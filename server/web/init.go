@@ -1,0 +1,4 @@
+package web
+
+func Init() {
+}

@@ -1,0 +1,4 @@
+package base
+
+func Init() {
+}

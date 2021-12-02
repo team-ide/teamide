@@ -1,0 +1,33 @@
+# 服务配置，配置IP、端口等
+[server]
+host = '0.0.0.0'
+port = 19000
+context = '/teamide'
+data = './data'
+
+# MySql配置
+[mysql]
+host = 'mysql'
+port = 3306
+database = 'teamide'
+username = 'root'
+password = '123456'
+
+# Redis配置
+[redis]
+address = 'redis:6379'
+auth = ''
+# Key前缀，Team IDE所有存储将以该字符作为前缀
+prefix = 'teamide'
+
+# Zookeeper配置
+[zookeeper]
+address = 'zookeeper:2181'
+# 根路径，Team IDE所有节点放在该节点下
+namespace = '/teamide'
+
+# Kafka配置
+[kafka]
+address = 'kafka:9092'
+# Topic前缀，Team IDE所有Topic将使用该字符作为前缀
+prefix = 'teamide'

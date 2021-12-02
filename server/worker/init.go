@@ -1,0 +1,4 @@
+package worker
+
+func Init() {
+}
