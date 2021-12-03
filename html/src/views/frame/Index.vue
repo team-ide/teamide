@@ -18,7 +18,22 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.tool.appendToast("sssssss", { title: "sss" });
+    this.tool
+      .alert("这是提示")
+      .then(() => {
+        console.log("确认");
+      })
+      .catch(() => {
+        console.log("取消");
+      });
+    this.tool
+      .confirm("这是确认")
+      .then(() => {
+        console.log("确认");
+      })
+      .catch(() => {
+        console.log("取消");
+      });
   },
 };
 </script>

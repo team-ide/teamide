@@ -1,5 +1,14 @@
 import Vue from 'vue'
 
+import InfoBox from './InfoBox.vue'
+Vue.component('InfoBox', InfoBox);
+
+import SystemInfoBox from './SystemInfoBox.vue'
+Vue.component('SystemInfoBox', SystemInfoBox);
+
+import AlertBox from './AlertBox.vue'
+Vue.component('AlertBox', AlertBox);
+
 import Login from './Login.vue'
 Vue.component('Login', Login);
 

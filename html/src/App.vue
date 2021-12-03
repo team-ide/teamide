@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    <InfoBox :source="source"></InfoBox>
+    <SystemInfoBox :source="source"></SystemInfoBox>
+    <AlertBox :source="source"></AlertBox>
     <Frame
       :source="source"
       v-if="!source.removeFrame"
@@ -45,18 +48,11 @@ export default {
   watch: {},
   methods: {},
   // 在实例创建完成后被立即调用
-  created() {},
-  // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {
-    this.tool.appendToast = (info, config) => {
-      //config : {
-      //   title: "BootstrapVue Toast",
-      //   autoHideDelay: 5000,
-      //   appendToast: append,
-      // }
-      this.$bvToast.toast(info, config);
-    };
+  created() {
+    this.tool.$bvToast = this.$bvToast;
   },
+  // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
+  mounted() {},
   destroyed() {},
 };
 </script>

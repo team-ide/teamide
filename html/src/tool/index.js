@@ -1,6 +1,7 @@
 import server from "@/server/index.js";
 import source from "@/source/index.js";
 
+
 import md5 from 'js-md5';
 let tool = {};
 tool.md5 = md5;
