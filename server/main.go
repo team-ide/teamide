@@ -5,10 +5,9 @@ import (
 	"cache"
 	"config"
 	"db"
+	"install"
 	"redis"
 	"service"
-	"sync"
-	"version"
 	"web"
 	"worker"
 	"zookeeper"
@@ -22,7 +21,7 @@ func Init() {
 	config.Init()
 	worker.Init()
 	db.Init()
-	version.Init()
+	install.Init()
 	redis.Init()
 	service.Init()
 	cache.Init()
@@ -30,8 +29,5 @@ func Init() {
 	web.Init()
 }
 func main() {
-	service.TestTotalBatchInsert(50, 100000)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	wg.Wait()
+	web.StartServer()
 }

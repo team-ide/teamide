@@ -27,7 +27,7 @@ func init() {
 	DBService = *service.(*MysqlService)
 
 	_, err = DBService.Exec(SqlParam{
-		Sql:    "SELECT 1 FROM " + TABLE_VERSION,
+		Sql:    "SELECT 1 FROM " + TABLE_INSTALL,
 		Params: []interface{}{},
 	})
 	if err != nil {

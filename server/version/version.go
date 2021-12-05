@@ -25,7 +25,7 @@ func InstallVersion(versionInfo *VersionInfo) {
 	var err error
 	var res []interface{}
 	res, err = db.DBService.Query(db.SqlParam{
-		Sql:    "SELECT detail FROM  " + db.TABLE_VERSION + " WHERE version=? ",
+		Sql:    "SELECT detail FROM  " + db.TABLE_INSTALL + " WHERE version=? ",
 		Params: []interface{}{versionInfo.Version},
 	}, func() interface{} {
 		return &VersionDetail{}
@@ -85,12 +85,12 @@ func UpgradeVersion(installedVersion *VersionInfo, versionInfo *VersionInfo) {
 	var dbSqlParam db.SqlParam
 	if installedVersion != nil {
 		dbSqlParam = db.SqlParam{
-			Sql:    "UPDATE " + db.TABLE_VERSION + " SET detail=?, updateTime=? WHERE version=? ",
+			Sql:    "UPDATE " + db.TABLE_INSTALL + " SET detail=?, updateTime=? WHERE version=? ",
 			Params: []interface{}{detail, base.Now(), versionInfo.Version},
 		}
 	} else {
 		dbSqlParam = db.SqlParam{
-			Sql:    "INSERT INTO  " + db.TABLE_VERSION + " (version, detail, createTime) VALUES (?, ?, ?) ",
+			Sql:    "INSERT INTO  " + db.TABLE_INSTALL + " (version, detail, createTime) VALUES (?, ?, ?) ",
 			Params: []interface{}{versionInfo.Version, detail, base.Now()},
 		}
 	}

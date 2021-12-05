@@ -42,3 +42,12 @@ type UserEnterpriseOrgBean struct {
 	Code     string `json:"code"`
 	Position string `json:"position"`
 }
+
+type SessionBean struct {
+	User *LoginUserBean `json:"user"`
+}
+
+type LoginUserBean struct {
+	UserId int64  `json:"userId"`
+	Name   string `json:"name"`
+}

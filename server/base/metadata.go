@@ -82,7 +82,7 @@ var (
 
 func init() {
 
-	checkMetadata(true)
+	checkMetadata(false)
 }
 func checkMetadata(out bool) {
 	codes := map[int]bool{}

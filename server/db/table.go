@@ -1,7 +1,7 @@
 package db
 
 var (
-	TABLE_VERSION = "TM_VERSION"
+	TABLE_INSTALL = "TM_INSTALL"
 
 	TABLE_ID = "TM_ID"
 

@@ -1,11 +1,11 @@
 module.exports = {
-  assetsDir: process.env.assetsDir,
-  publicPath: process.env.publicPath,
+  assetsDir: "static",
+  publicPath: "./",
   devServer: {
-    port: 8081,
+    port: 21081,
     proxy: {
       "/server": {
-        target: "http://127.0.0.1:8081/server",
+        target: "http://127.0.0.1:21080/server",
         changeOrigin: true
       },
     }

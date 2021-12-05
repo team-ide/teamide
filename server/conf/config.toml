@@ -1,7 +1,7 @@
 # 服务配置，配置IP、端口等
 [server]
 host = '0.0.0.0'
-port = 19000
+port = 21080
 context = '/teamide'
 data = './data'
 

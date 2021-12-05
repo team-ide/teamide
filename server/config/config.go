@@ -66,7 +66,6 @@ func init() {
 		panic(err)
 	}
 	Config = formatConfig(Config)
-	loadServerInfo()
 }
 
 //格式化配置，填充默认值
