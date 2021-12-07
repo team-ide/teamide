@@ -1,8 +1,8 @@
 # 服务配置，配置IP、端口等
 [server]
-host = '0.0.0.0'
+host = '0.0.0.0'            # 如需要任意IP访问，则填写：“0.0.0.0” 或 “::”
 port = 21080
-context = '/teamide'
+context = '/teamide'        # 如直接通过IP+端口访问，则填写：“” 或 “/”
 data = './data'
 
 # MySql配置
