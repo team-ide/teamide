@@ -2,6 +2,7 @@ package service
 
 import (
 	"base"
+	"config"
 	"db"
 	"redis"
 )
@@ -45,7 +46,7 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 			if err != nil {
 				return
 			}
-			var id_ int64 = 0
+			var id_ int64 = config.GetBaseID()
 			if idInfo == nil {
 				idInfo = &base.IDEntity{
 					Type: int8(idType),
@@ -115,24 +116,9 @@ func IDBatchInsert(ids []interface{}) (err error) {
 	return
 }
 
-func IDUpdate(id base.IDEntity) (err error) {
-	sql := "UPDATE " + db.TABLE_ID + " SET id=? WHERE type=? "
-	params := []interface{}{id.Id, id.Type}
-
-	sqlParam := db.NewSqlParam(sql, params)
-
-	// fmt.Println("IDUpdate:", base.ToJSON(sqlParam))
-	_, err = db.DBService.Exec(sqlParam)
-
-	if err != nil {
-		return
-	}
-	return
-}
-
 func IDInsertOrUpdate(id base.IDEntity) (err error) {
-	sql := "INSERT INTO " + db.TABLE_ID + " (type, id) VALUES (?, ?) ON DUPLICATE KEY UPDATE id=?"
-	params := []interface{}{id.Type, id.Id, id.Id}
+	sql := "INSERT INTO " + db.TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
+	params := []interface{}{config.GetServerId(), id.Type, id.Id, id.Id}
 
 	sqlParam := db.NewSqlParam(sql, params)
 
@@ -147,8 +133,8 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 
 //查询单个ID
 func IDGet(idType base.IDType) (id *base.IDEntity, err error) {
-	sql := "SELECT * FROM " + db.TABLE_ID + " WHERE type=? "
-	params := []interface{}{idType}
+	sql := "SELECT * FROM " + db.TABLE_ID + " WHERE serverId=? AND type=? "
+	params := []interface{}{config.GetServerId(), idType}
 
 	sqlParam := db.NewSqlParam(sql, params)
 

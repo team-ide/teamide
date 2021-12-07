@@ -142,11 +142,9 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 		user := &base.UserEntity{}
 
 		email := pingYing + "@teamide.com"
-		phone := "1" + fmt.Sprint(base.RandInt(10000000000, 20000000000))
 		user.Name = userName
 		user.Account = pingYing
 		user.Email = email
-		user.Phone = phone
 
 		userTotal := &base.UserTotalBean{
 			User: user,

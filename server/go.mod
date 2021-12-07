@@ -20,7 +20,6 @@ require (
 	cache v0.0.0-00010101000000-000000000000
 	config v0.0.0-00010101000000-000000000000
 	db v0.0.0-00010101000000-000000000000
-	github.com/Chain-Zhang/pinyin v0.1.3 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/sessions v1.2.1 // indirect
 	install v0.0.0-00010101000000-000000000000
