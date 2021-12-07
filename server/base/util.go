@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"reflect"
 	"regexp"
@@ -23,6 +24,25 @@ var (
 	//全局的JSON转换对象
 	JSON = jsoniter.ConfigCompatibleWithStandardLibrary
 )
+
+func GetIpFromAddr(addr net.Addr) net.IP {
+	var ip net.IP
+	switch v := addr.(type) {
+	case *net.IPNet:
+		ip = v.IP
+	case *net.IPAddr:
+		ip = v.IP
+	}
+	if ip == nil || ip.IsLoopback() {
+		return nil
+	}
+	ip = ip.To4()
+	if ip == nil {
+		return nil // not an ipv4 address
+	}
+
+	return ip
+}
 
 func ToJSON(data interface{}) string {
 	if data != nil {

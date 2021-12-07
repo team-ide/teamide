@@ -16,7 +16,7 @@ func init() {
 	address := config.Config.Redis.Address
 	auth := config.Config.Redis.Auth
 	cluster := strings.Contains(address, ";")
-	fmt.Println("redis service init address:", address)
+	fmt.Println("Redis初始化：address:", address)
 	if cluster {
 		service, err = CreateRedisClusterService(address, auth)
 		if err != nil {
@@ -34,7 +34,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Redis连接成功")
+	fmt.Println("Redis连接成功！")
 }
 func Init() {
 }

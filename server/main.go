@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"os/signal"
 	"server/base"
 	"server/cache"
 	"server/config"
@@ -11,6 +13,7 @@ import (
 	"server/web"
 	"server/worker"
 	"server/zookeeper"
+	"syscall"
 )
 
 func init() {
@@ -28,6 +31,13 @@ func Init() {
 	zookeeper.Init()
 	web.Init()
 }
+
+var (
+	done = make(chan os.Signal, 1)
+)
+
 func main() {
 	web.StartServer()
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	<-done
 }

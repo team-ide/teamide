@@ -13,7 +13,7 @@ func init() {
 	var service interface{}
 	var err error
 	address := config.Config.Zookeeper.Address
-	fmt.Println("zookeeper service init address:", address)
+	fmt.Println("Zookeeper初始化：address:", address)
 	service, err = CreateZookeeperService(address)
 	if err != nil {
 		panic(err)
@@ -24,7 +24,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Zookeeper连接成功")
+	fmt.Println("Zookeeper连接成功！")
 }
 func Init() {
 }

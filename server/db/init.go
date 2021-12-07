@@ -19,7 +19,7 @@ func init() {
 		Username: config.Config.Mysql.Username,
 		Password: config.Config.Mysql.Password,
 	}
-	fmt.Println("db service init host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database)
+	fmt.Println("数据库初始化：host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database)
 	service, err = CreateMysqlService(databaseConfig)
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("MySql连接成功")
+	fmt.Println("数据库连接成功！")
 }
 
 func Init() {

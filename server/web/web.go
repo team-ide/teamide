@@ -2,6 +2,8 @@ package web
 
 import (
 	"fmt"
+	"net"
+	"server/base"
 	"server/config"
 
 	"net/http"
@@ -33,37 +35,89 @@ func handleResource(name, path string, r *mux.Router) {
 	})
 }
 
-func StartServer() {
+func bindMapping() (r *mux.Router) {
+	r = mux.NewRouter()
 
-	context := config.Config.Server.Context
-	if context == "" || context == "/" {
-		context = ""
-	}
+	r.HandleFunc(serverContext[0:len(serverContext)-1], handleIndex)
+	r.HandleFunc(serverContext+"user/register", userRegister)
+	r.HandleFunc(serverContext+"user/search", userSearch)
+	r.HandleFunc(serverContext+"user/active", userActive)
+	r.HandleFunc(serverContext+"user/cancel", userCancel)
 
-	r := mux.NewRouter()
-
-	r.HandleFunc(context+"", handleIndex)
+	r.HandleFunc(serverContext+"manage/user/query", manageUserQuery)
+	r.HandleFunc(serverContext+"manage/user/insert", manageUserInsert)
+	r.HandleFunc(serverContext+"manage/user/update", manageUserUpdate)
+	r.HandleFunc(serverContext+"manage/user/lock", manageUserLock)
+	r.HandleFunc(serverContext+"manage/user/unlock", manageUserUnlock)
+	r.HandleFunc(serverContext+"manage/user/delete", manageUserDelete)
 
 	//静态请求，由AssetFS统一处理。
 	for k := range _bintree.Children {
 		name := k
-		path := context + "/" + name
+		path := serverContext + name
 		handleResource(name, path, r)
 		if name == "index.html" {
-			handleResource(name, context+"/", r)
+			handleResource(name, serverContext, r)
 		}
 	}
+	return
+}
 
-	host := config.Config.Server.Host
-	port := config.Config.Server.Port
+var (
+	serverContext string
+	serverHost    string
+	serverPort    int
+)
 
-	httpServer := fmt.Sprint(host, ":", port)
-	if context != "/" {
-		context += "/"
+func init() {
+	serverContext = config.Config.Server.Context
+	if serverContext == "" || serverContext[len(serverContext)-1:] != "/" {
+		serverContext = serverContext + "/"
 	}
-	println("url:http://" + httpServer + context)
-	err := http.ListenAndServe(httpServer, r)
+
+	serverHost = config.Config.Server.Host
+	serverPort = config.Config.Server.Port
+}
+func StartServer() {
+
+	r := bindMapping()
+	ints, err := net.Interfaces()
 	if err != nil {
 		panic(err)
 	}
+	println("服务启动，访问地址：")
+	if serverHost == "0.0.0.0" || serverHost == "::" {
+		httpServer := fmt.Sprint("127.0.0.1", ":", serverPort)
+		println("\t", "http://"+httpServer+serverContext)
+		for _, iface := range ints {
+			if iface.Flags&net.FlagUp == 0 {
+				continue // interface down
+			}
+			if iface.Flags&net.FlagLoopback != 0 {
+				continue // loopback interface
+			}
+			addrs, err := iface.Addrs()
+			if err != nil {
+				panic(err)
+			}
+			for _, addr := range addrs {
+				ip := base.GetIpFromAddr(addr)
+				if ip == nil {
+					continue
+				}
+				httpServer := fmt.Sprint(ip, ":", serverPort)
+				println("\t", "http://"+httpServer+serverContext)
+			}
+		}
+	} else {
+		httpServer := fmt.Sprint(serverHost, ":", serverPort)
+		println("\t", "http://"+httpServer+serverContext)
+	}
+	go func() {
+		httpServer := fmt.Sprint(serverHost, ":", serverPort)
+		err = http.ListenAndServe(httpServer, r)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }

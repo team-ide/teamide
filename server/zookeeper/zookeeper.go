@@ -22,7 +22,7 @@ func CreateZookeeperService(address string) (*ZookeeperService, error) {
 
 func (service *ZookeeperService) init(address string) error {
 	var err error
-	service.conn, service.connEvent, err = zk.Connect(strings.Split(address, ","), time.Second*3)
+	service.conn, service.connEvent, err = zk.Connect(strings.Split(address, ","), time.Second*3, zk.WithLogInfo(false))
 	return err
 }
 
