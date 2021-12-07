@@ -3,6 +3,7 @@ package base
 import (
 	"config"
 	"fmt"
+	"server"
 )
 
 var (
@@ -19,7 +20,7 @@ const (
 )
 
 func GetRedisKey() (key string) {
-	key = fmt.Sprint(REDIS_PREFIX, ":", "server", ":", config.GetServerId())
+	key = fmt.Sprint(REDIS_PREFIX, ":", "server", ":", server.GetServerId())
 	return
 }
 

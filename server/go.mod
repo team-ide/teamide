@@ -9,6 +9,7 @@ replace (
 	db => ./db
 	install => ./install
 	redis => ./redis
+	server => ./server
 	service => ./service
 	web => ./web
 	worker => ./worker
@@ -20,8 +21,6 @@ require (
 	cache v0.0.0-00010101000000-000000000000
 	config v0.0.0-00010101000000-000000000000
 	db v0.0.0-00010101000000-000000000000
-	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/gorilla/sessions v1.2.1 // indirect
 	install v0.0.0-00010101000000-000000000000
 	redis v0.0.0-00010101000000-000000000000
 	service v0.0.0-00010101000000-000000000000

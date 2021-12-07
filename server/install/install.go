@@ -2,8 +2,8 @@ package install
 
 import (
 	"base"
-	"config"
 	"db"
+	"server"
 )
 
 type InstallInfo struct {
@@ -51,7 +51,7 @@ func InstallStage(info *InstallInfo, stage *InstallStageInfo) {
 	}
 	detail := base.ToJSON(detailInfo)
 	// 加密detail
-	detail = config.Encrypt(detail)
+	detail = server.Encrypt(detail)
 	sqlParam := db.SqlParam{
 		Sql:    "INSERT INTO  " + db.TABLE_INSTALL + " (module, stage, detail, createTime) VALUES (?, ?, ?, ?) ",
 		Params: []interface{}{info.Module, stage.Stage, detail, base.Now()},

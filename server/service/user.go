@@ -2,11 +2,11 @@ package service
 
 import (
 	"base"
-	"config"
 	"db"
 	"errors"
 	"fmt"
 	"redis"
+	"server"
 )
 
 func UserCheck(user *base.UserEntity) (err error) {
@@ -131,7 +131,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 		datas := []interface{}{}
 		for index, one := range inserts {
 			one.MetadataId = ids[index]
-			one.ServerId = config.GetServerId()
+			one.ServerId = server.GetServerId()
 			datas = append(datas, one)
 		}
 		err = BatchInsert(db.TABLE_USER_METADATA, datas)
@@ -296,7 +296,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 	password.Salt = ""
 
 	sql := "INSERT INTO " + db.TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
-	params := []interface{}{config.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
+	params := []interface{}{server.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
 
 	sqlParam := db.NewSqlParam(sql, params)
 
@@ -347,7 +347,7 @@ func UserCount(user base.UserEntity) (count int64, err error) {
 func UserAppendWhere(user base.UserEntity, sqlParam *db.SqlParam) {
 
 	sqlParam.Sql += " AND serverId=? "
-	sqlParam.Params = append(sqlParam.Params, config.GetServerId())
+	sqlParam.Params = append(sqlParam.Params, server.GetServerId())
 
 	if user.EnabledState != 0 {
 		sqlParam.Sql += " AND enabledState=? "
@@ -378,7 +378,7 @@ func UserAppendWhere(user base.UserEntity, sqlParam *db.SqlParam) {
 //用户搜索，只搜索有效用户
 func UserSearch(name string) (users []*base.UserEntity, err error) {
 	sql := "SELECT userId,name,avatar FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
-	params := []interface{}{config.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
+	params := []interface{}{server.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
 	sqlParam := db.NewSqlParam(sql, params)
 
@@ -398,7 +398,7 @@ func UserSearch(name string) (users []*base.UserEntity, err error) {
 //查询单个用户
 func UserGet(userId int64) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + db.TABLE_USER + " WHERE serverId=? AND userId=? "
-	params := []interface{}{config.GetServerId(), userId}
+	params := []interface{}{server.GetServerId(), userId}
 
 	sqlParam := db.NewSqlParam(sql, params)
 
@@ -417,7 +417,7 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
 func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
-	params := []interface{}{config.GetServerId(), account, account, account}
+	params := []interface{}{server.GetServerId(), account, account, account}
 
 	sqlParam := db.NewSqlParam(sql, params)
 
@@ -436,7 +436,7 @@ func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 // 根据 登录名称 邮箱 手机 查询UserId
 func UserGetUserIdByAccount(account string, email string) (userId int64, err error) {
 	sql := "SELECT userId FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
-	params := []interface{}{config.GetServerId(), account}
+	params := []interface{}{server.GetServerId(), account}
 
 	if email != "" {
 		sql += "OR email=? "
@@ -461,7 +461,7 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 // 根据 登录名称 邮箱 手机 统计
 func UserExistByAccount(account string, email string) (exist bool, err error) {
 	sql := "SELECT COUNT(userId) FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
-	params := []interface{}{config.GetServerId(), account}
+	params := []interface{}{server.GetServerId(), account}
 
 	if email != "" {
 		sql += "OR email=? "

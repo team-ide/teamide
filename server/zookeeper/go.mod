@@ -5,6 +5,7 @@ go 1.15
 replace (
 	base => ../base
 	config => ../config
+	server => ../server
 	worker => ../worker
 )
 
