@@ -145,7 +145,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 }
 
 func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, mStruct *base.MStruct) (inserts []base.UserMetadataEntity, err error) {
-	if metadata == nil || len(metadata) == 0 {
+	if len(metadata) == 0 {
 		return
 	}
 
@@ -197,7 +197,7 @@ func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, 
 					UserId:         userId,
 					MetadataStruct: mStruct.StructCode,
 					MetadataField:  mSField.StructFieldCode,
-					MetadataValue:  fmt.Sprint("map"),
+					MetadataValue:  "",
 					CreateTime:     base.Now(),
 				}
 				inserts = append(inserts, insert)
