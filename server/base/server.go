@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -172,34 +171,6 @@ func GetCerInfoByCode(code string) (info *CerInfo) {
 	info = &CerInfo{}
 	json.Unmarshal(bs, &info)
 	return
-}
-
-func buildOrderStr(infoMap map[string]string, secret string) (returnStr string) {
-	keys := []string{}
-
-	for k := range infoMap {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	var buf bytes.Buffer
-	for _, k := range keys {
-		if infoMap[k] == "" {
-			continue
-		}
-		if buf.Len() > 0 {
-			buf.WriteByte('&')
-		}
-
-		buf.WriteString(k)
-		buf.WriteByte('=')
-		buf.WriteString(infoMap[k])
-	}
-
-	buf.WriteString("&secret=" + secret)
-	returnStr = buf.String()
-
-	return returnStr
 }
 
 func pkcs7Padding(ciphertext []byte, blockSize int) []byte {

@@ -23,8 +23,5 @@ func NewErrorValdate(args ...interface{}) *valdateError {
 
 func IsErrorValdate(err error) bool {
 	errValue := GetRefValue(err)
-	if errValue.Type() == valdateErrorType {
-		return true
-	}
-	return false
+	return errValue.Type() == valdateErrorType
 }
