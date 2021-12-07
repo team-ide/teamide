@@ -1,8 +1,8 @@
 package web
 
 import (
-	"config"
 	"fmt"
+	"server/config"
 
 	"net/http"
 	"strings"

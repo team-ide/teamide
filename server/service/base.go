@@ -1,8 +1,8 @@
 package service
 
 import (
-	"base"
-	"db"
+	"server/base"
+	"server/db"
 )
 
 func Insert(table string, one interface{}) (err error) {

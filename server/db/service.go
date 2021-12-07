@@ -1,9 +1,9 @@
 package db
 
 import (
-	"base"
+	"server/base"
+	"server/worker"
 	"strings"
-	"worker"
 )
 
 type Automatic struct {

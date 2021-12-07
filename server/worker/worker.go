@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"base"
+	"server/base"
 	"sync"
 	"time"
 )

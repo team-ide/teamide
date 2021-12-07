@@ -1,8 +1,8 @@
 package zookeeper
 
 import (
-	"base"
-	"worker"
+	"server/base"
+	"server/worker"
 )
 
 type Automatic struct {

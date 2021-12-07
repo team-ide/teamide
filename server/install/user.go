@@ -1,6 +1,6 @@
 package install
 
-import "db"
+import "server/db"
 
 func getUser() (info *InstallInfo) {
 

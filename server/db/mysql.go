@@ -1,8 +1,8 @@
 package db
 
 import (
-	"base"
 	"fmt"
+	"server/base"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"

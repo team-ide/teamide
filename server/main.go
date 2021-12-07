@@ -1,16 +1,16 @@
 package main
 
 import (
-	"base"
-	"cache"
-	"config"
-	"db"
-	"install"
-	"redis"
-	"service"
-	"web"
-	"worker"
-	"zookeeper"
+	"server/base"
+	"server/cache"
+	"server/config"
+	"server/db"
+	"server/install"
+	"server/redis"
+	"server/service"
+	"server/web"
+	"server/worker"
+	"server/zookeeper"
 )
 
 func init() {

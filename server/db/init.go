@@ -1,8 +1,8 @@
 package db
 
 import (
-	"config"
 	"fmt"
+	"server/config"
 )
 
 var (

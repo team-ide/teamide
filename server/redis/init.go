@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"config"
 	"fmt"
+	"server/config"
 	"strings"
 )
 

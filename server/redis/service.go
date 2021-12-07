@@ -1,10 +1,10 @@
 package redis
 
 import (
-	"base"
 	"fmt"
+	"server/base"
+	"server/worker"
 	"strings"
-	"worker"
 )
 
 type Automatic struct {

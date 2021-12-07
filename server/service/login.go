@@ -1,7 +1,7 @@
 package service
 
 import (
-	"base"
+	"server/base"
 )
 
 func LoginByAccount(account string, password string) (user *base.UserEntity, err error) {

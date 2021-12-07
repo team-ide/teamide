@@ -1,6 +1,6 @@
 package install
 
-import "db"
+import "server/db"
 
 func getID() (info *InstallInfo) {
 

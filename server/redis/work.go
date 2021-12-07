@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"base"
+	"server/base"
 )
 
 type getRequest struct {

@@ -1,8 +1,8 @@
 package zookeeper
 
 import (
-	"config"
 	"fmt"
+	"server/config"
 )
 
 var (
