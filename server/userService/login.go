@@ -1,12 +1,11 @@
-package loginService
+package userService
 
 import (
 	"server/base"
-	"server/userService"
 )
 
 func LoginByAccount(account string, password string) (user *base.UserEntity, err error) {
-	user, err = userService.UserGetByAccount(account)
+	user, err = UserGetByAccount(account)
 	if err != nil {
 		return
 	}

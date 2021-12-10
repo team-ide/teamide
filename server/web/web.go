@@ -5,10 +5,23 @@ import (
 	"net"
 	"server/base"
 	"server/config"
+	"server/enterpriseService"
+	"server/groupService"
+	"server/idService"
+	"server/jobService"
+	"server/logService"
+	"server/messageService"
+	"server/powerService"
+	"server/settingService"
+	"server/spaceService"
+	"server/systemService"
+	"server/userService"
+	"server/wbsService"
 
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/mux"
 )
 
@@ -120,4 +133,23 @@ func StartServer() {
 			panic(err)
 		}
 	}()
+
+	ginR := gin.Default()
+	BindApi(serverContext, ginR)
+}
+
+func BindApi(root string, r *gin.Engine) {
+
+	idService.BindApi(root, r)
+	userService.BindApi(root, r)
+	wbsService.BindApi(root, r)
+	logService.BindApi(root, r)
+	enterpriseService.BindApi(root, r)
+	jobService.BindApi(root, r)
+	powerService.BindApi(root, r)
+	settingService.BindApi(root, r)
+	spaceService.BindApi(root, r)
+	systemService.BindApi(root, r)
+	messageService.BindApi(root, r)
+	groupService.BindApi(root, r)
 }
