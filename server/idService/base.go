@@ -1,9 +1,8 @@
-package service
+package idService
 
 import (
 	"server/base"
-	"server/db"
-	"server/redis"
+	"server/component"
 )
 
 func GetID(idType base.IDType) (id int64, err error) {
@@ -23,19 +22,19 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 
 	var key = base.GetIDRedisKey(idType)
 	var exists bool
-	exists, err = redis.RedisService.Exists(key)
+	exists, err = component.Redis.Exists(key)
 	if err != nil {
 		return
 	}
 	if !exists {
 		var unlock func() (err error)
-		unlock, err = redis.RedisService.Lock(key+":lock", 10, 1000)
+		unlock, err = component.Redis.Lock(key+":lock", 10, 1000)
 		if err != nil {
 			return
 		}
 		defer unlock()
 
-		exists, err = redis.RedisService.Exists(key)
+		exists, err = component.Redis.Exists(key)
 		if err != nil {
 			return
 		}
@@ -54,7 +53,7 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 			} else {
 				id_ = idInfo.Id + 100
 			}
-			err = redis.RedisService.SetInt64(key, id_)
+			err = component.Redis.SetInt64(key, id_)
 			if err != nil {
 				return
 			}
@@ -67,7 +66,7 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 		unlock()
 	}
 	var maxId int64
-	maxId, err = redis.RedisService.IncrBy(key, size)
+	maxId, err = component.Redis.IncrBy(key, size)
 	if err != nil {
 		return
 	}
@@ -92,10 +91,10 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 }
 func IDInsert(id base.IDEntity) (err error) {
 
-	sqlParam := db.InsertSqlByBean(db.TABLE_ID, id)
+	sqlParam := component.DB.InsertSqlByBean(base.TABLE_ID, id)
 
 	// fmt.Println("IDInsert:", base.ToJSON(sqlParam))
-	_, err = db.DBService.Insert(sqlParam)
+	_, err = component.DB.Insert(sqlParam)
 
 	if err != nil {
 		return
@@ -105,9 +104,9 @@ func IDInsert(id base.IDEntity) (err error) {
 
 func IDBatchInsert(ids []interface{}) (err error) {
 
-	sqlParam := db.InsertSqlByBean(db.TABLE_ID, ids...)
+	sqlParam := component.DB.InsertSqlByBean(base.TABLE_ID, ids...)
 
-	_, err = db.DBService.Insert(sqlParam)
+	_, err = component.DB.Insert(sqlParam)
 
 	if err != nil {
 		return
@@ -116,13 +115,13 @@ func IDBatchInsert(ids []interface{}) (err error) {
 }
 
 func IDInsertOrUpdate(id base.IDEntity) (err error) {
-	sql := "INSERT INTO " + db.TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
+	sql := "INSERT INTO " + base.TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
 	params := []interface{}{base.GetServerId(), id.Type, id.Id, id.Id}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	// fmt.Println("IDUpdate:", base.ToJSON(sqlParam))
-	_, err = db.DBService.Exec(sqlParam)
+	_, err = component.DB.Exec(sqlParam)
 
 	if err != nil {
 		return
@@ -132,13 +131,13 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 
 //查询单个ID
 func IDGet(idType base.IDType) (id *base.IDEntity, err error) {
-	sql := "SELECT * FROM " + db.TABLE_ID + " WHERE serverId=? AND type=? "
+	sql := "SELECT * FROM " + base.TABLE_ID + " WHERE serverId=? AND type=? "
 	params := []interface{}{base.GetServerId(), idType}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res []interface{}
-	res, err = db.DBService.Query(sqlParam, base.NewIDEntityInterface)
+	res, err = component.DB.Query(sqlParam, base.NewIDEntityInterface)
 
 	if err != nil {
 		return

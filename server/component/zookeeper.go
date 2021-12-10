@@ -1,12 +1,36 @@
-package zookeeper
+package component
 
 import (
 	"errors"
+	"fmt"
+	"server/config"
 	"strings"
 	"time"
 
 	"github.com/go-zookeeper/zk"
 )
+
+var (
+	Zookeeper ZookeeperService
+)
+
+func init() {
+	var service interface{}
+	var err error
+	address := config.Config.Zookeeper.Address
+	fmt.Println("Zookeeper初始化：address:", address)
+	service, err = CreateZookeeperService(address)
+	if err != nil {
+		panic(err)
+	}
+	Zookeeper = *service.(*ZookeeperService)
+
+	_, err = Zookeeper.Exists("/")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Zookeeper连接成功！")
+}
 
 //注册处理器在线信息等
 type ZookeeperService struct {

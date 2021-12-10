@@ -1,4 +1,0 @@
-package worker
-
-func Init() {
-}

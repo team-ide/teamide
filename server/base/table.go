@@ -1,4 +1,4 @@
-package db
+package base
 
 var (
 	TABLE_INSTALL = "TM_INSTALL"

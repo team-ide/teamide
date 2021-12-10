@@ -1,10 +1,10 @@
 package main
 
 import (
-	"server/service"
+	"server/userService"
 	"testing"
 )
 
 func TestUser(t *testing.T) {
-	service.TestTotalBatchInsert(30, 200000)
+	userService.TestTotalBatchInsert(30, 200000)
 }

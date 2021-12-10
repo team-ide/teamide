@@ -1,4 +1,0 @@
-package cache
-
-func Init() {
-}

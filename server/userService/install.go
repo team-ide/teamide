@@ -1,17 +1,17 @@
-package install
+package userService
 
-import "server/db"
+import "server/base"
 
-func getUser() (info *InstallInfo) {
+func GetInstall() (info *base.InstallInfo) {
 
-	info = &InstallInfo{}
+	info = &base.InstallInfo{}
 
 	info.Module = "user"
-	stages := []*InstallStageInfo{}
+	stages := []*base.InstallStageInfo{}
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_USER (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',
@@ -38,9 +38,9 @@ CREATE TABLE TM_USER (
 		},
 	})
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_METADATA",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_USER_METADATA (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',
@@ -64,9 +64,9 @@ CREATE TABLE TM_USER_METADATA (
 		},
 	})
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_AUTH",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_USER_AUTH (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',
@@ -93,9 +93,9 @@ CREATE TABLE TM_USER_AUTH (
 		},
 	})
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_PASSWORD",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_USER_PASSWORD (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',

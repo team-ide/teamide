@@ -1,4 +1,4 @@
-package redis
+package component
 
 import (
 	"context"
@@ -72,44 +72,6 @@ func (service *RedisClusterService) Exists(key string) (value bool, err error) {
 	value = res == 1
 	return
 }
-func (service *RedisClusterService) Get(key string) (valueInfo ValueInfo, err error) {
-	var keyType string
-	keyType, err = service.KeyType(key)
-	if err != nil {
-		return
-	}
-	var value interface{}
-
-	if keyType == "none" {
-
-	} else if keyType == "string" {
-		cmd := service.redisCluster.Get(context.TODO(), key)
-		value, err = cmd.Result()
-	} else if keyType == "list" {
-
-		cmd := service.redisCluster.LLen(context.TODO(), key)
-
-		var len int64
-		len, err = cmd.Result()
-		if err != nil {
-			return
-		}
-		cmdRange := service.redisCluster.LRange(context.TODO(), key, 0, len)
-		value, err = cmdRange.Result()
-	} else if keyType == "set" {
-		cmd := service.redisCluster.SMembers(context.TODO(), key)
-		value, err = cmd.Result()
-	} else if keyType == "hash" {
-		cmd := service.redisCluster.HGetAll(context.TODO(), key)
-		value, err = cmd.Result()
-	} else {
-		println(keyType)
-	}
-	valueInfo.Type = keyType
-	valueInfo.Value = value
-	return
-}
-
 func (service *RedisClusterService) GetString(key string) (value string, err error) {
 	cmd := service.redisCluster.Get(context.TODO(), key)
 	value, err = cmd.Result()
@@ -280,11 +242,11 @@ var (
 		end
 		return res
 	`)
-	clusterDeleteLockByUidScript = redisv8.NewScript(`
-		local res = redis.call("GET", KEYS[1]) 
-		if res == ARGV[1] then
-			return redis.call("DEL", KEYS[1])
-		end
-		return res 
-	`)
+	// clusterDeleteLockByUidScript = redisv8.NewScript(`
+	// 	local res = redis.call("GET", KEYS[1])
+	// 	if res == ARGV[1] then
+	// 		return redis.call("DEL", KEYS[1])
+	// 	end
+	// 	return res
+	// `)
 )

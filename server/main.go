@@ -4,15 +4,10 @@ import (
 	"os"
 	"os/signal"
 	"server/base"
-	"server/cache"
+	"server/component"
 	"server/config"
-	"server/db"
-	"server/install"
-	"server/redis"
-	"server/service"
+	"server/installService"
 	"server/web"
-	"server/worker"
-	"server/zookeeper"
 	"syscall"
 )
 
@@ -22,13 +17,8 @@ func init() {
 func Init() {
 	base.Init()
 	config.Init()
-	worker.Init()
-	db.Init()
-	install.Init()
-	redis.Init()
-	service.Init()
-	cache.Init()
-	zookeeper.Init()
+	component.Init()
+	installService.Init()
 	web.Init()
 }
 

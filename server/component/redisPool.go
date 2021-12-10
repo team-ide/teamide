@@ -1,4 +1,4 @@
-package redis
+package component
 
 import (
 	"errors"
@@ -108,65 +108,6 @@ func (service *RedisPoolService) Exists(key string) (value bool, err error) {
 		count, err = redigo.Int(reply, err)
 		value = count == 1
 	}
-
-	return
-}
-
-func (service *RedisPoolService) Get(key string) (valueInfo ValueInfo, err error) {
-	var keyType string
-	keyType, err = service.KeyType(key)
-	if err != nil {
-		return
-	}
-	var value interface{}
-	client := service.pool.Get()
-	defer client.Close()
-	if keyType == "none" {
-
-	} else if keyType == "string" {
-		var reply interface{}
-		reply, err = client.Do("get", key)
-		if err != nil {
-			return
-		}
-		if reply != nil {
-			value, err = redigo.String(reply, err)
-		}
-	} else if keyType == "list" {
-		var reply interface{}
-		reply, err = client.Do("llen", key)
-		if err != nil {
-			return
-		}
-		var len int64
-		len, err = redigo.Int64(reply, err)
-		if err != nil {
-			return
-		}
-		reply, err = client.Do("lrange", key, 0, len)
-		if err != nil {
-			return
-		}
-		value, err = redigo.Strings(reply, err)
-	} else if keyType == "set" {
-		var reply interface{}
-		reply, err = client.Do("smembers", key)
-		if err != nil {
-			return
-		}
-		value, err = redigo.Strings(reply, err)
-	} else if keyType == "hash" {
-		var reply interface{}
-		reply, err = client.Do("hgetall", key)
-		if err != nil {
-			return
-		}
-		value, err = redigo.StringMap(reply, err)
-	} else {
-		println(keyType)
-	}
-	valueInfo.Type = keyType
-	valueInfo.Value = value
 
 	return
 }

@@ -1,17 +1,17 @@
-package install
+package idService
 
-import "server/db"
+import "server/base"
 
-func getID() (info *InstallInfo) {
+func GetInstall() (info *base.InstallInfo) {
 
-	info = &InstallInfo{}
+	info = &base.InstallInfo{}
 
 	info.Module = "id"
-	stages := []*InstallStageInfo{}
+	stages := []*base.InstallStageInfo{}
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_ID",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_ID (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',

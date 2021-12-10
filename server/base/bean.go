@@ -51,3 +51,29 @@ type LoginUserBean struct {
 	UserId int64  `json:"userId"`
 	Name   string `json:"name"`
 }
+
+type InstallInfo struct {
+	Module string              `json:"module"`
+	Stages []*InstallStageInfo `json:"stages"`
+}
+
+type InstallStageInfo struct {
+	Stage    string   `json:"stage"`
+	SqlParam SqlParam `json:"sqlParam"`
+}
+
+type SqlParam struct {
+	Sql    string        `json:"sql,omitempty"`
+	Params []interface{} `json:"params,omitempty"`
+}
+
+func NewSqlParam(sql_ string, params []interface{}) (sqlParam SqlParam) {
+	if params == nil {
+		params = []interface{}{}
+	}
+	sqlParam = SqlParam{
+		Sql:    sql_,
+		Params: params,
+	}
+	return
+}

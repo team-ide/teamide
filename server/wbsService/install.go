@@ -1,17 +1,17 @@
-package install
+package wbsService
 
-import "server/db"
+import "server/base"
 
-func getWbs() (info *InstallInfo) {
+func GetInstall() (info *base.InstallInfo) {
 
-	info = &InstallInfo{}
+	info = &base.InstallInfo{}
 
 	info.Module = "wbs"
-	stages := []*InstallStageInfo{}
+	stages := []*base.InstallStageInfo{}
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_WBS_PROJECT",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_WBS_PROJECT (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',
@@ -38,9 +38,9 @@ CREATE TABLE TM_WBS_PROJECT (
 		},
 	})
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_WBS_VERSION",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_WBS_VERSION (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',
@@ -67,9 +67,9 @@ CREATE TABLE TM_WBS_VERSION (
 		},
 	})
 
-	stages = append(stages, &InstallStageInfo{
+	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_WBS_TASK",
-		SqlParam: db.SqlParam{
+		SqlParam: base.SqlParam{
 			Sql: `
 CREATE TABLE TM_WBS_TASK (
 	serverId bigint(20) NOT NULL COMMENT '服务ID',

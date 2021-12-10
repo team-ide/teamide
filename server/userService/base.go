@@ -1,11 +1,11 @@
-package service
+package userService
 
 import (
 	"errors"
 	"fmt"
 	"server/base"
-	"server/db"
-	"server/redis"
+	"server/component"
+	"server/idService"
 )
 
 func UserCheck(user *base.UserEntity) (err error) {
@@ -88,7 +88,7 @@ func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
 
 	lockKey := base.GetUserMetadataLockRedisKey(user.UserId)
 	var unlock func() (err error)
-	unlock, err = redis.RedisService.Lock(lockKey, 10, 1000)
+	unlock, err = component.Redis.Lock(lockKey, 10, 1000)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
 
 func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err error) {
 	if userId == 0 {
-		err = errors.New("userId is null.")
+		err = errors.New("userId is null")
 		return
 	}
 	inserts := []base.UserMetadataEntity{}
@@ -116,14 +116,12 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 		if err != nil {
 			return
 		}
-		for _, one := range inserts_ {
-			inserts = append(inserts, one)
-		}
+		inserts = append(inserts, inserts_...)
 	}
 	size := len(inserts)
 	if size > 0 {
 		var ids []int64
-		ids, err = GetIDs(base.ID_TYPE_USER_METADATA, int64(size))
+		ids, err = idService.GetIDs(base.ID_TYPE_USER_METADATA, int64(size))
 		if err != nil {
 			return
 		}
@@ -133,7 +131,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 			one.ServerId = base.GetServerId()
 			datas = append(datas, one)
 		}
-		err = BatchInsert(db.TABLE_USER_METADATA, datas)
+		err = component.DB.BatchInsertBean(base.TABLE_USER_METADATA, datas)
 
 		if err != nil {
 			return
@@ -241,7 +239,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 
 	// defer lock.Unlock()
 	var accountUnlock func() (err error)
-	accountUnlock, err = redis.RedisService.Lock(base.GetUserInsertLockRedisKey(user.Account), 10, 1000)
+	accountUnlock, err = component.Redis.Lock(base.GetUserInsertLockRedisKey(user.Account), 10, 1000)
 	if err != nil {
 		return
 	}
@@ -249,7 +247,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 
 	if user.Email != "" {
 		var emailUnlock func() (err error)
-		emailUnlock, err = redis.RedisService.Lock(base.GetUserInsertLockRedisKey(user.Email), 10, 1000)
+		emailUnlock, err = component.Redis.Lock(base.GetUserInsertLockRedisKey(user.Email), 10, 1000)
 		if err != nil {
 			return
 		}
@@ -266,7 +264,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 		return
 	}
 	var userId int64
-	userId, err = GetID(base.ID_TYPE_USER)
+	userId, err = idService.GetID(base.ID_TYPE_USER)
 	if err != nil {
 		return
 	}
@@ -276,7 +274,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 	user.LockedState = 2
 	user.CreateTime = base.Now()
 
-	err = Insert(db.TABLE_USER, *user)
+	err = component.DB.InsertBean(base.TABLE_USER, *user)
 
 	if err != nil {
 		return
@@ -294,12 +292,12 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 	password.Password = ""
 	password.Salt = ""
 
-	sql := "INSERT INTO " + db.TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
+	sql := "INSERT INTO " + base.TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
 	params := []interface{}{base.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
-	_, err = db.DBService.Exec(sqlParam)
+	_, err = component.DB.Exec(sqlParam)
 
 	if err != nil {
 		return
@@ -308,15 +306,15 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 	return
 }
 func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
-	sql := "SELECT * FROM " + db.TABLE_USER + " WHERE 1=1 "
+	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	UserAppendWhere(user, &sqlParam)
 
 	var res []interface{}
-	_, err = db.DBService.Query(sqlParam, base.NewUserEntityInterface)
+	_, err = component.DB.Query(sqlParam, base.NewUserEntityInterface)
 
 	if err != nil {
 		return
@@ -330,20 +328,20 @@ func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
 }
 
 func UserCount(user base.UserEntity) (count int64, err error) {
-	sql := "SELECT COUNT(*) FROM " + db.TABLE_USER + " WHERE 1=1 "
+	sql := "SELECT COUNT(*) FROM " + base.TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	UserAppendWhere(user, &sqlParam)
 
-	count, err = db.DBService.Count(sqlParam)
+	count, err = component.DB.Count(sqlParam)
 	if err != nil {
 		return
 	}
 	return
 }
-func UserAppendWhere(user base.UserEntity, sqlParam *db.SqlParam) {
+func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 
 	sqlParam.Sql += " AND serverId=? "
 	sqlParam.Params = append(sqlParam.Params, base.GetServerId())
@@ -376,13 +374,13 @@ func UserAppendWhere(user base.UserEntity, sqlParam *db.SqlParam) {
 
 //用户搜索，只搜索有效用户
 func UserSearch(name string) (users []*base.UserEntity, err error) {
-	sql := "SELECT userId,name,avatar FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
+	sql := "SELECT userId,name,avatar FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
 	params := []interface{}{base.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res []interface{}
-	res, err = db.DBService.Query(sqlParam, base.NewUserEntityInterface)
+	res, err = component.DB.Query(sqlParam, base.NewUserEntityInterface)
 	if err != nil {
 		return
 	}
@@ -396,13 +394,13 @@ func UserSearch(name string) (users []*base.UserEntity, err error) {
 
 //查询单个用户
 func UserGet(userId int64) (user *base.UserEntity, err error) {
-	sql := "SELECT * FROM " + db.TABLE_USER + " WHERE serverId=? AND userId=? "
+	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND userId=? "
 	params := []interface{}{base.GetServerId(), userId}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res []interface{}
-	res, err = db.DBService.Query(sqlParam, base.NewUserEntityInterface)
+	res, err = component.DB.Query(sqlParam, base.NewUserEntityInterface)
 
 	if err != nil {
 		return
@@ -415,13 +413,13 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
 func UserGetByAccount(account string) (user *base.UserEntity, err error) {
-	sql := "SELECT * FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
+	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
 	params := []interface{}{base.GetServerId(), account, account, account}
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res []interface{}
-	res, err = db.DBService.Query(sqlParam, base.NewUserEntityInterface)
+	res, err = component.DB.Query(sqlParam, base.NewUserEntityInterface)
 
 	if err != nil {
 		return
@@ -434,7 +432,7 @@ func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 
 // 根据 登录名称 邮箱 手机 查询UserId
 func UserGetUserIdByAccount(account string, email string) (userId int64, err error) {
-	sql := "SELECT userId FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
+	sql := "SELECT userId FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{base.GetServerId(), account}
 
 	if email != "" {
@@ -443,10 +441,10 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 	}
 	sql += ")"
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res []interface{}
-	res, err = db.DBService.Query(sqlParam, base.NewUserEntityInterface)
+	res, err = component.DB.Query(sqlParam, base.NewUserEntityInterface)
 
 	if err != nil {
 		return
@@ -459,7 +457,7 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 
 // 根据 登录名称 邮箱 手机 统计
 func UserExistByAccount(account string, email string) (exist bool, err error) {
-	sql := "SELECT COUNT(userId) FROM " + db.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
+	sql := "SELECT COUNT(userId) FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{base.GetServerId(), account}
 
 	if email != "" {
@@ -468,10 +466,10 @@ func UserExistByAccount(account string, email string) (exist bool, err error) {
 	}
 	sql += ")"
 
-	sqlParam := db.NewSqlParam(sql, params)
+	sqlParam := base.NewSqlParam(sql, params)
 
 	var res int64
-	res, err = db.DBService.Count(sqlParam)
+	res, err = component.DB.Count(sqlParam)
 
 	if err != nil {
 		return
