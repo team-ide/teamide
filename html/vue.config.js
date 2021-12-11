@@ -1,6 +1,6 @@
 module.exports = {
-  assetsDir: "static",
-  publicPath: "",
+  assetsDir: process.env.assetsDir,
+  publicPath: process.env.publicPath,
   devServer: {
     port: 21081,
     proxy: {

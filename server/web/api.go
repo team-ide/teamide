@@ -34,6 +34,7 @@ func bindApi(gouterGroup *gin.RouterGroup) {
 		if doApi(path, c) {
 			return
 		}
+		println("path:" + path)
 		c.Status(http.StatusNotFound)
 	})
 }
@@ -45,6 +46,11 @@ func doApi(path string, c *gin.Context) bool {
 		return false
 	}
 	name := path[index+len("api/"):]
+
+	if name == "" || name == "/" {
+		apiData(path[0:index], c)
+		return true
+	}
 
 	api := apiCache[name]
 	if api == nil {

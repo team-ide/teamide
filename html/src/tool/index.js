@@ -10,6 +10,7 @@ tool.init = function () {
         if (res.code == 0) {
             let data = res.data;
             source.url = data.url;
+            source.api = data.api;
         }
     })
 };

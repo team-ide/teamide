@@ -2,6 +2,7 @@ let source = {};
 
 source.ready = false;
 source.url = null;
+source.api = null;
 
 source.frame = {
     show: true,
