@@ -46,7 +46,7 @@ func doApi(path string, c *gin.Context) bool {
 	}
 	name := path[index+len("api/"):]
 
-	api, _ := apiCache[name]
+	api := apiCache[name]
 	if api == nil {
 		return false
 	}
