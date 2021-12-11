@@ -16,7 +16,7 @@ var (
 )
 
 func LogStr(args ...interface{}) string {
-	if args == nil || len(args) == 0 {
+	if len(args) == 0 {
 		return ""
 	}
 	return fmt.Sprint(args...)
@@ -47,7 +47,7 @@ func newZapLogger() (*zap.Logger, error) {
 		MessageKey:     "msg",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.000"),
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
