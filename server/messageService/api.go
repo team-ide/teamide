@@ -8,6 +8,6 @@ func index(c *gin.Context) {
 	})
 }
 
-func BindApi(root string, r *gin.Engine) {
-	r.GET(root+"message/index", index)
+func BindApi(apiCache map[string]func(c *gin.Context)) {
+	apiCache["message/index"] = index
 }
