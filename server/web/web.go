@@ -98,7 +98,7 @@ func StartServer() {
 	if err != nil {
 		panic(err)
 	}
-	println("服务启动，访问地址：")
+	println("服务启动，访问地址:")
 	if serverHost == "0.0.0.0" || serverHost == "::" {
 		httpServer := fmt.Sprint("127.0.0.1", ":", serverPort)
 		println("\t", "http://"+httpServer+serverContext)

@@ -1,8 +1,8 @@
 # 服务配置，配置IP、端口等
 [server]
-host = '0.0.0.0'            # 如需要任意IP访问，则填写：“0.0.0.0” 或 “::”
+host = '0.0.0.0'            # 如需要任意IP访问，则填写:“0.0.0.0” 或 “::”
 port = 21080
-context = '/teamide'        # 如直接通过IP+端口访问，则填写：“” 或 “/”
+context = '/teamide'        # 如直接通过IP+端口访问，则填写:“” 或 “/”
 data = './data'
 
 # MySql配置
@@ -31,3 +31,11 @@ namespace = '/teamide'
 address = 'kafka:9092'
 # Topic前缀，Team IDE所有Topic将使用该字符作为前缀
 prefix = 'teamide'
+
+# 日志配置
+[log]
+filename = "./log/server.log"
+maxSize = 100                      # 文件大小单位M
+maxAge = 7                         # 保留多少天
+maxBackups = 10                    # 最多几个文件
+level = "debug"                    # 级别，debug，info，warn，error

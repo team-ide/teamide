@@ -93,7 +93,6 @@ func IDInsert(id base.IDEntity) (err error) {
 
 	sqlParam := component.DB.InsertSqlByBean(base.TABLE_ID, id)
 
-	// fmt.Println("IDInsert:", base.ToJSON(sqlParam))
 	_, err = component.DB.Insert(sqlParam)
 
 	if err != nil {
@@ -120,7 +119,6 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 
 	sqlParam := base.NewSqlParam(sql, params)
 
-	// fmt.Println("IDUpdate:", base.ToJSON(sqlParam))
 	_, err = component.DB.Exec(sqlParam)
 
 	if err != nil {

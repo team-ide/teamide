@@ -102,7 +102,7 @@ func TestTotalBatchInsert(ctrip int, count int) {
 			defer func() {
 
 				if r := recover(); r != nil {
-					fmt.Printf("捕获到的错误：%s\n", r)
+					fmt.Printf("捕获到的错误:%s\n", r)
 				}
 			}()
 			for {
@@ -123,12 +123,12 @@ func TestTotalBatchInsert(ctrip int, count int) {
 			}
 			nowTime := base.GetNowTime()
 			use := nowTime - res.startTime
-			fmt.Println("当前耗时：", use, "，成功：", res.successCount, "，失败：", res.errorCount)
+			base.Logger.Info(base.LogStr("当前耗时:", use, "，成功:", res.successCount, "，失败:", res.errorCount))
 		}
 	}()
 	wg.Wait()
 	end := base.GetNowTime()
-	fmt.Println("testTotalBatchInsert", "结束，耗时：", (end - res.startTime), "，成功：", res.successCount, "，失败：", res.errorCount)
+	base.Logger.Info(base.LogStr("testTotalBatchInsert", "结束，耗时:", (end - res.startTime), "，成功:", res.successCount, "，失败:", res.errorCount))
 }
 func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 	var i int
@@ -172,7 +172,6 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 
 		userTotals = append(userTotals, userTotal)
 	}
-	// fmt.Println("批量插入用户开始：", len(users))
 	var successUserTotals []*base.UserTotalBean
 	var errUserTotals []*base.UserTotalBean
 	var errs []error
@@ -190,7 +189,7 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 				panic(e)
 			}
 		}
-		// fmt.Println("批量插入用户耗时：", (end - start), "，成功：", len(successUserTotals), "，失败：", len(errUserTotals), "，异常：", errs)
+		// base.Logger.Info(base.LogStr("批量插入用户耗时:", (end - start), "，成功:", len(successUserTotals), "，失败:", len(errUserTotals), "，异常:", errs))
 	}
 
 }

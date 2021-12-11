@@ -2,7 +2,7 @@ package component
 
 import (
 	"errors"
-	"fmt"
+	"server/base"
 	"server/config"
 	"strings"
 	"time"
@@ -18,7 +18,7 @@ func init() {
 	var service interface{}
 	var err error
 	address := config.Config.Zookeeper.Address
-	fmt.Println("Zookeeper初始化：address:", address)
+	base.Logger.Info(base.LogStr("Zookeeper初始化:address:", address))
 	service, err = CreateZookeeperService(address)
 	if err != nil {
 		panic(err)
@@ -29,7 +29,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Zookeeper连接成功！")
+	base.Logger.Info(base.LogStr("Zookeeper连接成功!"))
 }
 
 //注册处理器在线信息等

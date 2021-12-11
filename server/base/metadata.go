@@ -88,24 +88,24 @@ func checkMetadata(out bool) {
 	codes := map[int]bool{}
 	for _, obj := range U_M {
 		if out {
-			fmt.Println("----------结构体（", obj.Comment, "）----------")
-			fmt.Println(ToJSON(obj))
+			Logger.Info(LogStr("----------结构体（", obj.Comment, "）----------"))
+			Logger.Info(ToJSON(obj))
 		}
 		_, ok := codes[obj.StructCode]
 		if ok {
-			panic(fmt.Sprint("元数据编码：", obj.StructCode, "已存在！"))
+			panic(fmt.Sprint("元数据编码:", obj.StructCode, "已存在!"))
 		}
 		codes[obj.StructCode] = true
 		if out {
-			fmt.Println("----------结构体（", obj.Comment, "）属性----------")
+			Logger.Info(LogStr("----------结构体（", obj.Comment, "）属性----------"))
 		}
 		for _, field := range obj.Fields {
 			if out {
-				fmt.Println(ToJSON(field))
+				Logger.Info(ToJSON(field))
 			}
 			_, ok := codes[field.StructFieldCode]
 			if ok {
-				panic(fmt.Sprint("元数据编码：", field.StructFieldCode, "已存在！"))
+				panic(fmt.Sprint("元数据编码:", field.StructFieldCode, "已存在!"))
 			}
 			codes[field.StructFieldCode] = true
 		}

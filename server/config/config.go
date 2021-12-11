@@ -12,6 +12,7 @@ type TomlConfig struct {
 	Zookeeper zookeeper `toml:"zookeeper"`
 	Kafka     kafka     `toml:"kafka"`
 	Mysql     mysql     `toml:"mysql"`
+	Log       log       `toml:"log"`
 }
 
 type server struct {
@@ -43,6 +44,14 @@ type mysql struct {
 	Database string `json:"database"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type log struct {
+	Filename   string
+	MaxSize    int
+	MaxAge     int
+	MaxBackups int
+	Level      string
 }
 
 var (
