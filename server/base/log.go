@@ -55,19 +55,14 @@ func newZapLogger() (*zap.Logger, error) {
 	switch config.Config.Log.Level {
 	case "debug":
 		level = zapcore.DebugLevel
-		break
 	case "info":
 		level = zapcore.InfoLevel
-		break
 	case "warn":
 		level = zapcore.WarnLevel
-		break
 	case "error":
 		level = zapcore.ErrorLevel
-		break
 	default:
 		level = zapcore.DebugLevel
-		break
 	}
 	atomicLevel := zap.NewAtomicLevelAt(level)
 	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig),
