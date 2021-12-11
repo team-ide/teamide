@@ -4,7 +4,7 @@ import source from "@/source/index.js";
 
 let axiosConfig = {};
 axiosConfig.timeout = 1000 * 60 * 10;
-axiosConfig.baseURL = source.ROOT_URL;
+axiosConfig.baseURL = location.pathname;
 axiosConfig.withCredentials = true; // 请求带上cookie
 let axiosInstance = axios.create(axiosConfig);
 // 添加请求拦截器

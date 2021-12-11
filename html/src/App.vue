@@ -28,6 +28,7 @@
       v-if="!source.removeConsole"
       v-show="source.showConsole"
     ></Console>
+    {{source.url}}
   </div>
 </template>
 

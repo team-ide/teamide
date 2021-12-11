@@ -31,6 +31,6 @@ new Vue({
   router,
   render: h => h(App),
   mounted() {
-    // this.tool.init()
+    this.tool.init()
   }
 }).$mount('#app')

@@ -1,11 +1,11 @@
 module.exports = {
   assetsDir: "static",
-  publicPath: "./",
+  publicPath: "",
   devServer: {
     port: 21081,
     proxy: {
-      "/server": {
-        target: "http://127.0.0.1:21080/server",
+      "/api": {
+        target: "http://127.0.0.1:21080/teamide/",
         changeOrigin: true
       },
     }

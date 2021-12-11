@@ -185,7 +185,7 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 	res.errorCount += len(errUserTotals)
 	if len(errUserTotals) > 0 {
 		for _, e := range errs {
-			if !base.IsErrorValdate(e) {
+			if !base.IsValidateError(e) {
 				panic(e)
 			}
 		}

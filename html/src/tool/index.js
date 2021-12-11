@@ -6,7 +6,12 @@ import md5 from 'js-md5';
 let tool = {};
 tool.md5 = md5;
 tool.init = function () {
-    server.data()
+    server.data().then(res => {
+        if (res.code == 0) {
+            let data = res.data;
+            source.url = data.url;
+        }
+    })
 };
 
 tool.formatDateByTime = function (time, format) {

@@ -1,10 +1,7 @@
 let source = {};
 
 source.ready = false;
-source.url = location.origin + location.pathname;
-if (!source.url.endsWith('/')) {
-    source.url = source.url + '/';
-}
+source.url = null;
 
 source.frame = {
     show: true,

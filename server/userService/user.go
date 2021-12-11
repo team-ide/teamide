@@ -10,40 +10,40 @@ import (
 
 func UserCheck(user *base.UserEntity) (err error) {
 	if user.Name == "" {
-		err = base.NewErrorValdate("用户名称不能为空!")
+		err = base.NewValidateError("用户名称不能为空!")
 		return
 	}
 	if len(user.Name) > 50 {
-		err = base.NewErrorValdate("用户:", user.Name, "，名称长度不能大于50个字节!")
+		err = base.NewValidateError("用户:", user.Name, "，名称长度不能大于50个字节!")
 		return
 	}
 	if user.Account == "" {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号不能为空!")
+		err = base.NewValidateError("用户:", user.Name, "，账号不能为空!")
 		return
 	}
 	if len(user.Account) < 4 {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号:", user.Account, "，长度不能小于4个字节!")
+		err = base.NewValidateError("用户:", user.Name, "，账号:", user.Account, "，长度不能小于4个字节!")
 		return
 	}
 	if len(user.Account) > 20 {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号:", user.Account, "，长度不能大于20个字节!")
+		err = base.NewValidateError("用户:", user.Name, "，账号:", user.Account, "，长度不能大于20个字节!")
 		return
 	}
 	if !base.MatchAccount(user.Account) {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号:", user.Account, "，格式不正确!")
+		err = base.NewValidateError("用户:", user.Name, "，账号:", user.Account, "，格式不正确!")
 		return
 	}
 	if base.MatchNumber(user.Account) {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号:", user.Account, "，不能为数字!")
+		err = base.NewValidateError("用户:", user.Name, "，账号:", user.Account, "，不能为数字!")
 		return
 	}
 	if user.Email != "" {
 		if len(user.Email) > 50 {
-			err = base.NewErrorValdate("用户:", user.Name, "，邮箱:", user.Email, "，长度不能大于50个字节!")
+			err = base.NewValidateError("用户:", user.Name, "，邮箱:", user.Email, "，长度不能大于50个字节!")
 			return
 		}
 		if !base.MatchEmail(user.Email) {
-			err = base.NewErrorValdate("用户:", user.Name, "，邮箱:", user.Email, "，格式不正确!")
+			err = base.NewValidateError("用户:", user.Name, "，邮箱:", user.Email, "，格式不正确!")
 			return
 		}
 	}
@@ -260,7 +260,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 		return
 	}
 	if exist {
-		err = base.NewErrorValdate("用户:", user.Name, "，账号信息已存在!")
+		err = base.NewValidateError("用户:", user.Name, "，账号信息已存在!")
 		return
 	}
 	var userId int64
