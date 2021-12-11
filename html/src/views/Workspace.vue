@@ -1,5 +1,5 @@
 <template>
-  <div>Wellcome Index!</div>
+  <div>Wellcome Workspace!</div>
 </template>
 
 <script>

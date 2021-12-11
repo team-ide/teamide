@@ -1,10 +1,18 @@
 <template>
-  <div class="frame-box">{{ source }}</div>
+  <div class="frame-box">
+    <Header :source="source"></Header>
+    <Body :source="source"></Body>
+    <Footer :source="source"></Footer>
+  </div>
 </template>
 
 <script>
+import Header from "@/views/frame/Header.vue";
+import Body from "@/views/frame/Body.vue";
+import Footer from "@/views/frame/Footer.vue";
+
 export default {
-  components: {},
+  components: { Header, Body, Footer },
   props: ["source"],
   data() {
     return {};
@@ -17,30 +25,13 @@ export default {
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {
-    this.tool
-      .alert("这是提示")
-      .then(() => {
-        console.log("确认");
-      })
-      .catch(() => {
-        console.log("取消");
-      });
-    this.tool
-      .confirm("这是确认")
-      .then(() => {
-        console.log("确认");
-      })
-      .catch(() => {
-        console.log("取消");
-      });
-  },
+  mounted() {},
 };
 </script>
 
 <style>
 .frame-box {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 </style>

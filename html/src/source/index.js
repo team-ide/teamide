@@ -1,8 +1,16 @@
 let source = {};
 
+source.status = null;
 source.ready = false;
 source.url = null;
 source.api = null;
+
+source.header = {
+    title: "Team IDE",
+    toggleable: "lg",
+    type: "dark",
+    variant: "dark",
+}
 
 source.frame = {
     show: true,
@@ -21,12 +29,12 @@ source.register = {
 }
 
 source.workspace = {
-    show: true,
+    show: false,
     remove: false,
 }
 
 source.console = {
-    show: true,
+    show: false,
     remove: false,
 }
 
@@ -35,5 +43,17 @@ source.enum = {
 
 source.log = {
 };
+
+source.init = (data) => {
+    if (data != null) {
+        source.url = data.url;
+        source.api = data.api;
+        source.status = "connected";
+        source.ready = true;
+    } else {
+        source.status = "error";
+        source.ready = false;
+    }
+}
 
 export default source;

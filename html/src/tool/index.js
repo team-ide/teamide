@@ -6,12 +6,17 @@ import md5 from 'js-md5';
 let tool = {};
 tool.md5 = md5;
 tool.init = function () {
+    source.status = 'connecting';
     server.data().then(res => {
         if (res.code == 0) {
             let data = res.data;
-            source.url = data.url;
-            source.api = data.api;
+            source.init(data)
+        } else {
+            tool.error(res.msg);
+            source.init();
         }
+    }).catch(() => {
+        source.init();
     })
 };
 

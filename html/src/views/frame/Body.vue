@@ -1,5 +1,7 @@
 <template>
-  <div>Wellcome Index!</div>
+  <div class="frame-body-box">
+    <router-view :source="source"></router-view>
+  </div>
 </template>
 
 <script>

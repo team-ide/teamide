@@ -1,0 +1,111 @@
+name: Toolbox release CI
+on:
+  push:
+    tags: # 当我们提交代码为tag 是以'v'开头的时候才会触发自动部署到服务端 如 git push tag v0.1.0
+      - 'v*'
+jobs:
+  lint:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 打包构建 java
+      # - name: Build Java
+      #   uses: actions/setup-java@v2
+      #   with:
+      #     java-version: '8'
+      #     distribution: 'adopt'
+      # - run: cd java && mvn clean install
+      # - run: zip -q -r release-java.zip java/release
+
+      # 打包构建 go
+      - name: Build Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15'
+      # 打包Linux
+      - run: cd go && export GOARCH=amd64 && export GOOS=linux && go build -o ../release/go-linux-x64/toolbox
+      - run: cp -rf go/config.toml release/go-linux-x64/
+      - run: cd release && zip -q -r release-go-linux-x64.zip go-linux-x64
+
+      # 打包MAC
+      - run: cd go && export GOARCH=amd64 && export GOOS=darwin && go build -o ../release/go-darwin-x64/toolbox
+      - run: cp -rf go/config.toml release/go-darwin-x64/
+      - run: cd release && zip -q -r release-go-darwin-x64.zip go-darwin-x64
+
+      # 打包Window
+      - run: cd go && export GOARCH=amd64 && export GOOS=windows && go build -o ../release/go-windows-x64/toolbox.exe
+      - run: cp -rf go/config.toml release/go-windows-x64/
+      - run: cd release && zip -q -r release-go-windows-x64.zip go-windows-x64
+
+      # 发布Docker
+      - name: Publish to Docker Repository
+        uses: elgohr/Publish-Docker-Github-Action@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        with:
+          name: teamide/toolbox
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 发布
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }} # (tag)标签名称
+          release_name: Release ${{ github.ref }}
+          draft: false # 是否是草稿
+          prerelease: false # 是否是预发布
+      # 上传构建结果到 Release（把打包的zip上传到Release）
+
+      # - name: Upload Java Release Asset
+      #   id: upload-java-release-asset
+      #   uses: actions/upload-release-asset@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+      #     asset_path: ./release-java.zip # 要上传文件
+      #     asset_name: release-java.zip # 上传后的文件名
+      #     asset_content_type: application/zip
+
+      - name: Upload Go linux Release Asset
+        id: upload-go-linux-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/release-go-linux-x64.zip # 要上传文件
+          asset_name: release-go-linux-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+      - name: Upload Go MAC Release Asset
+        id: upload-go-MAC-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/release-go-darwin-x64.zip # 要上传文件
+          asset_name: release-go-darwin-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+      - name: Upload Go Windows Release Asset
+        id: upload-go-windows-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/release-go-windows-x64.zip # 要上传文件
+          asset_name: release-go-windows-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+

@@ -1,5 +1,6 @@
 <template>
-  <div>Wellcome Index!</div>
+  <div class="frame-footer-box">
+  </div>
 </template>
 
 <script>

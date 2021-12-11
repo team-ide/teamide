@@ -30,6 +30,9 @@ import { } from '@/component'
 new Vue({
   router,
   render: h => h(App),
+  created() {
+    this.tool.$bvToast = this.$bvToast;
+  },
   mounted() {
     this.tool.init()
   }
