@@ -67,8 +67,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ TEAMIDE_RELEASE_VERSION }} # (tag)标签名称
-          release_name: Release ${{ TEAMIDE_RELEASE_VERSION }}
+          tag_name: ${ TEAMIDE_RELEASE_VERSION } # (tag)标签名称
+          release_name: Release ${ TEAMIDE_RELEASE_VERSION }
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
       # 上传构建结果到 Release（把打包的zip上传到Release）
