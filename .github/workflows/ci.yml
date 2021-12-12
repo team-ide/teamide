@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 10
       # npm install
-      - run: cd html && npm run install && npm run build
+      - run: cd html && npm install && npm run build
 
       # 打包静态资源
       - run: cd html/dist && go get -u github.com/jteeuwen/go-bindata/... && go-bindata -pkg web -o ../../server/web/html.go ./...
