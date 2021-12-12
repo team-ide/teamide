@@ -54,15 +54,15 @@ jobs:
       - run: cd release && zip -q -r teamide-go-windows-x64.zip teamide-windows-x64
 
       # 发布Docker
-      - name: Publish to Docker Repository
-        uses: elgohr/Publish-Docker-Github-Action@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        with:
-          name: teamide/server
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      # - name: Publish to Docker Repository
+      #   uses: elgohr/Publish-Docker-Github-Action@master
+      #   env:
+      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      #   with:
+      #     name: teamide/server
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
       # 发布
       - name: Create Release
