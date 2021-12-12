@@ -26,7 +26,8 @@ jobs:
       - run: cd html && npm install && npm run build
 
       # 打包静态资源
-      - run: cd html/dist && go get -u github.com/jteeuwen/go-bindata/... && go-bindata -pkg web -o ../../server/web/html.go ./...
+      - run: go get -u github.com/jteeuwen/go-bindata/...
+      - run: cd html/dist && go-bindata -pkg web -o ../../server/web/html.go ./...
 
       - run: export TEAMIDE_RELEASE_VERSION=`head -1 RELEASE.version`
       # 打包构建 Server
