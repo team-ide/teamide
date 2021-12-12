@@ -63,7 +63,18 @@ jobs:
       #     name: teamide/server
       #     username: ${{ secrets.DOCKER_USERNAME }}
       #     password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: ./package.json
+          property: version
 
+      - name: Read Release Description
+        id: release_body
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./RELEASE.md
       # 发布
       - name: Create Release
         id: create_release
@@ -71,8 +82,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${ TEAMIDE_RELEASE_VERSION } # (tag)标签名称
-          release_name: Release ${ TEAMIDE_RELEASE_VERSION }
+          tag_name: release-v${{steps.release_version.outputs.value}}
+          release_name: release-v${{steps.release_version.outputs.value}}
+          body: ${{steps.release_body.outputs.content}}
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
       # 上传构建结果到 Release（把打包的zip上传到Release）
