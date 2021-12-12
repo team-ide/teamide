@@ -1,4 +1,4 @@
-log/
-.history/
+log
+.history
 server
 server.exe
