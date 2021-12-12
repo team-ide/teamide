@@ -49,41 +49,49 @@ source.login = {
             name: "个人主页",
             icon: "person-circle",
             link: "/user/home",
+            color:"deep-purple",
         },
         {
             name: "个人中心",
             icon: "person",
             link: "/user/home",
+            color:"purple",
         },
         {
             name: "修改密码",
             icon: "shield",
             link: "/user/home",
+            color:"indigo",
         },
         {
             name: "任务计划",
             icon: "calendar-minus",
             link: "/user/home",
+            color:"teal",
         },
         {
             name: "消息通知",
             icon: "chat-text",
             link: "/user/home",
+            color:"green",
         },
         {
             name: "帮助中心",
             icon: "exclamation",
             link: "/user/home",
+            color:"lime",
         },
         {
             name: "问题建议",
             icon: "question",
             link: "/user/home",
+            color:"orange",
         },
         {
             name: "设置",
             icon: "gear",
             link: "/user/home",
+            color:"brown",
         },
     ]
 }

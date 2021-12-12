@@ -70,7 +70,7 @@
                 <b-container class="bv-example-row">
                   <b-row cols="1" class="header-row">
                     <b-col>
-                      <b-card style="border: 0px" align="center">
+                      <b-card class="bd-0 text-center">
                         <b-card-title>
                           <b-img
                             v-bind="{
@@ -84,26 +84,21 @@
                           ></b-img>
                         </b-card-title>
                         <b-card-text>
-                          <div style="font-size: 14px">
+                          <div class="ft-15">
                             {{ source.login.user.name }}
                           </div>
-                          <div style="margin-top: 5px">
-                            <b-badge
-                              variant="secondary  "
-                              style="margin: 0px 2px"
-                              >系统组</b-badge
-                            >
-                            <b-badge variant="success  " style="margin: 0px 2px"
-                              >系统组</b-badge
-                            >
+                          <div class="mgt-5 ft-12">
+                            <span class="mglr-2 color-green"> A组 </span>
+                            <span class="mglr-2 color-orange">
+                              B组
+                              <b-icon icon="gear" title="组长"></b-icon>
+                            </span>
+                            <span class="mglr-2 color-blue"> E组 </span>
                           </div>
-                          <div style="margin-top: 5px">
-                            <b-badge variant="warning  " style="margin: 0px 2px"
-                              >系统组</b-badge
-                            >
-                            <b-badge variant="info  " style="margin: 0px 2px"
-                              >生产部</b-badge
-                            >
+                          <div class="mgt-5 ft-12">
+                            <span class="mglr-2 color-green"> A部门 </span>
+                            <span class="mglr-2 color-orange"> B部门 </span>
+                            <span class="mglr-2 color-blue"> E部门 </span>
                           </div>
                         </b-card-text>
                       </b-card>
@@ -113,37 +108,31 @@
                   <b-row cols="3" class="body-row">
                     <template v-for="(one, index) in source.login.headerNavs">
                       <b-col :key="index">
-                        <b-card
-                          align="center"
-                          :border-variant="
-                            source.colors[index % source.colors.length]
-                          "
-                        >
+                        <b-card align="center" :class="`bd-${one.color}`">
                           <b-card-title>
                             <b-icon
                               :icon="one.icon"
-                              :class="`text-${
-                                source.colors[index % source.colors.length]
-                              }`"
+                              :class="`color-${one.color}`"
                             ></b-icon>
                           </b-card-title>
                           <b-card-text>
-                            <b-link
+                            <div
+                              class="tm-link"
                               @click="$router.push(`/${one.link}`)"
-                              :class="`text-${
-                                source.colors[index % source.colors.length]
-                              }`"
+                              :class="`color-${one.color}`"
                             >
                               {{ one.name }}
-                            </b-link>
+                            </div>
                           </b-card-text>
                         </b-card>
                       </b-col>
                     </template>
                     <b-col>
                       <b-card style="border: 0px" align="center">
-                        <b-card-text style="padding-top: 20px;">
-                          <b-link href="#" class="card-link">更多功能</b-link>
+                        <b-card-text style="padding-top: 20px">
+                          <div href="#" class="tm-link color-grey">
+                            更多功能
+                          </div>
                         </b-card-text>
                       </b-card>
                     </b-col>
@@ -151,14 +140,14 @@
                   <b-row cols="1" class="footer-row">
                     <b-col>
                       <hr />
-                      <b-card style="border: 0px" align="center">
+                      <b-card class="bd-0 text-center">
                         <b-card-text>
-                          <b-link
+                          <div
                             @click="tool.toLogout()"
-                            class="text-warning"
+                            class="tm-link color-orange"
                           >
                             登出
-                          </b-link>
+                          </div>
                         </b-card-text>
                       </b-card>
                     </b-col>

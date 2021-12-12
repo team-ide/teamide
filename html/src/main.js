@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from '@/App.vue'
 import router from '@/router'
 
+
 Vue.config.productionTip = false
 
 import tool from '@/tool'
@@ -24,6 +25,9 @@ import '@/app.scss'
 Vue.use(BootstrapVue)
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin)
+
+import tm from 'teamide-ui'
+Vue.use(tm)
 
 import { } from '@/component'
 

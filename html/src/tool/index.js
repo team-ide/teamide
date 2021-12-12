@@ -1,9 +1,11 @@
 import server from "@/server/index.js";
 import source from "@/source/index.js";
 
+import tm from 'teamide-ui'
 
 import md5 from 'js-md5';
 let tool = {};
+Object.assign(tool, tm);
 tool.md5 = md5;
 tool.init = function () {
     source.status = 'connecting';
@@ -22,13 +24,13 @@ tool.init = function () {
 
 tool.toLogin = function () {
 
-    source.login.remove = false;
-    source.login.show = true;
-    // source.login.user = {
-    //     name: "张三",
-    //     avatar: "static/logo.png",
-    //     avatarUrl: source.url + "static/logo.png",
-    // }
+    // source.login.remove = false;
+    // source.login.show = true;
+    source.login.user = {
+        name: "张三",
+        avatar: "static/logo.png",
+        avatarUrl: source.url + "static/logo.png",
+    }
 };
 
 tool.toLogout = function () {
