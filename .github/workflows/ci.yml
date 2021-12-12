@@ -17,6 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # 读取发布版本
+      - run: export TEAMIDE_RELEASE_VERSION=`head -1 RELEASE.version`
+
       # 打包构建 html
       - name: use Node.js 10
         uses: actions/setup-node@v1
@@ -25,16 +28,16 @@ jobs:
       # npm install
       # - run: cd html && npm install && npm run build
 
-      # 打包静态资源
-      # - run: go get -u github.com/jteeuwen/go-bindata/...
-      # - run: cd html/dist && $GOPATH/bin/go-bindata -pkg web -o ../../server/web/html.go ./...
-
-      - run: export TEAMIDE_RELEASE_VERSION=`head -1 RELEASE.version`
       # 打包构建 Server
       - name: Build Server
         uses: actions/setup-go@v2
         with:
           go-version: '^1.17'
+
+      # 打包静态资源
+      - run: go get -u github.com/jteeuwen/go-bindata/...
+      - run: cd html/dist && $GOPATH/bin/go-bindata -pkg web -o ../../server/web/html.go ./...
+
       # 打包Linux
       - run: cd server && export GOARCH=amd64 && export GOOS=linux && go build -o ../release/teamide-linux-x64/server
       - run: cp -rf server/conf release/teamide-linux-x64/
