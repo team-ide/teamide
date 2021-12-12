@@ -64,6 +64,7 @@ jobs:
         id: release_body
         uses: juliangruber/read-file-action@v1
         with:
+          path: ./RELEASE.md
 
       # 发布Docker
       - name: Publish to Docker Repository
