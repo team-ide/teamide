@@ -53,16 +53,6 @@ jobs:
       - run: cp -rf server/conf release/teamide-windows-x64/
       - run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
-      # 发布Docker
-      # - name: Publish to Docker Repository
-      #   uses: elgohr/Publish-Docker-Github-Action@master
-      #   env:
-      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      #   with:
-      #     name: teamide/server
-      #     username: ${{ secrets.DOCKER_USERNAME }}
-      #     password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Read Release Version
         id: release_version
         uses: ashley-taylor/read-json-property-action@v1.0
@@ -74,7 +64,18 @@ jobs:
         id: release_body
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./RELEASE.md
+
+      # 发布Docker
+      - name: Publish to Docker Repository
+        uses: elgohr/Publish-Docker-Github-Action@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        with:
+          name: teamide/server:v${{steps.release_version.outputs.value}}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       # 发布
       - name: Create Release
         id: create_release
