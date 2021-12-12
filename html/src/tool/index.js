@@ -20,6 +20,21 @@ tool.init = function () {
     })
 };
 
+tool.toLogin = function () {
+
+    source.login.remove = false;
+    source.login.show = true;
+    // source.login.user = {
+    //     name: "张三",
+    //     avatar: "static/logo.png",
+    //     avatarUrl: source.url + "static/logo.png",
+    // }
+};
+
+tool.toLogout = function () {
+    source.login.user = null;
+};
+
 tool.formatDateByTime = function (time, format) {
     if (time == null || time <= 0) {
         return "";

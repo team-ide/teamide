@@ -98,4 +98,9 @@ body {
   height: 100%;
   width: 100%;
 }
+*,
+:after,
+:before {
+  box-sizing: border-box;
+}
 </style>
