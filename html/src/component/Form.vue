@@ -24,10 +24,11 @@
           }}</b-form-invalid-feedback>
         </b-form-group>
       </template>
-      <b-button v-if="saveShow" variant="primary" @click="doSave">
-        {{ saveText }}
-      </b-button>
     </template>
+    <slot></slot>
+    <b-button v-if="_saveShow" variant="primary" @click="doSave">
+      {{ saveText || "保存" }}
+    </b-button>
   </b-form>
 </template>
 
@@ -35,17 +36,21 @@
 <script>
 export default {
   components: {},
-  props: ["source", "form"],
+  props: ["source", "form", "formData", "saveShow", "saveText"],
   data() {
     return {
-      formData: null,
-      saveText: "保存",
-      saveShow: true,
       key: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
-  computed: {},
+  computed: {
+    _saveShow() {
+      if (this.saveShow == undefined || this.saveShow == null) {
+        return true;
+      }
+      return this.saveShow;
+    },
+  },
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
@@ -55,8 +60,6 @@ export default {
       });
     },
     init() {
-      let formData = this.form.newDefaultData();
-      this.formData = formData;
       this.key = this.tool.getNumber();
     },
   },

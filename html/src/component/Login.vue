@@ -1,35 +1,67 @@
 <template>
-  <div class="login-page">
-    <div class="login-box bg-cyan-6 pd-20">
-      <div class="login-left ">
-        <h1 class="pdtb-10 pdlr-20">Team IDE</h1>
-        <hr />
-        <p class="ft-16 pdtb-10 pdlr-20">
+  <div class="login-page bg-grey-8">
+    <div class="login-box bg-cyan pd-20">
+      <div class="login-left">
+        <div class="ft-25 pdtb-10 pdlr-20">Team IDE</div>
+        <p class="ft-15 ft-16 pdtb-5 pdlr-20">
           <span class="pdlr-5">团队协作</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">工作报告</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">高效</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">安全</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">可靠</span>
         </p>
-        <h3 class="pdtb-10 pdlr-20">Toolbox</h3>
-        <p class="ft-16 pdtb-10 pdlr-20">
+        <hr />
+        <div class="ft-25 pdtb-10 pdlr-20">Toolbox</div>
+        <p class="ft-15 pdtb-5 pdlr-20">
           <span class="pdlr-5">Redis</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Mysql</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Zookeeper</span>
-          <br/>
+          <br />
           <span class="pdlr-5">Elasticsearch</span>
-          <span class="pdlr-5">·</span>
+          <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Kafka</span>
         </p>
       </div>
       <div class="login-right">
-        <Form v-if="loginForm != null" :form="loginForm" class="pd-10"></Form>
+        <Form
+          v-if="loginForm != null"
+          :form="loginForm"
+          :formData="loginData"
+          :saveShow="false"
+          class="pd-10"
+        >
+          <b-form-group>
+            <b-form-checkbox
+              v-model="rememberPassword"
+              :value="true"
+              class="float-left mgr-20"
+            >
+              记住密码
+            </b-form-checkbox>
+            <b-form-checkbox
+              v-model="autoLogin"
+              :value="true"
+              class="float-left mgr-20"
+            >
+              自动登录
+            </b-form-checkbox>
+          </b-form-group>
+          <div class="pdtb-10">
+            <div class="tm-btn bg-lime tm-btn-block" @click="doLogin">登录</div>
+          </div>
+          <div class="pdtb-10 text-right ft-13">
+            没有账号？
+            <div class="tm-link color-orange mgt--1" @click="tool.toRegister()">
+              立即注册
+            </div>
+          </div>
+        </Form>
       </div>
     </div>
   </div>
@@ -42,15 +74,36 @@ export default {
   data() {
     return {
       loginForm: null,
+      loginData: null,
+      rememberPassword: false,
+      autoLogin: false,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    rememberPassword() {
+      if (!this.rememberPassword) {
+        this.autoLogin = false;
+      }
+    },
+    autoLogin() {
+      if (this.autoLogin) {
+        this.rememberPassword = true;
+      }
+    },
+  },
   methods: {
+    doLogin() {
+      this.loginForm.validate(this.loginData).then((res) => {
+        console.log(res);
+      });
+    },
     init() {
       this.loginForm = this.form.build(this.form.login);
+      let loginData = this.loginForm.newDefaultData();
+      this.loginData = loginData;
     },
   },
   // 在实例创建完成后被立即调用
@@ -85,6 +138,7 @@ export default {
   width: 400px;
   height: 100%;
   float: left;
+  font-weight: 700;
 }
 .login-right {
   width: 400px;
