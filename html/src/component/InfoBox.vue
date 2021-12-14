@@ -45,8 +45,4 @@ export default {
 </script>
 
 <style>
-.login-box {
-  width: 100%;
-  height: 100%;
-}
 </style>

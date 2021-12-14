@@ -21,4 +21,7 @@ Vue.component('Workspace', Workspace);
 import Console from './console/Console.vue'
 Vue.component('Console', Console);
 
+import Form from './Form.vue'
+Vue.component('Form', Form);
+
 export default {};
