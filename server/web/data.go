@@ -18,7 +18,7 @@ type DataResponse struct {
 	Api string `json:"api"`
 }
 
-func apiData(path string, c *gin.Context) {
+func apiData(path string, requestBean *base.RequestBean, c *gin.Context) {
 	request := &DataRequest{}
 	if !base.RequestJSON(request, c) {
 		return

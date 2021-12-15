@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"server/base"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
 )
 
@@ -52,4 +53,11 @@ func GetSessionBean(r *http.Request) *base.SessionBean {
 		res = &base.SessionBean{}
 	}
 	return res
+}
+
+func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	res = request.Session
+
+	return
 }

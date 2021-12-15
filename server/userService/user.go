@@ -260,7 +260,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 		return
 	}
 	if exist {
-		err = base.NewValidateError("用户:", user.Name, "，账号信息已存在!")
+		err = base.NewValidateError("用户:", user.Name, "，账号或邮箱信息已存在!")
 		return
 	}
 	var userId int64
@@ -272,6 +272,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 	user.EnabledState = 1
 	user.ActivedState = 2
 	user.LockedState = 2
+	user.ServerId = base.GetServerId()
 	user.CreateTime = base.Now()
 
 	err = component.DB.InsertBean(base.TABLE_USER, *user)
@@ -305,6 +306,33 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 
 	return
 }
+
+// 查询用户密码
+func UserPasswordCheck(userId int64, password string) (check bool, err error) {
+	sql := "SELECT * FROM " + base.TABLE_USER_PASSWORD + " WHERE serverId=? AND userId=? "
+	params := []interface{}{base.GetServerId(), userId}
+
+	sqlParam := base.NewSqlParam(sql, params)
+
+	var res []interface{}
+	res, err = component.DB.Query(sqlParam, base.NewUserPasswordEntityInterface)
+
+	if err != nil {
+		return
+	}
+	if len(res) == 0 {
+		return
+	}
+	userPassword := res[0].(*base.UserPasswordEntity)
+
+	pwd := base.EncodePassword(userPassword.Salt, password)
+	if pwd != userPassword.Password {
+		return
+	}
+	check = true
+	return
+}
+
 func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
 	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
@@ -414,7 +442,7 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
 func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
-	params := []interface{}{base.GetServerId(), account, account, account}
+	params := []interface{}{base.GetServerId(), account, account}
 
 	sqlParam := base.NewSqlParam(sql, params)
 

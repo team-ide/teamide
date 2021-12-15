@@ -1,6 +1,6 @@
 <template>
-  <div class="login-page bg-grey-8">
-    <div class="login-box bg-cyan pd-20">
+  <div class="login-page bg-teal-9">
+    <div class="login-box bg-teal-5 pd-20">
       <div class="login-left">
         <div class="ft-25 pdtb-10 pdlr-20">Team IDE</div>
         <p class="ft-15 ft-16 pdtb-5 pdlr-20">
@@ -53,7 +53,13 @@
             </b-form-checkbox>
           </b-form-group>
           <div class="pdtb-10">
-            <div class="tm-btn bg-lime tm-btn-block" @click="doLogin">登录</div>
+            <div
+              class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
+              :class="{ 'tm-disabled': loginBtnDisabled }"
+              @click="doLogin"
+            >
+              登&nbsp;&nbsp;录
+            </div>
           </div>
           <div class="pdtb-10 text-right ft-13">
             没有账号？
@@ -77,6 +83,7 @@ export default {
       loginData: null,
       rememberPassword: false,
       autoLogin: false,
+      loginBtnDisabled: false,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -96,8 +103,36 @@ export default {
   },
   methods: {
     doLogin() {
+      this.loginBtnDisabled = true;
       this.loginForm.validate(this.loginData).then((res) => {
-        console.log(res);
+        if (res.valid) {
+          let param = {};
+          Object.assign(param, this.loginData);
+          let aesPassword = this.tool.aesEncrypt(param.password);
+          console.log("加密后:" + aesPassword);
+          let password = this.tool.aesDecrypt(aesPassword);
+          console.log("解密后:" + password);
+          param.password = aesPassword;
+          this.server
+            .login(param)
+            .then((res) => {
+              this.loginBtnDisabled = false;
+              if (res.code == 0) {
+                this.tool.success("登录成功！");
+                this.tool.initSession();
+                setTimeout(() => {
+                  this.tool.hideLogin();
+                }, 300);
+              } else {
+                this.tool.error(res.msg);
+              }
+            })
+            .catch((e) => {
+              this.loginBtnDisabled = false;
+            });
+        } else {
+          this.loginBtnDisabled = false;
+        }
       });
     },
     init() {
@@ -122,7 +157,7 @@ export default {
   position: fixed;
   left: 0px;
   top: 0px;
-  z-index: 1000000;
+  z-index: 100;
   background: #fff;
 }
 .login-box {

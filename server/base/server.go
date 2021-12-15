@@ -2,9 +2,6 @@ package base
 
 import (
 	"bufio"
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -96,16 +93,27 @@ func init() {
 	Logger.Info("服务器信息加载成功!")
 
 	str := "测试加解密字段"
-	str1 := Encrypt(str)
+	str1 := AesEncryptCBC(str)
 	if str1 == "" || str1 == str {
 		panic("加密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器加密验证成功!")
-	str2 := Decrypt(str1)
+	str2 := AesDecryptCBC(str1)
+	if str2 == "" || str2 != str {
+		panic("解密异常，请确认服务器信息是否正确!")
+	}
+
+	str1 = AesEncryptECB(str)
+	if str1 == "" || str1 == str {
+		panic("加密异常，请确认服务器信息是否正确!")
+	}
+	Logger.Info("服务器加密验证成功!")
+	str2 = AesDecryptECB(str1)
 	if str2 == "" || str2 != str {
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器解密验证成功!")
+
 }
 
 func IsNum(s string) bool {
@@ -129,35 +137,91 @@ func GetBaseID() (id int64) {
 }
 
 //AES加密,CBC
-func Encrypt(origData string) (res string) {
+func AesEncryptCBC(origData string) (res string) {
 	if serverInfo == nil || serverInfo.Key == "" {
 		Logger.Error("加密失败，证书信息不存在!")
 		return
 	}
-	bs, err := AESEncrypt([]byte(origData), []byte(serverInfo.Key))
-	if err != nil {
-		Logger.Error("加密失败!")
-		return
-	}
-
-	// 经过一次base64 否则 直接转字符串乱码
-	res = base64.URLEncoding.EncodeToString(bs)
-	return
+	return AesEncryptCBCByKey(origData, serverInfo.Key)
 }
 
-//AES解密
-func Decrypt(crypted string) (res string) {
+//AES解密,CBC
+func AesDecryptCBC(crypted string) (res string) {
 	if serverInfo == nil || serverInfo.Key == "" {
 		Logger.Error("解密失败，证书信息不存在!")
 		return
 	}
+	return AesDecryptCBCByKey(crypted, serverInfo.Key)
+}
+
+//AES加密,ECB
+func AesEncryptECB(origData string) (res string) {
+	if serverInfo == nil || serverInfo.Key == "" {
+		Logger.Error("加密失败，证书信息不存在!")
+		return
+	}
+	return AesEncryptECBByKey(origData, serverInfo.Key)
+}
+
+//AES解密,ECB
+func AesDecryptECB(crypted string) (res string) {
+	if serverInfo == nil || serverInfo.Key == "" {
+		Logger.Error("解密失败，证书信息不存在!")
+		return
+	}
+	return AesDecryptECBByKey(crypted, serverInfo.Key)
+}
+
+//AES加密,CBC
+func AesEncryptCBCByKey(origData string, key string) (res string) {
+	bs, err := AesCBCEncrypt([]byte(origData), []byte(key))
+	if err != nil {
+		Logger.Error("加密失败!")
+		return
+	}
 	// 经过一次base64 否则 直接转字符串乱码
-	bs, err := base64.URLEncoding.DecodeString(crypted)
+	res = base64.StdEncoding.EncodeToString(bs)
+	return
+}
+
+//AES解密,CBC
+func AesDecryptCBCByKey(crypted string, key string) (res string) {
+	// 经过一次base64 否则 直接转字符串乱码
+	bs, err := base64.StdEncoding.DecodeString(crypted)
 	if err != nil {
 		Logger.Error("解密失败!")
 		return
 	}
-	bs, err = AESDecrypt(bs, []byte(serverInfo.Key))
+	bs, err = AesCBCDecrypt(bs, []byte(key))
+	if err != nil {
+		Logger.Error("解密失败!")
+		return
+	}
+	res = string(bs)
+	return
+}
+
+//AES加密,ECB
+func AesEncryptECBByKey(origData string, key string) (res string) {
+	bs, err := AesECBEncrypt([]byte(origData), []byte(key))
+	if err != nil {
+		Logger.Error("加密失败!")
+		return
+	}
+	// 经过一次base64 否则 直接转字符串乱码
+	res = base64.StdEncoding.EncodeToString(bs)
+	return
+}
+
+//AES解密,ECB
+func AesDecryptECBByKey(crypted string, key string) (res string) {
+	// 经过一次base64 否则 直接转字符串乱码
+	bs, err := base64.StdEncoding.DecodeString(crypted)
+	if err != nil {
+		Logger.Error("解密失败!")
+		return
+	}
+	bs, err = AesECBDecrypt(bs, []byte(key))
 	if err != nil {
 		Logger.Error("解密失败!")
 		return
@@ -178,49 +242,8 @@ func GetCerInfoByCode(code string) (info *CerInfo) {
 		bs = append(bs, b)
 	}
 
-	bs, _ = AESDecrypt(bs, []byte(CerSecret))
+	bs, _ = AesCBCDecrypt(bs, []byte(CerSecret))
 	info = &CerInfo{}
 	json.Unmarshal(bs, info)
 	return
-}
-
-func pkcs7Padding(ciphertext []byte, blockSize int) []byte {
-	padding := blockSize - len(ciphertext)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
-}
-
-func pkcs7UnPadding(origData []byte) []byte {
-	length := len(origData)
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
-}
-
-//AES加密,CBC
-func AESEncrypt(origData, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	blockSize := block.BlockSize()
-	origData = pkcs7Padding(origData, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
-	crypted := make([]byte, len(origData))
-	blockMode.CryptBlocks(crypted, origData)
-
-	return crypted, nil
-}
-
-//AES解密
-func AESDecrypt(crypted, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
-	origData := make([]byte, len(crypted))
-	blockMode.CryptBlocks(origData, crypted)
-	origData = pkcs7UnPadding(origData)
-	return origData, nil
 }

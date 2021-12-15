@@ -313,7 +313,9 @@ func GetFieldTypeValue(t reflect.Type, v reflect.Value) interface{} {
 	case "int", "int8", "int16", "int32", "int64":
 		value = v.Int()
 	default:
-		value = v.Interface()
+		if !v.IsNil() {
+			value = v.Interface()
+		}
 	}
 	return value
 }
@@ -382,12 +384,12 @@ func BeanToMap(bean interface{}) (res map[string]interface{}) {
 
 	fieldCount := refType.NumField() // field count
 	for i := 0; i < fieldCount; i++ {
-		fieldType := refType.Field(i)   // field type
-		fieldValue := refValue.Field(i) // field vlaue
+		fieldType := refType.Field(i) // field type
 		jsonName := GetJsonNameByType(fieldType)
 		if jsonName == "" {
 			continue
 		}
+		fieldValue := refValue.Field(i) // field vlaue
 		value := GetFieldTypeValue(fieldType.Type, fieldValue)
 		switch fieldType.Type.Name() {
 		case "string", "int", "int8", "int16", "int32", "int64", "float32", "float64", "bool", "Time", "time.Time":

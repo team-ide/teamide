@@ -40,7 +40,7 @@ func InstallStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	}
 	detail := base.ToJSON(detailInfo)
 	// 加密detail
-	detail = base.Encrypt(detail)
+	detail = base.AesEncryptCBC(detail)
 	sqlParam := base.SqlParam{
 		Sql:    "INSERT INTO  " + base.TABLE_INSTALL + " (module, stage, detail, createTime) VALUES (?, ?, ?, ?) ",
 		Params: []interface{}{info.Module, stage.Stage, detail, base.Now()},

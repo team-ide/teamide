@@ -4,15 +4,19 @@ import source from "@/source/index.js";
 import tm from 'teamide-ui'
 
 import md5 from 'js-md5';
+import CryptoJS from '@/tool/CryptoJS.js';
 let tool = {};
 Object.assign(tool, tm);
 tool.md5 = md5;
+
 tool.init = function () {
     source.status = 'connecting';
     server.data().then(res => {
         if (res.code == 0) {
             let data = res.data;
-            source.init(data)
+            source.init(data);
+
+            tool.initSession();
         } else {
             tool.error(res.msg);
             source.init();
@@ -21,9 +25,22 @@ tool.init = function () {
         source.init();
     })
 };
+tool.initSession = function () {
+    server.session().then(res => {
+        if (res.code == 0) {
+            let data = res.data;
+            source.initSession(data)
+        } else {
+            tool.error(res.msg);
+            source.initSession();
+        }
+    }).catch(() => {
+        source.initSession();
+    })
+};
 
 tool.toLogin = function () {
-
+    tool.hideRegister();
     source.login.remove = false;
     source.login.show = true;
     // source.login.user = {
@@ -33,10 +50,88 @@ tool.toLogin = function () {
     // }
 };
 
-tool.toLogout = function () {
-    source.login.user = null;
+tool.hideLogin = function () {
+    source.login.remove = true;
+    source.login.show = false;
 };
 
+tool.toRegister = function () {
+    tool.hideLogin();
+    source.register.remove = false;
+    source.register.show = true;
+};
+
+tool.hideRegister = function () {
+    source.register.remove = true;
+    source.register.show = false;
+};
+
+tool.toLogout = function () {
+    server.logout().then(res => {
+        if (res.code == 0) {
+            source.login.user = null;
+        }
+    }).catch(() => {
+    })
+};
+
+
+
+tool.byteToString = function (arr) {
+    if (typeof arr === 'string') {
+        return arr;
+    }
+    var str = '',
+        _arr = arr;
+    for (var i = 0; i < _arr.length; i++) {
+        var one = _arr[i].toString(2),
+            v = one.match(/^1+?(?=0)/);
+        if (v && one.length == 8) {
+            var bytesLength = v[0].length;
+            var store = _arr[i].toString(2).slice(7 - bytesLength);
+            for (var st = 1; st < bytesLength; st++) {
+                store += _arr[st + i].toString(2).slice(2);
+            }
+            str += String.fromCharCode(parseInt(store, 2));
+            i += bytesLength - 1;
+        } else {
+            str += String.fromCharCode(_arr[i]);
+        }
+    }
+    return str;
+}
+
+tool.stringToByte = function (str) {
+    var bytes = new Array();
+    var len, c;
+    len = str.length;
+    for (var i = 0; i < len; i++) {
+        c = str.charCodeAt(i);
+        if (c >= 0x010000 && c <= 0x10FFFF) {
+            bytes.push(((c >> 18) & 0x07) | 0xF0);
+            bytes.push(((c >> 12) & 0x3F) | 0x80);
+            bytes.push(((c >> 6) & 0x3F) | 0x80);
+            bytes.push((c & 0x3F) | 0x80);
+        } else if (c >= 0x000800 && c <= 0x00FFFF) {
+            bytes.push(((c >> 12) & 0x0F) | 0xE0);
+            bytes.push(((c >> 6) & 0x3F) | 0x80);
+            bytes.push((c & 0x3F) | 0x80);
+        } else if (c >= 0x000080 && c <= 0x0007FF) {
+            bytes.push(((c >> 6) & 0x1F) | 0xC0);
+            bytes.push((c & 0x3F) | 0x80);
+        } else {
+            bytes.push(c & 0xFF);
+        }
+    }
+    return bytes;
+}
+let k = tool.byteToString([81, 53, 54, 104, 70, 65, 97, 117, 87, 107, 49, 56, 71, 121, 50, 105]);
+tool.aesEncrypt = function (str) {
+    return CryptoJS.encrypt(str, k);
+};
+tool.aesDecrypt = function (str) {
+    return CryptoJS.decrypt(str, k);
+};
 tool.formatDateByTime = function (time, format) {
     if (time == null || time <= 0) {
         return "";

@@ -10,6 +10,10 @@ var (
 	ZOOKEEPER_PREFIX string = config.Config.Zookeeper.Namespace
 )
 
+const (
+	HTTP_AES_KEY string = "Q56hFAauWk18Gy2i"
+)
+
 type IDType int8
 
 // ID类型
