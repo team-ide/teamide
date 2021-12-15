@@ -5,7 +5,7 @@
       :type="source.header.type"
       :variant="source.header.variant"
     >
-      <b-navbar-brand :href="source.url" tag="h1" class="mb-0">
+      <b-navbar-brand :href="source.url" class="ft-20 ft-900 color-grey">
         {{ source.header.title }}
       </b-navbar-brand>
 
@@ -17,7 +17,7 @@
             <b-nav-item
               :key="index"
               @click="$router.push(`${one.link}`)"
-              :active="$route.path == `${one.link}`"
+              :active="$route.path == `${one.link}` || (one.match && one.match($route.path))"
             >
               {{ one.name }}
             </b-nav-item>

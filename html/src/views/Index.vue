@@ -1,8 +1,5 @@
 <template>
-  <div>
-    <Form v-if="loginForm != null" :form="loginForm" class="pd-10"></Form>
-    <Form v-if="registerForm != null" :form="registerForm" class="pd-10"></Form>
-  </div>
+  <div></div>
 </template>
 
 <script>
@@ -10,10 +7,7 @@ export default {
   components: {},
   props: ["source"],
   data() {
-    return {
-      loginForm: null,
-      registerForm: null,
-    };
+    return {};
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
@@ -23,10 +17,7 @@ export default {
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {
-    this.loginForm = this.form.build(this.form.login);
-    this.registerForm = this.form.build(this.form.register);
-  },
+  mounted() {},
 };
 </script>
 

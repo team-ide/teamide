@@ -29,7 +29,12 @@ source.header = {
         {
             name: "系统管理",
             icon: "home",
-            link: "/manager",
+            link: "/manage",
+            match(path){
+                if(path=='/manage' || path.indexOf('/manage/') == 0){
+                    return true;
+                }
+            },
         },
     ],
 }

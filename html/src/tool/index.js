@@ -39,6 +39,12 @@ tool.initSession = function () {
     })
 };
 
+tool.hasFrame = function (path) {
+    if (path == '/') {
+        return false;
+    }
+    return true;
+};
 tool.toLogin = function () {
     tool.hideRegister();
     source.login.remove = false;

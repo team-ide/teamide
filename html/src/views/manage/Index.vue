@@ -1,18 +1,13 @@
 <template>
-  <div class="frame-box">
-    <Header :source="source"></Header>
-    <Body :source="source"></Body>
-    <Footer :source="source"></Footer>
+  <div class="page-box">
+    <div class="page-header">这是页头</div>
+    <div class="page-body">这是页体</div>
   </div>
 </template>
 
 <script>
-import Header from "@/views/frame/Header.vue";
-import Body from "@/views/frame/Body.vue";
-import Footer from "@/views/frame/Footer.vue";
-
 export default {
-  components: { Header, Body, Footer },
+  components: {},
   props: ["source"],
   data() {
     return {};
@@ -30,8 +25,4 @@ export default {
 </script>
 
 <style>
-.frame-box {
-  width: 100%;
-  height: 100%;
-}
 </style>
