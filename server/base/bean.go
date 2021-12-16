@@ -43,24 +43,6 @@ type UserEnterpriseOrgBean struct {
 	Position string `json:"position"`
 }
 
-type RequestBean struct {
-	Session *SessionBean   `json:"session"`
-	User    *LoginUserBean `json:"user"`
-}
-
-type SessionBean struct {
-	User *LoginUserBean `json:"user"`
-}
-
-type LoginUserBean struct {
-	ServerId int64  `json:"serverId"`
-	UserId   int64  `json:"userId"`
-	Name     string `json:"name"`
-	Avatar   string `json:"avatar"`
-	Account  string `json:"account"`
-	Email    string `json:"email"`
-}
-
 type InstallInfo struct {
 	Module string              `json:"module"`
 	Stages []*InstallStageInfo `json:"stages"`

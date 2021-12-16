@@ -43,6 +43,7 @@ type RedisService interface {
 	GetString(key string) (value string, err error)
 	GetInt64(key string) (value int64, err error)
 	IncrBy(key string, num int64) (value int64, err error)
+	Expire(key string, second int64) (value int, err error)
 	Set(key string, value string) (err error)
 	SetInt64(key string, value int64) (err error)
 	Sadd(key string, value string) (err error)

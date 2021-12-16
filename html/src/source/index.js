@@ -1,3 +1,5 @@
+import tool from "@/tool/index.js";
+
 let source = {};
 
 source.status = null;
@@ -30,8 +32,8 @@ source.header = {
             name: "系统管理",
             icon: "home",
             link: "/manage",
-            match(path){
-                if(path=='/manage' || path.indexOf('/manage/') == 0){
+            match(path) {
+                if (path == '/manage' || path.indexOf('/manage/') == 0) {
                     return true;
                 }
             },
@@ -122,7 +124,7 @@ source.enum = {
 source.log = {
 };
 
-
+source.powers = [];
 source.init = (data) => {
     if (data != null) {
         source.url = data.url;
@@ -135,11 +137,26 @@ source.init = (data) => {
 source.initSession = (data) => {
     if (data != null) {
         source.login.user = data.user;
+        source.powers = data.powers || [];
     } else {
         source.login.user = null;
+        source.powers = [];
     }
     source.status = "connected";
     source.ready = true;
+}
+
+source.hasPower = function (action) {
+    action = '' + action;
+    source.powers = source.powers || [];
+    let find = false;
+    for (let i = 0; i < source.powers.length; i++) {
+        if (source.powers[i].toLowerCase() == action.toLowerCase()) {
+            find = true;
+            break;
+        }
+    }
+    return find;
 }
 
 export default source;

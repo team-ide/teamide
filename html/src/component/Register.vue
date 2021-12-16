@@ -38,6 +38,7 @@
         >
           <div class="pdtb-10">
             <div
+              v-if="source.hasPower('register')"
               class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
               :class="{ 'tm-disabled': registerBtnDisabled }"
               @click="doRegister"
@@ -45,7 +46,7 @@
               注&nbsp;&nbsp;册
             </div>
           </div>
-          <div class="pdtb-10 text-right ft-13">
+          <div v-if="source.hasPower('login')" class="pdtb-10 text-right ft-13">
             已有账号？
             <div class="tm-link color-orange mgt--1" @click="tool.toLogin()">
               立即登录
@@ -80,9 +81,6 @@ export default {
           let param = {};
           Object.assign(param, this.registerData);
           let aesPassword = this.tool.aesEncrypt(param.password);
-          console.log("加密后:" + aesPassword);
-          let password = this.tool.aesDecrypt(aesPassword);
-          console.log("解密后:" + password);
           param.password = aesPassword;
           this.server
             .register(param)

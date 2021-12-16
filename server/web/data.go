@@ -18,7 +18,8 @@ type DataResponse struct {
 	Api string `json:"api"`
 }
 
-func apiData(path string, requestBean *base.RequestBean, c *gin.Context) {
+func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	path := requestBean.Path[0:strings.LastIndex(requestBean.Path, "api/")]
 	request := &DataRequest{}
 	if !base.RequestJSON(request, c) {
 		return
@@ -39,5 +40,7 @@ func apiData(path string, requestBean *base.RequestBean, c *gin.Context) {
 
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
-	base.ResponseJSON(response, nil, c)
+
+	res = response
+	return
 }

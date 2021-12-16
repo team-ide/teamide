@@ -157,6 +157,21 @@ func (service *RedisPoolService) IncrBy(key string, num int64) (value int64, err
 	return
 }
 
+func (service *RedisPoolService) Expire(key string, second int64) (value int, err error) {
+	client := service.pool.Get()
+	defer client.Close()
+	var reply interface{}
+	reply, err = client.Do("expire", key, second*1000)
+	if err != nil {
+		return
+	}
+	if reply != nil {
+		value, err = redigo.Int(reply, err)
+	}
+
+	return
+}
+
 func (service *RedisPoolService) Set(key string, value string) (err error) {
 
 	client := service.pool.Get()

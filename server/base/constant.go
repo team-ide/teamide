@@ -41,3 +41,8 @@ func GetUserMetadataLockRedisKey(userId int64) (key string) {
 	key = fmt.Sprint(GetRedisKey(), ":", "user:", userId, ":metadata:lock")
 	return
 }
+
+func GeAccessTokenKey(accessToken string) (key string) {
+	key = fmt.Sprint(GetRedisKey(), ":", "access:token:", accessToken)
+	return
+}

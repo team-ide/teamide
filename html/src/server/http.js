@@ -12,6 +12,11 @@ axiosInstance.interceptors.request.use(function (config) {
 	// 在发送请求之前做些什么
 	config = config || {};
 	config.headers = config.headers || {};
+	let JWT = tool.getJWT();
+	if (tool.isNotEmpty(JWT)) {
+		tool.setJWT(JWT);
+		config.headers['JWT'] = JWT;
+	}
 	return config;
 }, function (error) {
 	// 对请求错误做些什么
@@ -39,7 +44,7 @@ axiosInstance.interceptors.response.use(function (response) {
 				return response.data;
 			case "100":
 				tool.error('暂无登录信息，请先登录！');
-				source.LOGIN_USER = null;
+				source.login.user = null;
 				return response.data;
 			case "101":
 				tool.error('暂无权限执行此次操作！');

@@ -37,20 +37,17 @@ func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err e
 		err = base.NewValidateError("用户名或密码错误!")
 		return
 	}
-	loginUser := &base.LoginUserBean{
+	jwt := &base.JWTBean{
 		UserId:   user.UserId,
 		Name:     user.Name,
-		Avatar:   user.Avatar,
-		Account:  user.Account,
-		Email:    user.Email,
 		ServerId: user.ServerId,
+		Time:     base.GetNowTime(),
 	}
-	SetSessionUser(c.Writer, c.Request, loginUser)
+	res = getJWTStr(jwt)
 	return
 }
 
 func apiLogout(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	SetSessionUser(c.Writer, c.Request, nil)
 	return
 }

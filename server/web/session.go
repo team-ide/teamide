@@ -1,63 +1,64 @@
 package web
 
 import (
-	"net/http"
 	"server/base"
+	"server/userService"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/sessions"
 )
 
 const (
-	session_store    = "team-ide-session"
-	session_key      = "team-ide"
-	session_bean_key = "team-ide-bean"
+	JWT_key = "JWT"
 )
 
-var sessionStore = sessions.NewCookieStore([]byte(session_store))
-
-func init() {
-	sessionStore.MaxAge(60 * 60 * 2)
-}
-
-func SetSessionUser(w http.ResponseWriter, r *http.Request, user *base.LoginUserBean) error {
-	param := GetSessionBean(r)
-	param.User = user
-	return SetSessionBean(w, r, param)
-}
-
-func SetSessionBean(w http.ResponseWriter, r *http.Request, sessionBean *base.SessionBean) error {
-	var err error
-	session, _ := sessionStore.Get(r, session_key)
-	value := ""
-	if sessionBean != nil {
-		var by []byte
-		by, err = base.JSON.Marshal(sessionBean)
-		if err != nil {
-			return err
-		}
-		value = string(by)
+func getJWT(c *gin.Context) *base.JWTBean {
+	jwt := c.GetHeader(JWT_key)
+	if jwt == "" {
+		return nil
 	}
-	session.Values[session_bean_key] = value
-	err = session.Save(r, w)
-	return err
-}
-
-func GetSessionBean(r *http.Request) *base.SessionBean {
-	session, _ := sessionStore.Get(r, session_key)
-	value, ok := session.Values[session_bean_key]
-	res := &base.SessionBean{}
-	if ok && value != "" {
-		base.JSON.Unmarshal([]byte(value.(string)), res)
-	} else {
-		res = &base.SessionBean{}
+	jwt = base.AesDecryptCBC(jwt)
+	if jwt == "" {
+		return nil
 	}
+	res := &base.JWTBean{}
+	base.JSON.Unmarshal([]byte(jwt), res)
 	return res
 }
 
+func getJWTStr(jwt *base.JWTBean) string {
+	if jwt == nil {
+		return ""
+	}
+	jwtStr := base.ToJSON(jwt)
+	jwtStr = base.AesEncryptCBC(jwtStr)
+	if jwtStr == "" {
+		return ""
+	}
+	return jwtStr
+}
+
+type SessionResponse struct {
+	User   *base.UserEntity `json:"user"`
+	Powers []string         `json:"powers"`
+}
+
 func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	response := &SessionResponse{}
+	var userId int64 = 0
+	if request.JWT != nil {
+		userId = request.JWT.UserId
+	}
+	if userId > 0 {
+		var user *base.UserEntity
+		user, err = userService.UserGet(request.JWT.UserId)
+		if err != nil {
+			return
+		}
+		response.User = user
+	}
 
-	res = request.Session
+	response.Powers = getPowersByUserId(userId)
 
+	res = response
 	return
 }

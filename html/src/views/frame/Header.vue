@@ -17,7 +17,10 @@
             <b-nav-item
               :key="index"
               @click="$router.push(`${one.link}`)"
-              :active="$route.path == `${one.link}` || (one.match && one.match($route.path))"
+              :active="
+                $route.path == `${one.link}` ||
+                (one.match && one.match($route.path))
+              "
             >
               {{ one.name }}
             </b-nav-item>
@@ -49,7 +52,9 @@
           </b-nav-item-dropdown>
 
           <template v-if="source.login.user == null">
-            <b-nav-item @click="tool.toLogin()"> 登录 </b-nav-item>
+            <b-nav-item v-if="source.hasPower('login')" @click="tool.toLogin()">
+              登录
+            </b-nav-item>
           </template>
           <template v-else>
             <b-nav-item-dropdown right class="user-dropdown">
@@ -143,6 +148,7 @@
                       <b-card class="bd-0 text-center">
                         <b-card-text>
                           <div
+                            v-if="source.hasPower('logout')"
                             @click="tool.toLogout()"
                             class="tm-link color-orange"
                           >

@@ -44,11 +44,8 @@ func bindApi(gouterGroup *gin.RouterGroup) {
 
 func getRequestBean(c *gin.Context) (request *base.RequestBean) {
 	request = &base.RequestBean{}
-	sessionBean := GetSessionBean(c.Request)
-	request.Session = sessionBean
-	if sessionBean != nil {
-		request.User = sessionBean.User
-	}
+	JWT := getJWT(c)
+	request.JWT = JWT
 	return
 }
 
@@ -59,16 +56,15 @@ func doApi(path string, c *gin.Context) bool {
 		return false
 	}
 	requestBean := getRequestBean(c)
+	requestBean.Path = path
 	name := path[index+len("api/"):]
-
-	if name == "" || name == "/" {
-		apiData(path[0:index], requestBean, c)
-		return true
-	}
 
 	api := apiCache[name]
 	if api == nil {
 		return false
+	}
+	if !checkPower(api, requestBean.JWT, c) {
+		return true
 	}
 	if api.Do != nil {
 		res, err := api.Do(requestBean, c)
@@ -79,47 +75,47 @@ func doApi(path string, c *gin.Context) bool {
 	}
 	return true
 }
-func appendApi(apis []*base.ApiWorker) {
+func appendApi(apis ...*base.ApiWorker) {
 	if len(apis) == 0 {
 		return
 	}
 	for _, api := range apis {
-		if api.Api == "" {
-			panic(errors.New(fmt.Sprint("api is null.", api)))
+		if api.Power == nil {
+			panic(errors.New(fmt.Sprint("API未设置权限!", api)))
 		}
-		_, find := apiCache[api.Api]
-		if find {
-			panic(errors.New(fmt.Sprint("api [", api.Api, "] already exists.", api)))
+		if len(api.Apis) == 0 {
+			panic(errors.New(fmt.Sprint("API未设置映射路径!", api)))
 		}
-		apiCache[api.Api] = api
+		for _, apiName := range api.Apis {
+
+			_, find := apiCache[apiName]
+			if find {
+				panic(errors.New(fmt.Sprint("API映射路径[", apiName, "]已存在!", api)))
+			}
+			apiCache[apiName] = api
+		}
 	}
 }
 func cacheApi() {
 	apiCache = make(map[string]*base.ApiWorker)
 
-	apiCache["login"] = &base.ApiWorker{
-		Do: apiLogin,
-	}
-	apiCache["logout"] = &base.ApiWorker{
-		Do: apiLogout,
-	}
-	apiCache["register"] = &base.ApiWorker{
-		Do: apiRegister,
-	}
-	apiCache["session"] = &base.ApiWorker{
-		Do: apiSession,
-	}
+	appendApi(&base.ApiWorker{Apis: []string{"", "/", "data"}, Power: base.PowerData, Do: apiData})
+	appendApi(&base.ApiWorker{Apis: []string{"login"}, Power: base.PowerLogin, Do: apiLogin})
+	appendApi(&base.ApiWorker{Apis: []string{"autoLogin"}, Power: base.PowerAutoLogin, Do: apiLogin})
+	appendApi(&base.ApiWorker{Apis: []string{"logout"}, Power: base.PowerLogout, Do: apiLogout})
+	appendApi(&base.ApiWorker{Apis: []string{"register"}, Power: base.PowerRegister, Do: apiRegister})
+	appendApi(&base.ApiWorker{Apis: []string{"session"}, Power: base.PowerSession, Do: apiSession})
 
-	appendApi(idService.BindApi())
-	appendApi(userService.BindApi())
-	appendApi(wbsService.BindApi())
-	appendApi(logService.BindApi())
-	appendApi(enterpriseService.BindApi())
-	appendApi(jobService.BindApi())
-	appendApi(powerService.BindApi())
-	appendApi(settingService.BindApi())
-	appendApi(spaceService.BindApi())
-	appendApi(systemService.BindApi())
-	appendApi(messageService.BindApi())
-	appendApi(groupService.BindApi())
+	appendApi(idService.BindApi()...)
+	appendApi(userService.BindApi()...)
+	appendApi(wbsService.BindApi()...)
+	appendApi(logService.BindApi()...)
+	appendApi(enterpriseService.BindApi()...)
+	appendApi(jobService.BindApi()...)
+	appendApi(powerService.BindApi()...)
+	appendApi(settingService.BindApi()...)
+	appendApi(spaceService.BindApi()...)
+	appendApi(systemService.BindApi()...)
+	appendApi(messageService.BindApi()...)
+	appendApi(groupService.BindApi()...)
 }

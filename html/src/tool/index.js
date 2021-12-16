@@ -75,13 +75,37 @@ tool.hideRegister = function () {
 tool.toLogout = function () {
     server.logout().then(res => {
         if (res.code == 0) {
+            tool.setJWT("");
             source.login.user = null;
         }
     }).catch(() => {
     })
 };
-
-
+tool.setJWT = function (jwt) {
+    if (tool.isNotEmpty(jwt)) {
+        tool.setCookie("team-ide-jwt", jwt, 60);
+    } else {
+        tool.setCookie("team-ide-jwt", jwt, 0);
+    }
+}
+tool.getJWT = function () {
+    return tool.getCookie("team-ide-jwt");
+}
+tool.setCookie = function (cname, cvalue, exms) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exms * 60 * 1000));
+    var expires = "expires=" + d.toGMTString();
+    document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+tool.getCookie = function (cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(name) == 0) { return c.substring(name.length, c.length); }
+    }
+    return "";
+}
 
 tool.byteToString = function (arr) {
     if (typeof arr === 'string') {
