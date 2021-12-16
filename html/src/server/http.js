@@ -14,7 +14,6 @@ axiosInstance.interceptors.request.use(function (config) {
 	config.headers = config.headers || {};
 	let JWT = tool.getJWT();
 	if (tool.isNotEmpty(JWT)) {
-		tool.setJWT(JWT);
 		config.headers['JWT'] = JWT;
 	}
 	return config;

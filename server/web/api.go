@@ -75,6 +75,7 @@ func doApi(path string, c *gin.Context) bool {
 	}
 	return true
 }
+
 func appendApi(apis ...*base.ApiWorker) {
 	if len(apis) == 0 {
 		return

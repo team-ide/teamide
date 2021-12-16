@@ -25,7 +25,32 @@ tool.init = function () {
         source.init();
     })
 };
+var sessionLoadding = false;
+var refreshSessionStart = false;
+function refreshSession() {
+    function nextContinue() {
+        setTimeout(() => {
+            refreshSession();
+        }, 1000 * 60 * 10);
+    }
+    if (sessionLoadding) {
+        nextContinue();
+    } else {
+        server.session().then(res => {
+            if (res.code == 0) {
+                let data = res.data;
+                source.initSession(data)
+            } else {
+                source.initSession();
+            }
+            nextContinue();
+        }).catch(() => {
+            nextContinue();
+        })
+    }
+}
 tool.initSession = function () {
+    sessionLoadding = true;
     server.session().then(res => {
         if (res.code == 0) {
             let data = res.data;
@@ -34,9 +59,17 @@ tool.initSession = function () {
             tool.error(res.msg);
             source.initSession();
         }
+        sessionLoadding = false;
     }).catch(() => {
         source.initSession();
+        sessionLoadding = false;
     })
+    if (!refreshSessionStart) {
+        refreshSessionStart = true;
+        setTimeout(() => {
+            refreshSession();
+        }, 1000 * 60 * 10);
+    }
 };
 
 tool.hasFrame = function (path) {
@@ -49,11 +82,6 @@ tool.toLogin = function () {
     tool.hideRegister();
     source.login.remove = false;
     source.login.show = true;
-    // source.login.user = {
-    //     name: "张三",
-    //     avatar: "static/logo.png",
-    //     avatarUrl: source.url + "static/logo.png",
-    // }
 };
 
 tool.hideLogin = function () {

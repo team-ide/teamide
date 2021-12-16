@@ -22,6 +22,7 @@ type RequestBean struct {
 }
 
 type JWTBean struct {
+	Sign     string `json:"sign"`
 	ServerId int64  `json:"serverId"`
 	UserId   int64  `json:"userId"`
 	Name     string `json:"name"`

@@ -138,6 +138,7 @@ source.initSession = (data) => {
     if (data != null) {
         source.login.user = data.user;
         source.powers = data.powers || [];
+		tool.setJWT(data.JWT);
     } else {
         source.login.user = null;
         source.powers = [];
@@ -158,5 +159,4 @@ source.hasPower = function (action) {
     }
     return find;
 }
-
 export default source;

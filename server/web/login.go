@@ -37,17 +37,83 @@ func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err e
 		err = base.NewValidateError("用户名或密码错误!")
 		return
 	}
-	jwt := &base.JWTBean{
-		UserId:   user.UserId,
-		Name:     user.Name,
-		ServerId: user.ServerId,
-		Time:     base.GetNowTime(),
-	}
-	res = getJWTStr(jwt)
+
+	res = getJWTStr(user)
 	return
 }
 
 func apiLogout(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
+	return
+}
+
+const (
+	JWT_key = "JWT"
+)
+
+func getJWT(c *gin.Context) *base.JWTBean {
+	jwt := c.GetHeader(JWT_key)
+	if jwt == "" {
+		return nil
+	}
+	jwt = base.AesDecryptCBC(jwt)
+	if jwt == "" {
+		return nil
+	}
+	res := &base.JWTBean{}
+	base.JSON.Unmarshal([]byte(jwt), res)
+	if res.Time == 0 {
+		return nil
+	}
+	// 超过两小时
+	if res.Time < (base.GetNowTime() - 1000*60*60*2) {
+		return nil
+	}
+	return res
+}
+
+func getJWTStr(user *base.UserEntity) string {
+	if user == nil {
+		return ""
+	}
+	jwt := &base.JWTBean{
+		Sign:     base.GenerateUUID(),
+		UserId:   user.UserId,
+		Name:     user.Name,
+		ServerId: user.ServerId,
+		Time:     base.GetNowTime(),
+	}
+	jwtStr := base.ToJSON(jwt)
+	jwtStr = base.AesEncryptCBC(jwtStr)
+	if jwtStr == "" {
+		return ""
+	}
+	return jwtStr
+}
+
+type SessionResponse struct {
+	User   *base.UserEntity `json:"user"`
+	Powers []string         `json:"powers"`
+	JWT    string           `json:"JWT"`
+}
+
+func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	response := &SessionResponse{}
+	var userId int64 = 0
+	if request.JWT != nil {
+		userId = request.JWT.UserId
+	}
+	if userId > 0 {
+		var user *base.UserEntity
+		user, err = userService.UserGet(request.JWT.UserId)
+		if err != nil {
+			return
+		}
+		response.User = user
+	}
+	response.JWT = getJWTStr(response.User)
+	response.Powers = getPowersByUserId(userId)
+
+	res = response
 	return
 }
