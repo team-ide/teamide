@@ -72,11 +72,17 @@ tool.initSession = function () {
     }
 };
 
-tool.hasFrame = function (path) {
-    if (path == '/') {
-        return false;
+tool.isManagePage = function (path) {
+    if (path == '/manage' || path.indexOf('/manage/') == 0) {
+        return true;
     }
-    return true;
+    return false;
+};
+tool.isUserPage = function (path) {
+    if (path == '/user' || path.indexOf('/user/') == 0) {
+        return true;
+    }
+    return false;
 };
 tool.toLogin = function () {
     tool.hideRegister();

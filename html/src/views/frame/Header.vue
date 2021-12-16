@@ -123,7 +123,7 @@
                           <b-card-text>
                             <div
                               class="tm-link"
-                              @click="$router.push(`/${one.link}`)"
+                              @click="$router.push(`${one.link}`)"
                               :class="`color-${one.color}`"
                             >
                               {{ one.name }}

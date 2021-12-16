@@ -100,6 +100,105 @@ source.login = {
             link: "/user/home",
             color: "brown",
         },
+    ],
+    manageNavs: [
+        {
+            name: "用户管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "用户列表",
+                    icon: "person-circle",
+                    link: "/manage/user",
+                },
+                {
+                    name: "元数据列表",
+                    icon: "person-circle",
+                    link: "/manage/user/metadata",
+                },
+                {
+                    name: "授权列表",
+                    icon: "person-circle",
+                    link: "/manage/user/auth",
+                },
+            ],
+        },
+        {
+            name: "权限管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "角色列表",
+                    icon: "person-circle",
+                    link: "/manage/role",
+                },
+            ],
+        },
+        {
+            name: "企业管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "企业列表",
+                    icon: "person-circle",
+                    link: "/manage/enterprise",
+                },
+            ],
+        },
+        {
+            name: "群组管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "群组列表",
+                    icon: "person-circle",
+                    link: "/manage/group",
+                },
+            ],
+        },
+        {
+            name: "任务管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "任务列表",
+                    icon: "person-circle",
+                    link: "/manage/job",
+                },
+            ],
+        },
+        {
+            name: "安全管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "日志管理",
+                    icon: "person-circle",
+                    link: "/manage/log",
+                },
+                {
+                    name: "登录记录",
+                    icon: "person-circle",
+                    link: "/manage/login",
+                },
+            ],
+        },
+        {
+            name: "系统管理",
+            icon: "person-circle",
+            navs: [
+                {
+                    name: "系统设置",
+                    icon: "person-circle",
+                    link: "/manage/system/setting",
+                },
+                {
+                    name: "系统日志",
+                    icon: "person-circle",
+                    link: "/manage/system/log",
+                },
+            ],
+        },
     ]
 }
 
@@ -138,7 +237,7 @@ source.initSession = (data) => {
     if (data != null) {
         source.login.user = data.user;
         source.powers = data.powers || [];
-		tool.setJWT(data.JWT);
+        tool.setJWT(data.JWT);
     } else {
         source.login.user = null;
         source.powers = [];
