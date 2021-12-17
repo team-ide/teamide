@@ -2,6 +2,7 @@ package component
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"server/base"
@@ -85,6 +86,77 @@ func (service *MysqlService) Close() (err error) {
 }
 
 func (service *MysqlService) InsertSqlByBean(table string, beans ...interface{}) (sqlParam base.SqlParam) {
+	params := []interface{}{}
+	if len(beans) == 0 {
+		return
+	}
+
+	refType := base.GetRefType(beans[0])
+
+	fieldCount := refType.NumField() // field count
+	insertColumns := ""
+
+	for i := 0; i < fieldCount; i++ {
+		fieldType := refType.Field(i) // field type
+		column := base.GetColumnNameByType(fieldType)
+		if column != "" {
+			insertColumns += column + ","
+		}
+	}
+	insertValuesList := []string{}
+	for _, bean := range beans {
+		refValue := base.GetRefValue(bean) // value
+		insertValues := ""
+		for i := 0; i < fieldCount; i++ {
+			fieldType := refType.Field(i)   // field type
+			fieldValue := refValue.Field(i) // field vlaue
+			column := base.GetColumnNameByType(fieldType)
+			if column == "" {
+				continue
+			}
+			value := base.GetFieldTypeValue(fieldType.Type, fieldValue)
+			switch fieldType.Type.Name() {
+			case "string":
+				if value == "" {
+					insertValues += "NULL,"
+					continue
+				}
+				insertValues += "?,"
+				params = append(params, value)
+			default:
+				if value == nil {
+					insertValues += "NULL,"
+					continue
+				} else if base.IsZero(value) {
+					insertValues += "NULL,"
+					continue
+				}
+				insertValues += "?,"
+				params = append(params, value)
+			}
+		}
+		if len(insertValues) > 0 {
+			insertValuesList = append(insertValuesList, insertValues)
+		}
+	}
+	if len(insertColumns) > 0 {
+		insertColumns = insertColumns[0 : len(insertColumns)-1]
+	}
+	sql := " INSERT INTO " + table + "(" + insertColumns + ") VALUES "
+	for i, values := range insertValuesList {
+		if i > 0 {
+			sql += ","
+		}
+		values = values[0 : len(values)-1]
+		sql += "("
+		sql += values
+		sql += ")"
+
+	}
+	return base.SqlParam{Sql: sql, Params: params}
+}
+
+func (service *MysqlService) UpdateSqlByBean(table string, keys []string, beans ...interface{}) (sqlParam base.SqlParam) {
 	params := []interface{}{}
 	if len(beans) == 0 {
 		return
@@ -319,6 +391,32 @@ func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err err
 	return
 }
 
+func (service *MysqlService) QueryPage(sqlParam base.SqlParam, countSqlParam base.SqlParam, newBean func() interface{}) (page *base.PageBean, err error) {
+	var total int64
+	total, err = service.Count(countSqlParam)
+	if err != nil {
+		return
+	}
+	page = &base.PageBean{
+		Total:     total,
+		PageSize:  sqlParam.PageSize,
+		PageIndex: sqlParam.PageIndex,
+	}
+	if total > 0 {
+		page.Init()
+		if sqlParam.PageIndex > page.TotalPage {
+			var res interface{}
+			sqlParam.Sql += fmt.Sprint(" LIMIT ", (page.PageIndex-1)*page.PageSize, " , ", page.PageSize, " ")
+			res, err = service.Query(sqlParam, newBean)
+			if err != nil {
+				return
+			}
+			page.Value = res
+		}
+	}
+	return
+}
+
 func (service *MysqlService) Insert(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
@@ -400,7 +498,21 @@ func (service *MysqlService) BatchInsertBean(table string, list []interface{}) (
 	return
 }
 
-func (service *MysqlService) QueryBean(table string, one interface{}, newBean func() interface{}) (users []*base.UserEntity, err error) {
+func (service *MysqlService) UpdateBean(table string, keys []string, one interface{}) (err error) {
+	if len(keys) == 0 {
+		err = errors.New("update bean keys cannot be empty!")
+	}
+	sqlParam := service.UpdateSqlByBean(table, keys, one)
+
+	_, err = service.Update(sqlParam)
+
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (service *MysqlService) QueryBean(table string, one interface{}, newBean func() interface{}) (res []interface{}, err error) {
 	sql := "SELECT * FROM " + table + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -408,16 +520,10 @@ func (service *MysqlService) QueryBean(table string, one interface{}, newBean fu
 
 	service.AppendWhere(one, &sqlParam)
 
-	var res []interface{}
-	_, err = service.Query(sqlParam, newBean)
+	res, err = service.Query(sqlParam, newBean)
 
 	if err != nil {
 		return
-	}
-	users = []*base.UserEntity{}
-	for _, one := range res {
-		user := one.(*base.UserEntity)
-		users = append(users, user)
 	}
 	return
 }

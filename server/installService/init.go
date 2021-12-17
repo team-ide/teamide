@@ -6,9 +6,10 @@ import (
 	"server/idService"
 	"server/jobService"
 	"server/logService"
+	"server/loginService"
 	"server/messageService"
+	"server/organizationService"
 	"server/powerService"
-	"server/settingService"
 	"server/spaceService"
 	"server/systemService"
 	"server/userService"
@@ -22,10 +23,11 @@ func Init() {
 	Install(wbsService.GetInstall())
 	Install(logService.GetInstall())
 	Install(enterpriseService.GetInstall())
+	Install(organizationService.GetInstall())
 	Install(jobService.GetInstall())
 	Install(powerService.GetInstall())
-	Install(settingService.GetInstall())
 	Install(spaceService.GetInstall())
+	Install(loginService.GetInstall())
 	Install(systemService.GetInstall())
 	Install(messageService.GetInstall())
 	Install(groupService.GetInstall())

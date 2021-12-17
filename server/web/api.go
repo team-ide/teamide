@@ -11,9 +11,10 @@ import (
 	"server/idService"
 	"server/jobService"
 	"server/logService"
+	"server/loginService"
 	"server/messageService"
+	"server/organizationService"
 	"server/powerService"
-	"server/settingService"
 	"server/spaceService"
 	"server/systemService"
 	"server/userService"
@@ -93,6 +94,7 @@ func appendApi(apis ...*base.ApiWorker) {
 			if find {
 				panic(errors.New(fmt.Sprint("API映射路径[", apiName, "]已存在!", api)))
 			}
+			// println("add api path :" + apiName + ",action:" + api.Power.Action)
 			apiCache[apiName] = api
 		}
 	}
@@ -112,11 +114,24 @@ func cacheApi() {
 	appendApi(wbsService.BindApi()...)
 	appendApi(logService.BindApi()...)
 	appendApi(enterpriseService.BindApi()...)
+	appendApi(organizationService.BindApi()...)
 	appendApi(jobService.BindApi()...)
 	appendApi(powerService.BindApi()...)
-	appendApi(settingService.BindApi()...)
 	appendApi(spaceService.BindApi()...)
 	appendApi(systemService.BindApi()...)
+	appendApi(loginService.BindApi()...)
 	appendApi(messageService.BindApi()...)
 	appendApi(groupService.BindApi()...)
+
+	var apiPowerMap = make(map[string]bool)
+	for _, api := range apiCache {
+		apiPowerMap[api.Power.Action] = true
+	}
+	ps := base.GetPowers()
+	for _, one := range ps {
+		_, ok := apiPowerMap[one.Action]
+		if !ok {
+			panic(errors.New("权限[" + one.Action + "]未配置动作!"))
+		}
+	}
 }

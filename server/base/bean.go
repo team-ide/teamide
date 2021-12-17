@@ -54,8 +54,10 @@ type InstallStageInfo struct {
 }
 
 type SqlParam struct {
-	Sql    string        `json:"sql,omitempty"`
-	Params []interface{} `json:"params,omitempty"`
+	PageIndex int64         `json:"pageIndex,omitempty"`
+	PageSize  int64         `json:"pageSize,omitempty"`
+	Sql       string        `json:"sql,omitempty"`
+	Params    []interface{} `json:"params,omitempty"`
 }
 
 func NewSqlParam(sql_ string, params []interface{}) (sqlParam SqlParam) {

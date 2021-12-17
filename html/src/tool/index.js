@@ -110,7 +110,7 @@ tool.toLogout = function () {
     server.logout().then(res => {
         if (res.code == 0) {
             tool.setJWT("");
-            source.login.user = null;
+            tool.initSession();
         }
     }).catch(() => {
     })

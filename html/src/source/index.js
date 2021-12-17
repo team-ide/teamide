@@ -128,7 +128,7 @@ let manageNavs = [
                 action: "manage_power_action_page",
             },
             {
-                name: "功能权限",
+                name: "数据权限",
                 icon: "person-circle",
                 link: "/manage/power/data",
                 action: "manage_power_data_page",
