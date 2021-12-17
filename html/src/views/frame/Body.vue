@@ -1,25 +1,30 @@
 <template>
   <div class="frame-body-box">
-    <template
-      v-if="tool.isManagePage($route.path) || tool.isUserPage($route.path)"
-    >
-      <div class="frame-body">
-        <div class="frame-body-left">
-          <template v-if="tool.isManagePage($route.path)">
-            <ManageNav :source="source"></ManageNav>
-          </template>
-          <template v-if="tool.isUserPage($route.path)">
-            <UserNav :source="source"></UserNav>
-          </template>
-        </div>
-        <div class="frame-body-center">
-          <router-view :source="source"></router-view>
-        </div>
-        <div class="frame-body-right"></div>
-      </div>
+    <template v-if="!source.hasPower($route.path)">
+      <NoPower :source="source"></NoPower>
     </template>
     <template v-else>
-      <router-view :source="source"></router-view>
+      <template
+        v-if="tool.isManagePage($route.path) || tool.isUserPage($route.path)"
+      >
+        <div class="frame-body">
+          <div class="frame-body-left">
+            <template v-if="tool.isManagePage($route.path)">
+              <ManageNav :source="source"></ManageNav>
+            </template>
+            <template v-if="tool.isUserPage($route.path)">
+              <UserNav :source="source"></UserNav>
+            </template>
+          </div>
+          <div class="frame-body-center">
+            <router-view :source="source"></router-view>
+          </div>
+          <div class="frame-body-right"></div>
+        </div>
+      </template>
+      <template v-else>
+        <router-view :source="source"></router-view>
+      </template>
     </template>
   </div>
 </template>
@@ -56,7 +61,7 @@ export default {
 }
 .frame-body {
   min-width: 1024px;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0px auto;
   min-height: calc(100% - 0px);
   background: #fff;
@@ -117,7 +122,11 @@ export default {
   cursor: pointer;
   border-right: 3px solid transparent;
 }
-.app-nav-body ul .app-nav-link.app-nav-active {
+.app-nav-body ul .app-nav-link.tm-active {
+  border-color: #cfcfcf;
+  color: #cfcfcf;
+}
+.app-nav-body ul .app-nav-link:hover:not(.tm-active) {
   border-color: #bdbdbd;
   color: #bdbdbd;
 }

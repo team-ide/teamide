@@ -13,7 +13,7 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <template v-for="(one, index) in source.header.navs">
+          <template v-for="(one, index) in source.frame.headerNavs">
             <b-nav-item
               :key="index"
               @click="$router.push(`${one.link}`)"
@@ -111,31 +111,42 @@
                     </b-col>
                   </b-row>
                   <b-row cols="3" class="body-row">
-                    <template v-for="(one, index) in source.login.headerNavs">
-                      <b-col :key="index">
-                        <b-card align="center" :class="`bd-${one.color}`">
-                          <b-card-title>
-                            <b-icon
-                              :icon="one.icon"
-                              :class="`color-${one.color}`"
-                            ></b-icon>
-                          </b-card-title>
-                          <b-card-text>
-                            <div
-                              class="tm-link"
-                              @click="$router.push(`${one.link}`)"
-                              :class="`color-${one.color}`"
-                            >
-                              {{ one.name }}
-                            </div>
-                          </b-card-text>
-                        </b-card>
-                      </b-col>
+                    <template v-for="(one, index) in source.frame.userNavs">
+                      <template v-if="index < 6">
+                        <b-col :key="index">
+                          <b-card align="center" :class="`bd-${one.color}`">
+                            <b-card-title>
+                              <b-icon
+                                :icon="one.icon"
+                                :class="`color-${one.color}`"
+                              ></b-icon>
+                            </b-card-title>
+                            <b-card-text>
+                              <div
+                                class="tm-link"
+                                @click="$router.push(`${one.link}`)"
+                                :class="[
+                                  `color-${one.color}`,
+                                  $route.path == `${one.link}` ||
+                                  (one.match && one.match($route.path))
+                                    ? 'tm-active'
+                                    : '',
+                                ]"
+                              >
+                                {{ one.name }}
+                              </div>
+                            </b-card-text>
+                          </b-card>
+                        </b-col>
+                      </template>
                     </template>
                     <b-col>
                       <b-card style="border: 0px" align="center">
                         <b-card-text style="padding-top: 20px">
-                          <div href="#" class="tm-link color-grey">
+                          <div
+                            @click="$router.push(`/user`)"
+                            class="tm-link color-grey"
+                          >
                             更多功能
                           </div>
                         </b-card-text>

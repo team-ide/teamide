@@ -24,4 +24,10 @@ Vue.component('Console', Console);
 import Form from './Form.vue'
 Vue.component('Form', Form);
 
+import ShouldLogin from './ShouldLogin.vue'
+Vue.component('ShouldLogin', ShouldLogin);
+
+import NoPower from './NoPower.vue'
+Vue.component('NoPower', NoPower);
+
 export default {};

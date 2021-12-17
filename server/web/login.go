@@ -114,6 +114,7 @@ func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err
 	response.JWT = getJWTStr(response.User)
 	response.Powers = getPowersByUserId(userId)
 
-	res = response
+	json := base.ToJSON(response)
+	res = base.AesEncryptCBCByKey(json, base.HTTP_AES_KEY)
 	return
 }

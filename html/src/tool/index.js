@@ -190,9 +190,11 @@ tool.stringToByte = function (str) {
     return bytes;
 }
 let k = tool.byteToString([81, 53, 54, 104, 70, 65, 97, 117, 87, 107, 49, 56, 71, 121, 50, 105]);
+// 加密
 tool.aesEncrypt = function (str) {
     return CryptoJS.encrypt(str, k);
 };
+// 解密
 tool.aesDecrypt = function (str) {
     return CryptoJS.decrypt(str, k);
 };

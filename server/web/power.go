@@ -2,6 +2,7 @@ package web
 
 import (
 	"server/base"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"
@@ -57,8 +58,24 @@ func getPowersByUserId(userId int64) (powers []string) {
 	if userId != 0 {
 		var userPowers []string
 		for _, power := range ps {
+			if !power.ShouldLogin {
+				continue
+			}
 			if arrays.ContainsString(userPowers, power.Action) >= 0 {
 				powers = append(powers, power.Action)
+			} else {
+				if strings.Index(power.Action, "user_") == 0 {
+					powers = append(powers, power.Action)
+				}
+				if strings.Index(power.Action, "manage_") == 0 {
+					powers = append(powers, power.Action)
+				}
+				if strings.Index(power.Action, "workspace_") == 0 {
+					powers = append(powers, power.Action)
+				}
+				if strings.Index(power.Action, "toolbox_") == 0 {
+					powers = append(powers, power.Action)
+				}
 			}
 		}
 	}

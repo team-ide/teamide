@@ -1,7 +1,62 @@
 <template>
   <div class="app-nav-box">
-    <div class="page-header">这是页头</div>
-    <div class="page-body">这是页体</div>
+    <div class="app-nav-header">用户中心</div>
+    <div class="app-nav-body">
+      <ul>
+        <template v-for="(one, index) in source.frame.userNavs">
+          <li :key="index">
+            <div class="app-nav">
+              <template v-if="tool.isEmpty(one.link)">
+                <div class="app-nav-text">{{ one.name }}</div>
+              </template>
+              <template v-else>
+                <div
+                  class="app-nav-link app-nav-text"
+                  @click="$router.push(`${one.link}`)"
+                  :class="[
+                    `color-${one.color}`,
+                    $route.path == `${one.link}` ||
+                    (one.match && one.match($route.path))
+                      ? 'tm-active'
+                      : '',
+                  ]"
+                >
+                  {{ one.name }}
+                </div>
+              </template>
+            </div>
+            <template v-if="one.navs != null && one.navs.length > 0">
+              <ul>
+                <template v-for="(sub, subIndex) in one.navs">
+                  <li :key="subIndex">
+                    <div class="app-nav">
+                      <template v-if="tool.isEmpty(sub.link)">
+                        <div class="app-nav-text">{{ sub.name }}</div>
+                      </template>
+                      <template v-else>
+                        <div
+                          class="app-nav-link app-nav-text"
+                          @click="$router.push(`${sub.link}`)"
+                          :class="[
+                            `color-${sub.color}`,
+                            $route.path == `${sub.link}` ||
+                            (sub.match && sub.match($route.path))
+                              ? 'tm-active'
+                              : '',
+                          ]"
+                        >
+                          {{ sub.name }}
+                        </div>
+                      </template>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </template>
+          </li>
+        </template>
+      </ul>
+    </div>
   </div>
 </template>
 

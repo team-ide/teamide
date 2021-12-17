@@ -3,7 +3,7 @@
     <div class="app-nav-header">系统管理</div>
     <div class="app-nav-body">
       <ul>
-        <template v-for="(one, index) in source.login.manageNavs">
+        <template v-for="(one, index) in source.frame.manageNavs">
           <li :key="index">
             <div class="app-nav">
               <template v-if="tool.isEmpty(one.link)">
@@ -13,7 +13,13 @@
                 <div
                   class="app-nav-link app-nav-text"
                   @click="$router.push(`${one.link}`)"
-                  :class="{ 'app-nav-active': $route.path == `${one.link}` }"
+                  :class="[
+                    `color-${one.color}`,
+                    $route.path == `${one.link}` ||
+                    (one.match && one.match($route.path))
+                      ? 'tm-active'
+                      : '',
+                  ]"
                 >
                   {{ one.name }}
                 </div>
@@ -31,9 +37,13 @@
                         <div
                           class="app-nav-link app-nav-text"
                           @click="$router.push(`${sub.link}`)"
-                          :class="{
-                            'app-nav-active': $route.path == `${sub.link}`,
-                          }"
+                          :class="[
+                            `color-${sub.color}`,
+                            $route.path == `${sub.link}` ||
+                            (sub.match && sub.match($route.path))
+                              ? 'tm-active'
+                              : '',
+                          ]"
                         >
                           {{ sub.name }}
                         </div>
