@@ -5,5 +5,7 @@ import (
 )
 
 func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+	bindUserMessageApi(appendApi)
+
 	bindManageMessageApi(appendApi)
 }

@@ -17,7 +17,7 @@ func bindManageSystemSettingApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageSystemSettingUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_SETTING,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},

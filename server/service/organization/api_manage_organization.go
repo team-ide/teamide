@@ -21,7 +21,7 @@ func bindManageOrganizationApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageOrganizationPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageOrganizationList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageOrganizationOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageOrganizationInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageOrganizationUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageOrganizationDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageOrganizationPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

@@ -17,7 +17,7 @@ func bindUserSettingApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlUserSettingUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_SETTING,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},

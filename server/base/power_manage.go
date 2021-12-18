@@ -1,93 +1,6 @@
 package base
 
-import "github.com/gin-gonic/gin"
-
-type RequestBean struct {
-	JWT  *JWTBean
-	Path string
-}
-
-type PageBean struct {
-	PageIndex int64
-	PageSize  int64
-	Total     int64
-	TotalPage int64
-	Value     interface{}
-}
-
-func (page *PageBean) Init() {
-	page.TotalPage = (page.Total + page.PageSize - 1) / page.PageSize
-}
-
-type JWTBean struct {
-	Sign     string `json:"sign"`
-	ServerId int64  `json:"serverId"`
-	UserId   int64  `json:"userId"`
-	Name     string `json:"name"`
-	Time     int64  `json:"time"`
-}
-
-type ApiWorker struct {
-	Apis    []string
-	Power   *PowerAction
-	Do      func(request *RequestBean, c *gin.Context) (res interface{}, err error)
-	DoOther func(request *RequestBean, c *gin.Context)
-}
-
-type PowerAction struct {
-	Action      string `json:"action"`
-	Text        string `json:"text"`
-	ShouldLogin bool   `json:"shouldLogin"`
-	Parent      *PowerAction
-}
-
 var (
-	powers []*PowerAction
-
-	// 基础权限
-	PowerRegister  = addPower(&PowerAction{Action: "register", Text: "注册"})
-	PowerData      = addPower(&PowerAction{Action: "data", Text: "数据"})
-	PowerSession   = addPower(&PowerAction{Action: "session", Text: "会话"})
-	PowerLogin     = addPower(&PowerAction{Action: "login", Text: "登录"})
-	PowerLogout    = addPower(&PowerAction{Action: "logout", Text: "登出"})
-	PowerAutoLogin = addPower(&PowerAction{Action: "auto_login", Text: "自动登录"})
-
-	// 用户 权限
-
-	// 用户资料 权限
-	PowerUserProfilePage   = addPower(&PowerAction{Action: "user_profile_page", Text: "用户资料页面", ShouldLogin: true})
-	PowerUserProfileUpdate = addPower(&PowerAction{Action: "user_profile_update", Text: "用户资料修改", Parent: PowerUserProfilePage, ShouldLogin: true})
-	// 用户密码 权限
-	PowerUserPasswordPage   = addPower(&PowerAction{Action: "user_password_page", Text: "用户密码页面", ShouldLogin: true})
-	PowerUserPasswordUpdate = addPower(&PowerAction{Action: "user_password_update", Text: "用户密码修改", Parent: PowerUserPasswordPage, ShouldLogin: true})
-
-	// 用户授权 权限
-	PowerUserAuthPage    = addPower(&PowerAction{Action: "user_auth_page", Text: "用户授权页面", ShouldLogin: true})
-	PowerUserAuthInsert  = addPower(&PowerAction{Action: "user_auth_insert", Text: "用户授权新增", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthUpdate  = addPower(&PowerAction{Action: "user_auth_update", Text: "用户授权修改", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthDelete  = addPower(&PowerAction{Action: "user_auth_delete", Text: "用户授权删除", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthActive  = addPower(&PowerAction{Action: "user_auth_active", Text: "用户授权激活", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthLock    = addPower(&PowerAction{Action: "user_auth_lock", Text: "用户授权锁定", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthUnlock  = addPower(&PowerAction{Action: "user_auth_unlock", Text: "用户授权解锁", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthEnable  = addPower(&PowerAction{Action: "user_auth_enable", Text: "用户授权启用", Parent: PowerUserAuthPage, ShouldLogin: true})
-	PowerUserAuthDisable = addPower(&PowerAction{Action: "user_auth_disable", Text: "用户授权禁用", Parent: PowerUserAuthPage, ShouldLogin: true})
-
-	// 用户凭证 权限
-	PowerUserCertificatePage   = addPower(&PowerAction{Action: "user_certificate_page", Text: "用户凭证页面", ShouldLogin: true})
-	PowerUserCertificateInsert = addPower(&PowerAction{Action: "user_certificate_insert", Text: "用户凭证新增", Parent: PowerUserCertificatePage, ShouldLogin: true})
-	PowerUserCertificateUpdate = addPower(&PowerAction{Action: "user_certificate_update", Text: "用户凭证修改", Parent: PowerUserCertificatePage, ShouldLogin: true})
-	PowerUserCertificateDelete = addPower(&PowerAction{Action: "user_certificate_delete", Text: "用户凭证删除", Parent: PowerUserCertificatePage, ShouldLogin: true})
-
-	// 用户消息 权限
-	PowerUserMessagePage   = addPower(&PowerAction{Action: "user_message_page", Text: "用户消息页面", ShouldLogin: true})
-	PowerUserMessageInsert = addPower(&PowerAction{Action: "user_message_insert", Text: "用户消息新增", Parent: PowerUserMessagePage, ShouldLogin: true})
-	PowerUserMessageUpdate = addPower(&PowerAction{Action: "user_message_update", Text: "用户消息修改", Parent: PowerUserMessagePage, ShouldLogin: true})
-	PowerUserMessageDelete = addPower(&PowerAction{Action: "user_message_delete", Text: "用户消息删除", Parent: PowerUserMessagePage, ShouldLogin: true})
-
-	// 用户设置 权限
-	PowerUserSettingPage   = addPower(&PowerAction{Action: "user_setting_page", Text: "用户设置页面", ShouldLogin: true})
-	PowerUserSettingUpdate = addPower(&PowerAction{Action: "user_setting_update", Text: "用户设置修改", Parent: PowerUserProfilePage, ShouldLogin: true})
-
 	// 系统管理 权限
 
 	// 管理用户 权限
@@ -100,6 +13,7 @@ var (
 	PowerManageUserUnlock  = addPower(&PowerAction{Action: "manage_user_unlock", Text: "管理用户解锁", Parent: PowerManageUserPage, ShouldLogin: true})
 	PowerManageUserEnable  = addPower(&PowerAction{Action: "manage_user_enable", Text: "管理用户启用", Parent: PowerManageUserPage, ShouldLogin: true})
 	PowerManageUserDisable = addPower(&PowerAction{Action: "manage_user_disable", Text: "管理用户禁用", Parent: PowerManageUserPage, ShouldLogin: true})
+
 	// 管理用户密码 权限
 	PowerManageUserPasswordReset  = addPower(&PowerAction{Action: "manage_user_password_reset", Text: "管理用户密码重置", Parent: PowerManageUserPage, ShouldLogin: true})
 	PowerManageUserPasswordUpdate = addPower(&PowerAction{Action: "manage_user_password_update", Text: "管理用户密码修改", Parent: PowerManageUserPage, ShouldLogin: true})
@@ -111,26 +25,34 @@ var (
 	PowerManageUserLockDelete = addPower(&PowerAction{Action: "manage_user_lock_delete", Text: "管理锁定用户删除", Parent: PowerManageUserLockPage, ShouldLogin: true})
 
 	// 管理用户授权 权限
-	PowerManageUserAuthPage    = addPower(&PowerAction{Action: "manage_user_auth_page", Text: "用户授权页面", ShouldLogin: true})
-	PowerManageUserAuthInsert  = addPower(&PowerAction{Action: "manage_user_auth_insert", Text: "用户授权新增", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthUpdate  = addPower(&PowerAction{Action: "manage_user_auth_update", Text: "用户授权修改", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthDelete  = addPower(&PowerAction{Action: "manage_user_auth_delete", Text: "用户授权删除", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthActive  = addPower(&PowerAction{Action: "manage_user_auth_active", Text: "用户授权激活", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthLock    = addPower(&PowerAction{Action: "manage_user_auth_lock", Text: "用户授权锁定", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthUnlock  = addPower(&PowerAction{Action: "manage_user_auth_unlock", Text: "用户授权解锁", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthEnable  = addPower(&PowerAction{Action: "manage_user_auth_enable", Text: "用户授权启用", Parent: PowerManageUserAuthPage, ShouldLogin: true})
-	PowerManageUserAuthDisable = addPower(&PowerAction{Action: "manage_user_auth_disable", Text: "用户授权禁用", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthPage    = addPower(&PowerAction{Action: "manage_user_auth_page", Text: "管理用户授权页面", ShouldLogin: true})
+	PowerManageUserAuthInsert  = addPower(&PowerAction{Action: "manage_user_auth_insert", Text: "管理用户授权新增", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthUpdate  = addPower(&PowerAction{Action: "manage_user_auth_update", Text: "管理用户授权修改", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthDelete  = addPower(&PowerAction{Action: "manage_user_auth_delete", Text: "管理用户授权删除", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthActive  = addPower(&PowerAction{Action: "manage_user_auth_active", Text: "管理用户授权激活", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthLock    = addPower(&PowerAction{Action: "manage_user_auth_lock", Text: "管理用户授权锁定", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthUnlock  = addPower(&PowerAction{Action: "manage_user_auth_unlock", Text: "管理用户授权解锁", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthEnable  = addPower(&PowerAction{Action: "manage_user_auth_enable", Text: "管理用户授权启用", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+	PowerManageUserAuthDisable = addPower(&PowerAction{Action: "manage_user_auth_disable", Text: "管理用户授权禁用", Parent: PowerManageUserAuthPage, ShouldLogin: true})
+
+	// 管理凭证 权限
+	PowerManageCertificatePage   = addPower(&PowerAction{Action: "manage_certificate_page", Text: "管理凭证页面", ShouldLogin: true})
+	PowerManageCertificateInsert = addPower(&PowerAction{Action: "manage_certificate_insert", Text: "管理凭证新增", Parent: PowerManageCertificatePage, ShouldLogin: true})
+	PowerManageCertificateUpdate = addPower(&PowerAction{Action: "manage_certificate_update", Text: "管理凭证修改", Parent: PowerManageCertificatePage, ShouldLogin: true})
+	PowerManageCertificateDelete = addPower(&PowerAction{Action: "manage_certificate_delete", Text: "管理凭证删除", Parent: PowerManageCertificatePage, ShouldLogin: true})
 
 	// 管理角色权限 权限
 	PowerManagePowerRolePage   = addPower(&PowerAction{Action: "manage_power_role_page", Text: "管理权限角色页面", ShouldLogin: true})
 	PowerManagePowerRoleInsert = addPower(&PowerAction{Action: "manage_power_role_insert", Text: "管理权限角色新增", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerRoleUpdate = addPower(&PowerAction{Action: "manage_power_role_update", Text: "管理权限角色修改", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerRoleDelete = addPower(&PowerAction{Action: "manage_power_role_delete", Text: "管理权限角色删除", Parent: PowerManagePowerRolePage, ShouldLogin: true})
+
 	// 管理功能权限 权限
 	PowerManagePowerActionPage   = addPower(&PowerAction{Action: "manage_power_action_page", Text: "管理功能权限页面", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerActionInsert = addPower(&PowerAction{Action: "manage_power_action_insert", Text: "管理功能权限新增", Parent: PowerManagePowerActionPage, ShouldLogin: true})
 	PowerManagePowerActionUpdate = addPower(&PowerAction{Action: "manage_power_action_update", Text: "管理功能权限修改", Parent: PowerManagePowerActionPage, ShouldLogin: true})
 	PowerManagePowerActionDelete = addPower(&PowerAction{Action: "manage_power_action_delete", Text: "管理功能权限删除", Parent: PowerManagePowerActionPage, ShouldLogin: true})
+
 	// 管理数据权限 权限
 	PowerManagePowerDataPage   = addPower(&PowerAction{Action: "manage_power_data_page", Text: "管理数据权限页面", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerDataInsert = addPower(&PowerAction{Action: "manage_power_data_insert", Text: "管理数据权限新增", Parent: PowerManagePowerDataPage, ShouldLogin: true})
@@ -189,15 +111,3 @@ var (
 	PowerManageSystemLogUpdate = addPower(&PowerAction{Action: "manage_system_log_update", Text: "管理日志修改", Parent: PowerManageSystemLogPage, ShouldLogin: true})
 	PowerManageSystemLogDelete = addPower(&PowerAction{Action: "manage_system_log_delete", Text: "管理日志删除", Parent: PowerManageSystemLogPage, ShouldLogin: true})
 )
-
-func addPower(power *PowerAction) *PowerAction {
-	powers = append(powers, power)
-	return power
-}
-
-func GetPowers() (ps []*PowerAction) {
-
-	ps = append(ps, powers...)
-
-	return
-}

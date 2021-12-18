@@ -17,7 +17,7 @@ func bindUserPasswordApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlUserPasswordUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},

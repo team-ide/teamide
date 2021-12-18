@@ -21,7 +21,7 @@ func bindManageUserLockApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageUserLockPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageUserLockList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageUserLockOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageUserLockInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageUserLockUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageUserLockDelete = &sqlModel.Delete{
-		Table: "TM_USER",
+		Table: TABLE_USER_LOCK,
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},

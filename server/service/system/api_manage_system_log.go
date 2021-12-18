@@ -21,7 +21,7 @@ func bindManageSystemLogApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageSystemLogPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageSystemLogList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageSystemLogOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageSystemLogInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageSystemLogUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageSystemLogDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageSystemLogPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

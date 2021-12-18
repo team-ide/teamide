@@ -17,7 +17,7 @@ func bindManageUserPasswordApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageUserPasswordReset = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -31,7 +31,7 @@ var (
 	}
 
 	sqlManageUserPasswordUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},

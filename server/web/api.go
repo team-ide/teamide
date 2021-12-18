@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"server/base"
+	certificateService "server/service/certificate"
 	enterpriseService "server/service/enterprise"
 	groupService "server/service/group"
 	idService "server/service/id"
@@ -122,6 +123,7 @@ func cacheApi() {
 	loginService.BindApi(appendApi)
 	messageService.BindApi(appendApi)
 	groupService.BindApi(appendApi)
+	certificateService.BindApi(appendApi)
 
 	var apiPowerMap = make(map[string]bool)
 	for _, api := range apiCache {

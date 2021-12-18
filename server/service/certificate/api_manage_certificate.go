@@ -1,4 +1,4 @@
-package enterpriseService
+package certificateService
 
 import (
 	"server/base"
@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func bindManageEnterpriseApi(appendApi func(apis ...*base.ApiWorker)) {
+func bindManageCertificateApi(appendApi func(apis ...*base.ApiWorker)) {
 
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/page"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterprisePage})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/list"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterpriseList})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/one"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterpriseOne})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/insert"}, Power: base.PowerManageEnterpriseInsert, Do: apiManageEnterpriseInsert})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/update"}, Power: base.PowerManageEnterpriseUpdate, Do: apiManageEnterpriseUpdate})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/delete"}, Power: base.PowerManageEnterpriseDelete, Do: apiManageEnterpriseDelete})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/page"}, Power: base.PowerManageCertificatePage, Do: apiManageCertificatePage})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/list"}, Power: base.PowerManageCertificatePage, Do: apiManageCertificateList})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/one"}, Power: base.PowerManageCertificatePage, Do: apiManageCertificateOne})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/insert"}, Power: base.PowerManageCertificateInsert, Do: apiManageCertificateInsert})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/update"}, Power: base.PowerManageCertificateUpdate, Do: apiManageCertificateUpdate})
+	appendApi(&base.ApiWorker{Apis: []string{"/manage/certificate/delete"}, Power: base.PowerManageCertificateDelete, Do: apiManageCertificateDelete})
 
 }
 
 var (
-	sqlManageEnterprisePage = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificatePage = &sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -50,8 +50,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseList = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificateList = &sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -80,8 +80,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseOne = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificateOne = &sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -100,8 +100,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseInsert = &sqlModel.Insert{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificateInsert = &sqlModel.Insert{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -115,8 +115,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseUpdate = &sqlModel.Update{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificateUpdate = &sqlModel.Update{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -129,8 +129,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseDelete = &sqlModel.Update{
-		Table: TABLE_ENTERPRISE,
+	sqlManageCertificateDelete = &sqlModel.Update{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -140,13 +140,13 @@ var (
 	}
 )
 
-func apiManageEnterprisePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificatePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterprisePage.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificatePage.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -158,13 +158,13 @@ func apiManageEnterprisePage(requestBean *base.RequestBean, c *gin.Context) (res
 	return
 }
 
-func apiManageEnterpriseList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificateList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseList.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificateList.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -176,13 +176,13 @@ func apiManageEnterpriseList(requestBean *base.RequestBean, c *gin.Context) (res
 	return
 }
 
-func apiManageEnterpriseOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificateOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseOne.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificateOne.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -194,13 +194,13 @@ func apiManageEnterpriseOne(requestBean *base.RequestBean, c *gin.Context) (res 
 	return
 }
 
-func apiManageEnterpriseInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificateInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseInsert.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificateInsert.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -212,13 +212,13 @@ func apiManageEnterpriseInsert(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-func apiManageEnterpriseUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificateUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseUpdate.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificateUpdate.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -230,13 +230,13 @@ func apiManageEnterpriseUpdate(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-func apiManageEnterpriseDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiManageCertificateDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseDelete.GetSqlParam(data)
+	sqlParam, err := sqlManageCertificateDelete.GetSqlParam(data)
 	if err != nil {
 		return
 	}

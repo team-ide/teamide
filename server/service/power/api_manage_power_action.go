@@ -21,7 +21,7 @@ func bindManagePowerActionApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManagePowerActionPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManagePowerActionList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManagePowerActionOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManagePowerActionInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManagePowerActionUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManagePowerActionDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManagePowerActionPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

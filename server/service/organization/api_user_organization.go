@@ -1,4 +1,4 @@
-package userService
+package organizationService
 
 import (
 	"server/base"
@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func bindUserMessageApi(appendApi func(apis ...*base.ApiWorker)) {
+func bindUserOrganizationApi(appendApi func(apis ...*base.ApiWorker)) {
 
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/page"}, Power: base.PowerUserMessagePage, Do: apiUserMessagePage})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/list"}, Power: base.PowerUserMessagePage, Do: apiUserMessageList})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/one"}, Power: base.PowerUserMessagePage, Do: apiUserMessageOne})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/insert"}, Power: base.PowerUserMessageInsert, Do: apiUserMessageInsert})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/update"}, Power: base.PowerUserMessageUpdate, Do: apiUserMessageUpdate})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/message/delete"}, Power: base.PowerUserMessageDelete, Do: apiUserMessageDelete})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/page"}, Power: base.PowerUserOrganizationPage, Do: apiUserOrganizationPage})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/list"}, Power: base.PowerUserOrganizationPage, Do: apiUserOrganizationList})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/one"}, Power: base.PowerUserOrganizationPage, Do: apiUserOrganizationOne})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/insert"}, Power: base.PowerUserOrganizationInsert, Do: apiUserOrganizationInsert})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/update"}, Power: base.PowerUserOrganizationUpdate, Do: apiUserOrganizationUpdate})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/organization/delete"}, Power: base.PowerUserOrganizationDelete, Do: apiUserOrganizationDelete})
 
 }
 
 var (
-	sqlUserMessagePage = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserOrganizationPage = &sqlModel.Select{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -50,8 +50,8 @@ var (
 		},
 	}
 
-	sqlUserMessageList = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserOrganizationList = &sqlModel.Select{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -80,8 +80,8 @@ var (
 		},
 	}
 
-	sqlUserMessageOne = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserOrganizationOne = &sqlModel.Select{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -100,8 +100,8 @@ var (
 		},
 	}
 
-	sqlUserMessageInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+	sqlUserOrganizationInsert = &sqlModel.Insert{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -115,8 +115,8 @@ var (
 		},
 	}
 
-	sqlUserMessageUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+	sqlUserOrganizationUpdate = &sqlModel.Update{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -129,8 +129,8 @@ var (
 		},
 	}
 
-	sqlUserMessageDelete = &sqlModel.Update{
-		Table: "TM_USER",
+	sqlUserOrganizationDelete = &sqlModel.Update{
+		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -140,13 +140,13 @@ var (
 	}
 )
 
-func apiUserMessagePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessagePage.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationPage.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -158,13 +158,13 @@ func apiUserMessagePage(requestBean *base.RequestBean, c *gin.Context) (res inte
 	return
 }
 
-func apiUserMessageList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessageList.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationList.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -176,13 +176,13 @@ func apiUserMessageList(requestBean *base.RequestBean, c *gin.Context) (res inte
 	return
 }
 
-func apiUserMessageOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessageOne.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationOne.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -194,13 +194,13 @@ func apiUserMessageOne(requestBean *base.RequestBean, c *gin.Context) (res inter
 	return
 }
 
-func apiUserMessageInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessageInsert.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationInsert.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -212,13 +212,13 @@ func apiUserMessageInsert(requestBean *base.RequestBean, c *gin.Context) (res in
 	return
 }
 
-func apiUserMessageUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessageUpdate.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationUpdate.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -230,13 +230,13 @@ func apiUserMessageUpdate(requestBean *base.RequestBean, c *gin.Context) (res in
 	return
 }
 
-func apiUserMessageDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserOrganizationDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserMessageDelete.GetSqlParam(data)
+	sqlParam, err := sqlUserOrganizationDelete.GetSqlParam(data)
 	if err != nil {
 		return
 	}

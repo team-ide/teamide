@@ -1,4 +1,4 @@
-package userService
+package groupService
 
 import (
 	"server/base"
@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func bindUserCertificateApi(appendApi func(apis ...*base.ApiWorker)) {
+func bindUserGroupApi(appendApi func(apis ...*base.ApiWorker)) {
 
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/page"}, Power: base.PowerUserCertificatePage, Do: apiUserCertificatePage})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/list"}, Power: base.PowerUserCertificatePage, Do: apiUserCertificateList})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/one"}, Power: base.PowerUserCertificatePage, Do: apiUserCertificateOne})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/insert"}, Power: base.PowerUserCertificateInsert, Do: apiUserCertificateInsert})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/update"}, Power: base.PowerUserCertificateUpdate, Do: apiUserCertificateUpdate})
-	appendApi(&base.ApiWorker{Apis: []string{"/user/certificate/delete"}, Power: base.PowerUserCertificateDelete, Do: apiUserCertificateDelete})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/page"}, Power: base.PowerUserGroupPage, Do: apiUserGroupPage})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/list"}, Power: base.PowerUserGroupPage, Do: apiUserGroupList})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/one"}, Power: base.PowerUserGroupPage, Do: apiUserGroupOne})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/insert"}, Power: base.PowerUserGroupInsert, Do: apiUserGroupInsert})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/update"}, Power: base.PowerUserGroupUpdate, Do: apiUserGroupUpdate})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/group/delete"}, Power: base.PowerUserGroupDelete, Do: apiUserGroupDelete})
 
 }
 
 var (
-	sqlUserCertificatePage = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserGroupPage = &sqlModel.Select{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -50,8 +50,8 @@ var (
 		},
 	}
 
-	sqlUserCertificateList = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserGroupList = &sqlModel.Select{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -80,8 +80,8 @@ var (
 		},
 	}
 
-	sqlUserCertificateOne = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserGroupOne = &sqlModel.Select{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -100,8 +100,8 @@ var (
 		},
 	}
 
-	sqlUserCertificateInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+	sqlUserGroupInsert = &sqlModel.Insert{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -115,8 +115,8 @@ var (
 		},
 	}
 
-	sqlUserCertificateUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+	sqlUserGroupUpdate = &sqlModel.Update{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -129,8 +129,8 @@ var (
 		},
 	}
 
-	sqlUserCertificateDelete = &sqlModel.Update{
-		Table: "TM_USER",
+	sqlUserGroupDelete = &sqlModel.Update{
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -140,13 +140,13 @@ var (
 	}
 )
 
-func apiUserCertificatePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificatePage.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupPage.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -158,13 +158,13 @@ func apiUserCertificatePage(requestBean *base.RequestBean, c *gin.Context) (res 
 	return
 }
 
-func apiUserCertificateList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificateList.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupList.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -176,13 +176,13 @@ func apiUserCertificateList(requestBean *base.RequestBean, c *gin.Context) (res 
 	return
 }
 
-func apiUserCertificateOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificateOne.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupOne.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -194,13 +194,13 @@ func apiUserCertificateOne(requestBean *base.RequestBean, c *gin.Context) (res i
 	return
 }
 
-func apiUserCertificateInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificateInsert.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupInsert.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -212,13 +212,13 @@ func apiUserCertificateInsert(requestBean *base.RequestBean, c *gin.Context) (re
 	return
 }
 
-func apiUserCertificateUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificateUpdate.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupUpdate.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -230,13 +230,13 @@ func apiUserCertificateUpdate(requestBean *base.RequestBean, c *gin.Context) (re
 	return
 }
 
-func apiUserCertificateDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserGroupDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlUserCertificateDelete.GetSqlParam(data)
+	sqlParam, err := sqlUserGroupDelete.GetSqlParam(data)
 	if err != nil {
 		return
 	}

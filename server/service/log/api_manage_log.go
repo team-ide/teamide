@@ -21,7 +21,7 @@ func bindManageLogApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageLogPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageLogList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageLogOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageLogInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageLogUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageLogDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_LOG,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageLogPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

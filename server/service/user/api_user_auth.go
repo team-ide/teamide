@@ -26,7 +26,7 @@ func bindUserAuthApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlUserAuthPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -56,7 +56,7 @@ var (
 	}
 
 	sqlUserAuthList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -86,7 +86,7 @@ var (
 	}
 
 	sqlUserAuthOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -106,7 +106,7 @@ var (
 	}
 
 	sqlUserAuthInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -121,7 +121,7 @@ var (
 	}
 
 	sqlUserAuthUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -135,7 +135,7 @@ var (
 	}
 
 	sqlUserAuthDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -145,7 +145,7 @@ var (
 	}
 
 	sqlUserAuthActive = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "activedState", ValueScript: "1"},
 		},
@@ -155,7 +155,7 @@ var (
 	}
 
 	sqlUserAuthLock = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "1"},
 		},
@@ -165,7 +165,7 @@ var (
 	}
 
 	sqlUserAuthUnlock = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "2"},
 		},
@@ -175,7 +175,7 @@ var (
 	}
 
 	sqlUserAuthDisable = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "2"},
 		},
@@ -185,7 +185,7 @@ var (
 	}
 
 	sqlUserAuthEnable = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "1"},
 		},

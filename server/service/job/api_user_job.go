@@ -1,4 +1,4 @@
-package enterpriseService
+package jobService
 
 import (
 	"server/base"
@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func bindManageEnterpriseApi(appendApi func(apis ...*base.ApiWorker)) {
+func bindUserJobApi(appendApi func(apis ...*base.ApiWorker)) {
 
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/page"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterprisePage})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/list"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterpriseList})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/one"}, Power: base.PowerManageEnterprisePage, Do: apiManageEnterpriseOne})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/insert"}, Power: base.PowerManageEnterpriseInsert, Do: apiManageEnterpriseInsert})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/update"}, Power: base.PowerManageEnterpriseUpdate, Do: apiManageEnterpriseUpdate})
-	appendApi(&base.ApiWorker{Apis: []string{"/manage/enterprise/delete"}, Power: base.PowerManageEnterpriseDelete, Do: apiManageEnterpriseDelete})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/page"}, Power: base.PowerUserJobPage, Do: apiUserJobPage})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/list"}, Power: base.PowerUserJobPage, Do: apiUserJobList})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/one"}, Power: base.PowerUserJobPage, Do: apiUserJobOne})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/insert"}, Power: base.PowerUserJobInsert, Do: apiUserJobInsert})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/update"}, Power: base.PowerUserJobUpdate, Do: apiUserJobUpdate})
+	appendApi(&base.ApiWorker{Apis: []string{"/user/job/delete"}, Power: base.PowerUserJobDelete, Do: apiUserJobDelete})
 
 }
 
 var (
-	sqlManageEnterprisePage = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobPage = &sqlModel.Select{
+		Table: "TM_USER",
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -50,8 +50,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseList = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobList = &sqlModel.Select{
+		Table: "TM_USER",
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -80,8 +80,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseOne = &sqlModel.Select{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobOne = &sqlModel.Select{
+		Table: "TM_USER",
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -100,8 +100,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseInsert = &sqlModel.Insert{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobInsert = &sqlModel.Insert{
+		Table: "TM_USER",
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -115,8 +115,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseUpdate = &sqlModel.Update{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobUpdate = &sqlModel.Update{
+		Table: "TM_USER",
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -129,8 +129,8 @@ var (
 		},
 	}
 
-	sqlManageEnterpriseDelete = &sqlModel.Update{
-		Table: TABLE_ENTERPRISE,
+	sqlUserJobDelete = &sqlModel.Update{
+		Table: "TM_USER",
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -140,13 +140,13 @@ var (
 	}
 )
 
-func apiManageEnterprisePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterprisePage.GetSqlParam(data)
+	sqlParam, err := sqlUserJobPage.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -158,13 +158,13 @@ func apiManageEnterprisePage(requestBean *base.RequestBean, c *gin.Context) (res
 	return
 }
 
-func apiManageEnterpriseList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseList.GetSqlParam(data)
+	sqlParam, err := sqlUserJobList.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -176,13 +176,13 @@ func apiManageEnterpriseList(requestBean *base.RequestBean, c *gin.Context) (res
 	return
 }
 
-func apiManageEnterpriseOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseOne.GetSqlParam(data)
+	sqlParam, err := sqlUserJobOne.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -194,13 +194,13 @@ func apiManageEnterpriseOne(requestBean *base.RequestBean, c *gin.Context) (res 
 	return
 }
 
-func apiManageEnterpriseInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseInsert.GetSqlParam(data)
+	sqlParam, err := sqlUserJobInsert.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -212,13 +212,13 @@ func apiManageEnterpriseInsert(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-func apiManageEnterpriseUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseUpdate.GetSqlParam(data)
+	sqlParam, err := sqlUserJobUpdate.GetSqlParam(data)
 	if err != nil {
 		return
 	}
@@ -230,13 +230,13 @@ func apiManageEnterpriseUpdate(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-func apiManageEnterpriseDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiUserJobDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	data := make(map[string]interface{})
 	err = c.BindJSON(&data)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManageEnterpriseDelete.GetSqlParam(data)
+	sqlParam, err := sqlUserJobDelete.GetSqlParam(data)
 	if err != nil {
 		return
 	}

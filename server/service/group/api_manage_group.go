@@ -21,7 +21,7 @@ func bindManageGroupApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageGroupPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageGroupList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageGroupOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageGroupInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageGroupUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageGroupDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_GROUP,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageGroupPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

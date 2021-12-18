@@ -1,6 +1,7 @@
 package installService
 
 import (
+	certificateService "server/service/certificate"
 	enterpriseService "server/service/enterprise"
 	groupService "server/service/group"
 	idService "server/service/id"
@@ -31,4 +32,6 @@ func Init() {
 	Install(systemService.GetInstall())
 	Install(messageService.GetInstall())
 	Install(groupService.GetInstall())
+	Install(certificateService.GetInstall())
+
 }

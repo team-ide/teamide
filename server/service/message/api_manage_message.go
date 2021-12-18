@@ -21,7 +21,7 @@ func bindManageMessageApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageMessagePage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageMessageList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageMessageOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageMessageInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageMessageUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageMessageDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageMessagePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

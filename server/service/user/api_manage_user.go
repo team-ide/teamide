@@ -26,7 +26,7 @@ func bindManageUserApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageUserPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -56,7 +56,7 @@ var (
 	}
 
 	sqlManageUserList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -86,7 +86,7 @@ var (
 	}
 
 	sqlManageUserOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -106,7 +106,7 @@ var (
 	}
 
 	sqlManageUserInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -121,7 +121,7 @@ var (
 	}
 
 	sqlManageUserUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -135,7 +135,7 @@ var (
 	}
 
 	sqlManageUserDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -145,7 +145,7 @@ var (
 	}
 
 	sqlManageUserActive = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "activedState", ValueScript: "1"},
 		},
@@ -155,7 +155,7 @@ var (
 	}
 
 	sqlManageUserLock = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "1"},
 		},
@@ -165,7 +165,7 @@ var (
 	}
 
 	sqlManageUserUnlock = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "2"},
 		},
@@ -175,7 +175,7 @@ var (
 	}
 
 	sqlManageUserDisable = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "2"},
 		},
@@ -185,7 +185,7 @@ var (
 	}
 
 	sqlManageUserEnable = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "1"},
 		},

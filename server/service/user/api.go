@@ -8,8 +8,6 @@ func BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserProfileApi(appendApi)
 	bindUserAuthApi(appendApi)
 	bindUserPasswordApi(appendApi)
-	bindUserMessageApi(appendApi)
-	bindUserCertificateApi(appendApi)
 	bindUserSettingApi(appendApi)
 
 	bindManageUserApi(appendApi)

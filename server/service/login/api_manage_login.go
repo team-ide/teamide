@@ -21,7 +21,7 @@ func bindManageLoginApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageLoginPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageLoginList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageLoginOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageLoginInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageLoginUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageLoginDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageLoginPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

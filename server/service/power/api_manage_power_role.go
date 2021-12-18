@@ -21,7 +21,7 @@ func bindManagePowerRoleApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManagePowerRolePage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManagePowerRoleList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManagePowerRoleOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManagePowerRoleInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManagePowerRoleUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManagePowerRoleDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManagePowerRolePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

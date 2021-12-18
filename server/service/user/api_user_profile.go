@@ -17,7 +17,7 @@ func bindUserProfileApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlUserProfileOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -37,7 +37,7 @@ var (
 	}
 
 	sqlUserProfileUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
