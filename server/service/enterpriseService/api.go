@@ -31,7 +31,7 @@ func manageEnterpriseNewBean() (res interface{}) {
 func manageEnterprisePageRequestBean() (res interface{}) {
 	return
 }
-func manageEnterprisePageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageEnterprisePageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

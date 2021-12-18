@@ -5,5 +5,5 @@ func init() {
 }
 
 func Init() {
-
+	initServer()
 }

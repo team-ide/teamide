@@ -31,7 +31,7 @@ func manageOrganizationNewBean() (res interface{}) {
 func manageOrganizationPageRequestBean() (res interface{}) {
 	return
 }
-func manageOrganizationPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageOrganizationPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

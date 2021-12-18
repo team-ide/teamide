@@ -32,7 +32,7 @@ func manageLogNewBean() (res interface{}) {
 func manageLogPageRequestBean() (res interface{}) {
 	return
 }
-func manageLogPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageLogPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

@@ -1,4 +1,4 @@
-package base
+package component
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"server/base"
 	"strconv"
 	"strings"
 )
@@ -43,7 +44,7 @@ func init() {
 		panic(err)
 	}
 	filePath := path + "/./conf/server.info"
-	exists, err := PathExists(filePath)
+	exists, err := base.PathExists(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -174,7 +175,7 @@ func AesDecryptECB(crypted string) (res string) {
 
 //AES加密,CBC
 func AesEncryptCBCByKey(origData string, key string) (res string) {
-	bs, err := AesCBCEncrypt([]byte(origData), []byte(key))
+	bs, err := base.AesCBCEncrypt([]byte(origData), []byte(key))
 	if err != nil {
 		Logger.Error("加密失败!")
 		return
@@ -192,7 +193,7 @@ func AesDecryptCBCByKey(crypted string, key string) (res string) {
 		Logger.Error("解密失败!")
 		return
 	}
-	bs, err = AesCBCDecrypt(bs, []byte(key))
+	bs, err = base.AesCBCDecrypt(bs, []byte(key))
 	if err != nil {
 		Logger.Error("解密失败!")
 		return
@@ -203,7 +204,7 @@ func AesDecryptCBCByKey(crypted string, key string) (res string) {
 
 //AES加密,ECB
 func AesEncryptECBByKey(origData string, key string) (res string) {
-	bs, err := AesECBEncrypt([]byte(origData), []byte(key))
+	bs, err := base.AesECBEncrypt([]byte(origData), []byte(key))
 	if err != nil {
 		Logger.Error("加密失败!")
 		return
@@ -221,7 +222,7 @@ func AesDecryptECBByKey(crypted string, key string) (res string) {
 		Logger.Error("解密失败!")
 		return
 	}
-	bs, err = AesECBDecrypt(bs, []byte(key))
+	bs, err = base.AesECBDecrypt(bs, []byte(key))
 	if err != nil {
 		Logger.Error("解密失败!")
 		return
@@ -242,7 +243,7 @@ func GetCerInfoByCode(code string) (info *CerInfo) {
 		bs = append(bs, b)
 	}
 
-	bs, _ = AesCBCDecrypt(bs, []byte(CerSecret))
+	bs, _ = base.AesCBCDecrypt(bs, []byte(CerSecret))
 	info = &CerInfo{}
 	json.Unmarshal(bs, info)
 	return

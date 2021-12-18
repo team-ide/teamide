@@ -26,7 +26,7 @@ func init() {
 		Username: config.Config.Mysql.Username,
 		Password: config.Config.Mysql.Password,
 	}
-	base.Logger.Info(base.LogStr("数据库初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
+	Logger.Info(LogStr("数据库初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
 	service, err = CreateMysqlService(databaseConfig)
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	base.Logger.Info(base.LogStr("数据库连接成功!"))
+	Logger.Info(LogStr("数据库连接成功!"))
 }
 
 type DatabaseConfig struct {
@@ -302,7 +302,7 @@ func (service *MysqlService) ResultToBeans(rows *sql.Rows, newBean func() interf
 		}
 		err = rows.Scan(values...)
 		if err != nil {
-			base.Logger.Error(base.LogStr("ResultToBeans error:", err))
+			Logger.Error(LogStr("ResultToBeans error:", err))
 			return nil, err
 		}
 		refValue := base.GetRefValue(bean)
@@ -362,8 +362,8 @@ func (service *MysqlService) ResultToBeans(rows *sql.Rows, newBean func() interf
 func (service *MysqlService) Query(sqlParam base.SqlParam, newBean func() interface{}) (list []interface{}, err error) {
 	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Query sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Query sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	list, err = service.ResultToBeans(rows, newBean)
@@ -377,8 +377,8 @@ func (service *MysqlService) Query(sqlParam base.SqlParam, newBean func() interf
 func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err error) {
 	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Count sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Count sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Count sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Count sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	if rows.Next() {
@@ -391,9 +391,9 @@ func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err err
 	return
 }
 
-func (service *MysqlService) QueryPage(sqlParam base.SqlParam, countSqlParam base.SqlParam, newBean func() interface{}) (page *base.PageBean, err error) {
+func (service *MysqlService) QueryPage(sqlParam base.SqlParam, newBean func() interface{}) (page *base.PageBean, err error) {
 	var total int64
-	total, err = service.Count(countSqlParam)
+	total, err = service.Count(base.SqlParam{CountSql: sqlParam.CountSql, CountParams: sqlParam.CountParams})
 	if err != nil {
 		return
 	}
@@ -421,8 +421,8 @@ func (service *MysqlService) Insert(sqlParam base.SqlParam) (rowsAffected int64,
 
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Insert sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Insert sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Insert sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Insert sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -435,8 +435,8 @@ func (service *MysqlService) Insert(sqlParam base.SqlParam) (rowsAffected int64,
 func (service *MysqlService) Update(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Update sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Update sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Update sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Update sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -449,8 +449,8 @@ func (service *MysqlService) Update(sqlParam base.SqlParam) (rowsAffected int64,
 func (service *MysqlService) Exec(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Exec sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Exec sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Exec sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Exec sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -463,8 +463,8 @@ func (service *MysqlService) Exec(sqlParam base.SqlParam) (rowsAffected int64, e
 func (service *MysqlService) Delete(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Delete sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Delete sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Delete sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Delete sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()

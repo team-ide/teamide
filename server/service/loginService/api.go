@@ -31,7 +31,7 @@ func manageLoginNewBean() (res interface{}) {
 func manageLoginPageRequestBean() (res interface{}) {
 	return
 }
-func manageLoginPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageLoginPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

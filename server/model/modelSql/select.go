@@ -1,6 +1,9 @@
-package sql
+package modelSql
 
-import "strings"
+import (
+	"server/base"
+	"strings"
+)
 
 type Select struct {
 	Database     string          `json:"database"`     // 库名
@@ -95,7 +98,7 @@ type Having struct {
 	Having    string `json:"having"`    // 筛选分组后的各组数据
 }
 
-func (this_ *Select) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam, err error) {
+func (this_ *Select) GetSqlParam(data map[string]interface{}) (sqlParam base.SqlParam, err error) {
 
 	var sql string
 	var params []interface{}
@@ -109,12 +112,12 @@ func (this_ *Select) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam
 	return
 }
 
-func (this_ *Select) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []SqlParam, err error) {
+func (this_ *Select) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []base.SqlParam, err error) {
 	if len(dataList) == 0 {
 		return
 	}
 	for _, data := range dataList {
-		var sqlParam SqlParam
+		var sqlParam base.SqlParam
 		sqlParam, err = this_.GetSqlParam(data)
 		if err != nil {
 			return

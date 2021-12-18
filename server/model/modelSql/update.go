@@ -1,7 +1,8 @@
-package sql
+package modelSql
 
 import (
 	"fmt"
+	"server/base"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ type UpdateColumn struct {
 	AllowEmpty  bool   `json:"allowEmpty"`  // 允许空值，如果是null或空字符串则也设置值
 }
 
-func (this_ *Update) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam, err error) {
+func (this_ *Update) GetSqlParam(data map[string]interface{}) (sqlParam base.SqlParam, err error) {
 	wrapTable := WrapTableName(this_.Database, this_.Table)
 
 	params := []interface{}{}
@@ -73,12 +74,12 @@ func (this_ *Update) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam
 	return
 }
 
-func (this_ *Update) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []SqlParam, err error) {
+func (this_ *Update) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []base.SqlParam, err error) {
 	if len(dataList) == 0 {
 		return
 	}
 	for _, data := range dataList {
-		var sqlParam SqlParam
+		var sqlParam base.SqlParam
 		sqlParam, err = this_.GetSqlParam(data)
 		if err != nil {
 			return

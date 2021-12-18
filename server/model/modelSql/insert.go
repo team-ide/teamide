@@ -1,7 +1,8 @@
-package sql
+package modelSql
 
 import (
 	"fmt"
+	"server/base"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (this_ *Insert) AppendColumn(column *InsertColumn) *Insert {
 	return this_
 }
 
-func (this_ *Insert) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam, err error) {
+func (this_ *Insert) GetSqlParam(data map[string]interface{}) (sqlParam base.SqlParam, err error) {
 	wrapTable := WrapTableName(this_.Database, this_.Table)
 
 	params := []interface{}{}
@@ -66,12 +67,12 @@ func (this_ *Insert) GetSqlParam(data map[string]interface{}) (sqlParam SqlParam
 	return
 }
 
-func (this_ *Insert) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []SqlParam, err error) {
+func (this_ *Insert) GetSqlParams(dataList ...map[string]interface{}) (sqlParams []base.SqlParam, err error) {
 	if len(dataList) == 0 {
 		return
 	}
 	for _, data := range dataList {
-		var sqlParam SqlParam
+		var sqlParam base.SqlParam
 		sqlParam, err = this_.GetSqlParam(data)
 		if err != nil {
 			return

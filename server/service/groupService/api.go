@@ -31,7 +31,7 @@ func manageGroupNewBean() (res interface{}) {
 func manageGroupPageRequestBean() (res interface{}) {
 	return
 }
-func manageGroupPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageGroupPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

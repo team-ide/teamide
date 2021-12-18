@@ -31,7 +31,7 @@ func manageJobNewBean() (res interface{}) {
 func manageJobPageRequestBean() (res interface{}) {
 	return
 }
-func manageJobPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageJobPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

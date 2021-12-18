@@ -101,7 +101,7 @@ func userAuthNewBean() (res interface{}) {
 func userAuthPageRequestBean() (res interface{}) {
 	return
 }
-func userAuthPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func userAuthPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 
@@ -143,7 +143,7 @@ func manageUserNewBean() (res interface{}) {
 func manageUserPageRequestBean() (res interface{}) {
 	return
 }
-func manageUserPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageUserPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 
@@ -193,7 +193,7 @@ func manageUserAuthNewBean() (res interface{}) {
 func manageUserAuthPageRequestBean() (res interface{}) {
 	return
 }
-func manageUserAuthPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageUserAuthPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 
@@ -235,7 +235,7 @@ func manageUserLockNewBean() (res interface{}) {
 func manageUserLockPageRequestBean() (res interface{}) {
 	return
 }
-func manageUserLockPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageUserLockPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

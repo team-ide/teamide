@@ -35,7 +35,7 @@ func manageSystemSettingNewBean() (res interface{}) {
 func manageSystemSettingPageRequestBean() (res interface{}) {
 	return
 }
-func manageSystemSettingPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageSystemSettingPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 func manageSystemSettingUpdateGetTableBean(requestBean interface{}) (table string, keys []string, bean interface{}, err error) {
@@ -48,7 +48,7 @@ func manageSystemLogNewBean() (res interface{}) {
 func manageSystemLogPageRequestBean() (res interface{}) {
 	return
 }
-func manageSystemLogPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func manageSystemLogPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 func manageSystemLogInsertGetTableBean(requestBean interface{}) (table string, bean interface{}, err error) {

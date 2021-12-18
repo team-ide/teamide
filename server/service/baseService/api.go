@@ -12,7 +12,7 @@ func NewQueryPageApiWorker(
 	Power *base.PowerAction,
 	NewRequestBean func() interface{},
 	NewBean func() interface{},
-	GetSqlParam func(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error),
+	GetSqlParam func(requestBean interface{}) (sqlParam base.SqlParam, err error),
 ) *base.ApiWorker {
 	return ApiQueryPage{Api, Power, NewRequestBean, NewBean, GetSqlParam}.ApiWorker()
 }
@@ -22,7 +22,7 @@ type ApiQueryPage struct {
 	Power          *base.PowerAction
 	NewRequestBean func() interface{}
 	NewBean        func() interface{}
-	GetSqlParam    func(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error)
+	GetSqlParam    func(requestBean interface{}) (sqlParam base.SqlParam, err error)
 }
 
 func (service ApiQueryPage) ApiWorker() (apiWorker *base.ApiWorker) {
@@ -46,12 +46,11 @@ func (service ApiQueryPage) Do(request *base.RequestBean, c *gin.Context) (res i
 		}
 	}
 	var sqlParam base.SqlParam
-	var countSqlParam base.SqlParam
-	sqlParam, countSqlParam, err = service.GetSqlParam(requestBean)
+	sqlParam, err = service.GetSqlParam(requestBean)
 	if err != nil {
 		return
 	}
-	res, err = component.DB.QueryPage(sqlParam, countSqlParam, base.NewUserEntityInterface)
+	res, err = component.DB.QueryPage(sqlParam, base.NewUserEntityInterface)
 	if err != nil {
 		return
 	}

@@ -5,7 +5,7 @@ import (
 	"server/component"
 )
 
-func GetID(idType base.IDType) (id int64, err error) {
+func GetID(idType component.IDType) (id int64, err error) {
 
 	var ids []int64
 	ids, err = GetIDs(idType, 1)
@@ -18,9 +18,9 @@ func GetID(idType base.IDType) (id int64, err error) {
 	return
 }
 
-func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
+func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 
-	var key = base.GetIDRedisKey(idType)
+	var key = component.GetIDRedisKey(idType)
 	var exists bool
 	exists, err = component.Redis.Exists(key)
 	if err != nil {
@@ -44,7 +44,7 @@ func GetIDs(idType base.IDType, size int64) (ids []int64, err error) {
 			if err != nil {
 				return
 			}
-			var id_ int64 = base.GetBaseID()
+			var id_ int64 = component.GetBaseID()
 			if idInfo == nil {
 				idInfo = &base.IDEntity{
 					Type: int8(idType),
@@ -115,7 +115,7 @@ func IDBatchInsert(ids []interface{}) (err error) {
 
 func IDInsertOrUpdate(id base.IDEntity) (err error) {
 	sql := "INSERT INTO " + base.TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
-	params := []interface{}{base.GetServerId(), id.Type, id.Id, id.Id}
+	params := []interface{}{component.GetServerId(), id.Type, id.Id, id.Id}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -128,9 +128,9 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 }
 
 //查询单个ID
-func IDGet(idType base.IDType) (id *base.IDEntity, err error) {
+func IDGet(idType component.IDType) (id *base.IDEntity, err error) {
 	sql := "SELECT * FROM " + base.TABLE_ID + " WHERE serverId=? AND type=? "
-	params := []interface{}{base.GetServerId(), idType}
+	params := []interface{}{component.GetServerId(), idType}
 
 	sqlParam := base.NewSqlParam(sql, params)
 

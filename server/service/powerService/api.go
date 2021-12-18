@@ -41,7 +41,7 @@ func managePowerRoleNewBean() (res interface{}) {
 func managePowerRolePageRequestBean() (res interface{}) {
 	return
 }
-func managePowerRolePageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func managePowerRolePageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 
@@ -63,7 +63,7 @@ func managePowerActionNewBean() (res interface{}) {
 func managePowerActionPageRequestBean() (res interface{}) {
 	return
 }
-func managePowerActionPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func managePowerActionPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 
@@ -85,7 +85,7 @@ func managePowerDataNewBean() (res interface{}) {
 func managePowerDataPageRequestBean() (res interface{}) {
 	return
 }
-func managePowerDataPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, countSqlParam base.SqlParam, err error) {
+func managePowerDataPageGetSqlParam(requestBean interface{}) (sqlParam base.SqlParam, err error) {
 	return
 }
 

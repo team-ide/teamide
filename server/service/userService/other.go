@@ -3,6 +3,7 @@ package userService
 import (
 	"fmt"
 	"server/base"
+	"server/component"
 	"sync"
 	"time"
 )
@@ -123,12 +124,12 @@ func TestTotalBatchInsert(ctrip int, count int) {
 			}
 			nowTime := base.GetNowTime()
 			use := nowTime - res.startTime
-			base.Logger.Info(base.LogStr("当前耗时:", use, "，成功:", res.successCount, "，失败:", res.errorCount))
+			component.Logger.Info(component.LogStr("当前耗时:", use, "，成功:", res.successCount, "，失败:", res.errorCount))
 		}
 	}()
 	wg.Wait()
 	end := base.GetNowTime()
-	base.Logger.Info(base.LogStr("testTotalBatchInsert", "结束，耗时:", (end - res.startTime), "，成功:", res.successCount, "，失败:", res.errorCount))
+	component.Logger.Info(component.LogStr("testTotalBatchInsert", "结束，耗时:", (end - res.startTime), "，成功:", res.successCount, "，失败:", res.errorCount))
 }
 func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 	var i int
@@ -189,7 +190,7 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 				panic(e)
 			}
 		}
-		// base.Logger.Info(base.LogStr("批量插入用户耗时:", (end - start), "，成功:", len(successUserTotals), "，失败:", len(errUserTotals), "，异常:", errs))
+		// component.Logger.Info(component.LogStr("批量插入用户耗时:", (end - start), "，成功:", len(successUserTotals), "，失败:", len(errUserTotals), "，异常:", errs))
 	}
 
 }

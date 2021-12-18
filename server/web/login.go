@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"server/base"
+	"server/component"
 	"server/service/userService"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,7 @@ func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err e
 		err = base.NewValidateError("登录密码不能为空!")
 		return
 	}
-	pwd := base.AesDecryptCBCByKey(loginRequest.Password, base.HTTP_AES_KEY)
+	pwd := component.AesDecryptCBCByKey(loginRequest.Password, component.HTTP_AES_KEY)
 	if pwd == "" {
 		err = base.NewValidateError("用户名或密码错误!")
 		return
@@ -57,7 +58,7 @@ func getJWT(c *gin.Context) *base.JWTBean {
 	if jwt == "" {
 		return nil
 	}
-	jwt = base.AesDecryptCBC(jwt)
+	jwt = component.AesDecryptCBC(jwt)
 	if jwt == "" {
 		return nil
 	}
@@ -85,7 +86,7 @@ func getJWTStr(user *base.UserEntity) string {
 		Time:     base.GetNowTime(),
 	}
 	jwtStr := base.ToJSON(jwt)
-	jwtStr = base.AesEncryptCBC(jwtStr)
+	jwtStr = component.AesEncryptCBC(jwtStr)
 	if jwtStr == "" {
 		return ""
 	}
@@ -116,6 +117,6 @@ func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err
 	response.Powers = getPowersByUserId(userId)
 
 	json := base.ToJSON(response)
-	res = base.AesEncryptCBCByKey(json, base.HTTP_AES_KEY)
+	res = component.AesEncryptCBCByKey(json, component.HTTP_AES_KEY)
 	return
 }

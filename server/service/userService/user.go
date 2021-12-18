@@ -86,7 +86,7 @@ func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
 
 	// defer lock.Unlock()
 
-	lockKey := base.GetUserMetadataLockRedisKey(user.UserId)
+	lockKey := component.GetUserMetadataLockRedisKey(user.UserId)
 	var unlock func() (err error)
 	unlock, err = component.Redis.Lock(lockKey, 10, 1000)
 	if err != nil {
@@ -121,14 +121,14 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 	size := len(inserts)
 	if size > 0 {
 		var ids []int64
-		ids, err = idService.GetIDs(base.ID_TYPE_USER_METADATA, int64(size))
+		ids, err = idService.GetIDs(component.ID_TYPE_USER_METADATA, int64(size))
 		if err != nil {
 			return
 		}
 		datas := []interface{}{}
 		for index, one := range inserts {
 			one.MetadataId = ids[index]
-			one.ServerId = base.GetServerId()
+			one.ServerId = component.GetServerId()
 			datas = append(datas, one)
 		}
 		err = component.DB.BatchInsertBean(base.TABLE_USER_METADATA, datas)
@@ -239,7 +239,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 
 	// defer lock.Unlock()
 	var accountUnlock func() (err error)
-	accountUnlock, err = component.Redis.Lock(base.GetUserInsertLockRedisKey(user.Account), 10, 1000)
+	accountUnlock, err = component.Redis.Lock(component.GetUserInsertLockRedisKey(user.Account), 10, 1000)
 	if err != nil {
 		return
 	}
@@ -247,7 +247,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 
 	if user.Email != "" {
 		var emailUnlock func() (err error)
-		emailUnlock, err = component.Redis.Lock(base.GetUserInsertLockRedisKey(user.Email), 10, 1000)
+		emailUnlock, err = component.Redis.Lock(component.GetUserInsertLockRedisKey(user.Email), 10, 1000)
 		if err != nil {
 			return
 		}
@@ -264,7 +264,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 		return
 	}
 	var userId int64
-	userId, err = idService.GetID(base.ID_TYPE_USER)
+	userId, err = idService.GetID(component.ID_TYPE_USER)
 	if err != nil {
 		return
 	}
@@ -272,7 +272,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 	user.EnabledState = 1
 	user.ActivedState = 2
 	user.LockedState = 2
-	user.ServerId = base.GetServerId()
+	user.ServerId = component.GetServerId()
 	user.CreateTime = base.Now()
 
 	err = component.DB.InsertBean(base.TABLE_USER, *user)
@@ -294,7 +294,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 	password.Salt = ""
 
 	sql := "INSERT INTO " + base.TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
-	params := []interface{}{base.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
+	params := []interface{}{component.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -310,7 +310,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 // 查询用户密码
 func UserPasswordCheck(userId int64, password string) (check bool, err error) {
 	sql := "SELECT * FROM " + base.TABLE_USER_PASSWORD + " WHERE serverId=? AND userId=? "
-	params := []interface{}{base.GetServerId(), userId}
+	params := []interface{}{component.GetServerId(), userId}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -372,7 +372,7 @@ func UserCount(user base.UserEntity) (count int64, err error) {
 func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 
 	sqlParam.Sql += " AND serverId=? "
-	sqlParam.Params = append(sqlParam.Params, base.GetServerId())
+	sqlParam.Params = append(sqlParam.Params, component.GetServerId())
 
 	if user.EnabledState != 0 {
 		sqlParam.Sql += " AND enabledState=? "
@@ -403,7 +403,7 @@ func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 //用户搜索，只搜索有效用户
 func UserSearch(name string) (users []*base.UserEntity, err error) {
 	sql := "SELECT userId,name,avatar FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
-	params := []interface{}{base.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
+	params := []interface{}{component.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -423,7 +423,7 @@ func UserSearch(name string) (users []*base.UserEntity, err error) {
 //查询单个用户
 func UserGet(userId int64) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND userId=? "
-	params := []interface{}{base.GetServerId(), userId}
+	params := []interface{}{component.GetServerId(), userId}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -442,7 +442,7 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
 func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
-	params := []interface{}{base.GetServerId(), account, account}
+	params := []interface{}{component.GetServerId(), account, account}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -461,7 +461,7 @@ func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 // 根据 登录名称 邮箱 手机 查询UserId
 func UserGetUserIdByAccount(account string, email string) (userId int64, err error) {
 	sql := "SELECT userId FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
-	params := []interface{}{base.GetServerId(), account}
+	params := []interface{}{component.GetServerId(), account}
 
 	if email != "" {
 		sql += "OR email=? "
@@ -486,7 +486,7 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 // 根据 登录名称 邮箱 手机 统计
 func UserExistByAccount(account string, email string) (exist bool, err error) {
 	sql := "SELECT COUNT(userId) FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
-	params := []interface{}{base.GetServerId(), account}
+	params := []interface{}{component.GetServerId(), account}
 
 	if email != "" {
 		sql += "OR email=? "

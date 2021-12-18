@@ -1,7 +1,6 @@
 package component
 
 import (
-	"server/base"
 	"server/config"
 	"strings"
 )
@@ -16,7 +15,7 @@ func init() {
 	address := config.Config.Redis.Address
 	auth := config.Config.Redis.Auth
 	cluster := strings.Contains(address, ";")
-	base.Logger.Info(base.LogStr("Redis初始化:address:", address))
+	Logger.Info(LogStr("Redis初始化:address:", address))
 	if cluster {
 		service, err = CreateRedisClusterService(address, auth)
 		if err != nil {
@@ -34,7 +33,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	base.Logger.Info(base.LogStr("Redis连接成功!"))
+	Logger.Info(LogStr("Redis连接成功!"))
 }
 
 type RedisService interface {
