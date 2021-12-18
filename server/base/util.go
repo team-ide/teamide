@@ -2,6 +2,7 @@ package base
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,13 +17,7 @@ import (
 	"time"
 
 	"github.com/Chain-Zhang/pinyin"
-	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
-)
-
-var (
-	//全局的JSON转换对象
-	JSON = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
 func GetIpFromAddr(addr net.Addr) net.IP {
@@ -46,7 +41,7 @@ func GetIpFromAddr(addr net.Addr) net.IP {
 
 func ToJSON(data interface{}) string {
 	if data != nil {
-		bs, _ := JSON.Marshal(data)
+		bs, _ := json.Marshal(data)
 		if bs != nil {
 			return string(bs)
 		}
@@ -55,7 +50,7 @@ func ToJSON(data interface{}) string {
 }
 
 func ToBean(bytes []byte, req interface{}) (err error) {
-	err = JSON.Unmarshal(bytes, req)
+	err = json.Unmarshal(bytes, req)
 	return
 }
 

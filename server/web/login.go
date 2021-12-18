@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"server/base"
 	"server/userService"
 
@@ -61,7 +62,7 @@ func getJWT(c *gin.Context) *base.JWTBean {
 		return nil
 	}
 	res := &base.JWTBean{}
-	base.JSON.Unmarshal([]byte(jwt), res)
+	json.Unmarshal([]byte(jwt), res)
 	if res.Time == 0 {
 		return nil
 	}
