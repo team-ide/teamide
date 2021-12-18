@@ -1,19 +1,19 @@
 package installService
 
 import (
-	"server/enterpriseService"
-	"server/groupService"
-	"server/idService"
-	"server/jobService"
-	"server/logService"
-	"server/loginService"
-	"server/messageService"
-	"server/organizationService"
-	"server/powerService"
-	"server/spaceService"
-	"server/systemService"
-	"server/userService"
-	"server/wbsService"
+	"server/service/enterpriseService"
+	"server/service/groupService"
+	"server/service/idService"
+	"server/service/jobService"
+	"server/service/logService"
+	"server/service/loginService"
+	"server/service/messageService"
+	"server/service/organizationService"
+	"server/service/powerService"
+	"server/service/spaceService"
+	"server/service/systemService"
+	"server/service/userService"
+	"server/service/wbsService"
 )
 
 func Init() {

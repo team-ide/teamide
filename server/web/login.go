@@ -3,7 +3,7 @@ package web
 import (
 	"encoding/json"
 	"server/base"
-	"server/userService"
+	"server/service/userService"
 
 	"github.com/gin-gonic/gin"
 )

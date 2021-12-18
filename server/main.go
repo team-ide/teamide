@@ -6,7 +6,7 @@ import (
 	"server/base"
 	"server/component"
 	"server/config"
-	"server/installService"
+	"server/service/installService"
 	"server/web"
 	"syscall"
 )

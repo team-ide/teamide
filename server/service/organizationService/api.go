@@ -2,7 +2,7 @@ package organizationService
 
 import (
 	"server/base"
-	"server/baseService"
+	"server/service/baseService"
 )
 
 func BindApi() (workers []*base.ApiWorker) {

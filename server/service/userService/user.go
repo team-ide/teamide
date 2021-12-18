@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"server/base"
 	"server/component"
-	"server/idService"
+	"server/service/idService"
 )
 
 func UserCheck(user *base.UserEntity) (err error) {
