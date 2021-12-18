@@ -5,6 +5,10 @@ import (
 	"server/component"
 )
 
+var (
+	TABLE_ID = "TM_ID"
+)
+
 func GetID(idType component.IDType) (id int64, err error) {
 
 	var ids []int64
@@ -91,7 +95,7 @@ func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 }
 func IDInsert(id base.IDEntity) (err error) {
 
-	sqlParam := component.DB.InsertSqlByBean(base.TABLE_ID, id)
+	sqlParam := component.DB.InsertSqlByBean(TABLE_ID, id)
 
 	_, err = component.DB.Insert(sqlParam)
 
@@ -103,7 +107,7 @@ func IDInsert(id base.IDEntity) (err error) {
 
 func IDBatchInsert(ids []interface{}) (err error) {
 
-	sqlParam := component.DB.InsertSqlByBean(base.TABLE_ID, ids...)
+	sqlParam := component.DB.InsertSqlByBean(TABLE_ID, ids...)
 
 	_, err = component.DB.Insert(sqlParam)
 
@@ -114,7 +118,7 @@ func IDBatchInsert(ids []interface{}) (err error) {
 }
 
 func IDInsertOrUpdate(id base.IDEntity) (err error) {
-	sql := "INSERT INTO " + base.TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
+	sql := "INSERT INTO " + TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
 	params := []interface{}{component.GetServerId(), id.Type, id.Id, id.Id}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -129,7 +133,7 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 
 //查询单个ID
 func IDGet(idType component.IDType) (id *base.IDEntity, err error) {
-	sql := "SELECT * FROM " + base.TABLE_ID + " WHERE serverId=? AND type=? "
+	sql := "SELECT * FROM " + TABLE_ID + " WHERE serverId=? AND type=? "
 	params := []interface{}{component.GetServerId(), idType}
 
 	sqlParam := base.NewSqlParam(sql, params)

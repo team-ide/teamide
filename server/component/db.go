@@ -33,13 +33,6 @@ func init() {
 	}
 	DB = *service.(*MysqlService)
 
-	_, err = DB.Exec(base.SqlParam{
-		Sql:    "SELECT 1 FROM " + base.TABLE_INSTALL,
-		Params: []interface{}{},
-	})
-	if err != nil {
-		panic(err)
-	}
 	Logger.Info(LogStr("数据库连接成功!"))
 }
 

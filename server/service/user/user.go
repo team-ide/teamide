@@ -8,6 +8,13 @@ import (
 	idService "server/service/id"
 )
 
+var (
+	TABLE_USER          = "TM_USER"
+	TABLE_USER_ACCOUNT  = "TM_USER_ACCOUNT"
+	TABLE_USER_PASSWORD = "TM_USER_PASSWORD"
+	TABLE_USER_METADATA = "TM_USER_METADATA"
+)
+
 func UserCheck(user *base.UserEntity) (err error) {
 	if user.Name == "" {
 		err = base.NewValidateError("用户名称不能为空!")
@@ -131,7 +138,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 			one.ServerId = component.GetServerId()
 			datas = append(datas, one)
 		}
-		err = component.DB.BatchInsertBean(base.TABLE_USER_METADATA, datas)
+		err = component.DB.BatchInsertBean(TABLE_USER_METADATA, datas)
 
 		if err != nil {
 			return
@@ -275,7 +282,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 	user.ServerId = component.GetServerId()
 	user.CreateTime = base.Now()
 
-	err = component.DB.InsertBean(base.TABLE_USER, *user)
+	err = component.DB.InsertBean(TABLE_USER, *user)
 
 	if err != nil {
 		return
@@ -293,7 +300,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 	password.Password = ""
 	password.Salt = ""
 
-	sql := "INSERT INTO " + base.TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
+	sql := "INSERT INTO " + TABLE_USER_PASSWORD + " (serverId, userId, salt, password, createTime) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE salt=?, password=?, updateTime=?"
 	params := []interface{}{component.GetServerId(), password.UserId, salt, pwd, password.CreateTime, salt, pwd, password.UpdateTime}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -309,7 +316,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 
 // 查询用户密码
 func UserPasswordCheck(userId int64, password string) (check bool, err error) {
-	sql := "SELECT * FROM " + base.TABLE_USER_PASSWORD + " WHERE serverId=? AND userId=? "
+	sql := "SELECT * FROM " + TABLE_USER_PASSWORD + " WHERE serverId=? AND userId=? "
 	params := []interface{}{component.GetServerId(), userId}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -334,7 +341,7 @@ func UserPasswordCheck(userId int64, password string) (check bool, err error) {
 }
 
 func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
-	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE 1=1 "
+	sql := "SELECT * FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -356,7 +363,7 @@ func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
 }
 
 func UserCount(user base.UserEntity) (count int64, err error) {
-	sql := "SELECT COUNT(*) FROM " + base.TABLE_USER + " WHERE 1=1 "
+	sql := "SELECT COUNT(*) FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -402,7 +409,7 @@ func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 
 //用户搜索，只搜索有效用户
 func UserSearch(name string) (users []*base.UserEntity, err error) {
-	sql := "SELECT userId,name,avatar FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
+	sql := "SELECT userId,name,avatar FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
 	params := []interface{}{component.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -422,7 +429,7 @@ func UserSearch(name string) (users []*base.UserEntity, err error) {
 
 //查询单个用户
 func UserGet(userId int64) (user *base.UserEntity, err error) {
-	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND userId=? "
+	sql := "SELECT * FROM " + TABLE_USER + " WHERE serverId=? AND userId=? "
 	params := []interface{}{component.GetServerId(), userId}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -441,7 +448,7 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
 func UserGetByAccount(account string) (user *base.UserEntity, err error) {
-	sql := "SELECT * FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
+	sql := "SELECT * FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
 	params := []interface{}{component.GetServerId(), account, account}
 
 	sqlParam := base.NewSqlParam(sql, params)
@@ -460,7 +467,7 @@ func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 
 // 根据 登录名称 邮箱 手机 查询UserId
 func UserGetUserIdByAccount(account string, email string) (userId int64, err error) {
-	sql := "SELECT userId FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
+	sql := "SELECT userId FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{component.GetServerId(), account}
 
 	if email != "" {
@@ -485,7 +492,7 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 
 // 根据 登录名称 邮箱 手机 统计
 func UserExistByAccount(account string, email string) (exist bool, err error) {
-	sql := "SELECT COUNT(userId) FROM " + base.TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
+	sql := "SELECT COUNT(userId) FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{component.GetServerId(), account}
 
 	if email != "" {

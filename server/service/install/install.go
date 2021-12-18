@@ -5,6 +5,10 @@ import (
 	"server/component"
 )
 
+var (
+	TABLE_INSTALL = "TM_INSTALL"
+)
+
 func Install(info *base.InstallInfo) {
 	if info == nil || info.Stages == nil {
 		return
@@ -21,7 +25,7 @@ func InstallStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	var err error
 	var res int64
 	res, err = component.DB.Count(base.SqlParam{
-		Sql:    "SELECT count(1) FROM  " + base.TABLE_INSTALL + " WHERE module=? AND stage=? ",
+		Sql:    "SELECT count(1) FROM  " + TABLE_INSTALL + " WHERE module=? AND stage=? ",
 		Params: []interface{}{info.Module, stage.Stage},
 	})
 	if err != nil {
@@ -42,7 +46,7 @@ func InstallStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	// 加密detail
 	detail = component.AesEncryptCBC(detail)
 	sqlParam := base.SqlParam{
-		Sql:    "INSERT INTO  " + base.TABLE_INSTALL + " (module, stage, detail, createTime) VALUES (?, ?, ?, ?) ",
+		Sql:    "INSERT INTO  " + TABLE_INSTALL + " (module, stage, detail, createTime) VALUES (?, ?, ?, ?) ",
 		Params: []interface{}{info.Module, stage.Stage, detail, base.Now()},
 	}
 
