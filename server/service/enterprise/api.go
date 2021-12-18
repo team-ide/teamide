@@ -5,5 +5,5 @@ import (
 )
 
 func BindApi(appendApi func(apis ...*base.ApiWorker)) {
-	bindManageEnterpriseininApi(appendApi)
+	bindManageEnterpriseApi(appendApi)
 }

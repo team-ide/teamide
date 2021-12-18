@@ -4,6 +4,5 @@ import (
 	"server/base"
 )
 
-func BindApi() (workers []*base.ApiWorker) {
-	return
+func BindApi(appendApi func(apis ...*base.ApiWorker)) {
 }

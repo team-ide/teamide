@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"server/model/sqlModel"
+	sqlModel "server/model/sql"
 	"testing"
 )
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"server/service/userService"
+	userService "server/service/user"
 	"testing"
 )
 

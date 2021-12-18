@@ -6,19 +6,19 @@ import (
 	"net/http"
 	"regexp"
 	"server/base"
-	"server/service/enterpriseService"
-	"server/service/groupService"
-	"server/service/idService"
-	"server/service/jobService"
-	"server/service/logService"
-	"server/service/loginService"
-	"server/service/messageService"
-	"server/service/organizationService"
-	"server/service/powerService"
-	"server/service/spaceService"
-	"server/service/systemService"
-	"server/service/userService"
-	"server/service/wbsService"
+	enterpriseService "server/service/enterprise"
+	groupService "server/service/group"
+	idService "server/service/id"
+	jobService "server/service/job"
+	logService "server/service/log"
+	loginService "server/service/login"
+	messageService "server/service/message"
+	organizationService "server/service/organization"
+	powerService "server/service/power"
+	spaceService "server/service/space"
+	systemService "server/service/system"
+	userService "server/service/user"
+	wbsService "server/service/wbs"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -109,19 +109,19 @@ func cacheApi() {
 	appendApi(&base.ApiWorker{Apis: []string{"register"}, Power: base.PowerRegister, Do: apiRegister})
 	appendApi(&base.ApiWorker{Apis: []string{"session"}, Power: base.PowerSession, Do: apiSession})
 
-	appendApi(idService.BindApi()...)
-	appendApi(userService.BindApi()...)
-	appendApi(wbsService.BindApi()...)
-	appendApi(logService.BindApi()...)
-	appendApi(enterpriseService.BindApi()...)
-	appendApi(organizationService.BindApi()...)
-	appendApi(jobService.BindApi()...)
-	appendApi(powerService.BindApi()...)
-	appendApi(spaceService.BindApi()...)
-	appendApi(systemService.BindApi()...)
-	appendApi(loginService.BindApi()...)
-	appendApi(messageService.BindApi()...)
-	appendApi(groupService.BindApi()...)
+	idService.BindApi(appendApi)
+	userService.BindApi(appendApi)
+	wbsService.BindApi(appendApi)
+	logService.BindApi(appendApi)
+	enterpriseService.BindApi(appendApi)
+	organizationService.BindApi(appendApi)
+	jobService.BindApi(appendApi)
+	powerService.BindApi(appendApi)
+	spaceService.BindApi(appendApi)
+	systemService.BindApi(appendApi)
+	loginService.BindApi(appendApi)
+	messageService.BindApi(appendApi)
+	groupService.BindApi(appendApi)
 
 	var apiPowerMap = make(map[string]bool)
 	for _, api := range apiCache {

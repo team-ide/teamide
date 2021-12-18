@@ -3,7 +3,7 @@ package organizationService
 import (
 	"server/base"
 	"server/component"
-	"server/model/sqlModel"
+	sqlModel "server/model/sql"
 
 	"github.com/gin-gonic/gin"
 )

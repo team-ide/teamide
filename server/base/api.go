@@ -161,6 +161,12 @@ var (
 	PowerManageJobUpdate = addPower(&PowerAction{Action: "manage_job_update", Text: "管理任务修改", Parent: PowerManageJobPage, ShouldLogin: true})
 	PowerManageJobDelete = addPower(&PowerAction{Action: "manage_job_delete", Text: "管理任务删除", Parent: PowerManageJobPage, ShouldLogin: true})
 
+	// 管理消息 权限
+	PowerManageMessagePage   = addPower(&PowerAction{Action: "manage_message_page", Text: "管理消息页面", ShouldLogin: true})
+	PowerManageMessageInsert = addPower(&PowerAction{Action: "manage_message_insert", Text: "管理消息新增", Parent: PowerManageMessagePage, ShouldLogin: true})
+	PowerManageMessageUpdate = addPower(&PowerAction{Action: "manage_message_update", Text: "管理消息修改", Parent: PowerManageMessagePage, ShouldLogin: true})
+	PowerManageMessageDelete = addPower(&PowerAction{Action: "manage_message_delete", Text: "管理消息删除", Parent: PowerManageMessagePage, ShouldLogin: true})
+
 	// 管理日志 权限
 	PowerManageLogPage   = addPower(&PowerAction{Action: "manage_log_page", Text: "管理日志页面", ShouldLogin: true})
 	PowerManageLogInsert = addPower(&PowerAction{Action: "manage_log_insert", Text: "管理日志新增", Parent: PowerManageLogPage, ShouldLogin: true})

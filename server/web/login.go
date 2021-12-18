@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"server/base"
 	"server/component"
-	"server/service/userService"
+	userService "server/service/user"
 
 	"github.com/gin-gonic/gin"
 )

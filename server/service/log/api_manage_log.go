@@ -3,7 +3,7 @@ package logService
 import (
 	"server/base"
 	"server/component"
-	"server/model/modelSql"
+	sqlModel "server/model/sql"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +20,9 @@ func bindManageLogApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageLogPage = &modelSql.Select{
+	sqlManageLogPage = &sqlModel.Select{
 		Table: "TM_USER",
-		Columns: []*modelSql.SelectColumn{
+		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
 			{Name: "avatar"},
@@ -35,14 +35,14 @@ var (
 			{Name: "createTime"},
 			{Name: "updateTime"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "deletedState", ValueScript: "1"},
 			{
 				Piece: true,
-				Wheres: []*modelSql.Where{
-					{Name: "name", Operator: modelSql.LIKE_BEFORE.Value},
-					{Name: "email", Operator: modelSql.LIKE_BEFORE.Value},
-					{Name: "account", Operator: modelSql.LIKE_BEFORE.Value},
+				Wheres: []*sqlModel.Where{
+					{Name: "name", Operator: sqlModel.LIKE_BEFORE.Value},
+					{Name: "email", Operator: sqlModel.LIKE_BEFORE.Value},
+					{Name: "account", Operator: sqlModel.LIKE_BEFORE.Value},
 					{Name: "activedState"},
 					{Name: "lockedState"},
 					{Name: "enabledState"},
@@ -50,9 +50,9 @@ var (
 		},
 	}
 
-	sqlManageLogList = &modelSql.Select{
+	sqlManageLogList = &sqlModel.Select{
 		Table: "TM_USER",
-		Columns: []*modelSql.SelectColumn{
+		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
 			{Name: "avatar"},
@@ -65,14 +65,14 @@ var (
 			{Name: "createTime"},
 			{Name: "updateTime"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "deletedState", ValueScript: "1"},
 			{
 				Piece: true,
-				Wheres: []*modelSql.Where{
-					{Name: "name", Operator: modelSql.LIKE_BEFORE.Value},
-					{Name: "email", Operator: modelSql.LIKE_BEFORE.Value},
-					{Name: "account", Operator: modelSql.LIKE_BEFORE.Value},
+				Wheres: []*sqlModel.Where{
+					{Name: "name", Operator: sqlModel.LIKE_BEFORE.Value},
+					{Name: "email", Operator: sqlModel.LIKE_BEFORE.Value},
+					{Name: "account", Operator: sqlModel.LIKE_BEFORE.Value},
 					{Name: "activedState"},
 					{Name: "lockedState"},
 					{Name: "enabledState"},
@@ -80,9 +80,9 @@ var (
 		},
 	}
 
-	sqlManageLogOne = &modelSql.Select{
+	sqlManageLogOne = &sqlModel.Select{
 		Table: "TM_USER",
-		Columns: []*modelSql.SelectColumn{
+		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
 			{Name: "avatar"},
@@ -95,14 +95,14 @@ var (
 			{Name: "createTime"},
 			{Name: "updateTime"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
 	}
 
-	sqlManageLogInsert = &modelSql.Insert{
+	sqlManageLogInsert = &sqlModel.Insert{
 		Table: "TM_USER",
-		Columns: []*modelSql.InsertColumn{
+		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
 			{Name: "avatar"},
@@ -115,26 +115,26 @@ var (
 		},
 	}
 
-	sqlManageLogUpdate = &modelSql.Update{
+	sqlManageLogUpdate = &sqlModel.Update{
 		Table: "TM_USER",
-		Columns: []*modelSql.UpdateColumn{
+		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
 			{Name: "email"},
 			{Name: "account"},
 			{Name: "updateTime", ValueScript: "now()"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
 	}
 
-	sqlManageLogDelete = &modelSql.Update{
+	sqlManageLogDelete = &sqlModel.Update{
 		Table: "TM_USER",
-		Columns: []*modelSql.UpdateColumn{
+		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
 	}

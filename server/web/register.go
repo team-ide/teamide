@@ -3,7 +3,7 @@ package web
 import (
 	"server/base"
 	"server/component"
-	"server/service/userService"
+	userService "server/service/user"
 
 	"github.com/gin-gonic/gin"
 )
