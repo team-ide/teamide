@@ -57,9 +57,9 @@ var (
 	// 用户资料 权限
 	PowerUserProfilePage   = addPower(&PowerAction{Action: "user_profile_page", Text: "用户资料页面", ShouldLogin: true})
 	PowerUserProfileUpdate = addPower(&PowerAction{Action: "user_profile_update", Text: "用户资料修改", Parent: PowerUserProfilePage, ShouldLogin: true})
-	// 用户安全 权限
-	PowerUserSecurityPage   = addPower(&PowerAction{Action: "user_security_page", Text: "用户安全页面", ShouldLogin: true})
-	PowerUserSecurityUpdate = addPower(&PowerAction{Action: "user_security_update", Text: "用户安全修改", Parent: PowerUserSecurityPage, ShouldLogin: true})
+	// 用户密码 权限
+	PowerUserPasswordPage   = addPower(&PowerAction{Action: "user_password_page", Text: "用户密码页面", ShouldLogin: true})
+	PowerUserPasswordUpdate = addPower(&PowerAction{Action: "user_password_update", Text: "用户密码修改", Parent: PowerUserPasswordPage, ShouldLogin: true})
 
 	// 用户授权 权限
 	PowerUserAuthPage    = addPower(&PowerAction{Action: "user_auth_page", Text: "用户授权页面", ShouldLogin: true})

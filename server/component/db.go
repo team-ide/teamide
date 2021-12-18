@@ -374,6 +374,31 @@ func (service *MysqlService) Query(sqlParam base.SqlParam, newBean func() interf
 	return
 }
 
+func (service *MysqlService) QueryOne(sqlParam base.SqlParam, newBean func() interface{}) (one interface{}, err error) {
+	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
+	if err != nil {
+		Logger.Error(LogStr("Query sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
+		return
+	}
+	var list []interface{}
+	list, err = service.ResultToBeans(rows, newBean)
+	if err != nil {
+		return
+	}
+
+	if len(list) > 1 {
+		err = errors.New("the result contains multiple pieces of data")
+		return
+	}
+	if len(list) == 1 {
+		one = list[0]
+		return
+	}
+	rows.Close()
+	return
+}
+
 func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err error) {
 	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {

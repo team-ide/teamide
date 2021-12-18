@@ -72,7 +72,6 @@ func (this_ SqlParam) ToExecSql() string {
 	res := ""
 	for index, str := range strs {
 		res += str
-		println("index:", index, ",str:", str)
 		if index >= len(strs)-1 {
 			continue
 		}

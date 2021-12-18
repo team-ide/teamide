@@ -88,8 +88,8 @@ func checkMetadata(out bool) {
 	codes := map[int]bool{}
 	for _, obj := range U_M {
 		if out {
-			Logger.Info(LogStr("----------结构体（", obj.Comment, "）----------"))
-			Logger.Info(ToJSON(obj))
+			fmt.Println("----------结构体（", obj.Comment, "）----------")
+			fmt.Println(ToJSON(obj))
 		}
 		_, ok := codes[obj.StructCode]
 		if ok {
@@ -97,11 +97,11 @@ func checkMetadata(out bool) {
 		}
 		codes[obj.StructCode] = true
 		if out {
-			Logger.Info(LogStr("----------结构体（", obj.Comment, "）属性----------"))
+			fmt.Println("----------结构体（", obj.Comment, "）属性----------")
 		}
 		for _, field := range obj.Fields {
 			if out {
-				Logger.Info(ToJSON(field))
+				fmt.Println(ToJSON(field))
 			}
 			_, ok := codes[field.StructFieldCode]
 			if ok {

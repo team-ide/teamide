@@ -3,36 +3,36 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"server/model/modelSql"
+	"server/model/sqlModel"
 	"testing"
 )
 
 func TestSelect(t *testing.T) {
-	model := &modelSql.Select{
+	model := &sqlModel.Select{
 		Table: "TM_USER",
-		Columns: []*modelSql.SelectColumn{
+		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
 			{Name: "email"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "account"},
 			{Piece: true,
-				Wheres: []*modelSql.Where{
+				Wheres: []*sqlModel.Where{
 					{Name: "name"},
 					{Name: "email"},
 				},
 			},
 		},
-		UnionSelects: []*modelSql.Select{
+		UnionSelects: []*sqlModel.Select{
 			{
 				Table: "TM_USER",
-				Columns: []*modelSql.SelectColumn{
+				Columns: []*sqlModel.SelectColumn{
 					{Name: "userId"},
 					{Name: "name"},
 					{Name: "email"},
 				},
-				Wheres: []*modelSql.Where{
+				Wheres: []*sqlModel.Where{
 					{Name: "name"},
 					{Name: "email"},
 				},
@@ -55,9 +55,9 @@ func TestSelect(t *testing.T) {
 }
 
 func TestInser(t *testing.T) {
-	model := &modelSql.Insert{
+	model := &sqlModel.Insert{
 		Table: "TM_USER",
-		Columns: []*modelSql.InsertColumn{
+		Columns: []*sqlModel.InsertColumn{
 			{Name: "id", AutoIncrement: true},
 			{Name: "name"},
 			{Name: "age"},
@@ -77,16 +77,16 @@ func TestInser(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	model := &modelSql.Update{
+	model := &sqlModel.Update{
 		Table: "TM_USER",
-		Columns: []*modelSql.UpdateColumn{
+		Columns: []*sqlModel.UpdateColumn{
 			{Name: "c1"},
 			{Name: "c2"},
 		},
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "c3"},
 			{Piece: true,
-				Wheres: []*modelSql.Where{
+				Wheres: []*sqlModel.Where{
 					{Name: "c1"},
 					{Name: "c2"},
 				},
@@ -109,12 +109,12 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	model := &modelSql.Delete{
+	model := &sqlModel.Delete{
 		Table: "TM_USER",
-		Wheres: []*modelSql.Where{
+		Wheres: []*sqlModel.Where{
 			{Name: "c3"},
 			{Piece: true,
-				Wheres: []*modelSql.Where{
+				Wheres: []*sqlModel.Where{
 					{Name: "c1"},
 					{Name: "c2"},
 				},

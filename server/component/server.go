@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	serverInfo *CerInfo
+	serverInfo = initServer()
 )
 
 type CerInfo struct {
@@ -34,11 +34,7 @@ type CerInfo struct {
 	ServerId    int64
 }
 
-func initServer() {
-
-}
-
-func init() {
+func initServer() *CerInfo {
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -54,7 +50,7 @@ func init() {
 	var f *os.File
 	f, err = os.Open(filePath)
 	if err != nil {
-		return
+		panic(err)
 	}
 	defer f.Close()
 	r := bufio.NewReader(f)
@@ -63,7 +59,7 @@ func init() {
 	for {
 		line, err = r.ReadString('\n')
 		if err != nil && err != io.EOF {
-			return
+			panic(err)
 		}
 		if strings.IndexByte(line, '\n') > 0 {
 			line = line[0:strings.IndexByte(line, '\n')]
@@ -85,14 +81,19 @@ func init() {
 			break
 		}
 	}
-	serverInfo = GetCerInfoByCode(code)
+	info := GetCerInfoByCode(code)
 
-	serverInfo.ServerId, err = strconv.ParseInt(serverInfo.No, 10, 64)
+	info.ServerId, err = strconv.ParseInt(info.No, 10, 64)
 	if err != nil {
 		panic("服务信息错误!")
 	}
 	Logger.Info("服务器信息加载成功!")
 
+	return info
+
+}
+
+func init() {
 	str := "测试加解密字段"
 	str1 := AesEncryptCBC(str)
 	if str1 == "" || str1 == str {
@@ -114,7 +115,6 @@ func init() {
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器解密验证成功!")
-
 }
 
 func IsNum(s string) bool {

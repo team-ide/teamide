@@ -7,19 +7,19 @@ import (
 )
 
 type TomlConfig struct {
-	Server    *server   `toml:"server"`
-	Redis     redis     `toml:"redis"`
-	Zookeeper zookeeper `toml:"zookeeper"`
-	Kafka     kafka     `toml:"kafka"`
-	Mysql     mysql     `toml:"mysql"`
-	Log       log       `toml:"log"`
+	Server    *server   `json:"server" toml:"server"`
+	Redis     redis     `json:"redis" toml:"redis"`
+	Zookeeper zookeeper `json:"zookeeper" toml:"zookeeper"`
+	Kafka     kafka     `json:"kafka" toml:"kafka"`
+	Mysql     mysql     `json:"mysql" toml:"mysql"`
+	Log       log       `json:"log" toml:"log"`
 }
 
 type server struct {
-	Host    string
-	Port    int
-	Context string
-	Data    string
+	Host    string `toml:"server"`
+	Port    int    `json:"port"`
+	Context string `json:"context"`
+	Data    string `json:"data"`
 }
 
 type redis struct {
@@ -47,11 +47,11 @@ type mysql struct {
 }
 
 type log struct {
-	Filename   string
-	MaxSize    int
-	MaxAge     int
-	MaxBackups int
-	Level      string
+	Filename   string `json:"filename"`
+	MaxSize    int    `json:"maxSize"`
+	MaxAge     int    `json:"maxAge"`
+	MaxBackups int    `json:"maxBackups"`
+	Level      string `json:"level"`
 }
 
 var (
