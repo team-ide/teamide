@@ -20,7 +20,7 @@ func bindUserMessageApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserMessagePage = &sqlModel.Select{
+	sqlUserMessagePage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserMessageList = &sqlModel.Select{
+	sqlUserMessageList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserMessageOne = &sqlModel.Select{
+	sqlUserMessageOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserMessageInsert = &sqlModel.Insert{
+	sqlUserMessageInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlUserMessageUpdate = &sqlModel.Update{
+	sqlUserMessageUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_MESSAGE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserMessageDelete = &sqlModel.Update{
+	sqlUserMessageDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_MESSAGE,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserMessagePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

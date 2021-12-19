@@ -20,7 +20,7 @@ func bindUserOrganizationApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserOrganizationPage = &sqlModel.Select{
+	sqlUserOrganizationPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserOrganizationList = &sqlModel.Select{
+	sqlUserOrganizationList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserOrganizationOne = &sqlModel.Select{
+	sqlUserOrganizationOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserOrganizationInsert = &sqlModel.Insert{
+	sqlUserOrganizationInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlUserOrganizationUpdate = &sqlModel.Update{
+	sqlUserOrganizationUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserOrganizationDelete = &sqlModel.Update{
+	sqlUserOrganizationDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_ORGANIZATION,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserOrganizationPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

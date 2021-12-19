@@ -20,7 +20,7 @@ func bindManageOrganizationApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageOrganizationPage = &sqlModel.Select{
+	sqlManageOrganizationPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageOrganizationList = &sqlModel.Select{
+	sqlManageOrganizationList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageOrganizationOne = &sqlModel.Select{
+	sqlManageOrganizationOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageOrganizationInsert = &sqlModel.Insert{
+	sqlManageOrganizationInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageOrganizationUpdate = &sqlModel.Update{
+	sqlManageOrganizationUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_ORGANIZATION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageOrganizationDelete = &sqlModel.Update{
+	sqlManageOrganizationDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_ORGANIZATION,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageOrganizationPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

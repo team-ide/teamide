@@ -16,7 +16,7 @@ func bindUserPasswordApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserPasswordUpdate = &sqlModel.Update{
+	sqlUserPasswordUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -28,7 +28,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserPasswordPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

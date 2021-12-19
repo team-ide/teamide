@@ -20,7 +20,7 @@ func bindUserEnterpriseApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserEnterprisePage = &sqlModel.Select{
+	sqlUserEnterprisePage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ENTERPRISE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserEnterpriseList = &sqlModel.Select{
+	sqlUserEnterpriseList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ENTERPRISE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserEnterpriseOne = &sqlModel.Select{
+	sqlUserEnterpriseOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_ENTERPRISE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserEnterpriseInsert = &sqlModel.Insert{
+	sqlUserEnterpriseInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_ENTERPRISE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlUserEnterpriseUpdate = &sqlModel.Update{
+	sqlUserEnterpriseUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_ENTERPRISE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserEnterpriseDelete = &sqlModel.Update{
+	sqlUserEnterpriseDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_ENTERPRISE,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserEnterprisePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

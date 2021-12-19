@@ -28,21 +28,20 @@ import (
 )
 
 func init() {
-
 	factory.BindInstallService(&installService.InstallService{})
+	factory.BindIdService(&idService.IdService{})
+	factory.BindSystemService(&systemService.SystemService{})
+	factory.BindLogService(&logService.LogService{})
+	factory.BindUserService(&userService.UserService{})
+	factory.BindLoginService(&loginService.LoginService{})
 	factory.BindCertificateService(&certificateService.CertificateService{})
 	factory.BindEnterpriseService(&enterpriseService.EnterpriseService{})
 	factory.BindGroupService(&groupService.GroupService{})
-	factory.BindIdService(&idService.IdService{})
 	factory.BindJobService(&jobService.JobService{})
-	factory.BindLogService(&logService.LogService{})
-	factory.BindLoginService(&loginService.LoginService{})
 	factory.BindMessageService(&messageService.MessageService{})
 	factory.BindOrganizationService(&organizationService.OrganizationService{})
 	factory.BindPowerService(&powerService.PowerService{})
 	factory.BindSpaceService(&spaceService.SpaceService{})
-	factory.BindSystemService(&systemService.SystemService{})
-	factory.BindUserService(&userService.UserService{})
 	factory.BindWbsService(&wbsService.WbsService{})
 
 	Init()
@@ -52,6 +51,7 @@ func Init() {
 	config.Init()
 	component.Init()
 	factory.InstallService.Install()
+	// service.CheckModel()
 	web.Init()
 }
 

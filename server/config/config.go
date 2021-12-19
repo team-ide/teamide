@@ -7,51 +7,51 @@ import (
 )
 
 type TomlConfig struct {
-	Server    *server   `json:"server" toml:"server"`
-	Redis     redis     `json:"redis" toml:"redis"`
-	Zookeeper zookeeper `json:"zookeeper" toml:"zookeeper"`
-	Kafka     kafka     `json:"kafka" toml:"kafka"`
-	Mysql     mysql     `json:"mysql" toml:"mysql"`
-	Log       log       `json:"log" toml:"log"`
+	Server    *server   `json:"server" toml:"server,omitempty"`
+	Redis     redis     `json:"redis" toml:"redis,omitempty"`
+	Zookeeper zookeeper `json:"zookeeper" toml:"zookeeper,omitempty"`
+	Kafka     kafka     `json:"kafka" toml:"kafka,omitempty"`
+	Mysql     mysql     `json:"mysql" toml:"mysql,omitempty"`
+	Log       log       `json:"log" toml:"log,omitempty"`
 }
 
 type server struct {
-	Host    string `toml:"server"`
-	Port    int    `json:"port"`
-	Context string `json:"context"`
-	Data    string `json:"data"`
+	Host    string `toml:"server,omitempty"`
+	Port    int    `json:"port,omitempty"`
+	Context string `json:"context,omitempty"`
+	Data    string `json:"data,omitempty"`
 }
 
 type redis struct {
-	Address string `json:"address"`
-	Auth    string `json:"auth"`
-	Prefix  string `json:"prefix"`
+	Address string `json:"address,omitempty"`
+	Auth    string `json:"auth,omitempty"`
+	Prefix  string `json:"prefix,omitempty"`
 }
 
 type zookeeper struct {
-	Address   string `json:"address"`
-	Namespace string `json:"namespace"`
+	Address   string `json:"address,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 type kafka struct {
-	Address string `json:"address"`
-	Prefix  string `json:"prefix"`
+	Address string `json:"address,omitempty"`
+	Prefix  string `json:"prefix,omitempty"`
 }
 
 type mysql struct {
-	Host     string `json:"host"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Host     string `json:"host,omitempty"`
+	Port     int32  `json:"port,omitempty"`
+	Database string `json:"database,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type log struct {
-	Filename   string `json:"filename"`
-	MaxSize    int    `json:"maxSize"`
-	MaxAge     int    `json:"maxAge"`
-	MaxBackups int    `json:"maxBackups"`
-	Level      string `json:"level"`
+	Filename   string `json:"filename,omitempty"`
+	MaxSize    int    `json:"maxSize,omitempty"`
+	MaxAge     int    `json:"maxAge,omitempty"`
+	MaxBackups int    `json:"maxBackups,omitempty"`
+	Level      string `json:"level,omitempty"`
 }
 
 var (

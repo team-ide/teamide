@@ -16,7 +16,7 @@ func bindManageUserPasswordApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageUserPasswordReset = &sqlModel.Update{
+	sqlManageUserPasswordReset = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -28,9 +28,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserPasswordUpdate = &sqlModel.Update{
+	sqlManageUserPasswordUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_PASSWORD,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -42,7 +42,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageUserPasswordReset(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

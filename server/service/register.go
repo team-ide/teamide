@@ -9,10 +9,10 @@ import (
 )
 
 type RegisterRequest struct {
-	Name     string `json:"name"`
-	Account  string `json:"account"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Name     string `json:"name,omitempty"`
+	Account  string `json:"account,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 func apiRegister(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {

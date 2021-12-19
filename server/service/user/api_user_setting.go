@@ -16,7 +16,7 @@ func bindUserSettingApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserSettingUpdate = &sqlModel.Update{
+	sqlUserSettingUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_SETTING,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -28,7 +28,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserSettingPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

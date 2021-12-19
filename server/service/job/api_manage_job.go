@@ -20,7 +20,7 @@ func bindManageJobApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageJobPage = &sqlModel.Select{
+	sqlManageJobPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageJobList = &sqlModel.Select{
+	sqlManageJobList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageJobOne = &sqlModel.Select{
+	sqlManageJobOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageJobInsert = &sqlModel.Insert{
+	sqlManageJobInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_JOB,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageJobUpdate = &sqlModel.Update{
+	sqlManageJobUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_JOB,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageJobDelete = &sqlModel.Update{
+	sqlManageJobDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_JOB,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageJobPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

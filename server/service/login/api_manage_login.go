@@ -20,7 +20,7 @@ func bindManageLoginApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageLoginPage = &sqlModel.Select{
+	sqlManageLoginPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageLoginList = &sqlModel.Select{
+	sqlManageLoginList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageLoginOne = &sqlModel.Select{
+	sqlManageLoginOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageLoginInsert = &sqlModel.Insert{
+	sqlManageLoginInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageLoginUpdate = &sqlModel.Update{
+	sqlManageLoginUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_LOGIN,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageLoginDelete = &sqlModel.Update{
+	sqlManageLoginDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_LOGIN,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageLoginPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

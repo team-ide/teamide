@@ -20,8 +20,8 @@ func bindUserCertificateApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserCertificatePage = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserCertificatePage = newSelectSql(&sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -48,10 +48,10 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserCertificateList = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserCertificateList = newSelectSql(&sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -78,10 +78,10 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlUserCertificateOne = &sqlModel.Select{
-		Table: "TM_USER",
+	sqlUserCertificateOne = newSelectSql(&sqlModel.Select{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -98,10 +98,10 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserCertificateInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+	sqlUserCertificateInsert = newInsertSql(&sqlModel.Insert{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -113,10 +113,10 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlUserCertificateUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+	sqlUserCertificateUpdate = newUpdateSql(&sqlModel.Update{
+		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserCertificateDelete = &sqlModel.Update{
-		Table: "TM_USER",
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
+	sqlUserCertificateDelete = newDeleteSql(&sqlModel.Delete{
+		Table: TABLE_CERTIFICATE,
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserCertificatePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

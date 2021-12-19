@@ -25,7 +25,7 @@ func bindManageUserAuthApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageUserAuthPage = &sqlModel.Select{
+	sqlManageUserAuthPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -53,9 +53,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageUserAuthList = &sqlModel.Select{
+	sqlManageUserAuthList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -83,9 +83,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageUserAuthOne = &sqlModel.Select{
+	sqlManageUserAuthOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -103,9 +103,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthInsert = &sqlModel.Insert{
+	sqlManageUserAuthInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -118,9 +118,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthUpdate = &sqlModel.Update{
+	sqlManageUserAuthUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -132,9 +132,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthDelete = &sqlModel.Update{
+	sqlManageUserAuthDelete = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
@@ -142,9 +142,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthActive = &sqlModel.Update{
+	sqlManageUserAuthActive = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "activedState", ValueScript: "1"},
@@ -152,9 +152,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthLock = &sqlModel.Update{
+	sqlManageUserAuthLock = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "1"},
@@ -162,9 +162,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthUnlock = &sqlModel.Update{
+	sqlManageUserAuthUnlock = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "lockedState", ValueScript: "2"},
@@ -172,9 +172,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthDisable = &sqlModel.Update{
+	sqlManageUserAuthDisable = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "2"},
@@ -182,9 +182,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserAuthEnable = &sqlModel.Update{
+	sqlManageUserAuthEnable = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_AUTH,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "enabledState", ValueScript: "1"},
@@ -192,7 +192,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageUserAuthPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

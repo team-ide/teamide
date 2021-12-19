@@ -9,13 +9,13 @@ import (
 )
 
 type DataRequest struct {
-	Origin   string `json:"origin"`
-	Pathname string `json:"pathname"`
+	Origin   string `json:"origin,omitempty"`
+	Pathname string `json:"pathname,omitempty"`
 }
 
 type DataResponse struct {
-	Url string `json:"url"`
-	Api string `json:"api"`
+	Url string `json:"url,omitempty"`
+	Api string `json:"api,omitempty"`
 }
 
 func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

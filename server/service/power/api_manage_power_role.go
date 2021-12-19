@@ -20,7 +20,7 @@ func bindManagePowerRoleApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManagePowerRolePage = &sqlModel.Select{
+	sqlManagePowerRolePage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerRoleList = &sqlModel.Select{
+	sqlManagePowerRoleList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerRoleOne = &sqlModel.Select{
+	sqlManagePowerRoleOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerRoleInsert = &sqlModel.Insert{
+	sqlManagePowerRoleInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerRoleUpdate = &sqlModel.Update{
+	sqlManagePowerRoleUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_POWER_ROLE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,26 +127,23 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerRoleDelete = &sqlModel.Update{
+	sqlManagePowerRoleDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_POWER_ROLE,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManagePowerRolePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRolePage.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRolePage.GetSqlParam(role)
 	if err != nil {
 		return
 	}
@@ -159,12 +156,12 @@ func apiManagePowerRolePage(requestBean *base.RequestBean, c *gin.Context) (res 
 }
 
 func apiManagePowerRoleList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRoleList.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRoleList.GetSqlParam(role)
 	if err != nil {
 		return
 	}
@@ -177,12 +174,12 @@ func apiManagePowerRoleList(requestBean *base.RequestBean, c *gin.Context) (res 
 }
 
 func apiManagePowerRoleOne(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRoleOne.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRoleOne.GetSqlParam(role)
 	if err != nil {
 		return
 	}
@@ -195,12 +192,12 @@ func apiManagePowerRoleOne(requestBean *base.RequestBean, c *gin.Context) (res i
 }
 
 func apiManagePowerRoleInsert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRoleInsert.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRoleInsert.GetSqlParam(role)
 	if err != nil {
 		return
 	}
@@ -213,12 +210,12 @@ func apiManagePowerRoleInsert(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func apiManagePowerRoleUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRoleUpdate.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRoleUpdate.GetSqlParam(role)
 	if err != nil {
 		return
 	}
@@ -231,12 +228,12 @@ func apiManagePowerRoleUpdate(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func apiManagePowerRoleDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	data := make(map[string]interface{})
-	err = c.BindJSON(&data)
+	role := make(map[string]interface{})
+	err = c.BindJSON(&role)
 	if err != nil {
 		return
 	}
-	sqlParam, err := sqlManagePowerRoleDelete.GetSqlParam(data)
+	sqlParam, err := sqlManagePowerRoleDelete.GetSqlParam(role)
 	if err != nil {
 		return
 	}

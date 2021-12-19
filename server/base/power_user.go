@@ -52,6 +52,12 @@ var (
 	PowerUserJobUpdate = addPower(&PowerAction{Action: "user_job_update", Text: "用户任务修改", Parent: PowerUserJobPage, ShouldLogin: true})
 	PowerUserJobDelete = addPower(&PowerAction{Action: "user_job_delete", Text: "用户任务删除", Parent: PowerUserJobPage, ShouldLogin: true})
 
+	// 用户空间 权限
+	PowerUserSpacePage   = addPower(&PowerAction{Action: "user_space_page", Text: "用户空间页面", ShouldLogin: true})
+	PowerUserSpaceInsert = addPower(&PowerAction{Action: "user_space_insert", Text: "用户空间新增", Parent: PowerUserSpacePage, ShouldLogin: true})
+	PowerUserSpaceUpdate = addPower(&PowerAction{Action: "user_space_update", Text: "用户空间修改", Parent: PowerUserSpacePage, ShouldLogin: true})
+	PowerUserSpaceDelete = addPower(&PowerAction{Action: "user_space_delete", Text: "用户空间删除", Parent: PowerUserSpacePage, ShouldLogin: true})
+
 	// 用户日志 权限
 	PowerUserLogPage   = addPower(&PowerAction{Action: "user_log_page", Text: "用户日志页面", ShouldLogin: true})
 	PowerUserLogInsert = addPower(&PowerAction{Action: "user_log_insert", Text: "用户日志新增", Parent: PowerUserLogPage, ShouldLogin: true})

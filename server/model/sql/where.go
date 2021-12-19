@@ -6,17 +6,17 @@ import (
 )
 
 type Where struct {
-	IfScript    string   `json:"ifScript"`    // 条件  满足该条件 添加
-	Custom      bool     `json:"custom"`      // 是否自定义
-	CustomSql   string   `json:"customSql"`   // 是否自定义
-	TableAlias  string   `json:"tableAlias"`  // 表别名
-	Name        string   `json:"name"`        // 字段名称
-	ValueScript string   `json:"valueScript"` // 字段值，可以是属性名、表达式等，如果该值为空，自动取名称相同的值
-	Required    bool     `json:"required"`    // 必填
-	AndOr       string   `json:"andOr"`       // AND 和 OR 运算符
-	Operator    string   `json:"operator"`    // 运算符 = < > LIKE BETWEEN
-	Piece       bool     `json:"piece"`       // 是条件快
-	Wheres      []*Where `json:"wheres"`      // 条件快的条件
+	IfScript    string   `json:"ifScript,omitempty"`    // 条件  满足该条件 添加
+	Custom      bool     `json:"custom,omitempty"`      // 是否自定义
+	CustomSql   string   `json:"customSql,omitempty"`   // 是否自定义
+	TableAlias  string   `json:"tableAlias,omitempty"`  // 表别名
+	Name        string   `json:"name,omitempty"`        // 字段名称
+	ValueScript string   `json:"valueScript,omitempty"` // 字段值，可以是属性名、表达式等，如果该值为空，自动取名称相同的值
+	Required    bool     `json:"required,omitempty"`    // 必填
+	AndOr       string   `json:"andOr,omitempty"`       // AND 和 OR 运算符
+	Operator    string   `json:"operator,omitempty"`    // 运算符 = < > LIKE BETWEEN
+	Piece       bool     `json:"piece,omitempty"`       // 是条件快
+	Wheres      []*Where `json:"wheres,omitempty"`      // 条件快的条件
 }
 
 func (this_ *Where) GetAndOr() string {
@@ -39,8 +39,8 @@ func (this_ *Where) GetOperator() Operator {
 }
 
 type Operator struct {
-	Value string `json:"value"`
-	Text  string `json:"text"`
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
 }
 
 // 运算符
@@ -208,6 +208,30 @@ func getPieceWhereSql(data map[string]interface{}, wheres []*Where) (whereSql st
 
 		whereSql = "(" + whereSql_ + ")"
 		params = params_
+	}
+	return
+}
+
+func appendWhereColumns(wheres []*Where, columns *[]string) {
+	if len(wheres) == 0 {
+		return
+	}
+
+	for _, where := range wheres {
+
+		if where.Piece {
+			appendWhereColumns(where.Wheres, columns)
+			continue
+		}
+		if where.Custom {
+			continue
+		}
+		if IsEmpty(where.Name) {
+			continue
+		}
+
+		wrapColumn := WrapColumnName(where.TableAlias, where.Name)
+		*columns = append(*columns, wrapColumn)
 	}
 	return
 }

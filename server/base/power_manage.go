@@ -47,6 +47,12 @@ var (
 	PowerManagePowerRoleUpdate = addPower(&PowerAction{Action: "manage_power_role_update", Text: "管理权限角色修改", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerRoleDelete = addPower(&PowerAction{Action: "manage_power_role_delete", Text: "管理权限角色删除", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 
+	// 管理用户权限 权限
+	PowerManagePowerUserPage   = addPower(&PowerAction{Action: "manage_power_user_page", Text: "管理用户权限页面", Parent: PowerManagePowerRolePage, ShouldLogin: true})
+	PowerManagePowerUserInsert = addPower(&PowerAction{Action: "manage_power_user_insert", Text: "管理用户权限新增", Parent: PowerManagePowerUserPage, ShouldLogin: true})
+	PowerManagePowerUserUpdate = addPower(&PowerAction{Action: "manage_power_user_update", Text: "管理用户权限修改", Parent: PowerManagePowerUserPage, ShouldLogin: true})
+	PowerManagePowerUserDelete = addPower(&PowerAction{Action: "manage_power_user_delete", Text: "管理用户权限删除", Parent: PowerManagePowerUserPage, ShouldLogin: true})
+
 	// 管理功能权限 权限
 	PowerManagePowerActionPage   = addPower(&PowerAction{Action: "manage_power_action_page", Text: "管理功能权限页面", Parent: PowerManagePowerRolePage, ShouldLogin: true})
 	PowerManagePowerActionInsert = addPower(&PowerAction{Action: "manage_power_action_insert", Text: "管理功能权限新增", Parent: PowerManagePowerActionPage, ShouldLogin: true})
@@ -88,6 +94,12 @@ var (
 	PowerManageMessageInsert = addPower(&PowerAction{Action: "manage_message_insert", Text: "管理消息新增", Parent: PowerManageMessagePage, ShouldLogin: true})
 	PowerManageMessageUpdate = addPower(&PowerAction{Action: "manage_message_update", Text: "管理消息修改", Parent: PowerManageMessagePage, ShouldLogin: true})
 	PowerManageMessageDelete = addPower(&PowerAction{Action: "manage_message_delete", Text: "管理消息删除", Parent: PowerManageMessagePage, ShouldLogin: true})
+
+	// 管理空间 权限
+	PowerManageSpacePage   = addPower(&PowerAction{Action: "manage_space_page", Text: "管理空间页面", ShouldLogin: true})
+	PowerManageSpaceInsert = addPower(&PowerAction{Action: "manage_space_insert", Text: "管理空间新增", Parent: PowerManageSpacePage, ShouldLogin: true})
+	PowerManageSpaceUpdate = addPower(&PowerAction{Action: "manage_space_update", Text: "管理空间修改", Parent: PowerManageSpacePage, ShouldLogin: true})
+	PowerManageSpaceDelete = addPower(&PowerAction{Action: "manage_space_delete", Text: "管理空间删除", Parent: PowerManageSpacePage, ShouldLogin: true})
 
 	// 管理日志 权限
 	PowerManageLogPage   = addPower(&PowerAction{Action: "manage_log_page", Text: "管理日志页面", ShouldLogin: true})

@@ -21,16 +21,16 @@ var (
 )
 
 type CerInfo struct {
-	IssuedBy    string `json:"颁发者"`
-	IssuedTo    string `json:"颁发给"`
-	No          string `json:"证书编号"`
-	Key         string `json:"密钥"`
-	IssueDate   string `json:"颁发日期"`
-	ValidPeriod string `json:"有效期"`
-	MAC         string `json:"MAC"`
-	Version     string `json:"版本"`
-	CerType     string `json:"证书类型"`
-	User        string `json:"用户"`
+	IssuedBy    string `json:"颁发者,omitempty"`
+	IssuedTo    string `json:"颁发给,omitempty"`
+	No          string `json:"证书编号,omitempty"`
+	Key         string `json:"密钥,omitempty"`
+	IssueDate   string `json:"颁发日期,omitempty"`
+	ValidPeriod string `json:"有效期,omitempty"`
+	MAC         string `json:"MAC,omitempty"`
+	Version     string `json:"版本,omitempty"`
+	CerType     string `json:"证书类型,omitempty"`
+	User        string `json:"用户,omitempty"`
 	ServerId    int64
 }
 

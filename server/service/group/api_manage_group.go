@@ -20,7 +20,7 @@ func bindManageGroupApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageGroupPage = &sqlModel.Select{
+	sqlManageGroupPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageGroupList = &sqlModel.Select{
+	sqlManageGroupList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageGroupOne = &sqlModel.Select{
+	sqlManageGroupOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_GROUP,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageGroupInsert = &sqlModel.Insert{
+	sqlManageGroupInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_GROUP,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageGroupUpdate = &sqlModel.Update{
+	sqlManageGroupUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_GROUP,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageGroupDelete = &sqlModel.Update{
+	sqlManageGroupDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_GROUP,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageGroupPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

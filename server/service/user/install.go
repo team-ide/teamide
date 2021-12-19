@@ -23,6 +23,7 @@ CREATE TABLE TM_USER (
 	activedState int(1) NOT NULL DEFAULT 2 COMMENT '激活状态:1-激活、2-未激活',
 	lockedState int(1) NOT NULL DEFAULT 2 COMMENT '锁定状态:1-锁定、2-未锁定',
 	enabledState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-启用、2-停用',
+	deletedState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-删除、2-正常',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	PRIMARY KEY (serverId, userId),
@@ -31,7 +32,8 @@ CREATE TABLE TM_USER (
 	KEY index_serverId_email (serverId, email),
 	KEY index_serverId_activedState (serverId, activedState),
 	KEY index_serverId_lockedState (serverId, lockedState),
-	KEY index_serverId_enabledState (serverId, enabledState)
+	KEY index_serverId_enabledState (serverId, enabledState),
+	KEY index_serverId_deletedState (serverId, deletedState)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户';
 				`,
 			Params: []interface{}{},
@@ -79,6 +81,7 @@ CREATE TABLE TM_USER_AUTH (
 	activedState int(1) NOT NULL DEFAULT 2 COMMENT '激活状态:1-激活、2-未激活',
 	lockedState int(1) NOT NULL DEFAULT 2 COMMENT '锁定状态:1-锁定、2-未锁定',
 	enabledState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-启用、2-停用',
+	deletedState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-删除、2-正常',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	PRIMARY KEY (serverId, authId),
@@ -86,7 +89,8 @@ CREATE TABLE TM_USER_AUTH (
 	KEY index_serverId_authType_openId (serverId, authType, openId),
 	KEY index_serverId_activedState (serverId, activedState),
 	KEY index_serverId_lockedState (serverId, lockedState),
-	KEY index_serverId_enabledState (serverId, enabledState)
+	KEY index_serverId_enabledState (serverId, enabledState),
+	KEY index_serverId_deletedState (serverId, deletedState)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户第三方授权';
 				`,
 			Params: []interface{}{},
@@ -106,6 +110,40 @@ CREATE TABLE TM_USER_PASSWORD (
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	PRIMARY KEY (serverId, userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户密码';
+				`,
+			Params: []interface{}{},
+		},
+	})
+
+	stages = append(stages, &base.InstallStageInfo{
+		Stage: "CREATE TABLE TM_USER_AUTH",
+		SqlParam: base.SqlParam{
+			Sql: `
+CREATE TABLE TM_USER_AUTH (
+	serverId bigint(20) NOT NULL COMMENT '服务ID',
+	authId bigint(20) NOT NULL COMMENT '授权ID',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (serverId, authId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权';
+				`,
+			Params: []interface{}{},
+		},
+	})
+
+	stages = append(stages, &base.InstallStageInfo{
+		Stage: "CREATE TABLE TM_USER_LOCK",
+		SqlParam: base.SqlParam{
+			Sql: `
+CREATE TABLE TM_USER_LOCK (
+	serverId bigint(20) NOT NULL COMMENT '服务ID',
+	lockId bigint(20) NOT NULL COMMENT '授权ID',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (serverId, lockId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权';
 				`,
 			Params: []interface{}{},
 		},

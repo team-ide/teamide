@@ -20,7 +20,7 @@ func bindManageUserLockApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageUserLockPage = &sqlModel.Select{
+	sqlManageUserLockPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageUserLockList = &sqlModel.Select{
+	sqlManageUserLockList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageUserLockOne = &sqlModel.Select{
+	sqlManageUserLockOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserLockInsert = &sqlModel.Insert{
+	sqlManageUserLockInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserLockUpdate = &sqlModel.Update{
+	sqlManageUserLockUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER_LOCK,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,14 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageUserLockDelete = &sqlModel.Delete{
+	sqlManageUserLockDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_USER_LOCK,
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageUserLockPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

@@ -16,7 +16,7 @@ func bindUserProfileApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlUserProfileOne = &sqlModel.Select{
+	sqlUserProfileOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_USER,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -34,9 +34,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlUserProfileUpdate = &sqlModel.Update{
+	sqlUserProfileUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_USER,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -48,7 +48,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiUserProfilePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

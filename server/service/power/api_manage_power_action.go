@@ -20,7 +20,7 @@ func bindManagePowerActionApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManagePowerActionPage = &sqlModel.Select{
+	sqlManagePowerActionPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerActionList = &sqlModel.Select{
+	sqlManagePowerActionList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerActionOne = &sqlModel.Select{
+	sqlManagePowerActionOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerActionInsert = &sqlModel.Insert{
+	sqlManagePowerActionInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerActionUpdate = &sqlModel.Update{
+	sqlManagePowerActionUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_POWER_ACTION,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerActionDelete = &sqlModel.Update{
+	sqlManagePowerActionDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_POWER_ACTION,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManagePowerActionPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

@@ -6,96 +6,96 @@ import (
 )
 
 type Select struct {
-	Database     string          `json:"database"`     // 库名
-	Table        string          `json:"table"`        // 表名
-	Distinct     bool            `json:"distinct"`     // SELECT DISTINCT 语句  列出不同的值
-	Columns      []*SelectColumn `json:"columns"`      // 字段
-	Intos        []*Into         `json:"intos"`        // SELECT INTO 复制表
-	InnerJoins   []*InnerJoin    `json:"innerJoins"`   // INNER JOIN
-	LeftJoin     []*LeftJoin     `json:"leftJoin"`     // LEFT JOIN
-	RightJoin    []*RightJoin    `json:"rightJoin"`    // RIGHT JOIN
-	FullJoin     []*FullJoin     `json:"fullJoin"`     // FULL JOIN
-	Wheres       []*Where        `json:"wheres"`       // 条件
-	Orders       []*Order        `json:"orders"`       // 排序
-	Groups       []*Group        `json:"groups"`       // 分组
-	Havings      []*Having       `json:"havings"`      // 筛选分组后的各组数据
-	UnionSelects []*Select       `json:"unionSelects"` // UNION 操作符 合并两个或多个 SELECT 语句的结果集
+	Database     string          `json:"database,omitempty"`     // 库名
+	Table        string          `json:"table,omitempty"`        // 表名
+	Distinct     bool            `json:"distinct,omitempty"`     // SELECT DISTINCT 语句  列出不同的值
+	Columns      []*SelectColumn `json:"columns,omitempty"`      // 字段
+	Intos        []*Into         `json:"intos,omitempty"`        // SELECT INTO 复制表
+	InnerJoins   []*InnerJoin    `json:"innerJoins,omitempty"`   // INNER JOIN
+	LeftJoin     []*LeftJoin     `json:"leftJoin,omitempty"`     // LEFT JOIN
+	RightJoin    []*RightJoin    `json:"rightJoin,omitempty"`    // RIGHT JOIN
+	FullJoin     []*FullJoin     `json:"fullJoin,omitempty"`     // FULL JOIN
+	Wheres       []*Where        `json:"wheres,omitempty"`       // 条件
+	Orders       []*Order        `json:"orders,omitempty"`       // 排序
+	Groups       []*Group        `json:"groups,omitempty"`       // 分组
+	Havings      []*Having       `json:"havings,omitempty"`      // 筛选分组后的各组数据
+	UnionSelects []*Select       `json:"unionSelects,omitempty"` // UNION 操作符 合并两个或多个 SELECT 语句的结果集
 }
 
 type SelectColumn struct {
-	IfScript   string `json:"ifScript"`   // 条件  满足该条件 添加
-	Custom     bool   `json:"custom"`     // 是否自定义
-	CustomSql  string `json:"customSql"`  // 是否自定义
-	TableAlias string `json:"tableAlias"` // 表别名
-	Name       string `json:"name"`       // 字段名称
-	Alias      string `json:"alias"`      // 字段别名
+	IfScript   string `json:"ifScript,omitempty"`   // 条件  满足该条件 添加
+	Custom     bool   `json:"custom,omitempty"`     // 是否自定义
+	CustomSql  string `json:"customSql,omitempty"`  // 是否自定义
+	TableAlias string `json:"tableAlias,omitempty"` // 表别名
+	Name       string `json:"name,omitempty"`       // 字段名称
+	Alias      string `json:"alias,omitempty"`      // 字段别名
 }
 
 type Into struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Table     string `json:"table"`     // 表名
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Table     string `json:"table,omitempty"`     // 表名
 }
 
 type InnerJoin struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Table     string `json:"table"`     // 表名
-	Alias     string `json:"alias"`     // 别名
-	On        string `json:"on"`        // ON
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Table     string `json:"table,omitempty"`     // 表名
+	Alias     string `json:"alias,omitempty"`     // 别名
+	On        string `json:"on,omitempty"`        // ON
 }
 
 type LeftJoin struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Table     string `json:"table"`     // 表名
-	Alias     string `json:"alias"`     // 别名
-	On        string `json:"on"`        // ON
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Table     string `json:"table,omitempty"`     // 表名
+	Alias     string `json:"alias,omitempty"`     // 别名
+	On        string `json:"on,omitempty"`        // ON
 }
 
 type RightJoin struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Table     string `json:"table"`     // 表名
-	Alias     string `json:"alias"`     // 别名
-	On        string `json:"on"`        // ON
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Table     string `json:"table,omitempty"`     // 表名
+	Alias     string `json:"alias,omitempty"`     // 别名
+	On        string `json:"on,omitempty"`        // ON
 }
 
 type FullJoin struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Table     string `json:"table"`     // 表名
-	Alias     string `json:"alias"`     // 别名
-	On        string `json:"on"`        // ON
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Table     string `json:"table,omitempty"`     // 表名
+	Alias     string `json:"alias,omitempty"`     // 别名
+	On        string `json:"on,omitempty"`        // ON
 }
 
 type Order struct {
-	IfScript   string `json:"ifScript"`   // 条件  满足该条件 添加
-	Custom     bool   `json:"custom"`     // 是否自定义
-	CustomSql  string `json:"customSql"`  // 是否自定义
-	TableAlias string `json:"tableAlias"` // 表别名
-	Name       string `json:"name"`       // 字段名称
-	AscDesc    string `json:"ascDesc"`    // 默认按照升序 升序ASC 降序DESC
+	IfScript   string `json:"ifScript,omitempty"`   // 条件  满足该条件 添加
+	Custom     bool   `json:"custom,omitempty"`     // 是否自定义
+	CustomSql  string `json:"customSql,omitempty"`  // 是否自定义
+	TableAlias string `json:"tableAlias,omitempty"` // 表别名
+	Name       string `json:"name,omitempty"`       // 字段名称
+	AscDesc    string `json:"ascDesc,omitempty"`    // 默认按照升序 升序ASC 降序DESC
 }
 
 type Group struct {
-	IfScript   string `json:"ifScript"`   // 条件  满足该条件 添加
-	Custom     bool   `json:"custom"`     // 是否自定义
-	CustomSql  string `json:"customSql"`  // 是否自定义
-	TableAlias string `json:"tableAlias"` // 表别名
-	Name       string `json:"name"`       // 字段名称
+	IfScript   string `json:"ifScript,omitempty"`   // 条件  满足该条件 添加
+	Custom     bool   `json:"custom,omitempty"`     // 是否自定义
+	CustomSql  string `json:"customSql,omitempty"`  // 是否自定义
+	TableAlias string `json:"tableAlias,omitempty"` // 表别名
+	Name       string `json:"name,omitempty"`       // 字段名称
 }
 
 type Having struct {
-	IfScript  string `json:"ifScript"`  // 条件  满足该条件 添加
-	Custom    bool   `json:"custom"`    // 是否自定义
-	CustomSql string `json:"customSql"` // 是否自定义
-	Having    string `json:"having"`    // 筛选分组后的各组数据
+	IfScript  string `json:"ifScript,omitempty"`  // 条件  满足该条件 添加
+	Custom    bool   `json:"custom,omitempty"`    // 是否自定义
+	CustomSql string `json:"customSql,omitempty"` // 是否自定义
+	Having    string `json:"having,omitempty"`    // 筛选分组后的各组数据
 }
 
 func (this_ *Select) GetSqlParam(data map[string]interface{}) (sqlParam base.SqlParam, err error) {
@@ -471,5 +471,26 @@ func getUnionSqlParam(data map[string]interface{}, list []*Select) (sql string, 
 
 	}
 	sql = strings.TrimSuffix(sql, "UNION ")
+	return
+}
+
+func (this_ *Select) GetTableColumns() (tableColumns map[string][]string) {
+	tableColumns = map[string][]string{}
+
+	wrapTable := WrapTableName(this_.Database, this_.Table)
+
+	var columns []string
+	for _, column := range this_.Columns {
+		if IsEmpty(column.Name) {
+			continue
+		}
+		wrapColumn := WrapColumnName("", column.Name)
+		columns = append(columns, wrapColumn)
+	}
+
+	appendWhereColumns(this_.Wheres, &columns)
+
+	tableColumns[wrapTable] = columns
+
 	return
 }

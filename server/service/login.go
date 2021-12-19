@@ -10,8 +10,8 @@ import (
 )
 
 type LoginRequest struct {
-	Account  string `json:"account"`
-	Password string `json:"password"`
+	Account  string `json:"account,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -94,9 +94,9 @@ func getJWTStr(user *base.UserEntity) string {
 }
 
 type SessionResponse struct {
-	User   *base.UserEntity `json:"user"`
-	Powers []string         `json:"powers"`
-	JWT    string           `json:"JWT"`
+	User   *base.UserEntity `json:"user,omitempty"`
+	Powers []string         `json:"powers,omitempty"`
+	JWT    string           `json:"JWT,omitempty"`
 }
 
 func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {

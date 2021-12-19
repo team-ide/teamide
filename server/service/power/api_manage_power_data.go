@@ -20,7 +20,7 @@ func bindManagePowerDataApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManagePowerDataPage = &sqlModel.Select{
+	sqlManagePowerDataPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_DATA,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerDataList = &sqlModel.Select{
+	sqlManagePowerDataList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_DATA,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManagePowerDataOne = &sqlModel.Select{
+	sqlManagePowerDataOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_POWER_DATA,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerDataInsert = &sqlModel.Insert{
+	sqlManagePowerDataInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_POWER_DATA,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerDataUpdate = &sqlModel.Update{
+	sqlManagePowerDataUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_POWER_DATA,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManagePowerDataDelete = &sqlModel.Update{
+	sqlManagePowerDataDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_POWER_DATA,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManagePowerDataPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

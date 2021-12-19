@@ -20,7 +20,7 @@ func bindManageCertificateApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageCertificatePage = &sqlModel.Select{
+	sqlManageCertificatePage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageCertificateList = &sqlModel.Select{
+	sqlManageCertificateList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageCertificateOne = &sqlModel.Select{
+	sqlManageCertificateOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageCertificateInsert = &sqlModel.Insert{
+	sqlManageCertificateInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageCertificateUpdate = &sqlModel.Update{
+	sqlManageCertificateUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_CERTIFICATE,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageCertificateDelete = &sqlModel.Update{
+	sqlManageCertificateDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_CERTIFICATE,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageCertificatePage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

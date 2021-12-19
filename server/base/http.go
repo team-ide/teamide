@@ -8,8 +8,8 @@ import (
 
 type HttpResponse struct {
 	Code string      `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+	Msg  string      `json:"msg,omitempty"`
+	Data interface{} `json:"data,omitempty"`
 }
 
 func RequestJSON(data interface{}, c *gin.Context) bool {

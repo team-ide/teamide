@@ -91,18 +91,7 @@ func bindApi(appendApi func(apis ...*base.ApiWorker)) {
 	appendApi(&base.ApiWorker{Apis: []string{"register"}, Power: base.PowerRegister, Do: apiRegister})
 	appendApi(&base.ApiWorker{Apis: []string{"session"}, Power: base.PowerSession, Do: apiSession})
 
-	factory.IdService.BindApi(appendApi)
-	factory.UserService.BindApi(appendApi)
-	factory.WbsService.BindApi(appendApi)
-	factory.LogService.BindApi(appendApi)
-	factory.EnterpriseService.BindApi(appendApi)
-	factory.OrganizationService.BindApi(appendApi)
-	factory.JobService.BindApi(appendApi)
-	factory.PowerService.BindApi(appendApi)
-	factory.SpaceService.BindApi(appendApi)
-	factory.SystemService.BindApi(appendApi)
-	factory.LoginService.BindApi(appendApi)
-	factory.MessageService.BindApi(appendApi)
-	factory.GroupService.BindApi(appendApi)
-	factory.CertificateService.BindApi(appendApi)
+	for _, one := range factory.Apis {
+		one.BindApi(appendApi)
+	}
 }

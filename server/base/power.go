@@ -20,11 +20,11 @@ func (page *PageBean) Init() {
 }
 
 type JWTBean struct {
-	Sign     string `json:"sign"`
-	ServerId int64  `json:"serverId"`
-	UserId   int64  `json:"userId"`
-	Name     string `json:"name"`
-	Time     int64  `json:"time"`
+	Sign     string `json:"sign,omitempty"`
+	ServerId int64  `json:"serverId,omitempty"`
+	UserId   int64  `json:"userId,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Time     int64  `json:"time,omitempty"`
 }
 
 type ApiWorker struct {
@@ -35,9 +35,9 @@ type ApiWorker struct {
 }
 
 type PowerAction struct {
-	Action      string `json:"action"`
-	Text        string `json:"text"`
-	ShouldLogin bool   `json:"shouldLogin"`
+	Action      string `json:"action,omitempty"`
+	Text        string `json:"text,omitempty"`
+	ShouldLogin bool   `json:"shouldLogin,omitempty"`
 	Parent      *PowerAction
 }
 

@@ -16,7 +16,7 @@ func bindManageSystemSettingApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageSystemSettingUpdate = &sqlModel.Update{
+	sqlManageSystemSettingUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_SYSTEM_SETTING,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -28,7 +28,7 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageSystemSettingPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

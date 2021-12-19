@@ -37,12 +37,12 @@ func init() {
 }
 
 type DatabaseConfig struct {
-	Type     string `json:"type"`
-	Host     string `json:"host"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Type     string `json:"type,omitempty"`
+	Host     string `json:"host,omitempty"`
+	Port     int32  `json:"port,omitempty"`
+	Database string `json:"database,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type MysqlService struct {

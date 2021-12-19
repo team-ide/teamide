@@ -20,7 +20,7 @@ func bindManageSystemLogApi(appendApi func(apis ...*base.ApiWorker)) {
 }
 
 var (
-	sqlManageSystemLogPage = &sqlModel.Select{
+	sqlManageSystemLogPage = newSelectSql(&sqlModel.Select{
 		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -48,9 +48,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageSystemLogList = &sqlModel.Select{
+	sqlManageSystemLogList = newSelectSql(&sqlModel.Select{
 		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -78,9 +78,9 @@ var (
 					{Name: "enabledState"},
 				}},
 		},
-	}
+	})
 
-	sqlManageSystemLogOne = &sqlModel.Select{
+	sqlManageSystemLogOne = newSelectSql(&sqlModel.Select{
 		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
@@ -98,9 +98,9 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageSystemLogInsert = &sqlModel.Insert{
+	sqlManageSystemLogInsert = newInsertSql(&sqlModel.Insert{
 		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
@@ -113,9 +113,9 @@ var (
 			{Name: "enabledState"},
 			{Name: "createTime", ValueScript: "now()", Required: true},
 		},
-	}
+	})
 
-	sqlManageSystemLogUpdate = &sqlModel.Update{
+	sqlManageSystemLogUpdate = newUpdateSql(&sqlModel.Update{
 		Table: TABLE_SYSTEM_LOG,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
@@ -127,17 +127,14 @@ var (
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 
-	sqlManageSystemLogDelete = &sqlModel.Update{
+	sqlManageSystemLogDelete = newDeleteSql(&sqlModel.Delete{
 		Table: TABLE_SYSTEM_LOG,
-		Columns: []*sqlModel.UpdateColumn{
-			{Name: "deleteState", ValueScript: "1"},
-		},
 		Wheres: []*sqlModel.Where{
 			{Name: "userId", Required: true},
 		},
-	}
+	})
 )
 
 func apiManageSystemLogPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

@@ -3,11 +3,43 @@ package factory
 import (
 	"server/base"
 	"server/component"
+	sqlModel "server/model/sql"
 )
 
-type idService interface {
-	GetInstall() (info *base.InstallInfo)
+type apiInterface interface {
 	BindApi(appendApi func(apis ...*base.ApiWorker))
+}
+
+var (
+	Apis = []apiInterface{}
+)
+
+type installInterface interface {
+	GetInstall() (info *base.InstallInfo)
+}
+
+var (
+	Installs = []installInterface{}
+)
+
+type modelInterface interface {
+	GetSelectSqls() (models []*sqlModel.Select)
+	GetInsertSqls() (models []*sqlModel.Insert)
+	GetUpdateSqls() (models []*sqlModel.Update)
+	GetDeleteSqls() (models []*sqlModel.Delete)
+}
+
+var (
+	Models = []modelInterface{}
+)
+
+func BindCommonService(service interface{}) {
+	Apis = append(Apis, service.(apiInterface))
+	Installs = append(Installs, service.(installInterface))
+	Models = append(Models, service.(modelInterface))
+}
+
+type idService interface {
 	GetID(idType component.IDType) (id int64, err error)
 	GetIDs(idType component.IDType, size int64) (ids []int64, err error)
 }
@@ -18,11 +50,10 @@ var (
 
 func BindIdService(service interface{}) {
 	IdService = service.(idService)
+	BindCommonService(service)
 }
 
 type userService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 	Get(userId int64) (user *base.UserEntity, err error)
 	TotalInsert(userTotal *base.UserTotalBean) (err error)
 	LoginByAccount(account string, password string) (res *base.UserEntity, err error)
@@ -34,11 +65,10 @@ var (
 
 func BindUserService(service interface{}) {
 	UserService = service.(userService)
+	BindCommonService(service)
 }
 
 type installService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 	Install()
 }
 
@@ -48,11 +78,10 @@ var (
 
 func BindInstallService(service interface{}) {
 	InstallService = service.(installService)
+	BindCommonService(service)
 }
 
 type certificateService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -61,11 +90,10 @@ var (
 
 func BindCertificateService(service interface{}) {
 	CertificateService = service.(certificateService)
+	BindCommonService(service)
 }
 
 type enterpriseService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -74,11 +102,10 @@ var (
 
 func BindEnterpriseService(service interface{}) {
 	EnterpriseService = service.(enterpriseService)
+	BindCommonService(service)
 }
 
 type groupService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -87,11 +114,10 @@ var (
 
 func BindGroupService(service interface{}) {
 	GroupService = service.(groupService)
+	BindCommonService(service)
 }
 
 type jobService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -100,11 +126,10 @@ var (
 
 func BindJobService(service interface{}) {
 	JobService = service.(jobService)
+	BindCommonService(service)
 }
 
 type logService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -113,11 +138,10 @@ var (
 
 func BindLogService(service interface{}) {
 	LogService = service.(logService)
+	BindCommonService(service)
 }
 
 type loginService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -126,11 +150,10 @@ var (
 
 func BindLoginService(service interface{}) {
 	LoginService = service.(loginService)
+	BindCommonService(service)
 }
 
 type messageService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -139,11 +162,10 @@ var (
 
 func BindMessageService(service interface{}) {
 	MessageService = service.(messageService)
+	BindCommonService(service)
 }
 
 type organizationService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -152,11 +174,10 @@ var (
 
 func BindOrganizationService(service interface{}) {
 	OrganizationService = service.(organizationService)
+	BindCommonService(service)
 }
 
 type powerService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -165,11 +186,10 @@ var (
 
 func BindPowerService(service interface{}) {
 	PowerService = service.(powerService)
+	BindCommonService(service)
 }
 
 type spaceService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -178,11 +198,10 @@ var (
 
 func BindSpaceService(service interface{}) {
 	SpaceService = service.(spaceService)
+	BindCommonService(service)
 }
 
 type systemService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -191,11 +210,10 @@ var (
 
 func BindSystemService(service interface{}) {
 	SystemService = service.(systemService)
+	BindCommonService(service)
 }
 
 type wbsService interface {
-	GetInstall() (info *base.InstallInfo)
-	BindApi(appendApi func(apis ...*base.ApiWorker))
 }
 
 var (
@@ -204,4 +222,5 @@ var (
 
 func BindWbsService(service interface{}) {
 	WbsService = service.(wbsService)
+	BindCommonService(service)
 }
