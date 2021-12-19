@@ -2,7 +2,7 @@ package systemService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *SystemService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

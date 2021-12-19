@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *LogService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserLogApi(appendApi)
 
 	bindManageLogApi(appendApi)

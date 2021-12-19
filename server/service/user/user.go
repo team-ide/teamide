@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"server/base"
 	"server/component"
-	idService "server/service/id"
+	"server/factory"
 )
 
 var (
@@ -18,7 +18,10 @@ var (
 	TABLE_USER_SETTING  = "TM_USER_SETTING"
 )
 
-func UserCheck(user *base.UserEntity) (err error) {
+type UserService struct {
+}
+
+func check(user *base.UserEntity) (err error) {
 	if user.Name == "" {
 		err = base.NewValidateError("用户名称不能为空!")
 		return
@@ -62,10 +65,10 @@ func UserCheck(user *base.UserEntity) (err error) {
 }
 
 // 用户全量信息新增
-func UserTotalInsert(userTotal *base.UserTotalBean) (err error) {
+func (this_ *UserService) TotalInsert(userTotal *base.UserTotalBean) (err error) {
 
 	user := userTotal.User
-	err = UserInsert(user)
+	err = insert(user)
 	if err != nil {
 		return
 	}
@@ -73,12 +76,12 @@ func UserTotalInsert(userTotal *base.UserTotalBean) (err error) {
 
 	password.UserId = user.UserId
 
-	err = UserSetPassword(password)
+	err = setPassword(password)
 	if err != nil {
 		return
 	}
 
-	err = UserSetMetadata(userTotal)
+	err = setMetadata(userTotal)
 	if err != nil {
 		return
 	}
@@ -86,7 +89,7 @@ func UserTotalInsert(userTotal *base.UserTotalBean) (err error) {
 	return
 }
 
-func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
+func setMetadata(userTotal *base.UserTotalBean) (err error) {
 
 	user := userTotal.User
 	metadata := base.BeanToMap(userTotal)
@@ -104,7 +107,7 @@ func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
 	}
 	defer unlock()
 
-	err = UserSetMetadataByMap(user.UserId, metadata)
+	err = setMetadataByMap(user.UserId, metadata)
 	unlock()
 	if err != nil {
 		return
@@ -113,7 +116,7 @@ func UserSetMetadata(userTotal *base.UserTotalBean) (err error) {
 	return
 }
 
-func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err error) {
+func setMetadataByMap(userId int64, metadata map[string]interface{}) (err error) {
 	if userId == 0 {
 		err = errors.New("userId is null")
 		return
@@ -122,7 +125,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 	for _, mStruct := range base.U_M {
 		data := metadata[mStruct.Name].(map[string]interface{})
 		var inserts_ []base.UserMetadataEntity
-		inserts_, err = UserGetInsertMetadataEntity(userId, data, mStruct)
+		inserts_, err = getInsertMetadataEntity(userId, data, mStruct)
 		if err != nil {
 			return
 		}
@@ -131,7 +134,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 	size := len(inserts)
 	if size > 0 {
 		var ids []int64
-		ids, err = idService.GetIDs(component.ID_TYPE_USER_METADATA, int64(size))
+		ids, err = factory.IdService.GetIDs(component.ID_TYPE_USER_METADATA, int64(size))
 		if err != nil {
 			return
 		}
@@ -151,7 +154,7 @@ func UserSetMetadataByMap(userId int64, metadata map[string]interface{}) (err er
 	return
 }
 
-func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, mStruct *base.MStruct) (inserts []base.UserMetadataEntity, err error) {
+func getInsertMetadataEntity(userId int64, metadata map[string]interface{}, mStruct *base.MStruct) (inserts []base.UserMetadataEntity, err error) {
 	if len(metadata) == 0 {
 		return
 	}
@@ -192,7 +195,7 @@ func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, 
 					inserts = append(inserts, insert)
 
 					var inserts_ []base.UserMetadataEntity
-					inserts_, err = UserGetInsertMetadataEntity(userId, one, mSField.Struct)
+					inserts_, err = getInsertMetadataEntity(userId, one, mSField.Struct)
 					if err != nil {
 						return
 					}
@@ -210,7 +213,7 @@ func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, 
 				inserts = append(inserts, insert)
 
 				var inserts_ []base.UserMetadataEntity
-				inserts_, err = UserGetInsertMetadataEntity(userId, one, mSField.Struct)
+				inserts_, err = getInsertMetadataEntity(userId, one, mSField.Struct)
 				if err != nil {
 					return
 				}
@@ -223,9 +226,9 @@ func UserGetInsertMetadataEntity(userId int64, metadata map[string]interface{}, 
 }
 
 // 用户全量信息批量新增
-func UserTotalBatchInsert(userTotals []*base.UserTotalBean) (successUserTotals []*base.UserTotalBean, errUserTotals []*base.UserTotalBean, errs []error, err error) {
+func (this_ *UserService) TotalBatchInsert(userTotals []*base.UserTotalBean) (successUserTotals []*base.UserTotalBean, errUserTotals []*base.UserTotalBean, errs []error, err error) {
 	for _, one := range userTotals {
-		e := UserTotalInsert(one)
+		e := this_.TotalInsert(one)
 		if e != nil {
 			errUserTotals = append(errUserTotals, one)
 			errs = append(errs, e)
@@ -238,9 +241,9 @@ func UserTotalBatchInsert(userTotals []*base.UserTotalBean) (successUserTotals [
 }
 
 // 用户信息新增
-func UserInsert(user *base.UserEntity) (err error) {
+func insert(user *base.UserEntity) (err error) {
 
-	err = UserCheck(user)
+	err = check(user)
 	if err != nil {
 		return
 	}
@@ -265,7 +268,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 	}
 
 	var exist bool
-	exist, err = UserExistByAccount(user.Account, user.Email)
+	exist, err = existByAccount(user.Account, user.Email)
 	if err != nil {
 		return
 	}
@@ -274,7 +277,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 		return
 	}
 	var userId int64
-	userId, err = idService.GetID(component.ID_TYPE_USER)
+	userId, err = factory.IdService.GetID(component.ID_TYPE_USER)
 	if err != nil {
 		return
 	}
@@ -295,7 +298,7 @@ func UserInsert(user *base.UserEntity) (err error) {
 }
 
 // 用户设置密码
-func UserSetPassword(password *base.UserPasswordEntity) (err error) {
+func setPassword(password *base.UserPasswordEntity) (err error) {
 	password.CreateTime = base.Now()
 	password.UpdateTime = base.Now()
 	salt := base.GenerateUUID()[0:6]
@@ -318,7 +321,7 @@ func UserSetPassword(password *base.UserPasswordEntity) (err error) {
 }
 
 // 查询用户密码
-func UserPasswordCheck(userId int64, password string) (check bool, err error) {
+func passwordCheck(userId int64, password string) (check bool, err error) {
 	sql := "SELECT * FROM " + TABLE_USER_PASSWORD + " WHERE serverId=? AND userId=? "
 	params := []interface{}{component.GetServerId(), userId}
 
@@ -343,7 +346,7 @@ func UserPasswordCheck(userId int64, password string) (check bool, err error) {
 	return
 }
 
-func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
+func (this_ *UserService) Query(user base.UserEntity) (users []*base.UserEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -365,7 +368,7 @@ func UserQuery(user base.UserEntity) (users []*base.UserEntity, err error) {
 	return
 }
 
-func UserCount(user base.UserEntity) (count int64, err error) {
+func (this_ *UserService) Count(user base.UserEntity) (count int64, err error) {
 	sql := "SELECT COUNT(*) FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -411,7 +414,7 @@ func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 }
 
 //用户搜索，只搜索有效用户
-func UserSearch(name string) (users []*base.UserEntity, err error) {
+func (this_ *UserService) Userh(name string) (users []*base.UserEntity, err error) {
 	sql := "SELECT userId,name,avatar FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
 	params := []interface{}{component.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
@@ -431,7 +434,7 @@ func UserSearch(name string) (users []*base.UserEntity, err error) {
 }
 
 //查询单个用户
-func UserGet(userId int64) (user *base.UserEntity, err error) {
+func (this_ *UserService) Get(userId int64) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_USER + " WHERE serverId=? AND userId=? "
 	params := []interface{}{component.GetServerId(), userId}
 
@@ -450,7 +453,7 @@ func UserGet(userId int64) (user *base.UserEntity, err error) {
 }
 
 // 根据登录名称 或 邮箱 或 手机 查询单个用户
-func UserGetByAccount(account string) (user *base.UserEntity, err error) {
+func getByAccount(account string) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? OR email=?)"
 	params := []interface{}{component.GetServerId(), account, account}
 
@@ -469,7 +472,7 @@ func UserGetByAccount(account string) (user *base.UserEntity, err error) {
 }
 
 // 根据 登录名称 邮箱 手机 查询UserId
-func UserGetUserIdByAccount(account string, email string) (userId int64, err error) {
+func getUserIdByAccount(account string, email string) (userId int64, err error) {
 	sql := "SELECT userId FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{component.GetServerId(), account}
 
@@ -494,7 +497,7 @@ func UserGetUserIdByAccount(account string, email string) (userId int64, err err
 }
 
 // 根据 登录名称 邮箱 手机 统计
-func UserExistByAccount(account string, email string) (exist bool, err error) {
+func existByAccount(account string, email string) (exist bool, err error) {
 	sql := "SELECT COUNT(userId) FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND (account=? "
 	params := []interface{}{component.GetServerId(), account}
 

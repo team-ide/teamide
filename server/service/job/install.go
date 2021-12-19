@@ -2,7 +2,7 @@ package jobService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *JobService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

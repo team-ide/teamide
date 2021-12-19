@@ -9,10 +9,13 @@ var (
 	TABLE_ID = "TM_ID"
 )
 
-func GetID(idType component.IDType) (id int64, err error) {
+type IdService struct {
+}
+
+func (this_ *IdService) GetID(idType component.IDType) (id int64, err error) {
 
 	var ids []int64
-	ids, err = GetIDs(idType, 1)
+	ids, err = this_.GetIDs(idType, 1)
 
 	if err != nil {
 		return
@@ -22,7 +25,7 @@ func GetID(idType component.IDType) (id int64, err error) {
 	return
 }
 
-func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
+func (this_ *IdService) GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 
 	var key = component.GetIDRedisKey(idType)
 	var exists bool
@@ -44,7 +47,7 @@ func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 		}
 		if !exists {
 			var idInfo *base.IDEntity
-			idInfo, err = IDGet(idType)
+			idInfo, err = get(idType)
 			if err != nil {
 				return
 			}
@@ -62,7 +65,7 @@ func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 				return
 			}
 			idInfo.Id = id_
-			err = IDInsertOrUpdate(*idInfo)
+			err = insertOrUpdate(*idInfo)
 			if err != nil {
 				return
 			}
@@ -83,7 +86,7 @@ func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 				Type: int8(idType),
 				Id:   id + 50,
 			}
-			err = IDInsertOrUpdate(*idInfo)
+			err = insertOrUpdate(*idInfo)
 			if err != nil {
 				return
 			}
@@ -93,31 +96,8 @@ func GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 
 	return
 }
-func IDInsert(id base.IDEntity) (err error) {
 
-	sqlParam := component.DB.InsertSqlByBean(TABLE_ID, id)
-
-	_, err = component.DB.Insert(sqlParam)
-
-	if err != nil {
-		return
-	}
-	return
-}
-
-func IDBatchInsert(ids []interface{}) (err error) {
-
-	sqlParam := component.DB.InsertSqlByBean(TABLE_ID, ids...)
-
-	_, err = component.DB.Insert(sqlParam)
-
-	if err != nil {
-		return
-	}
-	return
-}
-
-func IDInsertOrUpdate(id base.IDEntity) (err error) {
+func insertOrUpdate(id base.IDEntity) (err error) {
 	sql := "INSERT INTO " + TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
 	params := []interface{}{component.GetServerId(), id.Type, id.Id, id.Id}
 
@@ -132,7 +112,7 @@ func IDInsertOrUpdate(id base.IDEntity) (err error) {
 }
 
 //查询单个ID
-func IDGet(idType component.IDType) (id *base.IDEntity, err error) {
+func get(idType component.IDType) (id *base.IDEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_ID + " WHERE serverId=? AND type=? "
 	params := []interface{}{component.GetServerId(), idType}
 

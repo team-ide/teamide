@@ -9,16 +9,19 @@ var (
 	TABLE_INSTALL = "TM_INSTALL"
 )
 
-func Install(info *base.InstallInfo) {
+type InstallService struct {
+}
+
+func install(info *base.InstallInfo) {
 	if info == nil || info.Stages == nil {
 		return
 	}
 	for _, stage := range info.Stages {
-		InstallStage(info, stage)
+		installStage(info, stage)
 	}
 }
 
-func InstallStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
+func installStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	if info == nil || stage == nil {
 		return
 	}
@@ -54,4 +57,16 @@ func InstallStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (this_ *InstallService) GetInstall() (info *base.InstallInfo) {
+
+	info = &base.InstallInfo{}
+
+	info.Module = "install"
+	stages := []*base.InstallStageInfo{}
+
+	info.Stages = stages
+
+	return
 }

@@ -4,9 +4,9 @@ import (
 	"server/base"
 )
 
-func LoginByAccount(account string, password string) (res *base.UserEntity, err error) {
+func (this_ *UserService) LoginByAccount(account string, password string) (res *base.UserEntity, err error) {
 	var user *base.UserEntity
-	user, err = UserGetByAccount(account)
+	user, err = getByAccount(account)
 	if err != nil {
 		return
 	}
@@ -14,7 +14,7 @@ func LoginByAccount(account string, password string) (res *base.UserEntity, err 
 		return
 	}
 	var check bool
-	check, err = UserPasswordCheck(user.UserId, password)
+	check, err = passwordCheck(user.UserId, password)
 	if err != nil {
 		return
 	}

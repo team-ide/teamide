@@ -2,7 +2,7 @@ package organizationService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *OrganizationService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

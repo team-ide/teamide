@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *UserService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserProfileApi(appendApi)
 	bindUserAuthApi(appendApi)
 	bindUserPasswordApi(appendApi)

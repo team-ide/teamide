@@ -2,7 +2,7 @@ package logService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *LogService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

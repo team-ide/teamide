@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *SystemService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindManageSystemSettingApi(appendApi)
 	bindManageSystemLogApi(appendApi)
 }

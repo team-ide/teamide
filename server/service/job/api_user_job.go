@@ -21,7 +21,7 @@ func bindUserJobApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlUserJobPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlUserJobList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlUserJobOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlUserJobInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlUserJobUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlUserJobDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},

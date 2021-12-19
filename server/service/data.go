@@ -1,4 +1,4 @@
-package web
+package service
 
 import (
 	"regexp"

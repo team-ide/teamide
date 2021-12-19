@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *GroupService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserGroupApi(appendApi)
 
 	bindManageGroupApi(appendApi)

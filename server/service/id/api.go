@@ -4,5 +4,5 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *IdService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 }

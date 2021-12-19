@@ -1,9 +1,9 @@
-package web
+package service
 
 import (
 	"server/base"
 	"server/component"
-	userService "server/service/user"
+	"server/factory"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +39,7 @@ func apiRegister(request *base.RequestBean, c *gin.Context) (res interface{}, er
 		Enterprise: nil,
 	}
 
-	err = userService.UserTotalInsert(userBean)
+	err = factory.UserService.TotalInsert(userBean)
 	if err != nil {
 		return
 	}

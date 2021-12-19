@@ -2,7 +2,7 @@ package wbsService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *WbsService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

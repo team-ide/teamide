@@ -1,10 +1,10 @@
-package web
+package service
 
 import (
 	"encoding/json"
 	"server/base"
 	"server/component"
-	userService "server/service/user"
+	"server/factory"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +31,7 @@ func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err e
 		return
 	}
 	var user *base.UserEntity
-	user, err = userService.LoginByAccount(loginRequest.Account, pwd)
+	user, err = factory.UserService.LoginByAccount(loginRequest.Account, pwd)
 	if err != nil {
 		return
 	}
@@ -107,7 +107,7 @@ func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err
 	}
 	if userId > 0 {
 		var user *base.UserEntity
-		user, err = userService.UserGet(request.JWT.UserId)
+		user, err = factory.UserService.Get(request.JWT.UserId)
 		if err != nil {
 			return
 		}

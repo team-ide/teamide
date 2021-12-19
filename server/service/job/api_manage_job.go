@@ -21,7 +21,7 @@ func bindManageJobApi(appendApi func(apis ...*base.ApiWorker)) {
 
 var (
 	sqlManageJobPage = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -51,7 +51,7 @@ var (
 	}
 
 	sqlManageJobList = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -81,7 +81,7 @@ var (
 	}
 
 	sqlManageJobOne = &sqlModel.Select{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.SelectColumn{
 			{Name: "userId"},
 			{Name: "name"},
@@ -101,7 +101,7 @@ var (
 	}
 
 	sqlManageJobInsert = &sqlModel.Insert{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.InsertColumn{
 			{Name: "userId", Required: true},
 			{Name: "name", Required: true},
@@ -116,7 +116,7 @@ var (
 	}
 
 	sqlManageJobUpdate = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "name"},
 			{Name: "avatar"},
@@ -130,7 +130,7 @@ var (
 	}
 
 	sqlManageJobDelete = &sqlModel.Update{
-		Table: "TM_USER",
+		Table: TABLE_JOB,
 		Columns: []*sqlModel.UpdateColumn{
 			{Name: "deleteState", ValueScript: "1"},
 		},
@@ -138,7 +138,6 @@ var (
 			{Name: "userId", Required: true},
 		},
 	}
-
 )
 
 func apiManageJobPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

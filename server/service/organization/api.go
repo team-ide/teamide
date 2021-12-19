@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *OrganizationService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserOrganizationApi(appendApi)
 
 	bindManageOrganizationApi(appendApi)

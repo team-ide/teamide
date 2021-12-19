@@ -2,7 +2,7 @@ package powerService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *PowerService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

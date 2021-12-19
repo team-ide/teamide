@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *JobService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserJobApi(appendApi)
 
 	bindManageJobApi(appendApi)

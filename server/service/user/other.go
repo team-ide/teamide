@@ -177,7 +177,7 @@ func userTotalBatchInsert(count int, res *testTotalBatchInsertResult) {
 	var errUserTotals []*base.UserTotalBean
 	var errs []error
 	var err error
-	successUserTotals, errUserTotals, errs, err = UserTotalBatchInsert(userTotals)
+	// successUserTotals, errUserTotals, errs, err = UserTotalBatchInsert(userTotals)
 	if err != nil {
 		panic(err)
 	}

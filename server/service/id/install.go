@@ -2,7 +2,7 @@ package idService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *IdService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

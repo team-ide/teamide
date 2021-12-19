@@ -4,7 +4,7 @@ import (
 	"server/base"
 )
 
-func BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *MessageService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 	bindUserMessageApi(appendApi)
 
 	bindManageMessageApi(appendApi)

@@ -2,7 +2,7 @@ package enterpriseService
 
 import "server/base"
 
-func GetInstall() (info *base.InstallInfo) {
+func (this_ *EnterpriseService) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 
