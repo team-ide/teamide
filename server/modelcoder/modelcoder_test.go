@@ -65,7 +65,7 @@ func initServiceModel() {
 		Name: "user/queryPage",
 		Steps: []ServiceFlowStepModel{
 			&ServiceFlowStepStartModel{Name: "start", Next: "queryPage"},
-			&ServiceFlowStepDaoModel{Name: "queryPage"},
+			&ServiceFlowStepDaoModel{Name: "queryPage", DaoName: "user/queryPage"},
 		},
 	})
 }

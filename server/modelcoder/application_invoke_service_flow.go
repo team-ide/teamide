@@ -70,6 +70,17 @@ func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, 
 	}
 	stepDao := interface{}(step).(*ServiceFlowStepDaoModel)
 
+	dao := application.context.GetDao(stepDao.DaoName)
+
+	if dao == nil {
+		err = newErrorDaoIsNull("invoke dao model [", stepDao.DaoName, "] is null")
+		return
+	}
+	res, err = invokeModel(application, dao, variable)
+	if err != nil {
+		return
+	}
+
 	next := flow.GetStep(stepDao.Next)
 	res, err = invokeServiceFlowStep(application, flow, next, variable)
 	if application.OutDebug() {
@@ -83,6 +94,17 @@ func invokeServiceFlowStepService(application *Application, flow *ServiceFlowMod
 		application.Debug("invoke service flow step [service] start")
 	}
 	stepService := interface{}(step).(*ServiceFlowStepServiceModel)
+
+	service := application.context.GetDao(stepService.ServiceName)
+
+	if service == nil {
+		err = newErrorServiceIsNull("invoke service model [", stepService.ServiceName, "] is null")
+		return
+	}
+	res, err = invokeModel(application, service, variable)
+	if err != nil {
+		return
+	}
 
 	next := flow.GetStep(stepService.Next)
 	res, err = invokeServiceFlowStep(application, flow, next, variable)
