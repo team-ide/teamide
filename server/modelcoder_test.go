@@ -11,7 +11,7 @@ func TestApplication(t *testing.T) {
 
 	variable := application.NewInvokeVariable(nil)
 
-	res, err := application.InvokeDaoByName("user/queryPage", variable)
+	res, err := application.InvokeServiceByName("user/queryPage", variable)
 	if err != nil {
 		panic(err)
 	}
@@ -26,6 +26,9 @@ var (
 type Logger struct {
 }
 
+func (this_ *Logger) OutDebug() bool {
+	return true
+}
 func (this_ *Logger) Debug(args ...interface{}) {
 	fmt.Println(args...)
 }
@@ -45,7 +48,18 @@ func initApplication() {
 func initApplicationModel() {
 	applicationModel = &modelcoder.ApplicationModel{}
 
+	initDaoModel()
+	initServiceModel()
+}
+func initDaoModel() {
+
 	applicationModel.AppendDao(&modelcoder.DaoSqlSelectOne{
+		Name: "user/queryPage",
+	})
+}
+func initServiceModel() {
+
+	applicationModel.AppendService(&modelcoder.ServiceFlow{
 		Name: "user/queryPage",
 	})
 }
