@@ -6,6 +6,7 @@ type Application struct {
 }
 type logger interface {
 	OutDebug() bool
+	OutInfo() bool
 	Debug(args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})
@@ -38,9 +39,32 @@ func (this_ *Application) NewInvokeVariable(data interface{}) *invokeVariable {
 	return res
 }
 
+func (this_ *Application) OutDebug() bool {
+	return this_.logger.OutDebug()
+}
+func (this_ *Application) Debug(args ...interface{}) {
+	if this_.OutDebug() {
+		this_.logger.Debug(args...)
+	}
+}
+func (this_ *Application) OutInfo() bool {
+	return this_.logger.OutInfo()
+}
+func (this_ *Application) Info(args ...interface{}) {
+	if this_.OutInfo() {
+		this_.logger.Info(args...)
+	}
+}
+func (this_ *Application) Warn(args ...interface{}) {
+	this_.logger.Warn(args...)
+}
+func (this_ *Application) Error(args ...interface{}) {
+	this_.logger.Error(args...)
+}
+
 func (this_ *Application) InvokeServiceByName(name string, variable *invokeVariable) (res interface{}, err error) {
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke service start , name:", name, ", variable:", ToJSON(variable))
+	if this_.OutDebug() {
+		this_.Debug("invoke service start , name:", name, ", variable:", ToJSON(variable))
 	}
 	if variable == nil {
 		err = newErrorVariableIsNull("invoke service variable is null")
@@ -53,18 +77,18 @@ func (this_ *Application) InvokeServiceByName(name string, variable *invokeVaria
 	}
 	res, err = invokeModel(this_, service, variable)
 	if err != nil {
-		this_.logger.Error("invoke service error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke service error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
 		return
 	}
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke service end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+	if this_.OutDebug() {
+		this_.Debug("invoke service end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
 	}
 	return
 }
 
 func (this_ *Application) InvokeService(service ServiceModel, variable *invokeVariable) (res interface{}, err error) {
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke service start , service:", ToJSON(service), ", variable:", ToJSON(variable))
+	if this_.OutDebug() {
+		this_.Debug("invoke service start , service:", ToJSON(service), ", variable:", ToJSON(variable))
 	}
 	if service == nil {
 		err = newErrorServiceIsNull("invoke service model is null")
@@ -76,18 +100,18 @@ func (this_ *Application) InvokeService(service ServiceModel, variable *invokeVa
 	}
 	res, err = invokeModel(this_, service, variable)
 	if err != nil {
-		this_.logger.Error("invoke service error , service:", ToJSON(service), ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke service error , service:", ToJSON(service), ", variable:", ToJSON(variable), ", error:", err)
 		return
 	}
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke service end , service:", ToJSON(service), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+	if this_.OutDebug() {
+		this_.Debug("invoke service end , service:", ToJSON(service), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
 	}
 	return
 }
 
 func (this_ *Application) InvokeDaoByName(name string, variable *invokeVariable) (res interface{}, err error) {
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke dao start , name:", name, ", variable:", ToJSON(variable))
+	if this_.OutDebug() {
+		this_.Debug("invoke dao start , name:", name, ", variable:", ToJSON(variable))
 	}
 	if variable == nil {
 		err = newErrorVariableIsNull("invoke dao variable is null")
@@ -100,18 +124,18 @@ func (this_ *Application) InvokeDaoByName(name string, variable *invokeVariable)
 	}
 	res, err = invokeModel(this_, dao, variable)
 	if err != nil {
-		this_.logger.Error("invoke dao error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke dao error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
 		return
 	}
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke dao end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+	if this_.OutDebug() {
+		this_.Debug("invoke dao end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
 	}
 	return
 }
 
 func (this_ *Application) InvokeDao(dao DaoModel, variable *invokeVariable) (res interface{}, err error) {
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke dao start , dao:", ToJSON(dao), ", variable:", ToJSON(variable))
+	if this_.OutDebug() {
+		this_.Debug("invoke dao start , dao:", ToJSON(dao), ", variable:", ToJSON(variable))
 	}
 	if dao == nil {
 		err = newErrorDaoIsNull("invoke dao model is null")
@@ -123,11 +147,11 @@ func (this_ *Application) InvokeDao(dao DaoModel, variable *invokeVariable) (res
 	}
 	res, err = invokeModel(this_, dao, variable)
 	if err != nil {
-		this_.logger.Error("invoke dao error , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke dao error , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", error:", err)
 		return
 	}
-	if this_.logger.OutDebug() {
-		this_.logger.Debug("invoke dao end , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+	if this_.OutDebug() {
+		this_.Debug("invoke dao end , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
 	}
 	return
 }

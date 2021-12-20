@@ -1,80 +1,80 @@
 package modelcoder
 
-type DaoSqlSelectOne struct {
+type DaoSqlSelectOneModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectOne) GetName() string {
+func (this_ *DaoSqlSelectOneModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectOne) GetType() *DaoModelType {
+func (this_ *DaoSqlSelectOneModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_ONE
 }
 
-type DaoSqlSelectList struct {
+type DaoSqlSelectListModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectList) GetName() string {
+func (this_ *DaoSqlSelectListModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectList) GetType() *DaoModelType {
+func (this_ *DaoSqlSelectListModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_LIST
 }
 
-type DaoSqlSelectPage struct {
+type DaoSqlSelectPageModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectPage) GetName() string {
+func (this_ *DaoSqlSelectPageModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectPage) GetType() *DaoModelType {
+func (this_ *DaoSqlSelectPageModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_PAGE
 }
 
-type DaoSqlSelectCount struct {
+type DaoSqlSelectCountModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectCount) GetName() string {
+func (this_ *DaoSqlSelectCountModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectCount) GetType() *DaoModelType {
+func (this_ *DaoSqlSelectCountModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_COUNT
 }
 
-type DaoSqlSelectInsert struct {
+type DaoSqlSelectInsertModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectInsert) GetName() string {
+func (this_ *DaoSqlSelectInsertModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectInsert) GetType() *DaoModelType {
+func (this_ *DaoSqlSelectInsertModel) GetType() *DaoModelType {
 	return DAO_SQL_INSERT
 }
 
-type DaoSqlSelectUpdate struct {
+type DaDaoSqlSelectUpdateModel struct {
 	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
 	Type string `json:"type,omitempty"` // 类型
 }
 
-func (this_ *DaoSqlSelectUpdate) GetName() string {
+func (this_ *DaDaoSqlSelectUpdateModel) GetName() string {
 	return this_.Name
 }
 
-func (this_ *DaoSqlSelectUpdate) GetType() *DaoModelType {
+func (this_ *DaDaoSqlSelectUpdateModel) GetType() *DaoModelType {
 	return DAO_SQL_UPDATE
 }
 

@@ -6,15 +6,15 @@ type ServiceModel interface {
 }
 
 type ServiceModelType struct {
-	Value   string
-	Text    string
-	Execute func(application *Application, service ServiceModel, variable *invokeVariable) (res interface{}, err error)
+	Value   string                                                                                                      `json:"value,omitempty"`
+	Text    string                                                                                                      `json:"text,omitempty"`
+	Execute func(application *Application, service ServiceModel, variable *invokeVariable) (res interface{}, err error) `json:"-"`
 }
 
 var (
 	serviceModelTypes []*ServiceModelType
 
-	SERVICE_FLOW = newServiceModelType("FLOW", "流程", invokeServiceFlow)
+	SERVICE_FLOW = newServiceModelType("flow", "流程", invokeServiceFlow)
 )
 
 func newServiceModelType(value, text string, execute func(application *Application, service ServiceModel, variable *invokeVariable) (res interface{}, err error)) *ServiceModelType {

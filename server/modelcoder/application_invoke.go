@@ -4,6 +4,9 @@ func invokeModel(application *Application, model interface{}, variable *invokeVa
 	service, isService := interface{}(model).(ServiceModel)
 	var serviceType *ServiceModelType
 	if isService {
+		if application.OutDebug() {
+			application.Debug("invoke model is service type [", ToJSON(service.GetType()), "]")
+		}
 		serviceType = service.GetType()
 		if serviceType == nil {
 			err = newErrorServiceTypeIsWrong("service [", service.GetName(), "] model type [", service.GetType(), "] parsing failed")
@@ -13,6 +16,9 @@ func invokeModel(application *Application, model interface{}, variable *invokeVa
 	dao, isDao := interface{}(model).(DaoModel)
 	var daoType *DaoModelType
 	if isDao {
+		if application.OutDebug() {
+			application.Debug("invoke model is dao type [", ToJSON(dao.GetType()), "]")
+		}
 		daoType = dao.GetType()
 		if daoType == nil {
 			err = newErrorDaoTypeIsWrong("dao [", dao.GetName(), "] model type [", dao.GetType(), "] parsing failed")
@@ -40,11 +46,17 @@ func invokeModel(application *Application, model interface{}, variable *invokeVa
 }
 
 func invokeModelBefore(application *Application, variable *invokeVariable) (err error) {
+	if application.OutDebug() {
+		application.Debug("invoke model before")
+	}
 
 	return
 }
 
 func invokeModelAfter(application *Application, variable *invokeVariable) (err error) {
+	if application.OutDebug() {
+		application.Debug("invoke model after")
+	}
 
 	return
 }

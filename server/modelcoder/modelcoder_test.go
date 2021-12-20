@@ -1,8 +1,7 @@
-package main
+package modelcoder
 
 import (
 	"fmt"
-	"server/modelcoder"
 	"testing"
 )
 
@@ -19,14 +18,17 @@ func TestApplication(t *testing.T) {
 }
 
 var (
-	application      *modelcoder.Application
-	applicationModel *modelcoder.ApplicationModel
+	application      *Application
+	applicationModel *ApplicationModel
 )
 
 type Logger struct {
 }
 
 func (this_ *Logger) OutDebug() bool {
+	return true
+}
+func (this_ *Logger) OutInfo() bool {
 	return true
 }
 func (this_ *Logger) Debug(args ...interface{}) {
@@ -43,23 +45,27 @@ func (this_ *Logger) Error(args ...interface{}) {
 }
 func initApplication() {
 	initApplicationModel()
-	application = modelcoder.NewApplication(applicationModel, &Logger{})
+	application = NewApplication(applicationModel, &Logger{})
 }
 func initApplicationModel() {
-	applicationModel = &modelcoder.ApplicationModel{}
+	applicationModel = &ApplicationModel{}
 
 	initDaoModel()
 	initServiceModel()
 }
 func initDaoModel() {
 
-	applicationModel.AppendDao(&modelcoder.DaoSqlSelectOne{
+	applicationModel.AppendDao(&DaoSqlSelectOneModel{
 		Name: "user/queryPage",
 	})
 }
 func initServiceModel() {
 
-	applicationModel.AppendService(&modelcoder.ServiceFlow{
+	applicationModel.AppendService(&ServiceFlowModel{
 		Name: "user/queryPage",
+		Steps: []ServiceFlowStepModel{
+			&ServiceFlowStepStartModel{Name: "start", Next: "queryPage"},
+			&ServiceFlowStepDaoModel{Name: "queryPage"},
+		},
 	})
 }

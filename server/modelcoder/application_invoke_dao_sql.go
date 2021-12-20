@@ -1,11 +1,15 @@
 package modelcoder
 
 func invokeDaoSqlSelectOne(application *Application, dao DaoModel, variable *invokeVariable) (res interface{}, err error) {
-	application.logger.Debug("invoke dao sql select one start")
-	sqlSelectOne := interface{}(dao).(*DaoSqlSelectOne)
+	if application.OutDebug() {
+		application.Debug("invoke dao sql select one start")
+	}
+	sqlSelectOne := interface{}(dao).(*DaoSqlSelectOneModel)
 	println(dao)
 	println(sqlSelectOne)
-	application.logger.Debug("invoke dao sql select one end")
+	if application.OutDebug() {
+		application.Debug("invoke dao sql select one end")
+	}
 	return
 }
 
