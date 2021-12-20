@@ -43,3 +43,31 @@ func newErrorDaoIsNull(args ...interface{}) *ErrorDaoIsNull {
 		Msg: fmt.Sprint(args...),
 	}
 }
+
+type ErrorServiceTypeIsWrong struct {
+	Msg string
+}
+
+func (err *ErrorServiceTypeIsWrong) Error() string {
+	return err.Msg
+}
+
+func newErrorServiceTypeIsWrong(args ...interface{}) *ErrorServiceTypeIsWrong {
+	return &ErrorServiceTypeIsWrong{
+		Msg: fmt.Sprint(args...),
+	}
+}
+
+type ErrorDaoTypeIsWrong struct {
+	Msg string
+}
+
+func (err *ErrorDaoTypeIsWrong) Error() string {
+	return err.Msg
+}
+
+func newErrorDaoTypeIsWrong(args ...interface{}) *ErrorDaoTypeIsWrong {
+	return &ErrorDaoTypeIsWrong{
+		Msg: fmt.Sprint(args...),
+	}
+}
