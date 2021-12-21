@@ -3,6 +3,7 @@ package modelcoder
 type DaoModel interface {
 	GetName() string        // 名称，同一个应用中唯一
 	GetType() *DaoModelType // 类型
+	GetParams() []*ParamModel
 }
 
 type DaoModelType struct {

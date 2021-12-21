@@ -2,73 +2,128 @@ package modelcoder
 
 func invokeServiceFlow(application *Application, service ServiceModel, variable *invokeVariable) (res interface{}, err error) {
 	if application.OutDebug() {
-		application.Debug("invoke service flow start")
+		application.Debug("invoke service [", service.GetName(), "] start, variable:", ToJSON(variable))
 	}
 	serviceFlow := interface{}(service).(*ServiceFlowModel)
-	start := serviceFlow.GetStartStep()
 
-	if start == nil {
-		application.Warn("invoke service flow start step is null")
+	err = processParams(application, serviceFlow.Params, variable)
+
+	if err != nil {
 		return
 	}
 
-	if application.OutDebug() {
-		application.Debug("invoke service flow start step:", ToJSON(start))
+	start := serviceFlow.GetStartStep()
+
+	if start == nil {
+		application.Warn("invoke service [", service.GetName(), "] start step is null")
+		return
 	}
-	res, err = start.GetType().Execute(application, serviceFlow, start, variable)
+	res, err = invokeServiceFlowStep(application, serviceFlow, start, variable)
 	if application.OutDebug() {
-		application.Debug("invoke service flow end")
+		application.Debug("invoke service [", service.GetName(), "] end")
 	}
 	return
 }
 
-func invokeServiceFlowStepStart(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
+func invokeServiceFlowStep(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
 	if application.OutDebug() {
-		application.Debug("invoke service flow step [start] start")
+		application.Debug("invoke service flow step [", step.GetName(), "] start, variable:", ToJSON(variable))
 	}
+	var params []*ParamModel
+
+	stepStart, startOk := interface{}(step).(*ServiceFlowStepStartModel)
+	if startOk {
+		params = stepStart.Params
+	}
+	stepData, dataOk := interface{}(step).(*ServiceFlowStepDataModel)
+	if dataOk {
+		params = stepData.Params
+	}
+	stepDecision, decisionOk := interface{}(step).(*ServiceFlowStepDecisionModel)
+	if decisionOk {
+		params = stepDecision.Params
+	}
+	stepDao, daoOk := interface{}(step).(*ServiceFlowStepDaoModel)
+	if daoOk {
+		params = stepDao.Params
+	}
+	stepService, serviceOk := interface{}(step).(*ServiceFlowStepServiceModel)
+	if serviceOk {
+		params = stepService.Params
+	}
+	stepEnd, endOk := interface{}(step).(*ServiceFlowStepEndModel)
+	stepError, errorOk := interface{}(step).(*ServiceFlowStepErrorModel)
+	err = processParams(application, params, variable)
+
+	if err != nil {
+		return
+	}
+	var next string
+	if startOk {
+		next, res, err = invokeServiceFlowStepStart(application, flow, stepStart, variable)
+	}
+	if dataOk {
+		next, res, err = invokeServiceFlowStepData(application, flow, stepData, variable)
+	}
+	if decisionOk {
+		next, res, err = invokeServiceFlowStepDecision(application, flow, stepDecision, variable)
+	}
+	if daoOk {
+		next, res, err = invokeServiceFlowStepDao(application, flow, stepDao, variable)
+	}
+	if serviceOk {
+		next, res, err = invokeServiceFlowStepService(application, flow, stepService, variable)
+	}
+	if endOk {
+		next, res, err = invokeServiceFlowStepEnd(application, flow, stepEnd, variable)
+	}
+	if errorOk {
+		next, res, err = invokeServiceFlowStepError(application, flow, stepError, variable)
+	}
+
+	if next != "" {
+		nextStep := flow.GetStep(next)
+		if nextStep == nil {
+			err = newErrorServiceStepIsWrong("invoke service flow next step [", next, "] not defind")
+			return
+		}
+		res, err = invokeServiceFlowStep(application, flow, nextStep, variable)
+	}
+	if application.OutDebug() {
+		application.Debug("invoke service flow step [", step.GetName(), "] end")
+	}
+	return
+}
+
+func invokeServiceFlowStepStart(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 	stepStart := interface{}(step).(*ServiceFlowStepStartModel)
 
-	next := flow.GetStep(stepStart.Next)
-	res, err = invokeServiceFlowStep(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [start] end")
-	}
+	next = stepStart.Next
 	return
 }
 
-func invokeServiceFlowStepData(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [data] start")
-	}
+func invokeServiceFlowStepData(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 	stepData := interface{}(step).(*ServiceFlowStepDataModel)
 
-	next := flow.GetStep(stepData.Next)
-	res, err = invokeServiceFlowStep(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [data] end")
-	}
+	next = stepData.Next
 	return
 }
 
-func invokeServiceFlowStepDecision(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [decision] start")
-	}
+func invokeServiceFlowStepDecision(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 	stepDecision := interface{}(step).(*ServiceFlowStepDecisionModel)
 
-	next := flow.GetStep(stepDecision.IfNext)
-	res, err = invokeServiceFlowStep(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [decision] end")
-	}
+	next = stepDecision.IfNext
 	return
 }
 
-func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [dao] start")
-	}
+func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 	stepDao := interface{}(step).(*ServiceFlowStepDaoModel)
+
+	err = processParams(application, stepDao.Params, variable)
+
+	if err != nil {
+		return
+	}
 
 	dao := application.context.GetDao(stepDao.DaoName)
 
@@ -76,24 +131,32 @@ func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, 
 		err = newErrorDaoIsNull("invoke dao model [", stepDao.DaoName, "] is null")
 		return
 	}
-	res, err = invokeModel(application, dao, variable)
+
+	var callVariable *invokeVariable
+	callParams := []string{}
+	// 调用外部Model 需要重置invokeVariable
+	callVariable, err = newCallVnvokeVariable(application, variable, callParams, dao.GetParams())
+	if err != nil {
+		return
+	}
+	res, err = invokeModel(application, dao, callVariable)
 	if err != nil {
 		return
 	}
 
-	next := flow.GetStep(stepDao.Next)
-	res, err = invokeServiceFlowStep(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [dao] end")
-	}
+	next = stepDao.Next
 	return
 }
 
-func invokeServiceFlowStepService(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [service] start")
-	}
+func invokeServiceFlowStepService(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
+
 	stepService := interface{}(step).(*ServiceFlowStepServiceModel)
+
+	err = processParams(application, stepService.Params, variable)
+
+	if err != nil {
+		return
+	}
 
 	service := application.context.GetDao(stepService.ServiceName)
 
@@ -106,48 +169,16 @@ func invokeServiceFlowStepService(application *Application, flow *ServiceFlowMod
 		return
 	}
 
-	next := flow.GetStep(stepService.Next)
-	res, err = invokeServiceFlowStep(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [service] end")
-	}
+	next = stepService.Next
 	return
 }
 
-func invokeServiceFlowStepEnd(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [end] start")
-	}
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [end] end")
-	}
+func invokeServiceFlowStepEnd(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
+
 	return
 }
 
-func invokeServiceFlowStepError(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [error] start")
-	}
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [error] end")
-	}
-	return
-}
+func invokeServiceFlowStepError(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 
-func invokeServiceFlowStep(application *Application, flow *ServiceFlowModel, next ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) {
-	if next == nil {
-		return
-	}
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [next] start")
-	}
-
-	if application.OutDebug() {
-		application.Debug("invoke service flow next step:", ToJSON(next))
-	}
-	res, err = next.GetType().Execute(application, flow, next, variable)
-	if application.OutDebug() {
-		application.Debug("invoke service flow step [next] end")
-	}
 	return
 }

@@ -8,9 +8,15 @@ import (
 func TestApplication(t *testing.T) {
 	initApplication()
 
-	variable := application.NewInvokeVariable(nil)
+	variable := application.NewInvokeVariable(&ParamData{
+		Name: "user",
+		Data: map[string]interface{}{
+			"name": "张三",
+			"age":  16,
+		},
+	})
 
-	res, err := application.InvokeServiceByName("user/queryPage", variable)
+	res, err := application.InvokeServiceByName("user/insert", variable)
 	if err != nil {
 		panic(err)
 	}
@@ -50,22 +56,54 @@ func initApplication() {
 func initApplicationModel() {
 	applicationModel = &ApplicationModel{}
 
+	initStructModel()
 	initDaoModel()
 	initServiceModel()
 }
+func initStructModel() {
+
+	applicationModel.AppendStruct(&StructModel{
+		Name: "user",
+		Fields: []*StructFieldModel{
+			{Name: "name"},
+			{Name: "arg"},
+		},
+	})
+	applicationModel.AppendStruct(&StructModel{
+		Name: "user",
+		Fields: []*StructFieldModel{
+			{Name: "name"},
+			{Name: "arg"},
+		},
+	})
+}
 func initDaoModel() {
 
-	applicationModel.AppendDao(&DaoSqlSelectOneModel{
-		Name: "user/queryPage",
+	applicationModel.AppendDao(&DaoSqlInsertModel{
+		Name:  "user/insert",
+		Table: "IM_USER",
+		Columns: []*DaoSqlInsertColumn{
+			{Name: "name", ValueScript: "user.name", Required: true},
+			{Name: "age", ValueScript: "user.age", Required: true},
+		},
+		Params: []*ParamModel{
+			{Name: "user", DataType: "user"},
+		},
+		Result: &ParamModel{
+			Name: "user", DataType: "user",
+		},
 	})
 }
 func initServiceModel() {
 
 	applicationModel.AppendService(&ServiceFlowModel{
-		Name: "user/queryPage",
+		Name: "user/insert",
+		Params: []*ParamModel{
+			{Name: "user", DataType: "user"},
+		},
 		Steps: []ServiceFlowStepModel{
-			&ServiceFlowStepStartModel{Name: "start", Next: "queryPage"},
-			&ServiceFlowStepDaoModel{Name: "queryPage", DaoName: "user/queryPage"},
+			&ServiceFlowStepStartModel{Name: "start", Next: "insert"},
+			&ServiceFlowStepDaoModel{Name: "insert", DaoName: "user/insert"},
 		},
 	})
 }

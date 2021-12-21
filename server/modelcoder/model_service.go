@@ -3,6 +3,7 @@ package modelcoder
 type ServiceModel interface {
 	GetName() string            // 名称，同一个应用中唯一
 	GetType() *ServiceModelType // 类型，sql、http、redis等
+	GetParams() []*ParamModel
 }
 
 type ServiceModelType struct {

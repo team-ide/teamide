@@ -14,9 +14,35 @@ type logger interface {
 }
 
 type invokeVariable struct {
-	data        interface{}
-	parent      *invokeVariable
-	invokeCache map[string]interface{}
+	Parent      *invokeVariable        `json:"-"`
+	ParamDatas  []*ParamData           `json:"paramDatas,omitempty"`
+	InvokeCache map[string]interface{} `json:"invokeCache,omitempty"`
+}
+
+func (this_ *invokeVariable) GetParamData(name string) *ParamData {
+	if len(this_.ParamDatas) == 0 {
+		return nil
+	}
+	for _, one := range this_.ParamDatas {
+		if one.Name == name {
+			return one
+		}
+	}
+	return nil
+}
+
+func (this_ *invokeVariable) AddParamData(paramDatas ...*ParamData) *invokeVariable {
+	this_.ParamDatas = append(this_.ParamDatas, paramDatas...)
+	return this_
+}
+
+func (this_ *invokeVariable) Clone() *invokeVariable {
+	res := &invokeVariable{
+		ParamDatas:  []*ParamData{},
+		Parent:      this_,
+		InvokeCache: map[string]interface{}{},
+	}
+	return res
 }
 
 func NewApplication(applicationModel *ApplicationModel, logger logger) *Application {
@@ -30,11 +56,14 @@ func NewApplication(applicationModel *ApplicationModel, logger logger) *Applicat
 	return res
 }
 
-func (this_ *Application) NewInvokeVariable(data interface{}) *invokeVariable {
+func (this_ *Application) NewInvokeVariable(paramDatas ...*ParamData) *invokeVariable {
 	res := &invokeVariable{
-		data:        data,
-		parent:      nil,
-		invokeCache: map[string]interface{}{},
+		ParamDatas:  []*ParamData{},
+		Parent:      nil,
+		InvokeCache: map[string]interface{}{},
+	}
+	if len(paramDatas) > 0 {
+		res.AddParamData(paramDatas...)
 	}
 	return res
 }
@@ -61,6 +90,14 @@ func (this_ *Application) Warn(args ...interface{}) {
 func (this_ *Application) Error(args ...interface{}) {
 	this_.logger.Error(args...)
 }
+func (this_ *Application) executeSqlInsert(database string, sql string, sqlParams []interface{}) (err error) {
+	if this_.OutDebug() {
+		this_.Debug("execute sql insert sql   :", sql)
+		this_.Debug("execute sql insert params:", ToJSON(sqlParams))
+	}
+
+	return
+}
 
 func (this_ *Application) InvokeServiceByName(name string, variable *invokeVariable) (res interface{}, err error) {
 	if this_.OutDebug() {
@@ -77,11 +114,11 @@ func (this_ *Application) InvokeServiceByName(name string, variable *invokeVaria
 	}
 	res, err = invokeModel(this_, service, variable)
 	if err != nil {
-		this_.Error("invoke service error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke service error , name:", name, ", error:", err)
 		return
 	}
 	if this_.OutDebug() {
-		this_.Debug("invoke service end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+		this_.Debug("invoke service end , name:", name, ", result:", ToJSON(res))
 	}
 	return
 }
@@ -100,11 +137,11 @@ func (this_ *Application) InvokeService(service ServiceModel, variable *invokeVa
 	}
 	res, err = invokeModel(this_, service, variable)
 	if err != nil {
-		this_.Error("invoke service error , service:", ToJSON(service), ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke service error , service:", ToJSON(service), ", error:", err)
 		return
 	}
 	if this_.OutDebug() {
-		this_.Debug("invoke service end , service:", ToJSON(service), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+		this_.Debug("invoke service end , service:", ToJSON(service), ", result:", ToJSON(res))
 	}
 	return
 }
@@ -124,11 +161,11 @@ func (this_ *Application) InvokeDaoByName(name string, variable *invokeVariable)
 	}
 	res, err = invokeModel(this_, dao, variable)
 	if err != nil {
-		this_.Error("invoke dao error , name:", name, ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke dao error , name:", name, ", error:", err)
 		return
 	}
 	if this_.OutDebug() {
-		this_.Debug("invoke dao end , name:", name, ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+		this_.Debug("invoke dao end , name:", name, ", result:", ToJSON(res))
 	}
 	return
 }
@@ -147,11 +184,11 @@ func (this_ *Application) InvokeDao(dao DaoModel, variable *invokeVariable) (res
 	}
 	res, err = invokeModel(this_, dao, variable)
 	if err != nil {
-		this_.Error("invoke dao error , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", error:", err)
+		this_.Error("invoke dao error , dao:", ToJSON(dao), ", error:", err)
 		return
 	}
 	if this_.OutDebug() {
-		this_.Debug("invoke dao end , dao:", ToJSON(dao), ", variable:", ToJSON(variable), ", result:", ToJSON(res))
+		this_.Debug("invoke dao end , dao:", ToJSON(dao), ", result:", ToJSON(res))
 	}
 	return
 }

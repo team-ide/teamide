@@ -58,6 +58,20 @@ func newErrorServiceTypeIsWrong(args ...interface{}) *ErrorServiceTypeIsWrong {
 	}
 }
 
+type ErrorServiceStepIsWrong struct {
+	Msg string
+}
+
+func (err *ErrorServiceStepIsWrong) Error() string {
+	return err.Msg
+}
+
+func newErrorServiceStepIsWrong(args ...interface{}) *ErrorServiceStepIsWrong {
+	return &ErrorServiceStepIsWrong{
+		Msg: fmt.Sprint(args...),
+	}
+}
+
 type ErrorDaoTypeIsWrong struct {
 	Msg string
 }
@@ -68,6 +82,34 @@ func (err *ErrorDaoTypeIsWrong) Error() string {
 
 func newErrorDaoTypeIsWrong(args ...interface{}) *ErrorDaoTypeIsWrong {
 	return &ErrorDaoTypeIsWrong{
+		Msg: fmt.Sprint(args...),
+	}
+}
+
+type ErrorStructIsNull struct {
+	Msg string
+}
+
+func (err *ErrorStructIsNull) Error() string {
+	return err.Msg
+}
+
+func newErrorStructIsNull(args ...interface{}) *ErrorStructIsNull {
+	return &ErrorStructIsNull{
+		Msg: fmt.Sprint(args...),
+	}
+}
+
+type ErrorParamIsNull struct {
+	Msg string
+}
+
+func (err *ErrorParamIsNull) Error() string {
+	return err.Msg
+}
+
+func newErrorParamIsNull(args ...interface{}) *ErrorParamIsNull {
+	return &ErrorParamIsNull{
 		Msg: fmt.Sprint(args...),
 	}
 }

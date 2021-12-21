@@ -1,9 +1,10 @@
 package modelcoder
 
 type ServiceFlowModel struct {
-	Name  string                 `json:"name,omitempty"` // 名称，同一个应用中唯一
-	Type  string                 `json:"type,omitempty"` // 类型
-	Steps []ServiceFlowStepModel `json:"steps,omitempty"`
+	Name   string                 `json:"name,omitempty"`   // 名称，同一个应用中唯一
+	Type   string                 `json:"type,omitempty"`   // 类型
+	Params []*ParamModel          `json:"params,omitempty"` // 参数配置
+	Steps  []ServiceFlowStepModel `json:"steps,omitempty"`
 }
 
 func (this_ *ServiceFlowModel) GetName() string {
@@ -12,6 +13,10 @@ func (this_ *ServiceFlowModel) GetName() string {
 
 func (this_ *ServiceFlowModel) GetType() *ServiceModelType {
 	return SERVICE_FLOW
+}
+
+func (this_ *ServiceFlowModel) GetParams() []*ParamModel {
+	return this_.Params
 }
 
 func (this_ *ServiceFlowModel) GetStartStep() ServiceFlowStepModel {
@@ -39,9 +44,10 @@ func (this_ *ServiceFlowModel) GetStep(name string) ServiceFlowStepModel {
 }
 
 type ServiceFlowStepStartModel struct {
-	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
-	Type string `json:"type,omitempty"` // 类型
-	Next string `json:"next,omitempty"` // 下个阶段
+	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
+	Type   string        `json:"type,omitempty"`   // 类型
+	Next   string        `json:"next,omitempty"`   // 下个阶段
+	Params []*ParamModel `json:"params,omitempty"` // 参数配置
 }
 
 func (this_ *ServiceFlowStepStartModel) GetName() string {
@@ -53,9 +59,10 @@ func (this_ *ServiceFlowStepStartModel) GetType() *ServiceFlowStepModelType {
 }
 
 type ServiceFlowStepDataModel struct {
-	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
-	Type string `json:"type,omitempty"` // 类型
-	Next string `json:"next,omitempty"` // 下个阶段
+	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
+	Type   string        `json:"type,omitempty"`   // 类型
+	Next   string        `json:"next,omitempty"`   //
+	Params []*ParamModel `json:"params,omitempty"` // 参数配置
 }
 
 func (this_ *ServiceFlowStepDataModel) GetName() string {
@@ -73,6 +80,8 @@ type ServiceFlowStepDecisionModel struct {
 	IfNext    string                                `json:"ifNext,omitempty"`    // 满足 if 条件 进行下一步
 	ElseIfs   []*ServiceFlowStepDecisionElseIfModel `json:"elseIfs,omitempty"`   // 不满足 if 条件 进入else if
 	ElseNext  string                                `json:"elseNext,omitempty"`  // 不满足 if 和 else if 条件 进入else
+	Params    []*ParamModel                         `json:"params,omitempty"`    // 参数配置
+	Result    *ParamModel                           `json:"result,omitempty"`    // 结果配置
 }
 
 type ServiceFlowStepDecisionElseIfModel struct {
@@ -92,10 +101,11 @@ func (this_ *ServiceFlowStepDecisionModel) GetType() *ServiceFlowStepModelType {
 }
 
 type ServiceFlowStepDaoModel struct {
-	Name    string `json:"name,omitempty"`    // 名称，同一个应用中唯一
-	Type    string `json:"type,omitempty"`    // 类型
-	DaoName string `json:"daoName,omitempty"` // 数据层名称
-	Next    string `json:"next,omitempty"`    // 下个阶段
+	Name    string        `json:"name,omitempty"`    // 名称，同一个应用中唯一
+	Type    string        `json:"type,omitempty"`    // 类型
+	DaoName string        `json:"daoName,omitempty"` // 数据层名称
+	Next    string        `json:"next,omitempty"`    // 下个阶段
+	Params  []*ParamModel `json:"params,omitempty"`  // 参数配置
 }
 
 func (this_ *ServiceFlowStepDaoModel) GetName() string {
@@ -107,10 +117,11 @@ func (this_ *ServiceFlowStepDaoModel) GetType() *ServiceFlowStepModelType {
 }
 
 type ServiceFlowStepServiceModel struct {
-	Name        string `json:"name,omitempty"`        // 名称，同一个应用中唯一
-	Type        string `json:"type,omitempty"`        // 类型
-	ServiceName string `json:"serviceName,omitempty"` // 服务名称
-	Next        string `json:"next,omitempty"`        // 下个阶段
+	Name        string        `json:"name,omitempty"`        // 名称，同一个应用中唯一
+	Type        string        `json:"type,omitempty"`        // 类型
+	ServiceName string        `json:"serviceName,omitempty"` // 服务名称
+	Next        string        `json:"next,omitempty"`        // 下个阶段
+	Params      []*ParamModel `json:"params,omitempty"`      // 参数配置
 }
 
 func (this_ *ServiceFlowStepServiceModel) GetName() string {
@@ -122,8 +133,9 @@ func (this_ *ServiceFlowStepServiceModel) GetType() *ServiceFlowStepModelType {
 }
 
 type ServiceFlowStepEndModel struct {
-	Name string `json:"name,omitempty"` // 名称，同一个应用中唯一
-	Type string `json:"type,omitempty"` // 类型
+	Name   string      `json:"name,omitempty"`   // 名称，同一个应用中唯一
+	Type   string      `json:"type,omitempty"`   // 类型
+	Result *ParamModel `json:"result,omitempty"` // 结果配置
 }
 
 func (this_ *ServiceFlowStepEndModel) GetName() string {
@@ -155,9 +167,9 @@ type ServiceFlowStepModel interface {
 }
 
 type ServiceFlowStepModelType struct {
-	Value   string                                                                                                                                   `json:"value,omitempty"`
-	Text    string                                                                                                                                   `json:"text,omitempty"`
-	Execute func(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error) `json:"-"`
+	Value   string                                                                                                                                                `json:"value,omitempty"`
+	Text    string                                                                                                                                                `json:"text,omitempty"`
+	Execute func(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) `json:"-"`
 }
 
 var (
@@ -172,7 +184,7 @@ var (
 	SERVICE_FLOW_STEP_ERROR    = newServiceFlowStepModelType("error", "Error", invokeServiceFlowStepError)
 )
 
-func newServiceFlowStepModelType(value, text string, execute func(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (res interface{}, err error)) *ServiceFlowStepModelType {
+func newServiceFlowStepModelType(value, text string, execute func(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error)) *ServiceFlowStepModelType {
 	res := &ServiceFlowStepModelType{
 		Value:   value,
 		Text:    text,
