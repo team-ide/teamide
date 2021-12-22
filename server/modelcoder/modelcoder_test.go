@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestScriptParser(t *testing.T) {
+	initApplication()
+	script := "user.userId + '1' + $factory.GetID() +'aaa'.length()"
+	scriptParser := &scriptParser{
+		script:             script,
+		factory:            application.factory,
+		factoryScriptCache: application.factoryScriptCache,
+	}
+
+	err := scriptParser.parse()
+
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestApplication(t *testing.T) {
 	initApplication()
 

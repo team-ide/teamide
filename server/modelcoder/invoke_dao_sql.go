@@ -60,7 +60,7 @@ func invokeDaoSqlInsert(application *Application, dao DaoModel, variable *invoke
 
 	var sql string
 	var sqlParams []interface{}
-	sql, sqlParams, err = getSqlInsertSqlParams(sqlInsert, variable)
+	sql, sqlParams, err = getSqlInsertSqlParams(sqlInsert, application, variable)
 	if err != nil {
 		return
 	}

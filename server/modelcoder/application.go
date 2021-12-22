@@ -1,9 +1,40 @@
 package modelcoder
 
+import (
+	"reflect"
+	"strings"
+)
+
 type Application struct {
-	context *applicationContext
-	logger  logger
+	context            *applicationContext
+	factory            FactoryScript
+	scriptParserCache  map[string]*scriptParser
+	factoryScriptCache map[string]interface{}
+	logger             logger
 }
+
+func NewApplication(applicationModel *ApplicationModel, logger logger) *Application {
+	if applicationModel == nil {
+		return nil
+	}
+	res := &Application{
+		logger:             logger,
+		scriptParserCache:  make(map[string]*scriptParser),
+		factoryScriptCache: make(map[string]interface{}),
+		factory:            &FactoryScriptDefault{},
+	}
+	reflectType := reflect.TypeOf(res.factory)
+	count := reflectType.NumMethod()
+	var i = 0
+	for i = 0; i < count; i++ {
+		method := reflectType.Method(i)
+		res.factoryScriptCache[method.Name] = true
+		res.factoryScriptCache[strings.ToLower(method.Name[0:1])+method.Name[1:]] = true
+	}
+	res.context = newApplicationContext(applicationModel)
+	return res
+}
+
 type logger interface {
 	OutDebug() bool
 	OutInfo() bool
@@ -42,17 +73,6 @@ func (this_ *invokeVariable) Clone() *invokeVariable {
 		Parent:      this_,
 		InvokeCache: map[string]interface{}{},
 	}
-	return res
-}
-
-func NewApplication(applicationModel *ApplicationModel, logger logger) *Application {
-	if applicationModel == nil {
-		return nil
-	}
-	res := &Application{
-		logger: logger,
-	}
-	res.context = newApplicationContext(applicationModel)
 	return res
 }
 

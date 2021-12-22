@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func getSqlInsertSqlParams(sqlInsert *DaoSqlInsertModel, variable *invokeVariable) (sql string, sqlParams []interface{}, err error) {
+func getSqlInsertSqlParams(sqlInsert *DaoSqlInsertModel, application *Application, variable *invokeVariable) (sql string, sqlParams []interface{}, err error) {
 	wrapTable := WrapTableName(sqlInsert.Database, sqlInsert.Table)
 
 	sqlParams = []interface{}{}
@@ -18,7 +18,7 @@ func getSqlInsertSqlParams(sqlInsert *DaoSqlInsertModel, variable *invokeVariabl
 			continue
 		}
 		var ifScript bool
-		ifScript, err = ifScriptValue(variable, column.IfScript)
+		ifScript, err = ifScriptValue(application, variable, column.IfScript)
 		if err != nil {
 			return
 		}
@@ -29,7 +29,7 @@ func getSqlInsertSqlParams(sqlInsert *DaoSqlInsertModel, variable *invokeVariabl
 			continue
 		}
 		var value interface{}
-		value, err = getColumnValue(variable, column.Name, column.ValueScript)
+		value, err = getColumnValue(application, variable, column.Name, column.ValueScript)
 		if err != nil {
 			return
 		}
