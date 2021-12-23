@@ -39,6 +39,7 @@ func TestApplication(t *testing.T) {
 			"name": "张三",
 			"age":  16,
 		},
+		DataStruct: application.context.GetStruct("user"),
 	})
 
 	res, err := application.InvokeServiceByName("user/insert", variable)
