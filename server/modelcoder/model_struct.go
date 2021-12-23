@@ -7,6 +7,18 @@ type StructModel struct {
 	Fields     []*StructFieldModel `json:"fields,omitempty"`     // 结构体字段
 }
 
+func (this_ *StructModel) GetField(name string) *StructFieldModel {
+	if len(this_.Fields) == 0 {
+		return nil
+	}
+	for _, one := range this_.Fields {
+		if one.Name == name {
+			return one
+		}
+	}
+	return nil
+}
+
 type StructFieldModel struct {
 	Name          string `json:"name,omitempty"`          // 字段名称，同一个结构体中唯一
 	Comment       string `json:"comment,omitempty"`       // 注释

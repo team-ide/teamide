@@ -1,5 +1,12 @@
 package modelcoder
 
+type VariableData struct {
+	Name       string       `json:"name,omitempty"`     // 变量名称
+	Data       interface{}  `json:"data,omitempty"`     // 变量值
+	DataType   *DataType    `json:"dataType,omitempty"` // 数据类型
+	DataStruct *StructModel `json:"-"`                  // 数据结构体
+}
+
 func processVariableDatas(application *Application, parameters []*VariableModel, variable *invokeVariable) (err error) {
 	if len(parameters) == 0 {
 		return

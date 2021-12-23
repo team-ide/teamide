@@ -9,13 +9,6 @@ type VariableModel struct {
 	DataStruct  *StructModel `json:"-"`                     // 数据结构体
 }
 
-type VariableData struct {
-	Name       string       `json:"name,omitempty"`     // 变量名称
-	Data       interface{}  `json:"data,omitempty"`     // 变量值
-	DataType   *DataType    `json:"dataType,omitempty"` // 数据类型
-	DataStruct *StructModel `json:"-"`                  // 数据结构体
-}
-
 type DataType struct {
 	Value string `json:"value,omitempty"`
 	Text  string `json:"text,omitempty"`

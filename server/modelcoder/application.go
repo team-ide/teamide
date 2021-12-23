@@ -6,11 +6,12 @@ import (
 )
 
 type Application struct {
-	context            *applicationContext
-	factory            FactoryScript
-	scriptParserCache  map[string]*scriptParser
-	factoryScriptCache map[string]interface{}
-	logger             logger
+	context                *applicationContext
+	factory                FactoryScript
+	scriptValueParserCache map[string]*scriptValueParser
+	scriptParserCache      map[string]*scriptParser
+	factoryScriptCache     map[string]interface{}
+	logger                 logger
 }
 
 func NewApplication(applicationModel *ApplicationModel, logger logger) *Application {
@@ -18,10 +19,11 @@ func NewApplication(applicationModel *ApplicationModel, logger logger) *Applicat
 		return nil
 	}
 	res := &Application{
-		logger:             logger,
-		scriptParserCache:  make(map[string]*scriptParser),
-		factoryScriptCache: make(map[string]interface{}),
-		factory:            &FactoryScriptDefault{},
+		logger:                 logger,
+		scriptValueParserCache: make(map[string]*scriptValueParser),
+		scriptParserCache:      make(map[string]*scriptParser),
+		factoryScriptCache:     make(map[string]interface{}),
+		factory:                &FactoryScriptDefault{},
 	}
 	reflectType := reflect.TypeOf(res.factory)
 	count := reflectType.NumMethod()

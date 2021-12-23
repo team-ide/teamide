@@ -7,17 +7,27 @@ import (
 
 func TestScriptParser(t *testing.T) {
 	initApplication()
-	script := "user.userId + '1' + $factory.GetID() +'aaa'.length()"
-	scriptParser := &scriptParser{
-		script:      script,
-		application: application,
-	}
+	script := "'张三'+(user.age>=18 || user.name=='张三'?'成年':'未成年')"
 
-	err := scriptParser.parse()
+	variable := application.NewInvokeVariable(&VariableData{
+		Name: "user",
+		Data: map[string]interface{}{
+			"name": "张三",
+			"age":  16,
+		},
+		DataStruct: application.context.GetStruct("user"),
+	})
+
+	value, err := getScriptValue(application, variable, script)
 
 	if err != nil {
 		panic(err)
 	}
+
+	println("script:", script)
+	println("value:", value)
+	println("value:", fmt.Sprint(value))
+	println("value:", value == 12)
 }
 
 func TestApplication(t *testing.T) {
@@ -81,14 +91,14 @@ func initStructModel() {
 		Name: "user",
 		Fields: []*StructFieldModel{
 			{Name: "name"},
-			{Name: "arg"},
+			{Name: "age"},
 		},
 	})
 	applicationModel.AppendStruct(&StructModel{
 		Name: "user",
 		Fields: []*StructFieldModel{
 			{Name: "name"},
-			{Name: "arg"},
+			{Name: "age"},
 		},
 	})
 }
