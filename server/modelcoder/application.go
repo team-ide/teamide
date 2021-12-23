@@ -45,16 +45,16 @@ type logger interface {
 }
 
 type invokeVariable struct {
-	Parent      *invokeVariable        `json:"-"`
-	ParamDatas  []*ParamData           `json:"paramDatas,omitempty"`
-	InvokeCache map[string]interface{} `json:"invokeCache,omitempty"`
+	Parent        *invokeVariable        `json:"-"`
+	VariableDatas []*VariableData        `json:"variableDatas,omitempty"`
+	InvokeCache   map[string]interface{} `json:"invokeCache,omitempty"`
 }
 
-func (this_ *invokeVariable) GetParamData(name string) *ParamData {
-	if len(this_.ParamDatas) == 0 {
+func (this_ *invokeVariable) GetVariableData(name string) *VariableData {
+	if len(this_.VariableDatas) == 0 {
 		return nil
 	}
-	for _, one := range this_.ParamDatas {
+	for _, one := range this_.VariableDatas {
 		if one.Name == name {
 			return one
 		}
@@ -62,28 +62,28 @@ func (this_ *invokeVariable) GetParamData(name string) *ParamData {
 	return nil
 }
 
-func (this_ *invokeVariable) AddParamData(paramDatas ...*ParamData) *invokeVariable {
-	this_.ParamDatas = append(this_.ParamDatas, paramDatas...)
+func (this_ *invokeVariable) AddVariableData(list ...*VariableData) *invokeVariable {
+	this_.VariableDatas = append(this_.VariableDatas, list...)
 	return this_
 }
 
 func (this_ *invokeVariable) Clone() *invokeVariable {
 	res := &invokeVariable{
-		ParamDatas:  []*ParamData{},
-		Parent:      this_,
-		InvokeCache: map[string]interface{}{},
+		VariableDatas: []*VariableData{},
+		Parent:        this_,
+		InvokeCache:   map[string]interface{}{},
 	}
 	return res
 }
 
-func (this_ *Application) NewInvokeVariable(paramDatas ...*ParamData) *invokeVariable {
+func (this_ *Application) NewInvokeVariable(VariableDatas ...*VariableData) *invokeVariable {
 	res := &invokeVariable{
-		ParamDatas:  []*ParamData{},
-		Parent:      nil,
-		InvokeCache: map[string]interface{}{},
+		VariableDatas: []*VariableData{},
+		Parent:        nil,
+		InvokeCache:   map[string]interface{}{},
 	}
-	if len(paramDatas) > 0 {
-		res.AddParamData(paramDatas...)
+	if len(VariableDatas) > 0 {
+		res.AddVariableData(VariableDatas...)
 	}
 	return res
 }

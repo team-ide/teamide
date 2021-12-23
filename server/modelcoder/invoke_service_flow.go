@@ -6,12 +6,6 @@ func invokeServiceFlow(application *Application, service ServiceModel, variable 
 	}
 	serviceFlow := interface{}(service).(*ServiceFlowModel)
 
-	err = processParams(application, serviceFlow.Params, variable)
-
-	if err != nil {
-		return
-	}
-
 	start := serviceFlow.GetStartStep()
 
 	if start == nil {
@@ -29,31 +23,23 @@ func invokeServiceFlowStep(application *Application, flow *ServiceFlowModel, ste
 	if application.OutDebug() {
 		application.Debug("invoke service flow step [", step.GetName(), "] start, variable:", ToJSON(variable))
 	}
-	var params []*ParamModel
+	var parameters []*VariableModel
 
 	stepStart, startOk := interface{}(step).(*ServiceFlowStepStartModel)
-	if startOk {
-		params = stepStart.Params
-	}
+
 	stepData, dataOk := interface{}(step).(*ServiceFlowStepDataModel)
-	if dataOk {
-		params = stepData.Params
-	}
+
 	stepDecision, decisionOk := interface{}(step).(*ServiceFlowStepDecisionModel)
-	if decisionOk {
-		params = stepDecision.Params
-	}
+
 	stepDao, daoOk := interface{}(step).(*ServiceFlowStepDaoModel)
-	if daoOk {
-		params = stepDao.Params
-	}
+
 	stepService, serviceOk := interface{}(step).(*ServiceFlowStepServiceModel)
-	if serviceOk {
-		params = stepService.Params
-	}
+
 	stepEnd, endOk := interface{}(step).(*ServiceFlowStepEndModel)
+
 	stepError, errorOk := interface{}(step).(*ServiceFlowStepErrorModel)
-	err = processParams(application, params, variable)
+
+	err = processVariableDatas(application, parameters, variable)
 
 	if err != nil {
 		return
@@ -119,12 +105,6 @@ func invokeServiceFlowStepDecision(application *Application, flow *ServiceFlowMo
 func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 	stepDao := interface{}(step).(*ServiceFlowStepDaoModel)
 
-	err = processParams(application, stepDao.Params, variable)
-
-	if err != nil {
-		return
-	}
-
 	dao := application.context.GetDao(stepDao.DaoName)
 
 	if dao == nil {
@@ -135,7 +115,7 @@ func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, 
 	var callVariable *invokeVariable
 	callParams := []string{}
 	// 调用外部Model 需要重置invokeVariable
-	callVariable, err = newCallVnvokeVariable(application, variable, callParams, dao.GetParams())
+	callVariable, err = newCallInvokeVariable(application, variable, callParams, dao.GetParameters())
 	if err != nil {
 		return
 	}
@@ -151,12 +131,6 @@ func invokeServiceFlowStepDao(application *Application, flow *ServiceFlowModel, 
 func invokeServiceFlowStepService(application *Application, flow *ServiceFlowModel, step ServiceFlowStepModel, variable *invokeVariable) (next string, res interface{}, err error) {
 
 	stepService := interface{}(step).(*ServiceFlowStepServiceModel)
-
-	err = processParams(application, stepService.Params, variable)
-
-	if err != nil {
-		return
-	}
 
 	service := application.context.GetDao(stepService.ServiceName)
 

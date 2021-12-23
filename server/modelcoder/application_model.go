@@ -6,7 +6,6 @@ type ApplicationModel struct {
 	Dictionaries []*DictionaryModel `json:"dictionaries,omitempty"` // 字典Model，定义数据字典，用户状态、XX类型值和文案映射等
 	Datasources  []*DatasourceModel `json:"datasources,omitempty"`  // 数据源Model，定义数据源，Database、Redis、Kafka等
 	Structs      []*StructModel     `json:"structs,omitempty"`      // 结构体Model，定义结构体，结构体字段、JSON字段、表字段等
-	Variables    []*VariableModel   `json:"variables,omitempty"`    // 变量Model，调用一个接口、服务、数据访问从入口设值开始，整个线上可用
 	Servers      []*ServerModel     `json:"servers,omitempty"`      // 服务器层Model，用于提供服务接口能力，HTTP、RPC等
 	Services     []ServiceModel     `json:"services,omitempty"`     // 服务层Model，用于逻辑处理，验证等
 	Daos         []DaoModel         `json:"daos,omitempty"`         // 数据层Model，用于处理数据存储，查询数据等
@@ -29,11 +28,6 @@ func (this_ *ApplicationModel) AppendDatasource(model ...*DatasourceModel) *Appl
 
 func (this_ *ApplicationModel) AppendStruct(model ...*StructModel) *ApplicationModel {
 	this_.Structs = append(this_.Structs, model...)
-	return this_
-}
-
-func (this_ *ApplicationModel) AppendVariable(model ...*VariableModel) *ApplicationModel {
-	this_.Variables = append(this_.Variables, model...)
 	return this_
 }
 

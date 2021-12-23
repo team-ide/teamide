@@ -1,9 +1,10 @@
 package modelcoder
 
 type DaoModel interface {
-	GetName() string        // 名称，同一个应用中唯一
-	GetType() *DaoModelType // 类型
-	GetParams() []*ParamModel
+	GetName() string                 // 名称，同一个应用中唯一
+	GetType() *DaoModelType          // 类型
+	GetParameters() []*VariableModel // 参数变量
+	GetResult() *VariableModel       // 结果变量
 }
 
 type DaoModelType struct {

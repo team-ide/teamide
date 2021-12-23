@@ -2,9 +2,9 @@ package modelcoder
 
 func getColumnValue(application *Application, variable *invokeVariable, name string, valueScript string) (res interface{}, err error) {
 	if IsEmpty(valueScript) {
-		paramData := variable.GetParamData(name)
-		if paramData != nil {
-			res = paramData.Data
+		variableData := variable.GetVariableData(name)
+		if variableData != nil {
+			res = variableData.Data
 		}
 	} else {
 		res, err = getScriptValue(application, variable, valueScript)
@@ -51,9 +51,8 @@ func getScriptParser(application *Application, script string) *scriptParser {
 	res, ok := application.scriptParserCache[script]
 	if !ok {
 		res = &scriptParser{
-			script:             script,
-			factory:            application.factory,
-			factoryScriptCache: application.factoryScriptCache,
+			script:      script,
+			application: application,
 		}
 		res.parse()
 		application.scriptParserCache[script] = res

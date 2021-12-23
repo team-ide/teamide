@@ -6,7 +6,6 @@ type applicationContext struct {
 	dictionaryMap    map[string]*DictionaryModel
 	datasourceMap    map[string]*DatasourceModel
 	structMap        map[string]*StructModel
-	variableMap      map[string]*VariableModel
 	serverMap        map[string]*ServerModel
 	serviceMap       map[string]ServiceModel
 	daoMap           map[string]DaoModel
@@ -22,7 +21,6 @@ func newApplicationContext(applicationModel *ApplicationModel) *applicationConte
 		dictionaryMap:    make(map[string]*DictionaryModel),
 		datasourceMap:    make(map[string]*DatasourceModel),
 		structMap:        make(map[string]*StructModel),
-		variableMap:      make(map[string]*VariableModel),
 		serverMap:        make(map[string]*ServerModel),
 		serviceMap:       make(map[string]ServiceModel),
 		daoMap:           make(map[string]DaoModel),
@@ -44,9 +42,6 @@ func (this_ *applicationContext) init() *applicationContext {
 	}
 	for _, one := range this_.applicationModel.Structs {
 		this_.structMap[one.Name] = one
-	}
-	for _, one := range this_.applicationModel.Variables {
-		this_.variableMap[one.Name] = one
 	}
 	for _, one := range this_.applicationModel.Servers {
 		this_.serverMap[one.Name] = one
@@ -78,11 +73,6 @@ func (this_ *applicationContext) GetDatasource(name string) *DatasourceModel {
 
 func (this_ *applicationContext) GetStruct(name string) *StructModel {
 	model := this_.structMap[name]
-	return model
-}
-
-func (this_ *applicationContext) GetVariable(name string) *VariableModel {
-	model := this_.variableMap[name]
 	return model
 }
 

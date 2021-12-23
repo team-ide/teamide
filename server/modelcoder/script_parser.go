@@ -11,11 +11,10 @@ import (
 )
 
 type scriptParser struct {
-	script             string
-	factory            FactoryScript
-	factoryScriptCache map[string]interface{}
-	callDotNames       []string
-	varDotNames        []string
+	script       string
+	application  *Application
+	callDotNames []string
+	varDotNames  []string
 }
 
 func (this_ *scriptParser) parse() error {
@@ -36,17 +35,13 @@ func (this_ *scriptParser) parse() error {
 			}
 		}
 	}
-	err = this_.checkCall()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func (this_ *scriptParser) checkCall() (err error) {
+func (this_ *scriptParser) checkCall(variables []VariableData) (err error) {
 	for _, callName := range this_.callDotNames {
 		key := strings.TrimPrefix(callName, "$factory.")
-		_, find := this_.factoryScriptCache[key]
+		_, find := this_.application.factoryScriptCache[key]
 		if !find {
 			err = errors.New(fmt.Sprint("call script [", callName, "] not defind"))
 			return

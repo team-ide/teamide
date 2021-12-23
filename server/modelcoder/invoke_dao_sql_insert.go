@@ -51,22 +51,3 @@ func getSqlInsertSqlParams(sqlInsert *DaoSqlInsertModel, application *Applicatio
 
 	return
 }
-
-func getSqlInsertTableColumns(sqlInsert *DaoSqlInsertModel) (tableColumns map[string][]string) {
-	tableColumns = map[string][]string{}
-
-	wrapTable := WrapTableName(sqlInsert.Database, sqlInsert.Table)
-
-	var columns []string
-	for _, column := range sqlInsert.Columns {
-		if IsEmpty(column.Name) {
-			continue
-		}
-		wrapColumn := WrapColumnName("", column.Name)
-		columns = append(columns, wrapColumn)
-
-	}
-	tableColumns[wrapTable] = columns
-
-	return
-}

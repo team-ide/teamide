@@ -9,9 +9,8 @@ func TestScriptParser(t *testing.T) {
 	initApplication()
 	script := "user.userId + '1' + $factory.GetID() +'aaa'.length()"
 	scriptParser := &scriptParser{
-		script:             script,
-		factory:            application.factory,
-		factoryScriptCache: application.factoryScriptCache,
+		script:      script,
+		application: application,
 	}
 
 	err := scriptParser.parse()
@@ -24,7 +23,7 @@ func TestScriptParser(t *testing.T) {
 func TestApplication(t *testing.T) {
 	initApplication()
 
-	variable := application.NewInvokeVariable(&ParamData{
+	variable := application.NewInvokeVariable(&VariableData{
 		Name: "user",
 		Data: map[string]interface{}{
 			"name": "张三",
@@ -102,10 +101,10 @@ func initDaoModel() {
 			{Name: "name", ValueScript: "user.name", Required: true},
 			{Name: "age", ValueScript: "user.age", Required: true},
 		},
-		Params: []*ParamModel{
+		Parameters: []*VariableModel{
 			{Name: "user", DataType: "user"},
 		},
-		Result: &ParamModel{
+		Result: &VariableModel{
 			Name: "user", DataType: "user",
 		},
 	})
@@ -114,7 +113,7 @@ func initServiceModel() {
 
 	applicationModel.AppendService(&ServiceFlowModel{
 		Name: "user/insert",
-		Params: []*ParamModel{
+		Parameters: []*VariableModel{
 			{Name: "user", DataType: "user"},
 		},
 		Steps: []ServiceFlowStepModel{

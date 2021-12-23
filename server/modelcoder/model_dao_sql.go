@@ -1,10 +1,10 @@
 package modelcoder
 
 type DaoSqlSelectOneModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlSelectOneModel) GetName() string {
@@ -15,15 +15,19 @@ func (this_ *DaoSqlSelectOneModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_ONE
 }
 
-func (this_ *DaoSqlSelectOneModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlSelectOneModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlSelectOneModel) GetResult() *VariableModel {
+	return this_.Result
 }
 
 type DaoSqlSelectListModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlSelectListModel) GetName() string {
@@ -34,15 +38,19 @@ func (this_ *DaoSqlSelectListModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_LIST
 }
 
-func (this_ *DaoSqlSelectListModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlSelectListModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlSelectListModel) GetResult() *VariableModel {
+	return this_.Result
 }
 
 type DaoSqlSelectPageModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlSelectPageModel) GetName() string {
@@ -53,15 +61,19 @@ func (this_ *DaoSqlSelectPageModel) GetType() *DaoModelType {
 	return DAO_SQL_SELECT_PAGE
 }
 
-func (this_ *DaoSqlSelectPageModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlSelectPageModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlSelectPageModel) GetResult() *VariableModel {
+	return this_.Result
 }
 
 type DaoSqlSelectCountModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlSelectCountModel) GetName() string {
@@ -73,13 +85,13 @@ func (this_ *DaoSqlSelectCountModel) GetType() *DaoModelType {
 }
 
 type DaoSqlInsertModel struct {
-	Name     string                `json:"name,omitempty"`     // 名称，同一个应用中唯一
-	Type     string                `json:"type,omitempty"`     // 类型
-	Database string                `json:"database,omitempty"` // 库名
-	Table    string                `json:"table,omitempty"`    // 表名
-	Columns  []*DaoSqlInsertColumn `json:"columns,omitempty"`  // 新增字段
-	Params   []*ParamModel         `json:"params,omitempty"`   // 参数配置
-	Result   *ParamModel           `json:"result,omitempty"`   // 结果配置
+	Name       string                `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string                `json:"type,omitempty"`       // 类型
+	Database   string                `json:"database,omitempty"`   // 库名
+	Table      string                `json:"table,omitempty"`      // 表名
+	Columns    []*DaoSqlInsertColumn `json:"columns,omitempty"`    // 新增字段
+	Parameters []*VariableModel      `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel        `json:"result,omitempty"`     // 结果配置
 }
 
 type DaoSqlInsertColumn struct {
@@ -99,15 +111,19 @@ func (this_ *DaoSqlInsertModel) GetType() *DaoModelType {
 	return DAO_SQL_INSERT
 }
 
-func (this_ *DaoSqlInsertModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlInsertModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlInsertModel) GetResult() *VariableModel {
+	return this_.Result
 }
 
 type DaoSqlUpdateModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlUpdateModel) GetName() string {
@@ -118,15 +134,19 @@ func (this_ *DaoSqlUpdateModel) GetType() *DaoModelType {
 	return DAO_SQL_UPDATE
 }
 
-func (this_ *DaoSqlUpdateModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlUpdateModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlUpdateModel) GetResult() *VariableModel {
+	return this_.Result
 }
 
 type DaoSqlDeleteModel struct {
-	Name   string        `json:"name,omitempty"`   // 名称，同一个应用中唯一
-	Type   string        `json:"type,omitempty"`   // 类型
-	Params []*ParamModel `json:"params,omitempty"` // 参数配置
-	Result *ParamModel   `json:"result,omitempty"` // 结果配置
+	Name       string           `json:"name,omitempty"`       // 名称，同一个应用中唯一
+	Type       string           `json:"type,omitempty"`       // 类型
+	Parameters []*VariableModel `json:"parameters,omitempty"` // 参数配置
+	Result     *VariableModel   `json:"result,omitempty"`     // 结果配置
 }
 
 func (this_ *DaoSqlDeleteModel) GetName() string {
@@ -137,6 +157,10 @@ func (this_ *DaoSqlDeleteModel) GetType() *DaoModelType {
 	return DAO_SQL_DELETE
 }
 
-func (this_ *DaoSqlDeleteModel) GetParams() []*ParamModel {
-	return this_.Params
+func (this_ *DaoSqlDeleteModel) GetParameters() []*VariableModel {
+	return this_.Parameters
+}
+
+func (this_ *DaoSqlDeleteModel) GetResult() *VariableModel {
+	return this_.Result
 }
