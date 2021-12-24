@@ -16,7 +16,7 @@ func getColumnValue(application *Application, variable *invokeVariable, name str
 			res = variableData.Data
 		}
 	} else {
-		res, err = getScriptValue(application, variable, valueScript)
+		res, err = getScriptExpressionValue(application, variable, valueScript)
 	}
 	return
 }
@@ -27,7 +27,7 @@ func ifScriptValue(application *Application, variable *invokeVariable, ifScript 
 		return
 	}
 	var value interface{}
-	value, err = getScriptValue(application, variable, ifScript)
+	value, err = getScriptExpressionValue(application, variable, ifScript)
 	if err != nil {
 		return
 	}
@@ -41,12 +41,12 @@ func ifScriptValue(application *Application, variable *invokeVariable, ifScript 
 	return
 }
 
-func getScriptValue(application *Application, variable *invokeVariable, script string) (res interface{}, err error) {
+func getScriptExpressionValue(application *Application, variable *invokeVariable, script string) (res interface{}, err error) {
 	if IsEmpty(script) {
 		res = nil
 	} else {
-		var parser *scriptValueParser
-		parser, err = getScriptValueParser(application, script)
+		var parser *scriptExpressionParser
+		parser, err = getScriptExpressionParser(application, script)
 		if err != nil {
 			return
 		}
@@ -57,14 +57,18 @@ func getScriptValue(application *Application, variable *invokeVariable, script s
 	return
 }
 
-func getScriptValueParser(application *Application, script string) (res *scriptValueParser, err error) {
+var (
+	scriptExpressionParserCache = make(map[string]*scriptExpressionParser)
+)
+
+func getScriptExpressionParser(application *Application, script string) (res *scriptExpressionParser, err error) {
 	if IsEmpty(script) {
 		return
 	}
 	var ok bool
-	res, ok = application.scriptValueParserCache[script]
+	res, ok = scriptExpressionParserCache[script]
 	if !ok {
-		res = &scriptValueParser{
+		res = &scriptExpressionParser{
 			script:      script,
 			application: application,
 		}
@@ -72,12 +76,12 @@ func getScriptValueParser(application *Application, script string) (res *scriptV
 		if err != nil {
 			return nil, err
 		}
-		application.scriptValueParserCache[script] = res
+		scriptExpressionParserCache[script] = res
 	}
 	return
 }
 
-func (this_ *scriptValueParser) check(variable *invokeVariable) (err error) {
+func (this_ *scriptExpressionParser) check(variable *invokeVariable) (err error) {
 
 	for _, callName := range this_.callDotNames {
 		key := strings.TrimPrefix(callName, "$factory.")
@@ -111,7 +115,7 @@ func (this_ *scriptValueParser) check(variable *invokeVariable) (err error) {
 	return
 }
 
-func (this_ *scriptValueParser) invoke(variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invoke(variable *invokeVariable) (res interface{}, err error) {
 	err = this_.check(variable)
 	if err != nil {
 		return
@@ -120,7 +124,7 @@ func (this_ *scriptValueParser) invoke(variable *invokeVariable) (res interface{
 	return
 }
 
-func (this_ *scriptValueParser) invokeExpressions(expressions []ast.Expression, variable *invokeVariable) (ress []interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeExpressions(expressions []ast.Expression, variable *invokeVariable) (ress []interface{}, err error) {
 	for _, one := range expressions {
 		var res interface{}
 		res, err = this_.invokeExpression(one, variable)
@@ -132,7 +136,7 @@ func (this_ *scriptValueParser) invokeExpressions(expressions []ast.Expression, 
 	return
 }
 
-func (this_ *scriptValueParser) invokeExpression(expression ast.Expression, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeExpression(expression ast.Expression, variable *invokeVariable) (res interface{}, err error) {
 	var ok = false
 
 	if !ok {
@@ -222,7 +226,7 @@ func ToFloat64(value interface{}) (res float64, ok bool) {
 	return
 }
 
-func (this_ *scriptValueParser) invokeBinaryExpression(expression *ast.BinaryExpression, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeBinaryExpression(expression *ast.BinaryExpression, variable *invokeVariable) (res interface{}, err error) {
 
 	var leftValue interface{}
 	leftValue, err = this_.invokeExpression(expression.Left, variable)
@@ -382,7 +386,7 @@ func (this_ *scriptValueParser) invokeBinaryExpression(expression *ast.BinaryExp
 	return
 }
 
-func (this_ *scriptValueParser) invokeConditionalExpression(expression *ast.ConditionalExpression, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeConditionalExpression(expression *ast.ConditionalExpression, variable *invokeVariable) (res interface{}, err error) {
 	var test interface{}
 	test, err = this_.invokeExpression(expression.Test, variable)
 	if err != nil {
@@ -395,7 +399,7 @@ func (this_ *scriptValueParser) invokeConditionalExpression(expression *ast.Cond
 	}
 	return
 }
-func (this_ *scriptValueParser) invokeCallExpression(expression *ast.CallExpression, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeCallExpression(expression *ast.CallExpression, variable *invokeVariable) (res interface{}, err error) {
 	println("invokeCallExpression:", ToJSON(expression))
 	var args []interface{}
 	args, err = this_.invokeExpressions(expression.ArgumentList, variable)
@@ -406,7 +410,7 @@ func (this_ *scriptValueParser) invokeCallExpression(expression *ast.CallExpress
 	return
 }
 
-func (this_ *scriptValueParser) invokeDotExpression(expression *ast.DotExpression, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeDotExpression(expression *ast.DotExpression, variable *invokeVariable) (res interface{}, err error) {
 	identifier, ok := interface{}(expression.Left).(*ast.Identifier)
 	if ok {
 		key := identifier.Name.String()
@@ -428,7 +432,7 @@ func (this_ *scriptValueParser) invokeDotExpression(expression *ast.DotExpressio
 	return
 }
 
-func (this_ *scriptValueParser) invokeIdentifier(expression *ast.Identifier, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeIdentifier(expression *ast.Identifier, variable *invokeVariable) (res interface{}, err error) {
 	key := expression.Name.String()
 	variableData := variable.GetVariableData(key)
 	if variableData != nil {
@@ -437,12 +441,12 @@ func (this_ *scriptValueParser) invokeIdentifier(expression *ast.Identifier, var
 	return
 }
 
-func (this_ *scriptValueParser) invokeStringLiteral(expression *ast.StringLiteral, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeStringLiteral(expression *ast.StringLiteral, variable *invokeVariable) (res interface{}, err error) {
 	res = expression.Value.String()
 	return
 }
 
-func (this_ *scriptValueParser) invokeNumberLiteral(expression *ast.NumberLiteral, variable *invokeVariable) (res interface{}, err error) {
+func (this_ *scriptExpressionParser) invokeNumberLiteral(expression *ast.NumberLiteral, variable *invokeVariable) (res interface{}, err error) {
 	reT := GetRefType(expression.Value)
 	reV := GetRefValue(expression.Value)
 	res = GetFieldTypeValue(reT, reV)

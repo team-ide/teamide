@@ -1,43 +1,42 @@
 package modelcoder
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
 
 type Application struct {
-	context                *applicationContext
-	factory                FactoryScript
-	scriptValueParserCache map[string]*scriptValueParser
-	scriptParserCache      map[string]*scriptParser
-	factoryScriptCache     map[string]interface{}
-	logger                 logger
+	context            *applicationContext
+	factory            FactoryScript
+	factoryScriptCache map[string]interface{}
+	OutDebug           func() bool
+	OutInfo            func() bool
+	Debug              func(args ...interface{})
+	Info               func(args ...interface{})
+	Warn               func(args ...interface{})
+	Error              func(args ...interface{})
 }
 
-func NewApplication(applicationModel *ApplicationModel, logger logger) *Application {
+func NewApplication(applicationModel *ApplicationModel, options ...interface{}) *Application {
 	if applicationModel == nil {
 		return nil
 	}
-	res := &Application{
-		logger:                 logger,
-		scriptValueParserCache: make(map[string]*scriptValueParser),
-		scriptParserCache:      make(map[string]*scriptParser),
-		factoryScriptCache:     make(map[string]interface{}),
-		factory:                &FactoryScriptDefault{},
+	res := &Application{}
+	res.initOption(&LoggerDefault{})
+	res.initOption(&FactoryScriptDefault{})
+
+	if len(options) > 0 {
+		for _, option := range options {
+			res.initOption(option)
+		}
 	}
-	reflectType := reflect.TypeOf(res.factory)
-	count := reflectType.NumMethod()
-	var i = 0
-	for i = 0; i < count; i++ {
-		method := reflectType.Method(i)
-		res.factoryScriptCache[method.Name] = true
-		res.factoryScriptCache[strings.ToLower(method.Name[0:1])+method.Name[1:]] = true
-	}
+
 	res.context = newApplicationContext(applicationModel)
 	return res
 }
 
-type logger interface {
+type LoggerOption interface {
 	OutDebug() bool
 	OutInfo() bool
 	Debug(args ...interface{})
@@ -46,36 +45,51 @@ type logger interface {
 	Error(args ...interface{})
 }
 
-type invokeVariable struct {
-	Parent        *invokeVariable        `json:"-"`
-	VariableDatas []*VariableData        `json:"variableDatas,omitempty"`
-	InvokeCache   map[string]interface{} `json:"invokeCache,omitempty"`
-}
-
-func (this_ *invokeVariable) GetVariableData(name string) *VariableData {
-	if len(this_.VariableDatas) == 0 {
-		return nil
+func (this_ *Application) initOption(option interface{}) *Application {
+	if option == nil {
+		return this_
 	}
-	for _, one := range this_.VariableDatas {
-		if one.Name == name {
-			return one
-		}
+	LoggerOption, LoggerOptionOk := option.(LoggerOption)
+	if LoggerOptionOk {
+		this_.initLoggerOption(LoggerOption)
 	}
-	return nil
-}
-
-func (this_ *invokeVariable) AddVariableData(list ...*VariableData) *invokeVariable {
-	this_.VariableDatas = append(this_.VariableDatas, list...)
+	FactoryScript, FactoryScriptOk := option.(FactoryScript)
+	if FactoryScriptOk {
+		this_.initFactoryOption(FactoryScript)
+	}
 	return this_
 }
 
-func (this_ *invokeVariable) Clone() *invokeVariable {
-	res := &invokeVariable{
-		VariableDatas: []*VariableData{},
-		Parent:        this_,
-		InvokeCache:   map[string]interface{}{},
+func (this_ *Application) initLoggerOption(option LoggerOption) *Application {
+	if option == nil {
+		return this_
 	}
-	return res
+	this_.OutDebug = option.OutDebug
+	this_.OutInfo = option.OutInfo
+	this_.Debug = option.Debug
+	this_.Info = option.Info
+	this_.Warn = option.Warn
+	this_.Error = option.Error
+	return this_
+}
+
+func (this_ *Application) initFactoryOption(option FactoryScript) *Application {
+	if option == nil {
+		return this_
+	}
+
+	this_.factoryScriptCache = make(map[string]interface{})
+	this_.factory = option
+
+	reflectType := reflect.TypeOf(this_.factory)
+	count := reflectType.NumMethod()
+	var i = 0
+	for i = 0; i < count; i++ {
+		method := reflectType.Method(i)
+		this_.factoryScriptCache[method.Name] = true
+		this_.factoryScriptCache[strings.ToLower(method.Name[0:1])+method.Name[1:]] = true
+	}
+	return this_
 }
 
 func (this_ *Application) NewInvokeVariable(VariableDatas ...*VariableData) *invokeVariable {
@@ -90,28 +104,6 @@ func (this_ *Application) NewInvokeVariable(VariableDatas ...*VariableData) *inv
 	return res
 }
 
-func (this_ *Application) OutDebug() bool {
-	return this_.logger.OutDebug()
-}
-func (this_ *Application) Debug(args ...interface{}) {
-	if this_.OutDebug() {
-		this_.logger.Debug(args...)
-	}
-}
-func (this_ *Application) OutInfo() bool {
-	return this_.logger.OutInfo()
-}
-func (this_ *Application) Info(args ...interface{}) {
-	if this_.OutInfo() {
-		this_.logger.Info(args...)
-	}
-}
-func (this_ *Application) Warn(args ...interface{}) {
-	this_.logger.Warn(args...)
-}
-func (this_ *Application) Error(args ...interface{}) {
-	this_.logger.Error(args...)
-}
 func (this_ *Application) executeSqlInsert(database string, sql string, sqlParams []interface{}) (err error) {
 	if this_.OutDebug() {
 		this_.Debug("execute sql insert sql   :", sql)
@@ -121,96 +113,24 @@ func (this_ *Application) executeSqlInsert(database string, sql string, sqlParam
 	return
 }
 
-func (this_ *Application) InvokeServiceByName(name string, variable *invokeVariable) (res interface{}, err error) {
-	if this_.OutDebug() {
-		this_.Debug("invoke service start , name:", name, ", variable:", ToJSON(variable))
-	}
-	if variable == nil {
-		err = newErrorVariableIsNull("invoke service variable is null")
-		return
-	}
-	service := this_.context.GetService(name)
-	if service == nil {
-		err = newErrorServiceIsNull("invoke service model is null")
-		return
-	}
-	res, err = invokeModel(this_, service, variable)
-	if err != nil {
-		this_.Error("invoke service error , name:", name, ", error:", err)
-		return
-	}
-	if this_.OutDebug() {
-		this_.Debug("invoke service end , name:", name, ", result:", ToJSON(res))
-	}
-	return
+type LoggerDefault struct {
 }
 
-func (this_ *Application) InvokeService(service ServiceModel, variable *invokeVariable) (res interface{}, err error) {
-	if this_.OutDebug() {
-		this_.Debug("invoke service start , service:", ToJSON(service), ", variable:", ToJSON(variable))
-	}
-	if service == nil {
-		err = newErrorServiceIsNull("invoke service model is null")
-		return
-	}
-	if variable == nil {
-		err = newErrorVariableIsNull("invoke service variable is null")
-		return
-	}
-	res, err = invokeModel(this_, service, variable)
-	if err != nil {
-		this_.Error("invoke service error , service:", ToJSON(service), ", error:", err)
-		return
-	}
-	if this_.OutDebug() {
-		this_.Debug("invoke service end , service:", ToJSON(service), ", result:", ToJSON(res))
-	}
-	return
+func (this_ *LoggerDefault) OutDebug() bool {
+	return true
 }
-
-func (this_ *Application) InvokeDaoByName(name string, variable *invokeVariable) (res interface{}, err error) {
-	if this_.OutDebug() {
-		this_.Debug("invoke dao start , name:", name, ", variable:", ToJSON(variable))
-	}
-	if variable == nil {
-		err = newErrorVariableIsNull("invoke dao variable is null")
-		return
-	}
-	dao := this_.context.GetDao(name)
-	if dao == nil {
-		err = newErrorDaoIsNull("invoke dao model is null")
-		return
-	}
-	res, err = invokeModel(this_, dao, variable)
-	if err != nil {
-		this_.Error("invoke dao error , name:", name, ", error:", err)
-		return
-	}
-	if this_.OutDebug() {
-		this_.Debug("invoke dao end , name:", name, ", result:", ToJSON(res))
-	}
-	return
+func (this_ *LoggerDefault) OutInfo() bool {
+	return true
 }
-
-func (this_ *Application) InvokeDao(dao DaoModel, variable *invokeVariable) (res interface{}, err error) {
-	if this_.OutDebug() {
-		this_.Debug("invoke dao start , dao:", ToJSON(dao), ", variable:", ToJSON(variable))
-	}
-	if dao == nil {
-		err = newErrorDaoIsNull("invoke dao model is null")
-		return
-	}
-	if variable == nil {
-		err = newErrorVariableIsNull("invoke dao variable is null")
-		return
-	}
-	res, err = invokeModel(this_, dao, variable)
-	if err != nil {
-		this_.Error("invoke dao error , dao:", ToJSON(dao), ", error:", err)
-		return
-	}
-	if this_.OutDebug() {
-		this_.Debug("invoke dao end , dao:", ToJSON(dao), ", result:", ToJSON(res))
-	}
-	return
+func (this_ *LoggerDefault) Debug(args ...interface{}) {
+	fmt.Println(args...)
+}
+func (this_ *LoggerDefault) Info(args ...interface{}) {
+	fmt.Println(args...)
+}
+func (this_ *LoggerDefault) Warn(args ...interface{}) {
+	fmt.Println(args...)
+}
+func (this_ *LoggerDefault) Error(args ...interface{}) {
+	fmt.Println(args...)
 }

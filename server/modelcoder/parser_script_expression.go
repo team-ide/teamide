@@ -9,7 +9,7 @@ import (
 	"github.com/dop251/goja/parser"
 )
 
-type scriptValueParser struct {
+type scriptExpressionParser struct {
 	script         string
 	application    *Application
 	callDotNames   []string
@@ -17,7 +17,7 @@ type scriptValueParser struct {
 	expression     ast.Expression
 }
 
-func (this_ *scriptValueParser) parse() error {
+func (this_ *scriptExpressionParser) parse() error {
 	this_.callDotNames = []string{}
 	this_.structDotNames = []string{}
 
@@ -42,7 +42,7 @@ func (this_ *scriptValueParser) parse() error {
 	return nil
 }
 
-func (this_ *scriptValueParser) addCallNames(expression *ast.CallExpression) (err error) {
+func (this_ *scriptExpressionParser) addCallNames(expression *ast.CallExpression) (err error) {
 	name := ""
 
 	calleeDotExpression, ok := interface{}(expression.Callee).(*ast.DotExpression)
@@ -67,7 +67,7 @@ func (this_ *scriptValueParser) addCallNames(expression *ast.CallExpression) (er
 	return
 }
 
-func (this_ *scriptValueParser) addStructDotNames(expression *ast.DotExpression) (err error) {
+func (this_ *scriptExpressionParser) addStructDotNames(expression *ast.DotExpression) (err error) {
 	if expression.Left != nil && !isIdentifier(expression.Left) {
 		return
 	}
@@ -100,7 +100,7 @@ func getDotExpressionName(expression *ast.DotExpression) (name string, err error
 	return
 }
 
-func (this_ *scriptValueParser) parseExpressions(expressions []ast.Expression) (err error) {
+func (this_ *scriptExpressionParser) parseExpressions(expressions []ast.Expression) (err error) {
 	for _, one := range expressions {
 		err = this_.parseExpression(one)
 		if err != nil {
@@ -109,7 +109,7 @@ func (this_ *scriptValueParser) parseExpressions(expressions []ast.Expression) (
 	}
 	return err
 }
-func (this_ *scriptValueParser) parseExpression(expression ast.Expression) (err error) {
+func (this_ *scriptExpressionParser) parseExpression(expression ast.Expression) (err error) {
 	var ok = false
 
 	if !ok {
@@ -171,7 +171,7 @@ func (this_ *scriptValueParser) parseExpression(expression ast.Expression) (err 
 	return err
 }
 
-func (this_ *scriptValueParser) parseBinaryExpression(expression *ast.BinaryExpression) (err error) {
+func (this_ *scriptExpressionParser) parseBinaryExpression(expression *ast.BinaryExpression) (err error) {
 
 	err = this_.parseExpression(expression.Left)
 	if err != nil {
@@ -183,7 +183,7 @@ func (this_ *scriptValueParser) parseBinaryExpression(expression *ast.BinaryExpr
 	}
 	return nil
 }
-func (this_ *scriptValueParser) parseConditionalExpression(expression *ast.ConditionalExpression) (err error) {
+func (this_ *scriptExpressionParser) parseConditionalExpression(expression *ast.ConditionalExpression) (err error) {
 
 	err = this_.parseExpression(expression.Test)
 	if err != nil {
@@ -200,7 +200,7 @@ func (this_ *scriptValueParser) parseConditionalExpression(expression *ast.Condi
 	return nil
 }
 
-func (this_ *scriptValueParser) parseCallExpression(expression *ast.CallExpression) (err error) {
+func (this_ *scriptExpressionParser) parseCallExpression(expression *ast.CallExpression) (err error) {
 	err = this_.addCallNames(expression)
 	if err != nil {
 		return
@@ -212,7 +212,7 @@ func (this_ *scriptValueParser) parseCallExpression(expression *ast.CallExpressi
 	return
 }
 
-func (this_ *scriptValueParser) parseDotExpression(expression *ast.DotExpression) (err error) {
+func (this_ *scriptExpressionParser) parseDotExpression(expression *ast.DotExpression) (err error) {
 	err = this_.addStructDotNames(expression)
 	if err != nil {
 		return
@@ -220,14 +220,14 @@ func (this_ *scriptValueParser) parseDotExpression(expression *ast.DotExpression
 	return
 }
 
-func (this_ *scriptValueParser) parseIdentifier(expression *ast.Identifier) (err error) {
+func (this_ *scriptExpressionParser) parseIdentifier(expression *ast.Identifier) (err error) {
 	return
 }
 
-func (this_ *scriptValueParser) parseStringLiteral(expression *ast.StringLiteral) (err error) {
+func (this_ *scriptExpressionParser) parseStringLiteral(expression *ast.StringLiteral) (err error) {
 	return
 }
 
-func (this_ *scriptValueParser) parseNumberLiteral(expression *ast.NumberLiteral) (err error) {
+func (this_ *scriptExpressionParser) parseNumberLiteral(expression *ast.NumberLiteral) (err error) {
 	return
 }

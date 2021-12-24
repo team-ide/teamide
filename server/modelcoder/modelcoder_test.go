@@ -5,7 +5,33 @@ import (
 	"testing"
 )
 
-func TestScriptParser(t *testing.T) {
+func TestScriptStatement(t *testing.T) {
+	initApplication()
+	script := `
+	var name = '在jams'
+	var name_ = name + '11-'
+	for(i=0;i<10;i++){
+		name+="--"+i
+	}
+	`
+	variable := application.NewInvokeVariable(&VariableData{
+		Name: "user",
+		Data: map[string]interface{}{
+			"name": "张三",
+			"age":  16,
+		},
+		DataStruct: application.context.GetStruct("user"),
+	})
+
+	err := invokeScriptStatement(application, variable, script)
+
+	if err != nil {
+		panic(err)
+	}
+
+	println("variable:", ToJSON(variable))
+}
+func TestScriptExpression(t *testing.T) {
 	initApplication()
 	script := "'张三'+(user.age>=18 || user.name=='张三'?'成年':'未成年')"
 
@@ -18,7 +44,7 @@ func TestScriptParser(t *testing.T) {
 		DataStruct: application.context.GetStruct("user"),
 	})
 
-	value, err := getScriptValue(application, variable, script)
+	value, err := getScriptExpressionValue(application, variable, script)
 
 	if err != nil {
 		panic(err)
@@ -54,30 +80,9 @@ var (
 	applicationModel *ApplicationModel
 )
 
-type Logger struct {
-}
-
-func (this_ *Logger) OutDebug() bool {
-	return true
-}
-func (this_ *Logger) OutInfo() bool {
-	return true
-}
-func (this_ *Logger) Debug(args ...interface{}) {
-	fmt.Println(args...)
-}
-func (this_ *Logger) Info(args ...interface{}) {
-	fmt.Println(args...)
-}
-func (this_ *Logger) Warn(args ...interface{}) {
-	fmt.Println(args...)
-}
-func (this_ *Logger) Error(args ...interface{}) {
-	fmt.Println(args...)
-}
 func initApplication() {
 	initApplicationModel()
-	application = NewApplication(applicationModel, &Logger{})
+	application = NewApplication(applicationModel)
 }
 func initApplicationModel() {
 	applicationModel = &ApplicationModel{}

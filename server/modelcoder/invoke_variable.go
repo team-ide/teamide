@@ -7,6 +7,38 @@ type VariableData struct {
 	DataStruct *StructModel `json:"-"`                  // 数据结构体
 }
 
+type invokeVariable struct {
+	Parent        *invokeVariable        `json:"-"`
+	VariableDatas []*VariableData        `json:"variableDatas,omitempty"`
+	InvokeCache   map[string]interface{} `json:"invokeCache,omitempty"`
+}
+
+func (this_ *invokeVariable) GetVariableData(name string) *VariableData {
+	if len(this_.VariableDatas) == 0 {
+		return nil
+	}
+	for _, one := range this_.VariableDatas {
+		if one.Name == name {
+			return one
+		}
+	}
+	return nil
+}
+
+func (this_ *invokeVariable) AddVariableData(list ...*VariableData) *invokeVariable {
+	this_.VariableDatas = append(this_.VariableDatas, list...)
+	return this_
+}
+
+func (this_ *invokeVariable) Clone() *invokeVariable {
+	res := &invokeVariable{
+		VariableDatas: []*VariableData{},
+		Parent:        this_,
+		InvokeCache:   map[string]interface{}{},
+	}
+	return res
+}
+
 func processVariableDatas(application *Application, parameters []*VariableModel, variable *invokeVariable) (err error) {
 	if len(parameters) == 0 {
 		return
