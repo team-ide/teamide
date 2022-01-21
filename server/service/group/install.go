@@ -1,6 +1,6 @@
 package groupService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *GroupService) GetInstall() (info *base.InstallInfo) {
 

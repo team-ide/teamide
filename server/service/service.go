@@ -1,7 +1,7 @@
 package service
 
 import (
-	"server/base"
+	"teamide/server/base"
 )
 
 var (

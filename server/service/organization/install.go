@@ -1,6 +1,6 @@
 package organizationService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *OrganizationService) GetInstall() (info *base.InstallInfo) {
 

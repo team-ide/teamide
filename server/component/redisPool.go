@@ -3,7 +3,7 @@ package component
 import (
 	"errors"
 	"fmt"
-	"server/base"
+	"teamide/server/base"
 	"time"
 
 	redigo "github.com/gomodule/redigo/redis"

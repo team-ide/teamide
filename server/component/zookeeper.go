@@ -2,8 +2,8 @@ package component
 
 import (
 	"errors"
-	"server/config"
 	"strings"
+	"teamide/server/config"
 	"time"
 
 	"github.com/go-zookeeper/zk"

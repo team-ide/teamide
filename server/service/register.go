@@ -1,9 +1,9 @@
 package service
 
 import (
-	"server/base"
-	"server/component"
-	"server/factory"
+	"teamide/server/base"
+	"teamide/server/component"
+	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
 )

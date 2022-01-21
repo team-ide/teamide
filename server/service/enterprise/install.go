@@ -1,6 +1,6 @@
 package enterpriseService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *EnterpriseService) GetInstall() (info *base.InstallInfo) {
 

@@ -1,6 +1,6 @@
 package spaceService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *SpaceService) GetInstall() (info *base.InstallInfo) {
 

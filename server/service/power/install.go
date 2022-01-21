@@ -1,6 +1,6 @@
 package powerService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *PowerService) GetInstall() (info *base.InstallInfo) {
 

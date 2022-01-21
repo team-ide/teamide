@@ -1,0 +1,104 @@
+name: Model Coder release CI
+on:
+  push:
+    # tags: # 当我们提交代码为tag 是以'v'开头的时候才会触发自动部署到服务端 如 git push tag v0.1.0
+    #   - 'v*'
+    branches: 
+      - main
+      - master
+jobs:
+  lint:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 打包构建 Server
+      - name: Build Server
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17'
+
+      # 打包Linux
+      - run: cd main && export GOARCH=amd64 && export GOOS=linux && go build -o ../release/application-linux-x64/main
+      - run: cp -rf main/app release/application-linux-x64/
+      - run: cp -rf main/README.md release/application-linux-x64/
+      - run: cp -rf RELEASE.md release/application-linux-x64/
+      - run: cd release && zip -q -r application-linux-x64.zip application-linux-x64
+
+      # 打包MAC
+      - run: cd main && export GOARCH=amd64 && export GOOS=darwin && go build -o ../release/application-darwin-x64/main
+      - run: cp -rf main/app release/application-darwin-x64/
+      - run: cp -rf main/README.md release/application-darwin-x64/
+      - run: cp -rf RELEASE.md release/application-darwin-x64/
+      - run: cd release && zip -q -r application-darwin-x64.zip application-darwin-x64
+
+      # 打包Window
+      - run: cd main && export GOARCH=amd64 && export GOOS=windows && go build -o ../release/application-windows-x64/main.exe
+      - run: cp -rf main/app release/application-windows-x64/
+      - run: cp -rf main/README.md release/application-windows-x64/
+      - run: cp -rf RELEASE.md release/application-windows-x64/
+      - run: cd release && zip -q -r application-windows-x64.zip application-windows-x64
+
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: ./package.json
+          property: version
+
+      - name: Read Release Description
+        id: release_body
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./RELEASE.md
+
+      # 发布
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{steps.release_version.outputs.value}}
+          release_name: ${{steps.release_version.outputs.value}}
+          body: ${{steps.release_body.outputs.content}}
+          draft: false # 是否是草稿
+          prerelease: false # 是否是预发布
+      # 上传构建结果到 Release（把打包的zip上传到Release）
+
+      - name: Upload Go linux Release Asset
+        id: upload-go-linux-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/application-linux-x64.zip # 要上传文件
+          asset_name: application-linux-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+      - name: Upload Go MAC Release Asset
+        id: upload-go-MAC-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/application-darwin-x64.zip # 要上传文件
+          asset_name: application-darwin-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+      - name: Upload Go Windows Release Asset
+        id: upload-go-windows-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/application-windows-x64.zip # 要上传文件
+          asset_name: application-windows-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+

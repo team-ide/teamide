@@ -1,0 +1,11 @@
+steps:
+  - variables:
+      - account: "'admin'"
+      - password: "'admin123'"
+    service:
+      name: token/create
+      callVariables:
+        - account: account
+        - password: password
+    variableName: access_token
+    return: access_token

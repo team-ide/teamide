@@ -2,9 +2,9 @@ package service
 
 import (
 	"encoding/json"
-	"server/base"
-	"server/component"
-	"server/factory"
+	"teamide/server/base"
+	"teamide/server/component"
+	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
 )

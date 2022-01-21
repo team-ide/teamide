@@ -1,7 +1,7 @@
 package idService
 
 import (
-	"server/base"
+	"teamide/server/base"
 )
 
 func (this_ *IdService) BindApi(appendApi func(apis ...*base.ApiWorker)) {

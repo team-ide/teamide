@@ -2,8 +2,8 @@ package service
 
 import (
 	"regexp"
-	"server/base"
 	"strings"
+	"teamide/server/base"
 
 	"github.com/gin-gonic/gin"
 )

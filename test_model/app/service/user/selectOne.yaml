@@ -1,0 +1,22 @@
+api: # 暴露服务接口
+  request:
+    path: /user/selectOne # 提供WEB 接口能力
+
+inVariables: # 定义入参变量
+  - userId:
+      dataType: long # 参数 userId
+      required: true
+      dataPlace: body # 通过request body传参
+      value: userId
+
+outVariable: # 定义出参变量
+  name: user
+  dataType: userInfo # 类型为 结构体 userInfo 类型
+
+steps:
+  - sqlSelect:
+      selectOne: true # 查询
+      table: TM_USER_INFO
+      wheres:
+        - userId = {userId}
+    variableName: user

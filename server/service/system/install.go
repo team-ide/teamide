@@ -1,6 +1,6 @@
 package systemService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *SystemService) GetInstall() (info *base.InstallInfo) {
 

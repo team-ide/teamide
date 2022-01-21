@@ -1,0 +1,20 @@
+api: # 暴露服务接口
+  request:
+    path: /file/upload # 提供WEB 接口能力
+
+inVariables: # 定义入参变量
+  - file:
+      dataType: fileInfo # 参数 user 类型为 结构体 userInfo 类型
+      dataPlace: file # 通过request body传参
+
+outVariable:
+  name: saveFile
+  dataType: fileInfo
+
+steps:
+  - fileSave: # 验证数据完整性
+      name: "UUID()+getFileTypeSuffix(file)"
+      dir: "nowFormat('2006/01/')"
+      reader: getReader(file)
+    variableName: saveFile
+    variableDataType: fileInfo

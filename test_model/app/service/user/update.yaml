@@ -1,0 +1,59 @@
+api: # 暴露服务接口
+  request:
+    path: /user/update # 提供WEB 接口能力
+
+inVariables: # 定义入参变量
+  - user:
+      dataType: userInfo # 参数 user 类型为 结构体 userInfo 类型
+      required: true
+      dataPlace: body # 通过request body传参
+
+outVariable: # 定义出参变量
+  name: user
+  dataType: userInfo
+
+steps:
+  - validates: # 验证数据完整性
+      - user.userId:
+          required: true
+
+  - lock:
+      name: userAccountLock # 锁名称 出现锁 必须添加锁名称 如果为主动解锁，则到最后解锁
+      type: redis # 使用 redis 锁
+      key: "'user:lock:account:' + user.account" # 账号锁 高并发下 保证库中账号不重复
+
+  - lock:
+      name: userEmailLock # 锁名称 出现锁 必须添加锁名称 如果为主动解锁，则到最后解锁
+      type: redis # 使用 redis 锁
+      key: "'user:lock:account:' + user.email" # 邮箱锁 高并发下 保证库中邮箱不重复
+
+  - sqlSelect: # 根据账号和邮箱查询是否存在该用户
+      selectCount: true
+      table: IDE_USER
+      wheres:
+        - userId != {user.userId} AND (account = {user.account} OR email = {user.email})
+    variableName: countByAccountOrEmail # 定义变量名 接收 调用dao层返回的值 后续使用
+
+  - if: "countByAccountOrEmail > 0" # 用户已存在，抛出异常 后续将不再执行
+    error: USER_ACCOUNT_ALREADY_EXISTS
+
+  - variables: # 设置一些初始值
+      user.updateTime: now() # 获取当前时间
+
+  - sqlUpdate: # 修改用户信息
+      table: IDE_USER
+      columns:
+        - user.name
+        - user.account
+        - user.email
+        - user.activedState
+        - user.lockedState
+        - user.enabledState
+        - user.deletedState
+        - user.updateTime
+      wheres:
+        - userId = {user.userId}
+
+  - redisSet: # 缓存用户信息到Redis
+      key: "'user:info:' + user.userId"
+      value: user

@@ -3,7 +3,7 @@ package web
 import (
 	"net/http"
 	"regexp"
-	"server/service"
+	"teamide/server/service"
 
 	"github.com/gin-gonic/gin"
 )

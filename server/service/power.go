@@ -1,8 +1,8 @@
 package service
 
 import (
-	"server/base"
 	"strings"
+	"teamide/server/base"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"

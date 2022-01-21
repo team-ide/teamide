@@ -1,9 +1,8 @@
 package factory
 
 import (
-	"server/base"
-	"server/component"
-	sqlModel "server/model/sql"
+	"teamide/server/base"
+	"teamide/server/component"
 )
 
 type apiInterface interface {
@@ -22,21 +21,9 @@ var (
 	Installs = []installInterface{}
 )
 
-type modelInterface interface {
-	GetSelectSqls() (models []*sqlModel.Select)
-	GetInsertSqls() (models []*sqlModel.Insert)
-	GetUpdateSqls() (models []*sqlModel.Update)
-	GetDeleteSqls() (models []*sqlModel.Delete)
-}
-
-var (
-	Models = []modelInterface{}
-)
-
 func BindCommonService(service interface{}) {
 	Apis = append(Apis, service.(apiInterface))
 	Installs = append(Installs, service.(installInterface))
-	Models = append(Models, service.(modelInterface))
 }
 
 type idService interface {

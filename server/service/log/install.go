@@ -1,6 +1,6 @@
 package logService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *LogService) GetInstall() (info *base.InstallInfo) {
 

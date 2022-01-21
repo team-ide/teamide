@@ -3,8 +3,8 @@ package web
 import (
 	"fmt"
 	"net"
-	"server/base"
-	"server/config"
+	"teamide/server/base"
+	"teamide/server/config"
 
 	"net/http"
 

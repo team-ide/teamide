@@ -1,0 +1,17 @@
+# type: oracle
+# host: 127.0.0.1
+# port: 1521
+# sid: XE
+# database: app_test_user
+# username: app_test_user
+# password: app_test_password
+# characterSet: utf8mb4
+# collate: utf8mb4_general_ci
+type: mysql
+host: mysql
+port: 3306
+database: app_test
+username: root
+password: 123456
+characterSet: utf8mb4
+collate: utf8mb4_general_ci

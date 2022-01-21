@@ -1,8 +1,8 @@
 package installService
 
 import (
-	"server/base"
-	"server/component"
+	"teamide/server/base"
+	"teamide/server/component"
 )
 
 var (

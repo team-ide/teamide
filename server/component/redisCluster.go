@@ -3,8 +3,8 @@ package component
 import (
 	"context"
 	"errors"
-	"server/base"
 	"strings"
+	"teamide/server/base"
 	"time"
 
 	redisv8 "github.com/go-redis/redis/v8"

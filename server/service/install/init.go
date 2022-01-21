@@ -1,6 +1,6 @@
 package installService
 
-import "server/factory"
+import "teamide/server/factory"
 
 func (this_ *InstallService) Install() {
 

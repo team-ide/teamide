@@ -1,6 +1,6 @@
 package userService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *UserService) GetInstall() (info *base.InstallInfo) {
 

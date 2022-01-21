@@ -1,6 +1,6 @@
 package jobService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *JobService) GetInstall() (info *base.InstallInfo) {
 

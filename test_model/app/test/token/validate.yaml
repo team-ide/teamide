@@ -1,0 +1,9 @@
+steps:
+  - variables:
+      - access_token: "'UhaD8aJmXQs2iClh3LCcdcZCb8dDrkW6GBEyAGH0gtXa4kgjavvXNRhPsZ28rfTLfiAVhscesxL8HHZuJnglq7F3Px61pMV19DrPxMjr43g='"
+    service:
+      name: token/validate
+      callVariables:
+        - access_token: access_token
+    variableName: tokenInfo
+    return: tokenInfo

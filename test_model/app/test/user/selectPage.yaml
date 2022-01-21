@@ -1,0 +1,10 @@
+steps:
+  - variables:
+      - user:
+          dataType: userInfo
+          fields:
+            - name: "'管'"
+    service:
+      name: user/selectPage
+      callVariables:
+        - user: user

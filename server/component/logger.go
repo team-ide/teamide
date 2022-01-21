@@ -3,7 +3,7 @@ package component
 import (
 	"errors"
 	"fmt"
-	"server/config"
+	"teamide/server/config"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

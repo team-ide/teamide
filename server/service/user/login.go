@@ -1,7 +1,7 @@
 package userService
 
 import (
-	"server/base"
+	"teamide/server/base"
 )
 
 func (this_ *UserService) LoginByAccount(account string, password string) (res *base.UserEntity, err error) {

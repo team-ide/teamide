@@ -1,6 +1,6 @@
 package certificateService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *CertificateService) GetInstall() (info *base.InstallInfo) {
 

@@ -1,0 +1,45 @@
+api: # 暴露服务接口
+  request:
+    path: /token/create # 提供WEB 接口能力
+comment: Token创建
+inVariables: # 定义入参变量
+  - account:
+      dataType: string # 参数 user 类型为 结构体 userInfo 类型
+      dataPlace: body # 通过request body传参
+      value: account
+  - password:
+      dataType: string # 参数 user 类型为 结构体 userInfo 类型
+      dataPlace: body # 通过request body传参
+      value: password
+
+outVariable: # 定义出参变量
+  name: access_token
+  comment: Access Token
+
+steps:
+  - validates: # 验证数据完整性
+      - account:
+          required: true
+          errorMsg: 登录账号不能为空
+      - password:
+          required: true
+          errorMsg: 登录密码不能为空
+
+  - service: # 根据账号和邮箱查询是否存在该用户
+      name: login/login
+      callVariables:
+        - account: account
+        - password: password
+    variableName: loginUser # 定义变量名 接收 调用dao层返回的值 后续使用
+    variableDataType: userInfo
+
+  - if: "loginUser != null"
+    variables:
+      - accessInfo:
+          dataType: accessInfo
+          fields:
+            - userId: loginUser.userId
+            - userName: loginUser.name
+            - timestamp: nowTime()
+      - accessInfoJson: dataToJSON(accessInfo)
+      - access_token: "aesCBCEncrypt(accessInfoJson, $AES_KEY)"

@@ -1,6 +1,6 @@
 package loginService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *LoginService) GetInstall() (info *base.InstallInfo) {
 

@@ -1,0 +1,152 @@
+api: # 暴露服务接口
+  request:
+    path: /user/insert # 提供WEB 接口能力
+
+inVariables: # 定义入参变量
+  - user:
+      dataType: userInfo # 参数 user 类型为 结构体 userInfo 类型
+      required: true
+  - password:
+      dataType: string # 参数 password 类型为 string
+      required: true
+      value: password
+
+outVariable: # 定义出参变量
+  name: user
+
+steps:
+  - comment: 验证数据完整性
+    validates:
+      - user.name:
+          comment: 验证用户名称格式
+          required: true
+          rules:
+            - maxLength: 30
+              errorMsg: 用户名称长度大于30个字节
+      - user.account:
+          comment: 验证用户账号格式
+          required: true
+          rules:
+            - minLength: 4
+              maxLength: 20
+              errorMsg: 账号长度不能小于4大于20个字节
+            - pattern: ^[a-zA-Z0-9_]+$
+              errorMsg: 账号只能包含字母、数字、下划线
+      - user.email:
+          comment: 验证用户邮箱格式
+          required: true
+          rules:
+            - maxLength: 30
+              errorMsg: 邮箱长度大于30个字节
+            - pattern: ^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$
+              errorMsg: 邮箱格式不正确
+      - password:
+          comment: 验证密码格式
+          required: true
+          rules:
+            - minLength: 4
+              maxLength: 20
+              errorMsg: 密码不能小于4大于20个字节
+
+  - comment: 账号锁，高并发下保证账号不重复
+    lock:
+      name: userAccountLock
+      type: redis
+      key: "'user:lock:account:' + user.account"
+
+  - comment: 邮箱锁，高并发下保证邮箱不重复
+    lock:
+      name: userEmailLock
+      type: redis
+      key: "'user:lock:account:' + user.email"
+
+  - comment: 根据账号和邮箱查询是否存在该用户
+    sqlSelect:
+      selectCount: true
+      table: TM_USER_INFO
+      wheres:
+        - account = {user.account} OR email = {user.email}
+    variableName: countByAccountOrEmail
+
+  - comment: 用户已存在，抛出异常 后续将不再执行
+    if: "countByAccountOrEmail > 0"
+    error: USER_ACCOUNT_ALREADY_EXISTS
+
+  - comment: 设置一些初始值
+    variables:
+      - user.userId:
+          value: getID()
+          comment: 生成用户ID
+      - user.createTime: now()
+      - user.activedState: 1
+      - user.lockedState: 2
+      - user.enabledState: 1
+      - user.deletedState: 2
+      - userPassword:
+          dataType: userPassword
+          comment: 初始化用户密码信息
+      - userPassword.userId: user.userId
+      - userPassword.salt:
+          value: randString(6, 6)
+          comment: 密码 盐 生成6位的随机字符串，用于密码加盐
+      - userPassword.password:
+          value: MD5(userPassword.salt + password)
+          comment: password 赋值为 参数传入的 password 使用MD5 盐加密
+      - userPassword.createTime: now()
+
+  - comment: 插入用户信息
+    sqlInsert:
+      table: TM_USER_INFO
+      columns:
+        - userId:
+            value: user.userId
+        - name:
+            value: user.name
+        - account:
+            value: user.account
+        - email:
+            value: user.email
+        - activedState:
+            value: user.activedState
+        - lockedState:
+            value: user.lockedState
+        - enabledState:
+            value: user.enabledState
+        - deletedState:
+            value: user.deletedState
+        - createTime:
+            value: user.createTime
+
+  - comment: 解除 邮箱锁
+    unlock: userEmailLock
+  - comment: 解除 账号锁
+    unlock: userAccountLock
+
+  - comment: 插入用户密码信息
+    sqlInsert:
+      table: TM_USER_PASSWORD
+      columns:
+        - userId:
+            value: userPassword.userId
+        - salt:
+            value: userPassword.salt
+        - password:
+            value: userPassword.password
+        - createTime:
+            value: userPassword.createTime
+
+  - comment: 缓存用户信息到Redis
+    redisSet:
+      key: "'user:info:' + user.userId"
+      value: user
+
+  - comment: 给该用户创建空间
+    service:
+      name: space/insert
+      callVariables:
+        - space:
+            dataType: spaceInfo
+            fields:
+              - name: user.account
+              - createUserId: user.userId
+              - createUserName: user.name

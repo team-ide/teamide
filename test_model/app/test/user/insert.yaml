@@ -1,0 +1,16 @@
+steps:
+
+  - variables:
+      - user:
+          dataType: userInfo
+          fields:
+            - name: randUserName(2, 3)
+            - account: toPinYin(user.name)
+            - email: "user.account + '@teamide.com'"
+      - password: randString(6, 10)
+    service:
+      name: user/insert
+      callVariables:
+        - user: user
+        - password: password
+    return: user

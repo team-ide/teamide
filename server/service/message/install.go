@@ -1,6 +1,6 @@
 package messageService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *MessageService) GetInstall() (info *base.InstallInfo) {
 

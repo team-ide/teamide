@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
-	"server/base"
-	"server/factory"
 	"strings"
+	"teamide/server/base"
+	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
 )

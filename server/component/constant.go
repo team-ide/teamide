@@ -2,7 +2,7 @@ package component
 
 import (
 	"fmt"
-	"server/config"
+	"teamide/server/config"
 )
 
 var (

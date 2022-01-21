@@ -1,0 +1,12 @@
+steps:
+
+  - variables:
+      - account: "'admin'"
+      - password: "'admin123'"
+    service:
+      name: login/login
+      callVariables:
+        - account: account
+        - password: password
+    variableName: loginUser
+    return: loginUser

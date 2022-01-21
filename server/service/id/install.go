@@ -1,6 +1,6 @@
 package idService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *IdService) GetInstall() (info *base.InstallInfo) {
 

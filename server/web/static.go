@@ -54,7 +54,7 @@ func toStatic(path string, c *gin.Context) bool {
 	} else if strings.HasSuffix(name, ".css") {
 		c.Header("Content-Type", "text/css")
 	} else if strings.HasSuffix(name, ".js") {
-		c.Header("Content-Type", "application/javascript")
+		c.Header("Content-Type", "teamide/application/javascript")
 	}
 	c.Writer.Write(bytes)
 	c.Status(http.StatusOK)

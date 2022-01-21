@@ -1,0 +1,104 @@
+{
+    "datas": [
+        {
+            "name": "users[0]",
+            "dotName": "users[0]",
+            "value": {
+                "account": "qushuang",
+                "email": "qushuang@teamide.com",
+                "name": "屈爽"
+            },
+            "listIndex": -1
+        },
+        {
+            "name": "users[1]",
+            "dotName": "users[1]",
+            "value": {
+                "account": "tianfeng",
+                "email": "tianfeng@teamide.com",
+                "name": "田枫"
+            },
+            "listIndex": -1
+        },
+        {
+            "name": "users[2]",
+            "dotName": "users[2]",
+            "value": {
+                "account": "zhoubao",
+                "email": "zhoubao@teamide.com",
+                "name": "周宝"
+            },
+            "listIndex": -1
+        },
+        {
+            "name": "password",
+            "dotName": "password",
+            "value": "1TN_Sdz",
+            "listIndex": -1
+        }
+    ],
+    "dataInfos": [
+        {
+            "name": "users",
+            "dotName": "users",
+            "dataInfos": [
+                {
+                    "name": "userId",
+                    "comment": "用户ID",
+                    "dotName": "users.userId"
+                },
+                {
+                    "name": "name",
+                    "comment": "用户名称",
+                    "dotName": "users.name"
+                },
+                {
+                    "name": "account",
+                    "comment": "账号",
+                    "dotName": "users.account"
+                },
+                {
+                    "name": "email",
+                    "comment": "邮箱",
+                    "dotName": "users.email"
+                },
+                {
+                    "name": "activedState",
+                    "comment": "激活状态",
+                    "dotName": "users.activedState"
+                },
+                {
+                    "name": "lockedState",
+                    "comment": "锁定状态",
+                    "dotName": "users.lockedState"
+                },
+                {
+                    "name": "enabledState",
+                    "comment": "启用状态",
+                    "dotName": "users.enabledState"
+                },
+                {
+                    "name": "deletedState",
+                    "comment": "删除状态",
+                    "dotName": "users.deletedState"
+                },
+                {
+                    "name": "createTime",
+                    "comment": "创建时间",
+                    "dotName": "users.createTime"
+                },
+                {
+                    "name": "updateTime",
+                    "comment": "修改时间",
+                    "dotName": "users.updateTime"
+                }
+            ],
+            "isList": true
+        },
+        {
+            "name": "password",
+            "value": "password",
+            "dotName": "password"
+        }
+    ]
+}

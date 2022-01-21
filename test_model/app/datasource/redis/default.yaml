@@ -1,0 +1,2 @@
+address: redis:6379
+prefix: "app:demo:"

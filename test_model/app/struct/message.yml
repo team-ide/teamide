@@ -1,0 +1,10 @@
+tableName: TM_MESSGAE
+fields: 
+  - name: messageId
+    dataType: long
+  - name: content
+    dataType: string
+  - name: createTime
+    dataType: date
+  - name: updateTime
+    dataType: date

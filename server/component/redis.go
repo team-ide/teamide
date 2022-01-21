@@ -1,8 +1,8 @@
 package component
 
 import (
-	"server/config"
 	"strings"
+	"teamide/server/config"
 )
 
 var (

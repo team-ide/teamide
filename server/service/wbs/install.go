@@ -1,6 +1,6 @@
 package wbsService
 
-import "server/base"
+import "teamide/server/base"
 
 func (this_ *WbsService) GetInstall() (info *base.InstallInfo) {
 

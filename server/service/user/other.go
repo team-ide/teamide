@@ -2,9 +2,9 @@ package userService
 
 import (
 	"fmt"
-	"server/base"
-	"server/component"
 	"sync"
+	"teamide/server/base"
+	"teamide/server/component"
 	"time"
 )
 
