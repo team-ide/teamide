@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"teamide/static"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +26,7 @@ func bindGet(gouterGroup *gin.RouterGroup) {
 
 func toIndex(c *gin.Context) bool {
 
-	bytes, _ := Asset("index.html")
+	bytes := static.Asset("index.html")
 	if bytes == nil {
 		return false
 	}
@@ -44,7 +45,7 @@ func toStatic(path string, c *gin.Context) bool {
 	}
 	name := path[index:]
 
-	bytes, _ := Asset(name)
+	bytes := static.Asset(name)
 	if bytes == nil {
 		return false
 	}
@@ -69,7 +70,7 @@ func toUploads(path string, c *gin.Context) bool {
 	}
 	name := path[index:]
 
-	bytes, _ := Asset(name)
+	bytes := static.Asset(name)
 	if bytes == nil {
 		return false
 	}

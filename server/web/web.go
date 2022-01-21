@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"net"
+	"strings"
 	"teamide/server/base"
 	"teamide/server/config"
 
@@ -12,72 +13,97 @@ import (
 )
 
 var (
-	serverContext string
-	serverHost    string
-	serverPort    int
+	ServerContext string
+	ServerHost    string
+	ServerPort    int
+	ServerUrl     string
 )
 
 func init() {
-	serverContext = config.Config.Server.Context
-	if serverContext == "" || serverContext[len(serverContext)-1:] != "/" {
-		serverContext = serverContext + "/"
+	ServerContext = config.Config.Server.Context
+	if ServerContext == "" || !strings.HasSuffix(ServerContext, "/") {
+		ServerContext = ServerContext + "/"
 	}
 
-	serverHost = config.Config.Server.Host
-	serverPort = config.Config.Server.Port
+	ServerHost = config.Config.Server.Host
+	ServerPort = config.Config.Server.Port
+
+	if base.IsLocalStartup {
+		if ServerHost == "" {
+			ServerHost = "127.0.0.1"
+		}
+		if ServerPort == 0 {
+			listener, err := net.Listen("tcp", ":0")
+			if err != nil {
+				panic(err)
+			}
+			ServerPort = listener.Addr().(*net.TCPAddr).Port
+		}
+	}
+	if ServerHost == "0.0.0.0" || ServerHost == ":" || ServerHost == "::" {
+		ServerUrl = fmt.Sprint("http://127.0.0.1:", ServerPort)
+	} else {
+		ServerUrl = fmt.Sprint("http://", ServerHost, ":", ServerPort)
+	}
 }
 
-func StartServer() {
+func StartServer() (serverUrl string, err error) {
 
 	gin.DefaultWriter = &nullWriter{}
 
 	router := gin.Default()
 
-	routerGroup := router.Group(serverContext)
+	routerGroup := router.Group(ServerContext)
 
 	bindGet(routerGroup)
 	bindApi(routerGroup)
 
-	ints, err := net.Interfaces()
+	var ints []net.Interface
+	ints, err = net.Interfaces()
 	if err != nil {
-		panic(err)
+		return
 	}
-	println("服务启动，访问地址:")
-	if serverHost == "0.0.0.0" || serverHost == "::" {
-		httpServer := fmt.Sprint("127.0.0.1", ":", serverPort)
-		println("\t", "http://"+httpServer+serverContext)
-		for _, iface := range ints {
-			if iface.Flags&net.FlagUp == 0 {
-				continue // interface down
-			}
-			if iface.Flags&net.FlagLoopback != 0 {
-				continue // loopback interface
-			}
-			addrs, err := iface.Addrs()
-			if err != nil {
-				panic(err)
-			}
-			for _, addr := range addrs {
-				ip := base.GetIpFromAddr(addr)
-				if ip == nil {
-					continue
+	if !base.IsLocalStartup {
+		println("服务启动，访问地址:")
+		if ServerHost == "0.0.0.0" || ServerHost == "::" {
+			httpServer := fmt.Sprint("127.0.0.1", ":", ServerPort)
+			println("\t", "http://"+httpServer+ServerContext)
+			for _, iface := range ints {
+				if iface.Flags&net.FlagUp == 0 {
+					continue // interface down
 				}
-				httpServer := fmt.Sprint(ip, ":", serverPort)
-				println("\t", "http://"+httpServer+serverContext)
+				if iface.Flags&net.FlagLoopback != 0 {
+					continue // loopback interface
+				}
+				var addrs []net.Addr
+				addrs, err = iface.Addrs()
+				if err != nil {
+					return
+				}
+				for _, addr := range addrs {
+					ip := base.GetIpFromAddr(addr)
+					if ip == nil {
+						continue
+					}
+					httpServer := fmt.Sprint(ip, ":", ServerPort)
+					println("\t", "http://"+httpServer+ServerContext)
+				}
 			}
+		} else {
+			httpServer := fmt.Sprint(ServerHost, ":", ServerPort)
+			println("\t", "http://"+httpServer+ServerContext)
 		}
-	} else {
-		httpServer := fmt.Sprint(serverHost, ":", serverPort)
-		println("\t", "http://"+httpServer+serverContext)
 	}
+
 	go func() {
-		httpServer := fmt.Sprint(serverHost, ":", serverPort)
+		httpServer := fmt.Sprint(ServerHost, ":", ServerPort)
 		err = http.ListenAndServe(httpServer, router)
 		if err != nil {
 			panic(err)
 		}
 	}()
-
+	serverUrl = ServerUrl
+	return serverUrl, err
 }
 
 type nullWriter struct{}

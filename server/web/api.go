@@ -18,7 +18,6 @@ func bindApi(gouterGroup *gin.RouterGroup) {
 		if service.DoApi(path, c) {
 			return
 		}
-		println("path:" + path)
 		c.Status(http.StatusNotFound)
 	})
 }

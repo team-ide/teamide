@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"teamide/server/base"
+	"teamide/server/component"
 	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
@@ -78,7 +79,7 @@ func CacheApi() {
 	for _, one := range ps {
 		_, ok := apiPowerMap[one.Action]
 		if !ok {
-			panic(errors.New("权限[" + one.Action + "]未配置动作!"))
+			component.Logger.Warn(component.LogStr("权限[", one.Action, "]未配置动作"))
 		}
 	}
 }

@@ -17,6 +17,12 @@ var (
 )
 
 func init() {
+
+	if base.IsLocalStartup {
+		if config.Config.Mysql == nil || config.Config.Mysql.Host == "" && config.Config.Mysql.Port == 0 {
+			return
+		}
+	}
 	var service interface{}
 	var err error
 	databaseConfig := DatabaseConfig{

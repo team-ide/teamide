@@ -2,6 +2,7 @@ package component
 
 import (
 	"strings"
+	"teamide/server/base"
 	"teamide/server/config"
 )
 
@@ -10,6 +11,12 @@ var (
 )
 
 func init() {
+	if base.IsLocalStartup {
+		if config.Config.Redis == nil || config.Config.Redis.Address == "" {
+			return
+		}
+	}
+
 	var service interface{}
 	var err error
 	address := config.Config.Redis.Address

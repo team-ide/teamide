@@ -3,6 +3,7 @@ package component
 import (
 	"errors"
 	"strings"
+	"teamide/server/base"
 	"teamide/server/config"
 	"time"
 
@@ -14,6 +15,13 @@ var (
 )
 
 func init() {
+
+	if base.IsLocalStartup {
+		if config.Config.Zookeeper == nil || config.Config.Zookeeper.Address == "" {
+			return
+		}
+	}
+
 	var service interface{}
 	var err error
 	address := config.Config.Zookeeper.Address

@@ -1,12 +1,6 @@
 package server
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
-	"teamide/server/base"
-	"teamide/server/component"
-	"teamide/server/config"
 	"teamide/server/web"
 
 	"teamide/server/factory"
@@ -47,20 +41,9 @@ func init() {
 	Init()
 }
 func Init() {
-	base.Init()
-	config.Init()
-	component.Init()
 	factory.InstallService.Install()
-	// service.CheckModel()
-	web.Init()
 }
 
-var (
-	done = make(chan os.Signal, 1)
-)
-
-func StartServer() {
-	web.StartServer()
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-done
+func Start() (serverUrl string, err error) {
+	return web.StartServer()
 }
