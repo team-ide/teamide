@@ -528,7 +528,8 @@ func (service *MysqlService) BatchInsertBean(table string, list []interface{}) (
 
 func (service *MysqlService) UpdateBean(table string, keys []string, one interface{}) (err error) {
 	if len(keys) == 0 {
-		err = errors.New("update bean keys cannot be empty!")
+		err = errors.New("update bean keys cannot be empty")
+		return
 	}
 	sqlParam := service.UpdateSqlByBean(table, keys, one)
 
