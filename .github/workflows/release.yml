@@ -84,8 +84,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{RELEASE_VERSION}}
-          release_name: ${{RELEASE_VERSION}}
+          tag_name: $RELEASE_VERSION
+          release_name: $RELEASE_VERSION
           body: ${{steps.release_body.outputs.content}}
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
@@ -98,8 +98,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/${{RELEASE_DIR_NAME}}-linux-x64.zip # 要上传文件
-          asset_name: ${{RELEASE_DIR_NAME}}-linux-x64.zip # 上传后的文件名
+          asset_path: ./release/$RELEASE_DIR_NAME-linux-x64.zip # 要上传文件
+          asset_name: $RELEASE_DIR_NAME-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - name: Upload Go MAC Release Asset
@@ -109,8 +109,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/${{RELEASE_DIR_NAME}}-darwin-x64.zip # 要上传文件
-          asset_name: ${{RELEASE_DIR_NAME}}-darwin-x64.zip # 上传后的文件名
+          asset_path: ./release/$RELEASE_DIR_NAME-darwin-x64.zip # 要上传文件
+          asset_name: $RELEASE_DIR_NAME-darwin-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - name: Upload Go Windows Release Asset
@@ -120,6 +120,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/${{RELEASE_DIR_NAME}}-windows-x64.zip # 要上传文件
-          asset_name: ${{RELEASE_DIR_NAME}}-windows-x64.zip # 上传后的文件名
+          asset_path: ./release/$RELEASE_DIR_NAME-windows-x64.zip # 要上传文件
+          asset_name: $RELEASE_DIR_NAME-windows-x64.zip # 上传后的文件名
           asset_content_type: application/zip
