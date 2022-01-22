@@ -26,7 +26,8 @@ jobs:
           property: version
 
       # 设置变量
-      - env:
+      - name: Set Release Env
+        env:
           RELEASE_VERSION: ${{steps.release_version.outputs.value}}
           RELEASE_DIR_NAME: teamide-${{steps.release_version.outputs.value}}
 
