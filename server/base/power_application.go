@@ -15,9 +15,8 @@ var (
 	PowerApplicationStop    = addPower(&PowerAction{Action: "application_stop", Text: "应用停止", Parent: PowerApplicationPage, ShouldLogin: true, AllowNative: true})
 	PowerApplicationRestart = addPower(&PowerAction{Action: "application_restart", Text: "应用重启", Parent: PowerApplicationPage, ShouldLogin: true, AllowNative: true})
 
-	// 应用模型 权限
-	PowerApplicationModel       = addPower(&PowerAction{Action: "application_model", Text: "应用模型", ShouldLogin: true, AllowNative: true})
-	PowerApplicationModelInsert = addPower(&PowerAction{Action: "application_model_insert", Text: "应用模型新增", Parent: PowerApplicationModel, ShouldLogin: true, AllowNative: true})
-	PowerApplicationModelUpdate = addPower(&PowerAction{Action: "application_model_update", Text: "应用模型修改", Parent: PowerApplicationModel, ShouldLogin: true, AllowNative: true})
-	PowerApplicationModelDelete = addPower(&PowerAction{Action: "application_model_delete", Text: "应用模型删除", Parent: PowerApplicationModel, ShouldLogin: true, AllowNative: true})
+	// 应用Context 权限
+	PowerApplicationContext     = addPower(&PowerAction{Action: "application_context", Text: "应用Context", ShouldLogin: true, AllowNative: true})
+	PowerApplicationContextLoad = addPower(&PowerAction{Action: "application_context_load", Text: "应用Context加载", Parent: PowerApplicationContext, ShouldLogin: true, AllowNative: true})
+	PowerApplicationContextSave = addPower(&PowerAction{Action: "application_context_save", Text: "应用Context保存", Parent: PowerApplicationContext, ShouldLogin: true, AllowNative: true})
 )

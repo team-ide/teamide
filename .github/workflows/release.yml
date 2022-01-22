@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - master
+      # - dev
 jobs:
   lint:
     strategy:
@@ -24,20 +25,6 @@ jobs:
         with:
           path: ./release/package.json
           property: version
-
-      # 设置变量
-      - env:
-          RELEASE_VERSION: ${{steps.release_version.outputs.value}}
-          RELEASE_DIR_NAME: teamide-${{steps.release_version.outputs.value}}
-        run: export RELEASE_VERSION=`$RELEASE_VERSION` && export RELEASE_DIR_NAME=`$RELEASE_DIR_NAME`
-        
-      - run: export RELEASE_LINUX_NAME=`$RELEASE_DIR_NAME-linux-x64`
-      - run: export RELEASE_WINDOWS_NAME=`$RELEASE_DIR_NAME-windows-x64`
-      - run: export RELEASE_DARWIN_NAME=`$RELEASE_DIR_NAME-darwin-x64`
-      
-      - run: echo $RELEASE_LINUX_NAME
-      - run: echo $RELEASE_WINDOWS_NAME
-      - run: echo $RELEASE_DARWIN_NAME
 
       # 读取发布说明
       - name: Read Release Description
@@ -64,25 +51,25 @@ jobs:
       - run: go test -timeout 3600s -run ^TestStatic$ teamide/static
 
       # 打包Linux
-      - run: export GOARCH=amd64 && export GOOS=linux && go build -o `release/$RELEASE_LINUX_NAME/teamide`
-      - run: cp -rf release/conf `release/$RELEASE_LINUX_NAME/`
-      - run: cp -rf release/README.md `release/$RELEASE_LINUX_NAME/`
-      - run: cp -rf release/RELEASE.md `release/$RELEASE_LINUX_NAME/`
-      - run: cd release && zip -q -r `$RELEASE_LINUX_NAME.zip` `$RELEASE_LINUX_NAME`
+      - run: export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
+      - run: cp -rf release/conf release/teamide-linux-x64/
+      - run: cp -rf release/README.md release/teamide-linux-x64/
+      - run: cp -rf release/RELEASE.md release/teamide-linux-x64/
+      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
 
       # 打包Window
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o `release/$RELEASE_WINDOWS_NAME/teamide.exe`
-      - run: cp -rf release/conf `release/$RELEASE_WINDOWS_NAME/`
-      - run: cp -rf release/README.md `release/$RELEASE_WINDOWS_NAME/`
-      - run: cp -rf release/RELEASE.md `release/$RELEASE_WINDOWS_NAME/`
-      - run: cd release && zip -q -r `$RELEASE_WINDOWS_NAME.zip` `$RELEASE_WINDOWS_NAME`
+      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o ./release/teamide-windows-x64/teamide.exe
+      - run: cp -rf release/conf release/teamide-windows-x64/
+      - run: cp -rf release/README.md release/teamide-windows-x64/
+      - run: cp -rf release/RELEASE.md release/teamide-windows-x64/
+      - run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
       # 打包MAC
-      # - run: export GOARCH=amd64 && export GOOS=darwin && go build -o ./release/RELEASE_DARWIN_NAME/teamide
-      # - run: cp -rf release/conf release/RELEASE_DARWIN_NAME/
-      # - run: cp -rf release/README.md release/RELEASE_DARWIN_NAME/
-      # - run: cp -rf release/RELEASE.md release/RELEASE_DARWIN_NAME/
-      # - run: cd release && zip -q -r RELEASE_DARWIN_NAME.zip RELEASE_DARWIN_NAME
+      - run: export GOARCH=amd64 && export GOOS=darwin && go build -o ./release/teamide-darwin-x64/teamide
+      - run: cp -rf release/conf release/teamide-darwin-x64/
+      - run: cp -rf release/README.md release/teamide-darwin-x64/
+      - run: cp -rf release/RELEASE.md release/teamide-darwin-x64/
+      - run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
 
       # 发布
       - name: Create Release
@@ -91,8 +78,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: $RELEASE_VERSION
-          release_name: $RELEASE_VERSION
+          tag_name: ${{steps.release_version.outputs.value}}
+          release_name: ${{steps.release_version.outputs.value}}
           body: ${{steps.release_body.outputs.content}}
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
@@ -105,8 +92,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/$RELEASE_LINUX_NAME.zip # 要上传文件
-          asset_name: $RELEASE_LINUX_NAME.zip # 上传后的文件名
+          asset_path: ./release/teamide-linux-x64.zip # 要上传文件
+          asset_name: teamide-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - name: Upload Go Windows Release Asset
@@ -116,17 +103,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/$RELEASE_WINDOWS_NAME.zip # 要上传文件
-          asset_name: $RELEASE_WINDOWS_NAME.zip # 上传后的文件名
+          asset_path: ./release/teamide-windows-x64.zip # 要上传文件
+          asset_name: teamide-windows-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      # - name: Upload Go MAC Release Asset
-      #   id: upload-go-MAC-release-asset
-      #   uses: actions/upload-release-asset@master
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-      #     asset_path: ./release/RELEASE_DARWIN_NAME.zip # 要上传文件
-      #     asset_name: RELEASE_DARWIN_NAME.zip # 上传后的文件名
-      #     asset_content_type: application/zip
+      - name: Upload Go MAC Release Asset
+        id: upload-go-MAC-release-asset
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/teamide-darwin-x64.zip # 要上传文件
+          asset_name: teamide-darwin-x64.zip # 上传后的文件名
+          asset_content_type: application/zip

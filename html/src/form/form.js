@@ -48,7 +48,56 @@ let register = {
     ],
 };
 
+let app = {
+    fields: [
+        {
+            label: "名称",
+            name: "name",
+            rules: [
+                {
+                    required: true,
+                    message: `应用名称不能为空!`
+                },
+                {
+                    pattern: /^[a-zA-Z0-9_]+$/,
+                    message: `应用名称只能包含数字、字母、下划线!`
+                },
+
+            ],
+        },
+    ],
+};
+
+
+let model = {
+    fields: [
+        {
+            label: "名称",
+            name: "name",
+            rules: [
+                {
+                    required: true,
+                    message: `模型名称不能为空!`
+                },
+                {
+                    pattern: /^[a-zA-Z0-9_]+$/,
+                    message: `模型名称只能包含数字、字母、下划线!`
+                },
+
+            ],
+        },
+        {
+            label: "说明",
+            name: "comment",
+            rules: [
+            ],
+        },
+    ],
+};
+
 export default {
     login,
     register,
+    app,
+    model,
 };

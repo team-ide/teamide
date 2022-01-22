@@ -1,5 +1,5 @@
 <template>
-  <div class="workspace-box">workspace:{{ source }}</div>
+  <div>Wellcome Application!</div>
 </template>
 
 <script>
@@ -22,8 +22,4 @@ export default {
 </script>
 
 <style>
-.workspace-box {
-  width: 100%;
-  height: 100%;
-}
 </style>

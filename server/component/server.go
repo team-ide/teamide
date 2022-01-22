@@ -1,7 +1,6 @@
 package component
 
 import (
-	"bufio"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"teamide/server/base"
+	"teamide/util"
 )
 
 const (
@@ -18,6 +18,58 @@ const (
 
 var (
 	serverInfo = initServer()
+)
+var (
+	defaultServerConfig = `
+Team IDE 证书
+证书编号        567910
+颁发者          Team IDE
+颁发给          Team IDE 免费服务器
+颁发日期        2021/10/25
+有效期          2021/10/25 - 永久
+MAC             ALL
+版本            0.0.1
+证书类型        免费版
+密钥            JUbLWZUhy0ZcYJfU
+用户            100
+签名            8c128f24d5f0aba4d92935929b753a96
+103 190 104 203 150 145 192 138
+ 132 133 177 163 123 76 161 25
+2 101 251 233 217 44 60 254 18
+5 15 250 39 182 43 205 21 16 2
+6 108 22 6 94 169 179 249 224 
+109 102 100 227 88 49 95 70 27
+ 89 40 96 23 155 58 129 194 89
+ 114 81 18 101 209 93 183 43 1
+12 161 240 149 117 19 23 200 4
+6 52 131 167 128 225 187 227 1
+90 201 45 101 205 45 62 79 177
+ 19 78 166 149 195 17 65 43 13
+9 73 238 228 200 66 106 10 35 
+113 122 100 47 166 175 160 10 
+85 247 81 137 147 191 124 180 
+172 21 142 16 98 43 194 205 19
+9 201 210 22 131 137 90 69 161
+ 139 29 39 65 3 17 116 228 187
+ 233 197 178 237 206 29 154 97
+ 198 73 134 13 8 186 242 231 1
+61 60 7 88 202 84 106 108 212 
+88 141 84 57 36 59 238 141 217
+ 73 250 237 27 20 227 214 175 
+140 241 238 244 243 213 32 21 
+72 166 234 244 16 196 68 105 1
+58 123 64 238 193 159 238 198 
+34 80 13 66 146 246 247 139 17
+9 57 214 171 220 171 198 175 2
+51 19 18 166 242 23 17 2 135 5
+9 127 196 67 133 60 200 48 75 
+8 197 115 115 158 235 0 182 66
+ 184 233 209 65 156 127 77 57 
+184 131 7 125 74 50 181 72 125
+ 74 198 99 179 168 206 39 148 
+119 225 219 194 178 184 210 11
+9 129 226 162 9 39 190 201 35 
+110 246 79`
 )
 
 type CerInfo struct {
@@ -35,38 +87,35 @@ type CerInfo struct {
 }
 
 func initServer() *CerInfo {
-	path, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	filePath := path + "/./conf/server.info"
+	filePath := util.BaseDir + "conf/server.info"
 	exists, err := base.PathExists(filePath)
 	if err != nil {
 		panic(err)
 	}
-	if !exists {
-		panic("服务信息文件[" + filePath + "]不存在")
-	}
-	var f *os.File
-	f, err = os.Open(filePath)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	r := bufio.NewReader(f)
-	var line string
-	var code string
-	for {
-		line, err = r.ReadString('\n')
-		if err != nil && err != io.EOF {
+	serverConfig := defaultServerConfig
+	if exists {
+
+		var f *os.File
+		f, err = os.Open(filePath)
+		if err != nil {
 			panic(err)
 		}
-		if strings.IndexByte(line, '\n') > 0 {
-			line = line[0:strings.IndexByte(line, '\n')]
+		defer f.Close()
+		var bs []byte
+		bs, err = io.ReadAll(f)
+		if err != nil {
+			panic(err)
 		}
-		if strings.IndexByte(line, '\r') > 0 {
-			line = line[0:strings.IndexByte(line, '\r')]
+		if len(bs) > 0 {
+			serverConfig = string(bs)
 		}
+	}
+	serverConfigLines := strings.Split(serverConfig, "\n")
+
+	var code string
+	for _, line := range serverConfigLines {
+		line = strings.TrimPrefix(line, "\r")
+		line = strings.TrimPrefix(line, "\t")
 		if code != "" {
 			code = fmt.Sprint(code, line)
 		} else {
@@ -85,6 +134,7 @@ func initServer() *CerInfo {
 
 	info.ServerId, err = strconv.ParseInt(info.No, 10, 64)
 	if err != nil {
+		Logger.Error(LogStr("服务信息错误!"))
 		panic("服务信息错误!")
 	}
 	Logger.Info("服务器信息加载成功!")
@@ -97,21 +147,26 @@ func init() {
 	str := "测试加解密字段"
 	str1 := AesEncryptCBC(str)
 	if str1 == "" || str1 == str {
+		Logger.Error(LogStr("加密异常，请确认服务器信息是否正确!"))
 		panic("加密异常，请确认服务器信息是否正确!")
 	}
-	Logger.Info("服务器加密验证成功!")
+	Logger.Info("服务器加密成功!")
 	str2 := AesDecryptCBC(str1)
 	if str2 == "" || str2 != str {
+		Logger.Error(LogStr("解密异常，请确认服务器信息是否正确!"))
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
+	Logger.Info("服务器解密成功!")
 
 	str1 = AesEncryptECB(str)
 	if str1 == "" || str1 == str {
+		Logger.Error(LogStr("加密异常，请确认服务器信息是否正确!"))
 		panic("加密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器加密验证成功!")
 	str2 = AesDecryptECB(str1)
 	if str2 == "" || str2 != str {
+		Logger.Error(LogStr("解密异常，请确认服务器信息是否正确!"))
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器解密验证成功!")
@@ -134,6 +189,13 @@ func GetBaseID() (id int64) {
 		return
 	}
 	id = 164317281
+	return
+}
+func GetKey() (key string) {
+	if serverInfo == nil {
+		return
+	}
+	key = serverInfo.Key
 	return
 }
 

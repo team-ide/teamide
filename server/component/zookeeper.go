@@ -25,12 +25,14 @@ func init() {
 	Logger.Info(LogStr("Zookeeper初始化:address:", address))
 	service, err = CreateZookeeperService(address)
 	if err != nil {
+		Logger.Error(LogStr("Zookeeper连接失败:", err))
 		panic(err)
 	}
 	Zookeeper = *service.(*ZookeeperService)
 
 	_, err = Zookeeper.Exists("/")
 	if err != nil {
+		Logger.Error(LogStr("Zookeeper连接失败:", err))
 		panic(err)
 	}
 	Logger.Info(LogStr("Zookeeper连接成功!"))

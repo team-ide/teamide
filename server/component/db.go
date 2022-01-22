@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	DB MysqlService
+	DB *MysqlService
 )
 
 func init() {
@@ -21,7 +21,7 @@ func init() {
 	if config.Config.IsNative {
 		return
 	}
-	var service interface{}
+	var service *MysqlService
 	var err error
 	databaseConfig := DatabaseConfig{
 		Host:     config.Config.Mysql.Host,
@@ -30,14 +30,20 @@ func init() {
 		Username: config.Config.Mysql.Username,
 		Password: config.Config.Mysql.Password,
 	}
-	Logger.Info(LogStr("数据库初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
+	Logger.Info(LogStr("Mysql初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
 	service, err = CreateMysqlService(databaseConfig)
 	if err != nil {
+		Logger.Error(LogStr("Mysql连接失败:", err))
 		panic(err)
 	}
-	DB = *service.(*MysqlService)
+	err = service.Open()
+	if err != nil {
+		Logger.Error(LogStr("Mysql连接失败:", err))
+		panic(err)
+	}
+	DB = service
 
-	Logger.Info(LogStr("数据库连接成功!"))
+	Logger.Info(LogStr("Mysql连接成功!"))
 }
 
 type DatabaseConfig struct {
@@ -522,7 +528,8 @@ func (service *MysqlService) BatchInsertBean(table string, list []interface{}) (
 
 func (service *MysqlService) UpdateBean(table string, keys []string, one interface{}) (err error) {
 	if len(keys) == 0 {
-		err = errors.New("update bean keys cannot be empty!")
+		err = errors.New("update bean keys cannot be empty")
+		return
 	}
 	sqlParam := service.UpdateSqlByBean(table, keys, one)
 

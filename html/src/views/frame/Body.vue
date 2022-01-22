@@ -57,7 +57,7 @@ export default {
   background: #ddd;
   position: relative;
   overflow: auto;
-  padding: 10px 0px;
+  padding: 0px 0px;
 }
 .frame-body {
   min-width: 1024px;
