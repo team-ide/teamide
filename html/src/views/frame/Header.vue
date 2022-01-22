@@ -28,7 +28,7 @@
         </b-navbar-nav>
 
         <!-- Right aligned nav items -->
-        <b-navbar-nav class="ml-auto">
+        <b-navbar-nav class="ml-auto" v-if="source.hasPower('search')">
           <b-nav-form>
             <b-form-input
               size="sm"
@@ -43,13 +43,13 @@
 
         <!-- Right aligned nav items -->
         <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown right>
+          <!-- <b-nav-item-dropdown right>
             <template #button-content>
               <span>语言:中文</span>
             </template>
             <b-dropdown-item href="#">中文</b-dropdown-item>
             <b-dropdown-item href="#" disabled>英文</b-dropdown-item>
-          </b-nav-item-dropdown>
+          </b-nav-item-dropdown> -->
 
           <template v-if="source.login.user == null">
             <b-nav-item v-if="source.hasPower('login')" @click="tool.toLogin()">
@@ -92,25 +92,41 @@
                           <div class="ft-15">
                             {{ source.login.user.name }}
                           </div>
-                          <div class="mgt-5 ft-12">
-                            <span class="mglr-2 color-green"> A组 </span>
-                            <span class="mglr-2 color-orange">
-                              B组
-                              <b-icon icon="gear" title="组长"></b-icon>
-                            </span>
-                            <span class="mglr-2 color-blue"> E组 </span>
-                          </div>
-                          <div class="mgt-5 ft-12">
-                            <span class="mglr-2 color-green"> A部门 </span>
-                            <span class="mglr-2 color-orange"> B部门 </span>
-                            <span class="mglr-2 color-blue"> E部门 </span>
-                          </div>
+                          <template
+                            v-if="
+                              source.login.groups != null &&
+                              source.login.groups.length > 0
+                            "
+                          >
+                            <div class="mgt-5 ft-12">
+                              <template
+                                v-for="(one, index) in source.login.groups"
+                              >
+                                <span
+                                  :key="'group-' + index"
+                                  class="mglr-2"
+                                  :class="[`color-${one.color}`]"
+                                >
+                                  {{ one.name }}
+                                  <b-icon
+                                    v-if="one.leader"
+                                    icon="gear"
+                                    title="组长"
+                                  ></b-icon>
+                                </span>
+                              </template>
+                            </div>
+                          </template>
                         </b-card-text>
                       </b-card>
                       <hr />
                     </b-col>
                   </b-row>
-                  <b-row cols="3" class="body-row">
+                  <b-row
+                    v-if="source.frame.userNavs.length > 0"
+                    cols="3"
+                    class="body-row"
+                  >
                     <template v-for="(one, index) in source.frame.userNavs">
                       <template v-if="index < 6">
                         <b-col :key="index">
@@ -153,7 +169,11 @@
                       </b-card>
                     </b-col>
                   </b-row>
-                  <b-row cols="1" class="footer-row">
+                  <b-row
+                    v-if="source.hasPower('logout')"
+                    cols="1"
+                    class="footer-row"
+                  >
                     <b-col>
                       <hr />
                       <b-card class="bd-0 text-center">
@@ -229,6 +249,7 @@ export default {
   padding: 5px 15px;
 }
 .user-dropdown .user-nav-box .row {
+  position: relative;
 }
 .user-dropdown .user-nav-box .col {
   padding-right: 5px;

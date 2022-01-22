@@ -59,12 +59,12 @@ type InstallStageInfo struct {
 }
 
 type SqlParam struct {
-	PageIndex   int64         `json:"pageIndex,omitempty,omitempty"`
-	PageSize    int64         `json:"pageSize,omitempty,omitempty"`
-	Sql         string        `json:"sql,omitempty,omitempty"`
-	Params      []interface{} `json:"params,omitempty,omitempty"`
-	CountSql    string        `json:"countSql,omitempty,omitempty"`
-	CountParams []interface{} `json:"countParams,omitempty,omitempty"`
+	PageIndex   int64         `json:"pageIndex,omitempty"`
+	PageSize    int64         `json:"pageSize,omitempty"`
+	Sql         string        `json:"sql,omitempty"`
+	Params      []interface{} `json:"params,omitempty"`
+	CountSql    string        `json:"countSql,omitempty"`
+	CountParams []interface{} `json:"countParams,omitempty"`
 }
 
 func (this_ SqlParam) ToExecSql() string {

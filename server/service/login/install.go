@@ -2,7 +2,7 @@ package loginService
 
 import "teamide/server/base"
 
-func (this_ *LoginService) GetInstall() (info *base.InstallInfo) {
+func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

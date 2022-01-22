@@ -6,9 +6,18 @@ import (
 )
 
 var (
-	REDIS_PREFIX     string = config.Config.Redis.Prefix
-	ZOOKEEPER_PREFIX string = config.Config.Zookeeper.Namespace
+	REDIS_PREFIX     string
+	ZOOKEEPER_PREFIX string
 )
+
+func init() {
+	if config.Config.Redis != nil {
+		REDIS_PREFIX = config.Config.Redis.Prefix
+	}
+	if config.Config.Zookeeper != nil {
+		ZOOKEEPER_PREFIX = config.Config.Zookeeper.Namespace
+	}
+}
 
 const (
 	HTTP_AES_KEY string = "Q56hFAauWk18Gy2i"

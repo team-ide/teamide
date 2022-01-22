@@ -2,7 +2,7 @@ package spaceService
 
 import "teamide/server/base"
 
-func (this_ *SpaceService) GetInstall() (info *base.InstallInfo) {
+func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

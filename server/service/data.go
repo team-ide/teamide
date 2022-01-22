@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 	"teamide/server/base"
+	"teamide/server/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,8 +15,9 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url string `json:"url,omitempty"`
-	Api string `json:"api,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Api      string `json:"api,omitempty"`
+	IsNative bool   `json:"isNative,omitempty"`
 }
 
 func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -40,6 +42,7 @@ func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, er
 
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
+	response.IsNative = config.Config.IsNative
 
 	res = response
 	return

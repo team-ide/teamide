@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"teamide/server/base"
 	"teamide/server/component"
+	"teamide/server/config"
 	"teamide/server/factory"
+	"teamide/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,20 +103,35 @@ type SessionResponse struct {
 
 func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	response := &SessionResponse{}
-	var userId int64 = 0
-	if request.JWT != nil {
-		userId = request.JWT.UserId
-	}
-	if userId > 0 {
-		var user *base.UserEntity
-		user, err = factory.UserService.Get(request.JWT.UserId)
-		if err != nil {
-			return
+
+	if config.Config.IsNative {
+		response.User = &base.UserEntity{
+			UserId: 1,
+			Name:   util.SystemUser_Username,
 		}
-		response.User = user
+		response.Powers = []string{}
+		ps := base.GetPowers()
+		for _, power := range ps {
+			if power.AllowNative {
+				response.Powers = append(response.Powers, power.Action)
+			}
+		}
+	} else {
+		var userId int64 = 0
+		if request.JWT != nil {
+			userId = request.JWT.UserId
+		}
+		if userId > 0 {
+			var user *base.UserEntity
+			user, err = factory.UserService.Get(request.JWT.UserId)
+			if err != nil {
+				return
+			}
+			response.User = user
+		}
+		response.Powers = getPowersByUserId(userId)
 	}
 	response.JWT = getJWTStr(response.User)
-	response.Powers = getPowersByUserId(userId)
 
 	json := base.ToJSON(response)
 	res = component.AesEncryptCBCByKey(json, component.HTTP_AES_KEY)

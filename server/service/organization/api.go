@@ -4,5 +4,5 @@ import (
 	"teamide/server/base"
 )
 
-func (this_ *OrganizationService) BindApi(appendApi func(apis ...*base.ApiWorker)) {
+func (this_ *Service) BindApi(appendApi func(apis ...*base.ApiWorker)) {
 }

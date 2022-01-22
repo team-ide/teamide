@@ -211,3 +211,39 @@ func BindWbsService(service interface{}) {
 	WbsService = service.(wbsService)
 	BindCommonService(service)
 }
+
+type applicationService interface {
+}
+
+var (
+	ApplicationService applicationService
+)
+
+func BindApplicationService(service interface{}) {
+	ApplicationService = service.(applicationService)
+	BindCommonService(service)
+}
+
+type workspaceService interface {
+}
+
+var (
+	WorkspaceService workspaceService
+)
+
+func BindWorkspaceService(service interface{}) {
+	WorkspaceService = service.(workspaceService)
+	BindCommonService(service)
+}
+
+type toolboxService interface {
+}
+
+var (
+	ToolboxService workspaceService
+)
+
+func BindToolboxService(service interface{}) {
+	ToolboxService = service.(toolboxService)
+	BindCommonService(service)
+}

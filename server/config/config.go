@@ -9,7 +9,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type TomlConfig struct {
+type ServerConfig struct {
+	IsNative  bool       `json:"-" yaml:"-"` // 是否是本机运行
 	Server    *server    `json:"server,omitempty" yaml:"server,omitempty"`
 	Redis     *redis     `json:"redis,omitempty" yaml:"redis,omitempty"`
 	Zookeeper *zookeeper `json:"zookeeper,omitempty" yaml:"zookeeper,omitempty"`
@@ -52,7 +53,7 @@ type log struct {
 }
 
 var (
-	Config *TomlConfig = &TomlConfig{}
+	Config *ServerConfig = &ServerConfig{}
 )
 
 func init() {
@@ -62,11 +63,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	if !exists {
-		if !base.IsLocalStartup {
-			panic("配置文件[" + filePath + "]不存在")
-		}
-	} else {
+	if exists {
 		f, err := os.Open(filePath)
 		if err != nil {
 			panic(err)
@@ -86,6 +83,9 @@ func init() {
 //格式化配置，填充默认值
 func formatConfig() {
 
+	if Config.Mysql == nil {
+		Config.IsNative = true
+	}
 	if Config.Server != nil {
 		if Config.Server.Data == "" {
 			Config.Server.Data = base.BaseDir + "data"
@@ -93,15 +93,32 @@ func formatConfig() {
 			Config.Server.Data = base.BaseDir + strings.TrimPrefix(Config.Server.Data, "./")
 		}
 	}
-
-	if Config.Log != nil {
-		if Config.Log.Filename == "" {
-			Config.Log.Filename = base.BaseDir + "log/server.log"
-		} else {
-			Config.Log.Filename = base.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
+	if Config.Log == nil {
+		Config.Log = &log{
+			MaxSize:    100,
+			MaxAge:     7,
+			MaxBackups: 10,
+			Level:      "info",
 		}
 	}
 
+	if Config.Log.Filename == "" {
+		Config.Log.Filename = base.BaseDir + "log/server.log"
+	} else {
+		Config.Log.Filename = base.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
+	}
+
+	if !Config.IsNative {
+		if Config.Mysql == nil || Config.Mysql.Host == "" || Config.Mysql.Port == 0 {
+			panic("请检查MySql配置是否正确")
+		}
+		if Config.Redis == nil || Config.Redis.Address == "" {
+			panic("请检查Redis配置是否正确")
+		}
+		if Config.Zookeeper == nil || Config.Zookeeper.Address == "" {
+			panic("请检查Zookeeper配置是否正确")
+		}
+	}
 }
 
 func GetFromSystem(key string) string {

@@ -38,6 +38,7 @@ type PowerAction struct {
 	Action      string `json:"action,omitempty"`
 	Text        string `json:"text,omitempty"`
 	ShouldLogin bool   `json:"shouldLogin,omitempty"`
+	AllowNative bool   `json:"allowNative,omitempty"`
 	Parent      *PowerAction
 }
 
@@ -45,12 +46,12 @@ var (
 	powers []*PowerAction
 
 	// 基础权限
-	PowerRegister  = addPower(&PowerAction{Action: "register", Text: "注册"})
-	PowerData      = addPower(&PowerAction{Action: "data", Text: "数据"})
-	PowerSession   = addPower(&PowerAction{Action: "session", Text: "会话"})
-	PowerLogin     = addPower(&PowerAction{Action: "login", Text: "登录"})
-	PowerLogout    = addPower(&PowerAction{Action: "logout", Text: "登出"})
-	PowerAutoLogin = addPower(&PowerAction{Action: "auto_login", Text: "自动登录"})
+	PowerRegister  = addPower(&PowerAction{Action: "register", Text: "注册", AllowNative: false})
+	PowerData      = addPower(&PowerAction{Action: "data", Text: "数据", AllowNative: true})
+	PowerSession   = addPower(&PowerAction{Action: "session", Text: "会话", AllowNative: true})
+	PowerLogin     = addPower(&PowerAction{Action: "login", Text: "登录", AllowNative: false})
+	PowerLogout    = addPower(&PowerAction{Action: "logout", Text: "登出", AllowNative: false})
+	PowerAutoLogin = addPower(&PowerAction{Action: "auto_login", Text: "自动登录", AllowNative: false})
 )
 
 func addPower(power *PowerAction) *PowerAction {

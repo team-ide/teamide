@@ -18,10 +18,8 @@ var (
 
 func init() {
 
-	if base.IsLocalStartup {
-		if config.Config.Mysql == nil || config.Config.Mysql.Host == "" && config.Config.Mysql.Port == 0 {
-			return
-		}
+	if config.Config.IsNative {
+		return
 	}
 	var service interface{}
 	var err error

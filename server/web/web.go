@@ -13,33 +13,34 @@ import (
 )
 
 var (
-	ServerContext string
-	ServerHost    string
-	ServerPort    int
+	ServerContext string = "/"
+	ServerHost    string = "127.0.0.1"
+	ServerPort    int    = 0
 	ServerUrl     string
 )
 
 func init() {
-	ServerContext = config.Config.Server.Context
-	if ServerContext == "" || !strings.HasSuffix(ServerContext, "/") {
-		ServerContext = ServerContext + "/"
+	if config.Config.Server != nil {
+		ServerContext = config.Config.Server.Context
+		if ServerContext == "" || !strings.HasSuffix(ServerContext, "/") {
+			ServerContext = ServerContext + "/"
+		}
+		ServerHost = config.Config.Server.Host
+		ServerPort = config.Config.Server.Port
 	}
 
-	ServerHost = config.Config.Server.Host
-	ServerPort = config.Config.Server.Port
-
-	if base.IsLocalStartup {
-		if ServerHost == "" {
-			ServerHost = "127.0.0.1"
-		}
-		if ServerPort == 0 {
-			listener, err := net.Listen("tcp", ":0")
-			if err != nil {
-				panic(err)
-			}
-			ServerPort = listener.Addr().(*net.TCPAddr).Port
-		}
+	if ServerHost == "" {
+		ServerHost = "127.0.0.1"
 	}
+
+	if ServerPort == 0 {
+		listener, err := net.Listen("tcp", ":0")
+		if err != nil {
+			panic(err)
+		}
+		ServerPort = listener.Addr().(*net.TCPAddr).Port
+	}
+
 	if ServerHost == "0.0.0.0" || ServerHost == ":" || ServerHost == "::" {
 		ServerUrl = fmt.Sprint("http://127.0.0.1:", ServerPort)
 	} else {
@@ -63,7 +64,7 @@ func StartServer() (serverUrl string, err error) {
 	if err != nil {
 		return
 	}
-	if !base.IsLocalStartup {
+	if !config.Config.IsNative {
 		println("服务启动，访问地址:")
 		if ServerHost == "0.0.0.0" || ServerHost == "::" {
 			httpServer := fmt.Sprint("127.0.0.1", ":", ServerPort)

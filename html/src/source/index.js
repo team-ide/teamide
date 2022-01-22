@@ -6,9 +6,10 @@ source.status = null;
 source.ready = false;
 source.url = null;
 source.api = null;
+source.isNative = false;
 
 source.header = {
-    title: "Team IDE",
+    title: "Team · IDE",
     toggleable: "lg",
     type: "dark",
     variant: "dark",
@@ -227,9 +228,21 @@ let headerNavs = [
         },
     },
     {
+        name: "应用",
+        icon: "home",
+        link: "/application",
+        action: "application_page",
+        match(path) {
+            if (path == '/application' || path.indexOf('/application/') == 0) {
+                return true;
+            }
+        },
+    },
+    {
         name: "工作台",
         icon: "home",
         link: "/workspace",
+        action: "workspace_page",
         match(path) {
             if (path == '/workspace' || path.indexOf('/workspace/') == 0) {
                 return true;
@@ -240,6 +253,7 @@ let headerNavs = [
         name: "工具箱",
         icon: "home",
         link: "/toolbox",
+        action: "toolbox_page",
         match(path) {
             if (path == '/toolbox' || path.indexOf('/toolbox/') == 0) {
                 return true;
@@ -273,6 +287,7 @@ source.init = (data) => {
     if (data != null) {
         source.url = data.url;
         source.api = data.api;
+        source.isNative = data.isNative
     } else {
         source.status = "error";
         source.ready = false;

@@ -4,7 +4,7 @@ import (
 	"teamide/server/base"
 )
 
-func (this_ *UserService) LoginByAccount(account string, password string) (res *base.UserEntity, err error) {
+func (this_ *Service) LoginByAccount(account string, password string) (res *base.UserEntity, err error) {
 	var user *base.UserEntity
 	user, err = getByAccount(account)
 	if err != nil {

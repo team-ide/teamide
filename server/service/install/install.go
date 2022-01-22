@@ -3,14 +3,8 @@ package installService
 import (
 	"teamide/server/base"
 	"teamide/server/component"
+	"teamide/server/config"
 )
-
-var (
-	TABLE_INSTALL = "TM_INSTALL"
-)
-
-type InstallService struct {
-}
 
 func install(info *base.InstallInfo) {
 	if info == nil || info.Stages == nil {
@@ -23,6 +17,10 @@ func install(info *base.InstallInfo) {
 
 func installStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	if info == nil || stage == nil {
+		return
+	}
+
+	if config.Config.IsNative {
 		return
 	}
 	var err error
@@ -59,7 +57,7 @@ func installStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 	}
 }
 
-func (this_ *InstallService) GetInstall() (info *base.InstallInfo) {
+func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

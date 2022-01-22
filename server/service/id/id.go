@@ -5,14 +5,7 @@ import (
 	"teamide/server/component"
 )
 
-var (
-	TABLE_ID = "TM_ID"
-)
-
-type IdService struct {
-}
-
-func (this_ *IdService) GetID(idType component.IDType) (id int64, err error) {
+func (this_ *Service) GetID(idType component.IDType) (id int64, err error) {
 
 	var ids []int64
 	ids, err = this_.GetIDs(idType, 1)
@@ -25,7 +18,7 @@ func (this_ *IdService) GetID(idType component.IDType) (id int64, err error) {
 	return
 }
 
-func (this_ *IdService) GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
+func (this_ *Service) GetIDs(idType component.IDType, size int64) (ids []int64, err error) {
 
 	var key = component.GetIDRedisKey(idType)
 	var exists bool

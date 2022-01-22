@@ -8,8 +8,6 @@ import (
 
 var (
 	BaseDir string
-
-	IsLocalStartup bool
 )
 
 func init() {

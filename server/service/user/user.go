@@ -8,19 +8,6 @@ import (
 	"teamide/server/factory"
 )
 
-var (
-	TABLE_USER          = "TM_USER"
-	TABLE_USER_ACCOUNT  = "TM_USER_ACCOUNT"
-	TABLE_USER_PASSWORD = "TM_USER_PASSWORD"
-	TABLE_USER_METADATA = "TM_USER_METADATA"
-	TABLE_USER_AUTH     = "TM_USER_AUTH"
-	TABLE_USER_LOCK     = "TM_USER_LOCK"
-	TABLE_USER_SETTING  = "TM_USER_SETTING"
-)
-
-type UserService struct {
-}
-
 func check(user *base.UserEntity) (err error) {
 	if user.Name == "" {
 		err = base.NewValidateError("用户名称不能为空!")
@@ -65,7 +52,7 @@ func check(user *base.UserEntity) (err error) {
 }
 
 // 用户全量信息新增
-func (this_ *UserService) TotalInsert(userTotal *base.UserTotalBean) (err error) {
+func (this_ *Service) TotalInsert(userTotal *base.UserTotalBean) (err error) {
 
 	user := userTotal.User
 	err = insert(user)
@@ -226,7 +213,7 @@ func getInsertMetadataEntity(userId int64, metadata map[string]interface{}, mStr
 }
 
 // 用户全量信息批量新增
-func (this_ *UserService) TotalBatchInsert(userTotals []*base.UserTotalBean) (successUserTotals []*base.UserTotalBean, errUserTotals []*base.UserTotalBean, errs []error, err error) {
+func (this_ *Service) TotalBatchInsert(userTotals []*base.UserTotalBean) (successUserTotals []*base.UserTotalBean, errUserTotals []*base.UserTotalBean, errs []error, err error) {
 	for _, one := range userTotals {
 		e := this_.TotalInsert(one)
 		if e != nil {
@@ -346,7 +333,7 @@ func passwordCheck(userId int64, password string) (check bool, err error) {
 	return
 }
 
-func (this_ *UserService) Query(user base.UserEntity) (users []*base.UserEntity, err error) {
+func (this_ *Service) Query(user base.UserEntity) (users []*base.UserEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -368,7 +355,7 @@ func (this_ *UserService) Query(user base.UserEntity) (users []*base.UserEntity,
 	return
 }
 
-func (this_ *UserService) Count(user base.UserEntity) (count int64, err error) {
+func (this_ *Service) Count(user base.UserEntity) (count int64, err error) {
 	sql := "SELECT COUNT(*) FROM " + TABLE_USER + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -414,7 +401,7 @@ func UserAppendWhere(user base.UserEntity, sqlParam *base.SqlParam) {
 }
 
 //用户搜索，只搜索有效用户
-func (this_ *UserService) Userh(name string) (users []*base.UserEntity, err error) {
+func (this_ *Service) Userh(name string) (users []*base.UserEntity, err error) {
 	sql := "SELECT userId,name,avatar FROM " + TABLE_USER + " WHERE serverId=? AND enabledState=1 AND activedState=1 AND lockedState=2 AND (name LIKE ? OR account LIKE ? OR email LIKE ?)"
 	params := []interface{}{component.GetServerId(), "" + name + "%", "" + name + "%", "" + name + "%"}
 
@@ -434,7 +421,7 @@ func (this_ *UserService) Userh(name string) (users []*base.UserEntity, err erro
 }
 
 //查询单个用户
-func (this_ *UserService) Get(userId int64) (user *base.UserEntity, err error) {
+func (this_ *Service) Get(userId int64) (user *base.UserEntity, err error) {
 	sql := "SELECT * FROM " + TABLE_USER + " WHERE serverId=? AND userId=? "
 	params := []interface{}{component.GetServerId(), userId}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"teamide/server/base"
 	"teamide/server/component"
+	"teamide/server/config"
 	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,12 @@ func appendApi(apis ...*base.ApiWorker) {
 		if len(api.Apis) == 0 {
 			panic(errors.New(fmt.Sprint("API未设置映射路径!", api)))
 		}
+
+		if config.Config.IsNative {
+			if !api.Power.AllowNative {
+				continue
+			}
+		}
 		for _, apiName := range api.Apis {
 
 			_, find := apiCache[apiName]
@@ -77,6 +84,11 @@ func CacheApi() {
 	}
 	ps := base.GetPowers()
 	for _, one := range ps {
+		if config.Config.IsNative {
+			if !one.AllowNative {
+				continue
+			}
+		}
 		_, ok := apiPowerMap[one.Action]
 		if !ok {
 			component.Logger.Warn(component.LogStr("权限[", one.Action, "]未配置动作"))

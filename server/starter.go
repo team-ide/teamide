@@ -4,6 +4,7 @@ import (
 	"teamide/server/web"
 
 	"teamide/server/factory"
+	applicationService "teamide/server/service/application"
 	certificateService "teamide/server/service/certificate"
 	enterpriseService "teamide/server/service/enterprise"
 	groupService "teamide/server/service/group"
@@ -17,26 +18,31 @@ import (
 	powerService "teamide/server/service/power"
 	spaceService "teamide/server/service/space"
 	systemService "teamide/server/service/system"
+	toolboxService "teamide/server/service/toolbox"
 	userService "teamide/server/service/user"
 	wbsService "teamide/server/service/wbs"
+	workspaceService "teamide/server/service/workspace"
 )
 
 func init() {
-	factory.BindInstallService(&installService.InstallService{})
-	factory.BindIdService(&idService.IdService{})
-	factory.BindSystemService(&systemService.SystemService{})
-	factory.BindLogService(&logService.LogService{})
-	factory.BindUserService(&userService.UserService{})
-	factory.BindLoginService(&loginService.LoginService{})
-	factory.BindCertificateService(&certificateService.CertificateService{})
-	factory.BindEnterpriseService(&enterpriseService.EnterpriseService{})
-	factory.BindGroupService(&groupService.GroupService{})
-	factory.BindJobService(&jobService.JobService{})
-	factory.BindMessageService(&messageService.MessageService{})
-	factory.BindOrganizationService(&organizationService.OrganizationService{})
-	factory.BindPowerService(&powerService.PowerService{})
-	factory.BindSpaceService(&spaceService.SpaceService{})
-	factory.BindWbsService(&wbsService.WbsService{})
+	factory.BindInstallService(&installService.Service{})
+	factory.BindIdService(&idService.Service{})
+	factory.BindSystemService(&systemService.Service{})
+	factory.BindLogService(&logService.Service{})
+	factory.BindUserService(&userService.Service{})
+	factory.BindLoginService(&loginService.Service{})
+	factory.BindCertificateService(&certificateService.Service{})
+	factory.BindEnterpriseService(&enterpriseService.Service{})
+	factory.BindGroupService(&groupService.Service{})
+	factory.BindJobService(&jobService.Service{})
+	factory.BindMessageService(&messageService.Service{})
+	factory.BindOrganizationService(&organizationService.Service{})
+	factory.BindPowerService(&powerService.Service{})
+	factory.BindSpaceService(&spaceService.Service{})
+	factory.BindWbsService(&wbsService.Service{})
+	factory.BindWbsService(&applicationService.Service{})
+	factory.BindWbsService(&workspaceService.Service{})
+	factory.BindWbsService(&toolboxService.Service{})
 
 	Init()
 }

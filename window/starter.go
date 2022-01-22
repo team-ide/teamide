@@ -2,7 +2,6 @@ package window
 
 import (
 	"net/url"
-	"runtime"
 
 	"github.com/zserge/lorca"
 )
@@ -19,8 +18,8 @@ func init() {
 	if window_height == 0 {
 		window_height = 768
 	}
-	window_width = window_width - 20
-	window_height = window_height - 60
+	window_width = window_width - 40
+	window_height = window_height - 80
 }
 
 func Start(title string, webUrl string, onClose func()) (err error) {
@@ -36,12 +35,11 @@ func Start(title string, webUrl string, onClose func()) (err error) {
 
 func startWindow(title string, webUrl string, onClose func()) (err error) {
 	var args []string
-	if runtime.GOOS == "linux" {
-		args = append(args, "--class=Lorca")
-	}
-	// args = append(args, "--single-proces")   // 单进程运行
-	// args = append(args, "--start-maximized") // 启动就最大化
-	// args = append(args, "--no-sandbox")      // 取消沙盒模式
+	args = append(args, "--class=TeamIDE")
+	// args = append(args, "--kiosk")               // 最大化
+	// args = append(args, "--start-maximized")     // 最大化
+	args = append(args, "--window-position=20,20") // 窗口位置
+	// args = append(args, "--window-size=-1,-1")   // 强制显示更新菜单项
 	var ui lorca.UI
 	ui, err = lorca.New("data:text/html,"+url.PathEscape(`
 <html>

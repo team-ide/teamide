@@ -1,34 +1,46 @@
 package main
 
 import (
+	"os"
 	"sync"
 	"teamide/server"
-	"teamide/server/base"
 	"teamide/window"
 )
 
 var (
 	waitGroupForStop sync.WaitGroup
-	ServerTitle      = "Team · IDE"
-	ServerUrl        = ""
+	serverTitle           = "Team · IDE"
+	serverUrl             = ""
+	IsDev            bool = false
 )
 
 func main() {
 	var err error
 
-	base.IsLocalStartup = true
+	for _, v := range os.Args {
+		if v == "--isDev" {
+			IsDev = true
+			continue
+		}
+	}
 
 	waitGroupForStop.Add(1)
 
-	ServerUrl, err = server.Start()
+	serverUrl, err = server.Start()
 	if err != nil {
 		panic(err)
 	}
-	err = window.Start(ServerTitle, ServerUrl, func() {
-		waitGroupForStop.Done()
-	})
-	if err != nil {
-		panic(err)
+	if IsDev {
+		serverUrl = "http://127.0.0.1:21081/"
+	}
+
+	if !IsDev {
+		err = window.Start(serverTitle, serverUrl, func() {
+			waitGroupForStop.Done()
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	waitGroupForStop.Wait()

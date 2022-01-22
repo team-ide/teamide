@@ -2,7 +2,7 @@ package certificateService
 
 import "teamide/server/base"
 
-func (this_ *CertificateService) GetInstall() (info *base.InstallInfo) {
+func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	info = &base.InstallInfo{}
 

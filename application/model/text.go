@@ -12,9 +12,6 @@ func TextToModel(namePath string, text string, model interface{}) (name string, 
 	if strings.HasSuffix(namePath, ".json") {
 		name = strings.TrimSuffix(name, ".json")
 		err = json.Unmarshal([]byte(text), model)
-	} else if strings.HasSuffix(namePath, ".toml") {
-		name = strings.TrimSuffix(name, ".toml")
-		err = yaml.Unmarshal([]byte(text), model)
 	} else {
 		name = strings.TrimSuffix(name, ".yaml")
 		name = strings.TrimSuffix(name, ".yml")
@@ -29,9 +26,6 @@ func TextToModelMap(namePath string, text string) (name string, res map[string]i
 	if strings.HasSuffix(namePath, ".json") {
 		name = strings.TrimSuffix(name, ".json")
 		err = json.Unmarshal([]byte(text), &res)
-	} else if strings.HasSuffix(namePath, ".toml") {
-		name = strings.TrimSuffix(name, ".toml")
-		err = yaml.Unmarshal([]byte(text), &res)
 	} else {
 		name = strings.TrimSuffix(name, ".yaml")
 		name = strings.TrimSuffix(name, ".yml")
