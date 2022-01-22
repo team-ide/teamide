@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - master
-      - dev
+      # - dev
 jobs:
   lint:
     strategy:
@@ -51,14 +51,14 @@ jobs:
       - run: go test -timeout 3600s -run ^TestStatic$ teamide/static
 
       # 打包Linux
-      - run: export GOARCH=amd64 && export GOOS=linux && go build -o release/teamide-linux-x64/teamide
+      - run: export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
       - run: cp -rf release/conf release/teamide-linux-x64/
       - run: cp -rf release/README.md release/teamide-linux-x64/
       - run: cp -rf release/RELEASE.md release/teamide-linux-x64/
       - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
 
       # 打包Window
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o release/teamide-windows-x64/teamide.exe
+      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o ./release/teamide-windows-x64/teamide.exe
       - run: cp -rf release/conf release/teamide-windows-x64/
       - run: cp -rf release/README.md release/teamide-windows-x64/
       - run: cp -rf release/RELEASE.md release/teamide-windows-x64/

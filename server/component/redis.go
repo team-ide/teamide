@@ -23,11 +23,13 @@ func init() {
 	if cluster {
 		service, err = CreateRedisClusterService(address, auth)
 		if err != nil {
+			Logger.Error(LogStr("Redis连接失败:", err))
 			panic(err)
 		}
 	} else {
 		service, err = CreateRedisPoolService(address, auth)
 		if err != nil {
+			Logger.Error(LogStr("Redis连接失败:", err))
 			panic(err)
 		}
 	}
@@ -35,6 +37,7 @@ func init() {
 
 	_, err = Redis.GetString("_")
 	if err != nil {
+		Logger.Error(LogStr("Redis连接失败:", err))
 		panic(err)
 	}
 	Logger.Info(LogStr("Redis连接成功!"))

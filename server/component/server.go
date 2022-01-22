@@ -85,6 +85,7 @@ func initServer() *CerInfo {
 
 	info.ServerId, err = strconv.ParseInt(info.No, 10, 64)
 	if err != nil {
+		Logger.Error(LogStr("服务信息错误!"))
 		panic("服务信息错误!")
 	}
 	Logger.Info("服务器信息加载成功!")
@@ -97,21 +98,25 @@ func init() {
 	str := "测试加解密字段"
 	str1 := AesEncryptCBC(str)
 	if str1 == "" || str1 == str {
+		Logger.Error(LogStr("加密异常，请确认服务器信息是否正确!"))
 		panic("加密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器加密验证成功!")
 	str2 := AesDecryptCBC(str1)
 	if str2 == "" || str2 != str {
+		Logger.Error(LogStr("解密异常，请确认服务器信息是否正确!"))
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
 
 	str1 = AesEncryptECB(str)
 	if str1 == "" || str1 == str {
+		Logger.Error(LogStr("加密异常，请确认服务器信息是否正确!"))
 		panic("加密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器加密验证成功!")
 	str2 = AesDecryptECB(str1)
 	if str2 == "" || str2 != str {
+		Logger.Error(LogStr("解密异常，请确认服务器信息是否正确!"))
 		panic("解密异常，请确认服务器信息是否正确!")
 	}
 	Logger.Info("服务器解密验证成功!")

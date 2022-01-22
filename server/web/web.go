@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 	"teamide/server/base"
+	"teamide/server/component"
 	"teamide/server/config"
 
 	"net/http"
@@ -36,6 +37,7 @@ func init() {
 	if ServerPort == 0 {
 		listener, err := net.Listen("tcp", ":0")
 		if err != nil {
+			component.Logger.Error(component.LogStr("随机端口获取失败:", err))
 			panic(err)
 		}
 		ServerPort = listener.Addr().(*net.TCPAddr).Port
@@ -100,6 +102,7 @@ func StartServer() (serverUrl string, err error) {
 		httpServer := fmt.Sprint(ServerHost, ":", ServerPort)
 		err = http.ListenAndServe(httpServer, router)
 		if err != nil {
+			component.Logger.Error(component.LogStr("Web启动失败:", err))
 			panic(err)
 		}
 	}()
