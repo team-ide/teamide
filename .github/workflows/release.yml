@@ -29,7 +29,7 @@ jobs:
       - env:
           RELEASE_VERSION: ${{steps.release_version.outputs.value}}
           RELEASE_DIR_NAME: teamide-${{steps.release_version.outputs.value}}
-        run: export RELEASE_VERSION=`$RELEASE_VERSION`` && export `RELEASE_DIR_NAME=$RELEASE_DIR_NAME`
+        run: export RELEASE_VERSION=`$RELEASE_VERSION` && export RELEASE_DIR_NAME=`$RELEASE_DIR_NAME`
         
       - run: export RELEASE_LINUX_NAME=`$RELEASE_DIR_NAME-linux-x64`
       - run: export RELEASE_WINDOWS_NAME=`$RELEASE_DIR_NAME-windows-x64`
