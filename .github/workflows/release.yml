@@ -31,10 +31,10 @@ jobs:
         env:
           RELEASE_VERSION: ${{steps.release_version.outputs.value}}
         run: |
-          export RELEASE_VERSION = $RELEASE_VERSION
-          export RELEASE_LINUX_NAME = teamide-$RELEASE_VERSION-linux-x64
-          export RELEASE_WINDOWS_NAME = teamide-$RELEASE_VERSION-windows-x64
-          export RELEASE_DARWIN_NAME = teamide-$RELEASE_VERSION-darwin-x64
+          export RELEASE_VERSION = `echo $RELEASE_VERSION`
+          export RELEASE_LINUX_NAME = `echo teamide-$RELEASE_VERSION-linux-x64`
+          export RELEASE_WINDOWS_NAME = `echo teamide-$RELEASE_VERSION-windows-x64`
+          export RELEASE_DARWIN_NAME = `echo teamide-$RELEASE_VERSION-darwin-x64`
 
       - run: |
           echo $RELEASE_VERSION
