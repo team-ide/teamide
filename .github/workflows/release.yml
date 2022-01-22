@@ -30,6 +30,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{steps.release_version.outputs.value}}
           RELEASE_DIR_NAME: teamide-${{steps.release_version.outputs.value}}
+        run: echo $RELEASE_VERSION && echo $RELEASE_DIR_NAME
 
       # 读取发布说明
       - name: Read Release Description
