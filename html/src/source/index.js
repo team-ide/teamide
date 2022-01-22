@@ -1,5 +1,9 @@
 import tool from "@/tool/index.js";
 
+import application from "./application.js";
+import workspace from "./workspace.js";
+import toolbox from "./toolbox.js";
+
 let source = {};
 
 source.status = null;
@@ -34,15 +38,9 @@ source.register = {
     remove: true,
 }
 
-source.workspace = {
-    show: false,
-    remove: false,
-}
-
-source.console = {
-    show: false,
-    remove: false,
-}
+source.workspace = workspace
+source.toolbox = toolbox
+source.application = application
 
 source.enum = {
 };

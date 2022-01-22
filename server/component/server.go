@@ -191,6 +191,13 @@ func GetBaseID() (id int64) {
 	id = 164317281
 	return
 }
+func GetKey() (key string) {
+	if serverInfo == nil {
+		return
+	}
+	key = serverInfo.Key
+	return
+}
 
 //AES加密,CBC
 func AesEncryptCBC(origData string) (res string) {

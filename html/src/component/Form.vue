@@ -26,9 +26,6 @@
       </template>
     </template>
     <slot></slot>
-    <b-button v-if="_saveShow" variant="primary" @click="doSave">
-      {{ saveText || "保存" }}
-    </b-button>
   </b-form>
 </template>
 
@@ -36,29 +33,17 @@
 <script>
 export default {
   components: {},
-  props: ["source", "form", "formData", "saveShow", "saveText"],
+  props: ["source", "form", "formData"],
   data() {
     return {
       key: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
-  computed: {
-    _saveShow() {
-      if (this.saveShow == undefined || this.saveShow == null) {
-        return true;
-      }
-      return this.saveShow;
-    },
-  },
+  computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    doSave() {
-      this.form.validate(this.formData).then((res) => {
-        console.log(res);
-      });
-    },
     init() {
       this.key = this.tool.getNumber();
     },

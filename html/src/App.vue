@@ -22,18 +22,6 @@
         v-show="source.register.show"
       >
       </Register>
-      <Workspace
-        :source="source"
-        v-if="!source.workspace.remove"
-        v-show="source.workspace.show"
-      >
-      </Workspace>
-      <Console
-        :source="source"
-        v-if="!source.console.remove"
-        v-show="source.console.show"
-      >
-      </Console>
     </template>
     <template v-else>
       <div v-if="source.status == 'connecting'">

@@ -3,12 +3,18 @@ package service
 import (
 	"strings"
 	"teamide/server/base"
+	"teamide/server/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"
 )
 
 func checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
+	if config.Config.IsNative {
+		if api.Power.AllowNative {
+			return true
+		}
+	}
 	if api.Power.ShouldLogin && (JWT == nil || JWT.UserId == 0) {
 		base.ResponseJSON(nil, base.ShouldLoginError, c)
 		return false
