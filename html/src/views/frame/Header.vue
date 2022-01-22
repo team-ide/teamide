@@ -5,7 +5,7 @@
       :type="source.header.type"
       :variant="source.header.variant"
     >
-      <b-navbar-brand :href="source.url" tag="h1" class="mb-0">
+      <b-navbar-brand :href="source.url" class="ft-20 ft-900 color-grey">
         {{ source.header.title }}
       </b-navbar-brand>
 
@@ -13,11 +13,14 @@
 
       <b-collapse id="nav-collapse" is-nav>
         <b-navbar-nav>
-          <template v-for="(one, index) in source.header.navs">
+          <template v-for="(one, index) in source.frame.headerNavs">
             <b-nav-item
               :key="index"
               @click="$router.push(`${one.link}`)"
-              :active="$route.path == `${one.link}`"
+              :active="
+                $route.path == `${one.link}` ||
+                (one.match && one.match($route.path))
+              "
             >
               {{ one.name }}
             </b-nav-item>
@@ -25,7 +28,7 @@
         </b-navbar-nav>
 
         <!-- Right aligned nav items -->
-        <b-navbar-nav class="ml-auto">
+        <b-navbar-nav class="ml-auto" v-if="source.hasPower('search')">
           <b-nav-form>
             <b-form-input
               size="sm"
@@ -40,16 +43,18 @@
 
         <!-- Right aligned nav items -->
         <b-navbar-nav class="ml-auto">
-          <b-nav-item-dropdown right>
+          <!-- <b-nav-item-dropdown right>
             <template #button-content>
               <span>语言:中文</span>
             </template>
             <b-dropdown-item href="#">中文</b-dropdown-item>
             <b-dropdown-item href="#" disabled>英文</b-dropdown-item>
-          </b-nav-item-dropdown>
+          </b-nav-item-dropdown> -->
 
           <template v-if="source.login.user == null">
-            <b-nav-item @click="tool.toLogin()"> 登录 </b-nav-item>
+            <b-nav-item v-if="source.hasPower('login')" @click="tool.toLogin()">
+              登录
+            </b-nav-item>
           </template>
           <template v-else>
             <b-nav-item-dropdown right class="user-dropdown">
@@ -87,62 +92,94 @@
                           <div class="ft-15">
                             {{ source.login.user.name }}
                           </div>
-                          <div class="mgt-5 ft-12">
-                            <span class="mglr-2 color-green"> A组 </span>
-                            <span class="mglr-2 color-orange">
-                              B组
-                              <b-icon icon="gear" title="组长"></b-icon>
-                            </span>
-                            <span class="mglr-2 color-blue"> E组 </span>
-                          </div>
-                          <div class="mgt-5 ft-12">
-                            <span class="mglr-2 color-green"> A部门 </span>
-                            <span class="mglr-2 color-orange"> B部门 </span>
-                            <span class="mglr-2 color-blue"> E部门 </span>
-                          </div>
+                          <template
+                            v-if="
+                              source.login.groups != null &&
+                              source.login.groups.length > 0
+                            "
+                          >
+                            <div class="mgt-5 ft-12">
+                              <template
+                                v-for="(one, index) in source.login.groups"
+                              >
+                                <span
+                                  :key="'group-' + index"
+                                  class="mglr-2"
+                                  :class="[`color-${one.color}`]"
+                                >
+                                  {{ one.name }}
+                                  <b-icon
+                                    v-if="one.leader"
+                                    icon="gear"
+                                    title="组长"
+                                  ></b-icon>
+                                </span>
+                              </template>
+                            </div>
+                          </template>
                         </b-card-text>
                       </b-card>
                       <hr />
                     </b-col>
                   </b-row>
-                  <b-row cols="3" class="body-row">
-                    <template v-for="(one, index) in source.login.headerNavs">
-                      <b-col :key="index">
-                        <b-card align="center" :class="`bd-${one.color}`">
-                          <b-card-title>
-                            <b-icon
-                              :icon="one.icon"
-                              :class="`color-${one.color}`"
-                            ></b-icon>
-                          </b-card-title>
-                          <b-card-text>
-                            <div
-                              class="tm-link"
-                              @click="$router.push(`/${one.link}`)"
-                              :class="`color-${one.color}`"
-                            >
-                              {{ one.name }}
-                            </div>
-                          </b-card-text>
-                        </b-card>
-                      </b-col>
+                  <b-row
+                    v-if="source.frame.userNavs.length > 0"
+                    cols="3"
+                    class="body-row"
+                  >
+                    <template v-for="(one, index) in source.frame.userNavs">
+                      <template v-if="index < 6">
+                        <b-col :key="index">
+                          <b-card align="center" :class="`bd-${one.color}`">
+                            <b-card-title>
+                              <b-icon
+                                :icon="one.icon"
+                                :class="`color-${one.color}`"
+                              ></b-icon>
+                            </b-card-title>
+                            <b-card-text>
+                              <div
+                                class="tm-link"
+                                @click="$router.push(`${one.link}`)"
+                                :class="[
+                                  `color-${one.color}`,
+                                  $route.path == `${one.link}` ||
+                                  (one.match && one.match($route.path))
+                                    ? 'tm-active'
+                                    : '',
+                                ]"
+                              >
+                                {{ one.name }}
+                              </div>
+                            </b-card-text>
+                          </b-card>
+                        </b-col>
+                      </template>
                     </template>
                     <b-col>
                       <b-card style="border: 0px" align="center">
                         <b-card-text style="padding-top: 20px">
-                          <div href="#" class="tm-link color-grey">
+                          <div
+                            @click="$router.push(`/user`)"
+                            class="tm-link color-grey"
+                          >
                             更多功能
                           </div>
                         </b-card-text>
                       </b-card>
                     </b-col>
                   </b-row>
-                  <b-row cols="1" class="footer-row">
+                  <b-row
+                    v-if="source.hasPower('logout')"
+                    cols="1"
+                    class="footer-row"
+                  >
                     <b-col>
                       <hr />
                       <b-card class="bd-0 text-center">
                         <b-card-text>
                           <div
+                            v-if="source.hasPower('logout')"
                             @click="tool.toLogout()"
                             class="tm-link color-orange"
                           >
@@ -212,6 +249,7 @@ export default {
   padding: 5px 15px;
 }
 .user-dropdown .user-nav-box .row {
+  position: relative;
 }
 .user-dropdown .user-nav-box .col {
   padding-right: 5px;

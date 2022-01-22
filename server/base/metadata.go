@@ -4,22 +4,22 @@ import "fmt"
 
 // 元数据结构体
 type MStruct struct {
-	StructCode int        `json:"structCode" column:"structCode"`
-	Name       string     `json:"name" column:"name"`
-	Comment    string     `json:"comment" column:"comment"`
-	Fields     []*MSField `json:"fields" column:"fields"`
+	StructCode int        `json:"structCode" column:"structCode,omitempty"`
+	Name       string     `json:"name" column:"name,omitempty"`
+	Comment    string     `json:"comment" column:"comment,omitempty"`
+	Fields     []*MSField `json:"fields" column:"fields,omitempty"`
 }
 
 // 元数据结构体字段
 type MSField struct {
-	StructCode      int      `json:"structCode" column:"structCode"`
-	StructFieldCode int      `json:"structFieldCode" column:"structFieldCode"`
-	Struct          *MStruct `json:"struct" column:"struct"`
-	Name            string   `json:"name" column:"name"`
-	Comment         string   `json:"comment" column:"comment"`
-	FieldType       int      `json:"fieldType" column:"fieldType"`
-	DefaultValue    string   `json:"defaultValue" column:"defaultValue"`
-	Options         []OBean  `json:"options" column:"options"`
+	StructCode      int      `json:"structCode" column:"structCode,omitempty"`
+	StructFieldCode int      `json:"structFieldCode" column:"structFieldCode,omitempty"`
+	Struct          *MStruct `json:"struct" column:"struct,omitempty"`
+	Name            string   `json:"name" column:"name,omitempty"`
+	Comment         string   `json:"comment" column:"comment,omitempty"`
+	FieldType       int      `json:"fieldType" column:"fieldType,omitempty"`
+	DefaultValue    string   `json:"defaultValue" column:"defaultValue,omitempty"`
+	Options         []OBean  `json:"options" column:"options,omitempty"`
 }
 
 const (
@@ -88,8 +88,8 @@ func checkMetadata(out bool) {
 	codes := map[int]bool{}
 	for _, obj := range U_M {
 		if out {
-			Logger.Info(LogStr("----------结构体（", obj.Comment, "）----------"))
-			Logger.Info(ToJSON(obj))
+			fmt.Println("----------结构体（", obj.Comment, "）----------")
+			fmt.Println(ToJSON(obj))
 		}
 		_, ok := codes[obj.StructCode]
 		if ok {
@@ -97,11 +97,11 @@ func checkMetadata(out bool) {
 		}
 		codes[obj.StructCode] = true
 		if out {
-			Logger.Info(LogStr("----------结构体（", obj.Comment, "）属性----------"))
+			fmt.Println("----------结构体（", obj.Comment, "）属性----------")
 		}
 		for _, field := range obj.Fields {
 			if out {
-				Logger.Info(ToJSON(field))
+				fmt.Println(ToJSON(field))
 			}
 			_, ok := codes[field.StructFieldCode]
 			if ok {

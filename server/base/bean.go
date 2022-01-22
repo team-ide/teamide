@@ -1,10 +1,15 @@
 package base
 
+import (
+	"fmt"
+	"strings"
+)
+
 type OBean struct {
-	Text    string      `json:"text" column:"text"`
-	Value   interface{} `json:"value" column:"value"`
-	Comment string      `json:"comment" column:"comment"`
-	Color   string      `json:"color" column:"color"`
+	Text    string      `json:"text" column:"text,omitempty"`
+	Value   interface{} `json:"value" column:"value,omitempty"`
+	Comment string      `json:"comment" column:"comment,omitempty"`
+	Color   string      `json:"color" column:"color,omitempty"`
 }
 
 func NewOBean(text string, value interface{}) (res OBean) {
@@ -16,55 +21,64 @@ func NewOBean(text string, value interface{}) (res OBean) {
 }
 
 type UserTotalBean struct {
-	User       *UserEntity         `json:"user"`
-	Password   *UserPasswordEntity `json:"password"`
-	Persona    *UserPersonaBean    `json:"persona"`
-	Enterprise *UserEnterpriseBean `json:"enterprise"`
+	User       *UserEntity         `json:"user,omitempty"`
+	Password   *UserPasswordEntity `json:"password,omitempty"`
+	Persona    *UserPersonaBean    `json:"persona,omitempty"`
+	Enterprise *UserEnterpriseBean `json:"enterprise,omitempty"`
 }
 
 type UserPersonaBean struct {
-	Name   string  `json:"name"`
-	Age    int     `json:"age"`
-	Sex    int8    `json:"sex"`
-	Photo  string  `json:"photo"`
-	Height float32 `json:"height"`
-	Weight float32 `json:"weight"`
+	Name   string  `json:"name,omitempty"`
+	Age    int     `json:"age,omitempty"`
+	Sex    int8    `json:"sex,omitempty"`
+	Photo  string  `json:"photo,omitempty"`
+	Height float32 `json:"height,omitempty"`
+	Weight float32 `json:"weight,omitempty"`
 }
 
 type UserEnterpriseBean struct {
-	Name   string                  `json:"name"`
-	Salary float32                 `json:"salary"`
-	Orgs   []UserEnterpriseOrgBean `json:"orgs"`
+	Name   string                  `json:"name,omitempty"`
+	Salary float32                 `json:"salary,omitempty"`
+	Orgs   []UserEnterpriseOrgBean `json:"orgs,omitempty"`
 }
 
 type UserEnterpriseOrgBean struct {
-	Name     string `json:"name"`
-	Code     string `json:"code"`
-	Position string `json:"position"`
-}
-
-type SessionBean struct {
-	User *LoginUserBean `json:"user"`
-}
-
-type LoginUserBean struct {
-	UserId int64  `json:"userId"`
-	Name   string `json:"name"`
+	Name     string `json:"name,omitempty"`
+	Code     string `json:"code,omitempty"`
+	Position string `json:"position,omitempty"`
 }
 
 type InstallInfo struct {
-	Module string              `json:"module"`
-	Stages []*InstallStageInfo `json:"stages"`
+	Module string              `json:"module,omitempty"`
+	Stages []*InstallStageInfo `json:"stages,omitempty"`
 }
 
 type InstallStageInfo struct {
-	Stage    string   `json:"stage"`
-	SqlParam SqlParam `json:"sqlParam"`
+	Stage    string   `json:"stage,omitempty"`
+	SqlParam SqlParam `json:"sqlParam,omitempty"`
 }
 
 type SqlParam struct {
-	Sql    string        `json:"sql,omitempty"`
-	Params []interface{} `json:"params,omitempty"`
+	PageIndex   int64         `json:"pageIndex,omitempty"`
+	PageSize    int64         `json:"pageSize,omitempty"`
+	Sql         string        `json:"sql,omitempty"`
+	Params      []interface{} `json:"params,omitempty"`
+	CountSql    string        `json:"countSql,omitempty"`
+	CountParams []interface{} `json:"countParams,omitempty"`
+}
+
+func (this_ SqlParam) ToExecSql() string {
+	strs := strings.Split(this_.Sql, `?`)
+	res := ""
+	for index, str := range strs {
+		res += str
+		if index >= len(strs)-1 {
+			continue
+		}
+		param := this_.Params[index]
+		res += fmt.Sprint("'", param, "'")
+	}
+	return res
 }
 
 func NewSqlParam(sql_ string, params []interface{}) (sqlParam SqlParam) {

@@ -27,6 +27,12 @@ let server = {
             }
         });
     },
+    register(param) {
+        return http.post('api/register', param, {
+            headers: {
+            }
+        });
+    },
 };
 
 export default server;

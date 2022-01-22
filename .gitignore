@@ -1,2 +1,4 @@
-log
 .history
+*.log
+teamide
+teamide.exe

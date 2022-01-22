@@ -18,7 +18,14 @@ var (
 )
 
 const (
-	validateErrCode = "100001"
+	shouldLoginErrCode = "100"
+	noPowerErrCode     = "101"
+	validateErrCode    = "200"
+)
+
+var (
+	ShouldLoginError = NewBaseError(shouldLoginErrCode, "未检出到登录用户,请先登录!")
+	NoPowerError     = NewBaseError(noPowerErrCode, "暂无权限操作!")
 )
 
 func NewBaseError(code string, args ...interface{}) *baseError {

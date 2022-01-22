@@ -2,10 +2,11 @@ package component
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
-	"server/base"
-	"server/config"
+	"teamide/server/base"
+	"teamide/server/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -16,6 +17,10 @@ var (
 )
 
 func init() {
+
+	if config.Config.IsNative {
+		return
+	}
 	var service interface{}
 	var err error
 	databaseConfig := DatabaseConfig{
@@ -25,30 +30,23 @@ func init() {
 		Username: config.Config.Mysql.Username,
 		Password: config.Config.Mysql.Password,
 	}
-	base.Logger.Info(base.LogStr("数据库初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
+	Logger.Info(LogStr("数据库初始化:host:", databaseConfig.Host, ",port:", databaseConfig.Port, ",database:", databaseConfig.Database))
 	service, err = CreateMysqlService(databaseConfig)
 	if err != nil {
 		panic(err)
 	}
 	DB = *service.(*MysqlService)
 
-	_, err = DB.Exec(base.SqlParam{
-		Sql:    "SELECT 1 FROM " + base.TABLE_INSTALL,
-		Params: []interface{}{},
-	})
-	if err != nil {
-		panic(err)
-	}
-	base.Logger.Info(base.LogStr("数据库连接成功!"))
+	Logger.Info(LogStr("数据库连接成功!"))
 }
 
 type DatabaseConfig struct {
-	Type     string `json:"type"`
-	Host     string `json:"host"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Type     string `json:"type,omitempty"`
+	Host     string `json:"host,omitempty"`
+	Port     int32  `json:"port,omitempty"`
+	Database string `json:"database,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type MysqlService struct {
@@ -85,6 +83,77 @@ func (service *MysqlService) Close() (err error) {
 }
 
 func (service *MysqlService) InsertSqlByBean(table string, beans ...interface{}) (sqlParam base.SqlParam) {
+	params := []interface{}{}
+	if len(beans) == 0 {
+		return
+	}
+
+	refType := base.GetRefType(beans[0])
+
+	fieldCount := refType.NumField() // field count
+	insertColumns := ""
+
+	for i := 0; i < fieldCount; i++ {
+		fieldType := refType.Field(i) // field type
+		column := base.GetColumnNameByType(fieldType)
+		if column != "" {
+			insertColumns += column + ","
+		}
+	}
+	insertValuesList := []string{}
+	for _, bean := range beans {
+		refValue := base.GetRefValue(bean) // value
+		insertValues := ""
+		for i := 0; i < fieldCount; i++ {
+			fieldType := refType.Field(i)   // field type
+			fieldValue := refValue.Field(i) // field vlaue
+			column := base.GetColumnNameByType(fieldType)
+			if column == "" {
+				continue
+			}
+			value := base.GetFieldTypeValue(fieldType.Type, fieldValue)
+			switch fieldType.Type.Name() {
+			case "string":
+				if value == "" {
+					insertValues += "NULL,"
+					continue
+				}
+				insertValues += "?,"
+				params = append(params, value)
+			default:
+				if value == nil {
+					insertValues += "NULL,"
+					continue
+				} else if base.IsZero(value) {
+					insertValues += "NULL,"
+					continue
+				}
+				insertValues += "?,"
+				params = append(params, value)
+			}
+		}
+		if len(insertValues) > 0 {
+			insertValuesList = append(insertValuesList, insertValues)
+		}
+	}
+	if len(insertColumns) > 0 {
+		insertColumns = insertColumns[0 : len(insertColumns)-1]
+	}
+	sql := " INSERT INTO " + table + "(" + insertColumns + ") VALUES "
+	for i, values := range insertValuesList {
+		if i > 0 {
+			sql += ","
+		}
+		values = values[0 : len(values)-1]
+		sql += "("
+		sql += values
+		sql += ")"
+
+	}
+	return base.SqlParam{Sql: sql, Params: params}
+}
+
+func (service *MysqlService) UpdateSqlByBean(table string, keys []string, beans ...interface{}) (sqlParam base.SqlParam) {
 	params := []interface{}{}
 	if len(beans) == 0 {
 		return
@@ -230,7 +299,7 @@ func (service *MysqlService) ResultToBeans(rows *sql.Rows, newBean func() interf
 		}
 		err = rows.Scan(values...)
 		if err != nil {
-			base.Logger.Error(base.LogStr("ResultToBeans error:", err))
+			Logger.Error(LogStr("ResultToBeans error:", err))
 			return nil, err
 		}
 		refValue := base.GetRefValue(bean)
@@ -290,8 +359,8 @@ func (service *MysqlService) ResultToBeans(rows *sql.Rows, newBean func() interf
 func (service *MysqlService) Query(sqlParam base.SqlParam, newBean func() interface{}) (list []interface{}, err error) {
 	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Query sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Query sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	list, err = service.ResultToBeans(rows, newBean)
@@ -302,11 +371,36 @@ func (service *MysqlService) Query(sqlParam base.SqlParam, newBean func() interf
 	return
 }
 
+func (service *MysqlService) QueryOne(sqlParam base.SqlParam, newBean func() interface{}) (one interface{}, err error) {
+	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
+	if err != nil {
+		Logger.Error(LogStr("Query sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Query sql error , params:", base.ToJSON(sqlParam.Params)))
+		return
+	}
+	var list []interface{}
+	list, err = service.ResultToBeans(rows, newBean)
+	if err != nil {
+		return
+	}
+
+	if len(list) > 1 {
+		err = errors.New("the result contains multiple pieces of data")
+		return
+	}
+	if len(list) == 1 {
+		one = list[0]
+		return
+	}
+	rows.Close()
+	return
+}
+
 func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err error) {
 	rows, err := service.db.Query(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Count sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Count sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Count sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Count sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	if rows.Next() {
@@ -319,12 +413,38 @@ func (service *MysqlService) Count(sqlParam base.SqlParam) (count int64, err err
 	return
 }
 
+func (service *MysqlService) QueryPage(sqlParam base.SqlParam, newBean func() interface{}) (page *base.PageBean, err error) {
+	var total int64
+	total, err = service.Count(base.SqlParam{CountSql: sqlParam.CountSql, CountParams: sqlParam.CountParams})
+	if err != nil {
+		return
+	}
+	page = &base.PageBean{
+		Total:     total,
+		PageSize:  sqlParam.PageSize,
+		PageIndex: sqlParam.PageIndex,
+	}
+	if total > 0 {
+		page.Init()
+		if sqlParam.PageIndex > page.TotalPage {
+			var res interface{}
+			sqlParam.Sql += fmt.Sprint(" LIMIT ", (page.PageIndex-1)*page.PageSize, " , ", page.PageSize, " ")
+			res, err = service.Query(sqlParam, newBean)
+			if err != nil {
+				return
+			}
+			page.Value = res
+		}
+	}
+	return
+}
+
 func (service *MysqlService) Insert(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Insert sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Insert sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Insert sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Insert sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -337,8 +457,8 @@ func (service *MysqlService) Insert(sqlParam base.SqlParam) (rowsAffected int64,
 func (service *MysqlService) Update(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Update sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Update sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Update sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Update sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -351,8 +471,8 @@ func (service *MysqlService) Update(sqlParam base.SqlParam) (rowsAffected int64,
 func (service *MysqlService) Exec(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Exec sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Exec sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Exec sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Exec sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -365,8 +485,8 @@ func (service *MysqlService) Exec(sqlParam base.SqlParam) (rowsAffected int64, e
 func (service *MysqlService) Delete(sqlParam base.SqlParam) (rowsAffected int64, err error) {
 	result, err := service.db.Exec(sqlParam.Sql, sqlParam.Params...)
 	if err != nil {
-		base.Logger.Error(base.LogStr("Delete sql error , sql:", sqlParam.Sql))
-		base.Logger.Error(base.LogStr("Delete sql error , params:", base.ToJSON(sqlParam.Params)))
+		Logger.Error(LogStr("Delete sql error , sql:", sqlParam.Sql))
+		Logger.Error(LogStr("Delete sql error , params:", base.ToJSON(sqlParam.Params)))
 		return
 	}
 	rowsAffected, err = result.RowsAffected()
@@ -400,7 +520,21 @@ func (service *MysqlService) BatchInsertBean(table string, list []interface{}) (
 	return
 }
 
-func (service *MysqlService) QueryBean(table string, one interface{}, newBean func() interface{}) (users []*base.UserEntity, err error) {
+func (service *MysqlService) UpdateBean(table string, keys []string, one interface{}) (err error) {
+	if len(keys) == 0 {
+		err = errors.New("update bean keys cannot be empty!")
+	}
+	sqlParam := service.UpdateSqlByBean(table, keys, one)
+
+	_, err = service.Update(sqlParam)
+
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (service *MysqlService) QueryBean(table string, one interface{}, newBean func() interface{}) (res []interface{}, err error) {
 	sql := "SELECT * FROM " + table + " WHERE 1=1 "
 	params := []interface{}{}
 
@@ -408,16 +542,10 @@ func (service *MysqlService) QueryBean(table string, one interface{}, newBean fu
 
 	service.AppendWhere(one, &sqlParam)
 
-	var res []interface{}
-	_, err = service.Query(sqlParam, newBean)
+	res, err = service.Query(sqlParam, newBean)
 
 	if err != nil {
 		return
-	}
-	users = []*base.UserEntity{}
-	for _, one := range res {
-		user := one.(*base.UserEntity)
-		users = append(users, user)
 	}
 	return
 }

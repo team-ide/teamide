@@ -1,103 +1,124 @@
 package config
 
 import (
+	"io"
 	"os"
+	"strings"
+	"teamide/server/base"
 
-	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v2"
 )
 
-type TomlConfig struct {
-	Server    *server   `toml:"server"`
-	Redis     redis     `toml:"redis"`
-	Zookeeper zookeeper `toml:"zookeeper"`
-	Kafka     kafka     `toml:"kafka"`
-	Mysql     mysql     `toml:"mysql"`
-	Log       log       `toml:"log"`
+type ServerConfig struct {
+	IsNative  bool       `json:"-" yaml:"-"` // 是否是本机运行
+	Server    *server    `json:"server,omitempty" yaml:"server,omitempty"`
+	Redis     *redis     `json:"redis,omitempty" yaml:"redis,omitempty"`
+	Zookeeper *zookeeper `json:"zookeeper,omitempty" yaml:"zookeeper,omitempty"`
+	Mysql     *mysql     `json:"mysql,omitempty" yaml:"mysql,omitempty"`
+	Log       *log       `json:"log,omitempty" yaml:"log,omitempty"`
 }
 
 type server struct {
-	Host    string
-	Port    int
-	Context string
-	Data    string
+	Host    string `json:"host,omitempty" yaml:"host,omitempty"`
+	Port    int    `json:"port,omitempty" yaml:"port,omitempty"`
+	Context string `json:"context,omitempty" yaml:"context,omitempty"`
+	Data    string `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
 type redis struct {
-	Address string `json:"address"`
-	Auth    string `json:"auth"`
-	Prefix  string `json:"prefix"`
+	Address string `json:"address,omitempty" yaml:"address,omitempty"`
+	Auth    string `json:"auth,omitempty" yaml:"auth,omitempty"`
+	Prefix  string `json:"prefix,omitempty" yaml:"prefix,omitempty"`
 }
 
 type zookeeper struct {
-	Address   string `json:"address"`
-	Namespace string `json:"namespace"`
-}
-
-type kafka struct {
-	Address string `json:"address"`
-	Prefix  string `json:"prefix"`
+	Address   string `json:"address,omitempty" yaml:"address,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 type mysql struct {
-	Host     string `json:"host"`
-	Port     int32  `json:"port"`
-	Database string `json:"database"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Host     string `json:"host,omitempty" yaml:"host,omitempty"`
+	Port     int32  `json:"port,omitempty" yaml:"port,omitempty"`
+	Database string `json:"database,omitempty" yaml:"database,omitempty"`
+	Username string `json:"username,omitempty" yaml:"username,omitempty"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty"`
 }
 
 type log struct {
-	Filename   string
-	MaxSize    int
-	MaxAge     int
-	MaxBackups int
-	Level      string
+	Filename   string `json:"filename,omitempty" yaml:"filename,omitempty"`
+	MaxSize    int    `json:"maxSize,omitempty" yaml:"maxSize,omitempty"`
+	MaxAge     int    `json:"maxAge,omitempty" yaml:"maxAge,omitempty"`
+	MaxBackups int    `json:"maxBackups,omitempty" yaml:"maxBackups,omitempty"`
+	Level      string `json:"level,omitempty" yaml:"level,omitempty"`
 }
 
 var (
-	Config *TomlConfig
+	Config *ServerConfig = &ServerConfig{}
 )
 
 func init() {
-	path, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	filePath := path + "/./conf/config.toml"
+
+	filePath := base.BaseDir + "conf/config.yaml"
 	exists, err := PathExists(filePath)
 	if err != nil {
 		panic(err)
 	}
-	if !exists {
-		panic("配置文件[" + filePath + "]不存在")
+	if exists {
+		f, err := os.Open(filePath)
+		if err != nil {
+			panic(err)
+		}
+		bs, err := io.ReadAll(f)
+		if err != nil {
+			panic(err)
+		}
+		err = yaml.Unmarshal(bs, Config)
+		if err != nil {
+			panic(err)
+		}
 	}
-	if _, err := toml.DecodeFile(filePath, &Config); err != nil {
-		panic(err)
-	}
-	Config = formatConfig(Config)
+	formatConfig()
 }
 
 //格式化配置，填充默认值
-func formatConfig(config *TomlConfig) *TomlConfig {
-	if config == nil {
-		config = &TomlConfig{}
+func formatConfig() {
+
+	if Config.Mysql == nil {
+		Config.IsNative = true
 	}
-	if config.Server == nil {
-		config.Server = &server{}
+	if Config.Server != nil {
+		if Config.Server.Data == "" {
+			Config.Server.Data = base.BaseDir + "data"
+		} else {
+			Config.Server.Data = base.BaseDir + strings.TrimPrefix(Config.Server.Data, "./")
+		}
 	}
-	if config.Server.Host == "" {
-		config.Server.Host = "0.0.0.0"
+	if Config.Log == nil {
+		Config.Log = &log{
+			MaxSize:    100,
+			MaxAge:     7,
+			MaxBackups: 10,
+			Level:      "info",
+		}
 	}
-	if config.Server.Port == 0 {
-		config.Server.Port = 19000
+
+	if Config.Log.Filename == "" {
+		Config.Log.Filename = base.BaseDir + "log/server.log"
+	} else {
+		Config.Log.Filename = base.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
 	}
-	if config.Server.Context == "" {
-		config.Server.Context = "/teamide"
+
+	if !Config.IsNative {
+		if Config.Mysql == nil || Config.Mysql.Host == "" || Config.Mysql.Port == 0 {
+			panic("请检查MySql配置是否正确")
+		}
+		if Config.Redis == nil || Config.Redis.Address == "" {
+			panic("请检查Redis配置是否正确")
+		}
+		if Config.Zookeeper == nil || Config.Zookeeper.Address == "" {
+			panic("请检查Zookeeper配置是否正确")
+		}
 	}
-	if config.Server.Data == "" {
-		config.Server.Data = "./data"
-	}
-	return config
 }
 
 func GetFromSystem(key string) string {

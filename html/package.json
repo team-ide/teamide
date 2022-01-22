@@ -14,7 +14,7 @@
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
     "js-md5": "^0.7.3",
-    "teamide-ui": "^1.2.4",
+    "teamide-ui": "^1.2.7",
     "vue": "^2.6.11",
     "vue-router": "^3.5.1"
   },
@@ -23,6 +23,7 @@
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
+    "crypto-js": "^4.1.1",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "node-sass": "^4.14.1",
@@ -41,7 +42,9 @@
     "parserOptions": {
       "parser": "babel-eslint"
     },
-    "rules": {}
+    "rules": {
+      "no-unused-vars": "off"
+    }
   },
   "browserslist": [
     "> 1%",

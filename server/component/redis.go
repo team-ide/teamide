@@ -1,9 +1,8 @@
 package component
 
 import (
-	"server/base"
-	"server/config"
 	"strings"
+	"teamide/server/config"
 )
 
 var (
@@ -11,12 +10,16 @@ var (
 )
 
 func init() {
+	if config.Config.IsNative {
+		return
+	}
+
 	var service interface{}
 	var err error
 	address := config.Config.Redis.Address
 	auth := config.Config.Redis.Auth
 	cluster := strings.Contains(address, ";")
-	base.Logger.Info(base.LogStr("Redis初始化:address:", address))
+	Logger.Info(LogStr("Redis初始化:address:", address))
 	if cluster {
 		service, err = CreateRedisClusterService(address, auth)
 		if err != nil {
@@ -34,7 +37,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	base.Logger.Info(base.LogStr("Redis连接成功!"))
+	Logger.Info(LogStr("Redis连接成功!"))
 }
 
 type RedisService interface {
@@ -43,6 +46,7 @@ type RedisService interface {
 	GetString(key string) (value string, err error)
 	GetInt64(key string) (value int64, err error)
 	IncrBy(key string, num int64) (value int64, err error)
+	Expire(key string, second int64) (value int, err error)
 	Set(key string, value string) (err error)
 	SetInt64(key string, value int64) (err error)
 	Sadd(key string, value string) (err error)

@@ -3,7 +3,7 @@ package component
 import (
 	"errors"
 	"fmt"
-	"server/base"
+	"teamide/server/base"
 	"time"
 
 	redigo "github.com/gomodule/redigo/redis"
@@ -152,6 +152,21 @@ func (service *RedisPoolService) IncrBy(key string, num int64) (value int64, err
 	}
 	if reply != nil {
 		value, err = redigo.Int64(reply, err)
+	}
+
+	return
+}
+
+func (service *RedisPoolService) Expire(key string, second int64) (value int, err error) {
+	client := service.pool.Get()
+	defer client.Close()
+	var reply interface{}
+	reply, err = client.Do("expire", key, second*1000)
+	if err != nil {
+		return
+	}
+	if reply != nil {
+		value, err = redigo.Int(reply, err)
 	}
 
 	return

@@ -31,6 +31,10 @@ export default {
       this.toast("提示", info, "info");
     };
 
+    this.tool.success = (warn) => {
+      this.toast("提示", warn, "success");
+    };
+
     this.tool.warn = (warn) => {
       this.toast("警告", warn, "warning");
     };
@@ -45,8 +49,4 @@ export default {
 </script>
 
 <style>
-.login-box {
-  width: 100%;
-  height: 100%;
-}
 </style>

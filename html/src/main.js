@@ -31,6 +31,10 @@ Vue.use(tm)
 
 import { } from '@/component'
 
+import form from "@/form";
+
+Vue.prototype.form = form;
+
 new Vue({
   router,
   render: h => h(App),
