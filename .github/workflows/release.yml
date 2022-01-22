@@ -57,18 +57,18 @@ jobs:
       - run: go test -timeout 3600s -run ^TestStatic$ teamide/static
 
       # 打包Linux
-      - run: export GOARCH=amd64 && export GOOS=linux && go build -o ./release/$RELEASE_DIR_NAME-linux-x64/teamide
-      - run: cp -rf release/conf release/$RELEASE_DIR_NAME-linux-x64/
-      - run: cp -rf release/README.md release/$RELEASE_DIR_NAME-linux-x64/
-      - run: cp -rf release/RELEASE.md release/$RELEASE_DIR_NAME-linux-x64/
-      - run: cd release && zip -q -r $RELEASE_DIR_NAME-linux-x64.zip $RELEASE_DIR_NAME-linux-x64
+      - run: export GOARCH=amd64 && export GOOS=linux && go build -o `release/$RELEASE_DIR_NAME-linux-x64/teamide`
+      - run: cp -rf release/conf `release/$RELEASE_DIR_NAME-linux-x64/`
+      - run: cp -rf release/README.md `release/$RELEASE_DIR_NAME-linux-x64/`
+      - run: cp -rf release/RELEASE.md `release/$RELEASE_DIR_NAME-linux-x64/`
+      - run: cd release && zip -q -r `$RELEASE_DIR_NAME-linux-x64.zip` `$RELEASE_DIR_NAME-linux-x64`
 
       # 打包Window
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o ./release/$RELEASE_DIR_NAME-windows-x64/teamide.exe
-      - run: cp -rf release/conf release/$RELEASE_DIR_NAME-windows-x64/
-      - run: cp -rf release/README.md release/$RELEASE_DIR_NAME-windows-x64/
-      - run: cp -rf release/RELEASE.md release/$RELEASE_DIR_NAME-windows-x64/
-      - run: cd release && zip -q -r $RELEASE_DIR_NAME-windows-x64.zip $RELEASE_DIR_NAME-windows-x64
+      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui" -o `release/$RELEASE_DIR_NAME-windows-x64/teamide.exe`
+      - run: cp -rf release/conf `release/$RELEASE_DIR_NAME-windows-x64/`
+      - run: cp -rf release/README.md `release/$RELEASE_DIR_NAME-windows-x64/`
+      - run: cp -rf release/RELEASE.md `release/$RELEASE_DIR_NAME-windows-x64/`
+      - run: cd release && zip -q -r `$RELEASE_DIR_NAME-windows-x64.zip` `$RELEASE_DIR_NAME-windows-x64`
 
       # 打包MAC
       # - run: export GOARCH=amd64 && export GOOS=darwin && go build -o ./release/$RELEASE_DIR_NAME-darwin-x64/teamide
