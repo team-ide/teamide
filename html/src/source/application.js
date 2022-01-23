@@ -15,7 +15,7 @@ application.groups = [
     {
         name: "structs", text: "结构体",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "表", name: "table" },
             { text: "父", name: "parent" },
@@ -49,14 +49,14 @@ application.groups = [
     {
         name: "services", text: "服务接口",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
         ],
     },
     {
         name: "constants", text: "常量",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "数据类型", name: "dataType" },
             { text: "值", name: "value" },
@@ -66,7 +66,7 @@ application.groups = [
     {
         name: "errors", text: "错误码",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "错误码", name: "code" },
             { text: "错误信息", name: "msg" },
@@ -75,14 +75,14 @@ application.groups = [
     {
         name: "tests", text: "测试",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
         ],
     },
     {
         name: "dictionaries", text: "数据字典",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             {
                 text: "选项", name: "options", isList: true,
@@ -98,7 +98,7 @@ application.groups = [
     {
         name: "serverWebs", text: "Web服务",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "Host", name: "host" },
             { text: "Port", name: "port" },
@@ -119,7 +119,7 @@ application.groups = [
     {
         name: "datasourceDatabases", text: "Database数据源",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "类型", name: "type" },
             { text: "Host", name: "host" },
@@ -132,7 +132,7 @@ application.groups = [
     {
         name: "datasourceRedises", text: "Redis数据源",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "Redis地址", name: "address" },
             { text: "密码", name: "auth" },
@@ -142,7 +142,7 @@ application.groups = [
     {
         name: "datasourceKafkas", text: "Kafka数据源",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "Kafka地址", name: "address" },
             { text: "前缀", name: "prefix", comment: "如果配置，所有topic将自动拼接该前缀", },
@@ -151,7 +151,7 @@ application.groups = [
     {
         name: "datasourceZookeepers", text: "Zookeeper数据源",
         fields: [
-            { text: "名称", name: "name" },
+            { text: "名称", name: "name", readonly: true, },
             { text: "注释", name: "comment" },
             { text: "Zookeeper地址", name: "address" },
             { text: "命名空间", name: "namespace", comment: "如果配置，则所有路径将放在该命名空间下", },

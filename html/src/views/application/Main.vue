@@ -30,8 +30,9 @@
           >
             <ModelEditor
               :source="source"
-              :config="one.config"
-              :bean="one.config.model"
+              :group="one.group"
+              :model="one.model"
+              @change="onModelChange"
             ></ModelEditor>
           </div>
         </template>
@@ -57,6 +58,10 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
+    async onModelChange(group, model) {
+      let flag = await this.application.saveModel(group, model);
+      return flag;
+    },
     toSelectTab(tab) {
       this.doActiveTab(tab);
     },
@@ -128,12 +133,10 @@ export default {
           name,
           text,
           title,
+          model,
+          group,
         };
         tab.active = false;
-        tab.config = {
-          model: model,
-          fields: group.fields,
-        };
       }
       return tab;
     },

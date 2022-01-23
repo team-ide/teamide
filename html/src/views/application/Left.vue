@@ -258,6 +258,24 @@ export default {
         this.openGroup(group);
       }
     },
+    async saveModel(group, model) {
+      let context = Object.assign({}, this.context);
+      context[group.name] = context[group.name] || [];
+
+      let find;
+      context[group.name].forEach((one) => {
+        if (one.name == model.name) {
+          find = one;
+        }
+      });
+      if (find == null) {
+        this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
+        return false;
+      }
+      context[group.name].splice(context[group.name].indexOf(find), 1, model);
+
+      await this.doSave(context);
+    },
     async doSave(context) {
       let res = await this.server.application.context.save({
         appName: this.app.name,
@@ -273,7 +291,9 @@ export default {
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {},
+  mounted() {
+    this.application.saveModel = this.saveModel;
+  },
 };
 </script>
 

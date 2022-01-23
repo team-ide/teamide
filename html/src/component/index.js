@@ -27,4 +27,12 @@ Vue.component('NoPower', NoPower);
 import ModelEditor from './modelEditor/Index.vue'
 Vue.component('ModelEditor', ModelEditor);
 
+import ModelEditorField from './modelEditor/Field.vue'
+Vue.component('ModelEditorField', ModelEditorField);
+
+import ModelEditorFieldBean from './modelEditor/FieldBean.vue'
+Vue.component('ModelEditorFieldBean', ModelEditorFieldBean);
+
+import ModelEditorFieldList from './modelEditor/FieldList.vue'
+Vue.component('ModelEditorFieldList', ModelEditorFieldList);
 export default {};

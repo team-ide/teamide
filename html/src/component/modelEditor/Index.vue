@@ -1,92 +1,34 @@
 <template>
-  <div class="model-editor" v-if="config != null && config.fields != null">
-    <ul>
-      <template v-for="(one, index) in config.fields">
-        <li :key="'field-' + index">
-          <template v-if="tool.isNotEmpty(one.text)">
-            <div class="text">{{ one.text }}</div>
-          </template>
-
-          <template v-if="one.fields == null">
-            <template v-if="tool.isEmpty(one.type) || one.type == 'text'">
-              <div class="input">
-                <Input :bean="bean" :name="one.name"></Input>
-              </div>
-            </template>
-          </template>
-
-          <template v-if="tool.isNotEmpty(one.comment)">
-            <div class="comment">{{ one.comment }}</div>
-          </template>
-        </li>
+  <div class="model-editor" v-if="group != null && group.fields != null">
+    <ul v-if="data != null">
+      <template v-for="(one, index) in group.fields">
+        <ModelEditorField
+          :key="'field-' + index"
+          :source="source"
+          :field="one"
+          :bean="data"
+          :wrap="wrap"
+        >
+        </ModelEditorField>
+        <template v-if="one.fields != null && !one.isList">
+          <ModelEditorFieldBean
+            :key="'field-bean-' + index"
+            :source="source"
+            :field="one"
+            :bean="data"
+            :wrap="wrap"
+          >
+          </ModelEditorFieldBean>
+        </template>
         <template v-if="one.fields != null && one.isList">
-          <li :key="'field-table-' + index" class="pdl-10 mgtb-10">
-            <table>
-              <thead>
-                <tr>
-                  <template v-for="(sub, subIndex) in one.fields">
-                    <th
-                      :key="'field-table-th-' + subIndex"
-                      :width="tool.isEmpty(sub.width) ? 60 : sub.width"
-                    >
-                      {{ sub.text }}
-                    </th>
-                  </template>
-                  <th>
-                    <div class="btn-group">
-                      <div
-                        class="tm-link color-green mgr-5"
-                        @click="toUpdate(group, model)"
-                        title="添加"
-                      >
-                        <b-icon icon="plus-circle-fill"></b-icon>
-                      </div>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <template v-for="(sub, subIndex) in one.fields">
-                    <td :key="'field-table-td-' + subIndex">
-                      <template
-                        v-if="tool.isEmpty(sub.type) || sub.type == 'text'"
-                      >
-                        <div class="input">
-                          <Input :bean="bean" :name="sub.name"></Input>
-                        </div>
-                      </template>
-                    </td>
-                  </template>
-                  <td>
-                    <div class="btn-group">
-                      <div
-                        class="tm-link mgr-5"
-                        @click="toUpdate(group, model)"
-                        title="上移"
-                      >
-                        <b-icon icon="caret-up-fill" class="ft-13"></b-icon>
-                      </div>
-                      <div
-                        class="tm-link mgr-5"
-                        @click="toUpdate(group, model)"
-                        title="下移"
-                      >
-                        <b-icon icon="caret-down-fill" class="ft-13"></b-icon>
-                      </div>
-                      <div
-                        class="tm-link mgr-5"
-                        @click="toUpdate(group, model)"
-                        title="删除"
-                      >
-                        <b-icon icon="backspace-fill" class="ft-13"></b-icon>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </li>
+          <ModelEditorFieldList
+            :key="'field-list-' + index"
+            :source="source"
+            :field="one"
+            :bean="data"
+            :wrap="wrap"
+          >
+          </ModelEditorFieldList>
         </template>
       </template>
     </ul>
@@ -95,25 +37,101 @@
 
 
 <script>
-import Input from "./Input.vue";
-
 export default {
-  components: { Input },
-  props: ["source", "bean", "config"],
+  components: {},
+  props: ["source", "model", "group"],
   data() {
     return {
       key: this.tool.getNumber(),
+      wrap: {},
+      data: null,
+      ready: false,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    model(newModel, oldModel) {
+      this.initData();
+    },
+  },
   methods: {
-    init() {},
+    init() {
+      this.set(JSON.parse(JSON.stringify(this.model || {})));
+    },
+    initData() {
+      this.set(JSON.parse(JSON.stringify(this.data || {})));
+    },
+    get() {
+      return this.data;
+    },
+    set(data) {
+      this.data = data;
+    },
+    refresh() {
+      this.initData();
+    },
+    onChange(bean, name, value) {
+      bean = bean || {};
+      bean[name] = value;
+      this.toCallChange();
+    },
+    push(bean, name, value) {
+      bean = bean || {};
+      bean[name] = bean[name] || [];
+      value = value || {};
+      bean[name].push(value);
+      this.toCallChange();
+    },
+    del(bean, name, value) {
+      bean = bean || {};
+      bean[name] = bean[name] || [];
+      value = value || {};
+      let index = bean[name].indexOf(value);
+      if (index >= 0) {
+        bean[name].splice(index, 1);
+        this.toCallChange();
+      }
+    },
+    up(bean, name, value) {
+      bean = bean || {};
+      bean[name] = bean[name] || [];
+      value = value || {};
+      let index = bean[name].indexOf(value);
+      if (index > 0) {
+        bean[name].splice(index, 1);
+        bean[name].splice(index - 1, 0, value);
+        this.toCallChange();
+      }
+    },
+    down(bean, name, value) {
+      bean = bean || {};
+      bean[name] = bean[name] || [];
+      value = value || {};
+      let index = bean[name].indexOf(value);
+      if (index >= 0 && index < bean[name].length - 1) {
+        bean[name].splice(index, 1);
+        bean[name].splice(index + 1, 0, value);
+        this.toCallChange();
+      }
+    },
+    toCallChange() {
+      let change_model = JSON.parse(JSON.stringify(this.data));
+      // console.log(this.data);
+      this.last_change_model = change_model;
+      this.$emit("change", this.group, change_model);
+    },
   },
   // 在实例创建完成后被立即调用
-  created() {},
+  created() {
+    this.wrap.push = this.push;
+    this.wrap.del = this.del;
+    this.wrap.up = this.up;
+    this.wrap.down = this.down;
+    this.wrap.onChange = this.onChange;
+    this.wrap.refresh = this.refresh;
+  },
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
     this.init();
