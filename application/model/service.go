@@ -35,8 +35,6 @@ func TextToServiceModel(namePath string, text string) (model *ServiceModel, err 
 	}
 	for key, value := range modelMap {
 		switch key {
-		case "comment":
-			model.Comment = value.(string)
 		case "api":
 			api := &ServiceApi{}
 			err = base.ToBean([]byte(base.ToJSON(value)), api)
@@ -44,11 +42,13 @@ func TextToServiceModel(namePath string, text string) (model *ServiceModel, err 
 				return
 			}
 			model.Api = api
+			delete(modelMap, "api")
 		case "inVariables":
 			model.InVariables, err = getVariablesByValue(value)
 			if err != nil {
 				return
 			}
+			delete(modelMap, "inVariables")
 		case "outVariable":
 			outVariable := &VariableModel{}
 			err = base.ToBean([]byte(base.ToJSON(value)), outVariable)
@@ -56,13 +56,21 @@ func TextToServiceModel(namePath string, text string) (model *ServiceModel, err 
 				return
 			}
 			model.OutVariable = outVariable
+			delete(modelMap, "outVariable")
 		case "steps":
 			model.Steps, err = getStepsByValue(value)
 			if err != nil {
 				return
 			}
+			delete(modelMap, "steps")
 		}
 	}
+
+	err = base.ToBean([]byte(base.ToJSON(modelMap)), model)
+	if err != nil {
+		return
+	}
+
 	return
 }
 

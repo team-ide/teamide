@@ -24,4 +24,7 @@ Vue.component('ShouldLogin', ShouldLogin);
 import NoPower from './NoPower.vue'
 Vue.component('NoPower', NoPower);
 
+import ModelEditor from './modelEditor/Index.vue'
+Vue.component('ModelEditor', ModelEditor);
+
 export default {};
