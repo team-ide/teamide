@@ -5,13 +5,13 @@ import (
 )
 
 type TestModel struct {
-	Name           string        `json:"name,omitempty" yaml:"name,omitempty"`                 // 名称，同一个应用中唯一
-	Comment        string        `json:"comment,omitempty" yaml:"name,omitempty"`              // 注释说明
-	Description    string        `json:"description,omitempty" yaml:"description,omitempty"`   // 注释说明
-	ThreadNumber   int           `json:"threadNumber,omitempty" yaml:"threadNumber,omitempty"` // 线程数量
-	ForNumber      int           `json:"forNumber,omitempty" yaml:"forNumber,omitempty"`       // 循环次数
-	Steps          []ServiceStep `json:"steps,omitempty" yaml:"steps,omitempty"`
-	TestJavascript string        `json:"-" yaml:"-"` // Javascript
+	Name           string       `json:"name,omitempty" yaml:"name,omitempty"`                 // 名称，同一个应用中唯一
+	Comment        string       `json:"comment,omitempty" yaml:"name,omitempty"`              // 注释说明
+	Description    string       `json:"description,omitempty" yaml:"description,omitempty"`   // 注释说明
+	ThreadNumber   int          `json:"threadNumber,omitempty" yaml:"threadNumber,omitempty"` // 线程数量
+	ForNumber      int          `json:"forNumber,omitempty" yaml:"forNumber,omitempty"`       // 循环次数
+	Steps          []ActionStep `json:"steps,omitempty" yaml:"steps,omitempty"`
+	TestJavascript string       `json:"-" yaml:"-"` // Javascript
 }
 
 func TextToTestModel(namePath string, text string) (model *TestModel, err error) {

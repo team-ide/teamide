@@ -15,18 +15,18 @@ type SqlInsertColumn struct {
 	IgnoreEmpty   bool   `json:"ignoreEmpty,omitempty" yaml:"ignoreEmpty,omitempty"`     // 忽略空值，如果忽略，则值是null、空字符串、0不设值
 }
 
-type ServiceStepSqlInsert struct {
-	Base *ServiceStepBase
+type ActionStepSqlInsert struct {
+	Base *ActionStepBase
 
 	SqlInsert        *SqlInsert `json:"sqlInsert,omitempty" yaml:"sqlInsert,omitempty"`               // 执行 SQL INSERT 操作
 	VariableName     string     `json:"variableName,omitempty" yaml:"variableName,omitempty"`         // 变量名称
 	VariableDataType string     `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` // 变量数据类型
 }
 
-func (this_ *ServiceStepSqlInsert) GetBase() *ServiceStepBase {
+func (this_ *ActionStepSqlInsert) GetBase() *ActionStepBase {
 	return this_.Base
 }
 
-func (this_ *ServiceStepSqlInsert) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepSqlInsert) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }

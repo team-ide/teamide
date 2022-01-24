@@ -22,7 +22,7 @@ var (
 func init() {
 	parseCallMap = make(map[string]func(parseInfo *ParseInfo, prefixName string, args []interface{}) (err error))
 	parseCallMap["addDataInfo"] = parseAddDataInfo
-	parseCallMap["service"] = parseService
+	parseCallMap["action"] = parseAction
 }
 
 func parseAddDataInfo(parseInfo *ParseInfo, _ string, args []interface{}) (err error) {
@@ -70,17 +70,17 @@ func parseAddDataInfo(parseInfo *ParseInfo, _ string, args []interface{}) (err e
 	return
 }
 
-func parseService(parseInfo *ParseInfo, prefixName string, args []interface{}) (err error) {
-	callServiceName := args[0].(string)
-	callService := parseInfo.App.GetContext().GetService(callServiceName)
-	if callService == nil {
-		err = base.NewErrorServiceIsNull("call service [", callServiceName, "] not defind")
+func parseAction(parseInfo *ParseInfo, prefixName string, args []interface{}) (err error) {
+	callActionName := args[0].(string)
+	callAction := parseInfo.App.GetContext().GetAction(callActionName)
+	if callAction == nil {
+		err = base.NewErrorActionIsNull("call action [", callActionName, "] not defind")
 		return
 	}
-	// for index, callVariable := range callService.InVariables {
+	// for index, callVariable := range callAction.InVariables {
 	// 	value := args[index+1].(string)
 	// 	if base.IsNotEmpty(value) && value != callVariable.Name {
-	// 		fmt.Println("callService [", callServiceName, "]")
+	// 		fmt.Println("callAction [", callActionName, "]")
 	// 		fmt.Println("call arg [", callVariable.Name, "] use [", value, "]")
 	// 		var dataInfo *common.InvokeDataInfo
 	// 		dataInfo, err = parseInfo.InvokeNamespace.GetDataInfo( value)
@@ -98,11 +98,11 @@ func parseService(parseInfo *ParseInfo, prefixName string, args []interface{}) (
 	// }
 
 	var javascript string
-	javascript, err = common.GetServiceJavascriptByService(parseInfo.App, callService)
+	javascript, err = common.GetActionJavascriptByAction(parseInfo.App, callAction)
 	if err != nil {
 		return
 	}
-	// if callService.Name == "user/batchInsert" {
+	// if callAction.Name == "user/batchInsert" {
 	// 	fmt.Println(javascript)
 	// }
 	functionParser := NewFunctionParser(javascript)

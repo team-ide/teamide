@@ -48,7 +48,7 @@ func (this_ *FileInfo) GetReader() (reader io.Reader, err error) {
 	return
 }
 
-func getServiceStepFileSaveByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepFileSaveByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -64,17 +64,17 @@ func getServiceStepFileSaveByMap(value interface{}) (step ServiceStep, err error
 			err = errors.New(fmt.Sprint("[", v, "] to file save error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step file save error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step file save error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepFileSave{}
+	step = &ActionStepFileSave{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepFileGetByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepFileGetByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -90,12 +90,12 @@ func getServiceStepFileGetByMap(value interface{}) (step ServiceStep, err error)
 			err = errors.New(fmt.Sprint("[", v, "] to file get error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step file get error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step file get error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepFileGet{}
+	step = &ActionStepFileGet{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }

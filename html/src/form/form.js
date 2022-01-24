@@ -80,7 +80,7 @@ let model = {
                     message: `模型名称不能为空!`
                 },
                 {
-                    pattern: /^[a-zA-Z0-9_]+$/,
+                    pattern: /^[a-zA-Z0-9_/]+$/,
                     message: `模型名称只能包含数字、字母、下划线!`
                 },
 

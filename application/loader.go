@@ -64,14 +64,14 @@ func (this_ *ContextLoader) Load() (context *model.ModelContext, err error) {
 				return
 			}
 			context.AppendStruct(one)
-		} else if strings.Index(namePath, "service/") == 0 {
-			var one *model.ServiceModel
-			one, err = model.TextToServiceModel(strings.TrimPrefix(namePath, "service/"), text)
+		} else if strings.Index(namePath, "action/") == 0 {
+			var one *model.ActionModel
+			one, err = model.TextToActionModel(strings.TrimPrefix(namePath, "action/"), text)
 			if err != nil {
-				fmt.Println("to service model error:", err)
+				fmt.Println("to action model error:", err)
 				return
 			}
-			context.AppendService(one)
+			context.AppendAction(one)
 		} else if strings.Index(namePath, "test/") == 0 {
 			var one *model.TestModel
 			one, err = model.TextToTestModel(strings.TrimPrefix(namePath, "test/"), text)

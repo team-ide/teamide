@@ -110,30 +110,30 @@ func (this_ *ContextDoc) getApiWebContent(serverWeb *model.ServerWebModel) (cont
 	appendLine(&content, "### 访问路径")
 	appendLine(&content, "> "+url)
 	appendLine(&content, "")
-	err = this_.appendServiceApiWebTokenContent(serverWeb, &content)
+	err = this_.appendActionApiWebTokenContent(serverWeb, &content)
 	if err != nil {
 		return
 	}
-	for _, one := range this_.App.GetContext().Services {
+	for _, one := range this_.App.GetContext().Actions {
 		if one.Api == nil || one.Api.Request == nil {
 			continue
 		}
-		err = this_.appendServiceApiWebContent(one, &content)
+		err = this_.appendActionApiWebContent(one, &content)
 		if err != nil {
-			fmt.Println("service [", one.Name, "] api error:", err)
+			fmt.Println("action [", one.Name, "] api error:", err)
 			return
 		}
 	}
 	return
 }
 
-func (this_ *ContextDoc) appendServiceApiWebTokenContent(serverWeb *model.ServerWebModel, content *string) (err error) {
+func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model.ServerWebModel, content *string) (err error) {
 	if serverWeb.Token == nil {
 		return
 	}
-	tokenValidateService := this_.App.GetContext().GetService(serverWeb.Token.ValidateService)
-	if tokenValidateService == nil {
-		err = base.NewError("", "token validata service [", serverWeb.Token.ValidateService, "] not defind")
+	tokenValidateAction := this_.App.GetContext().GetAction(serverWeb.Token.ValidateAction)
+	if tokenValidateAction == nil {
+		err = base.NewError("", "token validata action [", serverWeb.Token.ValidateAction, "] not defind")
 		return
 	}
 
@@ -146,7 +146,7 @@ func (this_ *ContextDoc) appendServiceApiWebTokenContent(serverWeb *model.Server
 	appendLine(content, "> "+strings.ReplaceAll(serverWeb.Token.Exclude, ",", " , "))
 	appendLine(content, "")
 
-	paths := getRequestPath(tokenValidateService)
+	paths := getRequestPath(tokenValidateAction)
 	if len(paths) > 0 {
 		appendLine(content, "#### 路径参数（Path）")
 		appendLine(content, "")
@@ -159,7 +159,7 @@ func (this_ *ContextDoc) appendServiceApiWebTokenContent(serverWeb *model.Server
 
 	}
 
-	params := getRequestParam(tokenValidateService)
+	params := getRequestParam(tokenValidateAction)
 	if len(params) > 0 {
 		appendLine(content, "#### 请求参数（URL）")
 		appendLine(content, "")
@@ -171,7 +171,7 @@ func (this_ *ContextDoc) appendServiceApiWebTokenContent(serverWeb *model.Server
 		appendLine(content, "")
 	}
 
-	headers := getRequestHeader(tokenValidateService)
+	headers := getRequestHeader(tokenValidateAction)
 	if len(headers) > 0 {
 		appendLine(content, "#### 请求头（Header）")
 		appendLine(content, "")
@@ -183,43 +183,43 @@ func (this_ *ContextDoc) appendServiceApiWebTokenContent(serverWeb *model.Server
 		appendLine(content, "")
 	}
 
-	tokenCreateService := this_.App.GetContext().GetService(serverWeb.Token.CreateService)
-	if tokenCreateService == nil {
-		err = base.NewError("", "token create service [", serverWeb.Token.CreateService, "] not defind")
+	tokenCreateAction := this_.App.GetContext().GetAction(serverWeb.Token.CreateAction)
+	if tokenCreateAction == nil {
+		err = base.NewError("", "token create action [", serverWeb.Token.CreateAction, "] not defind")
 		return
 	}
-	err = this_.appendServiceApiWebContent(tokenCreateService, content)
+	err = this_.appendActionApiWebContent(tokenCreateAction, content)
 	if err != nil {
 		return
 	}
 	return
 }
-func getRequestHeader(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestHeader(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_HEADER {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestBody(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestBody(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if base.IsEmpty(one.DataPlace) || model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_BODY {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestFile(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestFile(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_FILE {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestForm(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestForm(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_FORM {
 			res = append(res, one)
 		}
@@ -227,8 +227,8 @@ func getRequestForm(service *model.ServiceModel) (res []*model.VariableModel) {
 	return
 }
 
-func getRequestParam(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestParam(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_PARAM {
 			res = append(res, one)
 		}
@@ -236,8 +236,8 @@ func getRequestParam(service *model.ServiceModel) (res []*model.VariableModel) {
 	return
 }
 
-func getRequestPath(service *model.ServiceModel) (res []*model.VariableModel) {
-	for _, one := range service.InVariables {
+func getRequestPath(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
 		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_PATH {
 			res = append(res, one)
 		}
@@ -245,10 +245,10 @@ func getRequestPath(service *model.ServiceModel) (res []*model.VariableModel) {
 	return
 }
 
-func (this_ *ContextDoc) appendServiceApiWebContent(service *model.ServiceModel, content *string) (err error) {
+func (this_ *ContextDoc) appendActionApiWebContent(action *model.ActionModel, content *string) (err error) {
 
 	var webApiJavascript string
-	webApiJavascript, err = common.GetWebApiJavascriptByService(this_.App, service, true)
+	webApiJavascript, err = common.GetWebApiJavascriptByAction(this_.App, action, true)
 	if err != nil {
 		return
 	}
@@ -267,27 +267,27 @@ func (this_ *ContextDoc) appendServiceApiWebContent(service *model.ServiceModel,
 	if err != nil {
 		return
 	}
-	if base.IsEmpty(service.Comment) {
-		appendLine(content, fmt.Sprint("### ", service.Name, ""))
+	if base.IsEmpty(action.Comment) {
+		appendLine(content, fmt.Sprint("### ", action.Name, ""))
 	} else {
-		appendLine(content, fmt.Sprint("### ", service.Comment, ""))
+		appendLine(content, fmt.Sprint("### ", action.Comment, ""))
 	}
 	appendLine(content, "")
 
-	if base.IsNotEmpty(service.Comment) || base.IsNotEmpty(service.Description) {
+	if base.IsNotEmpty(action.Comment) || base.IsNotEmpty(action.Description) {
 		appendLine(content, "#### 接口功能")
 		appendLine(content, "")
-		if base.IsEmpty(service.Description) {
-			appendLine(content, "> "+service.Comment)
+		if base.IsEmpty(action.Description) {
+			appendLine(content, "> "+action.Comment)
 		} else {
-			appendLine(content, "> "+service.Description)
+			appendLine(content, "> "+action.Description)
 		}
 		appendLine(content, "")
 	}
 
 	appendLine(content, "#### 请求地址")
 	appendLine(content, "")
-	requestPath := service.Api.Request.Path
+	requestPath := action.Api.Request.Path
 	if !strings.HasPrefix(requestPath, "/") {
 		requestPath = "/" + requestPath
 	}
@@ -296,19 +296,19 @@ func (this_ *ContextDoc) appendServiceApiWebContent(service *model.ServiceModel,
 
 	appendLine(content, "#### 请求方式")
 	appendLine(content, "")
-	if base.IsEmpty(service.Api.Request.Method) {
+	if base.IsEmpty(action.Api.Request.Method) {
 		appendLine(content, "> POST")
 	} else {
-		appendLine(content, "> "+service.Api.Request.Method)
+		appendLine(content, "> "+action.Api.Request.Method)
 	}
 	appendLine(content, "")
 
-	err = this_.appendInVariable(service, content, parseInfo)
+	err = this_.appendInVariable(action, content, parseInfo)
 	if err != nil {
 		return
 	}
 
-	err = this_.appendOutVariable(service, content, parseInfo)
+	err = this_.appendOutVariable(action, content, parseInfo)
 	if err != nil {
 		return
 	}
@@ -318,9 +318,9 @@ func (this_ *ContextDoc) appendServiceApiWebContent(service *model.ServiceModel,
 	return
 }
 
-func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
+func (this_ *ContextDoc) appendInVariable(action *model.ActionModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
 
-	paths := getRequestPath(service)
+	paths := getRequestPath(action)
 	if len(paths) > 0 {
 		appendLine(content, "#### 路径参数（Path）")
 		appendLine(content, "")
@@ -333,7 +333,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 
 	}
 
-	params := getRequestParam(service)
+	params := getRequestParam(action)
 	if len(params) > 0 {
 		appendLine(content, "#### 请求参数（URL）")
 		appendLine(content, "")
@@ -345,7 +345,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 		appendLine(content, "")
 	}
 
-	headers := getRequestHeader(service)
+	headers := getRequestHeader(action)
 	if len(headers) > 0 {
 		appendLine(content, "#### 请求头（Header）")
 		appendLine(content, "")
@@ -357,7 +357,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 		appendLine(content, "")
 	}
 
-	forms := getRequestForm(service)
+	forms := getRequestForm(action)
 	if len(forms) > 0 {
 		appendLine(content, "#### 请求表单（Form）")
 		appendLine(content, "")
@@ -369,7 +369,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 		appendLine(content, "")
 	}
 
-	files := getRequestFile(service)
+	files := getRequestFile(action)
 	if len(files) > 0 {
 		appendLine(content, "#### 表单文件（Form）")
 		appendLine(content, "")
@@ -381,7 +381,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 		appendLine(content, "")
 	}
 
-	bodys := getRequestBody(service)
+	bodys := getRequestBody(action)
 	if len(bodys) > 0 {
 		var dataInfos []*common.InvokeDataInfo
 		for _, one := range parseInfo.InvokeNamespace.DataInfos {
@@ -393,7 +393,7 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 		}
 
 		var json string = ""
-		err = this_.appendInJSONDataInfos(service, &json, dataInfos, 0)
+		err = this_.appendInJSONDataInfos(action, &json, dataInfos, 0)
 		if err != nil {
 			return
 		}
@@ -411,18 +411,18 @@ func (this_ *ContextDoc) appendInVariable(service *model.ServiceModel, content *
 	return
 }
 
-func (this_ *ContextDoc) appendOutVariable(service *model.ServiceModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
+func (this_ *ContextDoc) appendOutVariable(action *model.ActionModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
 
 	// 输出文件
-	if service.Api.Response != nil && (service.Api.Response.DownloadFile || service.Api.Response.OpenFile) {
-		if service.Api.Response.DownloadFile {
+	if action.Api.Response != nil && (action.Api.Response.DownloadFile || action.Api.Response.OpenFile) {
+		if action.Api.Response.DownloadFile {
 			appendLine(content, "#### 下载文件")
 			appendLine(content, "")
 			appendLine(content, "```")
 			appendLine(content, "文件流")
 			appendLine(content, "```")
 			appendLine(content, "")
-		} else if service.Api.Response.OpenFile {
+		} else if action.Api.Response.OpenFile {
 			appendLine(content, "#### 打开文件")
 			appendLine(content, "")
 			appendLine(content, "```")
@@ -436,15 +436,15 @@ func (this_ *ContextDoc) appendOutVariable(service *model.ServiceModel, content 
 	json += "{\n"
 	json += `  "code": "0",` + " // 错误码\n"
 	json += `  "msg": "", // 错误信息` + "\n"
-	if service.OutVariable != nil {
+	if action.OutVariable != nil {
 		var outDataInfo *common.InvokeDataInfo
 		for _, one := range parseInfo.InvokeNamespace.DataInfos {
-			if one.Name == service.OutVariable.Name {
+			if one.Name == action.OutVariable.Name {
 				outDataInfo = one
 				break
 			}
 		}
-		err = this_.appendJSONDataInfo(service, &json, "value", outDataInfo, true, true, 1)
+		err = this_.appendJSONDataInfo(action, &json, "value", outDataInfo, true, true, 1)
 		if err != nil {
 			return
 		}
@@ -463,7 +463,7 @@ func (this_ *ContextDoc) appendOutVariable(service *model.ServiceModel, content 
 	return
 }
 
-func (this_ *ContextDoc) appendInJSONDataInfos(service *model.ServiceModel, content *string, dataInfos []*common.InvokeDataInfo, tab int) (err error) {
+func (this_ *ContextDoc) appendInJSONDataInfos(action *model.ActionModel, content *string, dataInfos []*common.InvokeDataInfo, tab int) (err error) {
 	for i := 0; i < tab; i++ {
 		*content += "  "
 	}
@@ -479,7 +479,7 @@ func (this_ *ContextDoc) appendInJSONDataInfos(service *model.ServiceModel, cont
 				name = ""
 			}
 		}
-		err = this_.appendJSONDataInfo(service, content, name, one, false, isEnd, tab+1)
+		err = this_.appendJSONDataInfo(action, content, name, one, false, isEnd, tab+1)
 		if err != nil {
 			return
 		}
@@ -491,7 +491,7 @@ func (this_ *ContextDoc) appendInJSONDataInfos(service *model.ServiceModel, cont
 	return
 }
 
-func (this_ *ContextDoc) appendJSONDataInfo(service *model.ServiceModel, content *string, name string, dataInfo *common.InvokeDataInfo, isOut bool, isEnd bool, tab int) (err error) {
+func (this_ *ContextDoc) appendJSONDataInfo(action *model.ActionModel, content *string, name string, dataInfo *common.InvokeDataInfo, isOut bool, isEnd bool, tab int) (err error) {
 
 	if len(dataInfo.DataInfos) > 0 {
 		var list []*common.InvokeDataInfo
@@ -535,7 +535,7 @@ func (this_ *ContextDoc) appendJSONDataInfo(service *model.ServiceModel, content
 			if base.IsNotEmpty(name) {
 				tab_++
 			}
-			err = this_.appendJSONDataInfo(service, content, one.Name, one, isOut, isEnd, tab_)
+			err = this_.appendJSONDataInfo(action, content, one.Name, one, isOut, isEnd, tab_)
 			if err != nil {
 				return
 			}

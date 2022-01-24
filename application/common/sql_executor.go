@@ -267,8 +267,8 @@ func (this_ *SqlExecutorDefault) Update(sql string, params []interface{}) (rowsA
 	return
 }
 
-func (service *SqlExecutorDefault) Delete(sql string, params []interface{}) (rowsAffected int64, err error) {
-	result, err := service.db.Exec(sql, params...)
+func (this_ *SqlExecutorDefault) Delete(sql string, params []interface{}) (rowsAffected int64, err error) {
+	result, err := this_.db.Exec(sql, params...)
 	if err != nil {
 		return
 	}

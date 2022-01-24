@@ -15,11 +15,11 @@ import (
 
 func ServerWebBindApis(app common.IApplication, serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup) (err error) {
 
-	if len(app.GetContext().Services) == 0 {
+	if len(app.GetContext().Actions) == 0 {
 		return
 	}
-	for _, one := range app.GetContext().Services {
-		err = serverWebBindServiceApi(app, serverWebToken, gouterGroup, one)
+	for _, one := range app.GetContext().Actions {
+		err = serverWebBindActionApi(app, serverWebToken, gouterGroup, one)
 		if err != nil {
 			return
 		}
@@ -53,17 +53,17 @@ func toWebResponseJSON(value interface{}, err error) *webResponseJSON {
 	return response
 }
 
-func serverWebBindServiceApi(app common.IApplication, serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup, service *model.ServiceModel) (err error) {
-	if service.Api == nil || service.Api.Request == nil {
+func serverWebBindActionApi(app common.IApplication, serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup, action *model.ActionModel) (err error) {
+	if action.Api == nil || action.Api.Request == nil {
 		return
 	}
-	requestPath := service.Api.Request.Path
+	requestPath := action.Api.Request.Path
 	if requestPath != "" {
 		if strings.Index(requestPath, "/") != 0 {
 			requestPath = "/" + requestPath
 		}
 	}
-	requestMethod := strings.ToUpper(service.Api.Request.Method)
+	requestMethod := strings.ToUpper(action.Api.Request.Method)
 	var bindFunc func(relativePath string, handlers ...gin.HandlerFunc) gin.IRoutes
 	switch requestMethod {
 	case "GET":
@@ -116,7 +116,7 @@ func serverWebBindServiceApi(app common.IApplication, serverWebToken *model.Serv
 	}
 
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-		app.GetLogger().Debug("web api bind [", requestPath, "] should token [", shouldValidataToken, "] for service [", service.Name, "]")
+		app.GetLogger().Debug("web api bind [", requestPath, "] should token [", shouldValidataToken, "] for action [", action.Name, "]")
 	}
 
 	bindFunc(requestPath, func(c *gin.Context) {
@@ -129,11 +129,11 @@ func serverWebBindServiceApi(app common.IApplication, serverWebToken *model.Serv
 			}
 			if err != nil {
 				if app.GetLogger() != nil {
-					app.GetLogger().Error("web api request [", requestPath, "] service [", service.Name, "] error:", err)
+					app.GetLogger().Error("web api request [", requestPath, "] action [", action.Name, "] error:", err)
 				}
 			}
-			if service.Api.Response != nil {
-				if service.Api.Response.DownloadFile || service.Api.Response.OpenFile {
+			if action.Api.Response != nil {
+				if action.Api.Response.DownloadFile || action.Api.Response.OpenFile {
 					if err != nil {
 						response := toWebResponseJSON(res, err)
 						c.JSON(200, response)
@@ -178,7 +178,7 @@ func serverWebBindServiceApi(app common.IApplication, serverWebToken *model.Serv
 						c.Status(404)
 						return
 					}
-					if service.Api.Response.DownloadFile {
+					if action.Api.Response.DownloadFile {
 						c.Header("contentType", "multipart/form-data")
 						c.Header("Content-Disposition", "attachment;fileName="+fileName)
 					}
@@ -190,7 +190,7 @@ func serverWebBindServiceApi(app common.IApplication, serverWebToken *model.Serv
 			c.JSON(200, response)
 		}()
 
-		res, err = InvokeWebApi(app, serverWebToken, shouldValidataToken, c, service)
+		res, err = InvokeWebApi(app, serverWebToken, shouldValidataToken, c, action)
 		if err != nil {
 			return
 		}
@@ -213,7 +213,7 @@ func matchRequestTokenRule(path string, rule_ string) bool {
 	return false
 }
 
-func InvokeWebApi(app common.IApplication, serverWebToken *model.ServerWebToken, shouldValidataToken bool, c *gin.Context, service *model.ServiceModel) (res interface{}, err error) {
+func InvokeWebApi(app common.IApplication, serverWebToken *model.ServerWebToken, shouldValidataToken bool, c *gin.Context, action *model.ActionModel) (res interface{}, err error) {
 	var invokeNamespace *common.InvokeNamespace
 	invokeNamespace, err = common.NewInvokeNamespace(app)
 	if err != nil {
@@ -222,24 +222,24 @@ func InvokeWebApi(app common.IApplication, serverWebToken *model.ServerWebToken,
 	invokeNamespace.RequestContext = c
 	invokeNamespace.ServerWebToken = serverWebToken
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-		app.GetLogger().Debug("invoke web api [", service.Api.Request, "] start")
+		app.GetLogger().Debug("invoke web api [", action.Api.Request, "] start")
 	}
 
 	startTime := base.GetNowTime()
 	defer func() {
 		endTime := base.GetNowTime()
 		if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-			app.GetLogger().Debug("invoke web api [", service.Api.Request, "] end, use:", (endTime - startTime), "ms")
+			app.GetLogger().Debug("invoke web api [", action.Api.Request, "] end, use:", (endTime - startTime), "ms")
 		}
 	}()
 
-	if base.IsEmpty(service.WebApiJavascript) {
-		service.WebApiJavascript, err = common.GetWebApiJavascriptByService(app, service, shouldValidataToken)
+	if base.IsEmpty(action.WebApiJavascript) {
+		action.WebApiJavascript, err = common.GetWebApiJavascriptByAction(app, action, shouldValidataToken)
 		if err != nil {
 			return
 		}
 	}
-	res, err = invokeJavascript(app, invokeNamespace, service.WebApiJavascript)
+	res, err = invokeJavascript(app, invokeNamespace, action.WebApiJavascript)
 	if err != nil {
 		return
 	}
@@ -247,13 +247,13 @@ func InvokeWebApi(app common.IApplication, serverWebToken *model.ServerWebToken,
 }
 
 func invokeWebApiValidateToken(app common.IApplication, serverWebToken *model.ServerWebToken, c *gin.Context) (res interface{}, err error) {
-	if serverWebToken.ValidateService == "" {
-		err = base.NewError("", "request token validata service not defind")
+	if serverWebToken.ValidateAction == "" {
+		err = base.NewError("", "request token validata action not defind")
 		return
 	}
-	service := app.GetContext().GetService(serverWebToken.ValidateService)
-	if service == nil {
-		err = base.NewError("", "request token validata service not defind")
+	action := app.GetContext().GetAction(serverWebToken.ValidateAction)
+	if action == nil {
+		err = base.NewError("", "request token validata action not defind")
 		return
 	}
 	var invokeNamespace *common.InvokeNamespace
@@ -265,24 +265,24 @@ func invokeWebApiValidateToken(app common.IApplication, serverWebToken *model.Se
 	invokeNamespace.ServerWebToken = serverWebToken
 
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-		app.GetLogger().Debug("invoke web api validata token [", service.Name, "] start")
+		app.GetLogger().Debug("invoke web api validata token [", action.Name, "] start")
 	}
 
 	startTime := base.GetNowTime()
 	defer func() {
 		endTime := base.GetNowTime()
 		if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-			app.GetLogger().Debug("invoke web api validata token[", service.Name, "] end, use:", (endTime - startTime), "ms")
+			app.GetLogger().Debug("invoke web api validata token[", action.Name, "] end, use:", (endTime - startTime), "ms")
 		}
 	}()
 
-	if base.IsEmpty(service.WebApiJavascript) {
-		service.WebApiJavascript, err = common.GetWebApiJavascriptByService(app, service, false)
+	if base.IsEmpty(action.WebApiJavascript) {
+		action.WebApiJavascript, err = common.GetWebApiJavascriptByAction(app, action, false)
 		if err != nil {
 			return
 		}
 	}
-	res, err = invokeJavascript(app, invokeNamespace, service.WebApiJavascript)
+	res, err = invokeJavascript(app, invokeNamespace, action.WebApiJavascript)
 	if err != nil {
 		return
 	}

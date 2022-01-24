@@ -39,7 +39,7 @@ func NewErrorVariableIsNull(args ...interface{}) baseError {
 	return NewError("10001", args...)
 }
 
-func NewErrorServiceIsNull(args ...interface{}) baseError {
+func NewErrorActionIsNull(args ...interface{}) baseError {
 	return NewError("10002", args...)
 }
 
@@ -47,11 +47,11 @@ func NewErrorDaoIsNull(args ...interface{}) baseError {
 	return NewError("10003", args...)
 }
 
-func NewErrorServiceTypeIsWrong(args ...interface{}) baseError {
+func NewErrorActionTypeIsWrong(args ...interface{}) baseError {
 	return NewError("10004", args...)
 }
 
-func NewErrorServiceStepIsWrong(args ...interface{}) baseError {
+func NewErrorActionStepIsWrong(args ...interface{}) baseError {
 	return NewError("10005", args...)
 }
 

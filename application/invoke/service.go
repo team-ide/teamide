@@ -14,30 +14,30 @@ func invokeJavascript(app common.IApplication, invokeNamespace *common.InvokeNam
 	return
 }
 
-func InvokeService(app common.IApplication, invokeNamespace *common.InvokeNamespace, service *model.ServiceModel) (res interface{}, err error) {
+func InvokeAction(app common.IApplication, invokeNamespace *common.InvokeNamespace, action *model.ActionModel) (res interface{}, err error) {
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-		app.GetLogger().Debug("invoke service [", service.Name, "] start")
-		// app.GetLogger().Debug("invoke service [", service.Name, "] invokeNamespace:", app.GetScript().DataToJSON(invokeNamespace))
+		app.GetLogger().Debug("invoke action [", action.Name, "] start")
+		// app.GetLogger().Debug("invoke action [", action.Name, "] invokeNamespace:", app.GetScript().DataToJSON(invokeNamespace))
 	}
 
 	startTime := base.GetNowTime()
 	defer func() {
 		endTime := base.GetNowTime()
 		if app.GetLogger() != nil && app.GetLogger().OutDebug() {
-			app.GetLogger().Debug("invoke service [", service.Name, "] end, use:", (endTime - startTime), "ms")
+			app.GetLogger().Debug("invoke action [", action.Name, "] end, use:", (endTime - startTime), "ms")
 		}
 	}()
 
-	if base.IsEmpty(service.ServiceJavascript) {
-		service.ServiceJavascript, err = common.GetServiceJavascriptByService(app, service)
+	if base.IsEmpty(action.ActionJavascript) {
+		action.ActionJavascript, err = common.GetActionJavascriptByAction(app, action)
 		if err != nil {
 			return
 		}
 	}
-	res, err = invokeJavascript(app, invokeNamespace, service.ServiceJavascript)
+	res, err = invokeJavascript(app, invokeNamespace, action.ActionJavascript)
 	if err != nil {
 		if app.GetLogger() != nil {
-			app.GetLogger().Error("invoke service [", service.Name, "] error:", err)
+			app.GetLogger().Error("invoke action [", action.Name, "] error:", err)
 		}
 		return
 	}

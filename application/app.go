@@ -179,21 +179,21 @@ func (this_ *Application) GetZookeeperExecutor(name string) (executor common.IZo
 	return
 }
 
-func (this_ *Application) InvokeServiceByName(name string, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
-	service := this_.context.GetService(name)
-	if service == nil {
-		err = base.NewErrorServiceIsNull("invoke service model [", name, "] is null")
+func (this_ *Application) InvokeActionByName(name string, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
+	action := this_.context.GetAction(name)
+	if action == nil {
+		err = base.NewErrorActionIsNull("invoke action model [", name, "] is null")
 		return
 	}
-	res, err = this_.InvokeService(service, invokeNamespace)
+	res, err = this_.InvokeAction(action, invokeNamespace)
 	return
 }
-func (this_ *Application) InvokeService(service *model.ServiceModel, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
+func (this_ *Application) InvokeAction(action *model.ActionModel, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
 	if invokeNamespace == nil {
-		err = base.NewErrorVariableIsNull("invoke service ", service.Name, " invokeNamespace is null")
+		err = base.NewErrorVariableIsNull("invoke action ", action.Name, " invokeNamespace is null")
 		return
 	}
-	res, err = invoke.InvokeService(this_, invokeNamespace, service)
+	res, err = invoke.InvokeAction(this_, invokeNamespace, action)
 	if err != nil {
 		return
 	}
@@ -203,7 +203,7 @@ func (this_ *Application) InvokeService(service *model.ServiceModel, invokeNames
 func (this_ *Application) InvokeTestByName(name string) (res *common.TestResult, err error) {
 	test := this_.context.GetTest(name)
 	if test == nil {
-		err = base.NewErrorServiceIsNull("test model [", name, "] is null")
+		err = base.NewErrorActionIsNull("test model [", name, "] is null")
 		return
 	}
 	res, err = this_.InvokeTest(test)

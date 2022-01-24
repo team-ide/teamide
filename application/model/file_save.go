@@ -8,18 +8,18 @@ type FileSave struct {
 	Bytes  string `json:"bytes,omitempty" yaml:"bytes,omitempty"`   // 值
 }
 
-type ServiceStepFileSave struct {
-	Base *ServiceStepBase
+type ActionStepFileSave struct {
+	Base *ActionStepBase
 
 	FileSave         *FileSave `json:"fileSave,omitempty" yaml:"fileSave,omitempty"`                 // 执行 SQL DELETE 操作
 	VariableName     string    `json:"variableName,omitempty" yaml:"variableName,omitempty"`         // 变量名称
 	VariableDataType string    `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` // 变量数据类型
 }
 
-func (this_ *ServiceStepFileSave) GetBase() *ServiceStepBase {
+func (this_ *ActionStepFileSave) GetBase() *ActionStepBase {
 	return this_.Base
 }
 
-func (this_ *ServiceStepFileSave) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepFileSave) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }

@@ -6,7 +6,7 @@ import (
 	"teamide/application/base"
 )
 
-func getServiceStepRedisSetByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepRedisSetByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -22,17 +22,17 @@ func getServiceStepRedisSetByMap(value interface{}) (step ServiceStep, err error
 			err = errors.New(fmt.Sprint("[", v, "] to redis set error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step redis set error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step redis set error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepRedisSet{}
+	step = &ActionStepRedisSet{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepRedisGetByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepRedisGetByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -48,17 +48,17 @@ func getServiceStepRedisGetByMap(value interface{}) (step ServiceStep, err error
 			err = errors.New(fmt.Sprint("[", v, "] to redis get error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step redis get error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step redis get error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepRedisGet{}
+	step = &ActionStepRedisGet{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepRedisDelByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepRedisDelByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -74,17 +74,17 @@ func getServiceStepRedisDelByMap(value interface{}) (step ServiceStep, err error
 			err = errors.New(fmt.Sprint("[", v, "] to redis del error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step redis del error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step redis del error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepRedisDel{}
+	step = &ActionStepRedisDel{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepRedisExpireByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepRedisExpireByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -100,17 +100,17 @@ func getServiceStepRedisExpireByMap(value interface{}) (step ServiceStep, err er
 			err = errors.New(fmt.Sprint("[", v, "] to redis expire error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step redis expire error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step redis expire error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepRedisExpire{}
+	step = &ActionStepRedisExpire{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepRedisExpireatByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepRedisExpireatByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -126,12 +126,12 @@ func getServiceStepRedisExpireatByMap(value interface{}) (step ServiceStep, err 
 			err = errors.New(fmt.Sprint("[", v, "] to redis expireat error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step redis expireat error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step redis expireat error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepRedisExpireat{}
+	step = &ActionStepRedisExpireat{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }

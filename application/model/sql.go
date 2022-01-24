@@ -75,7 +75,7 @@ func getWhereMapsByValue(value interface{}) (wheres []map[string]interface{}, er
 	return
 }
 
-func getServiceStepSqlSelectByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepSqlSelectByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -96,17 +96,17 @@ func getServiceStepSqlSelectByMap(value interface{}) (step ServiceStep, err erro
 			err = errors.New(fmt.Sprint("[", v, "] to sql select error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step sql select error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step sql select error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepSqlSelect{}
+	step = &ActionStepSqlSelect{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepSqlInsertByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepSqlInsertByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -123,17 +123,17 @@ func getServiceStepSqlInsertByMap(value interface{}) (step ServiceStep, err erro
 			err = errors.New(fmt.Sprint("[", v, "] to sql insert error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step sql insert error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step sql insert error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepSqlInsert{}
+	step = &ActionStepSqlInsert{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepSqlUpdateByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepSqlUpdateByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -154,17 +154,17 @@ func getServiceStepSqlUpdateByMap(value interface{}) (step ServiceStep, err erro
 			err = errors.New(fmt.Sprint("[", v, "] to sql update error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step sql update error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step sql update error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepSqlUpdate{}
+	step = &ActionStepSqlUpdate{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepSqlDeleteByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepSqlDeleteByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -181,12 +181,12 @@ func getServiceStepSqlDeleteByMap(value interface{}) (step ServiceStep, err erro
 			err = errors.New(fmt.Sprint("[", v, "] to sql delete error"))
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step sql delete error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step sql delete error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepSqlDelete{}
+	step = &ActionStepSqlDelete{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }

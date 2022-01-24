@@ -27,6 +27,9 @@ Vue.component('NoPower', NoPower);
 import ModelEditor from './modelEditor/Index.vue'
 Vue.component('ModelEditor', ModelEditor);
 
+import ModelEditorFieldInput from './modelEditor/FieldInput.vue'
+Vue.component('ModelEditorFieldInput', ModelEditorFieldInput);
+
 import ModelEditorField from './modelEditor/Field.vue'
 Vue.component('ModelEditorField', ModelEditorField);
 
@@ -35,4 +38,8 @@ Vue.component('ModelEditorFieldBean', ModelEditorFieldBean);
 
 import ModelEditorFieldList from './modelEditor/FieldList.vue'
 Vue.component('ModelEditorFieldList', ModelEditorFieldList);
+
+import ModelEditorAction from './modelEditor/Action.vue'
+Vue.component('ModelEditorAction', ModelEditorAction);
+
 export default {};

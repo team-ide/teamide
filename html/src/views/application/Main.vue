@@ -10,6 +10,7 @@
             :class="{ active: one.active }"
           >
             <span class="text" @click="toSelectTab(one)">{{ one.text }}</span>
+            <span v-if="one.changed" class="color-red-4 mgt-2 ft-15"> * </span>
             <span
               class="delete-btn tm-pointer color-orange"
               @click="toDeleteTab(one)"
@@ -32,7 +33,9 @@
               :source="source"
               :group="one.group"
               :model="one.model"
+              :context="application.context"
               @change="onModelChange"
+              @save="onModelSave"
             ></ModelEditor>
           </div>
         </template>
@@ -59,6 +62,23 @@ export default {
   watch: {},
   methods: {
     async onModelChange(group, model) {
+      let key = this.getTabKeyByModel(group, model);
+      let tab = this.getTab(key);
+      if (tab == null) {
+        return;
+      }
+      tab.changed = true;
+      tab.last_model = model;
+    },
+    async onModelSave(group, model) {
+      let key = this.getTabKeyByModel(group, model);
+      let tab = this.getTab(key);
+      if (tab == null) {
+        return;
+      }
+      tab.changed = false;
+      tab.last_model = null;
+      tab.model = model;
       let flag = await this.application.saveModel(group, model);
       return flag;
     },
@@ -68,7 +88,7 @@ export default {
     getTab(tab) {
       let res = null;
       this.application.tabs.forEach((one) => {
-        if (one == tab || one.name == tab || one.name == tab.name) {
+        if (one == tab || one.key == tab || one.key == tab.key) {
           res = one;
         }
       });
@@ -115,28 +135,30 @@ export default {
         this.application.activeTab = tab;
       });
     },
+    getTabKeyByModel(group, model) {
+      let key = this.app.name + ":" + group.name + ":" + model.name;
+      return key;
+    },
     createTabByModel(group, model) {
-      let name = this.app.name + ":" + group.name + ":" + model.name;
+      let key = this.getTabKeyByModel(group, model);
 
-      let tab = this.getTab(name);
+      let tab = this.getTab(key);
       if (tab == null) {
         let title =
-          "应用：" +
-          this.app.name +
-          " > " +
-          group.text +
-          " > " +
-          model.name +
-          (this.tool.isEmpty(model.comment) ? "" : "(" + model.comment + ")");
+          "应用：" + this.app.name + " > " + group.text + " > " + model.name;
+        if (this.tool.isNotEmpty(model.comment)) {
+          title += "(" + model.comment + ")";
+        }
         let text = model.name;
         tab = {
-          name,
+          key,
           text,
           title,
           model,
           group,
         };
         tab.active = false;
+        tab.changed = false;
       }
       return tab;
     },

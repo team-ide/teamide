@@ -6,33 +6,33 @@ import (
 	"teamide/application/base"
 )
 
-type ServiceStep interface {
-	GetBase() *ServiceStepBase
-	SetBase(*ServiceStepBase)
+type ActionStep interface {
+	GetBase() *ActionStepBase
+	SetBase(*ActionStepBase)
 }
 
-type ServiceStepBase struct {
+type ActionStepBase struct {
 	Name               string           `json:"name,omitempty" yaml:"name,omitempty"`                             // 名称，同一个应用中唯一
 	Comment            string           `json:"comment,omitempty" yaml:"comment,omitempty"`                       // 注释
 	If                 string           `json:"if,omitempty" yaml:"if,omitempty"`                                 // 满足 if 条件
 	Validates          []*ValidateModel `json:"validates,omitempty" yaml:"validates,omitempty"`                   // 验证
 	Variables          []*VariableModel `json:"variables,omitempty" yaml:"variables,omitempty"`                   // 变量
-	Steps              []ServiceStep    `json:"steps,omitempty" yaml:"steps,omitempty"`                           // 子阶段
+	Steps              []ActionStep     `json:"steps,omitempty" yaml:"steps,omitempty"`                           // 子阶段
 	Return             bool             `json:"return,omitempty" yaml:"return,omitempty"`                         // 是否退出
 	ReturnVariableName string           `json:"returnVariableName,omitempty" yaml:"returnVariableName,omitempty"` // 是否退出
 	TryError           *ErrorModel      `json:"tryError,omitempty" yaml:"tryError"`
 }
 
-func (this_ *ServiceStepBase) GetBase() *ServiceStepBase {
+func (this_ *ActionStepBase) GetBase() *ActionStepBase {
 	return this_
 }
 
-func (this_ *ServiceStepBase) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepBase) SetBase(v *ActionStepBase) {
 
 }
 
-type ServiceStepLock struct {
-	Base *ServiceStepBase
+type ActionStepLock struct {
+	Base *ActionStepBase
 
 	Lock *LockModel `json:"lock,omitempty" yaml:"lock,omitempty"` // 锁
 }
@@ -43,15 +43,15 @@ type LockModel struct {
 	Key  string `json:"key,omitempty" yaml:"key,omitempty"`   // 锁Key
 }
 
-func (this_ *ServiceStepLock) GetBase() *ServiceStepBase {
+func (this_ *ActionStepLock) GetBase() *ActionStepBase {
 	return this_.Base
 }
-func (this_ *ServiceStepLock) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepLock) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }
 
-type ServiceStepUnlock struct {
-	Base *ServiceStepBase
+type ActionStepUnlock struct {
+	Base *ActionStepBase
 
 	Unlock *UnlockModel `json:"unlock,omitempty" yaml:"unlock,omitempty"` // 解锁
 }
@@ -60,47 +60,47 @@ type UnlockModel struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"` // 锁名称 只用作定义 如需主动解锁 必须定义名称 不自动解锁 最 所有阶段执行结束 自动解锁
 }
 
-func (this_ *ServiceStepUnlock) GetBase() *ServiceStepBase {
+func (this_ *ActionStepUnlock) GetBase() *ActionStepBase {
 	return this_.Base
 }
-func (this_ *ServiceStepUnlock) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepUnlock) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }
 
-type ServiceStepError struct {
-	Base *ServiceStepBase
+type ActionStepError struct {
+	Base *ActionStepBase
 
 	Error *ErrorModel `json:"error,omitempty" yaml:"error,omitempty"` // 异常
 }
 
-func (this_ *ServiceStepError) GetBase() *ServiceStepBase {
+func (this_ *ActionStepError) GetBase() *ActionStepBase {
 	return this_.Base
 }
-func (this_ *ServiceStepError) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepError) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }
 
-type ServiceStepService struct {
-	Base *ServiceStepBase
+type ActionStepAction struct {
+	Base *ActionStepBase
 
-	Service          *StepServiceModel `json:"service,omitempty" yaml:"service,omitempty"`                   // 解锁
-	VariableName     string            `json:"variableName,omitempty" yaml:"variableName,omitempty"`         // 变量名称
-	VariableDataType string            `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` // 变量数据类型
+	Action           *StepActionModel `json:"action,omitempty" yaml:"action,omitempty"`                     // 解锁
+	VariableName     string           `json:"variableName,omitempty" yaml:"variableName,omitempty"`         // 变量名称
+	VariableDataType string           `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` // 变量数据类型
 }
 
-type StepServiceModel struct {
+type StepActionModel struct {
 	Name          string           `json:"name,omitempty" yaml:"name,omitempty"`                   // 服务名称
 	CallVariables []*VariableModel `json:"callVariables,omitempty" yaml:"callVariables,omitempty"` // 变量
 }
 
-func (this_ *ServiceStepService) GetBase() *ServiceStepBase {
+func (this_ *ActionStepAction) GetBase() *ActionStepBase {
 	return this_.Base
 }
-func (this_ *ServiceStepService) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepAction) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }
 
-func getServiceStepLockByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepLockByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -118,17 +118,17 @@ func getServiceStepLockByMap(value interface{}) (step ServiceStep, err error) {
 			}
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step lock error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step lock error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepLock{}
+	step = &ActionStepLock{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return step, err
 }
 
-func getServiceStepUnlockByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepUnlockByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -146,17 +146,17 @@ func getServiceStepUnlockByMap(value interface{}) (step ServiceStep, err error) 
 			}
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step unlock error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step unlock error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepUnlock{}
+	step = &ActionStepUnlock{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
 
-func getServiceStepErrorByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepErrorByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -174,12 +174,12 @@ func getServiceStepErrorByMap(value interface{}) (step ServiceStep, err error) {
 			}
 		}
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step error error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step error error"))
 	}
 	if err != nil {
 		return
 	}
-	step = &ServiceStepError{}
+	step = &ActionStepError{}
 	err = base.ToBean([]byte(base.ToJSON(value)), step)
 	return
 }
@@ -204,45 +204,45 @@ func formatTryErrorByMap(value interface{}) (err error) {
 	}
 	return
 }
-func getServiceStepServiceByMap(value interface{}) (step ServiceStep, err error) {
+func getActionStepActionByMap(value interface{}) (step ActionStep, err error) {
 	if value == nil {
 		return
 	}
 	var callVariables []*VariableModel
 	switch v := value.(type) {
 	case map[string]interface{}:
-		if v["service"] == nil {
+		if v["action"] == nil {
 			return
 		}
-		var serviceMap map[string]interface{}
-		switch data := v["service"].(type) {
+		var actionMap map[string]interface{}
+		switch data := v["action"].(type) {
 		case map[string]interface{}:
-			serviceMap = data
+			actionMap = data
 		default:
-			serviceMap = map[string]interface{}{
+			actionMap = map[string]interface{}{
 				"name": data,
 			}
 		}
-		if serviceMap["callVariables"] != nil {
-			callVariables, err = getVariablesByValue(serviceMap["callVariables"])
+		if actionMap["callVariables"] != nil {
+			callVariables, err = getVariablesByValue(actionMap["callVariables"])
 			if err != nil {
 				return
 			}
-			delete(serviceMap, "callVariables")
+			delete(actionMap, "callVariables")
 		}
-		v["service"] = serviceMap
+		v["action"] = actionMap
 	default:
-		err = errors.New(fmt.Sprint("[", v, "] to service step service error"))
+		err = errors.New(fmt.Sprint("[", v, "] to action step action error"))
 	}
 	if err != nil {
 		return
 	}
-	stepService := &ServiceStepService{}
-	err = base.ToBean([]byte(base.ToJSON(value)), stepService)
+	stepAction := &ActionStepAction{}
+	err = base.ToBean([]byte(base.ToJSON(value)), stepAction)
 	if err != nil {
 		return
 	}
-	stepService.Service.CallVariables = callVariables
-	step = stepService
+	stepAction.Action.CallVariables = callVariables
+	step = stepAction
 	return
 }

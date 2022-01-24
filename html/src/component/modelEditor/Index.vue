@@ -1,37 +1,86 @@
 <template>
-  <div class="model-editor" v-if="group != null && group.fields != null">
-    <ul v-if="data != null">
-      <template v-for="(one, index) in group.fields">
-        <ModelEditorField
-          :key="'field-' + index"
+  <div
+    class="model-editor"
+    tabindex="-1"
+    @keydown="keydown"
+    v-if="group != null && group.fields != null"
+  >
+    <template v-if="data != null">
+      <div class="model-editor-toolbar">
+        <b-button-group size="sm">
+          <b-button title="保存（Ctrl+s）" @click="save()">
+            <b-icon icon="sticky-fill"></b-icon>
+          </b-button>
+          <b-button title="复制" @click="copy()">
+            <b-icon icon="stickies-fill"></b-icon>
+          </b-button>
+          <b-button title="刷新" @click="refresh()">
+            <b-icon icon="arrow-clockwise"></b-icon>
+          </b-button>
+          <b-button title="上一步" @click="previousStep()">
+            <b-icon icon="arrow-left"></b-icon
+          ></b-button>
+          <b-button title="下一步" @click="nextStep()">
+            <b-icon icon="arrow-right"></b-icon
+          ></b-button>
+          <b-button v-if="group.isAction" title="测试" @click="toTest()">
+            <b-icon icon="skip-end-fill"></b-icon
+          ></b-button>
+          <b-button title="帮助说明" @click="help()">
+            <b-icon icon="exclamation-circle-fill"></b-icon
+          ></b-button>
+          <b-button title="删除" @click="toDelete()">
+            <b-icon icon="x-circle"></b-icon
+          ></b-button>
+        </b-button-group>
+      </div>
+      <template v-if="group.isAction">
+        <ModelEditorAction
           :source="source"
-          :field="one"
+          :context="context"
           :bean="data"
           :wrap="wrap"
         >
-        </ModelEditorField>
-        <template v-if="one.fields != null && !one.isList">
-          <ModelEditorFieldBean
-            :key="'field-bean-' + index"
-            :source="source"
-            :field="one"
-            :bean="data"
-            :wrap="wrap"
-          >
-          </ModelEditorFieldBean>
-        </template>
-        <template v-if="one.fields != null && one.isList">
-          <ModelEditorFieldList
-            :key="'field-list-' + index"
-            :source="source"
-            :field="one"
-            :bean="data"
-            :wrap="wrap"
-          >
-          </ModelEditorFieldList>
-        </template>
+        </ModelEditorAction>
       </template>
-    </ul>
+      <template v-else>
+        <ul v-if="!group.isAction">
+          <template v-for="(one, index) in group.fields">
+            <ModelEditorField
+              :key="'field-' + index"
+              :source="source"
+              :context="context"
+              :field="one"
+              :bean="data"
+              :wrap="wrap"
+            >
+            </ModelEditorField>
+            <template v-if="one.fields != null && !one.isList">
+              <ModelEditorFieldBean
+                :key="'field-bean-' + index"
+                :source="source"
+                :context="context"
+                :field="one"
+                :bean="data"
+                :wrap="wrap"
+              >
+              </ModelEditorFieldBean>
+            </template>
+            <template v-if="one.fields != null && one.isList">
+              <ModelEditorFieldList
+                :key="'field-list-' + index"
+                :source="source"
+                :context="context"
+                :field="one"
+                :bean="data"
+                :wrap="wrap"
+              >
+              </ModelEditorFieldList>
+            </template>
+          </template>
+        </ul>
+      </template>
+    </template>
   </div>
 </template>
 
@@ -39,7 +88,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "model", "group"],
+  props: ["source", "context", "model", "group"],
   data() {
     return {
       key: this.tool.getNumber(),
@@ -48,9 +97,7 @@ export default {
       ready: false,
     };
   },
-  // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
-  // 计算属性 数据变，直接会触发相应的操作
   watch: {
     model(newModel, oldModel) {
       this.initData();
@@ -122,8 +169,26 @@ export default {
       this.last_change_model = change_model;
       this.$emit("change", this.group, change_model);
     },
+    keydown(event) {
+      //ctrl+s
+      if (event.keyCode === 83 && event.ctrlKey) {
+        event.preventDefault && event.preventDefault();
+        event.stopPropagation && event.stopPropagation();
+        this.save();
+        return false;
+      }
+    },
+    save() {
+      let model = JSON.parse(JSON.stringify(this.data));
+      this.$emit("save", this.group, model);
+    },
+    copy() {},
+    toDelete() {},
+    previousStep() {},
+    nextStep() {},
+    help() {},
+    toTest() {},
   },
-  // 在实例创建完成后被立即调用
   created() {
     this.wrap.push = this.push;
     this.wrap.del = this.del;
@@ -132,7 +197,6 @@ export default {
     this.wrap.onChange = this.onChange;
     this.wrap.refresh = this.refresh;
   },
-  // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
     this.init();
   },
@@ -142,6 +206,7 @@ export default {
 <style>
 .model-editor {
   width: 100%;
+  height: 100%;
 }
 .model-editor ul {
   margin-top: 10px;
@@ -163,23 +228,13 @@ export default {
 .model-editor .comment {
   padding: 2px 5px;
 }
-.model-editor input {
-  padding: 1px 5px;
-  border: 0px;
-  outline: none;
-  background: transparent;
-  color: #f9f9f9;
-  border-bottom: 1px dashed #f9f9f9;
-  min-width: 40px;
-}
-.model-editor table {
-  border: 1px dashed #4e4e4e;
-}
-.model-editor thead {
-  border-bottom: 1px dashed #4e4e4e;
-}
-.model-editor table th {
+.model-editor-toolbar {
+  width: 100%;
   text-align: center;
-  line-height: 25px;
+  padding: 5px 0px;
+}
+
+.model-editor-toolbar .btn {
+  border-radius: 0px;
 }
 </style>

@@ -15,8 +15,8 @@ type ServerWebToken struct {
 
 	Variables        []*VariableModel `json:"variables,omitempty" yaml:"variables,omitempty"`               // 输入变量
 	Validates        []*ValidateModel `json:"validates,omitempty" yaml:"validates,omitempty"`               // 验证
-	CreateService    string           `json:"createService,omitempty" yaml:"createService,omitempty"`       //
-	ValidateService  string           `json:"validateService,omitempty" yaml:"validateService,omitempty"`   //
+	CreateAction     string           `json:"createAction,omitempty" yaml:"createAction,omitempty"`         //
+	ValidateAction   string           `json:"validateAction,omitempty" yaml:"validateAction,omitempty"`     //
 	VariableName     string           `json:"variableName,omitempty" yaml:"variableName,omitempty"`         //
 	VariableDataType string           `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` //
 }

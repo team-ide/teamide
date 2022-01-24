@@ -11,7 +11,7 @@ type ModelContext struct {
 	DatasourceZookeepers []*DatasourceZookeeper `json:"datasourceZookeepers,omitempty"` // 数据源Model，定义数据源，Database、Redis、Kafka等
 	Structs              []*StructModel         `json:"structs,omitempty"`              // 结构体Model，定义结构体，结构体字段、JSON字段、表字段等
 	ServerWebs           []*ServerWebModel      `json:"serverWebs,omitempty"`           // 服务器层Model，用于提供服务接口能力，HTTP、RPC等
-	Services             []*ServiceModel        `json:"services,omitempty"`             // 服务层Model，用于逻辑处理，验证等
+	Actions              []*ActionModel         `json:"actions,omitempty"`              // 服务层Model，用于逻辑处理，验证等
 	Tests                []*TestModel           `json:"tests,omitempty"`                // 测试Model，用于逻辑处理，验证等
 
 	constantMap            map[string]*ConstantModel       `json:"-"`
@@ -23,7 +23,7 @@ type ModelContext struct {
 	datasourceZookeeperMap map[string]*DatasourceZookeeper `json:"-"`
 	structMap              map[string]*StructModel         `json:"-"`
 	serverWebMap           map[string]*ServerWebModel      `json:"-"`
-	serviceMap             map[string]*ServiceModel        `json:"-"`
+	actionMap              map[string]*ActionModel         `json:"-"`
 	testMap                map[string]*TestModel           `json:"-"`
 }
 
@@ -37,7 +37,7 @@ func (this_ *ModelContext) Init() *ModelContext {
 	this_.initDatasourceZookeeper()
 	this_.initStruct()
 	this_.initServerWeb()
-	this_.initService()
+	this_.initAction()
 	this_.initTest()
 	fileInfoStruct := &StructModel{
 		Name: "fileInfo",
@@ -138,10 +138,10 @@ func (this_ *ModelContext) initServerWeb() *ModelContext {
 	return this_
 }
 
-func (this_ *ModelContext) initService() *ModelContext {
-	this_.serviceMap = map[string]*ServiceModel{}
-	for _, one := range this_.Services {
-		this_.serviceMap[one.Name] = one
+func (this_ *ModelContext) initAction() *ModelContext {
+	this_.actionMap = map[string]*ActionModel{}
+	for _, one := range this_.Actions {
+		this_.actionMap[one.Name] = one
 	}
 	return this_
 }
@@ -199,8 +199,8 @@ func (this_ *ModelContext) GetServerWeb(name string) *ServerWebModel {
 	return model
 }
 
-func (this_ *ModelContext) GetService(name string) *ServiceModel {
-	model := this_.serviceMap[name]
+func (this_ *ModelContext) GetAction(name string) *ActionModel {
+	model := this_.actionMap[name]
 	return model
 }
 
@@ -263,9 +263,9 @@ func (this_ *ModelContext) AppendServerWeb(model ...*ServerWebModel) *ModelConte
 	return this_
 }
 
-func (this_ *ModelContext) AppendService(model ...*ServiceModel) *ModelContext {
-	this_.Services = append(this_.Services, model...)
-	this_.initService()
+func (this_ *ModelContext) AppendAction(model ...*ActionModel) *ModelContext {
+	this_.Actions = append(this_.Actions, model...)
+	this_.initAction()
 	return this_
 }
 

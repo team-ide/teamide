@@ -7,8 +7,8 @@ import (
 	"teamide/application/model"
 )
 
-func GetWebApiJavascriptByService(app IApplication, service *model.ServiceModel, shouldValidataToken bool) (javascript string, err error) {
-	methodName := GetJavascriptMethodName(service.Name)
+func GetWebApiJavascriptByAction(app IApplication, action *model.ActionModel, shouldValidataToken bool) (javascript string, err error) {
+	methodName := GetJavascriptMethodName(action.Name)
 	javascript += ""
 	javascript += "function web_api_" + methodName + "() {\n"
 
@@ -17,27 +17,27 @@ func GetWebApiJavascriptByService(app IApplication, service *model.ServiceModel,
 	}
 
 	var variablesJavascript string
-	variablesJavascript, err = getWebApiJavascriptByVariables(app, service, service.InVariables, 1)
+	variablesJavascript, err = getWebApiJavascriptByVariables(app, action, action.InVariables, 1)
 	if err != nil {
 		return
 	}
 	if base.IsNotEmpty(variablesJavascript) {
 		javascript += variablesJavascript
 	}
-	callArgs := `"` + service.Name + `", `
-	for _, one := range service.InVariables {
+	callArgs := `"` + action.Name + `", `
+	for _, one := range action.InVariables {
 		callArgs += one.Name + ", "
 	}
 	callArgs = strings.TrimSuffix(callArgs, ", ")
 	base.AppendLine(&javascript, "// 调用服务方法", 1)
 
-	base.AppendLine(&javascript, "return service("+callArgs+")", 1)
+	base.AppendLine(&javascript, "return action("+callArgs+")", 1)
 
 	javascript += "}"
 	return
 }
 
-func getWebApiJavascriptByVariables(app IApplication, service *model.ServiceModel, variables []*model.VariableModel, tab int) (javascript string, err error) {
+func getWebApiJavascriptByVariables(app IApplication, action *model.ActionModel, variables []*model.VariableModel, tab int) (javascript string, err error) {
 	for _, one := range variables {
 		if base.IsNotEmpty(one.Comment) {
 			base.AppendLine(&javascript, "// "+one.Comment, tab)

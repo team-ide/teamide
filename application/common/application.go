@@ -17,8 +17,8 @@ type IApplication interface {
 	GetKafkaExecutor(name string) (IKafkaExecutor, error)
 	GetZookeeperExecutor(name string) (IZookeeperExecutor, error)
 	GetLogger() ILogger
-	InvokeServiceByName(name string, invokeNamespace *InvokeNamespace) (res interface{}, err error)
-	InvokeService(service *model.ServiceModel, invokeNamespace *InvokeNamespace) (res interface{}, err error)
+	InvokeActionByName(name string, invokeNamespace *InvokeNamespace) (res interface{}, err error)
+	InvokeAction(action *model.ActionModel, invokeNamespace *InvokeNamespace) (res interface{}, err error)
 	InvokeTestByName(name string) (res *TestResult, err error)
 	InvokeTest(test *model.TestModel) (res *TestResult, err error)
 	StartServers() (err error)

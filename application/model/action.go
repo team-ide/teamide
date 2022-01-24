@@ -6,37 +6,37 @@ import (
 	"teamide/application/base"
 )
 
-type ServiceModel struct {
-	Name              string           `json:"name,omitempty" yaml:"name,omitempty"`               // 名称，同一个应用中唯一
-	Comment           string           `json:"comment,omitempty" yaml:"name,omitempty"`            // 注释说明
-	Description       string           `json:"description,omitempty" yaml:"description,omitempty"` // 注释说明
-	Api               *ServiceApi      `json:"api,omitempty" yaml:"api,omitempty"`
-	InVariables       []*VariableModel `json:"inVariables,omitempty" yaml:"inVariables,omitempty"` // 输入变量
-	OutVariable       *VariableModel   `json:"outVariable,omitempty" yaml:"outVariable,omitempty"` // 输出变量
-	Steps             []ServiceStep    `json:"steps,omitempty" yaml:"steps,omitempty"`
-	ServiceJavascript string           `json:"-" yaml:"-"` // Javascript
-	WebApiJavascript  string           `json:"-" yaml:"-"` // Javascript
+type ActionModel struct {
+	Name             string           `json:"name,omitempty" yaml:"name,omitempty"`               // 名称，同一个应用中唯一
+	Comment          string           `json:"comment,omitempty" yaml:"name,omitempty"`            // 注释说明
+	Description      string           `json:"description,omitempty" yaml:"description,omitempty"` // 注释说明
+	Api              *ActionApi       `json:"api,omitempty" yaml:"api,omitempty"`
+	InVariables      []*VariableModel `json:"inVariables,omitempty" yaml:"inVariables,omitempty"` // 输入变量
+	OutVariable      *VariableModel   `json:"outVariable,omitempty" yaml:"outVariable,omitempty"` // 输出变量
+	Steps            []ActionStep     `json:"steps,omitempty" yaml:"steps,omitempty"`
+	ActionJavascript string           `json:"-" yaml:"-"` // Javascript
+	WebApiJavascript string           `json:"-" yaml:"-"` // Javascript
 }
 
-type ServiceApi struct {
+type ActionApi struct {
 	Request  *ApiRequest  `json:"request,omitempty" yaml:"request,omitempty"`   //
 	Response *ApiResponse `json:"response,omitempty" yaml:"response,omitempty"` //
 }
 
-func TextToServiceModel(namePath string, text string) (model *ServiceModel, err error) {
+func TextToActionModel(namePath string, text string) (model *ActionModel, err error) {
 	var modelMap map[string]interface{}
 	var name string
 	name, modelMap, err = TextToModelMap(namePath, text)
 	if err != nil {
 		return
 	}
-	model = &ServiceModel{
+	model = &ActionModel{
 		Name: name,
 	}
 	for key, value := range modelMap {
 		switch key {
 		case "api":
-			api := &ServiceApi{}
+			api := &ActionApi{}
 			err = base.ToBean([]byte(base.ToJSON(value)), api)
 			if err != nil {
 				return
@@ -74,7 +74,7 @@ func TextToServiceModel(namePath string, text string) (model *ServiceModel, err 
 	return
 }
 
-func getStepsByValue(value interface{}) (steps []ServiceStep, err error) {
+func getStepsByValue(value interface{}) (steps []ActionStep, err error) {
 	if value == nil {
 		return
 	}
@@ -89,7 +89,7 @@ func getStepsByValue(value interface{}) (steps []ServiceStep, err error) {
 			return
 		}
 
-		var step ServiceStep
+		var step ActionStep
 		step, err = getStepByValue(valuesOneMap)
 
 		if err != nil {
@@ -102,7 +102,7 @@ func getStepsByValue(value interface{}) (steps []ServiceStep, err error) {
 	return
 }
 
-func getStepByValue(valuesOneMap map[string]interface{}) (step ServiceStep, err error) {
+func getStepByValue(valuesOneMap map[string]interface{}) (step ActionStep, err error) {
 	if valuesOneMap == nil {
 		return
 	}
@@ -126,7 +126,7 @@ func getStepByValue(valuesOneMap map[string]interface{}) (step ServiceStep, err 
 	}
 	delete(valuesOneMap, "return")
 
-	var subSteps []ServiceStep
+	var subSteps []ActionStep
 	subSteps, err = getStepsByValue(valuesOneMap["steps"])
 	if err != nil {
 		return
@@ -149,82 +149,82 @@ func getStepByValue(valuesOneMap map[string]interface{}) (step ServiceStep, err 
 
 	step = nil
 	if step == nil {
-		step, err = getServiceStepLockByMap(valuesOneMap)
+		step, err = getActionStepLockByMap(valuesOneMap)
 		if err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepUnlockByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepUnlockByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepErrorByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepErrorByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepSqlSelectByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepSqlSelectByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepSqlInsertByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepSqlInsertByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepSqlUpdateByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepSqlUpdateByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepSqlDeleteByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepSqlDeleteByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepFileSaveByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepFileSaveByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepFileGetByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepFileGetByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepRedisSetByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepRedisSetByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepRedisGetByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepRedisGetByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepRedisDelByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepRedisDelByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepRedisExpireByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepRedisExpireByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepRedisExpireatByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepRedisExpireatByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
 	if step == nil {
-		if step, err = getServiceStepServiceByMap(valuesOneMap); err != nil {
+		if step, err = getActionStepActionByMap(valuesOneMap); err != nil {
 			return
 		}
 	}
-	baseStep := &ServiceStepBase{
+	baseStep := &ActionStepBase{
 		Validates:          validates,
 		Variables:          variables,
 		Steps:              subSteps,

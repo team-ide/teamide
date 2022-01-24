@@ -254,7 +254,7 @@ func (this_ *ExpressionParser) parseCallExpression(expression *ast.CallExpressio
 	for callKey, callFun := range parseCallMap {
 		if strings.HasSuffix(funcName, callKey) {
 			var args []interface{}
-			if callKey == "service" {
+			if callKey == "action" {
 				args, err = getParseCallArgsForScript(expression.ArgumentList)
 			} else {
 				args, err = getParseCallArgsForValue(expression.ArgumentList, 100)

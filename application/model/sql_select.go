@@ -30,19 +30,19 @@ type SqlSelectColumn struct {
 	Alias      string `json:"alias,omitempty" yaml:"alias,omitempty"`           // 字段别名
 }
 
-type ServiceStepSqlSelect struct {
-	Base *ServiceStepBase
+type ActionStepSqlSelect struct {
+	Base *ActionStepBase
 
 	SqlSelect        *SqlSelect `json:"sqlSelect,omitempty" yaml:"sqlSelect,omitempty"`               // 执行 SQL SELECT 操作
 	VariableName     string     `json:"variableName,omitempty" yaml:"variableName,omitempty"`         // 变量名称
 	VariableDataType string     `json:"variableDataType,omitempty" yaml:"variableDataType,omitempty"` // 变量数据类型
 }
 
-func (this_ *ServiceStepSqlSelect) GetBase() *ServiceStepBase {
+func (this_ *ActionStepSqlSelect) GetBase() *ActionStepBase {
 	return this_.Base
 }
 
-func (this_ *ServiceStepSqlSelect) SetBase(v *ServiceStepBase) {
+func (this_ *ActionStepSqlSelect) SetBase(v *ActionStepBase) {
 	this_.Base = v
 }
 

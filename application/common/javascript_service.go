@@ -32,11 +32,11 @@ func GetJavascriptMethodName(name string) (methodName string) {
 	return
 }
 
-func GetServiceJavascriptByService(app IApplication, service *model.ServiceModel) (javascript string, err error) {
-	methodName := GetJavascriptMethodName(service.Name)
+func GetActionJavascriptByAction(app IApplication, action *model.ActionModel) (javascript string, err error) {
+	methodName := GetJavascriptMethodName(action.Name)
 	javascript += ""
-	javascript += "function service_" + methodName + "("
-	for _, inVariable := range service.InVariables {
+	javascript += "function action_" + methodName + "("
+	for _, inVariable := range action.InVariables {
 		javascript += inVariable.Name + ", "
 	}
 	javascript = strings.TrimSuffix(javascript, ", ")
@@ -46,7 +46,7 @@ func GetServiceJavascriptByService(app IApplication, service *model.ServiceModel
 	javascript += "\n"
 
 	var stepsJavascript string
-	stepsJavascript, err = GetJavascriptBySteps(app, service.Steps, 1)
+	stepsJavascript, err = GetJavascriptBySteps(app, action.Steps, 1)
 	if err != nil {
 		return
 	}
@@ -54,8 +54,8 @@ func GetServiceJavascriptByService(app IApplication, service *model.ServiceModel
 		javascript += stepsJavascript
 	}
 
-	if service.OutVariable != nil {
-		base.AppendLine(&javascript, "return "+service.OutVariable.Name, 1)
+	if action.OutVariable != nil {
+		base.AppendLine(&javascript, "return "+action.OutVariable.Name, 1)
 	}
 
 	javascript += "}"
@@ -63,7 +63,7 @@ func GetServiceJavascriptByService(app IApplication, service *model.ServiceModel
 	return
 }
 
-func GetJavascriptBySteps(app IApplication, steps []model.ServiceStep, tab int) (javascript string, err error) {
+func GetJavascriptBySteps(app IApplication, steps []model.ActionStep, tab int) (javascript string, err error) {
 	if len(steps) == 0 {
 		return
 	}
@@ -81,7 +81,7 @@ func GetJavascriptBySteps(app IApplication, steps []model.ServiceStep, tab int) 
 	return
 }
 
-func GetJavascriptByStep(app IApplication, step model.ServiceStep, tab int) (javascript string, err error) {
+func GetJavascriptByStep(app IApplication, step model.ActionStep, tab int) (javascript string, err error) {
 	if base.IsNotEmpty(step.GetBase().Comment) {
 		base.AppendLine(&javascript, "// "+step.GetBase().Comment, tab)
 	}
@@ -108,37 +108,37 @@ func GetJavascriptByStep(app IApplication, step model.ServiceStep, tab int) (jav
 	}
 	var stepJavascript string
 	switch step_ := step.(type) {
-	case *model.ServiceStepLock:
+	case *model.ActionStepLock:
 		stepJavascript, err = getJavascriptByStepLock(app, step_, tab)
-	case *model.ServiceStepUnlock:
+	case *model.ActionStepUnlock:
 		stepJavascript, err = getJavascriptByStepUnlock(app, step_, tab)
-	case *model.ServiceStepError:
+	case *model.ActionStepError:
 		stepJavascript, err = getJavascriptByStepError(app, step_, tab)
-	case *model.ServiceStepSqlSelect:
+	case *model.ActionStepSqlSelect:
 		stepJavascript, err = getJavascriptByStepSqlSelect(app, step_, tab)
-	case *model.ServiceStepSqlInsert:
+	case *model.ActionStepSqlInsert:
 		stepJavascript, err = getJavascriptByStepSqlInsert(app, step_, tab)
-	case *model.ServiceStepSqlUpdate:
+	case *model.ActionStepSqlUpdate:
 		stepJavascript, err = getJavascriptByStepSqlUpdate(app, step_, tab)
-	case *model.ServiceStepSqlDelete:
+	case *model.ActionStepSqlDelete:
 		stepJavascript, err = getJavascriptByStepSqlDelete(app, step_, tab)
-	case *model.ServiceStepRedisSet:
+	case *model.ActionStepRedisSet:
 		stepJavascript, err = getJavascriptByStepRedisSet(app, step_, tab)
-	case *model.ServiceStepRedisGet:
+	case *model.ActionStepRedisGet:
 		stepJavascript, err = getJavascriptByStepRedisGet(app, step_, tab)
-	case *model.ServiceStepRedisDel:
+	case *model.ActionStepRedisDel:
 		stepJavascript, err = getJavascriptByStepRedisDel(app, step_, tab)
-	case *model.ServiceStepRedisExpire:
+	case *model.ActionStepRedisExpire:
 		stepJavascript, err = getJavascriptByStepRedisExpire(app, step_, tab)
-	case *model.ServiceStepRedisExpireat:
+	case *model.ActionStepRedisExpireat:
 		stepJavascript, err = getJavascriptByStepRedisExpireat(app, step_, tab)
-	case *model.ServiceStepService:
-		stepJavascript, err = getJavascriptByStepService(app, step_, tab)
-	case *model.ServiceStepFileSave:
+	case *model.ActionStepAction:
+		stepJavascript, err = getJavascriptByStepAction(app, step_, tab)
+	case *model.ActionStepFileSave:
 		stepJavascript, err = getJavascriptByStepFileSave(app, step_, tab)
-	case *model.ServiceStepFileGet:
+	case *model.ActionStepFileGet:
 		stepJavascript, err = getJavascriptByStepFileGet(app, step_, tab)
-	case *model.ServiceStepBase:
+	case *model.ActionStepBase:
 	default:
 		err = errors.New(fmt.Sprint("GetJavascriptByStep step type not match:", reflect.TypeOf(step).Elem().Name()))
 		return
@@ -231,7 +231,7 @@ func getJavascriptByValidataRule(app IApplication, name string, rule *model.Vali
 	if strings.Contains(name, ".") {
 		// parentName := name[:strings.Index(name, ".")]
 		// fieldName := name[strings.Index(name, ".")+1:]
-		// for _, in := range service.InVariables {
+		// for _, in := range action.InVariables {
 		// 	if in.Name == parentName {
 		// 		dataType := app.GetContext().GetVariableDataType(in.DataType)
 		// 		if dataType.DataStruct != nil {
@@ -304,7 +304,7 @@ func getJavascriptByVariables(app IApplication, variables []*model.VariableModel
 	return
 }
 
-func getJavascriptByStepLock(app IApplication, step *model.ServiceStepLock, tab int) (javascript string, err error) {
+func getJavascriptByStepLock(app IApplication, step *model.ActionStepLock, tab int) (javascript string, err error) {
 	name := step.Lock.Name
 	if base.IsEmpty(name) {
 		name = "$lock_" + app.GetScript().RandString(10, 10)
@@ -321,13 +321,13 @@ func getJavascriptByStepLock(app IApplication, step *model.ServiceStepLock, tab 
 	return
 }
 
-func getJavascriptByStepUnlock(app IApplication, step *model.ServiceStepUnlock, tab int) (javascript string, err error) {
+func getJavascriptByStepUnlock(app IApplication, step *model.ActionStepUnlock, tab int) (javascript string, err error) {
 	name := step.Unlock.Name
 	base.AppendLine(&javascript, "$invoke_temp.lock_"+name+".unlock()", tab)
 	return
 }
 
-func getJavascriptByStepError(app IApplication, step *model.ServiceStepError, tab int) (javascript string, err error) {
+func getJavascriptByStepError(app IApplication, step *model.ActionStepError, tab int) (javascript string, err error) {
 	var errorModel *model.ErrorModel
 	errorModel, err = GetErrorModel(app, step.Error.Name, step.Error.Code, step.Error.Msg)
 	if err != nil {
@@ -350,7 +350,7 @@ func getJavascriptByErrorModel(app IApplication, errorModel *model.ErrorModel, d
 	return
 }
 
-func getJavascriptByStepSqlSelect(app IApplication, step *model.ServiceStepSqlSelect, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlSelect(app IApplication, step *model.ActionStepSqlSelect, tab int) (javascript string, err error) {
 
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlSelect(app, step.SqlSelect, tab)
@@ -415,7 +415,7 @@ func getJavascriptByStepSqlSelect(app IApplication, step *model.ServiceStepSqlSe
 	return
 }
 
-func getJavascriptByStepSqlInsert(app IApplication, step *model.ServiceStepSqlInsert, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlInsert(app IApplication, step *model.ActionStepSqlInsert, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlInsert(app, step.SqlInsert, tab)
 	if err != nil {
@@ -435,7 +435,7 @@ func getJavascriptByStepSqlInsert(app IApplication, step *model.ServiceStepSqlIn
 	return
 }
 
-func getJavascriptByStepSqlUpdate(app IApplication, step *model.ServiceStepSqlUpdate, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlUpdate(app IApplication, step *model.ActionStepSqlUpdate, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlUpdate(app, step.SqlUpdate, tab)
 	if err != nil {
@@ -455,7 +455,7 @@ func getJavascriptByStepSqlUpdate(app IApplication, step *model.ServiceStepSqlUp
 	return
 }
 
-func getJavascriptByStepSqlDelete(app IApplication, step *model.ServiceStepSqlDelete, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlDelete(app IApplication, step *model.ActionStepSqlDelete, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlDelete(app, step.SqlDelete, tab)
 	if err != nil {
@@ -475,7 +475,7 @@ func getJavascriptByStepSqlDelete(app IApplication, step *model.ServiceStepSqlDe
 	return
 }
 
-func getJavascriptByStepRedisSet(app IApplication, step *model.ServiceStepRedisSet, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisSet(app IApplication, step *model.ActionStepRedisSet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -488,7 +488,7 @@ func getJavascriptByStepRedisSet(app IApplication, step *model.ServiceStepRedisS
 	return
 }
 
-func getJavascriptByStepRedisGet(app IApplication, step *model.ServiceStepRedisGet, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisGet(app IApplication, step *model.ActionStepRedisGet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -501,7 +501,7 @@ func getJavascriptByStepRedisGet(app IApplication, step *model.ServiceStepRedisG
 	return
 }
 
-func getJavascriptByStepRedisDel(app IApplication, step *model.ServiceStepRedisDel, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisDel(app IApplication, step *model.ActionStepRedisDel, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -514,7 +514,7 @@ func getJavascriptByStepRedisDel(app IApplication, step *model.ServiceStepRedisD
 	return
 }
 
-func getJavascriptByStepRedisExpire(app IApplication, step *model.ServiceStepRedisExpire, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisExpire(app IApplication, step *model.ActionStepRedisExpire, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -526,7 +526,7 @@ func getJavascriptByStepRedisExpire(app IApplication, step *model.ServiceStepRed
 	return
 }
 
-func getJavascriptByStepRedisExpireat(app IApplication, step *model.ServiceStepRedisExpireat, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisExpireat(app IApplication, step *model.ActionStepRedisExpireat, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -538,18 +538,18 @@ func getJavascriptByStepRedisExpireat(app IApplication, step *model.ServiceStepR
 	return
 }
 
-func getJavascriptByStepService(app IApplication, step *model.ServiceStepService, tab int) (javascript string, err error) {
+func getJavascriptByStepAction(app IApplication, step *model.ActionStepAction, tab int) (javascript string, err error) {
 
 	var variablesJavascript string
-	variablesJavascript, err = getJavascriptByVariables(app, step.Service.CallVariables, tab)
+	variablesJavascript, err = getJavascriptByVariables(app, step.Action.CallVariables, tab)
 	if err != nil {
 		return
 	}
 	if base.IsNotEmpty(variablesJavascript) {
 		javascript += variablesJavascript
 	}
-	callArgs := `"` + step.Service.Name + `", `
-	for _, one := range step.Service.CallVariables {
+	callArgs := `"` + step.Action.Name + `", `
+	for _, one := range step.Action.CallVariables {
 		callArgs += one.Name + ", "
 	}
 	callArgs = strings.TrimSuffix(callArgs, ", ")
@@ -563,11 +563,11 @@ func getJavascriptByStepService(app IApplication, step *model.ServiceStepService
 		base.AppendLine(&javascript, `addDataInfo("`+step.VariableName+`", "`+step.VariableDataType+`")`, tab)
 	}
 	base.AppendLine(&javascript, "// 调用服务方法", tab)
-	base.AppendLine(&javascript, variableName+"service("+callArgs+")", tab)
+	base.AppendLine(&javascript, variableName+"action("+callArgs+")", tab)
 	return
 }
 
-func getJavascriptByStepFileSave(app IApplication, step *model.ServiceStepFileSave, tab int) (javascript string, err error) {
+func getJavascriptByStepFileSave(app IApplication, step *model.ActionStepFileSave, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -603,7 +603,7 @@ func getJavascriptByStepFileSave(app IApplication, step *model.ServiceStepFileSa
 	return
 }
 
-func getJavascriptByStepFileGet(app IApplication, step *model.ServiceStepFileGet, tab int) (javascript string, err error) {
+func getJavascriptByStepFileGet(app IApplication, step *model.ActionStepFileGet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "

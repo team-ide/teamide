@@ -37,7 +37,7 @@ func init() {
 	invokeCallMap[".redisSet"] = invokeRedisSet
 	invokeCallMap[".redisGet"] = invokeRedisGet
 	invokeCallMap[".redisDel"] = invokeRedisDel
-	invokeCallMap["service"] = invokeService
+	invokeCallMap["action"] = invokeAction
 	invokeCallMap["newVariable"] = invokeNewVariable
 	invokeCallMap["addDataInfo"] = invokeAddDataInfo
 	invokeCallMap["validataRequestToken"] = invokeValidataRequestToken
@@ -596,11 +596,11 @@ func invokeRedisDel(invokeInfo *InvokeInfo, prefixName string, args []interface{
 	return
 }
 
-func invokeService(invokeInfo *InvokeInfo, prefixName string, args []interface{}) (res interface{}, err error) {
-	callServiceName := args[0].(string)
-	callService := invokeInfo.App.GetContext().GetService(callServiceName)
-	if callService == nil {
-		err = base.NewErrorServiceIsNull("service [", callServiceName, "] not defind")
+func invokeAction(invokeInfo *InvokeInfo, prefixName string, args []interface{}) (res interface{}, err error) {
+	callActionName := args[0].(string)
+	callAction := invokeInfo.App.GetContext().GetAction(callActionName)
+	if callAction == nil {
+		err = base.NewErrorActionIsNull("action [", callActionName, "] not defind")
 		return
 	}
 
@@ -610,7 +610,7 @@ func invokeService(invokeInfo *InvokeInfo, prefixName string, args []interface{}
 		return
 	}
 
-	for index, callVariable := range callService.InVariables {
+	for index, callVariable := range callAction.InVariables {
 		value := args[index+1]
 		err = callInvokeNamespace.SetDataInfo(callVariable)
 		if err != nil {
@@ -622,7 +622,7 @@ func invokeService(invokeInfo *InvokeInfo, prefixName string, args []interface{}
 		}
 	}
 	// fmt.Println("callInvokeNamespace:", base.ToJSON(callInvokeNamespace))
-	res, err = invokeInfo.App.InvokeService(callService, callInvokeNamespace)
+	res, err = invokeInfo.App.InvokeAction(callAction, callInvokeNamespace)
 	if err != nil {
 		return
 	}

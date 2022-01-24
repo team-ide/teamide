@@ -1,21 +1,22 @@
 <template>
   <input
-    class="model-input"
+    type="checkbox"
+    class="model-switch"
     v-model="value"
-    :style="{ width: width + 'px' }"
     @change="onChange"
     @input="onInput"
     autocomplete="off"
+    :value="true"
+    :checked="tool.isTrue(value)"
   />
 </template>
 
 <script>
 export default {
-  props: ["wrap", "bean", "name", "validate", "isNumber"],
+  props: ["wrap", "bean", "name", "validate"],
   components: {},
   data() {
     return {
-      width: null,
       value: null,
     };
   },
@@ -23,18 +24,10 @@ export default {
     bean() {
       this.init();
     },
-    value() {
-      this.initWidth(this.value);
-    },
+    value() {},
   },
   methods: {
-    initWidth(value) {
-      let compute = this.tool.computeFontSize(value, "13px");
-      this.width = compute.width + 10;
-    },
-    onInput() {
-      this.initWidth(this.$el.value);
-    },
+    onInput() {},
     onChange() {
       if (this.validate) {
         let error = this.validate(this.bean, this.name, this.value);
@@ -44,18 +37,12 @@ export default {
           return;
         }
       }
-      if (this.isNumber) {
-        this.$emit("change", Number(this.value));
-        this.wrap &&
-          this.wrap.onChange(this.bean, this.name, Number(this.value));
-      } else {
-        this.$emit("change", this.value);
-        this.wrap && this.wrap.onChange(this.bean, this.name, this.value);
-      }
+
+      this.$emit("change", this.value);
+      this.wrap && this.wrap.onChange(this.bean, this.name, this.value);
     },
     init() {
       this.value = this.getBeanValue();
-      this.initWidth(this.value);
     },
     bindEvent() {
       this.$el.addEventListener("keydown", (event) => {
@@ -82,15 +69,8 @@ export default {
 </script>
 
 <style >
-.model-input {
-  padding: 1px 5px;
-  border-color: transparent;
-  outline: none;
+.model-switch {
   background: transparent;
-  color: #f9f9f9;
-  border-bottom: 1px groove #f9f9f9;
-  min-width: 40px;
-  text-align: center;
-  font-size: 12px;
+  margin-top: 4px;
 }
 </style>
