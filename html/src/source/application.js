@@ -159,4 +159,84 @@ application.groups = [
     },
 ];
 
+var databaseTypeOptions = [];
+databaseTypeOptions.push({ value: "Mysql", text: "MySql" });
+application.getDatabaseTypeOptions = function (context) {
+    return databaseTypeOptions;
+
+};
+
+var columnTypeOptions = [];
+columnTypeOptions.push({ value: "varchar", text: "varchar" });
+columnTypeOptions.push({ value: "bigint", text: "bigint" });
+columnTypeOptions.push({ value: "int", text: "int" });
+columnTypeOptions.push({ value: "datetime", text: "datetime" });
+columnTypeOptions.push({ value: "number", text: "number" });
+application.getColumnTypeOptions = function (context) {
+    return columnTypeOptions;
+};
+
+var indexTypeOptions = [];
+indexTypeOptions.push({ value: "unique", text: "普通索引" });
+application.getIndexTypeOptions = function (context) {
+    return indexTypeOptions;
+};
+
+var dataTypeOptions = [];
+dataTypeOptions.push({ value: "string", text: "字符串" });
+dataTypeOptions.push({ value: "int", text: "整形" });
+dataTypeOptions.push({ value: "long", text: "长整型" });
+dataTypeOptions.push({ value: "boolean", text: "布尔型" });
+dataTypeOptions.push({ value: "byte", text: "字节型" });
+dataTypeOptions.push({ value: "date", text: "日期" });
+dataTypeOptions.push({ value: "short", text: "短整型" });
+dataTypeOptions.push({ value: "double", text: "双精度浮点型" });
+dataTypeOptions.push({ value: "float", text: "浮点型" });
+dataTypeOptions.push({ value: "map", text: "集合" });
+application.getDataTypeOptions = function (context) {
+    let options = [];
+    dataTypeOptions.forEach(one => {
+        options.push(one);
+    });
+    if (context && context.structs) {
+        context.structs.forEach((one) => {
+            options.push({
+                value: one.name,
+                text: one.name,
+                comment: one.comment,
+            });
+        });
+    }
+    return options;
+
+};
+
+application.getStructOptions = function (context) {
+    let options = [];
+    if (context && context.structs) {
+        context.structs.forEach((one) => {
+            options.push({
+                value: one.name,
+                text: one.name,
+                comment: one.comment,
+            });
+        });
+    }
+    return options;
+};
+
+application.getActionOptions = function (context) {
+    let options = [];
+    if (context && context.actions) {
+        context.actions.forEach((one) => {
+            options.push({
+                value: one.name,
+                text: one.name,
+                comment: one.comment,
+            });
+        });
+    }
+    return options;
+
+};
 export default application;

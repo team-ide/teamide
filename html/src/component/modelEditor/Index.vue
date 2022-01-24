@@ -11,27 +11,32 @@
           <b-button title="保存（Ctrl+s）" @click="save()">
             <b-icon icon="sticky-fill"></b-icon>
           </b-button>
-          <b-button title="复制" @click="copy()">
+          <b-button title="复制" :disabled="true" @click="copy()">
             <b-icon icon="stickies-fill"></b-icon>
           </b-button>
-          <b-button title="刷新" @click="refresh()">
+          <b-button title="刷新" :disabled="true" @click="refresh()">
             <b-icon icon="arrow-clockwise"></b-icon>
           </b-button>
-          <b-button title="上一步" @click="previousStep()">
-            <b-icon icon="arrow-left"></b-icon
-          ></b-button>
-          <b-button title="下一步" @click="nextStep()">
-            <b-icon icon="arrow-right"></b-icon
-          ></b-button>
-          <b-button v-if="group.isAction" title="测试" @click="toTest()">
-            <b-icon icon="skip-end-fill"></b-icon
-          ></b-button>
-          <b-button title="帮助说明" @click="help()">
-            <b-icon icon="exclamation-circle-fill"></b-icon
-          ></b-button>
-          <b-button title="删除" @click="toDelete()">
-            <b-icon icon="x-circle"></b-icon
-          ></b-button>
+          <b-button title="上一步" :disabled="true" @click="previousStep()">
+            <b-icon icon="arrow-left"></b-icon>
+          </b-button>
+          <b-button title="下一步" :disabled="true" @click="nextStep()">
+            <b-icon icon="arrow-right"></b-icon>
+          </b-button>
+          <b-button
+            v-if="group.isAction"
+            title="测试"
+            :disabled="true"
+            @click="toTest()"
+          >
+            <b-icon icon="skip-end-fill"></b-icon>
+          </b-button>
+          <b-button title="帮助说明" :disabled="true" @click="help()">
+            <b-icon icon="exclamation-circle-fill"></b-icon>
+          </b-button>
+          <b-button title="删除" :disabled="true" @click="toDelete()">
+            <b-icon icon="x-circle"></b-icon>
+          </b-button>
         </b-button-group>
       </div>
       <template v-if="group.isAction">

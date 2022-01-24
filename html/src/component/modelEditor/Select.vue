@@ -6,9 +6,9 @@
     :style="{ width: width + 'px' }"
   >
     <option value="">{{ placeholder ? placeholder : "请选择" }}</option>
-    <template v-if="options != null">
+    <template v-if="items != null">
       <option
-        v-for="(item, index) in options"
+        v-for="(item, index) in items"
         :key="index"
         :value="item.value || item.name"
       >
@@ -29,12 +29,19 @@ export default {
     "name",
     "options",
     "placeholder",
+    "isDataTypeOption",
+    "isStructOption",
+    "isActionOption",
+    "isColumnTypeOption",
+    "isIndexTypeOption",
+    "isDatabaseTypeOption",
   ],
   components: {},
   data() {
     return {
       width: null,
       value: null,
+      items: null,
     };
   },
   watch: {
@@ -43,6 +50,18 @@ export default {
     },
     value() {
       this.initWidth(this.value);
+    },
+    options() {
+      this.initOptions();
+    },
+    context() {
+      if (this.isDataTypeOption) {
+        this.initDataTypeOptions();
+      } else if (this.isStructOption) {
+        this.initStructOptions();
+      } else if (this.isActionOption) {
+        this.initActionOptions();
+      }
     },
   },
   methods: {
@@ -63,6 +82,7 @@ export default {
       this.wrap && this.wrap.onChange(this.bean, this.name, this.value);
     },
     init() {
+      this.initOptions();
       let value = this.getBeanValue();
       if (this.tool.isEmpty(value)) {
         value = "";
@@ -76,6 +96,41 @@ export default {
         this.bean[this.name] = null;
       }
       return this.bean[this.name];
+    },
+    initOptions() {
+      if (this.options != null) {
+        this.items = this.options;
+      } else if (this.isDataTypeOption) {
+        this.initDataTypeOptions();
+      } else if (this.isColumnTypeOption) {
+        this.initColumnTypeOptions();
+      } else if (this.isIndexTypeOption) {
+        this.initIndexTypeOptions();
+      } else if (this.isDatabaseTypeOption) {
+        this.initIndexTypeOptions();
+      } else if (this.isStructOption) {
+        this.initStructOptions();
+      } else if (this.isActionOption) {
+        this.initActionOptions();
+      }
+    },
+    initActionOptions() {
+      this.items = this.source.application.getActionOptions(this.context);
+    },
+    initStructOptions() {
+      this.items = this.source.application.getStructOptions(this.context);
+    },
+    initDataTypeOptions() {
+      this.items = this.source.application.getDataTypeOptions(this.context);
+    },
+    initColumnTypeOptions() {
+      this.items = this.source.application.getColumnTypeOptions(this.context);
+    },
+    initIndexTypeOptions() {
+      this.items = this.source.application.getIndexTypeOptions(this.context);
+    },
+    initDatabaseTypeOptions() {
+      this.items = this.source.application.getDatabaseTypeOptions(this.context);
     },
   },
   mounted() {
