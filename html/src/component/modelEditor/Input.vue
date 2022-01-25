@@ -83,7 +83,7 @@ export default {
 
 <style >
 .model-input {
-  padding: 1px 5px;
+  padding: 0px 5px;
   border-color: transparent;
   outline: none;
   background: transparent;
@@ -92,5 +92,7 @@ export default {
   min-width: 40px;
   text-align: center;
   font-size: 12px;
+  line-height: 22px;
+  height: 22px;
 }
 </style>

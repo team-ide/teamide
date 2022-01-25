@@ -13,7 +13,9 @@
         :value="item.value || item.name"
       >
         {{ item.text || item.name }}
-        <template v-if="item.comment"> ( {{ item.comment }} ) </template>
+        <template v-if="tool.isNotEmpty(item.comment)">
+          ({{ item.comment }})
+        </template>
       </option>
     </template>
   </select>
@@ -67,10 +69,13 @@ export default {
   methods: {
     initWidth(value) {
       let text = this.placeholder ? this.placeholder : "请选择";
-      let list = this.options || [];
-      list.forEach((option) => {
-        if (option.value == value || option.name == value) {
-          text = option.text || option.name;
+      let items = this.items || [];
+      items.forEach((item) => {
+        if (item.value == value || item.name == value) {
+          text = item.text || item.name;
+          if (this.tool.isNotEmpty(item.comment)) {
+            text += "(" + item.comment + ")";
+          }
         }
       });
 
@@ -142,7 +147,7 @@ export default {
 
 <style >
 .model-select {
-  padding: 2px 0px 1px 5px;
+  padding: 0px 0px 0px 5px;
   border-color: transparent;
   outline: none;
   background: transparent;
@@ -153,6 +158,8 @@ export default {
   -moz-appearance: auto;
   -webkit-appearance: auto;
   font-size: 12px;
+  line-height: 22px;
+  height: 22px;
 }
 .model-select option {
   background-color: #ffffff;

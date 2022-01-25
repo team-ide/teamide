@@ -11,7 +11,7 @@
           :readonly="true"
           :wrap="wrap"
         ></Input_>
-        <div class="text">注释</div>
+        <span class="pdlr-10">注释</span>
         <Input_
           :source="source"
           :context="context"
@@ -34,7 +34,7 @@
         <div class="text">Web Api</div>
         <input type="checkbox" class="model-switch" v-model="webApiOpen" />
         <template v-if="bean.api != null && bean.api.request != null">
-          <div class="text">请求地址</div>
+          <span class="pdlr-10">请求地址</span>
           <Input_
             :source="source"
             :context="context"
@@ -42,7 +42,7 @@
             name="path"
             :wrap="wrap"
           ></Input_>
-          <div class="text">请求方法</div>
+          <span class="pdlr-10">请求方法</span>
           <Input_
             :source="source"
             :context="context"
@@ -57,6 +57,7 @@
         (
         <template v-for="(one, index) in bean.inVariables">
           <div :key="'inVariable-' + index" class="inVariable-box">
+            <span class="pdlr-5" style="width: auto">名称</span>
             <Input_
               :source="source"
               :context="context"
@@ -64,7 +65,7 @@
               name="name"
               :wrap="wrap"
             ></Input_>
-            <span class="pdlr-5"></span>
+            <span class="pdlr-5" style="width: auto">类型</span>
             <Select_
               :source="source"
               :context="context"
@@ -73,6 +74,13 @@
               :isDataTypeOption="true"
               :wrap="wrap"
             ></Select_>
+            <div
+              class="tm-link color-red mgl-5"
+              @click="wrap.del(bean, 'inVariables', one)"
+              title="删除"
+            >
+              <b-icon icon="x" class="ft-12"></b-icon>
+            </div>
             <template v-if="index < bean.inVariables.length - 1">
               <span class="pdl-5 pdr-10">,</span>
             </template>

@@ -224,6 +224,8 @@ export default {
 }
 .model-editor li {
   display: flex;
+  line-height: 22px;
+  margin-bottom: 6px;
 }
 .model-editor .text {
   min-width: 80px;
@@ -231,7 +233,7 @@ export default {
 .model-editor .text,
 .model-editor .input,
 .model-editor .comment {
-  padding: 2px 5px;
+  padding: 0px 5px;
 }
 .model-editor-toolbar {
   width: 100%;
