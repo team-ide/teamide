@@ -52,6 +52,45 @@
           ></Input_>
         </template>
       </li>
+      <li>
+        <div class="text">入参</div>
+        (
+        <template v-for="(one, index) in bean.inVariables">
+          <div :key="'inVariable-' + index" class="inVariable-box">
+            <Input_
+              :source="source"
+              :context="context"
+              :bean="one"
+              name="name"
+              :wrap="wrap"
+            ></Input_>
+            <span class="pdlr-5"></span>
+            <Select_
+              :source="source"
+              :context="context"
+              :bean="one"
+              name="dataType"
+              :isDataTypeOption="true"
+              :wrap="wrap"
+            ></Select_>
+            <template v-if="index < bean.inVariables.length - 1">
+              <span class="pdl-5 pdr-10">,</span>
+            </template>
+          </div>
+        </template>
+        )
+        <div class="btn-group">
+          <div
+            class="tm-link color-green mgl-5"
+            @click="
+              wrap.push(bean, 'inVariables', { name: 'arg', dataType: '' })
+            "
+            title="添加入参"
+          >
+            <b-icon icon="plus-circle-fill"></b-icon>
+          </div>
+        </div>
+      </li>
     </ul>
   </div>
 </template>
@@ -59,9 +98,10 @@
 
 <script>
 import Input_ from "./Input.vue";
+import Select_ from "./Select.vue";
 
 export default {
-  components: { Input_ },
+  components: { Input_, Select_ },
   props: ["source", "context", "wrap", "bean"],
   data() {
     return {
@@ -75,28 +115,43 @@ export default {
       this.init();
     },
     webApiOpen(open) {
-      if (this.isInitWebApiOpen) {
-        return;
-      }
       let api = null;
       if (open) {
+        if (this.bean.api != null && this.bean.api.request != null) {
+          this.bean.api.response = this.bean.api.response || {};
+          return;
+        }
         api = this.bean.api || {};
         api.request = api.request || {
           path: "/",
         };
-        api.response = api.response || {};
+      } else {
+        if (this.bean.api == null || this.bean.api.request == null) {
+          return;
+        }
       }
       this.wrap && this.wrap.onChange(this.bean, "api", api);
     },
   },
   methods: {
     init() {
+      if (this.bean.inVariables == null) {
+        this.bean.inVariables = [];
+        this.wrap.refresh();
+        return;
+      }
+      if (this.bean.outVariable == null) {
+        this.bean.outVariable = {};
+        this.wrap.refresh();
+        return;
+      }
+      if (this.bean.steps == null) {
+        this.bean.steps = [];
+        this.wrap.refresh();
+        return;
+      }
       if (this.bean.api != null && this.bean.api.request != null) {
-        this.isInitWebApiOpen = true;
         this.webApiOpen = true;
-        this.$nextTick(() => {
-          this.isInitWebApiOpen = false;
-        });
       }
       this.ready = true;
     },
@@ -109,4 +164,7 @@ export default {
 </script>
 
 <style>
+.inVariable-box {
+  display: flex;
+}
 </style>
