@@ -152,7 +152,7 @@ export default {
   outline: none;
   background: transparent;
   color: #f9f9f9;
-  border-bottom: 1px groove #f9f9f9;
+  border-bottom: 0px groove #f9f9f9;
   min-width: 40px;
   text-align: center;
   -moz-appearance: auto;

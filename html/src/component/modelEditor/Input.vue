@@ -29,8 +29,8 @@ export default {
   },
   methods: {
     initWidth(value) {
-      let compute = this.tool.computeFontSize(value, "13px");
-      this.width = compute.width + 10;
+      let compute = this.tool.computeFontSize(value, "12px");
+      this.width = compute.width + 15;
     },
     onInput() {
       this.initWidth(this.$el.value);
