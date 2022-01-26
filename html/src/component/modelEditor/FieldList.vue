@@ -1,23 +1,23 @@
 <template>
-  <li v-if="ready">
+  <li v-if="ready" class="pdl-20">
     <table class="model-table">
       <thead>
         <tr>
           <template v-for="(one, index) in field.fields">
-            <th :key="'field-table-th-' + index">
-              {{ one.text }}
-            </th>
+            <template v-if="one.ifScript == null || one.ifScript(bean)">
+              <th :key="'field-table-th-' + index">
+                {{ one.text }}
+              </th>
+            </template>
           </template>
           <th width="100">
-            <div class="btn-group">
-              <div
-                class="tm-link color-green mgr-5"
-                @click="wrap.push(bean, field.name, {})"
-                title="添加"
-              >
-                <b-icon icon="plus-circle-fill"></b-icon>
-              </div>
-            </div>
+            <span
+              class="tm-pointer color-green mgr-5"
+              @click="wrap.push(bean, field.name, {})"
+              title="添加"
+            >
+              <b-icon icon="plus-circle-fill"></b-icon>
+            </span>
           </th>
         </tr>
       </thead>
@@ -26,40 +26,42 @@
           <template v-for="(oneBean, oneBeanIndex) in list">
             <tr :key="'field-table-tr-' + oneBeanIndex">
               <template v-for="(one, index) in field.fields">
-                <td :key="'field-table-td-' + index">
-                  <ModelEditorFieldInput
-                    :source="source"
-                    :context="context"
-                    :bean="oneBean"
-                    :field="one"
-                    :wrap="wrap"
-                  ></ModelEditorFieldInput>
-                </td>
+                <template
+                  v-if="one.ifScript == null || one.ifScript(bean, oneBean)"
+                >
+                  <td :key="'field-table-td-' + index">
+                    <ModelEditorFieldInput
+                      :source="source"
+                      :context="context"
+                      :bean="oneBean"
+                      :field="one"
+                      :wrap="wrap"
+                    ></ModelEditorFieldInput>
+                  </td>
+                </template>
               </template>
               <td>
-                <div class="btn-group">
-                  <div
-                    class="tm-link mgr-5"
-                    @click="wrap.up(bean, field.name, oneBean)"
-                    title="上移"
-                  >
-                    <b-icon icon="caret-up-fill" class="ft-13"></b-icon>
-                  </div>
-                  <div
-                    class="tm-link mgr-5"
-                    @click="wrap.down(bean, field.name, oneBean)"
-                    title="下移"
-                  >
-                    <b-icon icon="caret-down-fill" class="ft-13"></b-icon>
-                  </div>
-                  <div
-                    class="tm-link mgr-5"
-                    @click="wrap.del(bean, field.name, oneBean)"
-                    title="删除"
-                  >
-                    <b-icon icon="backspace-fill" class="ft-13"></b-icon>
-                  </div>
-                </div>
+                <span
+                  class="tm-pointer mgr-5"
+                  @click="wrap.up(bean, field.name, oneBean)"
+                  title="上移"
+                >
+                  <b-icon icon="caret-up-fill" class="ft-13"></b-icon>
+                </span>
+                <span
+                  class="tm-pointer mgr-5"
+                  @click="wrap.down(bean, field.name, oneBean)"
+                  title="下移"
+                >
+                  <b-icon icon="caret-down-fill" class="ft-13"></b-icon>
+                </span>
+                <span
+                  class="tm-pointer mgr-5"
+                  @click="wrap.del(bean, field.name, oneBean)"
+                  title="删除"
+                >
+                  <b-icon icon="backspace-fill" class="ft-13"></b-icon>
+                </span>
               </td>
             </tr>
           </template>

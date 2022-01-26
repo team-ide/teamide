@@ -1,7 +1,7 @@
 <template>
   <li v-if="ready">
     <template v-if="tool.isNotEmpty(field.text)">
-      <div class="text">{{ field.text }}</div>
+      <span class="text">{{ field.text }}</span>
     </template>
 
     <template v-if="field.fields == null">
@@ -15,7 +15,7 @@
     </template>
 
     <template v-if="tool.isNotEmpty(field.comment)">
-      <div class="comment">{{ field.comment }}</div>
+      <span class="comment">{{ field.comment }}</span>
     </template>
   </li>
 </template>

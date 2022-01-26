@@ -76,10 +76,12 @@ export default {
       if (tab == null) {
         return;
       }
-      tab.changed = false;
-      tab.last_model = null;
-      tab.model = model;
       let flag = await this.application.saveModel(group, model);
+      if (flag) {
+        tab.changed = false;
+        tab.last_model = null;
+        tab.model = model;
+      }
       return flag;
     },
     toSelectTab(tab) {

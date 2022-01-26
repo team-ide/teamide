@@ -1,3 +1,4 @@
+import tool from "../tool";
 
 let application = {};
 
@@ -26,13 +27,13 @@ application.groups = [
                     { text: "注释", name: "comment" },
                     { text: "数据类型", name: "dataType", type: "select", isDataTypeOption: true, },
                     { text: "是List", name: "isList", type: "switch" },
-                    { text: "字段", name: "column" },
-                    { text: "字段类型", name: "columnType", type: "select", isColumnTypeOption: true, },
-                    { text: "字段长度", name: "columnLength", isNumber: true, },
-                    { text: "小数长度", name: "columnDecimal", isNumber: true, },
-                    { text: "是主键", name: "primaryKey", type: "switch" },
-                    { text: "不能为空", name: "notNull", type: "switch" },
-                    { text: "默认", name: "default" },
+                    { text: "字段", name: "column", ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "字段类型", name: "columnType", type: "select", isColumnTypeOption: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "字段长度", name: "columnLength", isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "小数长度", name: "columnDecimal", isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "是主键", name: "primaryKey", type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "不能为空", name: "notNull", type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "默认", name: "default", ifScript(data) { return tool.isNotEmpty(data.table) }, },
                 ]
             },
             {

@@ -238,11 +238,7 @@ export default {
       }
       Object.assign(this.updateData, model);
 
-      await this.doSave(context);
-
-      if (this.application.groupOpens.indexOf(group.name) < 0) {
-        this.openGroup(group);
-      }
+      return await this.doSave(context);
     },
     async doDelete(group, model) {
       let context = Object.assign({}, this.context);
@@ -252,11 +248,7 @@ export default {
       }
       context[group.name].splice(context[group.name].indexOf(model), 1);
 
-      await this.doSave(context);
-
-      if (this.application.groupOpens.indexOf(group.name) < 0) {
-        this.openGroup(group);
-      }
+      return await this.doSave(context);
     },
     async saveModel(group, model) {
       let context = Object.assign({}, this.context);
@@ -274,7 +266,7 @@ export default {
       }
       context[group.name].splice(context[group.name].indexOf(find), 1, model);
 
-      await this.doSave(context);
+      return await this.doSave(context);
     },
     async doSave(context) {
       let res = await this.server.application.context.save({
@@ -283,8 +275,10 @@ export default {
       });
       if (res.code == 0) {
         this.application.context = res.data;
+        return true;
       } else {
         this.tool.error(res.msg);
+        return false;
       }
     },
   },

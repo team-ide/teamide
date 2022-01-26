@@ -21,9 +21,17 @@ func TextToTestModel(namePath string, text string) (model *TestModel, err error)
 	if err != nil {
 		return
 	}
-	model = &TestModel{
-		Name: name,
+	model, err = MapToTestModel(modelMap)
+	if err != nil {
+		return
 	}
+	model.Name = name
+	return
+}
+
+func MapToTestModel(modelMap map[string]interface{}) (model *TestModel, err error) {
+
+	model = &TestModel{}
 	model.Steps, err = getStepsByValue(modelMap["steps"])
 	if err != nil {
 		return

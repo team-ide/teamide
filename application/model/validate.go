@@ -46,7 +46,7 @@ func getValidatesByValue(value interface{}) (validates []*ValidateModel, err err
 	for _, valuesOne := range values {
 		switch v := valuesOne.(type) {
 		case map[string]interface{}:
-			validateMap := map[string]interface{}{}
+			validateMap := v
 			if len(v) == 1 {
 				for mapKey, mapValue := range v {
 					switch subV := mapValue.(type) {

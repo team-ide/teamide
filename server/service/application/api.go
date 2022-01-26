@@ -1,10 +1,10 @@
 package applicationService
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"teamide/application"
 	"teamide/application/model"
 	"teamide/server/base"
 	"teamide/server/component"
@@ -243,7 +243,7 @@ func apiContextLoad(requestBean *base.RequestBean, c *gin.Context) (res interfac
 		if err != nil {
 			return
 		}
-		err = base.ToBean(bs, context)
+		context, err = application.GetContextByText(string(bs))
 		if err != nil {
 			return
 		}
@@ -281,17 +281,17 @@ func apiContextSave(requestBean *base.RequestBean, c *gin.Context) (res interfac
 	}
 
 	var context = &model.ModelContext{}
-
-	err = base.ToBean([]byte(request.Content), context)
+	context, err = application.GetContextByText(request.Content)
+	if err != nil {
+		return
+	}
+	var text string
+	text, err = application.GetTextByContext(context)
 	if err != nil {
 		return
 	}
 	var bs []byte
-	bs, err = json.Marshal(context)
-	if err != nil {
-		return
-	}
-	bs, err = base.AesCBCEncrypt(bs, []byte(component.GetKey()))
+	bs, err = base.AesCBCEncrypt([]byte(text), []byte(component.GetKey()))
 	if err != nil {
 		return
 	}

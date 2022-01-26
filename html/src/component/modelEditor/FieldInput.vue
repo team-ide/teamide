@@ -1,5 +1,5 @@
 <template>
-  <div v-if="ready" class="input">
+  <span v-if="ready" class="input">
     <template v-if="field.type == 'switch'">
       <Switch_
         :source="source"
@@ -41,7 +41,7 @@
       >
       </Input_>
     </template>
-  </div>
+  </span>
 </template>
 
 

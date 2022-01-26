@@ -130,7 +130,12 @@ func getVariablesByValue(value interface{}) (variables []*VariableModel, err err
 		return
 	}
 	values, valuesOk := value.([]interface{})
-	if !valuesOk || len(values) == 0 {
+	if !valuesOk {
+		err = errors.New(fmt.Sprint("value [", value, "] type [", reflect.TypeOf(value).Name(), "] to variable list error"))
+		return
+
+	}
+	if len(values) == 0 {
 		return
 	}
 
@@ -140,7 +145,7 @@ func getVariablesByValue(value interface{}) (variables []*VariableModel, err err
 			if len(v) == 0 {
 				break
 			}
-			variableMap := map[string]interface{}{}
+			variableMap := v
 			if len(v) == 1 {
 				for mapKey, mapValue := range v {
 					switch subV := mapValue.(type) {
@@ -191,6 +196,7 @@ func getVariablesByValue(value interface{}) (variables []*VariableModel, err err
 			}
 		default:
 			err = errors.New(fmt.Sprint("value [", v, "] type [", reflect.TypeOf(v).Name(), "] to variable error"))
+			return
 		}
 	}
 	return

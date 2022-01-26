@@ -30,9 +30,17 @@ func TextToActionModel(namePath string, text string) (model *ActionModel, err er
 	if err != nil {
 		return
 	}
-	model = &ActionModel{
-		Name: name,
+	model, err = MapToActionModel(modelMap)
+	if err != nil {
+		return
 	}
+	model.Name = name
+	return
+}
+
+func MapToActionModel(modelMap map[string]interface{}) (model *ActionModel, err error) {
+
+	model = &ActionModel{}
 	for key, value := range modelMap {
 		switch key {
 		case "api":

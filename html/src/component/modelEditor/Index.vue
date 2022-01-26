@@ -223,12 +223,9 @@ export default {
   font-size: 12px;
 }
 .model-editor li {
-  display: flex;
+  display: block;
   line-height: 22px;
-  margin-bottom: 6px;
-}
-.model-editor .text {
-  min-width: 80px;
+  margin-bottom: 3px;
 }
 .model-editor .text,
 .model-editor .input,

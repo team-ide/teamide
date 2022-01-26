@@ -42,4 +42,10 @@ Vue.component('ModelEditorFieldList', ModelEditorFieldList);
 import ModelEditorAction from './modelEditor/Action.vue'
 Vue.component('ModelEditorAction', ModelEditorAction);
 
+import ModelEditorStep from './modelEditor/Step.vue'
+Vue.component('ModelEditorStep', ModelEditorStep);
+
+import ModelEditorSteps from './modelEditor/Steps.vue'
+Vue.component('ModelEditorSteps', ModelEditorSteps);
+
 export default {};

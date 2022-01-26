@@ -2,7 +2,7 @@
   <div v-if="ready">
     <ul>
       <li>
-        <div class="text">名称</div>
+        <span class="text">名称</span>
         <Input_
           :source="source"
           :context="context"
@@ -11,7 +11,7 @@
           :readonly="true"
           :wrap="wrap"
         ></Input_>
-        <span class="pdlr-10">注释</span>
+        <span class="text">注释</span>
         <Input_
           :source="source"
           :context="context"
@@ -21,7 +21,7 @@
         ></Input_>
       </li>
       <li>
-        <div class="text">详细描述</div>
+        <span class="text">详细描述</span>
         <Input_
           :source="source"
           :context="context"
@@ -31,10 +31,10 @@
         ></Input_>
       </li>
       <li>
-        <div class="text">Web Api</div>
+        <span class="text">Web Api</span>
         <input type="checkbox" class="model-switch" v-model="webApiOpen" />
         <template v-if="bean.api != null && bean.api.request != null">
-          <span class="pdlr-10">请求地址</span>
+          <span class="text">请求地址</span>
           <Input_
             :source="source"
             :context="context"
@@ -42,7 +42,7 @@
             name="path"
             :wrap="wrap"
           ></Input_>
-          <span class="pdlr-10">请求方法</span>
+          <span class="text">请求方法</span>
           <Input_
             :source="source"
             :context="context"
@@ -53,10 +53,10 @@
         </template>
       </li>
       <li>
-        <div class="text">入参</div>
+        <span class="text">入参</span>
         (
         <template v-for="(one, index) in bean.inVariables">
-          <div :key="'inVariable-' + index" class="inVariable-box">
+          <span :key="'inVariable-' + index">
             <span class="pdlr-5" style="width: auto">名称</span>
             <Input_
               :source="source"
@@ -74,30 +74,65 @@
               :isDataTypeOption="true"
               :wrap="wrap"
             ></Select_>
-            <div
-              class="tm-link color-red mgl-5"
+            <span
+              class="tm-pointer color-red mgl-5"
               @click="wrap.del(bean, 'inVariables', one)"
               title="删除"
             >
               <b-icon icon="x" class="ft-12"></b-icon>
-            </div>
+            </span>
             <template v-if="index < bean.inVariables.length - 1">
               <span class="pdl-5 pdr-10">,</span>
             </template>
-          </div>
+          </span>
         </template>
         )
-        <div class="btn-group">
-          <div
-            class="tm-link color-green mgl-5"
-            @click="
-              wrap.push(bean, 'inVariables', { name: 'arg', dataType: '' })
-            "
-            title="添加入参"
-          >
-            <b-icon icon="plus-circle-fill"></b-icon>
-          </div>
-        </div>
+        <span
+          class="tm-pointer color-green mgl-5"
+          @click="wrap.push(bean, 'inVariables', { name: 'arg', dataType: '' })"
+          title="添加入参"
+        >
+          <b-icon icon="plus-circle-fill"></b-icon>
+        </span>
+      </li>
+      <li>
+        <span class="text">出参</span>
+        <span class="pdlr-5" style="width: auto">名称</span>
+        <Input_
+          :source="source"
+          :context="context"
+          :bean="bean.outVariable"
+          name="name"
+          :wrap="wrap"
+        ></Input_>
+        <span class="pdlr-5" style="width: auto">类型</span>
+        <Select_
+          :source="source"
+          :context="context"
+          :bean="bean.outVariable"
+          name="dataType"
+          :isDataTypeOption="true"
+          :wrap="wrap"
+        ></Select_>
+      </li>
+      <li>
+        <span class="text">步骤</span>
+        <span
+          class="tm-pointer color-green mgl-5"
+          @click="wrap.push(bean, 'steps', { name: 'arg', dataType: '' })"
+          title="添加步骤"
+        >
+          <b-icon icon="plus-circle-fill"></b-icon>
+        </span>
+
+        <ModelEditorSteps
+          class="pdl-20"
+          :source="source"
+          :context="context"
+          :wrap="wrap"
+          :bean="bean"
+        >
+        </ModelEditorSteps>
       </li>
     </ul>
   </div>
@@ -172,7 +207,4 @@ export default {
 </script>
 
 <style>
-.inVariable-box {
-  display: flex;
-}
 </style>
