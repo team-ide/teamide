@@ -212,6 +212,7 @@ export default {
 .model-editor {
   width: 100%;
   height: 100%;
+  overflow: auto;
 }
 .model-editor ul {
   margin-top: 10px;
@@ -236,6 +237,7 @@ export default {
   width: 100%;
   text-align: center;
   padding: 5px 0px;
+  position: absolute;
 }
 
 .model-editor-toolbar .btn {

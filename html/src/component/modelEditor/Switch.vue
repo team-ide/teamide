@@ -71,6 +71,8 @@ export default {
 <style >
 .model-switch {
   background: transparent;
-  vertical-align: middle;
+  height: 10px;
+  margin-top: 0px;
+  vertical-align: -1px;
 }
 </style>

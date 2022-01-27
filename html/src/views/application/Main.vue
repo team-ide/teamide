@@ -10,10 +10,18 @@
             :class="{ active: one.active }"
           >
             <span class="text" @click="toSelectTab(one)">{{ one.text }}</span>
-            <span v-if="one.changed" class="color-red-4 mgt-2 ft-15"> * </span>
             <span
+              v-if="one.changed"
+              class="color-orange mgr-2 ft-22"
+              title="有更改"
+            >
+              <b-icon icon="dot"></b-icon>
+            </span>
+            <span
+              v-if="!one.changed"
               class="delete-btn tm-pointer color-orange"
               @click="toDeleteTab(one)"
+              title="关闭"
             >
               <b-icon icon="x"></b-icon>
             </span>

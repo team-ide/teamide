@@ -117,13 +117,8 @@
       </li>
       <li>
         <span class="text">步骤</span>
-        <span
-          class="tm-pointer color-green mgl-5"
-          @click="wrap.push(bean, 'steps', { name: 'arg', dataType: '' })"
-          title="添加步骤"
-        >
-          <b-icon icon="plus-circle-fill"></b-icon>
-        </span>
+        <AddStep :source="source" :context="context" :wrap="wrap" :bean="bean">
+        </AddStep>
 
         <ModelEditorSteps
           class="pdl-20"
@@ -142,9 +137,10 @@
 <script>
 import Input_ from "./Input.vue";
 import Select_ from "./Select.vue";
+import AddStep from "./AddStep.vue";
 
 export default {
-  components: { Input_, Select_ },
+  components: { Input_, Select_, AddStep },
   props: ["source", "context", "wrap", "bean"],
   data() {
     return {

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="ready">
+  <div v-if="ready" class="model-step">
     <div>
       <template v-if="openIf">
         <span class="text">if (</span>
@@ -13,7 +13,7 @@
         <span class="text">) {</span>
       </template>
       <template v-else>
-        <span class="text">// if</span>
+        <span class="text">添加条件</span>
       </template>
       <input
         type="checkbox"
@@ -27,126 +27,39 @@
         @click="wrap.del(parent, 'steps', bean)"
         title="删除步骤"
       >
-        <b-icon icon="x" class="ft-12"></b-icon>
+        删除步骤
       </span>
-      <span
-        class="tm-pointer color-green mgl-5"
-        @click="wrap.push(bean, 'steps', { name: 'step' })"
-        title="添加子步骤"
+      <AddStep
+        :source="source"
+        :context="context"
+        :wrap="wrap"
+        :bean="bean"
+        :isChild="true"
       >
-        <b-icon icon="plus"></b-icon>
-      </span>
+      </AddStep>
     </div>
     <div :class="{ 'pdl-20': openIf }">
-      <template v-if="bean.variables != null">
-        <div>
-          <div>
-            <span class="text">变量</span>
-            <span
-              class="tm-pointer mgl-5"
-              @click="
-                wrap.push(bean, 'variables', {
-                  name: 'name',
-                  value: 'value',
-                  dataType: 'string',
-                })
-              "
-              title="添加变量"
-            >
-              <b-icon icon="plus"></b-icon>
-            </span>
-          </div>
-          <template v-for="(one, index) in bean.variables">
-            <div :key="'variable-' + index" class="pdl-20">
-              <Input_
-                :source="source"
-                :context="context"
-                :bean="one"
-                name="name"
-                title="变量名称"
-                :wrap="wrap"
-              ></Input_>
-              <span class="text">:</span>
-              <Input_
-                :source="source"
-                :context="context"
-                :bean="one"
-                name="value"
-                title="值"
-                :wrap="wrap"
-              ></Input_>
-              <span class="text">类型</span>
-              <Select_
-                :source="source"
-                :context="context"
-                :bean="one"
-                name="dataType"
-                :isDataTypeOption="true"
-                :wrap="wrap"
-              ></Select_>
-              <span
-                class="tm-pointer color-red mgl-5"
-                @click="wrap.del(bean, 'variables', one)"
-                title="删除"
-              >
-                <b-icon icon="x" class="ft-12"></b-icon>
-              </span>
-            </div>
-          </template>
-        </div>
-      </template>
-      <template v-if="bean.validates != null">
-        <div>
-          <div>
-            <span class="text">验证</span>
-            <span
-              class="tm-pointer mgl-5"
-              @click="
-                wrap.push(bean, 'validates', {
-                  name: 'name',
-                  pattern: '',
-                })
-              "
-              title="添加验证"
-            >
-              <b-icon icon="plus"></b-icon>
-            </span>
-          </div>
-          <template v-for="(one, index) in bean.validates">
-            <div :key="'validate-' + index" class="pdl-20">
-              <Input_
-                :source="source"
-                :context="context"
-                :bean="one"
-                name="name"
-                :wrap="wrap"
-                title="变量"
-              ></Input_>
-              <span class="text">:</span>
-              <Input_
-                :source="source"
-                :context="context"
-                :bean="one"
-                name="value"
-                :wrap="wrap"
-                title="pattern"
-              ></Input_>
-            </div>
-          </template>
-        </div>
-      </template>
-      <div>
-        <Select_
+      <div class="mgt-10" v-if="bean.variables != null">
+        <span class="text">定义变量</span>
+        <Variables
+          class="mgl-60 mgt--20"
           :source="source"
           :context="context"
-          :bean="this"
-          name="stepType"
-          :options="stepTypes"
-          placeholder="普通"
-          class="pdl-0"
-          @change="stepTypeChange"
-        ></Select_>
-        <span class="text">步骤</span>
+          :bean="bean"
+          :wrap="wrap"
+        >
+        </Variables>
+      </div>
+      <div class="mgt-10" v-if="bean.validates != null">
+        <span class="text">变量验证</span>
+        <Validates
+          class="mgl-60 mgt--20"
+          :source="source"
+          :context="context"
+          :bean="bean"
+          :wrap="wrap"
+        >
+        </Validates>
       </div>
       <template v-if="tool.isEmpty(stepType)">
         <div class="pdl-20">base</div>
@@ -175,25 +88,18 @@
 
 <script>
 import Input_ from "./Input.vue";
-import Select_ from "./Select.vue";
+import Variables from "./Variables.vue";
+import Validates from "./Validates.vue";
+import AddStep from "./AddStep.vue";
 
 export default {
-  components: { Input_, Select_ },
+  components: { Input_, Variables, Validates, AddStep },
   props: ["source", "context", "wrap", "bean", "parent"],
   data() {
     return {
       ready: false,
       openIf: false,
       stepType: null,
-      stepTypes: [
-        { value: "sqlSelect", text: "Sql Select" },
-        { value: "sqlInsert", text: "Sql Insert" },
-        { value: "sqlUpdate", text: "Sql Update" },
-        { value: "sqlDelete", text: "Sql Delete" },
-        { value: "redisGet", text: "Redis Get" },
-        { value: "redisSet", text: "Redis Set" },
-        { value: "redisDel", text: "Redis Del" },
-      ],
     };
   },
   computed: {},
@@ -207,16 +113,6 @@ export default {
       this.stepType = value;
     },
     init() {
-      if (this.bean.variables == null) {
-        this.bean.variables = [];
-        this.wrap.refresh();
-        return;
-      }
-      if (this.bean.validates == null) {
-        this.bean.validates = [];
-        this.wrap.refresh();
-        return;
-      }
       if (this.tool.isNotEmpty(this.bean.if)) {
         this.openIf = true;
       }
@@ -231,4 +127,8 @@ export default {
 </script>
 
 <style>
+.model-step {
+  margin: 2px;
+  border: 1px solid #3a3a3a;
+}
 </style>

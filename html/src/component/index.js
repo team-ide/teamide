@@ -48,4 +48,12 @@ Vue.component('ModelEditorStep', ModelEditorStep);
 import ModelEditorSteps from './modelEditor/Steps.vue'
 Vue.component('ModelEditorSteps', ModelEditorSteps);
 
+import MenuBox from './menu/MenuBox.vue'
+Vue.component('MenuBox', MenuBox);
+
+import MenuSubBox from './menu/MenuSubBox.vue'
+Vue.component('MenuSubBox', MenuSubBox);
+
+import MenuItem from './menu/MenuItem.vue'
+Vue.component('MenuItem', MenuItem);
 export default {};
