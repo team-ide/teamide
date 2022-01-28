@@ -11,10 +11,10 @@
           <b-button title="保存（Ctrl+s）" @click="save()">
             <b-icon icon="sticky-fill"></b-icon>
           </b-button>
-          <b-button title="复制" :disabled="true" @click="copy()">
+          <b-button title="复制" @click="copy()">
             <b-icon icon="stickies-fill"></b-icon>
           </b-button>
-          <b-button title="刷新" :disabled="true" @click="refresh()">
+          <b-button title="刷新重置" @click="reload()">
             <b-icon icon="arrow-clockwise"></b-icon>
           </b-button>
           <b-button title="上一步" :disabled="true" @click="previousStep()">
@@ -41,6 +41,7 @@
       </div>
       <template v-if="group.isAction">
         <ModelEditorAction
+          class="mgt-40"
           :source="source"
           :context="context"
           :bean="data"
@@ -49,7 +50,7 @@
         </ModelEditorAction>
       </template>
       <template v-else>
-        <ul v-if="!group.isAction">
+        <ul v-if="!group.isAction" class="mgt-40">
           <template v-for="(one, index) in group.fields">
             <ModelEditorField
               :key="'field-' + index"
@@ -93,7 +94,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "context", "model", "group"],
+  props: ["source", "context", "model", "group", "application"],
   data() {
     return {
       key: this.tool.getNumber(),
@@ -137,35 +138,32 @@ export default {
       this.toCallChange();
     },
     del(bean, name, value) {
-      bean = bean || {};
-      bean[name] = bean[name] || [];
-      value = value || {};
-      let index = bean[name].indexOf(value);
-      if (index >= 0) {
-        bean[name].splice(index, 1);
-        this.toCallChange();
+      if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index >= 0) {
+          bean[name].splice(index, 1);
+          this.toCallChange();
+        }
       }
     },
     up(bean, name, value) {
-      bean = bean || {};
-      bean[name] = bean[name] || [];
-      value = value || {};
-      let index = bean[name].indexOf(value);
-      if (index > 0) {
-        bean[name].splice(index, 1);
-        bean[name].splice(index - 1, 0, value);
-        this.toCallChange();
+      if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index > 0) {
+          bean[name].splice(index, 1);
+          bean[name].splice(index - 1, 0, value);
+          this.toCallChange();
+        }
       }
     },
     down(bean, name, value) {
-      bean = bean || {};
-      bean[name] = bean[name] || [];
-      value = value || {};
-      let index = bean[name].indexOf(value);
-      if (index >= 0 && index < bean[name].length - 1) {
-        bean[name].splice(index, 1);
-        bean[name].splice(index + 1, 0, value);
-        this.toCallChange();
+      if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index >= 0 && index < bean[name].length - 1) {
+          bean[name].splice(index, 1);
+          bean[name].splice(index + 1, 0, value);
+          this.toCallChange();
+        }
       }
     },
     toCallChange() {
@@ -187,7 +185,18 @@ export default {
       let model = JSON.parse(JSON.stringify(this.data));
       this.$emit("save", this.group, model);
     },
-    copy() {},
+    copy() {
+      let model = JSON.parse(JSON.stringify(this.data));
+      this.application.showModelForm(this.group, model, (group, param) => {
+        Object.assign(model, param);
+        return this.application.saveModel(group, model, true);
+      });
+    },
+    reload() {
+      let model = JSON.parse(JSON.stringify(this.model));
+      this.set(model);
+      this.$emit("change", this.group, model);
+    },
     toDelete() {},
     previousStep() {},
     nextStep() {},

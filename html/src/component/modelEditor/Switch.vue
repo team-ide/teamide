@@ -54,9 +54,6 @@ export default {
     },
     getBeanValue() {
       this.bean = this.bean || {};
-      if (this.bean[this.name] == null) {
-        this.bean[this.name] = null;
-      }
       return this.bean[this.name];
     },
   },

@@ -97,9 +97,6 @@ export default {
     },
     getBeanValue() {
       this.bean = this.bean || {};
-      if (this.bean[this.name] == null) {
-        this.bean[this.name] = null;
-      }
       return this.bean[this.name];
     },
     initOptions() {
@@ -150,7 +147,6 @@ export default {
   padding: 0px 0px 0px 5px;
   border-color: transparent;
   outline: none;
-  background: transparent;
   color: #f9f9f9;
   border-bottom: 0px groove #f9f9f9;
   min-width: 40px;
@@ -160,10 +156,15 @@ export default {
   font-size: 12px;
   line-height: 22px;
   height: 22px;
+  /* background: transparent; */
+  background: #343434;
 }
 .model-select option {
   background-color: #ffffff;
   color: #3e3e3e;
   text-align: left;
+}
+.model-table .model-select {
+  width: 100% !important;
 }
 </style>

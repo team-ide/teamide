@@ -11,7 +11,7 @@
 
 <script>
 export default {
-  props: ["wrap", "bean", "name", "validate", "isNumber"],
+  props: ["source", "context", "wrap", "bean", "name", "validate", "isNumber"],
   components: {},
   data() {
     return {
@@ -29,6 +29,9 @@ export default {
   },
   methods: {
     initWidth(value) {
+      if (this.tool.isEmpty(value)) {
+        value = "";
+      }
       let compute = this.tool.computeFontSize(value, "12px");
       this.width = compute.width + 15;
     },
@@ -67,9 +70,6 @@ export default {
     },
     getBeanValue() {
       this.bean = this.bean || {};
-      if (this.bean[this.name] == null) {
-        this.bean[this.name] = null;
-      }
       return this.bean[this.name];
     },
   },
@@ -94,6 +94,9 @@ export default {
   font-size: 12px;
   line-height: 22px;
   height: 22px;
-  background: #383838;
+  background: #343434;
+}
+.model-table .model-input {
+  width: 100% !important;
 }
 </style>

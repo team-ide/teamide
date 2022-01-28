@@ -174,7 +174,9 @@ export default {
     },
     toInsert(group) {
       let data = {};
-      this.application.showModelForm(group, data, this.doInsert);
+      this.application.showModelForm(group, data, (g, m) => {
+        return this.doInsert(g, m);
+      });
     },
     toUpdate(group, model) {
       let data = {
@@ -182,7 +184,9 @@ export default {
         comment: model.comment,
       };
       this.updateData = model;
-      this.application.showModelForm(group, data, this.doUpdate);
+      this.application.showModelForm(group, data, (g, m) => {
+        return this.doUpdate(g, m);
+      });
     },
     toDelete(group, model) {
       this.tool
@@ -198,7 +202,7 @@ export default {
         })
         .catch((e) => {});
     },
-    async doInsert(group, model) {
+    doInsert(group, model) {
       let context = Object.assign({}, this.context);
       context[group.name] = context[group.name] || [];
       let find;
@@ -213,13 +217,13 @@ export default {
       }
       context[group.name].push(model);
 
-      await this.doSave(context);
+      this.doSave(context);
 
       if (this.application.groupOpens.indexOf(group.name) < 0) {
         this.openGroup(group);
       }
     },
-    async doUpdate(group, model) {
+    doUpdate(group, model) {
       let context = Object.assign({}, this.context);
       context[group.name] = context[group.name] || [];
 
@@ -234,23 +238,27 @@ export default {
         return false;
       }
       if (context[group.name].indexOf(this.updateData) < 0) {
-        return;
+        this.tool.error(
+          "[" + group.text + "]模型[" + this.updateData.name + "]不存在"
+        );
+        return false;
       }
       Object.assign(this.updateData, model);
 
-      return await this.doSave(context);
+      return this.doSave(context);
     },
-    async doDelete(group, model) {
+    doDelete(group, model) {
       let context = Object.assign({}, this.context);
       context[group.name] = context[group.name] || [];
       if (context[group.name].indexOf(model) < 0) {
-        return;
+        this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
+        return false;
       }
       context[group.name].splice(context[group.name].indexOf(model), 1);
 
-      return await this.doSave(context);
+      return this.doSave(context);
     },
-    async saveModel(group, model) {
+    async saveModel(group, model, isInsert) {
       let context = Object.assign({}, this.context);
       context[group.name] = context[group.name] || [];
 
@@ -260,11 +268,19 @@ export default {
           find = one;
         }
       });
-      if (find == null) {
-        this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
-        return false;
+      if (isInsert) {
+        if (find != null) {
+          this.tool.error("[" + group.text + "]模型[" + model.name + "]已存在");
+          return false;
+        }
+        context[group.name].push(model);
+      } else {
+        if (find == null) {
+          this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
+          return false;
+        }
+        context[group.name].splice(context[group.name].indexOf(find), 1, model);
       }
-      context[group.name].splice(context[group.name].indexOf(find), 1, model);
 
       return await this.doSave(context);
     },

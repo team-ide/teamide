@@ -39,6 +39,7 @@
           >
             <ModelEditor
               :source="source"
+              :application="source.application"
               :group="one.group"
               :model="one.model"
               :context="application.context"
@@ -67,24 +68,52 @@ export default {
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    context() {
+      this.contextChange();
+    },
+  },
   methods: {
-    async onModelChange(group, model) {
+    contextChange() {
+      this.application.tabs.forEach((tab) => {
+        if (tab.group == null || tab.model == null) {
+          return;
+        }
+        if (!this.context[tab.group.name]) {
+          return;
+        }
+        this.context[tab.group.name].forEach((one) => {
+          if (one.name != tab.model.name) {
+            return;
+          }
+          this.application.trimObj(one);
+          if (JSON.stringify(one) != JSON.stringify(tab.model)) {
+            tab.model = one;
+          }
+        });
+      });
+    },
+    onModelChange(group, model) {
       let key = this.getTabKeyByModel(group, model);
       let tab = this.getTab(key);
       if (tab == null) {
         return;
       }
-      tab.changed = true;
+      this.application.trimObj(model);
+      let newModelContent = JSON.stringify(model);
+      let oldModelContent = JSON.stringify(tab.model);
+      let changed = newModelContent != oldModelContent;
+      tab.changed = changed;
       tab.last_model = model;
     },
-    async onModelSave(group, model) {
+    onModelSave(group, model) {
       let key = this.getTabKeyByModel(group, model);
       let tab = this.getTab(key);
       if (tab == null) {
         return;
       }
-      let flag = await this.application.saveModel(group, model);
+      this.application.trimObj(model);
+      let flag = this.application.saveModel(group, model);
       if (flag) {
         tab.changed = false;
         tab.last_model = null;
@@ -160,6 +189,7 @@ export default {
           title += "(" + model.comment + ")";
         }
         let text = model.name;
+        this.application.trimObj(model);
         tab = {
           key,
           text,

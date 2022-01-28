@@ -17,8 +17,8 @@ application.groups = [
         name: "structs", text: "结构体",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "表", name: "table" },
+            { text: "注释", name: "comment", },
+            { text: "表", name: "table", },
             { text: "父", name: "parent", type: "select", isStructOption: true, },
             {
                 text: "字段", name: "fields", isList: true,
@@ -51,16 +51,16 @@ application.groups = [
         name: "actions", text: "服务接口", isAction: true,
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
+            { text: "注释", name: "comment", },
         ],
     },
     {
         name: "constants", text: "常量",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
+            { text: "注释", name: "comment", },
             { text: "数据类型", name: "dataType", type: "select", isDataTypeOption: true, },
-            { text: "值", name: "value" },
+            { text: "值", name: "value", },
             { text: "环境变量", name: "environmentVariable", comment: "优先取环境变量中的值", },
         ],
     },
@@ -68,30 +68,30 @@ application.groups = [
         name: "errors", text: "错误码",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "错误码", name: "code" },
-            { text: "错误信息", name: "msg" },
+            { text: "注释", name: "comment", },
+            { text: "错误码", name: "code", },
+            { text: "错误信息", name: "msg", },
         ],
     },
     {
         name: "tests", text: "测试",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
+            { text: "注释", name: "comment", },
         ],
     },
     {
         name: "dictionaries", text: "数据字典",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
+            { text: "注释", name: "comment", },
             {
                 text: "选项", name: "options", isList: true,
                 fields: [
-                    { text: "文案", name: "text" },
-                    { text: "值", name: "value" },
+                    { text: "文案", name: "text", },
+                    { text: "值", name: "value", },
                     { text: "数据类型", name: "dataType", type: "select", isDataTypeOption: true, },
-                    { text: "注释", name: "comment" },
+                    { text: "注释", name: "comment", },
                 ]
             },
         ],
@@ -100,18 +100,18 @@ application.groups = [
         name: "serverWebs", text: "Web服务",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "Host", name: "host" },
-            { text: "Port", name: "port" },
-            { text: "ContextPath", name: "contextPath" },
+            { text: "注释", name: "comment", },
+            { text: "Host", name: "host", },
+            { text: "Port", name: "port", },
+            { text: "ContextPath", name: "contextPath", },
             {
                 text: "Token", name: "token",
                 fields: [
-                    { text: "验证路径", name: "include" },
-                    { text: "忽略路径", name: "exclude" },
+                    { text: "验证路径", name: "include", },
+                    { text: "忽略路径", name: "exclude", },
                     { text: "创建Token服务", name: "createAction", type: "select", isActionOption: true, },
                     { text: "验证Token服务", name: "validateAction", type: "select", isActionOption: true, },
-                    { text: "变量名称", name: "variableName" },
+                    { text: "变量名称", name: "variableName", },
                     { text: "变量数据类型", name: "variableDataType", type: "select", isDataTypeOption: true, },
                 ]
             },
@@ -121,22 +121,22 @@ application.groups = [
         name: "datasourceDatabases", text: "Database数据源",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
+            { text: "注释", name: "comment", },
             { text: "类型", name: "type", type: "select", isDatabaseTypeOption: true, },
-            { text: "Host", name: "host" },
+            { text: "Host", name: "host", },
             { text: "Port", name: "port", isNumber: true, },
-            { text: "Database", name: "database" },
-            { text: "Username", name: "username" },
-            { text: "Password", name: "password" },
+            { text: "Database", name: "database", },
+            { text: "Username", name: "username", },
+            { text: "Password", name: "password", },
         ],
     },
     {
         name: "datasourceRedises", text: "Redis数据源",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "Redis地址", name: "address" },
-            { text: "密码", name: "auth" },
+            { text: "注释", name: "comment", },
+            { text: "Redis地址", name: "address", },
+            { text: "密码", name: "auth", },
             { text: "前缀", name: "prefix", comment: "如果配置，所有key将自动拼接该前缀", },
         ],
     },
@@ -144,8 +144,8 @@ application.groups = [
         name: "datasourceKafkas", text: "Kafka数据源",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "Kafka地址", name: "address" },
+            { text: "注释", name: "comment", },
+            { text: "Kafka地址", name: "address", },
             { text: "前缀", name: "prefix", comment: "如果配置，所有topic将自动拼接该前缀", },
         ],
     },
@@ -153,8 +153,8 @@ application.groups = [
         name: "datasourceZookeepers", text: "Zookeeper数据源",
         fields: [
             { text: "名称", name: "name", readonly: true, },
-            { text: "注释", name: "comment" },
-            { text: "Zookeeper地址", name: "address" },
+            { text: "注释", name: "comment", },
+            { text: "Zookeeper地址", name: "address", },
             { text: "命名空间", name: "namespace", comment: "如果配置，则所有路径将放在该命名空间下", },
         ],
     },
@@ -239,5 +239,56 @@ application.getActionOptions = function (context) {
     }
     return options;
 
+};
+function getKeys(obj) {
+    if (obj == null) {
+        return [];
+    }
+    return Object.keys(obj);
+}
+application.trimObj = function (obj) {
+    if (obj == null || obj == "") {
+        return
+    }
+    for (let key in obj) {
+        if (obj[key] == null || obj[key] == "") {
+            delete obj[key]
+        } else {
+            if (Array.isArray(obj[key])) {
+                application.trimArray(obj[key]);
+                if (obj[key].length == 0) {
+                    delete obj[key]
+                }
+            } else if (typeof obj[key] == "object") {
+                application.trimObj(obj[key]);
+                if (getKeys(obj[key]).length == 0) {
+                    delete obj[key]
+                }
+            }
+        }
+    }
+};
+application.trimArray = function (array) {
+    let needRemoves = [];
+    array.forEach(one => {
+        if (one == null || one == "") {
+            needRemoves.push(one);
+        } else {
+            if (Array.isArray(one)) {
+                application.trimArray(one);
+                if (one.length == 0) {
+                    needRemoves.push(one);
+                }
+            } else if (typeof one == "object") {
+                application.trimObj(one);
+                if (getKeys(one).length == 0) {
+                    needRemoves.push(one);
+                }
+            }
+        }
+    });
+    needRemoves.forEach(one => {
+        array.splice(array.indexOf(one), 1)
+    });
 };
 export default application;
