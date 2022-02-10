@@ -1,7 +1,7 @@
 package model
 
 type ApiModel struct {
-	Name     string       `json:"name,omitempty"`                               // 名称，同一个应用中唯一
+	Name     string       `json:"name,omitempty" yaml:"name,omitempty"`         // 名称，同一个应用中唯一
 	Request  *ApiRequest  `json:"request,omitempty" yaml:"request,omitempty"`   //
 	Response *ApiResponse `json:"response,omitempty" yaml:"response,omitempty"` //
 }

@@ -59,3 +59,11 @@ func TextToServerWebModel(namePath string, text string) (model *ServerWebModel, 
 	model.Name = name
 	return
 }
+
+func ServerWebModelToText(model *ServerWebModel) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}

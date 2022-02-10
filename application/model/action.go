@@ -8,7 +8,7 @@ import (
 
 type ActionModel struct {
 	Name             string           `json:"name,omitempty" yaml:"name,omitempty"`               // 名称，同一个应用中唯一
-	Comment          string           `json:"comment,omitempty" yaml:"name,omitempty"`            // 注释说明
+	Comment          string           `json:"comment,omitempty" yaml:"comment,omitempty"`         // 注释说明
 	Description      string           `json:"description,omitempty" yaml:"description,omitempty"` // 注释说明
 	Api              *ActionApi       `json:"api,omitempty" yaml:"api,omitempty"`
 	InVariables      []*VariableModel `json:"inVariables,omitempty" yaml:"inVariables,omitempty"` // 输入变量
@@ -248,6 +248,14 @@ func getStepByValue(valuesOneMap map[string]interface{}) (step ActionStep, err e
 	}
 	if step != nil {
 		step.SetBase(baseStep)
+	}
+	return
+}
+
+func ActionModelToText(model *ActionModel) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
 	}
 	return
 }

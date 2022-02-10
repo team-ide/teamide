@@ -55,3 +55,11 @@ func TextToStructModel(namePath string, text string) (model *StructModel, err er
 	model.Name = name
 	return
 }
+
+func StructModelToText(model *StructModel) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}

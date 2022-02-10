@@ -1,7 +1,7 @@
 package model
 
 type DictionaryModel struct {
-	Name    string              `json:"name,omitempty"`                             // 名称，同一个应用中唯一
+	Name    string              `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment string              `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明
 	Options []*DictionaryOption `json:"options,omitempty" yaml:"options,omitempty"` // 结构体字段
 }
@@ -21,5 +21,13 @@ func TextToDictionaryModel(namePath string, text string) (model *DictionaryModel
 		return
 	}
 	model.Name = name
+	return
+}
+
+func DictionaryModelToText(model *DictionaryModel) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
 	return
 }

@@ -1,7 +1,7 @@
 package model
 
 type DatasourceDatabase struct {
-	Name         string `json:"name,omitempty"`                             // 名称，同一个应用中唯一
+	Name         string `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment      string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明
 	Type         string `json:"type,omitempty" yaml:"type,omitempty"`
 	Host         string `json:"host,omitempty" yaml:"host,omitempty"`
@@ -15,7 +15,7 @@ type DatasourceDatabase struct {
 }
 
 type DatasourceRedis struct {
-	Name    string `json:"name,omitempty"`                             // 名称，同一个应用中唯一
+	Name    string `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明
 
 	Address string `json:"address,omitempty" yaml:"address,omitempty"`
@@ -24,7 +24,7 @@ type DatasourceRedis struct {
 }
 
 type DatasourceKafka struct {
-	Name    string `json:"name,omitempty"`                             // 名称，同一个应用中唯一
+	Name    string `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明
 
 	Address string `json:"address,omitempty" yaml:"address,omitempty"`
@@ -32,7 +32,7 @@ type DatasourceKafka struct {
 }
 
 type DatasourceZookeeper struct {
-	Name    string `json:"name,omitempty"`                             // 名称，同一个应用中唯一
+	Name    string `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明
 
 	Address   string `json:"address,omitempty" yaml:"address,omitempty"`
@@ -92,5 +92,37 @@ func TextToDatasourceZookeeper(namePath string, text string) (model *DatasourceZ
 		name = ""
 	}
 	model.Name = (name)
+	return
+}
+
+func DatasourceDatabaseToText(model *DatasourceDatabase) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func DatasourceRedisToText(model *DatasourceRedis) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func DatasourceKafkaToText(model *DatasourceKafka) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func DatasourceZookeeperToText(model *DatasourceZookeeper) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
 	return
 }

@@ -18,3 +18,11 @@ func TextToConstantModel(namePath string, text string) (model *ConstantModel, er
 	model.Name = name
 	return
 }
+
+func ConstantModelToText(model *ConstantModel) (text string, err error) {
+	text, err = ModelToText(model)
+	if err != nil {
+		return
+	}
+	return
+}

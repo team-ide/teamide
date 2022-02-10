@@ -217,11 +217,14 @@ export default {
       }
       context[group.name].push(model);
 
-      this.doSave(context);
+      let flag = this.doSave(context);
 
-      if (this.application.groupOpens.indexOf(group.name) < 0) {
-        this.openGroup(group);
+      if (flag) {
+        if (this.application.groupOpens.indexOf(group.name) < 0) {
+          this.openGroup(group);
+        }
       }
+      return flag;
     },
     doUpdate(group, model) {
       let context = Object.assign({}, this.context);

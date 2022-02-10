@@ -9,14 +9,14 @@ import (
 )
 
 type VariableModel struct {
-	Name      string      `json:"name,omitempty"`                       // 名称，同一个方法模块唯一
-	Comment   string      `json:"comment,omitempty"`                    // 注释说明
-	Value     string      `json:"value,omitempty" yaml:"value"`         // 值脚本
-	IsList    bool        `json:"isList,omitempty" yaml:"isList"`       // 是否是列表
-	IsPage    bool        `json:"isPage,omitempty" yaml:"isPage"`       // 是否是列表
-	DataType  string      `json:"dataType,omitempty" yaml:"dataType"`   // 数据类型
-	DataPlace string      `json:"dataPlace,omitempty" yaml:"dataPlace"` // 数据位置
-	TryError  *ErrorModel `json:"tryError,omitempty" yaml:"tryError"`
+	Name      string      `json:"name,omitempty" yaml:"name,omitempty"`           // 名称，同一个方法模块唯一
+	Comment   string      `json:"comment,omitempty" yaml:"comment,omitempty"`     // 注释说明
+	Value     string      `json:"value,omitempty" yaml:"value,omitempty"`         // 值脚本
+	IsList    bool        `json:"isList,omitempty" yaml:"isList,omitempty"`       // 是否是列表
+	IsPage    bool        `json:"isPage,omitempty" yaml:"isPage,omitempty"`       // 是否是列表
+	DataType  string      `json:"dataType,omitempty" yaml:"dataType,omitempty"`   // 数据类型
+	DataPlace string      `json:"dataPlace,omitempty" yaml:"dataPlace,omitempty"` // 数据位置
+	TryError  *ErrorModel `json:"tryError,omitempty" yaml:"tryError,omitempty"`
 }
 
 func (this_ *ModelContext) GetVariableDataType(dataType string) (res *VariableDataType) {

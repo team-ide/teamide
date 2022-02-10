@@ -237,6 +237,10 @@ export default {
   line-height: 22px;
   margin-bottom: 3px;
 }
+.model-editor .text {
+  display: inline-block;
+  min-width: 80px;
+}
 .model-editor .text,
 .model-editor .input,
 .model-editor .comment {
@@ -251,5 +255,12 @@ export default {
 
 .model-editor-toolbar .btn {
   border-radius: 0px;
+  padding: 2px 5px !important;
+  font-size: 13px !important;
+  line-height: unset;
+}
+.model-editor-toolbar .btn .b-icon.bi {
+  font-size: 13px !important;
+  vertical-align: -1px;
 }
 </style>

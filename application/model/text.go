@@ -80,8 +80,8 @@ func appendMapSliceList(list []interface{}) []interface{} {
 	}
 	return listValue
 }
-func ModelToText(model map[string]interface{}) (text string, err error) {
-	model = make(map[string]interface{})
+
+func ModelToText(model interface{}) (text string, err error) {
 	var bs []byte
 	bs, err = yaml.Marshal(&model)
 	if err != nil {

@@ -18,24 +18,29 @@ type ContextLoader struct {
 	dirAbsolutePath string
 }
 
+func LoadContext(dir string) (context *model.ModelContext, err error) {
+	loader := &ContextLoader{Dir: dir}
+	return loader.Load()
+}
+
+func SaveContext(dir string, context *model.ModelContext) (err error) {
+	loader := &ContextLoader{Dir: dir}
+	return loader.Save(context)
+}
+
 func (this_ *ContextLoader) Load() (context *model.ModelContext, err error) {
-	var path string
-	path, err = os.Getwd()
-	if err != nil {
-		return
-	}
-	dirPath := path + "/" + this_.Dir
+
 	var exists bool
-	exists, err = base.PathExists(dirPath)
+	exists, err = base.PathExists(this_.Dir)
 	if err != nil {
 		return
 	}
 	if !exists {
-		err = errors.New(fmt.Sprint("dir [" + dirPath + "] not exist"))
+		err = errors.New(fmt.Sprint("dir [" + this_.Dir + "] not exist"))
 		return
 	}
 	var abs string
-	abs, err = filepath.Abs(dirPath)
+	abs, err = filepath.Abs(this_.Dir)
 	if err != nil {
 		return
 	}
@@ -146,6 +151,199 @@ func (this_ *ContextLoader) Load() (context *model.ModelContext, err error) {
 			context.AppendDatasourceZookeeper(one)
 		}
 	}
+	return
+}
+
+func (this_ *ContextLoader) Save(context *model.ModelContext) (err error) {
+	for _, one := range context.Constants {
+		err = this_.SaveModel(model.MODEL_TYPE_CONSTANT, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.Errors {
+		err = this_.SaveModel(model.MODEL_TYPE_ERROR, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.Dictionaries {
+		err = this_.SaveModel(model.MODEL_TYPE_DICTIONARY, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.Structs {
+		err = this_.SaveModel(model.MODEL_TYPE_STRUCT, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.Actions {
+		err = this_.SaveModel(model.MODEL_TYPE_ACTION, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.Tests {
+		err = this_.SaveModel(model.MODEL_TYPE_TEST, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.ServerWebs {
+		err = this_.SaveModel(model.MODEL_TYPE_SERVER_WEB, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.DatasourceDatabases {
+		err = this_.SaveModel(model.MODEL_TYPE_DATASOURCE_DATABASE, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.DatasourceRedises {
+		err = this_.SaveModel(model.MODEL_TYPE_DATASOURCE_REDIS, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.DatasourceKafkas {
+		err = this_.SaveModel(model.MODEL_TYPE_DATASOURCE_KAFKA, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range context.DatasourceZookeepers {
+		err = this_.SaveModel(model.MODEL_TYPE_DATASOURCE_ZOOKEEPER, one.Name, one)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func (this_ *ContextLoader) SaveModel(modelType *model.ModelType, name string, data interface{}) (err error) {
+
+	text := ""
+	constantModel, constantModelOk := data.(*model.ConstantModel)
+	if constantModelOk {
+		text, err = model.ConstantModelToText(constantModel)
+		if err != nil {
+			return
+		}
+	}
+	errorModel, errorModelOk := data.(*model.ErrorModel)
+	if errorModelOk {
+		text, err = model.ErrorModelToText(errorModel)
+		if err != nil {
+			return
+		}
+	}
+	dictionaryModel, dictionaryModelOk := data.(*model.DictionaryModel)
+	if dictionaryModelOk {
+		text, err = model.DictionaryModelToText(dictionaryModel)
+		if err != nil {
+			return
+		}
+	}
+	structModel, structModelOk := data.(*model.StructModel)
+	if structModelOk {
+		text, err = model.StructModelToText(structModel)
+		if err != nil {
+			return
+		}
+	}
+	actionModel, actionModelOk := data.(*model.ActionModel)
+	if actionModelOk {
+		text, err = model.ActionModelToText(actionModel)
+		if err != nil {
+			return
+		}
+	}
+	testModel, testModelOk := data.(*model.TestModel)
+	if testModelOk {
+		text, err = model.TestModelToText(testModel)
+		if err != nil {
+			return
+		}
+	}
+	serverWebModel, serverWebModelOk := data.(*model.ServerWebModel)
+	if serverWebModelOk {
+		text, err = model.ServerWebModelToText(serverWebModel)
+		if err != nil {
+			return
+		}
+	}
+	datasourceDatabase, datasourceDatabaseOk := data.(*model.DatasourceDatabase)
+	if datasourceDatabaseOk {
+		text, err = model.DatasourceDatabaseToText(datasourceDatabase)
+		if err != nil {
+			return
+		}
+	}
+	datasourceRedis, datasourceRedisOk := data.(*model.DatasourceRedis)
+	if datasourceRedisOk {
+		text, err = model.DatasourceRedisToText(datasourceRedis)
+		if err != nil {
+			return
+		}
+	}
+	datasourceKafka, datasourceKafkaOk := data.(*model.DatasourceKafka)
+	if datasourceKafkaOk {
+		text, err = model.DatasourceKafkaToText(datasourceKafka)
+		if err != nil {
+			return
+		}
+	}
+	datasourceZookeeper, datasourceZookeeperOk := data.(*model.DatasourceZookeeper)
+	if datasourceZookeeperOk {
+		text, err = model.DatasourceZookeeperToText(datasourceZookeeper)
+		if err != nil {
+			return
+		}
+	}
+	path := this_.Dir + "/" + modelType.Dir + "/" + name + ".yaml"
+	if name == "" {
+		path = this_.Dir + "/" + modelType.Dir + "/default.yaml"
+	}
+	var exists bool
+	exists, err = base.PathExists(path)
+	if err != nil {
+		return
+	}
+	if exists {
+		err = os.Remove(path)
+		if err != nil {
+			return
+		}
+	}
+	var abs string
+	abs, err = filepath.Abs(path)
+	if err != nil {
+		return
+	}
+	dirAbsolutePath := filepath.ToSlash(abs)
+	parentPath := dirAbsolutePath[0:strings.LastIndex(dirAbsolutePath, "/")]
+	exists, err = base.PathExists(parentPath)
+	if err != nil {
+		return
+	}
+	if !exists {
+		err = os.MkdirAll(parentPath, 0777)
+		if err != nil {
+			return
+		}
+	}
+
+	var file *os.File
+	file, err = os.Create(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	file.WriteString(text)
 	return
 }
 

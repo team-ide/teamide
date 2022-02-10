@@ -26,13 +26,13 @@ application.groups = [
                     { text: "名称", name: "name" },
                     { text: "注释", name: "comment" },
                     { text: "数据类型", name: "dataType", type: "select", isDataTypeOption: true, },
-                    { text: "是List", name: "isList", type: "switch" },
+                    { text: "是List", name: "isList", type: "switch", width: 40, },
                     { text: "字段", name: "column", ifScript(data) { return tool.isNotEmpty(data.table) }, },
-                    { text: "字段类型", name: "columnType", type: "select", isColumnTypeOption: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
-                    { text: "字段长度", name: "columnLength", isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
-                    { text: "小数长度", name: "columnDecimal", isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
-                    { text: "是主键", name: "primaryKey", type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
-                    { text: "不能为空", name: "notNull", type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "字段类型", name: "columnType", width: 80, type: "select", isColumnTypeOption: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "字段长度", name: "columnLength", width: 70, isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "小数长度", name: "columnDecimal", width: 70, isNumber: true, ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "是主键", name: "primaryKey", width: 60, type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
+                    { text: "不能为空", name: "notNull", width: 60, type: "switch", ifScript(data) { return tool.isNotEmpty(data.table) }, },
                     { text: "默认", name: "default", ifScript(data) { return tool.isNotEmpty(data.table) }, },
                 ]
             },
@@ -41,7 +41,7 @@ application.groups = [
                 fields: [
                     { text: "名称", name: "name" },
                     { text: "注释", name: "comment" },
-                    { text: "类型", name: "type", type: "select", isIndexTypeOption: true, },
+                    { text: "类型", name: "type", width: 80, type: "select", isIndexTypeOption: true, },
                     { text: "字段", name: "columns" },
                 ]
             },

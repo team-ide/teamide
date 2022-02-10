@@ -7,31 +7,31 @@ import (
 )
 
 type ValidateModel struct {
-	Comment   string               `json:"comment,omitempty"`                    // 注释说明
-	Name      string               `json:"name,omitempty"`                       // 名称
-	Required  bool                 `json:"required,omitempty"`                   // 必填
-	Min       int                  `json:"min,omitempty" yaml:"min"`             // 最小数
-	Max       int                  `json:"max,omitempty" yaml:"max"`             // 最大数
-	MinLength int                  `json:"minLength,omitempty" yaml:"minLength"` // 最小长度
-	MaxLength int                  `json:"maxLength,omitempty" yaml:"maxLength"` // 最大长度
-	Pattern   string               `json:"pattern,omitempty"`                    // 正则匹配
-	Error     string               `json:"error,omitempty"`                      // 异常
-	ErrorCode string               `json:"errorCode,omitempty" yaml:"errorCode"` // 异常码码
-	ErrorMsg  string               `json:"errorMsg,omitempty" yaml:"errorMsg"`   // 异常信息
-	Rules     []*ValidateRuleModel `json:"rules,omitempty"`                      // 变量
-	TryError  *ErrorModel          `json:"tryError,omitempty" yaml:"tryError"`
+	Name      string               `json:"name,omitempty" yaml:"name,omitempty"`           // 名称
+	Comment   string               `json:"comment,omitempty" yaml:"comment,omitempty"`     // 注释说明
+	Required  bool                 `json:"required,omitempty" yaml:"required,omitempty"`   // 必填
+	Min       int                  `json:"min,omitempty" yaml:"min,omitempty"`             // 最小数
+	Max       int                  `json:"max,omitempty" yaml:"max,omitempty"`             // 最大数
+	MinLength int                  `json:"minLength,omitempty" yaml:"minLength,omitempty"` // 最小长度
+	MaxLength int                  `json:"maxLength,omitempty" yaml:"maxLength,omitempty"` // 最大长度
+	Pattern   string               `json:"pattern,omitempty" yaml:"pattern,omitempty"`     // 正则匹配
+	Error     string               `json:"error,omitempty" yaml:"error,omitempty"`         // 异常
+	ErrorCode string               `json:"errorCode,omitempty" yaml:"errorCode,omitempty"` // 异常码码
+	ErrorMsg  string               `json:"errorMsg,omitempty" yaml:"errorMsg,omitempty"`   // 异常信息
+	Rules     []*ValidateRuleModel `json:"rules,omitempty" yaml:"rules,omitempty"`         // 变量
+	TryError  *ErrorModel          `json:"tryError,omitempty" yaml:"tryError,omitempty"`
 }
 
 type ValidateRuleModel struct {
-	Required  bool   `json:"required,omitempty"`                   // 必填
-	Min       int    `json:"min,omitempty" yaml:"min"`             // 最小数
-	Max       int    `json:"max,omitempty" yaml:"max"`             // 最大数
-	MinLength int    `json:"minLength,omitempty" yaml:"minLength"` // 最小长度
-	MaxLength int    `json:"maxLength,omitempty" yaml:"maxLength"` // 最大长度
-	Pattern   string `json:"pattern,omitempty"`                    // 正则匹配
-	Error     string `json:"error,omitempty"`                      // 异常
-	ErrorCode string `json:"errorCode,omitempty" yaml:"errorCode"` // 异常码码
-	ErrorMsg  string `json:"errorMsg,omitempty" yaml:"errorMsg"`   // 异常信息
+	Required  bool   `json:"required,omitempty" yaml:"required,omitempty"`   // 必填
+	Min       int    `json:"min,omitempty" yaml:"min,omitempty"`             // 最小数
+	Max       int    `json:"max,omitempty" yaml:"max,omitempty"`             // 最大数
+	MinLength int    `json:"minLength,omitempty" yaml:"minLength,omitempty"` // 最小长度
+	MaxLength int    `json:"maxLength,omitempty" yaml:"maxLength,omitempty"` // 最大长度
+	Pattern   string `json:"pattern,omitempty" yaml:"pattern,omitempty"`     // 正则匹配
+	Error     string `json:"error,omitempty" yaml:"error,omitempty"`         // 异常
+	ErrorCode string `json:"errorCode,omitempty" yaml:"errorCode,omitempty"` // 异常码码
+	ErrorMsg  string `json:"errorMsg,omitempty" yaml:"errorMsg,omitempty"`   // 异常信息
 }
 
 func getValidatesByValue(value interface{}) (validates []*ValidateModel, err error) {

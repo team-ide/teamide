@@ -1,11 +1,17 @@
 <template>
-  <li v-if="ready" class="pdl-20">
+  <li v-if="ready" class="pdlr-30">
     <table class="model-table">
       <thead>
         <tr>
           <template v-for="(one, index) in field.fields">
             <template v-if="one.ifScript == null || one.ifScript(bean)">
-              <th :key="'field-table-th-' + index">
+              <th
+                :key="'field-table-th-' + index"
+                :style="{
+                  width: one.width + 'px',
+                  minWidth: one.width > 0 ? '' : '80px',
+                }"
+              >
                 {{ one.text }}
               </th>
             </template>
@@ -119,10 +125,12 @@ export default {
 .model-table th {
   text-align: center;
   line-height: 25px;
-  padding: 0px 10px;
-  min-width: 75px;
+  padding: 0px 0px;
 }
 .model-table td {
   text-align: center;
+}
+.model-table td .input {
+  padding: 0px 0px;
 }
 </style>

@@ -1,0 +1,6 @@
+name: asd
+comment: asd
+fields:
+- name: asdasd
+  comment: asdasd
+  dataType: long
