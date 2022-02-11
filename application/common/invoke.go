@@ -109,19 +109,19 @@ type InvokeData struct {
 }
 
 type InvokeDataInfo struct {
-	Name       string                  `json:"name,omitempty"`
-	Comment    string                  `json:"comment,omitempty"`
-	Alias      []string                `json:"alias,omitempty"`
-	Value      string                  `json:"value,omitempty"`
-	DotName    string                  `json:"dotName,omitempty"`
-	DataInfos  []*InvokeDataInfo       `json:"dataInfos,omitempty"`
-	Parent     *InvokeDataInfo         `json:"-"`
-	DataType   *model.VariableDataType `json:"-"`
-	IsList     bool                    `json:"isList,omitempty"` // 是否是列表
-	IsPage     bool                    `json:"isPage,omitempty"` // 是否是列表
-	Validatas  []*model.ValidateModel  `json:"-"`
-	IsUse      bool                    `json:"isUse,omitempty"`      // 是否 使用
-	IsSetValue bool                    `json:"isSetValue,omitempty"` // 是否 设值
+	Name       string                 `json:"name,omitempty"`
+	Comment    string                 `json:"comment,omitempty"`
+	Alias      []string               `json:"alias,omitempty"`
+	Value      string                 `json:"value,omitempty"`
+	DotName    string                 `json:"dotName,omitempty"`
+	DataInfos  []*InvokeDataInfo      `json:"dataInfos,omitempty"`
+	Parent     *InvokeDataInfo        `json:"-"`
+	DataType   *model.DataType        `json:"-"`
+	IsList     bool                   `json:"isList,omitempty"` // 是否是列表
+	IsPage     bool                   `json:"isPage,omitempty"` // 是否是列表
+	Validatas  []*model.ValidateModel `json:"-"`
+	IsUse      bool                   `json:"isUse,omitempty"`      // 是否 使用
+	IsSetValue bool                   `json:"isSetValue,omitempty"` // 是否 设值
 }
 
 func CloneDataInfo(dataInfo *InvokeDataInfo) (res *InvokeDataInfo) {

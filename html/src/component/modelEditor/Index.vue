@@ -3,7 +3,7 @@
     class="model-editor"
     tabindex="-1"
     @keydown="keydown"
-    v-if="group != null && group.fields != null"
+    v-if="modelType != null && modelType.fields != null"
   >
     <template v-if="data != null">
       <div class="model-editor-toolbar">
@@ -24,7 +24,7 @@
             <b-icon icon="arrow-right"></b-icon>
           </b-button>
           <b-button
-            v-if="group.isAction"
+            v-if="modelType.isAction"
             title="测试"
             :disabled="true"
             @click="toTest()"
@@ -39,7 +39,7 @@
           </b-button>
         </b-button-group>
       </div>
-      <template v-if="group.isAction">
+      <template v-if="modelType.isAction">
         <ModelEditorAction
           class="mgt-40"
           :source="source"
@@ -50,8 +50,8 @@
         </ModelEditorAction>
       </template>
       <template v-else>
-        <ul v-if="!group.isAction" class="mgt-40">
-          <template v-for="(one, index) in group.fields">
+        <ul v-if="!modelType.isAction" class="mgt-40">
+          <template v-for="(one, index) in modelType.fields">
             <ModelEditorField
               :key="'field-' + index"
               :source="source"
@@ -94,7 +94,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "context", "model", "group", "application"],
+  props: ["source", "context", "model", "modelType", "application"],
   data() {
     return {
       key: this.tool.getNumber(),
@@ -170,7 +170,7 @@ export default {
       let change_model = JSON.parse(JSON.stringify(this.data));
       // console.log(this.data);
       this.last_change_model = change_model;
-      this.$emit("change", this.group, change_model);
+      this.$emit("change", this.modelType, change_model);
     },
     keydown(event) {
       //ctrl+s
@@ -183,25 +183,42 @@ export default {
     },
     save() {
       let model = JSON.parse(JSON.stringify(this.data));
-      this.$emit("save", this.group, model);
+      this.$emit("save", this.modelType, model);
     },
     copy() {
       let model = JSON.parse(JSON.stringify(this.data));
-      this.application.showModelForm(this.group, model, (group, param) => {
-        Object.assign(model, param);
-        return this.application.saveModel(group, model, true);
-      });
+      this.application.showModelForm(
+        this.modelType,
+        model,
+        (modelType, param) => {
+          Object.assign(model, param);
+          return this.application.saveModel(modelType, model, true);
+        }
+      );
     },
     reload() {
       let model = JSON.parse(JSON.stringify(this.model));
       this.set(model);
-      this.$emit("change", this.group, model);
+      this.$emit("change", this.modelType, model);
     },
     toDelete() {},
     previousStep() {},
     nextStep() {},
     help() {},
     toTest() {},
+    ifScript(ifScript, bean, oneBean) {
+      let tool = this.tool;
+      if (tool.isEmpty(ifScript)) {
+        return true;
+      }
+      let source = this.source;
+      let application = this.application;
+      let model = this.data;
+      let context = this.context;
+      let modelType = this.modelType;
+      let res = eval("(" + ifScript + ")");
+      return res;
+    },
   },
   created() {
     this.wrap.push = this.push;
@@ -210,6 +227,7 @@ export default {
     this.wrap.down = this.down;
     this.wrap.onChange = this.onChange;
     this.wrap.refresh = this.refresh;
+    this.wrap.ifScript = this.ifScript;
   },
   mounted() {
     this.init();

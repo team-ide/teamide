@@ -4,7 +4,9 @@
       <thead>
         <tr>
           <template v-for="(one, index) in field.fields">
-            <template v-if="one.ifScript == null || one.ifScript(bean)">
+            <template
+              v-if="one.ifScript == null || wrap.ifScript(one.ifScript, bean)"
+            >
               <th
                 :key="'field-table-th-' + index"
                 :style="{
@@ -33,7 +35,10 @@
             <tr :key="'field-table-tr-' + oneBeanIndex">
               <template v-for="(one, index) in field.fields">
                 <template
-                  v-if="one.ifScript == null || one.ifScript(bean, oneBean)"
+                  v-if="
+                    one.ifScript == null ||
+                    wrap.ifScript(one.ifScript, bean, oneBean)
+                  "
                 >
                   <td :key="'field-table-td-' + index">
                     <ModelEditorFieldInput
@@ -129,6 +134,11 @@ export default {
 }
 .model-table td {
   text-align: center;
+  border-right: 1px dashed #4e4e4e;
+  padding: 0px 0px;
+}
+.model-table tr td:last-child {
+  border-right: 0px;
 }
 .model-table td .input {
   padding: 0px 0px;

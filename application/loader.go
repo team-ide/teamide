@@ -47,7 +47,7 @@ func (this_ *ContextLoader) Load() (context *model.ModelContext, err error) {
 	this_.dirAbsolutePath = filepath.ToSlash(abs)
 
 	fileContentMap := make(map[string]string)
-	err = this_.loadDirFiles(fileContentMap, this_.dirAbsolutePath)
+	err = loadDirFiles(fileContentMap, this_.dirAbsolutePath)
 	var namePaths []string
 	for namePath := range fileContentMap {
 		namePaths = append(namePaths, namePath)
@@ -347,7 +347,7 @@ func (this_ *ContextLoader) SaveModel(modelType *model.ModelType, name string, d
 	return
 }
 
-func (this_ *ContextLoader) loadDirFiles(fileContentMap map[string]string, fileDir string) (err error) {
+func loadDirFiles(fileContentMap map[string]string, fileDir string) (err error) {
 	//获取当前目录下的所有文件或目录信息
 	err = filepath.Walk(fileDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -362,7 +362,7 @@ func (this_ *ContextLoader) loadDirFiles(fileContentMap map[string]string, fileD
 				return err
 			}
 			fileAbsolutePath := filepath.ToSlash(abs)
-			name := strings.TrimPrefix(fileAbsolutePath, this_.dirAbsolutePath)
+			name := strings.TrimPrefix(fileAbsolutePath, fileDir)
 			name = strings.TrimPrefix(name, "/")
 			var f *os.File
 			f, err = os.Open(path)

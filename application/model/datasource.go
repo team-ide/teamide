@@ -14,6 +14,26 @@ type DatasourceDatabase struct {
 	Collate      string `json:"collate,omitempty" yaml:"collate,omitempty"`
 }
 
+type DatabaseType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	DATABASE_TYPES = []*DatabaseType{}
+
+	DATABASE_TYPE_MYSQL = newDatabaseType("mysql", "MySql")
+)
+
+func newDatabaseType(value, text string) *DatabaseType {
+	res := &DatabaseType{
+		Value: value,
+		Text:  text,
+	}
+	DATABASE_TYPES = append(DATABASE_TYPES, res)
+	return res
+}
+
 type DatasourceRedis struct {
 	Name    string `json:"name,omitempty" yaml:"name,omitempty"`       // 名称，同一个应用中唯一
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释说明

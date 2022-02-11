@@ -78,7 +78,7 @@ func invokeGetRequestData(invokeInfo *InvokeInfo, _ string, args []interface{}) 
 	name := args[1].(string)
 	valueScript := args[2].(string)
 	var value interface{}
-	switch model.GetVariableDataPlace(dataPlace) {
+	switch model.GetDataPlace(dataPlace) {
 	case model.DATA_PLACE_PATH:
 		var pathValue string
 		if base.IsNotEmpty(valueScript) {

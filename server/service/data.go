@@ -3,6 +3,7 @@ package service
 import (
 	"regexp"
 	"strings"
+	"teamide/application/model"
 	"teamide/server/base"
 	"teamide/server/config"
 
@@ -15,9 +16,15 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url      string `json:"url,omitempty"`
-	Api      string `json:"api,omitempty"`
-	IsNative bool   `json:"isNative,omitempty"`
+	Url           string                `json:"url,omitempty"`
+	Api           string                `json:"api,omitempty"`
+	IsNative      bool                  `json:"isNative,omitempty"`
+	ColumnTypes   []*model.ColumnType   `json:"columnTypes,omitempty"`
+	DataTypes     []*model.DataType     `json:"dataTypes,omitempty"`
+	IndexTypes    []*model.IndexType    `json:"indexTypes,omitempty"`
+	ModelTypes    []*model.ModelType    `json:"modelTypes,omitempty"`
+	DataPlaces    []*model.DataPlace    `json:"dataPlaces,omitempty"`
+	DatabaseTypes []*model.DatabaseType `json:"databaseTypes,omitempty"`
 }
 
 func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -43,6 +50,12 @@ func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, er
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
 	response.IsNative = config.Config.IsNative
+	response.ColumnTypes = model.COLUMN_TYPES
+	response.DataTypes = model.DATA_TYPES
+	response.ModelTypes = model.MODEL_TYPES
+	response.IndexTypes = model.INDEX_TYPES
+	response.DataPlaces = model.DATA_PLACES
+	response.DatabaseTypes = model.DATABASE_TYPES
 
 	res = response
 	return

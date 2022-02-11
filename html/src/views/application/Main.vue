@@ -40,7 +40,7 @@
             <ModelEditor
               :source="source"
               :application="source.application"
-              :group="one.group"
+              :modelType="one.modelType"
               :model="one.model"
               :context="application.context"
               @change="onModelChange"
@@ -76,13 +76,13 @@ export default {
   methods: {
     contextChange() {
       this.application.tabs.forEach((tab) => {
-        if (tab.group == null || tab.model == null) {
+        if (tab.modelType == null || tab.model == null) {
           return;
         }
-        if (!this.context[tab.group.name]) {
+        if (!this.context[tab.modelType.name]) {
           return;
         }
-        this.context[tab.group.name].forEach((one) => {
+        this.context[tab.modelType.name].forEach((one) => {
           if (one.name != tab.model.name) {
             return;
           }
@@ -93,8 +93,8 @@ export default {
         });
       });
     },
-    onModelChange(group, model) {
-      let key = this.getTabKeyByModel(group, model);
+    onModelChange(modelType, model) {
+      let key = this.getTabKeyByModel(modelType, model);
       let tab = this.getTab(key);
       if (tab == null) {
         return;
@@ -106,14 +106,14 @@ export default {
       tab.changed = changed;
       tab.last_model = model;
     },
-    onModelSave(group, model) {
-      let key = this.getTabKeyByModel(group, model);
+    onModelSave(modelType, model) {
+      let key = this.getTabKeyByModel(modelType, model);
       let tab = this.getTab(key);
       if (tab == null) {
         return;
       }
       this.application.trimObj(model);
-      let flag = this.application.saveModel(group, model);
+      let flag = this.application.saveModel(modelType, model);
       if (flag) {
         tab.changed = false;
         tab.last_model = null;
@@ -174,17 +174,17 @@ export default {
         this.application.activeTab = tab;
       });
     },
-    getTabKeyByModel(group, model) {
-      let key = this.app.name + ":" + group.name + ":" + model.name;
+    getTabKeyByModel(modelType, model) {
+      let key = this.app.name + ":" + modelType.name + ":" + model.name;
       return key;
     },
-    createTabByModel(group, model) {
-      let key = this.getTabKeyByModel(group, model);
+    createTabByModel(modelType, model) {
+      let key = this.getTabKeyByModel(modelType, model);
 
       let tab = this.getTab(key);
       if (tab == null) {
         let title =
-          "应用：" + this.app.name + " > " + group.text + " > " + model.name;
+          "应用：" + this.app.name + " > " + modelType.text + " > " + model.name;
         if (this.tool.isNotEmpty(model.comment)) {
           title += "(" + model.comment + ")";
         }
@@ -195,7 +195,7 @@ export default {
           text,
           title,
           model,
-          group,
+          modelType,
         };
         tab.active = false;
         tab.changed = false;

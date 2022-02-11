@@ -302,28 +302,19 @@ func apiModelInsert(requestBean *base.RequestBean, c *gin.Context) (res interfac
 		return
 	}
 	modelType := model.GetModelType(request.ModelType)
-	modelPath := appDir + "/" + modelType.Dir + "/" + request.ModelName + ".yaml"
-	var exist bool
-	exist, err = util.PathExists(modelPath)
+	err = application.NewWorker(appDir).ModelInsert(modelType, request.ModelName)
+
 	if err != nil {
 		return
 	}
-	if exist {
-		err = errors.New(fmt.Sprint("应用模型", request.ModelName, "已存在"))
-		return
-	}
-	var file *os.File
-	file, err = os.Create(modelPath)
-	if err != nil {
-		return
-	}
-	defer file.Close()
 	return
 }
 
 type ModelSaveRequest struct {
-	AppName string `json:"appName,omitempty"`
-	Content string `json:"content,omitempty"`
+	AppName   string `json:"appName,omitempty"`
+	ModelType string `json:"modelType,omitempty"`
+	ModelName string `json:"modelName,omitempty"`
+	ModelText string `json:"modelText,omitempty"`
 }
 
 func apiModelSave(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -332,39 +323,26 @@ func apiModelSave(requestBean *base.RequestBean, c *gin.Context) (res interface{
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	if request.AppName == "" {
-		err = errors.New("应用名称不能为空")
-		return
-	}
-	appPath := GetAppPath(requestBean, request.AppName)
-	var exist bool
-	exist, err = util.PathExists(appPath)
+	var appDir string
+	appDir, err = checkApp(requestBean, request.AppName)
 	if err != nil {
 		return
 	}
-	if !exist {
-		err = errors.New(fmt.Sprint("应用", request.AppName, "不存在"))
-		return
-	}
+	modelType := model.GetModelType(request.ModelType)
+	err = application.NewWorker(appDir).ModelInsert(modelType, request.ModelName)
 
-	var context = &model.ModelContext{}
-	context, err = application.GetContextByText(request.Content)
 	if err != nil {
 		return
 	}
-
-	err = application.SaveContext(appPath, context)
-	if err != nil {
-		return
-	}
-	res = context
 
 	return
 }
 
 type ModelRenameRequest struct {
-	AppName string `json:"appName,omitempty"`
-	Content string `json:"content,omitempty"`
+	AppName     string `json:"appName,omitempty"`
+	ModelType   string `json:"modelType,omitempty"`
+	ModelName   string `json:"modelName,omitempty"`
+	ModelRename string `json:"modelRename,omitempty"`
 }
 
 func apiModelRename(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -373,39 +351,25 @@ func apiModelRename(requestBean *base.RequestBean, c *gin.Context) (res interfac
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	if request.AppName == "" {
-		err = errors.New("应用名称不能为空")
-		return
-	}
-	appPath := GetAppPath(requestBean, request.AppName)
-	var exist bool
-	exist, err = util.PathExists(appPath)
+	var appDir string
+	appDir, err = checkApp(requestBean, request.AppName)
 	if err != nil {
 		return
 	}
-	if !exist {
-		err = errors.New(fmt.Sprint("应用", request.AppName, "不存在"))
-		return
-	}
+	modelType := model.GetModelType(request.ModelType)
+	err = application.NewWorker(appDir).ModelRename(modelType, request.ModelName, request.ModelRename)
 
-	var context = &model.ModelContext{}
-	context, err = application.GetContextByText(request.Content)
 	if err != nil {
 		return
 	}
-
-	err = application.SaveContext(appPath, context)
-	if err != nil {
-		return
-	}
-	res = context
 
 	return
 }
 
 type ModelDeleteRequest struct {
-	AppName string `json:"appName,omitempty"`
-	Content string `json:"content,omitempty"`
+	AppName   string `json:"appName,omitempty"`
+	ModelType string `json:"modelType,omitempty"`
+	ModelName string `json:"modelName,omitempty"`
 }
 
 func apiModelDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -414,32 +378,17 @@ func apiModelDelete(requestBean *base.RequestBean, c *gin.Context) (res interfac
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	if request.AppName == "" {
-		err = errors.New("应用名称不能为空")
-		return
-	}
-	appPath := GetAppPath(requestBean, request.AppName)
-	var exist bool
-	exist, err = util.PathExists(appPath)
+	var appDir string
+	appDir, err = checkApp(requestBean, request.AppName)
 	if err != nil {
 		return
 	}
-	if !exist {
-		err = errors.New(fmt.Sprint("应用", request.AppName, "不存在"))
-		return
-	}
+	modelType := model.GetModelType(request.ModelType)
+	err = application.NewWorker(appDir).ModelDelete(modelType, request.ModelName)
 
-	var context = &model.ModelContext{}
-	context, err = application.GetContextByText(request.Content)
 	if err != nil {
 		return
 	}
-
-	err = application.SaveContext(appPath, context)
-	if err != nil {
-		return
-	}
-	res = context
 
 	return
 }

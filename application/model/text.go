@@ -90,3 +90,56 @@ func ModelToText(model interface{}) (text string, err error) {
 	text = string(bs)
 	return
 }
+
+func MapToModel(modelType *ModelType, data map[string]interface{}) (model interface{}, err error) {
+
+	var userJSON = true
+	switch modelType {
+	case MODEL_TYPE_CONSTANT:
+		model = &ConstantModel{}
+	case MODEL_TYPE_ERROR:
+		model = &ErrorModel{}
+	case MODEL_TYPE_STRUCT:
+		model = &StructModel{}
+	case MODEL_TYPE_SERVER_WEB:
+		model = &ServerWebModel{}
+	case MODEL_TYPE_DICTIONARY:
+		model = &DictionaryModel{}
+	case MODEL_TYPE_DATASOURCE_DATABASE:
+		model = &DatasourceDatabase{}
+	case MODEL_TYPE_DATASOURCE_REDIS:
+		model = &DatasourceRedis{}
+	case MODEL_TYPE_DATASOURCE_KAFKA:
+		model = &DatasourceKafka{}
+	case MODEL_TYPE_DATASOURCE_ZOOKEEPER:
+		model = &DatasourceZookeeper{}
+	case MODEL_TYPE_ACTION:
+		var m *ActionModel
+		m, err = MapToActionModel(data)
+		if err != nil {
+			return
+		}
+		model = m
+		userJSON = false
+	case MODEL_TYPE_TEST:
+		var m *TestModel
+		m, err = MapToTestModel(data)
+		if err != nil {
+			return
+		}
+		model = m
+		userJSON = false
+	}
+	if userJSON {
+		var bs []byte
+		bs, err = json.Marshal(data)
+		if err != nil {
+			return
+		}
+		err = json.Unmarshal(bs, model)
+		if err != nil {
+			return
+		}
+	}
+	return
+}

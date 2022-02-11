@@ -1,19 +1,21 @@
 <template>
   <div>
     <div class="context-group-box">
-      <template v-for="(group, index) in application.groups">
+      <template v-for="(modelType, index) in source.modelTypes">
         <div :key="'group-' + index" class="context-group">
           <div
             class="context-group-title"
             :class="{
               'context-group-body-hide':
-                application.groupOpens.indexOf(group.name) < 0,
+                application.modelTypeOpens.indexOf(modelType.name) < 0,
             }"
           >
-            <template v-if="application.groupOpens.indexOf(group.name) < 0">
+            <template
+              v-if="application.modelTypeOpens.indexOf(modelType.name) < 0"
+            >
               <span
                 class="tm-pointer ft-12 color-grey pdlr-5"
-                @click="openGroup(group)"
+                @click="modelTypeOpen(modelType)"
               >
                 <b-icon icon="caret-right"></b-icon>
               </span>
@@ -21,7 +23,7 @@
             <template v-else>
               <span
                 class="tm-pointer ft-12 color-grey pdlr-5"
-                @click="closeGroup(group)"
+                @click="modelTypeClose(modelType)"
               >
                 <b-icon icon="caret-down-fill"></b-icon>
               </span>
@@ -34,14 +36,14 @@
                 white-space: nowrap;
                 cursor: pointer;
               "
-              @dblclick="openOrCloseGroup(group)"
+              @dblclick="modelTypeOpenOrClose(modelType)"
             >
-              {{ group.text }}
+              {{ modelType.text }}
             </div>
             <div class="context-btn-group ft-12">
               <span
                 class="tm-pointer color-green mgr-5"
-                @click="toInsert(group)"
+                @click="toInsert(modelType)"
               >
                 <b-icon icon="plus-square"></b-icon>
               </span>
@@ -51,14 +53,15 @@
             class="context-group-body"
             :class="{
               'context-group-body-hide':
-                application.groupOpens.indexOf(group.name) < 0,
+                application.modelTypeOpens.indexOf(modelType.name) < 0,
             }"
-            :style="groupStyleObject(group)"
+            :style="modelTypeStyleObject(modelType)"
           >
             <div class="context-model-box">
               <template
                 v-if="
-                  context[group.name] == null || context[group.name].length == 0
+                  context[modelType.name] == null ||
+                  context[modelType.name].length == 0
                 "
               >
                 <div class="text-center pdtb-10">
@@ -66,11 +69,11 @@
                 </div>
               </template>
               <template v-else>
-                <template v-for="(model, index) in context[group.name]">
+                <template v-for="(model, index) in context[modelType.name]">
                   <div :key="'model-' + index" class="context-model">
                     <div
                       class="context-model-title"
-                      @dblclick="openModel(group, model)"
+                      @dblclick="modelOpen(modelType, model)"
                     >
                       <div
                         style="
@@ -90,13 +93,13 @@
                       <div class="context-btn-group ft-12">
                         <span
                           class="tm-pointer color-blue mgl-5"
-                          @click="toUpdate(group, model)"
+                          @click="toUpdate(modelType, model)"
                         >
                           <b-icon icon="pencil-square" class="ft-13"></b-icon>
                         </span>
                         <span
                           class="tm-pointer color-orange mgl-5"
-                          @click="toDelete(group, model)"
+                          @click="toDelete(modelType, model)"
                         >
                           <b-icon icon="x-square"></b-icon>
                         </span>
@@ -125,11 +128,11 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    groupStyleObject: function (group, models) {
-      var opened = this.application.groupOpens.indexOf(group.name) >= 0;
+    modelTypeStyleObject: function (modelType, models) {
+      var opened = this.application.modelTypeOpens.indexOf(modelType.name) >= 0;
       var height = 0;
-      if (this.context[group.name] != null) {
-        height = this.context[group.name].length * 25;
+      if (this.context[modelType.name] != null) {
+        height = this.context[modelType.name].length * 25;
       }
       if (height == 0) {
         height = 40;
@@ -145,104 +148,104 @@ export default {
         // marginTop: marginTop + "px",
       };
     },
-    openOrCloseGroup(group) {
-      if (this.application.groupOpens.indexOf(group.name) < 0) {
-        this.openGroup(group);
+    modelTypeOpenOrClose(modelType) {
+      if (this.application.modelTypeOpens.indexOf(modelType.name) < 0) {
+        this.modelTypeOpen(modelType);
       } else {
-        this.closeGroup(group);
+        this.modelTypeClose(modelType);
       }
     },
-    openGroup(group) {
-      if (this.application.groupOpens.indexOf(group.name) < 0) {
-        this.application.groupOpens.push(group.name);
-        group.marginTop = 0;
+    modelTypeOpen(modelType) {
+      if (this.application.modelTypeOpens.indexOf(modelType.name) < 0) {
+        this.application.modelTypeOpens.push(modelType.name);
+        modelType.marginTop = 0;
       }
     },
-    closeGroup(group) {
-      if (this.application.groupOpens.indexOf(group.name) >= 0) {
-        this.application.groupOpens.splice(
-          this.application.groupOpens.indexOf(group.name),
+    modelTypeClose(modelType) {
+      if (this.application.modelTypeOpens.indexOf(modelType.name) >= 0) {
+        this.application.modelTypeOpens.splice(
+          this.application.modelTypeOpens.indexOf(modelType.name),
           1
         );
-        group.marginTop = 100;
+        modelType.marginTop = 100;
       }
     },
-    openModel(group, model) {
-      let tab = this.application.createTabByModel(group, model);
+    modelOpen(modelType, model) {
+      let tab = this.application.createTabByModel(modelType, model);
       this.application.addTab(tab);
       this.application.doActiveTab(tab);
     },
-    toInsert(group) {
+    toInsert(modelType) {
       let data = {};
-      this.application.showModelForm(group, data, (g, m) => {
+      this.application.showModelForm(modelType, data, (g, m) => {
         return this.doInsert(g, m);
       });
     },
-    toUpdate(group, model) {
+    toUpdate(modelType, model) {
       let data = {
         name: model.name,
         comment: model.comment,
       };
       this.updateData = model;
-      this.application.showModelForm(group, data, (g, m) => {
+      this.application.showModelForm(modelType, data, (g, m) => {
         return this.doUpdate(g, m);
       });
     },
-    toDelete(group, model) {
+    toDelete(modelType, model) {
       this.tool
         .confirm(
           "删除[" +
-            group.text +
+            modelType.text +
             "]模型[" +
             model.name +
             "]将无法回复，确定删除？"
         )
         .then(() => {
-          this.doDelete(group, model);
+          this.doDelete(modelType, model);
         })
         .catch((e) => {});
     },
-    doInsert(group, model) {
+    doInsert(modelType, model) {
       let context = Object.assign({}, this.context);
-      context[group.name] = context[group.name] || [];
+      context[modelType.name] = context[modelType.name] || [];
       let find;
-      context[group.name].forEach((one) => {
+      context[modelType.name].forEach((one) => {
         if (one.name == model.name) {
           find = one;
         }
       });
       if (find != null) {
-        this.tool.error("[" + group.text + "]模型[" + model.name + "]已存在");
+        this.tool.error("[" + modelType.text + "]模型[" + model.name + "]已存在");
         return false;
       }
-      context[group.name].push(model);
+      context[modelType.name].push(model);
 
       let flag = this.doSave(context);
 
       if (flag) {
-        if (this.application.groupOpens.indexOf(group.name) < 0) {
-          this.openGroup(group);
+        if (this.application.modelTypeOpens.indexOf(modelType.name) < 0) {
+          this.modelTypeOpen(modelType);
         }
       }
       return flag;
     },
-    doUpdate(group, model) {
+    doUpdate(modelType, model) {
       let context = Object.assign({}, this.context);
-      context[group.name] = context[group.name] || [];
+      context[modelType.name] = context[modelType.name] || [];
 
       let find;
-      context[group.name].forEach((one) => {
+      context[modelType.name].forEach((one) => {
         if (one.name == model.name) {
           find = one;
         }
       });
       if (find != null && find != this.updateData) {
-        this.tool.error("[" + group.text + "]模型[" + model.name + "]已存在");
+        this.tool.error("[" + modelType.text + "]模型[" + model.name + "]已存在");
         return false;
       }
-      if (context[group.name].indexOf(this.updateData) < 0) {
+      if (context[modelType.name].indexOf(this.updateData) < 0) {
         this.tool.error(
-          "[" + group.text + "]模型[" + this.updateData.name + "]不存在"
+          "[" + modelType.text + "]模型[" + this.updateData.name + "]不存在"
         );
         return false;
       }
@@ -250,39 +253,39 @@ export default {
 
       return this.doSave(context);
     },
-    doDelete(group, model) {
+    doDelete(modelType, model) {
       let context = Object.assign({}, this.context);
-      context[group.name] = context[group.name] || [];
-      if (context[group.name].indexOf(model) < 0) {
-        this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
+      context[modelType.name] = context[modelType.name] || [];
+      if (context[modelType.name].indexOf(model) < 0) {
+        this.tool.error("[" + modelType.text + "]模型[" + model.name + "]不存在");
         return false;
       }
-      context[group.name].splice(context[group.name].indexOf(model), 1);
+      context[modelType.name].splice(context[modelType.name].indexOf(model), 1);
 
       return this.doSave(context);
     },
-    async saveModel(group, model, isInsert) {
+    async saveModel(modelType, model, isInsert) {
       let context = Object.assign({}, this.context);
-      context[group.name] = context[group.name] || [];
+      context[modelType.name] = context[modelType.name] || [];
 
       let find;
-      context[group.name].forEach((one) => {
+      context[modelType.name].forEach((one) => {
         if (one.name == model.name) {
           find = one;
         }
       });
       if (isInsert) {
         if (find != null) {
-          this.tool.error("[" + group.text + "]模型[" + model.name + "]已存在");
+          this.tool.error("[" + modelType.text + "]模型[" + model.name + "]已存在");
           return false;
         }
-        context[group.name].push(model);
+        context[modelType.name].push(model);
       } else {
         if (find == null) {
-          this.tool.error("[" + group.text + "]模型[" + model.name + "]不存在");
+          this.tool.error("[" + modelType.text + "]模型[" + model.name + "]不存在");
           return false;
         }
-        context[group.name].splice(context[group.name].indexOf(find), 1, model);
+        context[modelType.name].splice(context[modelType.name].indexOf(find), 1, model);
       }
 
       return await this.doSave(context);

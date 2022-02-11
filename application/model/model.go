@@ -22,6 +22,8 @@ type ModelTypeField struct {
 	IsIndexTypeOption    bool             `json:"isIndexTypeOption,omitempty"`
 	IsActionOption       bool             `json:"isActionOption,omitempty"`
 	IsDatabaseTypeOption bool             `json:"isDatabaseTypeOption,omitempty"`
+	IsColumnTypeOption   bool             `json:"isColumnTypeOption,omitempty"`
+	IfScript             string           `json:"ifScript,omitempty"`
 }
 
 var (
@@ -39,13 +41,24 @@ var (
 				Fields: []ModelTypeField{
 					{Name: "name", Text: "名称"},
 					{Name: "comment", Text: "注释"},
+					{Name: "dataType", Text: "数据类型", Type: "select", IsDataTypeOption: true},
+					{Name: "isList", Text: "是List", Type: "switch", Width: 40},
+					{Name: "column", Text: "字段", IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "columnType", Text: "字段类型", Type: "select", Width: 80, IsColumnTypeOption: true, IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "columnLength", Text: "长度", Width: 60, IsNumber: true, IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "columnDecimal", Text: "小数", Width: 60, IsNumber: true, IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "primaryKey", Text: "主键", Type: "switch", Width: 60, IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "notNull", Text: "不为空", Type: "switch", Width: 60, IfScript: "tool.isNotEmpty(model.table)"},
+					{Name: "default", Text: "默认", Width: 60, IfScript: "tool.isNotEmpty(model.table)"},
 				},
 			},
 
-			{Name: "indexs", Text: "索引", IsList: true,
+			{Name: "indexs", Text: "索引", IsList: true, IfScript: "tool.isNotEmpty(model.table)",
 				Fields: []ModelTypeField{
 					{Name: "name", Text: "名称"},
 					{Name: "comment", Text: "注释"},
+					{Name: "type", Text: "类型", Type: "select", Width: 80, IsIndexTypeOption: true},
+					{Name: "columns", Text: "字段"},
 				},
 			},
 		},

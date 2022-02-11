@@ -123,16 +123,16 @@ export default {
       this.items = this.source.application.getStructOptions(this.context);
     },
     initDataTypeOptions() {
-      this.items = this.source.application.getDataTypeOptions(this.context);
+      this.items = this.source.dataTypes;
     },
     initColumnTypeOptions() {
-      this.items = this.source.application.getColumnTypeOptions(this.context);
+      this.items = this.source.columnTypes;
     },
     initIndexTypeOptions() {
-      this.items = this.source.application.getIndexTypeOptions(this.context);
+      this.items = this.source.indexTypes;
     },
     initDatabaseTypeOptions() {
-      this.items = this.source.application.getDatabaseTypeOptions(this.context);
+      this.items = this.source.databaseTypes;
     },
   },
   mounted() {

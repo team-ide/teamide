@@ -1,5 +1,6 @@
 name: asd
 comment: asd
+table: a
 fields:
 - name: asdasd
   comment: asdasd

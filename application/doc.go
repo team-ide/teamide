@@ -196,7 +196,7 @@ func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model.ServerW
 }
 func getRequestHeader(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_HEADER {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_HEADER {
 			res = append(res, one)
 		}
 	}
@@ -204,7 +204,7 @@ func getRequestHeader(action *model.ActionModel) (res []*model.VariableModel) {
 }
 func getRequestBody(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if base.IsEmpty(one.DataPlace) || model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_BODY {
+		if base.IsEmpty(one.DataPlace) || model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_BODY {
 			res = append(res, one)
 		}
 	}
@@ -212,7 +212,7 @@ func getRequestBody(action *model.ActionModel) (res []*model.VariableModel) {
 }
 func getRequestFile(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_FILE {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_FILE {
 			res = append(res, one)
 		}
 	}
@@ -220,7 +220,7 @@ func getRequestFile(action *model.ActionModel) (res []*model.VariableModel) {
 }
 func getRequestForm(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_FORM {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_FORM {
 			res = append(res, one)
 		}
 	}
@@ -229,7 +229,7 @@ func getRequestForm(action *model.ActionModel) (res []*model.VariableModel) {
 
 func getRequestParam(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_PARAM {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_PARAM {
 			res = append(res, one)
 		}
 	}
@@ -238,7 +238,7 @@ func getRequestParam(action *model.ActionModel) (res []*model.VariableModel) {
 
 func getRequestPath(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model.GetVariableDataPlace(one.DataPlace) == model.DATA_PLACE_PATH {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_PATH {
 			res = append(res, one)
 		}
 	}

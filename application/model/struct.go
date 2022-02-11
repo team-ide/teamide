@@ -45,6 +45,89 @@ type StructIndexModel struct {
 	Comment string `json:"comment,omitempty" yaml:"comment,omitempty"` // 注释
 }
 
+type DataType struct {
+	Value      string       `json:"value,omitempty"`
+	Text       string       `json:"text,omitempty"`
+	DataStruct *StructModel `json:"dataStruct,omitempty"`
+}
+
+var (
+	DATA_TYPES = []*DataType{}
+
+	DATA_TYPE_STRING  = newDataType("string", "字符串")
+	DATA_TYPE_INT     = newDataType("int", "整形")
+	DATA_TYPE_LONG    = newDataType("long", "长整型")
+	DATA_TYPE_BOOLEAN = newDataType("boolean", "布尔型")
+	DATA_TYPE_BYTE    = newDataType("byte", "字节型")
+	DATA_TYPE_DATE    = newDataType("date", "日期")
+	DATA_TYPE_SHORT   = newDataType("short", "短整型")
+	DATA_TYPE_DOUBLE  = newDataType("double", "双精度浮点型")
+	DATA_TYPE_FLOAT   = newDataType("float", "浮点型")
+	DATA_TYPE_MAP     = newDataType("map", "集合")
+)
+
+func newDataType(value, text string) *DataType {
+	res := &DataType{
+		Value: value,
+		Text:  text,
+	}
+	DATA_TYPES = append(DATA_TYPES, res)
+	return res
+}
+
+func getDataType(value string) *DataType {
+	for _, one := range DATA_TYPES {
+		if one.Value == value {
+			return one
+		}
+	}
+	return nil
+}
+
+type ColumnType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	COLUMN_TYPES = []*ColumnType{}
+
+	COLUMN_TYPE_VARCHAR  = newColumnType("varchar", "varchar")
+	COLUMN_TYPE_BIGINT   = newColumnType("bigint", "bigint")
+	COLUMN_TYPE_INT      = newColumnType("int", "int")
+	COLUMN_TYPE_DATETIME = newColumnType("datetime", "datetime")
+	COLUMN_TYPE_NUMBER   = newColumnType("number", "number")
+)
+
+func newColumnType(value, text string) *ColumnType {
+	res := &ColumnType{
+		Value: value,
+		Text:  text,
+	}
+	COLUMN_TYPES = append(COLUMN_TYPES, res)
+	return res
+}
+
+type IndexType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	INDEX_TYPES = []*IndexType{}
+
+	INDEX_TYPE_KEY    = newIndexType("key", "普通")
+	INDEX_TYPE_UNIQUE = newIndexType("unique", "唯一")
+)
+
+func newIndexType(value, text string) *IndexType {
+	res := &IndexType{
+		Value: value,
+		Text:  text,
+	}
+	INDEX_TYPES = append(INDEX_TYPES, res)
+	return res
+}
 func TextToStructModel(namePath string, text string) (model *StructModel, err error) {
 	var name string
 	model = &StructModel{}

@@ -19,11 +19,11 @@ type VariableModel struct {
 	TryError  *ErrorModel `json:"tryError,omitempty" yaml:"tryError,omitempty"`
 }
 
-func (this_ *ModelContext) GetVariableDataType(dataType string) (res *VariableDataType) {
+func (this_ *ModelContext) GetVariableDataType(dataType string) (res *DataType) {
 	if dataType == "" {
 		return
 	}
-	res = getVariableDataType(dataType)
+	res = getDataType(dataType)
 	if res != nil {
 		return
 	}
@@ -31,7 +31,7 @@ func (this_ *ModelContext) GetVariableDataType(dataType string) (res *VariableDa
 	if dataStruct == nil {
 		return
 	}
-	res = &VariableDataType{
+	res = &DataType{
 		Value:      dataStruct.Name,
 		Text:       dataStruct.Comment,
 		DataStruct: dataStruct,
@@ -51,73 +51,33 @@ func FormatVariableModel(variable interface{}) interface{} {
 	return variable
 }
 
-type VariableDataType struct {
-	Value           string            `json:"value,omitempty"`
-	Text            string            `json:"text,omitempty"`
-	DataStruct      *StructModel      `json:"dataStruct,omitempty"`
-	DataStructField *StructFieldModel `json:"dataStructField,omitempty"`
-}
-
-var (
-	dataTypes = []*VariableDataType{}
-
-	DATA_TYPE_STRING  = newVariableDataType("string", "字符串(String,string)")
-	DATA_TYPE_INT     = newVariableDataType("int", "整形(int,int32)")
-	DATA_TYPE_LONG    = newVariableDataType("long", "长整型(long,int64)")
-	DATA_TYPE_BOOLEAN = newVariableDataType("boolean", "布尔型(boolean,bool)")
-	DATA_TYPE_BYTE    = newVariableDataType("byte", "字节型(byte,int8)")
-	DATA_TYPE_DATE    = newVariableDataType("date", "字节型(Date,date)")
-	DATA_TYPE_SHORT   = newVariableDataType("short", "短整型(short,int16)")
-	DATA_TYPE_DOUBLE  = newVariableDataType("double", "双精度浮点型(double,float64)")
-	DATA_TYPE_FLOAT   = newVariableDataType("float", "浮点型(float,float32)")
-	DATA_TYPE_MAP     = newVariableDataType("map", "集合(Map,map)")
-)
-
-func newVariableDataType(value, text string) *VariableDataType {
-	res := &VariableDataType{
-		Value: value,
-		Text:  text,
-	}
-	dataTypes = append(dataTypes, res)
-	return res
-}
-
-func getVariableDataType(value string) *VariableDataType {
-	for _, one := range dataTypes {
-		if one.Value == value {
-			return one
-		}
-	}
-	return nil
-}
-
-type VariableDataPlace struct {
+type DataPlace struct {
 	Value string `json:"value,omitempty"`
 	Text  string `json:"text,omitempty"`
 }
 
 var (
-	dataPlaces = []*VariableDataPlace{}
+	DATA_PLACES = []*DataPlace{}
 
-	DATA_PLACE_BODY   = newVariableDataPlace("body", "Request Body")
-	DATA_PLACE_HEADER = newVariableDataPlace("header", "Request Header")
-	DATA_PLACE_PARAM  = newVariableDataPlace("param", "Request Param")
-	DATA_PLACE_FILE   = newVariableDataPlace("file", "Request File")
-	DATA_PLACE_PATH   = newVariableDataPlace("path", "Request Path")
-	DATA_PLACE_FORM   = newVariableDataPlace("form", "Request Form")
+	DATA_PLACE_BODY   = newDataPlace("body", "Request Body")
+	DATA_PLACE_HEADER = newDataPlace("header", "Request Header")
+	DATA_PLACE_PARAM  = newDataPlace("param", "Request Param")
+	DATA_PLACE_FILE   = newDataPlace("file", "Request File")
+	DATA_PLACE_PATH   = newDataPlace("path", "Request Path")
+	DATA_PLACE_FORM   = newDataPlace("form", "Request Form")
 )
 
-func newVariableDataPlace(value, text string) *VariableDataPlace {
-	res := &VariableDataPlace{
+func newDataPlace(value, text string) *DataPlace {
+	res := &DataPlace{
 		Value: value,
 		Text:  text,
 	}
-	dataPlaces = append(dataPlaces, res)
+	DATA_PLACES = append(DATA_PLACES, res)
 	return res
 }
 
-func GetVariableDataPlace(value string) *VariableDataPlace {
-	for _, one := range dataPlaces {
+func GetDataPlace(value string) *DataPlace {
+	for _, one := range DATA_PLACES {
 		if strings.EqualFold(one.Value, value) {
 			return one
 		}

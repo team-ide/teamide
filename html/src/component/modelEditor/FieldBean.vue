@@ -9,6 +9,10 @@
           :field="one"
           :bean="data[field.name]"
           :wrap="wrap"
+          v-if="
+            one.ifScript == null ||
+            wrap.ifScript(one.ifScript, data[field.name])
+          "
         >
         </ModelEditorField>
         <template v-if="one.fields != null && !one.isList">
@@ -19,6 +23,7 @@
             :field="one"
             :bean="data"
             :wrap="wrap"
+            v-if="one.ifScript == null || wrap.ifScript(one.ifScript, data)"
           >
           </ModelEditorFieldBean>
         </template>
@@ -30,6 +35,7 @@
             :field="one"
             :bean="data"
             :wrap="wrap"
+            v-if="one.ifScript == null || wrap.ifScript(one.ifScript, data)"
           >
           </ModelEditorFieldList>
         </template>
