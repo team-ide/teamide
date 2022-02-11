@@ -184,7 +184,12 @@ export default {
       let tab = this.getTab(key);
       if (tab == null) {
         let title =
-          "应用：" + this.app.name + " > " + modelType.text + " > " + model.name;
+          "应用：" +
+          this.app.name +
+          " > " +
+          modelType.text +
+          " > " +
+          model.name;
         if (this.tool.isNotEmpty(model.comment)) {
           title += "(" + model.comment + ")";
         }
