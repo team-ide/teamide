@@ -122,10 +122,10 @@ export default {
 
 <style>
 .model-table {
-  border: 1px dashed #4e4e4e;
+  padding: 0px 0px;
 }
 .model-table thead {
-  border-bottom: 1px dashed #4e4e4e;
+  border: 1px dashed #4e4e4e;
 }
 .model-table th {
   text-align: center;
@@ -135,12 +135,16 @@ export default {
 .model-table td {
   text-align: center;
   border-right: 1px dashed #4e4e4e;
+  border-bottom: 1px dashed #4e4e4e;
   padding: 0px 0px;
 }
-.model-table tr td:last-child {
-  border-right: 0px;
+.model-table tbody {
+  border-left: 1px dashed #4e4e4e;
 }
 .model-table td .input {
   padding: 0px 0px;
+}
+.model-table td .model-input {
+  min-width: 80px;
 }
 </style>

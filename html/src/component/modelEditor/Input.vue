@@ -89,14 +89,11 @@ export default {
   /* background: transparent; */
   color: #f9f9f9;
   /* border-bottom: 1px groove #f9f9f9; */
-  min-width: 40px;
+  min-width: 80px;
   text-align: center;
   font-size: 12px;
   line-height: 22px;
   height: 22px;
   background: #343434;
-}
-.model-table .model-input {
-  width: 100% !important;
 }
 </style>

@@ -109,7 +109,7 @@ export default {
       } else if (this.isIndexTypeOption) {
         this.initIndexTypeOptions();
       } else if (this.isDatabaseTypeOption) {
-        this.initIndexTypeOptions();
+        this.initDatabaseTypeOptions();
       } else if (this.isStructOption) {
         this.initStructOptions();
       } else if (this.isActionOption) {
@@ -149,7 +149,7 @@ export default {
   outline: none;
   color: #f9f9f9;
   border-bottom: 0px groove #f9f9f9;
-  min-width: 40px;
+  min-width: 80px;
   text-align: center;
   -moz-appearance: auto;
   -webkit-appearance: auto;

@@ -50,41 +50,15 @@
         </ModelEditorAction>
       </template>
       <template v-else>
-        <ul v-if="!modelType.isAction" class="mgt-40">
-          <template v-for="(one, index) in modelType.fields">
-            <ModelEditorField
-              :key="'field-' + index"
-              :source="source"
-              :context="context"
-              :field="one"
-              :bean="data"
-              :wrap="wrap"
-            >
-            </ModelEditorField>
-            <template v-if="one.fields != null && !one.isList">
-              <ModelEditorFieldBean
-                :key="'field-bean-' + index"
-                :source="source"
-                :context="context"
-                :field="one"
-                :bean="data"
-                :wrap="wrap"
-              >
-              </ModelEditorFieldBean>
-            </template>
-            <template v-if="one.fields != null && one.isList">
-              <ModelEditorFieldList
-                :key="'field-list-' + index"
-                :source="source"
-                :context="context"
-                :field="one"
-                :bean="data"
-                :wrap="wrap"
-              >
-              </ModelEditorFieldList>
-            </template>
-          </template>
-        </ul>
+        <ModelEditorFields
+          v-if="!modelType.isAction"
+          :source="source"
+          :context="context"
+          :fields="modelType.fields"
+          :bean="data"
+          :wrap="wrap"
+        >
+        </ModelEditorFields>
       </template>
     </template>
   </div>
@@ -119,7 +93,34 @@ export default {
     get() {
       return this.data;
     },
+    formatDataFields(data, fields) {
+      if (data == null || fields == null) {
+        return;
+      }
+      fields.forEach((one) => {
+        if (one.fields) {
+          if (one.isList) {
+            if (data[one.name] == null) {
+              data[one.name] = [];
+            }
+            data[one.name].forEach((oneData) => {
+              this.formatDataFields(oneData, one.fields);
+            });
+          } else {
+            if (data[one.name] == null) {
+              data[one.name] = {};
+            }
+            this.formatDataFields(data[one.name], one.fields);
+          }
+        } else {
+          if (data[one.name] == null) {
+            data[one.name] = null;
+          }
+        }
+      });
+    },
     set(data) {
+      this.formatDataFields(data, this.modelType.fields);
       this.data = data;
     },
     refresh() {

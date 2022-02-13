@@ -30,11 +30,11 @@ Vue.component('ModelEditor', ModelEditor);
 import ModelEditorFieldInput from './modelEditor/FieldInput.vue'
 Vue.component('ModelEditorFieldInput', ModelEditorFieldInput);
 
+import ModelEditorFields from './modelEditor/Fields.vue'
+Vue.component('ModelEditorFields', ModelEditorFields);
+
 import ModelEditorField from './modelEditor/Field.vue'
 Vue.component('ModelEditorField', ModelEditorField);
-
-import ModelEditorFieldBean from './modelEditor/FieldBean.vue'
-Vue.component('ModelEditorFieldBean', ModelEditorFieldBean);
 
 import ModelEditorFieldList from './modelEditor/FieldList.vue'
 Vue.component('ModelEditorFieldList', ModelEditorFieldList);
