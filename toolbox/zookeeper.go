@@ -93,16 +93,16 @@ func getZKService(address string) (res *ZKService, err error) {
 	key := "zookeeper-" + address
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
-		var zkService *ZKService
-		zkService, err = CreateZKService(address)
+		var s *ZKService
+		s, err = CreateZKService(address)
 		if err != nil {
 			return
 		}
-		_, err = zkService.Exists("/")
+		_, err = s.Exists("/")
 		if err != nil {
 			return
 		}
-		res = zkService
+		res = s
 		return
 	})
 	if err != nil {
@@ -113,32 +113,38 @@ func getZKService(address string) (res *ZKService, err error) {
 }
 
 func CreateZKService(address string) (*ZKService, error) {
-	service := &ZKService{}
-	err := service.init(address)
+	service := &ZKService{
+		address: address,
+	}
+	err := service.init()
 	return service, err
 }
 
 //注册处理器在线信息等
 type ZKService struct {
+	address     string
 	zkConn      *zk.Conn        //zk连接
 	zkConnEvent <-chan zk.Event // zk事件通知管道
 	lastUseTime int64
 }
 
-func (this_ *ZKService) init(address string) error {
+func (this_ *ZKService) init() error {
 	var err error
-	var servers []string
-	if strings.Contains(address, ",") {
-		servers = strings.Split(address, ",")
-	} else if strings.Contains(address, ";") {
-		servers = strings.Split(address, ";")
-	} else {
-		servers = []string{address}
-	}
-	this_.zkConn, this_.zkConnEvent, err = zk.Connect(servers, time.Second*3)
+	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*3)
 	return err
 }
 
+func (this_ *ZKService) GetServers() []string {
+	var servers []string
+	if strings.Contains(this_.address, ",") {
+		servers = strings.Split(this_.address, ",")
+	} else if strings.Contains(this_.address, ";") {
+		servers = strings.Split(this_.address, ";")
+	} else {
+		servers = []string{this_.address}
+	}
+	return servers
+}
 func (this_ *ZKService) GetConn() *zk.Conn {
 	defer func() {
 		this_.lastUseTime = GetNowTime()
