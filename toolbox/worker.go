@@ -2,7 +2,6 @@ package toolbox
 
 import (
 	"sync"
-	"teamide/server/base"
 	"time"
 )
 
@@ -55,7 +54,7 @@ type Service interface {
 func startServiceTimer() {
 	for {
 		time.Sleep(1 * time.Second)
-		nowTime := base.GetNowTime()
+		nowTime := GetNowTime()
 		for key, one := range serviceCache {
 			if one.GetWaitTime() > 0 && nowTime-one.GetLastUseTime() >= one.GetWaitTime() {
 				delete(serviceCache, key)

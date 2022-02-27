@@ -1,8 +1,11 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"teamide/server/base"
 
@@ -72,12 +75,21 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		err = yaml.Unmarshal(bs, Config)
+		configMap := map[string]interface{}{}
+		err = yaml.Unmarshal(bs, &configMap)
 		if err != nil {
 			panic(err)
 		}
+		foramtMap(configMap)
+
+		bs, err = json.Marshal(configMap)
+		if err != nil {
+			panic(err)
+		}
+		json.Unmarshal(bs, Config)
 	}
 	formatConfig()
+	fmt.Println(base.ToJSON(Config))
 }
 
 //格式化配置，填充默认值
@@ -88,7 +100,11 @@ func formatConfig() {
 	}
 	if Config.Server != nil {
 		if Config.Server.Data == "" {
-			Config.Server.Data = base.BaseDir + "data"
+			if base.UserHomeDir == "" {
+				Config.Server.Data = base.BaseDir + "data"
+			} else {
+				Config.Server.Data = base.UserHomeDir + "TeamIDE/data"
+			}
 		} else {
 			Config.Server.Data = base.BaseDir + strings.TrimPrefix(Config.Server.Data, "./")
 		}
@@ -103,7 +119,11 @@ func formatConfig() {
 	}
 
 	if Config.Log.Filename == "" {
-		Config.Log.Filename = base.BaseDir + "log/server.log"
+		if base.UserHomeDir == "" {
+			Config.Log.Filename = base.BaseDir + "log/server.log"
+		} else {
+			Config.Log.Filename = base.UserHomeDir + "TeamIDE/log/server.log"
+		}
 	} else {
 		Config.Log.Filename = base.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
 	}
@@ -119,6 +139,52 @@ func formatConfig() {
 			panic("请检查Zookeeper配置是否正确")
 		}
 	}
+}
+
+func foramtMap(mapValue map[string]interface{}) {
+	if mapValue == nil {
+		return
+	}
+	for key, value := range mapValue {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			foramtMap(v)
+		default:
+			res := foramtValue(value)
+			mapValue[key] = res
+		}
+	}
+
+}
+func foramtValue(value interface{}) (res string) {
+	if value == nil {
+		return
+	}
+	stringValue, stringValueOk := value.(string)
+	if stringValueOk {
+		res = stringValue
+		return
+	}
+	res = ""
+	var re *regexp.Regexp
+	re, _ = regexp.Compile(`[$]+{(.+?)}`)
+	indexsList := re.FindAllIndex([]byte(stringValue), -1)
+	var lastIndex int = 0
+	for _, indexs := range indexsList {
+		res += stringValue[lastIndex:indexs[0]]
+
+		lastIndex = indexs[1]
+
+		key := stringValue[indexs[0]+1 : indexs[1]-1]
+		value := GetFromSystem(key)
+		if value == "" {
+			return
+		}
+		res += value
+	}
+	res += stringValue[lastIndex:]
+
+	return
 }
 
 func GetFromSystem(key string) string {
