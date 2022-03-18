@@ -16,7 +16,6 @@ require (
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/satori/go.uuid v1.2.0
 	github.com/wxnacy/wgo v1.0.4
-	github.com/zserge/lorca v0.1.10
 	go.uber.org/zap v1.20.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0

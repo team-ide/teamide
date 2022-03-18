@@ -3,7 +3,6 @@ package installService
 import (
 	"teamide/server/base"
 	"teamide/server/component"
-	"teamide/server/config"
 )
 
 func install(info *base.InstallInfo) {
@@ -20,7 +19,7 @@ func installStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 		return
 	}
 
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		return
 	}
 	var err error
@@ -36,16 +35,16 @@ func installStage(info *base.InstallInfo, stage *base.InstallStageInfo) {
 		return
 	}
 	detailInfo := make(map[string]interface{})
-	if stage.SqlParam.Sql != "" {
-		detailInfo["sqlParam"] = stage.SqlParam
-		_, err = component.DB.Exec(stage.SqlParam)
+	if stage.Sql != nil {
+		detailInfo["sql"] = stage.Sql
+		_, err = component.DB.Exec(base.SqlParam{Sql: stage.Sql.MySql})
 		if err != nil {
 			panic(err)
 		}
 	}
 	detail := base.ToJSON(detailInfo)
 	// 加密detail
-	detail = component.AesEncryptCBC(detail)
+	detail = component.RSAEncrypt(detail)
 	sqlParam := base.SqlParam{
 		Sql:    "INSERT INTO  " + TABLE_INSTALL + " (module, stage, detail, createTime) VALUES (?, ?, ?, ?) ",
 		Params: []interface{}{info.Module, stage.Stage, detail, base.Now()},

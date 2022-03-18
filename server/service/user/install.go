@@ -11,10 +11,9 @@ func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	name varchar(50) NOT NULL COMMENT '名称',
 	avatar varchar(200) DEFAULT NULL COMMENT '头像',
@@ -26,26 +25,24 @@ CREATE TABLE TM_USER (
 	deletedState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-删除、2-正常',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, userId),
-	KEY index_serverId_name (serverId, name),
-	KEY index_serverId_account (serverId, account),
-	KEY index_serverId_email (serverId, email),
-	KEY index_serverId_activedState (serverId, activedState),
-	KEY index_serverId_lockedState (serverId, lockedState),
-	KEY index_serverId_enabledState (serverId, enabledState),
-	KEY index_serverId_deletedState (serverId, deletedState)
+	PRIMARY KEY (userId),
+	KEY index_name (name),
+	KEY index_account (account),
+	KEY index_email (email),
+	KEY index_activedState (activedState),
+	KEY index_lockedState (lockedState),
+	KEY index_enabledState (enabledState),
+	KEY index_deletedState (deletedState)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_METADATA",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER_METADATA (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	metadataId bigint(20) NOT NULL COMMENT '元数据ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	metadataStruct int(10) NOT NULL COMMENT '元数据结构',
@@ -54,24 +51,22 @@ CREATE TABLE TM_USER_METADATA (
 	parentId bigint(20) DEFAULT NULL COMMENT '父ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, metadataId),
-	KEY index_serverId_userId (serverId, userId),
-	KEY index_serverId_metadataStruct_metadataField (serverId, metadataStruct, metadataField),
-	KEY index_serverId_userId_metadataStruct_metadataField (serverId, userId, metadataStruct, metadataField),
-	KEY index_serverId_parentId (serverId, parentId),
-	KEY index_serverId_userId_parentId (serverId, userId, parentId)
+	PRIMARY KEY (metadataId),
+	KEY index_userId (userId),
+	KEY index_metadataStruct_metadataField (metadataStruct, metadataField),
+	KEY index_userId_metadataStruct_metadataField (userId, metadataStruct, metadataField),
+	KEY index_parentId (parentId),
+	KEY index_userId_parentId (userId, parentId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户元数据';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_AUTH",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER_AUTH (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	authId bigint(20) NOT NULL COMMENT '授权ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	authType int(2) NOT NULL COMMENT '授权类型',
@@ -84,68 +79,63 @@ CREATE TABLE TM_USER_AUTH (
 	deletedState int(1) NOT NULL DEFAULT 1 COMMENT '启用状态:1-删除、2-正常',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, authId),
-	KEY index_serverId_userId (serverId, userId),
-	KEY index_serverId_authType_openId (serverId, authType, openId),
-	KEY index_serverId_activedState (serverId, activedState),
-	KEY index_serverId_lockedState (serverId, lockedState),
-	KEY index_serverId_enabledState (serverId, enabledState),
-	KEY index_serverId_deletedState (serverId, deletedState)
+	PRIMARY KEY (authId),
+	KEY index_userId (userId),
+	KEY index_authType_openId (authType, openId),
+	KEY index_activedState (activedState),
+	KEY index_lockedState (lockedState),
+	KEY index_enabledState (enabledState),
+	KEY index_deletedState (deletedState)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户第三方授权';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_PASSWORD",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER_PASSWORD (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	salt varchar(20) NOT NULL COMMENT '盐',
 	password varchar(100) NOT NULL COMMENT '密码',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, userId)
+	PRIMARY KEY (userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户密码';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_AUTH",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER_AUTH (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	authId bigint(20) NOT NULL COMMENT '授权ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, authId)
+	PRIMARY KEY (authId),
+	KEY index_userId (userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_USER_LOCK",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_USER_LOCK (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
-	lockId bigint(20) NOT NULL COMMENT '授权ID',
+	lockId bigint(20) NOT NULL COMMENT '锁定ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, lockId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权';
+	PRIMARY KEY (lockId),
+	KEY index_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户锁定';
 				`,
-			Params: []interface{}{},
 		},
 	})
 

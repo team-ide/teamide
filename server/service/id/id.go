@@ -91,8 +91,8 @@ func (this_ *Service) GetIDs(idType component.IDType, size int64) (ids []int64, 
 }
 
 func insertOrUpdate(id base.IDEntity) (err error) {
-	sql := "INSERT INTO " + TABLE_ID + " (serverId, type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
-	params := []interface{}{component.GetServerId(), id.Type, id.Id, id.Id}
+	sql := "INSERT INTO " + TABLE_ID + " (type, id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=?"
+	params := []interface{}{id.Type, id.Id, id.Id}
 
 	sqlParam := base.NewSqlParam(sql, params)
 
@@ -106,8 +106,8 @@ func insertOrUpdate(id base.IDEntity) (err error) {
 
 //查询单个ID
 func get(idType component.IDType) (id *base.IDEntity, err error) {
-	sql := "SELECT * FROM " + TABLE_ID + " WHERE serverId=? AND type=? "
-	params := []interface{}{component.GetServerId(), idType}
+	sql := "SELECT * FROM " + TABLE_ID + " WHERE type=? "
+	params := []interface{}{idType}
 
 	sqlParam := base.NewSqlParam(sql, params)
 

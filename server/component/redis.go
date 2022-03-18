@@ -2,6 +2,7 @@ package component
 
 import (
 	"strings"
+	"teamide/server/base"
 	"teamide/server/config"
 )
 
@@ -10,7 +11,7 @@ var (
 )
 
 func init() {
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		return
 	}
 

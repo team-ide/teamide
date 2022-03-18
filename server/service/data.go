@@ -5,7 +5,6 @@ import (
 	"strings"
 	"teamide/application/model"
 	"teamide/server/base"
-	"teamide/server/config"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +17,7 @@ type DataRequest struct {
 type DataResponse struct {
 	Url           string                `json:"url,omitempty"`
 	Api           string                `json:"api,omitempty"`
-	IsNative      bool                  `json:"isNative,omitempty"`
+	IsStandAlone  bool                  `json:"isStandAlone,omitempty"`
 	ColumnTypes   []*model.ColumnType   `json:"columnTypes,omitempty"`
 	DataTypes     []*model.DataType     `json:"dataTypes,omitempty"`
 	IndexTypes    []*model.IndexType    `json:"indexTypes,omitempty"`
@@ -49,7 +48,7 @@ func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, er
 
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
-	response.IsNative = config.Config.IsNative
+	response.IsStandAlone = base.IS_STAND_ALONE
 	response.ColumnTypes = model.COLUMN_TYPES
 	response.DataTypes = model.DATA_TYPES
 	response.ModelTypes = model.MODEL_TYPES

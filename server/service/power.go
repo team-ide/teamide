@@ -3,14 +3,13 @@ package service
 import (
 	"strings"
 	"teamide/server/base"
-	"teamide/server/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"
 )
 
 func checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		if api.Power.AllowNative {
 			return true
 		}

@@ -18,7 +18,7 @@ var (
 
 func init() {
 
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		return
 	}
 	var service *MysqlService

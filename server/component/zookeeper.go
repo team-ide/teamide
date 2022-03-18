@@ -3,6 +3,7 @@ package component
 import (
 	"errors"
 	"strings"
+	"teamide/server/base"
 	"teamide/server/config"
 	"time"
 
@@ -15,7 +16,7 @@ var (
 
 func init() {
 
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		return
 	}
 

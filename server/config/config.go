@@ -13,7 +13,6 @@ import (
 )
 
 type ServerConfig struct {
-	IsNative  bool       `json:"-" yaml:"-"` // 是否是本机运行
 	Server    *server    `json:"server,omitempty" yaml:"server,omitempty"`
 	Redis     *redis     `json:"redis,omitempty" yaml:"redis,omitempty"`
 	Zookeeper *zookeeper `json:"zookeeper,omitempty" yaml:"zookeeper,omitempty"`
@@ -87,6 +86,8 @@ func init() {
 			panic(err)
 		}
 		json.Unmarshal(bs, Config)
+	} else {
+		base.IS_STAND_ALONE = true
 	}
 	formatConfig()
 	fmt.Println(base.ToJSON(Config))
@@ -95,15 +96,15 @@ func init() {
 //格式化配置，填充默认值
 func formatConfig() {
 
-	if Config.Mysql == nil {
-		Config.IsNative = true
+	if Config.Server == nil {
+		base.IS_STAND_ALONE = true
 	}
 	if Config.Server != nil {
 		if Config.Server.Data == "" {
-			if base.UserHomeDir == "" {
-				Config.Server.Data = base.BaseDir + "data"
-			} else {
+			if base.IS_STAND_ALONE && base.UserHomeDir != "" {
 				Config.Server.Data = base.UserHomeDir + "TeamIDE/data"
+			} else {
+				Config.Server.Data = base.BaseDir + "data"
 			}
 		} else {
 			Config.Server.Data = base.BaseDir + strings.TrimPrefix(Config.Server.Data, "./")
@@ -119,16 +120,17 @@ func formatConfig() {
 	}
 
 	if Config.Log.Filename == "" {
-		if base.UserHomeDir == "" {
-			Config.Log.Filename = base.BaseDir + "log/server.log"
-		} else {
+
+		if base.IS_STAND_ALONE && base.UserHomeDir != "" {
 			Config.Log.Filename = base.UserHomeDir + "TeamIDE/log/server.log"
+		} else {
+			Config.Log.Filename = base.BaseDir + "log/server.log"
 		}
 	} else {
 		Config.Log.Filename = base.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
 	}
 
-	if !Config.IsNative {
+	if !base.IS_STAND_ALONE {
 		if Config.Mysql == nil || Config.Mysql.Host == "" || Config.Mysql.Port == 0 {
 			panic("请检查MySql配置是否正确")
 		}

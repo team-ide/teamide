@@ -6,7 +6,6 @@ import (
 	"strings"
 	"teamide/server/base"
 	"teamide/server/component"
-	"teamide/server/config"
 	"teamide/server/factory"
 
 	"github.com/gin-gonic/gin"
@@ -58,7 +57,7 @@ func appendApi(apis ...*base.ApiWorker) {
 			panic(errors.New(fmt.Sprint("API未设置映射路径!", api)))
 		}
 
-		if config.Config.IsNative {
+		if base.IS_STAND_ALONE {
 			if !api.Power.AllowNative {
 				continue
 			}
@@ -84,7 +83,7 @@ func CacheApi() {
 	}
 	ps := base.GetPowers()
 	for _, one := range ps {
-		if config.Config.IsNative {
+		if base.IS_STAND_ALONE {
 			if !one.AllowNative {
 				continue
 			}

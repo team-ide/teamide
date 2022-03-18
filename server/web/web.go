@@ -66,7 +66,7 @@ func StartServer() (serverUrl string, err error) {
 	if err != nil {
 		return
 	}
-	if !config.Config.IsNative {
+	if !base.IS_STAND_ALONE {
 		println("服务启动，访问地址:")
 		if ServerHost == "0.0.0.0" || ServerHost == "::" {
 			httpServer := fmt.Sprint("127.0.0.1", ":", ServerPort)

@@ -9,7 +9,7 @@ import (
 )
 
 func GetUserApps(jwt *base.JWTBean) (appsDir string) {
-	appsDir = fmt.Sprint(config.Config.Server.Data, "/apps/", jwt.ServerId, "-", jwt.UserId)
+	appsDir = fmt.Sprint(config.Config.Server.Data, "/apps/", jwt.UserId)
 
 	appsDir = util.GetAbsolutePath(appsDir)
 

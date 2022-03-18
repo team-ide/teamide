@@ -54,8 +54,13 @@ type InstallInfo struct {
 }
 
 type InstallStageInfo struct {
-	Stage    string   `json:"stage,omitempty"`
-	SqlParam SqlParam `json:"sqlParam,omitempty"`
+	Stage string      `json:"stage,omitempty"`
+	Sql   *InstallSql `json:"sql,omitempty"`
+}
+
+type InstallSql struct {
+	MySql     string `json:"mySql,omitempty"`
+	SqliteSql string `json:"sqliteSql,omitempty"`
 }
 
 type SqlParam struct {

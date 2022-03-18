@@ -4,8 +4,62 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"encoding/base64"
 	"errors"
+	"teamide/application/base"
 )
+
+//AES加密,CBC
+func AesEncryptCBCByKey(origData string, key string) (res string, err error) {
+	bs, err := base.AesCBCEncrypt([]byte(origData), []byte(key))
+	if err != nil {
+		return
+	}
+	// 经过一次base64 否则 直接转字符串乱码
+	res = base64.StdEncoding.EncodeToString(bs)
+	return
+}
+
+//AES解密,CBC
+func AesDecryptCBCByKey(crypted string, key string) (res string, err error) {
+	// 经过一次base64 否则 直接转字符串乱码
+	bs, err := base64.StdEncoding.DecodeString(crypted)
+	if err != nil {
+		return
+	}
+	bs, err = base.AesCBCDecrypt(bs, []byte(key))
+	if err != nil {
+		return
+	}
+	res = string(bs)
+	return
+}
+
+//AES加密,ECB
+func AesEncryptECBByKey(origData string, key string) (res string, err error) {
+	bs, err := base.AesECBEncrypt([]byte(origData), []byte(key))
+	if err != nil {
+		return
+	}
+	// 经过一次base64 否则 直接转字符串乱码
+	res = base64.StdEncoding.EncodeToString(bs)
+	return
+}
+
+//AES解密,ECB
+func AesDecryptECBByKey(crypted string, key string) (res string, err error) {
+	// 经过一次base64 否则 直接转字符串乱码
+	bs, err := base64.StdEncoding.DecodeString(crypted)
+	if err != nil {
+		return
+	}
+	bs, err = base.AesECBDecrypt(bs, []byte(key))
+	if err != nil {
+		return
+	}
+	res = string(bs)
+	return
+}
 
 // ECB模式加密
 func AesECBEncrypt(data, key []byte) ([]byte, error) {

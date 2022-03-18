@@ -5,9 +5,8 @@ import (
 )
 
 type IDEntity struct {
-	ServerId int64 `json:"serverId" column:"serverId,omitempty"`
-	Type     int8  `json:"type" column:"type,omitempty"`
-	Id       int64 `json:"id" column:"id,omitempty"`
+	Type int8  `json:"type" column:"type,omitempty"`
+	Id   int64 `json:"id" column:"id,omitempty"`
 }
 
 func NewIDEntity() (res *IDEntity) {
@@ -19,7 +18,6 @@ func NewIDEntityInterface() interface{} {
 }
 
 type UserEntity struct {
-	ServerId     int64     `json:"serverId" column:"serverId,omitempty"`
 	UserId       int64     `json:"userId" column:"userId,omitempty"`
 	Name         string    `json:"name" column:"name,omitempty"`
 	Avatar       string    `json:"avatar" column:"avatar,omitempty"`
@@ -41,7 +39,6 @@ func NewUserEntityInterface() interface{} {
 }
 
 type UserMetadataEntity struct {
-	ServerId       int64     `json:"serverId" column:"serverId,omitempty"`
 	MetadataId     int64     `json:"metadataId" column:"metadataId,omitempty"`
 	UserId         int64     `json:"userId" column:"userId,omitempty"`
 	MetadataStruct int       `json:"metadataStruct" column:"metadataStruct,omitempty"`
@@ -61,7 +58,6 @@ func NewUserMetadataEntityInterface() interface{} {
 }
 
 type UserAuthEntity struct {
-	ServerId     int64     `json:"serverId" column:"serverId,omitempty"`
 	AuthId       int64     `json:"authId" column:"authId,omitempty"`
 	UserId       int64     `json:"userId" column:"userId,omitempty"`
 	AuthType     int8      `json:"authType" column:"authType,omitempty"`
@@ -84,7 +80,6 @@ func NewUserAuthEntityInterface() interface{} {
 }
 
 type UserPasswordEntity struct {
-	ServerId   int64     `json:"serverId" column:"serverId,omitempty"`
 	UserId     int64     `json:"userId" column:"userId,omitempty"`
 	Salt       string    `json:"salt" column:"salt,omitempty"`
 	Password   string    `json:"password" column:"password,omitempty"`

@@ -4,22 +4,27 @@ import (
 	"os"
 	"sync"
 	"teamide/server"
+	"teamide/server/base"
 	"teamide/window"
 )
 
 var (
 	waitGroupForStop sync.WaitGroup
-	serverTitle           = "Team · IDE"
-	serverUrl             = ""
-	IsDev            bool = false
+	serverTitle      = "Team · IDE"
+	serverUrl        = ""
+	isHtmlDev        = false
 )
 
 func main() {
 	var err error
 
 	for _, v := range os.Args {
-		if v == "--isDev" {
-			IsDev = true
+		if v == "--isStandAlone" {
+			base.IS_STAND_ALONE = true
+			continue
+		}
+		if v == "--isHtmlDev" {
+			isHtmlDev = true
 			continue
 		}
 	}
@@ -30,11 +35,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if IsDev {
+	if isHtmlDev {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
-	if !IsDev {
+	if base.IS_STAND_ALONE {
 		err = window.Start(serverTitle, serverUrl, func() {
 			waitGroupForStop.Done()
 		})

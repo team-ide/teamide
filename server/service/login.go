@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"teamide/server/base"
 	"teamide/server/component"
-	"teamide/server/config"
 	"teamide/server/factory"
 	"teamide/util"
 
@@ -27,7 +26,10 @@ func apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err e
 		err = base.NewValidateError("登录密码不能为空!")
 		return
 	}
-	pwd := component.AesDecryptCBCByKey(loginRequest.Password, component.HTTP_AES_KEY)
+	pwd, err := base.AesDecryptCBCByKey(loginRequest.Password, component.HTTP_AES_KEY)
+	if err != nil {
+		return
+	}
 	if pwd == "" {
 		err = base.NewValidateError("用户名或密码错误!")
 		return
@@ -60,7 +62,7 @@ func getJWT(c *gin.Context) *base.JWTBean {
 	if jwt == "" {
 		return nil
 	}
-	jwt = component.AesDecryptCBC(jwt)
+	jwt = component.RSADecrypt(jwt)
 	if jwt == "" {
 		return nil
 	}
@@ -81,14 +83,13 @@ func getJWTStr(user *base.UserEntity) string {
 		return ""
 	}
 	jwt := &base.JWTBean{
-		Sign:     base.GenerateUUID(),
-		UserId:   user.UserId,
-		Name:     user.Name,
-		ServerId: user.ServerId,
-		Time:     base.GetNowTime(),
+		Sign:   base.GenerateUUID(),
+		UserId: user.UserId,
+		Name:   user.Name,
+		Time:   base.GetNowTime(),
 	}
 	jwtStr := base.ToJSON(jwt)
-	jwtStr = component.AesEncryptCBC(jwtStr)
+	jwtStr = component.RSAEncrypt(jwtStr)
 	if jwtStr == "" {
 		return ""
 	}
@@ -104,7 +105,7 @@ type SessionResponse struct {
 func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	response := &SessionResponse{}
 
-	if config.Config.IsNative {
+	if base.IS_STAND_ALONE {
 		response.User = &base.UserEntity{
 			UserId: 1,
 			Name:   util.SystemUser_Username,
@@ -134,6 +135,9 @@ func apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err
 	response.JWT = getJWTStr(response.User)
 
 	json := base.ToJSON(response)
-	res = component.AesEncryptCBCByKey(json, component.HTTP_AES_KEY)
+	res, err = base.AesEncryptCBCByKey(json, component.HTTP_AES_KEY)
+	if err != nil {
+		return
+	}
 	return
 }

@@ -20,11 +20,10 @@ func (page *PageBean) Init() {
 }
 
 type JWTBean struct {
-	Sign     string `json:"sign,omitempty"`
-	ServerId int64  `json:"serverId,omitempty"`
-	UserId   int64  `json:"userId,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Time     int64  `json:"time,omitempty"`
+	Sign   string `json:"sign,omitempty"`
+	UserId int64  `json:"userId,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Time   int64  `json:"time,omitempty"`
 }
 
 type ApiWorker struct {

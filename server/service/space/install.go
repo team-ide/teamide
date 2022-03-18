@@ -11,52 +11,46 @@ func (this_ *Service) GetInstall() (info *base.InstallInfo) {
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_SPACE",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_SPACE (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	spaceId bigint(20) NOT NULL COMMENT '空间ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, spaceId)
+	PRIMARY KEY (spaceId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_SPACE_USER",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_SPACE_USER (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	spaceId bigint(20) NOT NULL COMMENT '空间ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, spaceId, userId)
+	PRIMARY KEY (spaceId, userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间用户';
 				`,
-			Params: []interface{}{},
 		},
 	})
 
 	stages = append(stages, &base.InstallStageInfo{
 		Stage: "CREATE TABLE TM_SPACE_POWER",
-		SqlParam: base.SqlParam{
-			Sql: `
+		Sql: &base.InstallSql{
+			MySql: `
 CREATE TABLE TM_SPACE_POWER (
-	serverId bigint(20) NOT NULL COMMENT '服务ID',
 	spaceId bigint(20) NOT NULL COMMENT '空间ID',
 	powerId bigint(20) NOT NULL COMMENT '权限ID',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
-	PRIMARY KEY (serverId, spaceId, powerId)
+	PRIMARY KEY (spaceId, powerId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间权限';
 				`,
-			Params: []interface{}{},
 		},
 	})
 

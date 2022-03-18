@@ -19,7 +19,10 @@ func apiRegister(request *base.RequestBean, c *gin.Context) (res interface{}, er
 	registerRequest := &RegisterRequest{}
 	base.RequestJSON(registerRequest, c)
 
-	pwd := component.AesDecryptCBCByKey(registerRequest.Password, component.HTTP_AES_KEY)
+	pwd, err := base.AesDecryptCBCByKey(registerRequest.Password, component.HTTP_AES_KEY)
+	if err != nil {
+		return
+	}
 	if pwd == "" {
 		err = base.NewValidateError("密码不能为空!")
 		return

@@ -5,9 +5,9 @@ package window
 
 func getWindowWidth() int {
 
-	return 0
+	return 1440
 }
 func getWindowHeight() int {
 
-	return 0
+	return 900
 }

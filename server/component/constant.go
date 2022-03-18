@@ -32,7 +32,7 @@ const (
 )
 
 func GetRedisKey() (key string) {
-	key = fmt.Sprint(REDIS_PREFIX, ":", "server", ":", GetServerId())
+	key = fmt.Sprint(REDIS_PREFIX)
 	return
 }
 
