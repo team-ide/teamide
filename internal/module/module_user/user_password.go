@@ -1,7 +1,7 @@
-package service
+package module_user
 
 import (
-	"teamide/internal/model"
+	"teamide/internal/module/module_id"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
@@ -10,7 +10,7 @@ import (
 // NewUserPasswordService 根据库配置创建UserPasswordService
 func NewUserPasswordService(dbWorker db.DatabaseWorker) (res *UserPasswordService) {
 
-	idService := NewIDService(dbWorker)
+	idService := module_id.NewIDService(dbWorker)
 
 	res = &UserPasswordService{
 		dbWorker:  dbWorker,
@@ -22,13 +22,13 @@ func NewUserPasswordService(dbWorker db.DatabaseWorker) (res *UserPasswordServic
 // UserPasswordService 用户密码服务
 type UserPasswordService struct {
 	dbWorker  db.DatabaseWorker
-	idService *IDService
+	idService *module_id.IDService
 }
 
 // CheckPassword 检测密码是否一致
 func (this_ *UserPasswordService) CheckPassword(userId int64, password string) (res bool, err error) {
-	sql := `SELECT salt,password FROM ` + model.TableUserPassword + ` WHERE userId=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(model.UserPasswordModel{}))
+	sql := `SELECT salt,password FROM ` + TableUserPassword + ` WHERE userId=? `
+	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserPasswordModel{}))
 	if err != nil {
 		return
 	}
@@ -50,7 +50,7 @@ func (this_ *UserPasswordService) Insert(userId int64, password string) (rowsAff
 	salt := util.GenerateUUID()[2:12]
 	pwd := util.EncodePassword(salt, password)
 
-	sql := `INSERT INTO ` + model.TableUserPassword + `(userId, salt, password, createTime) VALUES (?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableUserPassword + `(userId, salt, password, createTime) VALUES (?, ?, ?, ?) `
 
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{userId, salt, pwd, time.Now()})
 	if err != nil {
@@ -66,7 +66,7 @@ func (this_ *UserPasswordService) UpdatePassword(userId int64, password string) 
 	salt := util.GenerateUUID()[2:12]
 	pwd := util.EncodePassword(salt, password)
 
-	sql := `UPDATE ` + model.TableUserPassword + ` SET salt=?,password=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUserPassword + ` SET salt=?,password=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{salt, pwd, time.Now(), userId})
 	if err != nil {
 		return

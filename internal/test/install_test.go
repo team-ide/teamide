@@ -1,12 +1,13 @@
-package service
+package test
 
 import (
+	"teamide/internal/module"
 	"testing"
 )
 
 func TestCheckMysql(t *testing.T) {
 	var err error
-	installService := NewInstallService(getMysqlDBWorker())
+	installService := module.NewInstallService(getMysqlDBWorker())
 	err = installService.Check()
 	if err != nil {
 		panic(err)
@@ -15,7 +16,7 @@ func TestCheckMysql(t *testing.T) {
 
 func TestCheckSqlite(t *testing.T) {
 	var err error
-	installService := NewInstallService(getSqliteDBWorker())
+	installService := module.NewInstallService(getSqliteDBWorker())
 	err = installService.Check()
 	if err != nil {
 		panic(err)
@@ -24,7 +25,7 @@ func TestCheckSqlite(t *testing.T) {
 
 func TestInstallMysql(t *testing.T) {
 	var err error
-	installService := NewInstallService(getMysqlDBWorker())
+	installService := module.NewInstallService(getMysqlDBWorker())
 	err = installService.Install()
 	if err != nil {
 		panic(err)
@@ -33,7 +34,7 @@ func TestInstallMysql(t *testing.T) {
 
 func TestInstallSqlite(t *testing.T) {
 	var err error
-	installService := NewInstallService(getSqliteDBWorker())
+	installService := module.NewInstallService(getSqliteDBWorker())
 	err = installService.Install()
 	if err != nil {
 		panic(err)

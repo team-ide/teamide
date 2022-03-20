@@ -1,9 +1,9 @@
-package service
+package module_user
 
 import (
 	"fmt"
 	"strings"
-	"teamide/internal/model"
+	"teamide/internal/module/module_id"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
@@ -12,7 +12,7 @@ import (
 // NewUserService 根据库配置创建UserService
 func NewUserService(dbWorker db.DatabaseWorker) (res *UserService) {
 
-	idService := NewIDService(dbWorker)
+	idService := module_id.NewIDService(dbWorker)
 
 	res = &UserService{
 		dbWorker:  dbWorker,
@@ -24,20 +24,20 @@ func NewUserService(dbWorker db.DatabaseWorker) (res *UserService) {
 // UserService 用户服务
 type UserService struct {
 	dbWorker  db.DatabaseWorker
-	idService *IDService
+	idService *module_id.IDService
 }
 
 // Get 查询单个
-func (this_ *UserService) Get(userId int64) (res *model.UserModel, err error) {
+func (this_ *UserService) Get(userId int64) (res *UserModel, err error) {
 
-	sql := `SELECT * FROM ` + model.TableUser + ` WHERE userId=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(model.UserModel{}))
+	sql := `SELECT * FROM ` + TableUser + ` WHERE userId=? `
+	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
 
 	if len(list) > 0 {
-		res = &model.UserModel{}
+		res = &UserModel{}
 		err = util.ToStruct(list[0], res)
 	} else {
 		res = nil
@@ -46,10 +46,10 @@ func (this_ *UserService) Get(userId int64) (res *model.UserModel, err error) {
 }
 
 // Query 查询
-func (this_ *UserService) Query(user *model.UserModel) (res []*model.UserModel, err error) {
+func (this_ *UserService) Query(user *UserModel) (res []*UserModel, err error) {
 
 	var values []interface{}
-	sql := `SELECT * FROM ` + model.TableUser + ` WHERE deleted=2 `
+	sql := `SELECT * FROM ` + TableUser + ` WHERE deleted=2 `
 	if user.Activated != 0 {
 		sql += " AND activated = ?"
 		values = append(values, user.Activated)
@@ -75,7 +75,7 @@ func (this_ *UserService) Query(user *model.UserModel) (res []*model.UserModel, 
 		values = append(values, fmt.Sprint("%", user.Email, "%"))
 	}
 
-	list, err := this_.dbWorker.Query(sql, values, util.GetStructFieldTypes(model.UserModel{}))
+	list, err := this_.dbWorker.Query(sql, values, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
@@ -92,7 +92,7 @@ func (this_ *UserService) Query(user *model.UserModel) (res []*model.UserModel, 
 func (this_ *UserService) CheckExist(account string, email string) (res bool, err error) {
 
 	var values []interface{}
-	sql := `SELECT COUNT(1) FROM ` + model.TableUser + ` WHERE deleted=2 AND (1=2`
+	sql := `SELECT COUNT(1) FROM ` + TableUser + ` WHERE deleted=2 AND (1=2`
 
 	if account != "" {
 		sql += " OR account = ?"
@@ -115,16 +115,16 @@ func (this_ *UserService) CheckExist(account string, email string) (res bool, er
 }
 
 // GetByAccount 根据账号查询
-func (this_ *UserService) GetByAccount(account string) (res *model.UserModel, err error) {
+func (this_ *UserService) GetByAccount(account string) (res *UserModel, err error) {
 
-	sql := `SELECT * FROM ` + model.TableUser + ` WHERE deleted=2 AND (account = ? OR email = ?)`
-	list, err := this_.dbWorker.Query(sql, []interface{}{account, account}, util.GetStructFieldTypes(model.UserModel{}))
+	sql := `SELECT * FROM ` + TableUser + ` WHERE deleted=2 AND (account = ? OR email = ?)`
+	list, err := this_.dbWorker.Query(sql, []interface{}{account, account}, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
 
 	if len(list) > 0 {
-		res = &model.UserModel{}
+		res = &UserModel{}
 		err = util.ToStruct(list[0], res)
 	} else {
 		res = nil
@@ -133,10 +133,10 @@ func (this_ *UserService) GetByAccount(account string) (res *model.UserModel, er
 }
 
 // Insert 新增
-func (this_ *UserService) Insert(user *model.UserModel) (rowsAffected int64, err error) {
+func (this_ *UserService) Insert(user *UserModel) (rowsAffected int64, err error) {
 
 	if user.UserId == 0 {
-		user.UserId, err = this_.idService.GetNextID(model.IDTypeUser)
+		user.UserId, err = this_.idService.GetNextID(module_id.IDTypeUser)
 		if err != nil {
 			return
 		}
@@ -148,7 +148,7 @@ func (this_ *UserService) Insert(user *model.UserModel) (rowsAffected int64, err
 		user.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + model.TableUser + `(userId, name, avatar, account, email, activated, createTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableUser + `(userId, name, avatar, account, email, activated, createTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
 
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{user.UserId, user.Name, user.Avatar, user.Account, user.Email, user.Activated, user.CreateTime})
 	if err != nil {
@@ -159,11 +159,11 @@ func (this_ *UserService) Insert(user *model.UserModel) (rowsAffected int64, err
 }
 
 // Update 更新
-func (this_ *UserService) Update(user *model.UserModel) (rowsAffected int64, err error) {
+func (this_ *UserService) Update(user *UserModel) (rowsAffected int64, err error) {
 
 	var values []interface{}
 
-	sql := `UPDATE ` + model.TableUser + ` SET `
+	sql := `UPDATE ` + TableUser + ` SET `
 
 	sql += "updateTime=?,"
 	values = append(values, time.Now())
@@ -193,7 +193,7 @@ func (this_ *UserService) Update(user *model.UserModel) (rowsAffected int64, err
 // Active 激活
 func (this_ *UserService) Active(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
@@ -205,7 +205,7 @@ func (this_ *UserService) Active(userId int64) (rowsAffected int64, err error) {
 // UnActive 不激活
 func (this_ *UserService) UnActive(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
@@ -217,7 +217,7 @@ func (this_ *UserService) UnActive(userId int64) (rowsAffected int64, err error)
 // Lock 锁定
 func (this_ *UserService) Lock(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
@@ -229,7 +229,7 @@ func (this_ *UserService) Lock(userId int64) (rowsAffected int64, err error) {
 // Unlock 解锁
 func (this_ *UserService) Unlock(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
@@ -241,7 +241,7 @@ func (this_ *UserService) Unlock(userId int64) (rowsAffected int64, err error) {
 // Enable 启用
 func (this_ *UserService) Enable(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
@@ -253,7 +253,7 @@ func (this_ *UserService) Enable(userId int64) (rowsAffected int64, err error) {
 // Disable 禁用
 func (this_ *UserService) Disable(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
@@ -265,7 +265,7 @@ func (this_ *UserService) Disable(userId int64) (rowsAffected int64, err error) 
 // Delete 更新
 func (this_ *UserService) Delete(userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableUser + ` SET deleted=?,deleteTime=? WHERE userId=? `
+	sql := `UPDATE ` + TableUser + ` SET deleted=?,deleteTime=? WHERE userId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return

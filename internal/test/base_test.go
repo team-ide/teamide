@@ -1,4 +1,4 @@
-package service
+package test
 
 import "teamide/pkg/db"
 

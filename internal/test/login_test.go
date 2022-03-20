@@ -1,27 +1,27 @@
-package service
+package test
 
 import (
 	"fmt"
-	"teamide/internal/model"
+	"teamide/internal/module/module_login"
 	"testing"
 )
 
 func TestLoginMysql(t *testing.T) {
-	service := NewLoginService(getMysqlDBWorker())
+	service := module_login.NewLoginService(getMysqlDBWorker())
 
 	testLogin(service)
 }
 
 func TestLoginSqlite(t *testing.T) {
-	service := NewLoginService(getSqliteDBWorker())
+	service := module_login.NewLoginService(getSqliteDBWorker())
 
 	testLogin(service)
 }
 
-func testLogin(service *LoginService) {
+func testLogin(service *module_login.LoginService) {
 	var err error
 
-	login := &model.LoginModel{
+	login := &module_login.LoginModel{
 		Account:    "zhangsan",
 		Password:   "123456",
 		SourceType: 1,

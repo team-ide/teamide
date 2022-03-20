@@ -1,4 +1,4 @@
-package service
+package module_lock
 
 import "sync"
 

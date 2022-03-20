@@ -1,8 +1,6 @@
-package model
+package module_user
 
-import (
-	"time"
-)
+import "time"
 
 const (
 	// ModuleUser 用户模块

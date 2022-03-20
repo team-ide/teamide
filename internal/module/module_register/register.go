@@ -1,9 +1,11 @@
-package service
+package module_register
 
 import (
 	"errors"
 	"fmt"
-	"teamide/internal/model"
+	"teamide/internal/module/module_id"
+	"teamide/internal/module/module_lock"
+	"teamide/internal/module/module_user"
 	"teamide/pkg/db"
 	"time"
 )
@@ -11,11 +13,11 @@ import (
 // NewRegisterService 根据库配置创建RegisterService
 func NewRegisterService(dbWorker db.DatabaseWorker) (res *RegisterService) {
 
-	idService := NewIDService(dbWorker)
+	idService := module_id.NewIDService(dbWorker)
 
-	userService := NewUserService(dbWorker)
+	userService := module_user.NewUserService(dbWorker)
 
-	userPasswordService := NewUserPasswordService(dbWorker)
+	userPasswordService := module_user.NewUserPasswordService(dbWorker)
 
 	res = &RegisterService{
 		dbWorker:            dbWorker,
@@ -29,13 +31,13 @@ func NewRegisterService(dbWorker db.DatabaseWorker) (res *RegisterService) {
 // RegisterService 注册服务
 type RegisterService struct {
 	dbWorker            db.DatabaseWorker
-	idService           *IDService
-	userService         *UserService
-	userPasswordService *UserPasswordService
+	idService           *module_id.IDService
+	userService         *module_user.UserService
+	userPasswordService *module_user.UserPasswordService
 }
 
 // Register 注册
-func (this_ *RegisterService) Register(register *model.RegisterModel) (rowsAffected int64, err error) {
+func (this_ *RegisterService) Register(register *RegisterModel) (rowsAffected int64, err error) {
 
 	checkExist := func() error {
 
@@ -55,11 +57,11 @@ func (this_ *RegisterService) Register(register *model.RegisterModel) (rowsAffec
 		return
 	}
 
-	accountLock := GetLock("user:account:" + register.Account)
+	accountLock := module_lock.GetLock("user:account:" + register.Account)
 	accountLock.Lock()
 	defer accountLock.Unlock()
 
-	emailLock := GetLock("user:email:" + register.Email)
+	emailLock := module_lock.GetLock("user:email:" + register.Email)
 	emailLock.Lock()
 	defer emailLock.Unlock()
 
@@ -72,7 +74,7 @@ func (this_ *RegisterService) Register(register *model.RegisterModel) (rowsAffec
 	if err != nil {
 		return
 	}
-	user := &model.UserModel{
+	user := &module_user.UserModel{
 		Name:    register.Name,
 		Account: register.Account,
 		Email:   register.Email,
@@ -98,10 +100,10 @@ func (this_ *RegisterService) Register(register *model.RegisterModel) (rowsAffec
 }
 
 // insert 新增
-func (this_ *RegisterService) insert(register *model.RegisterModel) (rowsAffected int64, err error) {
+func (this_ *RegisterService) insert(register *RegisterModel) (rowsAffected int64, err error) {
 
 	if register.RegisterId == 0 {
-		register.RegisterId, err = this_.idService.GetNextID(model.IDTypeRegister)
+		register.RegisterId, err = this_.idService.GetNextID(module_id.IDTypeRegister)
 		if err != nil {
 			return
 		}
@@ -110,7 +112,7 @@ func (this_ *RegisterService) insert(register *model.RegisterModel) (rowsAffecte
 		register.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + model.TableRegister + `(registerId, name, account, email, ip, sourceType, source, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableRegister + `(registerId, name, account, email, ip, sourceType, source, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
 
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{register.RegisterId, register.Name, register.Account, register.Email, register.Ip, register.SourceType, register.Source, register.CreateTime})
 	if err != nil {
@@ -123,7 +125,7 @@ func (this_ *RegisterService) insert(register *model.RegisterModel) (rowsAffecte
 // bindUser 绑定用户
 func (this_ *RegisterService) bindUser(registerId int64, userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableRegister + ` SET userId=?,updateTime=? WHERE registerId=? `
+	sql := `UPDATE ` + TableRegister + ` SET userId=?,updateTime=? WHERE registerId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{userId, time.Now(), registerId})
 	if err != nil {
 		return

@@ -1,14 +1,20 @@
-package model
+package module_id
 
-func init() {
+import (
+	"teamide/internal/install"
+)
 
-	// 创建用户表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleID,
-		Stage:   `创建表[` + TableID + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+func GetInstallStages() []*install.StageModel {
+
+	return []*install.StageModel{
+
+		// 创建用户表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleID,
+			Stage:   `创建表[` + TableID + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableID + ` (
 	idType int(10) NOT NULL COMMENT '类型',
 	value bigint(20) NOT NULL COMMENT '值',
@@ -17,8 +23,8 @@ CREATE TABLE ` + TableID + ` (
 	PRIMARY KEY (idType)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ID';
 `,
-			},
-			Sqlite: []string{`
+				},
+				Sqlite: []string{`
 CREATE TABLE ` + TableID + ` (
 	idType int(10) NOT NULL,
 	value bigint(20) NOT NULL,
@@ -27,8 +33,9 @@ CREATE TABLE ` + TableID + ` (
 	PRIMARY KEY (idType)
 );
 `,
+				},
 			},
 		},
-	})
+	}
 
 }

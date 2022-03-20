@@ -1,27 +1,27 @@
-package service
+package test
 
 import (
 	"fmt"
-	"teamide/internal/model"
+	"teamide/internal/module/module_register"
 	"testing"
 )
 
 func TestRegisterMysql(t *testing.T) {
-	service := NewRegisterService(getMysqlDBWorker())
+	service := module_register.NewRegisterService(getMysqlDBWorker())
 
 	testRegister(service)
 }
 
 func TestRegisterSqlite(t *testing.T) {
-	service := NewRegisterService(getSqliteDBWorker())
+	service := module_register.NewRegisterService(getSqliteDBWorker())
 
 	testRegister(service)
 }
 
-func testRegister(service *RegisterService) {
+func testRegister(service *module_register.RegisterService) {
 	var err error
 
-	register := &model.RegisterModel{
+	register := &module_register.RegisterModel{
 		Name:       "张三",
 		Account:    "zhangsan",
 		Email:      "zhangsan@teamide.com",

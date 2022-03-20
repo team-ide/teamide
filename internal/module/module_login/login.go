@@ -1,9 +1,11 @@
-package service
+package module_login
 
 import (
 	"errors"
 	"fmt"
-	"teamide/internal/model"
+	"teamide/internal/module/module_id"
+	"teamide/internal/module/module_lock"
+	"teamide/internal/module/module_user"
 	"teamide/pkg/db"
 	"time"
 )
@@ -11,17 +13,20 @@ import (
 // NewLoginService 根据库配置创建LoginService
 func NewLoginService(dbWorker db.DatabaseWorker) (res *LoginService) {
 
-	idService := NewIDService(dbWorker)
+	idService := module_id.NewIDService(dbWorker)
 
-	userService := NewUserService(dbWorker)
+	userService := module_user.NewUserService(dbWorker)
 
-	userPasswordService := NewUserPasswordService(dbWorker)
+	userPasswordService := module_user.NewUserPasswordService(dbWorker)
+
+	userAuthService := module_user.NewUserAuthService(dbWorker)
 
 	res = &LoginService{
 		dbWorker:            dbWorker,
 		idService:           idService,
 		userService:         userService,
 		userPasswordService: userPasswordService,
+		userAuthService:     userAuthService,
 	}
 	return
 }
@@ -29,15 +34,16 @@ func NewLoginService(dbWorker db.DatabaseWorker) (res *LoginService) {
 // LoginService 注册服务
 type LoginService struct {
 	dbWorker            db.DatabaseWorker
-	idService           *IDService
-	userService         *UserService
-	userPasswordService *UserPasswordService
+	idService           *module_id.IDService
+	userService         *module_user.UserService
+	userPasswordService *module_user.UserPasswordService
+	userAuthService     *module_user.UserAuthService
 }
 
 // Login 注册
-func (this_ *LoginService) Login(login *model.LoginModel) (rowsAffected int64, err error) {
+func (this_ *LoginService) Login(login *LoginModel) (rowsAffected int64, err error) {
 
-	accountLock := GetLock("user:login:" + login.Account)
+	accountLock := module_lock.GetLock("user:login:" + login.Account)
 	accountLock.Lock()
 	defer accountLock.Unlock()
 
@@ -71,10 +77,10 @@ func (this_ *LoginService) Login(login *model.LoginModel) (rowsAffected int64, e
 }
 
 // insert 新增
-func (this_ *LoginService) insert(login *model.LoginModel) (rowsAffected int64, err error) {
+func (this_ *LoginService) insert(login *LoginModel) (rowsAffected int64, err error) {
 
 	if login.LoginId == 0 {
-		login.LoginId, err = this_.idService.GetNextID(model.IDTypeLogin)
+		login.LoginId, err = this_.idService.GetNextID(module_id.IDTypeLogin)
 		if err != nil {
 			return
 		}
@@ -86,7 +92,7 @@ func (this_ *LoginService) insert(login *model.LoginModel) (rowsAffected int64, 
 		login.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + model.TableLogin + `(loginId, account, ip, sourceType, source, userId, loginTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableLogin + `(loginId, account, ip, sourceType, source, userId, loginTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
 
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{login.LoginId, login.Account, login.Ip, login.SourceType, login.Source, login.UserId, login.LoginTime, login.CreateTime})
 	if err != nil {
@@ -99,7 +105,7 @@ func (this_ *LoginService) insert(login *model.LoginModel) (rowsAffected int64, 
 // Logout 登出
 func (this_ *LoginService) Logout(loginId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + model.TableLogin + ` SET logoutTime=?,updateTime=? WHERE loginId=? `
+	sql := `UPDATE ` + TableLogin + ` SET logoutTime=?,updateTime=? WHERE loginId=? `
 	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{time.Now(), time.Now(), loginId})
 	if err != nil {
 		return

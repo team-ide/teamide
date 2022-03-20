@@ -1,14 +1,18 @@
-package model
+package module_user
 
-func init() {
+import "teamide/internal/install"
 
-	// 创建用户表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleUser,
-		Stage:   `创建表[` + TableUser + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+func GetInstallStages() []*install.StageModel {
+
+	return []*install.StageModel{
+
+		// 创建用户表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleUser,
+			Stage:   `创建表[` + TableUser + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableUser + ` (
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	name varchar(50) NOT NULL COMMENT '名称',
@@ -32,7 +36,7 @@ CREATE TABLE ` + TableUser + ` (
 	KEY index_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户';
 `},
-			Sqlite: []string{`
+				Sqlite: []string{`
 CREATE TABLE ` + TableUser + ` (
 	userId bigint(20) NOT NULL,
 	name varchar(50) NOT NULL,
@@ -49,24 +53,24 @@ CREATE TABLE ` + TableUser + ` (
 	PRIMARY KEY (userId)
 );
 `,
-				`CREATE INDEX ` + TableUser + `_index_name on ` + TableUser + ` (name);`,
-				`CREATE INDEX ` + TableUser + `_index_account on ` + TableUser + ` (account);`,
-				`CREATE INDEX ` + TableUser + `_index_email on ` + TableUser + ` (email);`,
-				`CREATE INDEX ` + TableUser + `_index_activated on ` + TableUser + ` (activated);`,
-				`CREATE INDEX ` + TableUser + `_index_locked on ` + TableUser + ` (locked);`,
-				`CREATE INDEX ` + TableUser + `_index_enabled on ` + TableUser + ` (enabled);`,
-				`CREATE INDEX ` + TableUser + `_index_deleted on ` + TableUser + ` (deleted);`,
+					`CREATE INDEX ` + TableUser + `_index_name on ` + TableUser + ` (name);`,
+					`CREATE INDEX ` + TableUser + `_index_account on ` + TableUser + ` (account);`,
+					`CREATE INDEX ` + TableUser + `_index_email on ` + TableUser + ` (email);`,
+					`CREATE INDEX ` + TableUser + `_index_activated on ` + TableUser + ` (activated);`,
+					`CREATE INDEX ` + TableUser + `_index_locked on ` + TableUser + ` (locked);`,
+					`CREATE INDEX ` + TableUser + `_index_enabled on ` + TableUser + ` (enabled);`,
+					`CREATE INDEX ` + TableUser + `_index_deleted on ` + TableUser + ` (deleted);`,
+				},
 			},
 		},
-	})
 
-	// 创建用户授权表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleUser,
-		Stage:   `创建表[` + TableUserAuth + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+		// 创建用户授权表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleUser,
+			Stage:   `创建表[` + TableUserAuth + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableUserAuth + ` (
 	authId bigint(20) NOT NULL COMMENT '授权ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
@@ -86,7 +90,7 @@ CREATE TABLE ` + TableUserAuth + ` (
 	KEY index_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户授权';
 `},
-			Sqlite: []string{`
+				Sqlite: []string{`
 CREATE TABLE ` + TableUserAuth + ` (
 	authId bigint(20) NOT NULL,
 	userId bigint(20) NOT NULL,
@@ -102,21 +106,21 @@ CREATE TABLE ` + TableUserAuth + ` (
 	PRIMARY KEY (authId)
 );
 `,
-				`CREATE INDEX ` + TableUserAuth + `_index_userId on ` + TableUserAuth + ` (userId);`,
-				`CREATE INDEX ` + TableUserAuth + `_index_authType on ` + TableUserAuth + ` (authType);`,
-				`CREATE INDEX ` + TableUserAuth + `_index_openId on ` + TableUserAuth + ` (openId);`,
-				`CREATE INDEX ` + TableUserAuth + `_deleted on ` + TableUserAuth + ` (deleted);`,
+					`CREATE INDEX ` + TableUserAuth + `_index_userId on ` + TableUserAuth + ` (userId);`,
+					`CREATE INDEX ` + TableUserAuth + `_index_authType on ` + TableUserAuth + ` (authType);`,
+					`CREATE INDEX ` + TableUserAuth + `_index_openId on ` + TableUserAuth + ` (openId);`,
+					`CREATE INDEX ` + TableUserAuth + `_deleted on ` + TableUserAuth + ` (deleted);`,
+				},
 			},
 		},
-	})
 
-	// 创建用户密码表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleUser,
-		Stage:   `创建表[` + TableUserPassword + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+		// 创建用户密码表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleUser,
+			Stage:   `创建表[` + TableUserPassword + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableUserPassword + ` (
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	salt varchar(20) NOT NULL COMMENT '盐',
@@ -126,7 +130,7 @@ CREATE TABLE ` + TableUserPassword + ` (
 	PRIMARY KEY (userId)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户密码';
 `},
-			Sqlite: []string{`
+				Sqlite: []string{`
 CREATE TABLE ` + TableUserPassword + ` (
 	userId bigint(20) NOT NULL,
 	salt varchar(20) NOT NULL,
@@ -136,7 +140,8 @@ CREATE TABLE ` + TableUserPassword + ` (
 	PRIMARY KEY (userId)
 );
 `,
+				},
 			},
 		},
-	})
+	}
 }

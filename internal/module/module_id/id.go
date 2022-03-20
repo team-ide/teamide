@@ -1,7 +1,7 @@
-package service
+package module_id
 
 import (
-	"teamide/internal/model"
+	"teamide/internal/module/module_lock"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
@@ -21,7 +21,7 @@ type IDService struct {
 }
 
 // GetNextID 根据类型获取一个ID
-func (this_ *IDService) GetNextID(idType model.IDType) (id int64, err error) {
+func (this_ *IDService) GetNextID(idType IDType) (id int64, err error) {
 	ids, err := this_.GetNextIDs(idType, 1)
 	if err != nil {
 		return
@@ -31,8 +31,8 @@ func (this_ *IDService) GetNextID(idType model.IDType) (id int64, err error) {
 }
 
 // GetNextIDs 根据类型获取一组ID
-func (this_ *IDService) GetNextIDs(idType model.IDType, size int64) (ids []int64, err error) {
-	locker := GetLock("ID:GetNextIDs")
+func (this_ *IDService) GetNextIDs(idType IDType, size int64) (ids []int64, err error) {
+	locker := module_lock.GetLock("ID:GetNextIDs")
 	locker.Lock()
 	defer locker.Unlock()
 
@@ -58,10 +58,10 @@ func (this_ *IDService) GetNextIDs(idType model.IDType, size int64) (ids []int64
 }
 
 // GetID 查询ID
-func (this_ *IDService) getID(idType model.IDType) (id int64, err error) {
+func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 
-	sql := `SELECT value FROM ` + model.TableID + ` WHERE idType=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{idType}, util.GetStructFieldTypes(model.IDModel{}))
+	sql := `SELECT value FROM ` + TableID + ` WHERE idType=? `
+	list, err := this_.dbWorker.Query(sql, []interface{}{idType}, util.GetStructFieldTypes(IDModel{}))
 	if err != nil {
 		return
 	}
@@ -69,7 +69,7 @@ func (this_ *IDService) getID(idType model.IDType) (id int64, err error) {
 	if len(list) == 0 {
 		id = 0
 
-		sql = `INSERT INTO ` + model.TableID + ` (idType, value, createTime) VALUES(?, ?, ?)`
+		sql = `INSERT INTO ` + TableID + ` (idType, value, createTime) VALUES(?, ?, ?)`
 		_, err = this_.dbWorker.Exec(sql, []interface{}{idType, id, time.Now()})
 		if err != nil {
 			return
@@ -82,9 +82,9 @@ func (this_ *IDService) getID(idType model.IDType) (id int64, err error) {
 }
 
 // updateID 修改ID
-func (this_ *IDService) updateID(idType model.IDType, id int64) (err error) {
+func (this_ *IDService) updateID(idType IDType, id int64) (err error) {
 
-	sql := `UPDATE ` + model.TableID + ` SET value=?,updateTime=? WHERE idType=?`
+	sql := `UPDATE ` + TableID + ` SET value=?,updateTime=? WHERE idType=?`
 	_, err = this_.dbWorker.Exec(sql, []interface{}{id, time.Now(), idType})
 	if err != nil {
 		return

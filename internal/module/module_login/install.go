@@ -1,14 +1,20 @@
-package model
+package module_login
 
-func init() {
+import (
+	"teamide/internal/install"
+)
 
-	// 创建用户表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleLogin,
-		Stage:   `创建表[` + TableLogin + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+func GetInstallStages() []*install.StageModel {
+
+	return []*install.StageModel{
+
+		// 创建登录表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleLogin,
+			Stage:   `创建表[` + TableLogin + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableLogin + ` (
 	loginId bigint(20) NOT NULL COMMENT '登录ID',
 	account varchar(20) NOT NULL COMMENT '账号',
@@ -30,7 +36,7 @@ CREATE TABLE ` + TableLogin + ` (
 	KEY index_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录';
 `},
-			Sqlite: []string{`
+				Sqlite: []string{`
 CREATE TABLE ` + TableLogin + ` (
 	loginId bigint(20) NOT NULL,
 	account varchar(20) NOT NULL,
@@ -47,13 +53,13 @@ CREATE TABLE ` + TableLogin + ` (
 	PRIMARY KEY (loginId)
 );
 `,
-				`CREATE INDEX ` + TableLogin + `_index_userId on ` + TableLogin + ` (userId);`,
-				`CREATE INDEX ` + TableLogin + `_index_account on ` + TableLogin + ` (account);`,
-				`CREATE INDEX ` + TableLogin + `_index_sourceType on ` + TableLogin + ` (sourceType);`,
-				`CREATE INDEX ` + TableLogin + `_index_source on ` + TableLogin + ` (source);`,
-				`CREATE INDEX ` + TableLogin + `_index_deleted on ` + TableLogin + ` (deleted);`,
+					`CREATE INDEX ` + TableLogin + `_index_userId on ` + TableLogin + ` (userId);`,
+					`CREATE INDEX ` + TableLogin + `_index_account on ` + TableLogin + ` (account);`,
+					`CREATE INDEX ` + TableLogin + `_index_sourceType on ` + TableLogin + ` (sourceType);`,
+					`CREATE INDEX ` + TableLogin + `_index_source on ` + TableLogin + ` (source);`,
+					`CREATE INDEX ` + TableLogin + `_index_deleted on ` + TableLogin + ` (deleted);`,
+				},
 			},
 		},
-	})
-
+	}
 }

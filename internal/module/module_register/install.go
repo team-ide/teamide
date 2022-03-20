@@ -1,14 +1,20 @@
-package model
+package module_register
 
-func init() {
+import (
+	"teamide/internal/install"
+)
 
-	// 创建用户表
-	appendInstallStage(&InstallStageModel{
-		Version: "1.0",
-		Module:  ModuleRegister,
-		Stage:   `创建表[` + TableRegister + `]`,
-		Sql: &InstallStageSqlModel{
-			Mysql: []string{`
+func GetInstallStages() []*install.StageModel {
+
+	return []*install.StageModel{
+
+		// 创建注册表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleRegister,
+			Stage:   `创建表[` + TableRegister + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
 CREATE TABLE ` + TableRegister + ` (
 	registerId bigint(20) NOT NULL COMMENT '注册ID',
 	name varchar(50) NOT NULL COMMENT '名称',
@@ -32,7 +38,7 @@ CREATE TABLE ` + TableRegister + ` (
 	KEY index_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='注册';
 `},
-			Sqlite: []string{`
+				Sqlite: []string{`
 CREATE TABLE ` + TableRegister + ` (
 	registerId bigint(20) NOT NULL,
 	name varchar(50) NOT NULL,
@@ -49,15 +55,16 @@ CREATE TABLE ` + TableRegister + ` (
 	PRIMARY KEY (registerId)
 );
 `,
-				`CREATE INDEX ` + TableRegister + `_index_userId on ` + TableRegister + ` (userId);`,
-				`CREATE INDEX ` + TableRegister + `_index_name on ` + TableRegister + ` (name);`,
-				`CREATE INDEX ` + TableRegister + `_index_account on ` + TableRegister + ` (account);`,
-				`CREATE INDEX ` + TableRegister + `_index_email on ` + TableRegister + ` (email);`,
-				`CREATE INDEX ` + TableRegister + `_index_sourceType on ` + TableRegister + ` (sourceType);`,
-				`CREATE INDEX ` + TableRegister + `_index_source on ` + TableRegister + ` (source);`,
-				`CREATE INDEX ` + TableRegister + `_index_deleted on ` + TableRegister + ` (deleted);`,
+					`CREATE INDEX ` + TableRegister + `_index_userId on ` + TableRegister + ` (userId);`,
+					`CREATE INDEX ` + TableRegister + `_index_name on ` + TableRegister + ` (name);`,
+					`CREATE INDEX ` + TableRegister + `_index_account on ` + TableRegister + ` (account);`,
+					`CREATE INDEX ` + TableRegister + `_index_email on ` + TableRegister + ` (email);`,
+					`CREATE INDEX ` + TableRegister + `_index_sourceType on ` + TableRegister + ` (sourceType);`,
+					`CREATE INDEX ` + TableRegister + `_index_source on ` + TableRegister + ` (source);`,
+					`CREATE INDEX ` + TableRegister + `_index_deleted on ` + TableRegister + ` (deleted);`,
+				},
 			},
 		},
-	})
+	}
 
 }
