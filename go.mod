@@ -13,6 +13,7 @@ require (
 	github.com/gomodule/redigo v1.8.8
 	github.com/huandu/go-clone v1.3.0
 	github.com/jmoiron/sqlx v1.3.4
+	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/satori/go.uuid v1.2.0
 	github.com/wxnacy/wgo v1.0.4

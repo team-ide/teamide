@@ -1,0 +1,5 @@
+package static
+
+
+func init() {
+}

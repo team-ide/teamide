@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 	"sync"
-	"teamide/server"
-	"teamide/server/base"
-	"teamide/window"
+	"teamide/internal/server"
+	"teamide/internal/server/base"
+	"teamide/pkg/window"
 )
 
 var (
