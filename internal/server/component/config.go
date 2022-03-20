@@ -3,8 +3,8 @@ package component
 import (
 	"fmt"
 	"os"
+	"teamide/internal/config"
 	"teamide/internal/server/base"
-	"teamide/internal/server/config"
 	"teamide/pkg/util"
 )
 

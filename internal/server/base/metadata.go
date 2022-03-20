@@ -1,6 +1,9 @@
 package base
 
-import "fmt"
+import (
+	"fmt"
+	"teamide/pkg/util"
+)
 
 // 元数据结构体
 type MStruct struct {
@@ -89,7 +92,7 @@ func checkMetadata(out bool) {
 	for _, obj := range U_M {
 		if out {
 			fmt.Println("----------结构体（", obj.Comment, "）----------")
-			fmt.Println(ToJSON(obj))
+			fmt.Println(util.ToJSON(obj))
 		}
 		_, ok := codes[obj.StructCode]
 		if ok {
@@ -101,7 +104,7 @@ func checkMetadata(out bool) {
 		}
 		for _, field := range obj.Fields {
 			if out {
-				fmt.Println(ToJSON(field))
+				fmt.Println(util.ToJSON(field))
 			}
 			_, ok := codes[field.StructFieldCode]
 			if ok {

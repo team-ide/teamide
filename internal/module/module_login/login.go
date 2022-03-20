@@ -41,13 +41,13 @@ type LoginService struct {
 }
 
 // Login 注册
-func (this_ *LoginService) Login(login *LoginModel) (rowsAffected int64, err error) {
+func (this_ *LoginService) Login(login *LoginModel) (user *module_user.UserModel, err error) {
 
 	accountLock := module_lock.GetLock("user:login:" + login.Account)
 	accountLock.Lock()
 	defer accountLock.Unlock()
 
-	user, err := this_.userService.GetByAccount(login.Account)
+	user, err = this_.userService.GetByAccount(login.Account)
 	if err != nil {
 		return
 	}

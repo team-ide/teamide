@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"teamide/internal/server/config"
+	"teamide/internal/config"
 )
 
 var (
@@ -21,7 +21,7 @@ func LogStr(args ...interface{}) string {
 	return fmt.Sprint(args...)
 }
 
-// NewZapLogger creator a new zap logger
+// newZapLogger creator a new zap logger
 // hook {Filename, Maxsize(megabytes), MaxBackups, MaxAge(days)}
 // level zap.Level { DebugLevel, InfoLevel, WarnLevel, ErrorLevel, }
 func newZapLogger() (*zap.Logger, error) {

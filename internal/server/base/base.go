@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	BaseDir        string
-	UserHomeDir    string
-	IS_STAND_ALONE = false
+	BaseDir      string
+	UserHomeDir  string
+	IsStandAlone = false
 )
 
 func getUserHome() string {

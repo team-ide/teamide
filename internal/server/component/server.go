@@ -5,23 +5,24 @@ import (
 	"fmt"
 	"os"
 	base2 "teamide/internal/server/base"
+	"teamide/pkg/util"
 )
 
 var (
-	rsa_public_key  = ""
-	rsa_private_key = ""
+	rsaPublicKey  = ""
+	rsaPrivateKey = ""
 )
 
 func initServer() {
-	if base2.IS_STAND_ALONE {
-		rsa_public_key = `-----BEGIN PUBLIC KEY-----
+	if base2.IsStandAlone {
+		rsaPublicKey = `-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC28eh+rmkHWEfFSjRIpQzdBaCr
 t32/EYH39D4DuCEwQgRYBEynPxr6yhS0ozdEujSX0vENk2YQ6RdnOfkVCLzh/huN
 6aguW94DFmU5Xc0AdtglSekCDE8Alk4MmhH6p+nN2Z22FiSIZY63rw0026613rD6
 y0QLQ1GgtBeAVaNdhwIDAQAB
 -----END PUBLIC KEY-----`
 
-		rsa_private_key = `-----BEGIN RSA PRIVATE KEY-----
+		rsaPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQC28eh+rmkHWEfFSjRIpQzdBaCrt32/EYH39D4DuCEwQgRYBEyn
 Pxr6yhS0ozdEujSX0vENk2YQ6RdnOfkVCLzh/huN6aguW94DFmU5Xc0AdtglSekC
 DE8Alk4MmhH6p+nN2Z22FiSIZY63rw0026613rD6y0QLQ1GgtBeAVaNdhwIDAQAB
@@ -39,7 +40,7 @@ Mr8hw5UEgHMbPnSA8H96ppLBTMOh9sgNp3ryDFE6Mw==
 		return
 	}
 	filePath := base2.BaseDir + "conf/public.pem"
-	exists, err := base2.PathExists(filePath)
+	exists, err := util.PathExists(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -50,10 +51,10 @@ Mr8hw5UEgHMbPnSA8H96ppLBTMOh9sgNp3ryDFE6Mw==
 	if err != nil {
 		panic(err)
 	}
-	rsa_public_key = string(bs)
+	rsaPublicKey = string(bs)
 
 	filePath = base2.BaseDir + "conf/private.pem"
-	exists, err = base2.PathExists(filePath)
+	exists, err = util.PathExists(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +65,7 @@ Mr8hw5UEgHMbPnSA8H96ppLBTMOh9sgNp3ryDFE6Mw==
 	if err != nil {
 		panic(err)
 	}
-	rsa_private_key = string(bs)
+	rsaPrivateKey = string(bs)
 
 }
 
@@ -103,11 +104,11 @@ func GetBaseID() int64 {
 }
 
 func RSAEncrypt(origData string) (res string) {
-	if rsa_public_key == "" {
+	if rsaPublicKey == "" {
 		Logger.Error("加密失败，加密密钥不存在!")
 		return
 	}
-	res, err := base2.RSAEncryptByKey(origData, rsa_public_key)
+	res, err := util.RSAEncryptByKey(origData, rsaPublicKey)
 	if err != nil {
 		Logger.Error(LogStr("加密失败:", err))
 		return
@@ -116,11 +117,11 @@ func RSAEncrypt(origData string) (res string) {
 }
 
 func RSADecrypt(crypted string) (res string) {
-	if rsa_private_key == "" {
+	if rsaPrivateKey == "" {
 		Logger.Error("解密失败，解密密钥不存在!")
 		return
 	}
-	res, err := base2.RSADecryptByKey(crypted, rsa_private_key)
+	res, err := util.RSADecryptByKey(crypted, rsaPrivateKey)
 	if err != nil {
 		Logger.Error(LogStr("解密失败:", err))
 		return

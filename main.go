@@ -20,7 +20,7 @@ func main() {
 
 	for _, v := range os.Args {
 		if v == "--isStandAlone" {
-			base.IS_STAND_ALONE = true
+			base.IsStandAlone = true
 			continue
 		}
 		if v == "--isHtmlDev" {
@@ -39,7 +39,7 @@ func main() {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
-	if base.IS_STAND_ALONE {
+	if base.IsStandAlone {
 		err = window.Start(serverTitle, serverUrl, func() {
 			waitGroupForStop.Done()
 		})

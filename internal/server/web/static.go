@@ -8,22 +8,22 @@ import (
 	"teamide/internal/server/static"
 )
 
-func bindGet(gouterGroup *gin.RouterGroup) {
+func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 	gouterGroup.GET("*path", func(c *gin.Context) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")
-		if toStatic(path, c) {
+		if this_.toStatic(path, c) {
 			return
 		}
-		if toUploads(path, c) {
+		if this_.toUploads(path, c) {
 			return
 		}
-		toIndex(c)
+		this_.toIndex(c)
 	})
 }
 
-func toIndex(c *gin.Context) bool {
+func (this_ *Server) toIndex(c *gin.Context) bool {
 
 	bytes := static.Asset("index.html")
 	if bytes == nil {
@@ -36,7 +36,7 @@ func toIndex(c *gin.Context) bool {
 	return true
 }
 
-func toStatic(path string, c *gin.Context) bool {
+func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 
 	index := strings.LastIndex(path, "static/")
 	if index < 0 {
@@ -61,7 +61,7 @@ func toStatic(path string, c *gin.Context) bool {
 	return true
 }
 
-func toUploads(path string, c *gin.Context) bool {
+func (this_ *Server) toUploads(path string, c *gin.Context) bool {
 
 	index := strings.LastIndex(path, "uploads/")
 	if index < 0 {
