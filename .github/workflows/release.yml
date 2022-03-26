@@ -134,7 +134,7 @@ jobs:
           asset_content_type: application/zip
 
       - name: Upload Go Windows StandAlone Release Asset
-        id: upload-go-windows-release-asset
+        id: upload-go-windows-standalone-release-asset
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
