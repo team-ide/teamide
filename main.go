@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"teamide/internal"
 	"teamide/internal/base"
@@ -14,7 +15,19 @@ var (
 	waitGroupForStop sync.WaitGroup
 	serverTitle      = "Team · IDE"
 	serverUrl        = ""
+
+	// buildFlags go build -ldflags '-X buildFlags=--isStandAlone' .
+	buildFlags = ""
 )
+
+func init() {
+	if strings.Contains(buildFlags, "--isStandAlone") {
+		base.IsStandAlone = true
+	}
+	if strings.Contains(buildFlags, "--isHtmlDev") {
+		base.IsHtmlDev = true
+	}
+}
 
 func main() {
 	var err error

@@ -50,7 +50,7 @@ func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error)
 func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
 
 	var values []interface{}
-	sql := `SELECT toolboxId,toolboxType,name,userId,createTime FROM ` + TableToolbox + ` WHERE deleted=2 `
+	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 `
 	if toolbox.ToolboxType != "" {
 		sql += " AND toolboxType = ?"
 		values = append(values, toolbox.ToolboxType)

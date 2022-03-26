@@ -30,7 +30,14 @@ let buildFormValidator = function (form) {
             return;
         }
         field.valid = undefined;
+        field.required = false;
         field.validMessage = undefined;
+        let rules = field.rules || [];
+        rules.forEach(rule => {
+            if (rule.required) {
+                field.required = true;
+            }
+        });
 
         field.validate = function (data) {
             return validateField(data, field);

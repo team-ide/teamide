@@ -118,10 +118,137 @@ let toolbox = {
     ],
 };
 
+let toolboxOption = {
+    database: {
+        fields: [
+            {
+                label: "类型",
+                name: "type",
+                type: "select",
+                defaultValue: "mysql",
+                rules: [
+                    {
+                        required: true,
+                        message: `数据库类型不能为空!`
+                    },
+
+                ],
+                options: [
+                    { text: "MySql", value: "mysql" },
+                ],
+            },
+            {
+                label: "Host（127.0.0.1）",
+                name: "host",
+                defaultValue: "127.0.0.1",
+                rules: [
+                    {
+                        required: true,
+                        message: `数据库连接地址不能为空!`
+                    },
+                ],
+            },
+            {
+                label: "Port（3306）",
+                name: "port",
+                defaultValue: "3306",
+                rules: [
+                    {
+                        required: true,
+                        message: `数据库连接端口不能为空!`
+                    },
+                ],
+            },
+            {
+                label: "Username",
+                name: "username",
+                rules: [
+                ],
+            },
+            {
+                label: "Password",
+                name: "password",
+                rules: [
+                ],
+            },
+        ],
+    },
+    redis: {
+        fields: [
+            {
+                label: "连接地址（127.0.0.1:6379）",
+                name: "address",
+                defaultValue: "127.0.0.1:6379",
+                rules: [
+                    {
+                        required: true,
+                        message: `连接地址不能为空!`
+                    },
+
+                ],
+            },
+            {
+                label: "密码",
+                name: "auth",
+                rules: [
+                ],
+            },
+        ],
+    },
+    zookeeper: {
+        fields: [
+            {
+                label: "连接地址（127.0.0.1:2181）",
+                name: "address",
+                defaultValue: "127.0.0.1:2181",
+                rules: [
+                    {
+                        required: true,
+                        message: `连接地址不能为空!`
+                    },
+
+                ],
+            },
+        ],
+    },
+    elasticsearch: {
+        fields: [
+            {
+                label: "连接地址（127.0.0.1:9200）",
+                name: "address",
+                defaultValue: "127.0.0.1:9200",
+                rules: [
+                    {
+                        required: true,
+                        message: `连接地址不能为空!`
+                    },
+
+                ],
+            },
+        ],
+    },
+    kafka: {
+        fields: [
+            {
+                label: "连接地址（127.0.0.1:9092）",
+                name: "address",
+                defaultValue: "127.0.0.1:9092",
+                rules: [
+                    {
+                        required: true,
+                        message: `连接地址不能为空!`
+                    },
+
+                ],
+            },
+        ],
+    },
+};
 export default {
     login,
     register,
     app,
     model,
     toolbox,
+    toolboxOption,
 };

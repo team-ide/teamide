@@ -14,16 +14,16 @@
       :formData="formData"
       class="pd-10"
     >
-      <div class="pdtb-10">
-        <div
-          class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
-          :class="{ 'tm-disabled': saveBtnDisabled }"
-          @click="doSave"
-        >
-          保存
-        </div>
-      </div>
     </Form>
+    <div class="pd-10">
+      <div
+        class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
+        :class="{ 'tm-disabled': saveBtnDisabled }"
+        @click="doSave"
+      >
+        保存
+      </div>
+    </div>
   </b-modal>
 </template>
 
