@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"teamide/pkg/application/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 )
 
 func GetJavascriptMethodName(name string) (methodName string) {
@@ -32,7 +32,7 @@ func GetJavascriptMethodName(name string) (methodName string) {
 	return
 }
 
-func GetActionJavascriptByAction(app IApplication, action *model2.ActionModel) (javascript string, err error) {
+func GetActionJavascriptByAction(app IApplication, action *model.ActionModel) (javascript string, err error) {
 	methodName := GetJavascriptMethodName(action.Name)
 	javascript += ""
 	javascript += "function action_" + methodName + "("
@@ -63,7 +63,7 @@ func GetActionJavascriptByAction(app IApplication, action *model2.ActionModel) (
 	return
 }
 
-func GetJavascriptBySteps(app IApplication, steps []model2.ActionStep, tab int) (javascript string, err error) {
+func GetJavascriptBySteps(app IApplication, steps []model.ActionStep, tab int) (javascript string, err error) {
 	if len(steps) == 0 {
 		return
 	}
@@ -81,7 +81,7 @@ func GetJavascriptBySteps(app IApplication, steps []model2.ActionStep, tab int) 
 	return
 }
 
-func GetJavascriptByStep(app IApplication, step model2.ActionStep, tab int) (javascript string, err error) {
+func GetJavascriptByStep(app IApplication, step model.ActionStep, tab int) (javascript string, err error) {
 	if base.IsNotEmpty(step.GetBase().Comment) {
 		base.AppendLine(&javascript, "// "+step.GetBase().Comment, tab)
 	}
@@ -108,37 +108,37 @@ func GetJavascriptByStep(app IApplication, step model2.ActionStep, tab int) (jav
 	}
 	var stepJavascript string
 	switch step_ := step.(type) {
-	case *model2.ActionStepLock:
+	case *model.ActionStepLock:
 		stepJavascript, err = getJavascriptByStepLock(app, step_, tab)
-	case *model2.ActionStepUnlock:
+	case *model.ActionStepUnlock:
 		stepJavascript, err = getJavascriptByStepUnlock(app, step_, tab)
-	case *model2.ActionStepError:
+	case *model.ActionStepError:
 		stepJavascript, err = getJavascriptByStepError(app, step_, tab)
-	case *model2.ActionStepSqlSelect:
+	case *model.ActionStepSqlSelect:
 		stepJavascript, err = getJavascriptByStepSqlSelect(app, step_, tab)
-	case *model2.ActionStepSqlInsert:
+	case *model.ActionStepSqlInsert:
 		stepJavascript, err = getJavascriptByStepSqlInsert(app, step_, tab)
-	case *model2.ActionStepSqlUpdate:
+	case *model.ActionStepSqlUpdate:
 		stepJavascript, err = getJavascriptByStepSqlUpdate(app, step_, tab)
-	case *model2.ActionStepSqlDelete:
+	case *model.ActionStepSqlDelete:
 		stepJavascript, err = getJavascriptByStepSqlDelete(app, step_, tab)
-	case *model2.ActionStepRedisSet:
+	case *model.ActionStepRedisSet:
 		stepJavascript, err = getJavascriptByStepRedisSet(app, step_, tab)
-	case *model2.ActionStepRedisGet:
+	case *model.ActionStepRedisGet:
 		stepJavascript, err = getJavascriptByStepRedisGet(app, step_, tab)
-	case *model2.ActionStepRedisDel:
+	case *model.ActionStepRedisDel:
 		stepJavascript, err = getJavascriptByStepRedisDel(app, step_, tab)
-	case *model2.ActionStepRedisExpire:
+	case *model.ActionStepRedisExpire:
 		stepJavascript, err = getJavascriptByStepRedisExpire(app, step_, tab)
-	case *model2.ActionStepRedisExpireat:
+	case *model.ActionStepRedisExpireat:
 		stepJavascript, err = getJavascriptByStepRedisExpireat(app, step_, tab)
-	case *model2.ActionStepAction:
+	case *model.ActionStepAction:
 		stepJavascript, err = getJavascriptByStepAction(app, step_, tab)
-	case *model2.ActionStepFileSave:
+	case *model.ActionStepFileSave:
 		stepJavascript, err = getJavascriptByStepFileSave(app, step_, tab)
-	case *model2.ActionStepFileGet:
+	case *model.ActionStepFileGet:
 		stepJavascript, err = getJavascriptByStepFileGet(app, step_, tab)
-	case *model2.ActionStepBase:
+	case *model.ActionStepBase:
 	default:
 		err = errors.New(fmt.Sprint("GetJavascriptByStep step type not match:", reflect.TypeOf(step).Elem().Name()))
 		return
@@ -173,8 +173,8 @@ func GetJavascriptByStep(app IApplication, step model2.ActionStep, tab int) (jav
 	return
 }
 
-func getJavascriptByValidatas(app IApplication, validatas []*model2.ValidateModel, tab int) (javascript string, err error) {
-	var errorModel *model2.ErrorModel
+func getJavascriptByValidatas(app IApplication, validatas []*model.ValidateModel, tab int) (javascript string, err error) {
+	var errorModel *model.ErrorModel
 	var errorJavascript string
 	for _, one := range validatas {
 		if base.IsNotEmpty(one.Comment) {
@@ -184,7 +184,7 @@ func getJavascriptByValidatas(app IApplication, validatas []*model2.ValidateMode
 		if err != nil {
 			return
 		}
-		errorJavascript, err = getJavascriptByValidataRule(app, one.Name, &model2.ValidateRuleModel{
+		errorJavascript, err = getJavascriptByValidataRule(app, one.Name, &model.ValidateRuleModel{
 			Required:  one.Required,
 			MinLength: one.MinLength,
 			MaxLength: one.MaxLength,
@@ -214,8 +214,8 @@ func getJavascriptByValidatas(app IApplication, validatas []*model2.ValidateMode
 	return
 }
 
-func getJavascriptByValidataRule(app IApplication, name string, rule *model2.ValidateRuleModel, parentErrorModel *model2.ErrorModel, tab int) (javascript string, err error) {
-	var errorModel *model2.ErrorModel
+func getJavascriptByValidataRule(app IApplication, name string, rule *model.ValidateRuleModel, parentErrorModel *model.ErrorModel, tab int) (javascript string, err error) {
+	var errorModel *model.ErrorModel
 	var errorJavascript string
 
 	errorModel, err = GetErrorModel(app, rule.Error, rule.ErrorCode, rule.ErrorMsg)
@@ -271,7 +271,7 @@ func getJavascriptByValidataRule(app IApplication, name string, rule *model2.Val
 	return
 }
 
-func getJavascriptByVariables(app IApplication, variables []*model2.VariableModel, tab int) (javascript string, err error) {
+func getJavascriptByVariables(app IApplication, variables []*model.VariableModel, tab int) (javascript string, err error) {
 	for _, one := range variables {
 		if base.IsNotEmpty(one.Comment) {
 			base.AppendLine(&javascript, "// "+one.Comment, tab)
@@ -282,13 +282,13 @@ func getJavascriptByVariables(app IApplication, variables []*model2.VariableMode
 			valueStr := `""`
 			if dataType != nil && dataType.DataStruct == nil {
 				switch dataType {
-				case model2.DATA_TYPE_LONG, model2.DATA_TYPE_INT, model2.DATA_TYPE_SHORT, model2.DATA_TYPE_BYTE:
+				case model.DATA_TYPE_LONG, model.DATA_TYPE_INT, model.DATA_TYPE_SHORT, model.DATA_TYPE_BYTE:
 					valueStr = `0`
-				case model2.DATA_TYPE_BOOLEAN:
+				case model.DATA_TYPE_BOOLEAN:
 					valueStr = `false`
-				case model2.DATA_TYPE_DOUBLE, model2.DATA_TYPE_FLOAT:
+				case model.DATA_TYPE_DOUBLE, model.DATA_TYPE_FLOAT:
 					valueStr = `0.0`
-				case model2.DATA_TYPE_MAP:
+				case model.DATA_TYPE_MAP:
 					valueStr = `{}`
 				}
 				base.AppendLine(&javascript, one.Name+" = "+"{}", tab)
@@ -304,7 +304,7 @@ func getJavascriptByVariables(app IApplication, variables []*model2.VariableMode
 	return
 }
 
-func getJavascriptByStepLock(app IApplication, step *model2.ActionStepLock, tab int) (javascript string, err error) {
+func getJavascriptByStepLock(app IApplication, step *model.ActionStepLock, tab int) (javascript string, err error) {
 	name := step.Lock.Name
 	if base.IsEmpty(name) {
 		name = "$lock_" + app.GetScript().RandString(10, 10)
@@ -321,14 +321,14 @@ func getJavascriptByStepLock(app IApplication, step *model2.ActionStepLock, tab 
 	return
 }
 
-func getJavascriptByStepUnlock(app IApplication, step *model2.ActionStepUnlock, tab int) (javascript string, err error) {
+func getJavascriptByStepUnlock(app IApplication, step *model.ActionStepUnlock, tab int) (javascript string, err error) {
 	name := step.Unlock.Name
 	base.AppendLine(&javascript, "$invoke_temp.lock_"+name+".unlock()", tab)
 	return
 }
 
-func getJavascriptByStepError(app IApplication, step *model2.ActionStepError, tab int) (javascript string, err error) {
-	var errorModel *model2.ErrorModel
+func getJavascriptByStepError(app IApplication, step *model.ActionStepError, tab int) (javascript string, err error) {
+	var errorModel *model.ErrorModel
 	errorModel, err = GetErrorModel(app, step.Error.Name, step.Error.Code, step.Error.Msg)
 	if err != nil {
 		return
@@ -338,7 +338,7 @@ func getJavascriptByStepError(app IApplication, step *model2.ActionStepError, ta
 	return
 }
 
-func getJavascriptByErrorModel(app IApplication, errorModel *model2.ErrorModel, defaultMsg string, tab int) (javascript string) {
+func getJavascriptByErrorModel(app IApplication, errorModel *model.ErrorModel, defaultMsg string, tab int) (javascript string) {
 	if errorModel == nil {
 		return
 	}
@@ -350,7 +350,7 @@ func getJavascriptByErrorModel(app IApplication, errorModel *model2.ErrorModel, 
 	return
 }
 
-func getJavascriptByStepSqlSelect(app IApplication, step *model2.ActionStepSqlSelect, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlSelect(app IApplication, step *model.ActionStepSqlSelect, tab int) (javascript string, err error) {
 
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlSelect(app, step.SqlSelect, tab)
@@ -415,7 +415,7 @@ func getJavascriptByStepSqlSelect(app IApplication, step *model2.ActionStepSqlSe
 	return
 }
 
-func getJavascriptByStepSqlInsert(app IApplication, step *model2.ActionStepSqlInsert, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlInsert(app IApplication, step *model.ActionStepSqlInsert, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlInsert(app, step.SqlInsert, tab)
 	if err != nil {
@@ -435,7 +435,7 @@ func getJavascriptByStepSqlInsert(app IApplication, step *model2.ActionStepSqlIn
 	return
 }
 
-func getJavascriptByStepSqlUpdate(app IApplication, step *model2.ActionStepSqlUpdate, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlUpdate(app IApplication, step *model.ActionStepSqlUpdate, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlUpdate(app, step.SqlUpdate, tab)
 	if err != nil {
@@ -455,7 +455,7 @@ func getJavascriptByStepSqlUpdate(app IApplication, step *model2.ActionStepSqlUp
 	return
 }
 
-func getJavascriptByStepSqlDelete(app IApplication, step *model2.ActionStepSqlDelete, tab int) (javascript string, err error) {
+func getJavascriptByStepSqlDelete(app IApplication, step *model.ActionStepSqlDelete, tab int) (javascript string, err error) {
 	var javascript_ string
 	javascript_, err = getJavascriptBySqlDelete(app, step.SqlDelete, tab)
 	if err != nil {
@@ -475,7 +475,7 @@ func getJavascriptByStepSqlDelete(app IApplication, step *model2.ActionStepSqlDe
 	return
 }
 
-func getJavascriptByStepRedisSet(app IApplication, step *model2.ActionStepRedisSet, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisSet(app IApplication, step *model.ActionStepRedisSet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -488,7 +488,7 @@ func getJavascriptByStepRedisSet(app IApplication, step *model2.ActionStepRedisS
 	return
 }
 
-func getJavascriptByStepRedisGet(app IApplication, step *model2.ActionStepRedisGet, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisGet(app IApplication, step *model.ActionStepRedisGet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -501,7 +501,7 @@ func getJavascriptByStepRedisGet(app IApplication, step *model2.ActionStepRedisG
 	return
 }
 
-func getJavascriptByStepRedisDel(app IApplication, step *model2.ActionStepRedisDel, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisDel(app IApplication, step *model.ActionStepRedisDel, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -514,7 +514,7 @@ func getJavascriptByStepRedisDel(app IApplication, step *model2.ActionStepRedisD
 	return
 }
 
-func getJavascriptByStepRedisExpire(app IApplication, step *model2.ActionStepRedisExpire, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisExpire(app IApplication, step *model.ActionStepRedisExpire, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -526,7 +526,7 @@ func getJavascriptByStepRedisExpire(app IApplication, step *model2.ActionStepRed
 	return
 }
 
-func getJavascriptByStepRedisExpireat(app IApplication, step *model2.ActionStepRedisExpireat, tab int) (javascript string, err error) {
+func getJavascriptByStepRedisExpireat(app IApplication, step *model.ActionStepRedisExpireat, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -538,7 +538,7 @@ func getJavascriptByStepRedisExpireat(app IApplication, step *model2.ActionStepR
 	return
 }
 
-func getJavascriptByStepAction(app IApplication, step *model2.ActionStepAction, tab int) (javascript string, err error) {
+func getJavascriptByStepAction(app IApplication, step *model.ActionStepAction, tab int) (javascript string, err error) {
 
 	var variablesJavascript string
 	variablesJavascript, err = getJavascriptByVariables(app, step.Action.CallVariables, tab)
@@ -567,7 +567,7 @@ func getJavascriptByStepAction(app IApplication, step *model2.ActionStepAction, 
 	return
 }
 
-func getJavascriptByStepFileSave(app IApplication, step *model2.ActionStepFileSave, tab int) (javascript string, err error) {
+func getJavascriptByStepFileSave(app IApplication, step *model.ActionStepFileSave, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "
@@ -603,7 +603,7 @@ func getJavascriptByStepFileSave(app IApplication, step *model2.ActionStepFileSa
 	return
 }
 
-func getJavascriptByStepFileGet(app IApplication, step *model2.ActionStepFileGet, tab int) (javascript string, err error) {
+func getJavascriptByStepFileGet(app IApplication, step *model.ActionStepFileGet, tab int) (javascript string, err error) {
 	variableName := step.VariableName
 	if base.IsNotEmpty(variableName) {
 		variableName += " = "

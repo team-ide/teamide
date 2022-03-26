@@ -3,12 +3,12 @@ package invoke
 import (
 	"sync"
 	"teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
+	"teamide/pkg/application/common"
 
 	"github.com/dop251/goja/ast"
 )
 
-func ExecuteStatementScript(app common2.IApplication, invokeNamespace *common2.InvokeNamespace, script string) (res interface{}, err error) {
+func ExecuteStatementScript(app common.IApplication, invokeNamespace *common.InvokeNamespace, script string) (res interface{}, err error) {
 	if app.GetScript().IsEmpty(script) {
 	} else {
 		var parser *StatementParser = getStatementParser(script)

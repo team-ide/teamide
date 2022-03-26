@@ -4,10 +4,10 @@ import (
 	"regexp"
 	"strings"
 	"teamide/pkg/application/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 )
 
-func getJavascriptBySqlInsert(app IApplication, sqlInsert *model2.SqlInsert, tab int) (javascript string, err error) {
+func getJavascriptBySqlInsert(app IApplication, sqlInsert *model.SqlInsert, tab int) (javascript string, err error) {
 
 	wrapTable := app.GetScript().WrapTableName(sqlInsert.Database, sqlInsert.Table)
 	base.AppendLine(&javascript, `$invoke_temp.sql = "INSERT INTO `+wrapTable+` "`, tab)
@@ -61,7 +61,7 @@ func getJavascriptBySqlInsert(app IApplication, sqlInsert *model2.SqlInsert, tab
 	return
 }
 
-func getJavascriptBySqlUpdate(app IApplication, sqlUpdate *model2.SqlUpdate, tab int) (javascript string, err error) {
+func getJavascriptBySqlUpdate(app IApplication, sqlUpdate *model.SqlUpdate, tab int) (javascript string, err error) {
 
 	wrapTable := app.GetScript().WrapTableName(sqlUpdate.Database, sqlUpdate.Table)
 	base.AppendLine(&javascript, `$invoke_temp.sql = "UPDATE `+wrapTable+` SET "`, tab)
@@ -118,7 +118,7 @@ func getJavascriptBySqlUpdate(app IApplication, sqlUpdate *model2.SqlUpdate, tab
 	return
 }
 
-func getJavascriptBySqlDelete(app IApplication, sqlDelete *model2.SqlDelete, tab int) (javascript string, err error) {
+func getJavascriptBySqlDelete(app IApplication, sqlDelete *model.SqlDelete, tab int) (javascript string, err error) {
 	wrapTable := app.GetScript().WrapTableName(sqlDelete.Database, sqlDelete.Table)
 
 	base.AppendLine(&javascript, `$invoke_temp.sql = "DELETE FROM `+wrapTable+` "`, tab)
@@ -140,7 +140,7 @@ func getJavascriptBySqlDelete(app IApplication, sqlDelete *model2.SqlDelete, tab
 	return
 }
 
-func getJavascriptBySqlSelect(app IApplication, sqlSelect *model2.SqlSelect, tab int) (javascript string, err error) {
+func getJavascriptBySqlSelect(app IApplication, sqlSelect *model.SqlSelect, tab int) (javascript string, err error) {
 
 	wrapTable := app.GetScript().WrapTableName(sqlSelect.Database, sqlSelect.Table)
 
@@ -267,7 +267,7 @@ func getJavascriptBySqlSelect(app IApplication, sqlSelect *model2.SqlSelect, tab
 	return
 }
 
-func getJavascriptBySqlWheres(app IApplication, wheres []*model2.SqlWhere, tab int) (javascript string, err error) {
+func getJavascriptBySqlWheres(app IApplication, wheres []*model.SqlWhere, tab int) (javascript string, err error) {
 	if len(wheres) == 0 {
 		return
 	}
@@ -286,7 +286,7 @@ func getJavascriptBySqlWheres(app IApplication, wheres []*model2.SqlWhere, tab i
 	return
 }
 
-func appendJavascriptBySqlWheres(app IApplication, javascript *string, wheres []*model2.SqlWhere, tab int) (err error) {
+func appendJavascriptBySqlWheres(app IApplication, javascript *string, wheres []*model.SqlWhere, tab int) (err error) {
 	for _, one := range wheres {
 		err = appendJavascriptBySqlWhere(app, javascript, one, tab)
 		if err != nil {
@@ -319,7 +319,7 @@ func formatJavascriptByCustomSql(app IApplication, customSql string) (sql string
 	sql += customSql[lastIndex:]
 	return
 }
-func appendJavascriptBySqlWhere(app IApplication, javascript *string, where *model2.SqlWhere, tab int) (err error) {
+func appendJavascriptBySqlWhere(app IApplication, javascript *string, where *model.SqlWhere, tab int) (err error) {
 	if where.Piece {
 		base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` ("`, tab)
 		base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + ")"`, tab)
@@ -348,42 +348,42 @@ func appendJavascriptBySqlWhere(app IApplication, javascript *string, where *mod
 			wrapColumn := app.GetScript().WrapColumnName(where.TableAlias, where.Name)
 			operator := where.GetOperator()
 			switch operator {
-			case model2.IS_NULL:
+			case model.IS_NULL:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` IS NULL "`, tab)
-			case model2.IS_NOT_NULL:
+			case model.IS_NOT_NULL:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` IS NOT NULL "`, tab)
-			case model2.IS_EMPTY:
+			case model.IS_EMPTY:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` = '' "`, tab)
-			case model2.IS_NOT_EMPTY:
+			case model.IS_NOT_EMPTY:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` <> '' "`, tab)
-			case model2.LIKE:
+			case model.LIKE:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push("%" + `+valueScript+` + "%")`, tab)
-			case model2.NOT_LIKE:
+			case model.NOT_LIKE:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` NOT LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push("%" + `+valueScript+` + "%")`, tab)
-			case model2.LIKE_BEFORE:
+			case model.LIKE_BEFORE:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+` + "%")`, tab)
-			case model2.NOT_LIKE_BEFORE:
+			case model.NOT_LIKE_BEFORE:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` NOT LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+` + "%")`, tab)
-			case model2.LIKE_AFTER:
+			case model.LIKE_AFTER:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push("%" + `+valueScript+`)`, tab)
-			case model2.NOT_LIKE_AFTER:
+			case model.NOT_LIKE_AFTER:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` NOT LIKE ? "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push("%" + `+valueScript+`)`, tab)
-			case model2.IN:
+			case model.IN:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` IN (?) "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+`)`, tab)
-			case model2.NOT_IN:
+			case model.NOT_IN:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` NOT IN (?) "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+`)`, tab)
-			case model2.IN_LIKE:
+			case model.IN_LIKE:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` IN LIKE (?) "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+`)`, tab)
-			case model2.NOT_IN:
+			case model.NOT_IN:
 				base.AppendLine(javascript, `$invoke_temp.whereSql = $invoke_temp.whereSql + "`+where.GetAndOr()+` `+wrapColumn+` NOT IN LIKE (?) "`, tab)
 				base.AppendLine(javascript, `$invoke_temp.whereParams.push(`+valueScript+`)`, tab)
 			default:

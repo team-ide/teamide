@@ -1,18 +1,18 @@
 package invoke
 
 import (
-	base2 "teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
+	"teamide/pkg/application/base"
+	"teamide/pkg/application/common"
 	"teamide/pkg/application/model"
 
 	"github.com/wxnacy/wgo/arrays"
 )
 
 type ParseInfo struct {
-	App             common2.IApplication     `json:"-"`
-	InvokeNamespace *common2.InvokeNamespace `json:"-"`
-	ParameterList   []string                 `json:"parameterList"`
-	UseFunctions    []string                 `json:"useFunctions"`
+	App             common.IApplication     `json:"-"`
+	InvokeNamespace *common.InvokeNamespace `json:"-"`
+	ParameterList   []string                `json:"parameterList"`
+	UseFunctions    []string                `json:"useFunctions"`
 }
 
 var (
@@ -44,8 +44,8 @@ func parseAddDataInfo(parseInfo *ParseInfo, _ string, args []interface{}) (err e
 	if len(args) > 5 {
 		isPage = args[5].(bool)
 	}
-	if base2.IsEmpty(dataType) && base2.IsNotEmpty(value) {
-		var dataInfo *common2.InvokeDataInfo
+	if base.IsEmpty(dataType) && base.IsNotEmpty(value) {
+		var dataInfo *common.InvokeDataInfo
 		dataInfo, _ = parseInfo.InvokeNamespace.GetDataInfo(value)
 		if dataInfo != nil {
 			// fmt.Println("add alias [", name, "] for value [", value, "]")
@@ -74,7 +74,7 @@ func parseAction(parseInfo *ParseInfo, prefixName string, args []interface{}) (e
 	callActionName := args[0].(string)
 	callAction := parseInfo.App.GetContext().GetAction(callActionName)
 	if callAction == nil {
-		err = base2.NewErrorActionIsNull("call action [", callActionName, "] not defind")
+		err = base.NewErrorActionIsNull("call action [", callActionName, "] not defind")
 		return
 	}
 	// for index, callVariable := range callAction.InVariables {
@@ -98,7 +98,7 @@ func parseAction(parseInfo *ParseInfo, prefixName string, args []interface{}) (e
 	// }
 
 	var javascript string
-	javascript, err = common2.GetActionJavascriptByAction(parseInfo.App, callAction)
+	javascript, err = common.GetActionJavascriptByAction(parseInfo.App, callAction)
 	if err != nil {
 		return
 	}

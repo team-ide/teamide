@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"sync"
 	"teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
+	"teamide/pkg/application/common"
 	"teamide/pkg/application/model"
 )
 
-func InvokeTest(app common2.IApplication, test *model.TestModel) (res *common2.TestResult, err error) {
-	res = &common2.TestResult{
-		Infos: []*common2.TestInfo{},
+func InvokeTest(app common.IApplication, test *model.TestModel) (res *common.TestResult, err error) {
+	res = &common.TestResult{
+		Infos: []*common.TestInfo{},
 	}
 	if len(test.Steps) == 0 {
 		return
@@ -43,7 +43,7 @@ func InvokeTest(app common2.IApplication, test *model.TestModel) (res *common2.T
 			for forIndex := 0; forIndex < forNumber; forIndex++ {
 				defer wg.Done()
 
-				info := &common2.TestInfo{
+				info := &common.TestInfo{
 					ThreadIndex: tIndex,
 					ForIndex:    forIndex,
 				}
@@ -71,7 +71,7 @@ func InvokeTest(app common2.IApplication, test *model.TestModel) (res *common2.T
 	return
 }
 
-func invokeTest(app common2.IApplication, test *model.TestModel, info *common2.TestInfo) (err error) {
+func invokeTest(app common.IApplication, test *model.TestModel, info *common.TestInfo) (err error) {
 
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
 		app.GetLogger().Debug("test [", test.Name, "] [", info.ThreadName, "] [", info.ForName, "] start")
@@ -94,14 +94,14 @@ func invokeTest(app common2.IApplication, test *model.TestModel, info *common2.T
 
 	var javascript string
 
-	javascript, info.Error = common2.GetTestJavascriptByTestStep(app, test)
+	javascript, info.Error = common.GetTestJavascriptByTestStep(app, test)
 
 	if info.Error != nil {
 		return info.Error
 	}
 
-	var invokeNamespace *common2.InvokeNamespace
-	invokeNamespace, err = common2.NewInvokeNamespace(app)
+	var invokeNamespace *common.InvokeNamespace
+	invokeNamespace, err = common.NewInvokeNamespace(app)
 	if err != nil {
 		return
 	}

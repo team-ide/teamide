@@ -3,7 +3,7 @@ package common
 import (
 	"fmt"
 	"strings"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 
 	databaseSql "database/sql"
 
@@ -12,9 +12,9 @@ import (
 
 type ISqlExecutor interface {
 	Ping() (err error)
-	Select(sql string, params []interface{}, columnFieldMap map[string]*model2.StructFieldModel) (res []map[string]interface{}, err error)
-	SelectOne(sql string, params []interface{}, columnFieldMap map[string]*model2.StructFieldModel) (res interface{}, err error)
-	SelectPage(sql string, params []interface{}, currentPage int64, pageSize int64, columnFieldMap map[string]*model2.StructFieldModel) (res []map[string]interface{}, err error)
+	Select(sql string, params []interface{}, columnFieldMap map[string]*model.StructFieldModel) (res []map[string]interface{}, err error)
+	SelectOne(sql string, params []interface{}, columnFieldMap map[string]*model.StructFieldModel) (res interface{}, err error)
+	SelectPage(sql string, params []interface{}, currentPage int64, pageSize int64, columnFieldMap map[string]*model.StructFieldModel) (res []map[string]interface{}, err error)
 	SelectCount(countSql string, countParams []interface{}) (count int64, err error)
 	Insert(sql string, params []interface{}) (rowsAffected int64, err error)
 	Update(sql string, params []interface{}) (rowsAffected int64, err error)
@@ -40,15 +40,15 @@ type SqlSelectPageResult struct {
 	Data        []map[string]interface{} `json:"data,omitempty"`        // 页数据
 }
 
-func DatabaseIsMySql(database *model2.DatasourceDatabase) bool {
+func DatabaseIsMySql(database *model.DatasourceDatabase) bool {
 	return strings.ToLower(database.Type) == "mysql"
 }
-func DatabaseIsOracle(database *model2.DatasourceDatabase) bool {
+func DatabaseIsOracle(database *model.DatasourceDatabase) bool {
 	return strings.ToLower(database.Type) == "oracle"
 }
 
-func GetColumnFieldMap(app IApplication, name string) (columnFieldMap map[string]*model2.StructFieldModel, err error) {
-	columnFieldMap = make(map[string]*model2.StructFieldModel)
+func GetColumnFieldMap(app IApplication, name string) (columnFieldMap map[string]*model.StructFieldModel, err error) {
+	columnFieldMap = make(map[string]*model.StructFieldModel)
 	structModel := app.GetContext().GetStruct(name)
 	if structModel == nil {
 		return
@@ -66,11 +66,11 @@ func GetColumnFieldMap(app IApplication, name string) (columnFieldMap map[string
 }
 
 type SqlExecutorDefault struct {
-	config *model2.DatasourceDatabase
+	config *model.DatasourceDatabase
 	db     *databaseSql.DB
 }
 
-func CreateSqlExecutor(config *model2.DatasourceDatabase) (executor *SqlExecutorDefault, err error) {
+func CreateSqlExecutor(config *model.DatasourceDatabase) (executor *SqlExecutorDefault, err error) {
 	executor = &SqlExecutorDefault{
 		config: config,
 	}
@@ -125,7 +125,7 @@ func (this_ *SqlExecutorDefault) SelectCount(sql string, params []interface{}) (
 	return
 }
 
-func (this_ *SqlExecutorDefault) SelectOne(sql string, params []interface{}, columnFieldMap map[string]*model2.StructFieldModel) (res interface{}, err error) {
+func (this_ *SqlExecutorDefault) SelectOne(sql string, params []interface{}, columnFieldMap map[string]*model.StructFieldModel) (res interface{}, err error) {
 	var list []map[string]interface{}
 	list, err = this_.Select(sql, params, columnFieldMap)
 	if err != nil {
@@ -137,7 +137,7 @@ func (this_ *SqlExecutorDefault) SelectOne(sql string, params []interface{}, col
 	return
 }
 
-func (this_ *SqlExecutorDefault) SelectPage(sql string, params []interface{}, pageNumber int64, pageSize int64, columnFieldMap map[string]*model2.StructFieldModel) (res []map[string]interface{}, err error) {
+func (this_ *SqlExecutorDefault) SelectPage(sql string, params []interface{}, pageNumber int64, pageSize int64, columnFieldMap map[string]*model.StructFieldModel) (res []map[string]interface{}, err error) {
 	sql += fmt.Sprint(" LIMIT ", (pageNumber-1)*pageSize, ",", pageSize)
 	res, err = this_.Select(sql, params, columnFieldMap)
 	if err != nil {
@@ -146,7 +146,7 @@ func (this_ *SqlExecutorDefault) SelectPage(sql string, params []interface{}, pa
 	return
 }
 
-func (this_ *SqlExecutorDefault) Select(sql string, params []interface{}, columnFieldMap map[string]*model2.StructFieldModel) (res []map[string]interface{}, err error) {
+func (this_ *SqlExecutorDefault) Select(sql string, params []interface{}, columnFieldMap map[string]*model.StructFieldModel) (res []map[string]interface{}, err error) {
 
 	var rows *databaseSql.Rows
 	rows, err = this_.db.Query(sql, params...)

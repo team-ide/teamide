@@ -3,24 +3,24 @@ package module_register
 import (
 	"errors"
 	"fmt"
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_lock"
 	"teamide/internal/module/module_user"
-	"teamide/pkg/db"
 	"time"
 )
 
 // NewRegisterService 根据库配置创建RegisterService
-func NewRegisterService(dbWorker db.DatabaseWorker) (res *RegisterService) {
+func NewRegisterService(ServerContext *context.ServerContext) (res *RegisterService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
-	userService := module_user.NewUserService(dbWorker)
+	userService := module_user.NewUserService(ServerContext)
 
-	userPasswordService := module_user.NewUserPasswordService(dbWorker)
+	userPasswordService := module_user.NewUserPasswordService(ServerContext)
 
 	res = &RegisterService{
-		dbWorker:            dbWorker,
+		ServerContext:       ServerContext,
 		idService:           idService,
 		userService:         userService,
 		userPasswordService: userPasswordService,
@@ -30,7 +30,7 @@ func NewRegisterService(dbWorker db.DatabaseWorker) (res *RegisterService) {
 
 // RegisterService 注册服务
 type RegisterService struct {
-	dbWorker            db.DatabaseWorker
+	*context.ServerContext
 	idService           *module_id.IDService
 	userService         *module_user.UserService
 	userPasswordService *module_user.UserPasswordService
@@ -114,7 +114,7 @@ func (this_ *RegisterService) insert(register *RegisterModel) (rowsAffected int6
 
 	sql := `INSERT INTO ` + TableRegister + `(registerId, name, account, email, ip, sourceType, source, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{register.RegisterId, register.Name, register.Account, register.Email, register.Ip, register.SourceType, register.Source, register.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{register.RegisterId, register.Name, register.Account, register.Email, register.Ip, register.SourceType, register.Source, register.CreateTime})
 	if err != nil {
 		return
 	}
@@ -126,7 +126,7 @@ func (this_ *RegisterService) insert(register *RegisterModel) (rowsAffected int6
 func (this_ *RegisterService) bindUser(registerId int64, userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableRegister + ` SET userId=?,updateTime=? WHERE registerId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{userId, time.Now(), registerId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{userId, time.Now(), registerId})
 	if err != nil {
 		return
 	}

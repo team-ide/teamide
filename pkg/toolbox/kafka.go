@@ -8,7 +8,7 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func GetKafkaWorker() *Worker {
+func init() {
 	worker_ := &Worker{
 		Name:    "kafka",
 		Text:    "Kafka",
@@ -39,7 +39,7 @@ func GetKafkaWorker() *Worker {
 		return kafkaWork("deleteRecords", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
 	}
 
-	return worker_
+	AddWorker(worker_)
 }
 
 type KafkaBaseRequest struct {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"teamide/pkg/application/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 )
 
-func GetWebApiJavascriptByAction(app IApplication, action *model2.ActionModel, shouldValidataToken bool) (javascript string, err error) {
+func GetWebApiJavascriptByAction(app IApplication, action *model.ActionModel, shouldValidataToken bool) (javascript string, err error) {
 	methodName := GetJavascriptMethodName(action.Name)
 	javascript += ""
 	javascript += "function web_api_" + methodName + "() {\n"
@@ -37,7 +37,7 @@ func GetWebApiJavascriptByAction(app IApplication, action *model2.ActionModel, s
 	return
 }
 
-func getWebApiJavascriptByVariables(app IApplication, action *model2.ActionModel, variables []*model2.VariableModel, tab int) (javascript string, err error) {
+func getWebApiJavascriptByVariables(app IApplication, action *model.ActionModel, variables []*model.VariableModel, tab int) (javascript string, err error) {
 	for _, one := range variables {
 		if base.IsNotEmpty(one.Comment) {
 			base.AppendLine(&javascript, "// "+one.Comment, tab)

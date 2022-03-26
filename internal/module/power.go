@@ -4,17 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"
 	"strings"
-	base2 "teamide/internal/server/base"
+	"teamide/internal/base"
 )
 
-func (this_ *Api) checkPower(api *base2.ApiWorker, JWT *base2.JWTBean, c *gin.Context) bool {
-	if base2.IsStandAlone {
-		if api.Power.AllowNative {
-			return true
-		}
-	}
+func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
+
 	if api.Power.ShouldLogin && (JWT == nil || JWT.UserId == 0) {
-		base2.ResponseJSON(nil, base2.ShouldLoginError, c)
+		base.ResponseJSON(nil, base.ShouldLoginError, c)
 		return false
 	}
 	ps := this_.getPowersByJWT(JWT)
@@ -30,16 +26,16 @@ func (this_ *Api) checkPower(api *base2.ApiWorker, JWT *base2.JWTBean, c *gin.Co
 		return find
 	}
 
-	base2.ResponseJSON(nil, base2.NoPowerError, c)
+	base.ResponseJSON(nil, base.NoPowerError, c)
 	return find
 }
 
-func (this_ *Api) getPowersByJWT(JWT *base2.JWTBean) (powers []*base2.PowerAction) {
+func (this_ *Api) getPowersByJWT(JWT *base.JWTBean) (powers []*base.PowerAction) {
 	var userId int64 = 0
 	if JWT != nil {
 		userId = JWT.UserId
 	}
-	ps := base2.GetPowers()
+	ps := base.GetPowers()
 	psStrs := this_.getPowersByUserId(userId)
 	if len(psStrs) == 0 {
 		return
@@ -53,7 +49,17 @@ func (this_ *Api) getPowersByJWT(JWT *base2.JWTBean) (powers []*base2.PowerActio
 }
 
 func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
-	ps := base2.GetPowers()
+
+	ps := base.GetPowers()
+	if base.IsStandAlone {
+		for _, power := range ps {
+			if power.StandAlone {
+				powers = append(powers, power.Action)
+			}
+		}
+		return
+	}
+
 	for _, power := range ps {
 		if !power.ShouldLogin {
 			powers = append(powers, power.Action)

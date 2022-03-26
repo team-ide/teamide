@@ -1,26 +1,26 @@
 package module_user
 
 import (
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/db"
 	"time"
 )
 
 // NewUserAuthService 根据库配置创建UserAuthService
-func NewUserAuthService(dbWorker db.DatabaseWorker) (res *UserAuthService) {
+func NewUserAuthService(ServerContext *context.ServerContext) (res *UserAuthService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
 	res = &UserAuthService{
-		dbWorker:  dbWorker,
-		idService: idService,
+		ServerContext: ServerContext,
+		idService:     idService,
 	}
 	return
 }
 
 // UserAuthService 用户授权服务
 type UserAuthService struct {
-	dbWorker  db.DatabaseWorker
+	*context.ServerContext
 	idService *module_id.IDService
 }
 
@@ -39,7 +39,7 @@ func (this_ *UserAuthService) Insert(userAuth *UserAuthModel) (rowsAffected int6
 
 	sql := `INSERT INTO ` + TableUserAuth + `(authId, userId, createTime) VALUES (?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{userAuth.AuthId, userAuth.UserId, time.Now()})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{userAuth.AuthId, userAuth.UserId, time.Now()})
 	if err != nil {
 		return
 	}

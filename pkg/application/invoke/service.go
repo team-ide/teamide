@@ -2,11 +2,11 @@ package invoke
 
 import (
 	"teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
+	"teamide/pkg/application/common"
 	"teamide/pkg/application/model"
 )
 
-func invokeJavascript(app common2.IApplication, invokeNamespace *common2.InvokeNamespace, javascript string) (res interface{}, err error) {
+func invokeJavascript(app common.IApplication, invokeNamespace *common.InvokeNamespace, javascript string) (res interface{}, err error) {
 	res, err = ExecuteFunctionScript(app, invokeNamespace, javascript)
 	if err != nil {
 		return
@@ -14,7 +14,7 @@ func invokeJavascript(app common2.IApplication, invokeNamespace *common2.InvokeN
 	return
 }
 
-func InvokeAction(app common2.IApplication, invokeNamespace *common2.InvokeNamespace, action *model.ActionModel) (res interface{}, err error) {
+func InvokeAction(app common.IApplication, invokeNamespace *common.InvokeNamespace, action *model.ActionModel) (res interface{}, err error) {
 	if app.GetLogger() != nil && app.GetLogger().OutDebug() {
 		app.GetLogger().Debug("invoke action [", action.Name, "] start")
 		// app.GetLogger().Debug("invoke action [", action.Name, "] invokeNamespace:", app.GetScript().DataToJSON(invokeNamespace))
@@ -29,7 +29,7 @@ func InvokeAction(app common2.IApplication, invokeNamespace *common2.InvokeNames
 	}()
 
 	if base.IsEmpty(action.ActionJavascript) {
-		action.ActionJavascript, err = common2.GetActionJavascriptByAction(app, action)
+		action.ActionJavascript, err = common.GetActionJavascriptByAction(app, action)
 		if err != nil {
 			return
 		}

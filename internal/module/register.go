@@ -2,9 +2,8 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
+	base2 "teamide/internal/base"
 	"teamide/internal/module/module_register"
-	base2 "teamide/internal/server/base"
-	"teamide/internal/server/component"
 	"teamide/pkg/util"
 )
 
@@ -19,7 +18,7 @@ func (this_ *Api) apiRegister(request *base2.RequestBean, c *gin.Context) (res i
 	registerRequest := &RegisterRequest{}
 	base2.RequestJSON(registerRequest, c)
 
-	pwd, err := util.AesDecryptCBCByKey(registerRequest.Password, component.HttpAesKey)
+	pwd, err := util.AesDecryptCBCByKey(registerRequest.Password, this_.HttpAesKey)
 	if err != nil {
 		return
 	}

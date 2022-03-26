@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func GetRedisWorker() *Worker {
+func init() {
 	worker_ := &Worker{
 		Name:    "redis",
 		Text:    "Redis",
@@ -15,7 +15,7 @@ func GetRedisWorker() *Worker {
 		return redisWork("get", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
 	}
 
-	return worker_
+	AddWorker(worker_)
 }
 
 type RedisBaseRequest struct {

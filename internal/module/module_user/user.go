@@ -3,27 +3,27 @@ package module_user
 import (
 	"fmt"
 	"strings"
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
 )
 
 // NewUserService 根据库配置创建UserService
-func NewUserService(dbWorker db.DatabaseWorker) (res *UserService) {
+func NewUserService(ServerContext *context.ServerContext) (res *UserService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
 	res = &UserService{
-		dbWorker:  dbWorker,
-		idService: idService,
+		ServerContext: ServerContext,
+		idService:     idService,
 	}
 	return
 }
 
 // UserService 用户服务
 type UserService struct {
-	dbWorker  db.DatabaseWorker
+	*context.ServerContext
 	idService *module_id.IDService
 }
 
@@ -31,7 +31,7 @@ type UserService struct {
 func (this_ *UserService) Get(userId int64) (res *UserModel, err error) {
 
 	sql := `SELECT * FROM ` + TableUser + ` WHERE userId=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserModel{}))
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
@@ -75,12 +75,12 @@ func (this_ *UserService) Query(user *UserModel) (res []*UserModel, err error) {
 		values = append(values, fmt.Sprint("%", user.Email, "%"))
 	}
 
-	list, err := this_.dbWorker.Query(sql, values, util.GetStructFieldTypes(UserModel{}))
+	list, err := this_.DatabaseWorker.Query(sql, values, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
 
-	err = util.ToStruct(list, res)
+	err = util.ToStruct(list, &res)
 	if err != nil {
 		return
 	}
@@ -104,7 +104,7 @@ func (this_ *UserService) CheckExist(account string, email string) (res bool, er
 	}
 	sql += ")"
 
-	count, err := this_.dbWorker.Count(sql, values)
+	count, err := this_.DatabaseWorker.Count(sql, values)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func (this_ *UserService) CheckExist(account string, email string) (res bool, er
 func (this_ *UserService) GetByAccount(account string) (res *UserModel, err error) {
 
 	sql := `SELECT * FROM ` + TableUser + ` WHERE deleted=2 AND (account = ? OR email = ?)`
-	list, err := this_.dbWorker.Query(sql, []interface{}{account, account}, util.GetStructFieldTypes(UserModel{}))
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{account, account}, util.GetStructFieldTypes(UserModel{}))
 	if err != nil {
 		return
 	}
@@ -150,7 +150,7 @@ func (this_ *UserService) Insert(user *UserModel) (rowsAffected int64, err error
 
 	sql := `INSERT INTO ` + TableUser + `(userId, name, avatar, account, email, activated, createTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{user.UserId, user.Name, user.Avatar, user.Account, user.Email, user.Activated, user.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{user.UserId, user.Name, user.Avatar, user.Account, user.Email, user.Activated, user.CreateTime})
 	if err != nil {
 		return
 	}
@@ -182,7 +182,7 @@ func (this_ *UserService) Update(user *UserModel) (rowsAffected int64, err error
 	sql += " WHERE userId=? "
 	values = append(values, user.UserId)
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, values)
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
 	if err != nil {
 		return
 	}
@@ -194,7 +194,7 @@ func (this_ *UserService) Update(user *UserModel) (rowsAffected int64, err error
 func (this_ *UserService) Active(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -206,7 +206,7 @@ func (this_ *UserService) Active(userId int64) (rowsAffected int64, err error) {
 func (this_ *UserService) UnActive(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET activated=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -218,7 +218,7 @@ func (this_ *UserService) UnActive(userId int64) (rowsAffected int64, err error)
 func (this_ *UserService) Lock(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -230,7 +230,7 @@ func (this_ *UserService) Lock(userId int64) (rowsAffected int64, err error) {
 func (this_ *UserService) Unlock(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET locked=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -242,7 +242,7 @@ func (this_ *UserService) Unlock(userId int64) (rowsAffected int64, err error) {
 func (this_ *UserService) Enable(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -254,7 +254,7 @@ func (this_ *UserService) Enable(userId int64) (rowsAffected int64, err error) {
 func (this_ *UserService) Disable(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET enabled=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{2, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{2, time.Now(), userId})
 	if err != nil {
 		return
 	}
@@ -266,7 +266,7 @@ func (this_ *UserService) Disable(userId int64) (rowsAffected int64, err error) 
 func (this_ *UserService) Delete(userId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableUser + ` SET deleted=?,deleteTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{1, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), userId})
 	if err != nil {
 		return
 	}

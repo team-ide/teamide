@@ -1,5 +1,0 @@
-package static
-
-
-func init() {
-}

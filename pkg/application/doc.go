@@ -5,16 +5,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	base2 "teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
-	invoke2 "teamide/pkg/application/invoke"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/base"
+	"teamide/pkg/application/common"
+	"teamide/pkg/application/invoke"
+	"teamide/pkg/application/model"
 )
 
 type ContextDoc struct {
 	Dir             string
 	dirAbsolutePath string
-	App             common2.IApplication
+	App             common.IApplication
 }
 
 func (this_ *ContextDoc) Out() (err error) {
@@ -25,7 +25,7 @@ func (this_ *ContextDoc) Out() (err error) {
 	}
 	dirPath := path + "/" + this_.Dir
 	var exists bool
-	exists, err = base2.PathExists(dirPath)
+	exists, err = base.PathExists(dirPath)
 	if err != nil {
 		return
 	}
@@ -48,15 +48,15 @@ func (this_ *ContextDoc) Out() (err error) {
 	return
 }
 
-func (this_ *ContextDoc) outWebApi(serverWeb *model2.ServerWebModel) (err error) {
+func (this_ *ContextDoc) outWebApi(serverWeb *model.ServerWebModel) (err error) {
 	var fileName = "web.api.md"
-	if base2.IsNotEmpty(serverWeb.Name) {
+	if base.IsNotEmpty(serverWeb.Name) {
 		fileName = serverWeb.Name + "." + fileName
 	}
 
 	var exists bool
 	indexPath := this_.dirAbsolutePath + "/" + fileName
-	exists, err = base2.PathExists(indexPath)
+	exists, err = base.PathExists(indexPath)
 	if err != nil {
 		return
 	}
@@ -91,7 +91,7 @@ func (this_ *ContextDoc) outWebApi(serverWeb *model2.ServerWebModel) (err error)
 	return
 }
 
-func (this_ *ContextDoc) getApiWebContent(serverWeb *model2.ServerWebModel) (content string, err error) {
+func (this_ *ContextDoc) getApiWebContent(serverWeb *model.ServerWebModel) (content string, err error) {
 	appendLine(&content, "## Web Server Api")
 	appendLine(&content, "")
 	contextPath := serverWeb.ContextPath
@@ -127,13 +127,13 @@ func (this_ *ContextDoc) getApiWebContent(serverWeb *model2.ServerWebModel) (con
 	return
 }
 
-func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model2.ServerWebModel, content *string) (err error) {
+func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model.ServerWebModel, content *string) (err error) {
 	if serverWeb.Token == nil {
 		return
 	}
 	tokenValidateAction := this_.App.GetContext().GetAction(serverWeb.Token.ValidateAction)
 	if tokenValidateAction == nil {
-		err = base2.NewError("", "token validata action [", serverWeb.Token.ValidateAction, "] not defind")
+		err = base.NewError("", "token validata action [", serverWeb.Token.ValidateAction, "] not defind")
 		return
 	}
 
@@ -185,7 +185,7 @@ func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model2.Server
 
 	tokenCreateAction := this_.App.GetContext().GetAction(serverWeb.Token.CreateAction)
 	if tokenCreateAction == nil {
-		err = base2.NewError("", "token create action [", serverWeb.Token.CreateAction, "] not defind")
+		err = base.NewError("", "token create action [", serverWeb.Token.CreateAction, "] not defind")
 		return
 	}
 	err = this_.appendActionApiWebContent(tokenCreateAction, content)
@@ -194,72 +194,72 @@ func (this_ *ContextDoc) appendActionApiWebTokenContent(serverWeb *model2.Server
 	}
 	return
 }
-func getRequestHeader(action *model2.ActionModel) (res []*model2.VariableModel) {
+func getRequestHeader(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_HEADER {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_HEADER {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestBody(action *model2.ActionModel) (res []*model2.VariableModel) {
+func getRequestBody(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if base2.IsEmpty(one.DataPlace) || model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_BODY {
+		if base.IsEmpty(one.DataPlace) || model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_BODY {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestFile(action *model2.ActionModel) (res []*model2.VariableModel) {
+func getRequestFile(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_FILE {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_FILE {
 			res = append(res, one)
 		}
 	}
 	return
 }
-func getRequestForm(action *model2.ActionModel) (res []*model2.VariableModel) {
+func getRequestForm(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_FORM {
-			res = append(res, one)
-		}
-	}
-	return
-}
-
-func getRequestParam(action *model2.ActionModel) (res []*model2.VariableModel) {
-	for _, one := range action.InVariables {
-		if model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_PARAM {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_FORM {
 			res = append(res, one)
 		}
 	}
 	return
 }
 
-func getRequestPath(action *model2.ActionModel) (res []*model2.VariableModel) {
+func getRequestParam(action *model.ActionModel) (res []*model.VariableModel) {
 	for _, one := range action.InVariables {
-		if model2.GetDataPlace(one.DataPlace) == model2.DATA_PLACE_PATH {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_PARAM {
 			res = append(res, one)
 		}
 	}
 	return
 }
 
-func (this_ *ContextDoc) appendActionApiWebContent(action *model2.ActionModel, content *string) (err error) {
+func getRequestPath(action *model.ActionModel) (res []*model.VariableModel) {
+	for _, one := range action.InVariables {
+		if model.GetDataPlace(one.DataPlace) == model.DATA_PLACE_PATH {
+			res = append(res, one)
+		}
+	}
+	return
+}
+
+func (this_ *ContextDoc) appendActionApiWebContent(action *model.ActionModel, content *string) (err error) {
 
 	var webApiJavascript string
-	webApiJavascript, err = common2.GetWebApiJavascriptByAction(this_.App, action, true)
+	webApiJavascript, err = common.GetWebApiJavascriptByAction(this_.App, action, true)
 	if err != nil {
 		return
 	}
-	functionParser := invoke2.NewFunctionParser(webApiJavascript)
+	functionParser := invoke.NewFunctionParser(webApiJavascript)
 
-	var invokeNamespace *common2.InvokeNamespace
-	invokeNamespace, err = common2.NewInvokeNamespace(this_.App)
+	var invokeNamespace *common.InvokeNamespace
+	invokeNamespace, err = common.NewInvokeNamespace(this_.App)
 	if err != nil {
 		return
 	}
-	parseInfo := &invoke2.ParseInfo{
+	parseInfo := &invoke.ParseInfo{
 		App:             this_.App,
 		InvokeNamespace: invokeNamespace,
 	}
@@ -267,17 +267,17 @@ func (this_ *ContextDoc) appendActionApiWebContent(action *model2.ActionModel, c
 	if err != nil {
 		return
 	}
-	if base2.IsEmpty(action.Comment) {
+	if base.IsEmpty(action.Comment) {
 		appendLine(content, fmt.Sprint("### ", action.Name, ""))
 	} else {
 		appendLine(content, fmt.Sprint("### ", action.Comment, ""))
 	}
 	appendLine(content, "")
 
-	if base2.IsNotEmpty(action.Comment) || base2.IsNotEmpty(action.Description) {
+	if base.IsNotEmpty(action.Comment) || base.IsNotEmpty(action.Description) {
 		appendLine(content, "#### 接口功能")
 		appendLine(content, "")
-		if base2.IsEmpty(action.Description) {
+		if base.IsEmpty(action.Description) {
 			appendLine(content, "> "+action.Comment)
 		} else {
 			appendLine(content, "> "+action.Description)
@@ -296,7 +296,7 @@ func (this_ *ContextDoc) appendActionApiWebContent(action *model2.ActionModel, c
 
 	appendLine(content, "#### 请求方式")
 	appendLine(content, "")
-	if base2.IsEmpty(action.Api.Request.Method) {
+	if base.IsEmpty(action.Api.Request.Method) {
 		appendLine(content, "> POST")
 	} else {
 		appendLine(content, "> "+action.Api.Request.Method)
@@ -318,7 +318,7 @@ func (this_ *ContextDoc) appendActionApiWebContent(action *model2.ActionModel, c
 	return
 }
 
-func (this_ *ContextDoc) appendInVariable(action *model2.ActionModel, content *string, parseInfo *invoke2.ParseInfo) (err error) {
+func (this_ *ContextDoc) appendInVariable(action *model.ActionModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
 
 	paths := getRequestPath(action)
 	if len(paths) > 0 {
@@ -383,7 +383,7 @@ func (this_ *ContextDoc) appendInVariable(action *model2.ActionModel, content *s
 
 	bodys := getRequestBody(action)
 	if len(bodys) > 0 {
-		var dataInfos []*common2.InvokeDataInfo
+		var dataInfos []*common.InvokeDataInfo
 		for _, one := range parseInfo.InvokeNamespace.DataInfos {
 			for _, inV := range bodys {
 				if one.Name == inV.Name {
@@ -397,7 +397,7 @@ func (this_ *ContextDoc) appendInVariable(action *model2.ActionModel, content *s
 		if err != nil {
 			return
 		}
-		if base2.IsNotEmpty(json) {
+		if base.IsNotEmpty(json) {
 			appendLine(content, "#### 请求数据（JSON）")
 			appendLine(content, "")
 			appendLine(content, "```json")
@@ -411,7 +411,7 @@ func (this_ *ContextDoc) appendInVariable(action *model2.ActionModel, content *s
 	return
 }
 
-func (this_ *ContextDoc) appendOutVariable(action *model2.ActionModel, content *string, parseInfo *invoke2.ParseInfo) (err error) {
+func (this_ *ContextDoc) appendOutVariable(action *model.ActionModel, content *string, parseInfo *invoke.ParseInfo) (err error) {
 
 	// 输出文件
 	if action.Api.Response != nil && (action.Api.Response.DownloadFile || action.Api.Response.OpenFile) {
@@ -437,7 +437,7 @@ func (this_ *ContextDoc) appendOutVariable(action *model2.ActionModel, content *
 	json += `  "code": "0",` + " // 错误码\n"
 	json += `  "msg": "", // 错误信息` + "\n"
 	if action.OutVariable != nil {
-		var outDataInfo *common2.InvokeDataInfo
+		var outDataInfo *common.InvokeDataInfo
 		for _, one := range parseInfo.InvokeNamespace.DataInfos {
 			if one.Name == action.OutVariable.Name {
 				outDataInfo = one
@@ -451,7 +451,7 @@ func (this_ *ContextDoc) appendOutVariable(action *model2.ActionModel, content *
 	}
 
 	json += "}"
-	if base2.IsNotEmpty(json) {
+	if base.IsNotEmpty(json) {
 		appendLine(content, "#### 返回数据（JSON）")
 		appendLine(content, "")
 		appendLine(content, "```json")
@@ -463,7 +463,7 @@ func (this_ *ContextDoc) appendOutVariable(action *model2.ActionModel, content *
 	return
 }
 
-func (this_ *ContextDoc) appendInJSONDataInfos(action *model2.ActionModel, content *string, dataInfos []*common2.InvokeDataInfo, tab int) (err error) {
+func (this_ *ContextDoc) appendInJSONDataInfos(action *model.ActionModel, content *string, dataInfos []*common.InvokeDataInfo, tab int) (err error) {
 	for i := 0; i < tab; i++ {
 		*content += "  "
 	}
@@ -471,10 +471,10 @@ func (this_ *ContextDoc) appendInJSONDataInfos(action *model2.ActionModel, conte
 	for index, one := range dataInfos {
 		isEnd := len(dataInfos) == index+1
 		name := one.Name
-		if base2.IsNotEmpty(one.Value) {
+		if base.IsNotEmpty(one.Value) {
 			name = one.Value
 		}
-		if len(one.DataInfos) > 0 && base2.IsEmpty(one.Value) {
+		if len(one.DataInfos) > 0 && base.IsEmpty(one.Value) {
 			if !one.IsList {
 				name = ""
 			}
@@ -491,10 +491,10 @@ func (this_ *ContextDoc) appendInJSONDataInfos(action *model2.ActionModel, conte
 	return
 }
 
-func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content *string, name string, dataInfo *common2.InvokeDataInfo, isOut bool, isEnd bool, tab int) (err error) {
+func (this_ *ContextDoc) appendJSONDataInfo(action *model.ActionModel, content *string, name string, dataInfo *common.InvokeDataInfo, isOut bool, isEnd bool, tab int) (err error) {
 
 	if len(dataInfo.DataInfos) > 0 {
-		var list []*common2.InvokeDataInfo
+		var list []*common.InvokeDataInfo
 
 		if isOut {
 			list = append(list, dataInfo.DataInfos...)
@@ -506,7 +506,7 @@ func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content 
 				}
 			}
 		}
-		if base2.IsNotEmpty(name) {
+		if base.IsNotEmpty(name) {
 			for i := 0; i < tab; i++ {
 				*content += "  "
 			}
@@ -518,13 +518,13 @@ func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content 
 			}
 			comment := dataInfo.Comment
 			if dataInfo.DataType != nil {
-				if base2.IsNotEmpty(comment) {
+				if base.IsNotEmpty(comment) {
 					comment += ", "
 				}
 				comment += dataInfo.DataType.Text
 
 			}
-			if base2.IsNotEmpty(comment) {
+			if base.IsNotEmpty(comment) {
 				*content += " // " + comment
 			}
 			*content += "\n"
@@ -532,7 +532,7 @@ func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content 
 		for index, one := range list {
 			isEnd := len(list) == index+1
 			tab_ := tab
-			if base2.IsNotEmpty(name) {
+			if base.IsNotEmpty(name) {
 				tab_++
 			}
 			err = this_.appendJSONDataInfo(action, content, one.Name, one, isOut, isEnd, tab_)
@@ -541,7 +541,7 @@ func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content 
 			}
 		}
 
-		if base2.IsNotEmpty(name) {
+		if base.IsNotEmpty(name) {
 			for i := 0; i < tab; i++ {
 				*content += "  "
 			}
@@ -570,13 +570,13 @@ func (this_ *ContextDoc) appendJSONDataInfo(action *model2.ActionModel, content 
 		}
 		comment := dataInfo.Comment
 		if dataInfo.DataType != nil {
-			if base2.IsNotEmpty(comment) {
+			if base.IsNotEmpty(comment) {
 				comment += ", "
 			}
 			comment += dataInfo.DataType.Text
 
 		}
-		if base2.IsNotEmpty(comment) {
+		if base.IsNotEmpty(comment) {
 			*content += " // " + comment
 		}
 		*content += "\n"

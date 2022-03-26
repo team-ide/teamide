@@ -1,34 +1,34 @@
 package module_user
 
 import (
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
 )
 
 // NewUserPasswordService 根据库配置创建UserPasswordService
-func NewUserPasswordService(dbWorker db.DatabaseWorker) (res *UserPasswordService) {
+func NewUserPasswordService(ServerContext *context.ServerContext) (res *UserPasswordService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
 	res = &UserPasswordService{
-		dbWorker:  dbWorker,
-		idService: idService,
+		ServerContext: ServerContext,
+		idService:     idService,
 	}
 	return
 }
 
 // UserPasswordService 用户密码服务
 type UserPasswordService struct {
-	dbWorker  db.DatabaseWorker
+	*context.ServerContext
 	idService *module_id.IDService
 }
 
 // CheckPassword 检测密码是否一致
 func (this_ *UserPasswordService) CheckPassword(userId int64, password string) (res bool, err error) {
 	sql := `SELECT salt,password FROM ` + TableUserPassword + ` WHERE userId=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserPasswordModel{}))
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserPasswordModel{}))
 	if err != nil {
 		return
 	}
@@ -52,7 +52,7 @@ func (this_ *UserPasswordService) Insert(userId int64, password string) (rowsAff
 
 	sql := `INSERT INTO ` + TableUserPassword + `(userId, salt, password, createTime) VALUES (?, ?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{userId, salt, pwd, time.Now()})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{userId, salt, pwd, time.Now()})
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func (this_ *UserPasswordService) UpdatePassword(userId int64, password string) 
 	pwd := util.EncodePassword(salt, password)
 
 	sql := `UPDATE ` + TableUserPassword + ` SET salt=?,password=?,updateTime=? WHERE userId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{salt, pwd, time.Now(), userId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{salt, pwd, time.Now(), userId})
 	if err != nil {
 		return
 	}

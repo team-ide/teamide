@@ -10,13 +10,14 @@ source.status = null;
 source.ready = false;
 source.url = null;
 source.api = null;
-source.isNative = false;
 source.columnTypes = null;
 source.dataTypes = null;
 source.indexTypes = null;
 source.modelTypes = null;
 source.dataPlaces = null;
 source.databaseTypes = null;
+
+source.toolboxTypes = null;
 
 source.header = {
     title: "Team · IDE",
@@ -291,13 +292,13 @@ source.init = (data) => {
     if (data != null) {
         source.url = data.url;
         source.api = data.api;
-        source.isNative = data.isNative;
         source.columnTypes = data.columnTypes;
         source.dataTypes = data.dataTypes;
         source.indexTypes = data.indexTypes;
         source.modelTypes = data.modelTypes;
         source.dataPlaces = data.dataPlaces;
         source.databaseTypes = data.databaseTypes;
+        source.toolboxTypes = data.toolboxTypes;
     } else {
         source.status = "error";
         source.ready = false;

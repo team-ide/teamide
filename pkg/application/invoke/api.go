@@ -6,14 +6,14 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	base2 "teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/base"
+	"teamide/pkg/application/common"
+	"teamide/pkg/application/model"
 
 	"github.com/gin-gonic/gin"
 )
 
-func ServerWebBindApis(app common2.IApplication, serverWebToken *model2.ServerWebToken, gouterGroup *gin.RouterGroup) (err error) {
+func ServerWebBindApis(app common.IApplication, serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup) (err error) {
 
 	if len(app.GetContext().Actions) == 0 {
 		return
@@ -40,7 +40,7 @@ func toWebResponseJSON(value interface{}, err error) *webResponseJSON {
 	}
 	if err != nil {
 		response.Msg = err.Error()
-		baseErr, baseErrOk := err.(*base2.ErrorBase)
+		baseErr, baseErrOk := err.(*base.ErrorBase)
 		if baseErrOk {
 			response.Code = baseErr.Code
 			response.Msg = baseErr.Msg
@@ -53,7 +53,7 @@ func toWebResponseJSON(value interface{}, err error) *webResponseJSON {
 	return response
 }
 
-func serverWebBindActionApi(app common2.IApplication, serverWebToken *model2.ServerWebToken, gouterGroup *gin.RouterGroup, action *model2.ActionModel) (err error) {
+func serverWebBindActionApi(app common.IApplication, serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup, action *model.ActionModel) (err error) {
 	if action.Api == nil || action.Api.Request == nil {
 		return
 	}
@@ -125,7 +125,7 @@ func serverWebBindActionApi(app common2.IApplication, serverWebToken *model2.Ser
 
 		defer func() {
 			if err == nil {
-				err = base2.PanicError(recover())
+				err = base.PanicError(recover())
 			}
 			if err != nil {
 				if app.GetLogger() != nil {
@@ -145,11 +145,11 @@ func serverWebBindActionApi(app common2.IApplication, serverWebToken *model2.Ser
 						switch v := res.(type) {
 						case io.Reader:
 							reader = v
-						case *model2.FileInfo:
+						case *model.FileInfo:
 							fileName = v.Name
 							reader, err = v.GetReader()
 						case map[string]interface{}:
-							fileInfo := &model2.FileInfo{}
+							fileInfo := &model.FileInfo{}
 							if v["name"] != nil {
 								fileInfo.Name = v["name"].(string)
 							}
@@ -213,9 +213,9 @@ func matchRequestTokenRule(path string, rule_ string) bool {
 	return false
 }
 
-func InvokeWebApi(app common2.IApplication, serverWebToken *model2.ServerWebToken, shouldValidataToken bool, c *gin.Context, action *model2.ActionModel) (res interface{}, err error) {
-	var invokeNamespace *common2.InvokeNamespace
-	invokeNamespace, err = common2.NewInvokeNamespace(app)
+func InvokeWebApi(app common.IApplication, serverWebToken *model.ServerWebToken, shouldValidataToken bool, c *gin.Context, action *model.ActionModel) (res interface{}, err error) {
+	var invokeNamespace *common.InvokeNamespace
+	invokeNamespace, err = common.NewInvokeNamespace(app)
 	if err != nil {
 		return
 	}
@@ -225,16 +225,16 @@ func InvokeWebApi(app common2.IApplication, serverWebToken *model2.ServerWebToke
 		app.GetLogger().Debug("invoke web api [", action.Api.Request, "] start")
 	}
 
-	startTime := base2.GetNowTime()
+	startTime := base.GetNowTime()
 	defer func() {
-		endTime := base2.GetNowTime()
+		endTime := base.GetNowTime()
 		if app.GetLogger() != nil && app.GetLogger().OutDebug() {
 			app.GetLogger().Debug("invoke web api [", action.Api.Request, "] end, use:", (endTime - startTime), "ms")
 		}
 	}()
 
-	if base2.IsEmpty(action.WebApiJavascript) {
-		action.WebApiJavascript, err = common2.GetWebApiJavascriptByAction(app, action, shouldValidataToken)
+	if base.IsEmpty(action.WebApiJavascript) {
+		action.WebApiJavascript, err = common.GetWebApiJavascriptByAction(app, action, shouldValidataToken)
 		if err != nil {
 			return
 		}
@@ -246,18 +246,18 @@ func InvokeWebApi(app common2.IApplication, serverWebToken *model2.ServerWebToke
 	return
 }
 
-func invokeWebApiValidateToken(app common2.IApplication, serverWebToken *model2.ServerWebToken, c *gin.Context) (res interface{}, err error) {
+func invokeWebApiValidateToken(app common.IApplication, serverWebToken *model.ServerWebToken, c *gin.Context) (res interface{}, err error) {
 	if serverWebToken.ValidateAction == "" {
-		err = base2.NewError("", "request token validata action not defind")
+		err = base.NewError("", "request token validata action not defind")
 		return
 	}
 	action := app.GetContext().GetAction(serverWebToken.ValidateAction)
 	if action == nil {
-		err = base2.NewError("", "request token validata action not defind")
+		err = base.NewError("", "request token validata action not defind")
 		return
 	}
-	var invokeNamespace *common2.InvokeNamespace
-	invokeNamespace, err = common2.NewInvokeNamespace(app)
+	var invokeNamespace *common.InvokeNamespace
+	invokeNamespace, err = common.NewInvokeNamespace(app)
 	if err != nil {
 		return
 	}
@@ -268,16 +268,16 @@ func invokeWebApiValidateToken(app common2.IApplication, serverWebToken *model2.
 		app.GetLogger().Debug("invoke web api validata token [", action.Name, "] start")
 	}
 
-	startTime := base2.GetNowTime()
+	startTime := base.GetNowTime()
 	defer func() {
-		endTime := base2.GetNowTime()
+		endTime := base.GetNowTime()
 		if app.GetLogger() != nil && app.GetLogger().OutDebug() {
 			app.GetLogger().Debug("invoke web api validata token[", action.Name, "] end, use:", (endTime - startTime), "ms")
 		}
 	}()
 
-	if base2.IsEmpty(action.WebApiJavascript) {
-		action.WebApiJavascript, err = common2.GetWebApiJavascriptByAction(app, action, false)
+	if base.IsEmpty(action.WebApiJavascript) {
+		action.WebApiJavascript, err = common.GetWebApiJavascriptByAction(app, action, false)
 		if err != nil {
 			return
 		}

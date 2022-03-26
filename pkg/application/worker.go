@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 	"teamide/pkg/application/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 )
 
 type worker struct {
@@ -28,14 +28,14 @@ func (this_ *worker) init() {
 	this_.dirAbsolutePath = filepath.ToSlash(abs)
 }
 
-func (this_ *worker) GetModelPath(modelType *model2.ModelType, name string) string {
+func (this_ *worker) GetModelPath(modelType *model.ModelType, name string) string {
 	if name == "" {
 		return this_.dirAbsolutePath + "/" + modelType.Dir + "/default.yaml"
 	}
 	return this_.dirAbsolutePath + "/" + modelType.Dir + "/" + name + ".yaml"
 }
 
-func (this_ *worker) Load() (context *model2.ModelContext, err error) {
+func (this_ *worker) Load() (context *model.ModelContext, err error) {
 
 	var exists bool
 	exists, err = base.PathExists(this_.Dir)
@@ -56,85 +56,85 @@ func (this_ *worker) Load() (context *model2.ModelContext, err error) {
 
 	sort.Strings(namePaths)
 
-	context = &model2.ModelContext{}
+	context = &model.ModelContext{}
 	for _, namePath := range namePaths {
 		if strings.HasSuffix(namePath, ".md") {
 			continue
 		}
 		text := fileContentMap[namePath]
 		if strings.Index(namePath, "struct/") == 0 {
-			var one *model2.StructModel
-			one, err = model2.TextToStructModel(strings.TrimPrefix(namePath, "struct/"), text)
+			var one *model.StructModel
+			one, err = model.TextToStructModel(strings.TrimPrefix(namePath, "struct/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendStruct(one)
 		} else if strings.Index(namePath, "action/") == 0 {
-			var one *model2.ActionModel
-			one, err = model2.TextToActionModel(strings.TrimPrefix(namePath, "action/"), text)
+			var one *model.ActionModel
+			one, err = model.TextToActionModel(strings.TrimPrefix(namePath, "action/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendAction(one)
 		} else if strings.Index(namePath, "test/") == 0 {
-			var one *model2.TestModel
-			one, err = model2.TextToTestModel(strings.TrimPrefix(namePath, "test/"), text)
+			var one *model.TestModel
+			one, err = model.TextToTestModel(strings.TrimPrefix(namePath, "test/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendTest(one)
 		} else if strings.Index(namePath, "teamide/server/web/") == 0 {
-			var one *model2.ServerWebModel
-			one, err = model2.TextToServerWebModel(strings.TrimPrefix(namePath, "teamide/server/web/"), text)
+			var one *model.ServerWebModel
+			one, err = model.TextToServerWebModel(strings.TrimPrefix(namePath, "teamide/server/web/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendServerWeb(one)
 		} else if strings.Index(namePath, "dictionary/") == 0 {
-			var one *model2.DictionaryModel
-			one, err = model2.TextToDictionaryModel(strings.TrimPrefix(namePath, "dictionary/"), text)
+			var one *model.DictionaryModel
+			one, err = model.TextToDictionaryModel(strings.TrimPrefix(namePath, "dictionary/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendDictionary(one)
 		} else if strings.Index(namePath, "constant/") == 0 {
-			var one *model2.ConstantModel
-			one, err = model2.TextToConstantModel(strings.TrimPrefix(namePath, "constant/"), text)
+			var one *model.ConstantModel
+			one, err = model.TextToConstantModel(strings.TrimPrefix(namePath, "constant/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendConstant(one)
 		} else if strings.Index(namePath, "error/") == 0 {
-			var one *model2.ErrorModel
-			one, err = model2.TextToErrorModel(strings.TrimPrefix(namePath, "error/"), text)
+			var one *model.ErrorModel
+			one, err = model.TextToErrorModel(strings.TrimPrefix(namePath, "error/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendError(one)
 		} else if strings.Index(namePath, "datasource/database/") == 0 {
-			var one *model2.DatasourceDatabase
-			one, err = model2.TextToDatasourceDatabase(strings.TrimPrefix(namePath, "datasource/database/"), text)
+			var one *model.DatasourceDatabase
+			one, err = model.TextToDatasourceDatabase(strings.TrimPrefix(namePath, "datasource/database/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendDatasourceDatabase(one)
 		} else if strings.Index(namePath, "datasource/redis/") == 0 {
-			var one *model2.DatasourceRedis
-			one, err = model2.TextToDatasourceRedis(strings.TrimPrefix(namePath, "datasource/redis/"), text)
+			var one *model.DatasourceRedis
+			one, err = model.TextToDatasourceRedis(strings.TrimPrefix(namePath, "datasource/redis/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendDatasourceRedis(one)
 		} else if strings.Index(namePath, "datasource/kafka/") == 0 {
-			var one *model2.DatasourceKafka
-			one, err = model2.TextToDatasourceKafka(strings.TrimPrefix(namePath, "datasource/kafka/"), text)
+			var one *model.DatasourceKafka
+			one, err = model.TextToDatasourceKafka(strings.TrimPrefix(namePath, "datasource/kafka/"), text)
 			if err != nil {
 				return
 			}
 			context.AppendDatasourceKafka(one)
 		} else if strings.Index(namePath, "datasource/zookeeper/") == 0 {
-			var one *model2.DatasourceZookeeper
-			one, err = model2.TextToDatasourceZookeeper(strings.TrimPrefix(namePath, "datasource/zookeeper/"), text)
+			var one *model.DatasourceZookeeper
+			one, err = model.TextToDatasourceZookeeper(strings.TrimPrefix(namePath, "datasource/zookeeper/"), text)
 			if err != nil {
 				return
 			}
@@ -144,69 +144,69 @@ func (this_ *worker) Load() (context *model2.ModelContext, err error) {
 	return
 }
 
-func (this_ *worker) Save(context *model2.ModelContext) (err error) {
+func (this_ *worker) Save(context *model.ModelContext) (err error) {
 	for _, one := range context.Constants {
-		err = this_.ModelSave(model2.MODEL_TYPE_CONSTANT, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_CONSTANT, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.Errors {
-		err = this_.ModelSave(model2.MODEL_TYPE_ERROR, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_ERROR, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.Dictionaries {
-		err = this_.ModelSave(model2.MODEL_TYPE_DICTIONARY, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_DICTIONARY, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.Structs {
-		err = this_.ModelSave(model2.MODEL_TYPE_STRUCT, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_STRUCT, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.Actions {
-		err = this_.ModelSave(model2.MODEL_TYPE_ACTION, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_ACTION, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.Tests {
-		err = this_.ModelSave(model2.MODEL_TYPE_TEST, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_TEST, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.ServerWebs {
-		err = this_.ModelSave(model2.MODEL_TYPE_SERVER_WEB, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_SERVER_WEB, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.DatasourceDatabases {
-		err = this_.ModelSave(model2.MODEL_TYPE_DATASOURCE_DATABASE, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_DATASOURCE_DATABASE, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.DatasourceRedises {
-		err = this_.ModelSave(model2.MODEL_TYPE_DATASOURCE_REDIS, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_DATASOURCE_REDIS, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.DatasourceKafkas {
-		err = this_.ModelSave(model2.MODEL_TYPE_DATASOURCE_KAFKA, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_DATASOURCE_KAFKA, one.Name, one)
 		if err != nil {
 			return
 		}
 	}
 	for _, one := range context.DatasourceZookeepers {
-		err = this_.ModelSave(model2.MODEL_TYPE_DATASOURCE_ZOOKEEPER, one.Name, one)
+		err = this_.ModelSave(model.MODEL_TYPE_DATASOURCE_ZOOKEEPER, one.Name, one)
 		if err != nil {
 			return
 		}
@@ -214,7 +214,7 @@ func (this_ *worker) Save(context *model2.ModelContext) (err error) {
 	return
 }
 
-func (this_ *worker) ModelInsert(modelType *model2.ModelType, name string) (err error) {
+func (this_ *worker) ModelInsert(modelType *model.ModelType, name string) (err error) {
 	path := this_.GetModelPath(modelType, name)
 	var exists bool
 	exists, err = base.PathExists(path)
@@ -235,7 +235,7 @@ func (this_ *worker) ModelInsert(modelType *model2.ModelType, name string) (err 
 	return
 }
 
-func (this_ *worker) ModelDelete(modelType *model2.ModelType, name string) (err error) {
+func (this_ *worker) ModelDelete(modelType *model.ModelType, name string) (err error) {
 	path := this_.GetModelPath(modelType, name)
 	var exists bool
 	exists, err = base.PathExists(path)
@@ -249,7 +249,7 @@ func (this_ *worker) ModelDelete(modelType *model2.ModelType, name string) (err 
 	return
 }
 
-func (this_ *worker) ModelRename(modelType *model2.ModelType, name string, rename string) (err error) {
+func (this_ *worker) ModelRename(modelType *model.ModelType, name string, rename string) (err error) {
 	path := this_.GetModelPath(modelType, name)
 	renamePath := this_.GetModelPath(modelType, rename)
 	var exists bool
@@ -273,40 +273,40 @@ func (this_ *worker) ModelRename(modelType *model2.ModelType, name string, renam
 	return
 }
 
-func (this_ *worker) ModelSave(modelType *model2.ModelType, name string, data interface{}) (err error) {
+func (this_ *worker) ModelSave(modelType *model.ModelType, name string, data interface{}) (err error) {
 
 	text := ""
 	if data != nil {
 		dataMap, dataMapOk := data.(map[string]interface{})
 		if dataMapOk {
-			data, err = model2.MapToModel(modelType, dataMap)
+			data, err = model.MapToModel(modelType, dataMap)
 			if err != nil {
 				return
 			}
 		}
 		switch m := data.(type) {
-		case *model2.ConstantModel:
-			text, err = model2.ConstantModelToText(m)
-		case *model2.ErrorModel:
-			text, err = model2.ErrorModelToText(m)
-		case *model2.DictionaryModel:
-			text, err = model2.DictionaryModelToText(m)
-		case *model2.StructModel:
-			text, err = model2.StructModelToText(m)
-		case *model2.ActionModel:
-			text, err = model2.ActionModelToText(m)
-		case *model2.TestModel:
-			text, err = model2.TestModelToText(m)
-		case *model2.ServerWebModel:
-			text, err = model2.ServerWebModelToText(m)
-		case *model2.DatasourceDatabase:
-			text, err = model2.DatasourceDatabaseToText(m)
-		case *model2.DatasourceRedis:
-			text, err = model2.DatasourceRedisToText(m)
-		case *model2.DatasourceKafka:
-			text, err = model2.DatasourceKafkaToText(m)
-		case *model2.DatasourceZookeeper:
-			text, err = model2.DatasourceZookeeperToText(m)
+		case *model.ConstantModel:
+			text, err = model.ConstantModelToText(m)
+		case *model.ErrorModel:
+			text, err = model.ErrorModelToText(m)
+		case *model.DictionaryModel:
+			text, err = model.DictionaryModelToText(m)
+		case *model.StructModel:
+			text, err = model.StructModelToText(m)
+		case *model.ActionModel:
+			text, err = model.ActionModelToText(m)
+		case *model.TestModel:
+			text, err = model.TestModelToText(m)
+		case *model.ServerWebModel:
+			text, err = model.ServerWebModelToText(m)
+		case *model.DatasourceDatabase:
+			text, err = model.DatasourceDatabaseToText(m)
+		case *model.DatasourceRedis:
+			text, err = model.DatasourceRedisToText(m)
+		case *model.DatasourceKafka:
+			text, err = model.DatasourceKafkaToText(m)
+		case *model.DatasourceZookeeper:
+			text, err = model.DatasourceZookeeperToText(m)
 		}
 		if err != nil {
 			return

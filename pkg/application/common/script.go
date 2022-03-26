@@ -10,7 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	base2 "teamide/pkg/application/base"
+	"teamide/pkg/application/base"
 	"teamide/pkg/application/model"
 	"time"
 
@@ -113,7 +113,7 @@ func (this_ *ScriptDefault) GetLock(key string) (res Locker, err error) { //
 
 //
 func (this_ *ScriptDefault) ThrowError(code string, msg string) (res bool, err error) { //
-	err = base2.NewError(code, msg)
+	err = base.NewError(code, msg)
 	return
 }
 func (this_ *ScriptDefault) Match(pattern string, value interface{}) (res bool) { //
@@ -177,7 +177,7 @@ func (this_ *ScriptDefault) DataToJSON(data interface{}) (res string) {
 	if data == nil {
 		return
 	}
-	res = base2.ToJSON(data)
+	res = base.ToJSON(data)
 	return
 }
 func (this_ *ScriptDefault) JSONToData(json string) (data interface{}, err error) {
@@ -185,13 +185,13 @@ func (this_ *ScriptDefault) JSONToData(json string) (data interface{}, err error
 		return
 	}
 	data = make(map[string]interface{})
-	err = base2.ToBean([]byte(json), &data)
+	err = base.ToBean([]byte(json), &data)
 	return
 }
 
 func (this_ *ScriptDefault) AesECBEncrypt(data, key string) (origData string, err error) { // AES ECB模式加密
 	var bs []byte
-	bs, err = base2.AesECBEncrypt([]byte(data), []byte(key))
+	bs, err = base.AesECBEncrypt([]byte(data), []byte(key))
 	if err != nil {
 		return
 	}
@@ -207,7 +207,7 @@ func (this_ *ScriptDefault) AesECBDecrypt(origData, key string) (data string, er
 	if err != nil {
 		return
 	}
-	bs, err = base2.AesECBDecrypt(bs, []byte(key))
+	bs, err = base.AesECBDecrypt(bs, []byte(key))
 	if err != nil {
 		return
 	}
@@ -217,7 +217,7 @@ func (this_ *ScriptDefault) AesECBDecrypt(origData, key string) (data string, er
 
 func (this_ *ScriptDefault) AesCBCEncrypt(data, key string) (origData string, err error) { // AES CBC模式加密
 	var bs []byte
-	bs, err = base2.AesCBCEncrypt([]byte(data), []byte(key))
+	bs, err = base.AesCBCEncrypt([]byte(data), []byte(key))
 	if err != nil {
 		return
 	}
@@ -232,7 +232,7 @@ func (this_ *ScriptDefault) AesCBCDecrypt(origData, key string) (data string, er
 	if err != nil {
 		return
 	}
-	bs, err = base2.AesCBCDecrypt(bs, []byte(key))
+	bs, err = base.AesCBCDecrypt(bs, []byte(key))
 	if err != nil {
 		return
 	}

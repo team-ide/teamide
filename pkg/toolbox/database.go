@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func GetDatabaseWorker() *Worker {
+func init() {
 	worker_ := &Worker{
 		Name:    "database",
 		Text:    "Database",
@@ -15,7 +15,7 @@ func GetDatabaseWorker() *Worker {
 		return databaseWork("databases", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
 	}
 
-	return worker_
+	AddWorker(worker_)
 }
 
 type DatabaseBaseRequest struct {

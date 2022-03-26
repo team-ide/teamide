@@ -56,4 +56,8 @@ Vue.component('MenuSubBox', MenuSubBox);
 
 import MenuItem from './menu/MenuItem.vue'
 Vue.component('MenuItem', MenuItem);
+
+
+import ToolboxEditor from './toolbox/Index.vue'
+Vue.component('ToolboxEditor', ToolboxEditor);
 export default {};

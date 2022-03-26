@@ -1,26 +1,26 @@
 package module_power
 
 import (
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/db"
 	"time"
 )
 
 // NewPowerUserService 根据库配置创建PowerUserService
-func NewPowerUserService(dbWorker db.DatabaseWorker) (res *PowerUserService) {
+func NewPowerUserService(ServerContext *context.ServerContext) (res *PowerUserService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
 	res = &PowerUserService{
-		dbWorker:  dbWorker,
-		idService: idService,
+		ServerContext: ServerContext,
+		idService:     idService,
 	}
 	return
 }
 
 // PowerUserService 权限角色服务
 type PowerUserService struct {
-	dbWorker  db.DatabaseWorker
+	*context.ServerContext
 	idService *module_id.IDService
 }
 
@@ -39,7 +39,7 @@ func (this_ *PowerUserService) Insert(powerUser *PowerUserModel) (rowsAffected i
 
 	sql := `INSERT INTO ` + TablePowerUser + `(powerUserId, userId, createTime) VALUES (?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{powerUser.PowerUserId, powerUser.UserId, time.Now()})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{powerUser.PowerUserId, powerUser.UserId, time.Now()})
 	if err != nil {
 		return
 	}

@@ -3,26 +3,26 @@ package module_login
 import (
 	"errors"
 	"fmt"
+	"teamide/internal/context"
 	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_lock"
 	"teamide/internal/module/module_user"
-	"teamide/pkg/db"
 	"time"
 )
 
 // NewLoginService 根据库配置创建LoginService
-func NewLoginService(dbWorker db.DatabaseWorker) (res *LoginService) {
+func NewLoginService(ServerContext *context.ServerContext) (res *LoginService) {
 
-	idService := module_id.NewIDService(dbWorker)
+	idService := module_id.NewIDService(ServerContext)
 
-	userService := module_user.NewUserService(dbWorker)
+	userService := module_user.NewUserService(ServerContext)
 
-	userPasswordService := module_user.NewUserPasswordService(dbWorker)
+	userPasswordService := module_user.NewUserPasswordService(ServerContext)
 
-	userAuthService := module_user.NewUserAuthService(dbWorker)
+	userAuthService := module_user.NewUserAuthService(ServerContext)
 
 	res = &LoginService{
-		dbWorker:            dbWorker,
+		ServerContext:       ServerContext,
 		idService:           idService,
 		userService:         userService,
 		userPasswordService: userPasswordService,
@@ -33,7 +33,7 @@ func NewLoginService(dbWorker db.DatabaseWorker) (res *LoginService) {
 
 // LoginService 注册服务
 type LoginService struct {
-	dbWorker            db.DatabaseWorker
+	*context.ServerContext
 	idService           *module_id.IDService
 	userService         *module_user.UserService
 	userPasswordService *module_user.UserPasswordService
@@ -94,7 +94,7 @@ func (this_ *LoginService) insert(login *LoginModel) (rowsAffected int64, err er
 
 	sql := `INSERT INTO ` + TableLogin + `(loginId, account, ip, sourceType, source, userId, loginTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
 
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{login.LoginId, login.Account, login.Ip, login.SourceType, login.Source, login.UserId, login.LoginTime, login.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{login.LoginId, login.Account, login.Ip, login.SourceType, login.Source, login.UserId, login.LoginTime, login.CreateTime})
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func (this_ *LoginService) insert(login *LoginModel) (rowsAffected int64, err er
 func (this_ *LoginService) Logout(loginId int64) (rowsAffected int64, err error) {
 
 	sql := `UPDATE ` + TableLogin + ` SET logoutTime=?,updateTime=? WHERE loginId=? `
-	rowsAffected, err = this_.dbWorker.Exec(sql, []interface{}{time.Now(), time.Now(), loginId})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{time.Now(), time.Now(), loginId})
 	if err != nil {
 		return
 	}

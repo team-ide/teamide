@@ -4,8 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"regexp"
 	"strings"
-	base2 "teamide/internal/server/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/internal/base"
+	"teamide/pkg/application/model"
+	"teamide/pkg/toolbox"
 )
 
 type DataRequest struct {
@@ -14,21 +15,22 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url           string                 `json:"url,omitempty"`
-	Api           string                 `json:"api,omitempty"`
-	IsStandAlone  bool                   `json:"isStandAlone,omitempty"`
-	ColumnTypes   []*model2.ColumnType   `json:"columnTypes,omitempty"`
-	DataTypes     []*model2.DataType     `json:"dataTypes,omitempty"`
-	IndexTypes    []*model2.IndexType    `json:"indexTypes,omitempty"`
-	ModelTypes    []*model2.ModelType    `json:"modelTypes,omitempty"`
-	DataPlaces    []*model2.DataPlace    `json:"dataPlaces,omitempty"`
-	DatabaseTypes []*model2.DatabaseType `json:"databaseTypes,omitempty"`
+	Url           string                `json:"url,omitempty"`
+	Api           string                `json:"api,omitempty"`
+	IsStandAlone  bool                  `json:"isStandAlone,omitempty"`
+	ColumnTypes   []*model.ColumnType   `json:"columnTypes,omitempty"`
+	DataTypes     []*model.DataType     `json:"dataTypes,omitempty"`
+	IndexTypes    []*model.IndexType    `json:"indexTypes,omitempty"`
+	ModelTypes    []*model.ModelType    `json:"modelTypes,omitempty"`
+	DataPlaces    []*model.DataPlace    `json:"dataPlaces,omitempty"`
+	DatabaseTypes []*model.DatabaseType `json:"databaseTypes,omitempty"`
+	ToolboxTypes  []*toolbox.Worker     `json:"toolboxTypes,omitempty"`
 }
 
-func apiData(requestBean *base2.RequestBean, c *gin.Context) (res interface{}, err error) {
+func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	path := requestBean.Path[0:strings.LastIndex(requestBean.Path, "api/")]
 	request := &DataRequest{}
-	if !base2.RequestJSON(request, c) {
+	if !base.RequestJSON(request, c) {
 		return
 	}
 	response := &DataResponse{}
@@ -47,13 +49,14 @@ func apiData(requestBean *base2.RequestBean, c *gin.Context) (res interface{}, e
 
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
-	response.IsStandAlone = base2.IsStandAlone
-	response.ColumnTypes = model2.COLUMN_TYPES
-	response.DataTypes = model2.DATA_TYPES
-	response.ModelTypes = model2.MODEL_TYPES
-	response.IndexTypes = model2.INDEX_TYPES
-	response.DataPlaces = model2.DATA_PLACES
-	response.DatabaseTypes = model2.DATABASE_TYPES
+	response.IsStandAlone = base.IsStandAlone
+	response.ColumnTypes = model.COLUMN_TYPES
+	response.DataTypes = model.DATA_TYPES
+	response.ModelTypes = model.MODEL_TYPES
+	response.IndexTypes = model.INDEX_TYPES
+	response.DataPlaces = model.DATA_PLACES
+	response.DatabaseTypes = model.DATABASE_TYPES
+	response.ToolboxTypes = toolbox.GetWorkers()
 
 	res = response
 	return

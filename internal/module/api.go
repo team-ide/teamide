@@ -4,84 +4,118 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"strings"
+	"teamide/internal/base"
+	"teamide/internal/config"
+	"teamide/internal/context"
+	"teamide/internal/module/module_application"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_register"
+	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
-	base2 "teamide/internal/server/base"
-	"teamide/internal/server/component"
-	"teamide/pkg/db"
 )
 
-func CacheApi(dbWorker db.DatabaseWorker) (api *Api) {
+func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
-	api = NewApi(dbWorker)
-	api.bindApi()
+	api = &Api{
+		ServerContext:      ServerContext,
+		userService:        module_user.NewUserService(ServerContext),
+		registerService:    module_register.NewRegisterService(ServerContext),
+		loginService:       module_login.NewLoginService(ServerContext),
+		installService:     NewInstallService(ServerContext),
+		applicationService: module_application.NewApplicationService(ServerContext),
+		toolboxService:     module_toolbox.NewToolboxService(ServerContext),
+
+		apiCache: make(map[string]*base.ApiWorker),
+	}
+	var apis []*base.ApiWorker
+	apis, err = api.GetApis()
+	if err != nil {
+		return
+	}
+	for _, one := range apis {
+		err = api.appendApi(one)
+		if err != nil {
+			return
+		}
+	}
 
 	var apiPowerMap = make(map[string]bool)
 	for _, api := range api.apiCache {
 		apiPowerMap[api.Power.Action] = true
 	}
-	ps := base2.GetPowers()
+	ps := base.GetPowers()
 	for _, one := range ps {
-		if base2.IsStandAlone {
-			if !one.AllowNative {
+		if base.IsStandAlone {
+			if !one.StandAlone {
 				continue
 			}
 		}
 		_, ok := apiPowerMap[one.Action]
 		if !ok {
-			component.Logger.Warn(component.LogStr("权限[", one.Action, "]未配置动作"))
+			ServerContext.Logger.Warn("权限[" + one.Action + "]未配置动作")
 		}
 	}
-	return
-}
 
-// NewApi 根据库配置创建IDService
-func NewApi(dbWorker db.DatabaseWorker) (res *Api) {
-	res = &Api{
-		dbWorker:        dbWorker,
-		userService:     module_user.NewUserService(dbWorker),
-		registerService: module_register.NewRegisterService(dbWorker),
-		loginService:    module_login.NewLoginService(dbWorker),
-		apiCache:        make(map[string]*base2.ApiWorker),
+	err = api.installService.Install()
+	if err != nil {
+		return
+	}
+	// 如果是单机 初始化一些用户
+	if base.IsStandAlone {
+		err = api.InitStandAlone()
+		if err != nil {
+			return
+		}
 	}
 	return
 }
 
 // Api ID服务
 type Api struct {
-	dbWorker        db.DatabaseWorker
-	userService     *module_user.UserService
-	registerService *module_register.RegisterService
-	loginService    *module_login.LoginService
-	apiCache        map[string]*base2.ApiWorker
+	config.ServerConfig
+	zap.Logger
+	*context.ServerContext
+	applicationService *module_application.ApplicationService
+	toolboxService     *module_toolbox.ToolboxService
+	userService        *module_user.UserService
+	registerService    *module_register.RegisterService
+	loginService       *module_login.LoginService
+	installService     *InstallService
+	apiCache           map[string]*base.ApiWorker
 }
 
-func (this_ *Api) bindApi() {
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"", "/", "data"}, Power: base2.PowerData, Do: apiData})
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"login"}, Power: base2.PowerLogin, Do: this_.apiLogin})
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"autoLogin"}, Power: base2.PowerAutoLogin, Do: this_.apiLogin})
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"logout"}, Power: base2.PowerLogout, Do: this_.apiLogout})
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"register"}, Power: base2.PowerRegister, Do: this_.apiRegister})
-	this_.appendApi(&base2.ApiWorker{Apis: []string{"session"}, Power: base2.PowerSession, Do: this_.apiSession})
+func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
+	apis = append(apis, &base.ApiWorker{Apis: []string{"", "/", "data"}, Power: base.PowerData, Do: apiData})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"login"}, Power: base.PowerLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"autoLogin"}, Power: base.PowerAutoLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: base.PowerLogout, Do: this_.apiLogout})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"register"}, Power: base.PowerRegister, Do: this_.apiRegister})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: base.PowerSession, Do: this_.apiSession})
 
+	apis = append(apis, module_application.NewApplicationApi(this_.applicationService).GetApis()...)
+	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
+
+	return
 }
 
-func (this_ *Api) appendApi(apis ...*base2.ApiWorker) {
+func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 	if len(apis) == 0 {
 		return
 	}
 	for _, api := range apis {
 		if api.Power == nil {
-			panic(errors.New(fmt.Sprint("API未设置权限!", api)))
+			err = errors.New(fmt.Sprint("API未设置权限!", api))
+			return
 		}
 		if len(api.Apis) == 0 {
-			panic(errors.New(fmt.Sprint("API未设置映射路径!", api)))
+			err = errors.New(fmt.Sprint("API未设置映射路径!", api))
+			return
 		}
 
-		if base2.IsStandAlone {
-			if !api.Power.AllowNative {
+		if base.IsStandAlone {
+			if !api.Power.StandAlone {
 				continue
 			}
 		}
@@ -89,18 +123,19 @@ func (this_ *Api) appendApi(apis ...*base2.ApiWorker) {
 
 			_, find := this_.apiCache[apiName]
 			if find {
-				panic(errors.New(fmt.Sprint("API映射路径[", apiName, "]已存在!", api)))
+				err = errors.New(fmt.Sprint("API映射路径[", apiName, "]已存在!", api))
+				return
 			}
 			// println("add api path :" + apiName + ",action:" + api.Power.Action)
 			this_.apiCache[apiName] = api
 		}
 	}
+	return
 }
 
-func (this_ *Api) getRequestBean(c *gin.Context) (request *base2.RequestBean) {
-	request = &base2.RequestBean{}
-	JWT := this_.getJWT(c)
-	request.JWT = JWT
+func (this_ *Api) getRequestBean(c *gin.Context) (request *base.RequestBean) {
+	request = &base.RequestBean{}
+	request.JWT = this_.getJWT(c)
 	return
 }
 
@@ -123,7 +158,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	}
 	if api.Do != nil {
 		res, err := api.Do(requestBean, c)
-		base2.ResponseJSON(res, err, c)
+		base.ResponseJSON(res, err, c)
 	}
 	if api.DoOther != nil {
 		api.DoOther(requestBean, c)

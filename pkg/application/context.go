@@ -2,16 +2,16 @@ package application
 
 import (
 	"encoding/json"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/model"
 )
 
-func GetContextByText(text string) (context *model2.ModelContext, err error) {
+func GetContextByText(text string) (context *model.ModelContext, err error) {
 	var contextMap map[string]interface{}
 	err = json.Unmarshal([]byte(text), &contextMap)
 	if err != nil {
 		return
 	}
-	context = &model2.ModelContext{}
+	context = &model.ModelContext{}
 	if contextMap["actions"] != nil {
 		list, listOk := contextMap["actions"].([]interface{})
 		if listOk {
@@ -20,8 +20,8 @@ func GetContextByText(text string) (context *model2.ModelContext, err error) {
 				if !oneMapOk {
 					continue
 				}
-				var oneModel *model2.ActionModel
-				oneModel, err = model2.MapToActionModel(oneMap)
+				var oneModel *model.ActionModel
+				oneModel, err = model.MapToActionModel(oneMap)
 				if err != nil {
 					return
 				}
@@ -39,8 +39,8 @@ func GetContextByText(text string) (context *model2.ModelContext, err error) {
 				if !oneMapOk {
 					continue
 				}
-				var oneModel *model2.TestModel
-				oneModel, err = model2.MapToTestModel(oneMap)
+				var oneModel *model.TestModel
+				oneModel, err = model.MapToTestModel(oneMap)
 				if err != nil {
 					return
 				}
@@ -62,7 +62,7 @@ func GetContextByText(text string) (context *model2.ModelContext, err error) {
 	return
 }
 
-func GetTextByContext(context *model2.ModelContext) (text string, err error) {
+func GetTextByContext(context *model.ModelContext) (text string, err error) {
 	var bs []byte
 	bs, err = json.Marshal(context)
 	if err != nil {

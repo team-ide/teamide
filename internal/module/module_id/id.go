@@ -1,23 +1,23 @@
 package module_id
 
 import (
+	"teamide/internal/context"
 	"teamide/internal/module/module_lock"
-	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
 )
 
 // NewIDService 根据库配置创建IDService
-func NewIDService(dbWorker db.DatabaseWorker) (res *IDService) {
+func NewIDService(ServerContext *context.ServerContext) (res *IDService) {
 	res = &IDService{
-		dbWorker: dbWorker,
+		ServerContext: ServerContext,
 	}
 	return
 }
 
 // IDService ID服务
 type IDService struct {
-	dbWorker db.DatabaseWorker
+	*context.ServerContext
 }
 
 // GetNextID 根据类型获取一个ID
@@ -61,7 +61,7 @@ func (this_ *IDService) GetNextIDs(idType IDType, size int64) (ids []int64, err 
 func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 
 	sql := `SELECT value FROM ` + TableID + ` WHERE idType=? `
-	list, err := this_.dbWorker.Query(sql, []interface{}{idType}, util.GetStructFieldTypes(IDModel{}))
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{idType}, util.GetStructFieldTypes(IDModel{}))
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 		id = 0
 
 		sql = `INSERT INTO ` + TableID + ` (idType, value, createTime) VALUES(?, ?, ?)`
-		_, err = this_.dbWorker.Exec(sql, []interface{}{idType, id, time.Now()})
+		_, err = this_.DatabaseWorker.Exec(sql, []interface{}{idType, id, time.Now()})
 		if err != nil {
 			return
 		}
@@ -85,7 +85,7 @@ func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 func (this_ *IDService) updateID(idType IDType, id int64) (err error) {
 
 	sql := `UPDATE ` + TableID + ` SET value=?,updateTime=? WHERE idType=?`
-	_, err = this_.dbWorker.Exec(sql, []interface{}{id, time.Now(), idType})
+	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{id, time.Now(), idType})
 	if err != nil {
 		return
 	}

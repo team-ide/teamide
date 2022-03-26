@@ -6,28 +6,39 @@ import (
 )
 
 type Worker struct {
-	Name    string
-	Text    string
-	Icon    string
-	Comment string
-	WorkMap map[string]func(map[string]interface{}) (map[string]interface{}, error)
+	Name    string                                                                  `json:"name,omitempty"`
+	Text    string                                                                  `json:"text,omitempty"`
+	Icon    string                                                                  `json:"icon,omitempty"`
+	Comment string                                                                  `json:"comment,omitempty"`
+	WorkMap map[string]func(map[string]interface{}) (map[string]interface{}, error) `json:"-"`
 }
 
 var (
-	WorkerCache  map[string]*Worker
-	serviceCache map[string]Service
+	workers      *[]*Worker         = &[]*Worker{}
+	serviceCache map[string]Service = map[string]Service{}
 	lock         sync.Mutex
 )
 
 func init() {
-	WorkerCache = map[string]*Worker{}
-	serviceCache = map[string]Service{}
 	go startServiceTimer()
 }
 
 func AddWorker(worker *Worker) {
-	name := worker.Name
-	WorkerCache[name] = worker
+	*workers = append(*workers, worker)
+}
+
+func GetWorkers() (res []*Worker) {
+	res = *workers
+	return
+}
+
+func GetWorker(name string) (res *Worker) {
+	for _, one := range *workers {
+		if one.Name == name {
+			res = one
+		}
+	}
+	return
 }
 
 func GetService(key string, create func() (Service, error)) (Service, error) {

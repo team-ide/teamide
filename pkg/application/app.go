@@ -7,14 +7,14 @@ import (
 	"strings"
 	"sync"
 	"teamide/pkg/application/base"
-	common2 "teamide/pkg/application/common"
-	invoke2 "teamide/pkg/application/invoke"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/common"
+	"teamide/pkg/application/invoke"
+	"teamide/pkg/application/model"
 
 	"github.com/gin-gonic/gin"
 )
 
-func NewApplication(context *model2.ModelContext, options ...interface{}) common2.IApplication {
+func NewApplication(context *model.ModelContext, options ...interface{}) common.IApplication {
 	if context == nil {
 		return nil
 	}
@@ -22,8 +22,8 @@ func NewApplication(context *model2.ModelContext, options ...interface{}) common
 	res := &Application{
 		context: context,
 	}
-	res.initLoggerOption(&common2.LoggerDefault{OutDebug_: true, OutInfo_: true})
-	res.initScriptOption(&common2.ScriptDefault{})
+	res.initLoggerOption(&common.LoggerDefault{OutDebug_: true, OutInfo_: true})
+	res.initScriptOption(&common.ScriptDefault{})
 
 	if len(options) > 0 {
 		for _, option := range options {
@@ -35,33 +35,33 @@ func NewApplication(context *model2.ModelContext, options ...interface{}) common
 }
 
 type Application struct {
-	context                 *model2.ModelContext
-	script                  common2.IScript
-	javascriptExecutor      common2.IJavascriptExecutor
+	context                 *model.ModelContext
+	script                  common.IScript
+	javascriptExecutor      common.IJavascriptExecutor
 	scriptCache             map[string]reflect.Method
-	logger                  common2.ILogger
+	logger                  common.ILogger
 	sqlExecutorCacheMutex   sync.Mutex
-	sqlExecutorCache        map[string]common2.ISqlExecutor
+	sqlExecutorCache        map[string]common.ISqlExecutor
 	redisExecutorCacheMutex sync.Mutex
-	redisExecutorCache      map[string]common2.IRedisExecutor
+	redisExecutorCache      map[string]common.IRedisExecutor
 }
 
 func (this_ *Application) initOption(option interface{}) *Application {
 	if option == nil {
 		return this_
 	}
-	logger, loggerOk := option.(common2.ILogger)
+	logger, loggerOk := option.(common.ILogger)
 	if loggerOk {
 		this_.initLoggerOption(logger)
 	}
-	script, scriptOk := option.(common2.IScript)
+	script, scriptOk := option.(common.IScript)
 	if scriptOk {
 		this_.initScriptOption(script)
 	}
 	return this_
 }
 
-func (this_ *Application) initLoggerOption(option common2.ILogger) *Application {
+func (this_ *Application) initLoggerOption(option common.ILogger) *Application {
 	if option == nil {
 		return this_
 	}
@@ -69,7 +69,7 @@ func (this_ *Application) initLoggerOption(option common2.ILogger) *Application 
 	return this_
 }
 
-func (this_ *Application) initScriptOption(option common2.IScript) *Application {
+func (this_ *Application) initScriptOption(option common.IScript) *Application {
 	if option == nil {
 		return this_
 	}
@@ -88,18 +88,18 @@ func (this_ *Application) initScriptOption(option common2.IScript) *Application 
 	return this_
 }
 
-func (this_ *Application) GetContext() *model2.ModelContext {
+func (this_ *Application) GetContext() *model.ModelContext {
 	return this_.context
 }
 
-func (this_ *Application) GetLogger() common2.ILogger {
+func (this_ *Application) GetLogger() common.ILogger {
 	return this_.logger
 }
 
-func (this_ *Application) GetScript() common2.IScript {
+func (this_ *Application) GetScript() common.IScript {
 	return this_.script
 }
-func (this_ *Application) GetJavascriptExecutor() common2.IJavascriptExecutor {
+func (this_ *Application) GetJavascriptExecutor() common.IJavascriptExecutor {
 	return this_.javascriptExecutor
 }
 
@@ -113,7 +113,7 @@ func (this_ *Application) GetScriptMethod(name string) reflect.Method {
 	return method
 }
 
-func (this_ *Application) GetSqlExecutor(name string) (executor common2.ISqlExecutor, err error) {
+func (this_ *Application) GetSqlExecutor(name string) (executor common.ISqlExecutor, err error) {
 	datasource := this_.context.GetDatasourceDatabase(name)
 	if datasource == nil {
 		err = errors.New(fmt.Sprint("database datasource [", name, "] is not defind"))
@@ -123,12 +123,12 @@ func (this_ *Application) GetSqlExecutor(name string) (executor common2.ISqlExec
 	this_.sqlExecutorCacheMutex.Lock()
 	defer this_.sqlExecutorCacheMutex.Unlock()
 	if this_.sqlExecutorCache == nil {
-		this_.sqlExecutorCache = make(map[string]common2.ISqlExecutor)
+		this_.sqlExecutorCache = make(map[string]common.ISqlExecutor)
 	}
 	executor = this_.sqlExecutorCache[key]
 
 	if executor == nil {
-		executor, err = common2.CreateSqlExecutor(datasource)
+		executor, err = common.CreateSqlExecutor(datasource)
 		if err != nil {
 			return
 		}
@@ -137,7 +137,7 @@ func (this_ *Application) GetSqlExecutor(name string) (executor common2.ISqlExec
 	return
 }
 
-func (this_ *Application) GetRedisExecutor(name string) (executor common2.IRedisExecutor, err error) {
+func (this_ *Application) GetRedisExecutor(name string) (executor common.IRedisExecutor, err error) {
 	datasource := this_.context.GetDatasourceRedis(name)
 	if datasource == nil {
 		err = errors.New(fmt.Sprint("redis datasource [", name, "] is not defind"))
@@ -147,12 +147,12 @@ func (this_ *Application) GetRedisExecutor(name string) (executor common2.IRedis
 	this_.redisExecutorCacheMutex.Lock()
 	defer this_.redisExecutorCacheMutex.Unlock()
 	if this_.redisExecutorCache == nil {
-		this_.redisExecutorCache = make(map[string]common2.IRedisExecutor)
+		this_.redisExecutorCache = make(map[string]common.IRedisExecutor)
 	}
 	executor = this_.redisExecutorCache[key]
 
 	if executor == nil {
-		executor, err = common2.CreateRedisExecutor(datasource)
+		executor, err = common.CreateRedisExecutor(datasource)
 		if err != nil {
 			return
 		}
@@ -161,7 +161,7 @@ func (this_ *Application) GetRedisExecutor(name string) (executor common2.IRedis
 	return
 }
 
-func (this_ *Application) GetKafkaExecutor(name string) (executor common2.IKafkaExecutor, err error) {
+func (this_ *Application) GetKafkaExecutor(name string) (executor common.IKafkaExecutor, err error) {
 	datasource := this_.context.GetDatasourceKafka(name)
 	if datasource == nil {
 		err = errors.New(fmt.Sprint("kafka datasource [", name, "] is not defind"))
@@ -170,7 +170,7 @@ func (this_ *Application) GetKafkaExecutor(name string) (executor common2.IKafka
 	return
 }
 
-func (this_ *Application) GetZookeeperExecutor(name string) (executor common2.IZookeeperExecutor, err error) {
+func (this_ *Application) GetZookeeperExecutor(name string) (executor common.IZookeeperExecutor, err error) {
 	datasource := this_.context.GetDatasourceZookeeper(name)
 	if datasource == nil {
 		err = errors.New(fmt.Sprint("zookeeper datasource [", name, "] is not defind"))
@@ -179,7 +179,7 @@ func (this_ *Application) GetZookeeperExecutor(name string) (executor common2.IZ
 	return
 }
 
-func (this_ *Application) InvokeActionByName(name string, invokeNamespace *common2.InvokeNamespace) (res interface{}, err error) {
+func (this_ *Application) InvokeActionByName(name string, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
 	action := this_.context.GetAction(name)
 	if action == nil {
 		err = base.NewErrorActionIsNull("invoke action model [", name, "] is null")
@@ -188,19 +188,19 @@ func (this_ *Application) InvokeActionByName(name string, invokeNamespace *commo
 	res, err = this_.InvokeAction(action, invokeNamespace)
 	return
 }
-func (this_ *Application) InvokeAction(action *model2.ActionModel, invokeNamespace *common2.InvokeNamespace) (res interface{}, err error) {
+func (this_ *Application) InvokeAction(action *model.ActionModel, invokeNamespace *common.InvokeNamespace) (res interface{}, err error) {
 	if invokeNamespace == nil {
 		err = base.NewErrorVariableIsNull("invoke action ", action.Name, " invokeNamespace is null")
 		return
 	}
-	res, err = invoke2.InvokeAction(this_, invokeNamespace, action)
+	res, err = invoke.InvokeAction(this_, invokeNamespace, action)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Application) InvokeTestByName(name string) (res *common2.TestResult, err error) {
+func (this_ *Application) InvokeTestByName(name string) (res *common.TestResult, err error) {
 	test := this_.context.GetTest(name)
 	if test == nil {
 		err = base.NewErrorActionIsNull("test model [", name, "] is null")
@@ -210,8 +210,8 @@ func (this_ *Application) InvokeTestByName(name string) (res *common2.TestResult
 	return
 }
 
-func (this_ *Application) InvokeTest(test *model2.TestModel) (res *common2.TestResult, err error) {
-	res, err = invoke2.InvokeTest(this_, test)
+func (this_ *Application) InvokeTest(test *model.TestModel) (res *common.TestResult, err error) {
+	res, err = invoke.InvokeTest(this_, test)
 	if err != nil {
 		return
 	}
@@ -231,9 +231,9 @@ func (this_ *Application) StartServers() (err error) {
 	return
 }
 
-func (this_ *Application) StartServerWeb(server *model2.ServerWebModel) (err error) {
+func (this_ *Application) StartServerWeb(server *model.ServerWebModel) (err error) {
 
-	err = invoke2.StartServerWeb(this_, server)
+	err = invoke.StartServerWeb(this_, server)
 
 	if err != nil {
 		return
@@ -242,9 +242,9 @@ func (this_ *Application) StartServerWeb(server *model2.ServerWebModel) (err err
 	return
 }
 
-func (this_ *Application) BindServerWebApis(serverWebToken *model2.ServerWebToken, gouterGroup *gin.RouterGroup) (err error) {
+func (this_ *Application) BindServerWebApis(serverWebToken *model.ServerWebToken, gouterGroup *gin.RouterGroup) (err error) {
 
-	err = invoke2.ServerWebBindApis(this_, serverWebToken, gouterGroup)
+	err = invoke.ServerWebBindApis(this_, serverWebToken, gouterGroup)
 	if err != nil {
 		return
 	}

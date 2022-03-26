@@ -1,6 +1,7 @@
 import http from '@/server/http';
 
 import application from "./application.js";
+import toolbox from "./toolbox.js";
 let server = {
     data(param) {
         param = param || {};
@@ -21,6 +22,7 @@ let server = {
         return http.post('api/register', param,);
     },
     application,
+    toolbox,
 };
 
 export default server;

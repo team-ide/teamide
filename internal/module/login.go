@@ -4,19 +4,18 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"os/user"
+	"teamide/internal/base"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_user"
-	base2 "teamide/internal/server/base"
-	component2 "teamide/internal/server/component"
 	"teamide/pkg/util"
 )
 
 var (
-	SystemUser_Uid      string // 用户的 ID
-	SystemUser_Gid      string // 用户所属组的 ID，如果属于多个组，那么此 ID 为主组的 ID
-	SystemUser_Username string // 用户名
-	SystemUser_Name     string // 属组名称，如果属于多个组，那么此名称为主组的名称
-	SystemUser_HomeDir  string // 用户的宿主目录
+	SystemUserUid      string // 用户的 ID
+	SystemUserGid      string // 用户所属组的 ID，如果属于多个组，那么此 ID 为主组的 ID
+	SystemUserUsername string // 用户名
+	SystemUserName     string // 属组名称，如果属于多个组，那么此名称为主组的名称
+	SystemUserHomeDir  string // 用户的宿主目录
 )
 
 func init() {
@@ -24,11 +23,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	SystemUser_Username = u.Username
-	SystemUser_Name = u.Name
-	SystemUser_HomeDir = u.HomeDir
-	SystemUser_Gid = u.Gid
-	SystemUser_Uid = u.Uid
+	SystemUserUsername = u.Username
+	SystemUserName = u.Name
+	SystemUserHomeDir = u.HomeDir
+	SystemUserGid = u.Gid
+	SystemUserUid = u.Uid
 }
 
 type LoginRequest struct {
@@ -36,23 +35,23 @@ type LoginRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (this_ *Api) apiLogin(request *base2.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	loginRequest := &LoginRequest{}
-	base2.RequestJSON(loginRequest, c)
+	base.RequestJSON(loginRequest, c)
 	if loginRequest.Account == "" {
-		err = base2.NewValidateError("登录账号不能为空!")
+		err = base.NewValidateError("登录账号不能为空!")
 		return
 	}
 	if loginRequest.Password == "" {
-		err = base2.NewValidateError("登录密码不能为空!")
+		err = base.NewValidateError("登录密码不能为空!")
 		return
 	}
-	pwd, err := util.AesDecryptCBCByKey(loginRequest.Password, component2.HttpAesKey)
+	pwd, err := util.AesDecryptCBCByKey(loginRequest.Password, this_.HttpAesKey)
 	if err != nil {
 		return
 	}
 	if pwd == "" {
-		err = base2.NewValidateError("用户名或密码错误!")
+		err = base.NewValidateError("用户名或密码错误!")
 		return
 	}
 
@@ -67,7 +66,7 @@ func (this_ *Api) apiLogin(request *base2.RequestBean, c *gin.Context) (res inte
 		return
 	}
 	if user == nil {
-		err = base2.NewValidateError("用户名或密码错误!")
+		err = base.NewValidateError("用户名或密码错误!")
 		return
 	}
 
@@ -75,25 +74,25 @@ func (this_ *Api) apiLogin(request *base2.RequestBean, c *gin.Context) (res inte
 	return
 }
 
-func (this_ *Api) apiLogout(request *base2.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *Api) apiLogout(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	return
 }
 
 const (
-	JWT_key = "JWT"
+	JwtKey = "JWT"
 )
 
-func (this_ *Api) getJWT(c *gin.Context) *base2.JWTBean {
-	jwt := c.GetHeader(JWT_key)
+func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
+	jwt := c.GetHeader(JwtKey)
 	if jwt == "" {
 		return nil
 	}
-	jwt = component2.RSADecrypt(jwt)
+	jwt = this_.Decryption.Decrypt(jwt)
 	if jwt == "" {
 		return nil
 	}
-	res := &base2.JWTBean{}
+	res := &base.JWTBean{}
 	json.Unmarshal([]byte(jwt), res)
 	if res.Time == 0 {
 		return nil
@@ -109,14 +108,14 @@ func (this_ *Api) getJWTStr(user *module_user.UserModel) string {
 	if user == nil {
 		return ""
 	}
-	jwt := &base2.JWTBean{
+	jwt := &base.JWTBean{
 		Sign:   util.GenerateUUID(),
 		UserId: user.UserId,
 		Name:   user.Name,
 		Time:   util.GetNowTime(),
 	}
 	jwtStr := util.ToJSON(jwt)
-	jwtStr = component2.RSAEncrypt(jwtStr)
+	jwtStr = this_.Decryption.Encrypt(jwtStr)
 	if jwtStr == "" {
 		return ""
 	}
@@ -129,40 +128,35 @@ type SessionResponse struct {
 	JWT    string                 `json:"JWT,omitempty"`
 }
 
-func (this_ *Api) apiSession(request *base2.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *Api) getStandAloneUserId() (userId int64) {
+	userId = 1
+	return
+}
+
+func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	response := &SessionResponse{}
 
-	if base2.IsStandAlone {
-		response.User = &module_user.UserModel{
-			UserId: 1,
-			Name:   SystemUser_Username,
-		}
-		response.Powers = []string{}
-		ps := base2.GetPowers()
-		for _, power := range ps {
-			if power.AllowNative {
-				response.Powers = append(response.Powers, power.Action)
-			}
-		}
+	var userId int64
+	if request.JWT != nil {
+		userId = request.JWT.UserId
 	} else {
-		var userId int64 = 0
-		if request.JWT != nil {
-			userId = request.JWT.UserId
+		if base.IsStandAlone {
+			userId = this_.getStandAloneUserId()
 		}
-		if userId > 0 {
-			var user *module_user.UserModel
-			user, err = this_.userService.Get(request.JWT.UserId)
-			if err != nil {
-				return
-			}
-			response.User = user
-		}
-		response.Powers = this_.getPowersByUserId(userId)
 	}
+	if userId > 0 {
+		var user *module_user.UserModel
+		user, err = this_.userService.Get(userId)
+		if err != nil {
+			return
+		}
+		response.User = user
+	}
+	response.Powers = this_.getPowersByUserId(userId)
 	response.JWT = this_.getJWTStr(response.User)
 
 	json := util.ToJSON(response)
-	res, err = util.AesEncryptCBCByKey(json, component2.HttpAesKey)
+	res, err = util.AesEncryptCBCByKey(json, this_.HttpAesKey)
 	if err != nil {
 		return
 	}

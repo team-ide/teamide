@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-func GetZKWorker() *Worker {
+func init() {
 	worker_ := &Worker{
 		Name:    "zookeeper",
 		Text:    "Zookeeper",
@@ -23,7 +23,7 @@ func GetZKWorker() *Worker {
 		return zkWork("delete", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
 	}
 
-	return worker_
+	AddWorker(worker_)
 }
 
 type ZookeeperBaseRequest struct {

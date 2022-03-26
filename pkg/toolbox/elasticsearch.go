@@ -2,7 +2,7 @@ package toolbox
 
 import "encoding/json"
 
-func GetESWorker() *Worker {
+func init() {
 	worker_ := &Worker{
 		Name:    "elasticsearch",
 		Text:    "Elasticsearch",
@@ -30,7 +30,7 @@ func GetESWorker() *Worker {
 		return esWork("scroll", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
 	}
 
-	return worker_
+	AddWorker(worker_)
 }
 
 type ElasticsearchBaseRequest struct {

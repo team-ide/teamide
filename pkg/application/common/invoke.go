@@ -5,8 +5,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	base2 "teamide/pkg/application/base"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/base"
+	"teamide/pkg/application/model"
 
 	"github.com/gin-gonic/gin"
 	clone "github.com/huandu/go-clone"
@@ -20,7 +20,7 @@ type InvokeNamespace struct {
 	TempMap        map[string]*InvokeData `json:"tempMap,omitempty"`
 	RequestContext *gin.Context           `json:"-"`
 	RequestBody    interface{}            `json:"requestBody,omitempty"`
-	ServerWebToken *model2.ServerWebToken `json:"-"`
+	ServerWebToken *model.ServerWebToken  `json:"-"`
 }
 
 func NewInvokeNamespace(app IApplication) (res *InvokeNamespace, err error) {
@@ -35,10 +35,10 @@ func NewInvokeNamespace(app IApplication) (res *InvokeNamespace, err error) {
 func (this_ *InvokeNamespace) init() (err error) {
 	for _, one := range this_.App.GetContext().Constants {
 		dataType := one.DataType
-		if base2.IsEmpty(dataType) {
+		if base.IsEmpty(dataType) {
 			dataType = "string"
 		}
-		err = this_.SetDataInfo(&model2.VariableModel{
+		err = this_.SetDataInfo(&model.VariableModel{
 			Name:     "$" + one.Name,
 			DataType: dataType,
 		})
@@ -46,46 +46,46 @@ func (this_ *InvokeNamespace) init() (err error) {
 			return
 		}
 		var stringValue string = one.Value
-		if base2.IsNotEmpty(one.EnvironmentVariable) {
+		if base.IsNotEmpty(one.EnvironmentVariable) {
 			environmentVariableValue := os.Getenv(one.EnvironmentVariable)
-			if base2.IsNotEmpty(environmentVariableValue) {
+			if base.IsNotEmpty(environmentVariableValue) {
 				stringValue = environmentVariableValue
 			}
 		}
 		var value interface{} = stringValue
 		dataType_ := this_.App.GetContext().GetVariableDataType(dataType)
 		switch dataType_ {
-		case model2.DATA_TYPE_BOOLEAN:
+		case model.DATA_TYPE_BOOLEAN:
 			value = this_.App.GetScript().IsTrue(stringValue)
-		case model2.DATA_TYPE_BYTE:
+		case model.DATA_TYPE_BYTE:
 			var num int
 			num, err = strconv.Atoi(stringValue)
 			if err != nil {
 				return
 			}
 			value = int8(num)
-		case model2.DATA_TYPE_FLOAT:
+		case model.DATA_TYPE_FLOAT:
 			var num int
 			num, err = strconv.Atoi(stringValue)
 			if err != nil {
 				return
 			}
 			value = int16(num)
-		case model2.DATA_TYPE_INT:
+		case model.DATA_TYPE_INT:
 			var num int
 			num, err = strconv.Atoi(stringValue)
 			if err != nil {
 				return
 			}
 			value = int(num)
-		case model2.DATA_TYPE_LONG:
+		case model.DATA_TYPE_LONG:
 			var num int
 			num, err = strconv.Atoi(stringValue)
 			if err != nil {
 				return
 			}
 			value = int64(num)
-		case model2.DATA_TYPE_MAP:
+		case model.DATA_TYPE_MAP:
 			value, err = this_.App.GetScript().JSONToData(stringValue)
 			if err != nil {
 				return
@@ -109,19 +109,19 @@ type InvokeData struct {
 }
 
 type InvokeDataInfo struct {
-	Name       string                  `json:"name,omitempty"`
-	Comment    string                  `json:"comment,omitempty"`
-	Alias      []string                `json:"alias,omitempty"`
-	Value      string                  `json:"value,omitempty"`
-	DotName    string                  `json:"dotName,omitempty"`
-	DataInfos  []*InvokeDataInfo       `json:"dataInfos,omitempty"`
-	Parent     *InvokeDataInfo         `json:"-"`
-	DataType   *model2.DataType        `json:"-"`
-	IsList     bool                    `json:"isList,omitempty"` // 是否是列表
-	IsPage     bool                    `json:"isPage,omitempty"` // 是否是列表
-	Validatas  []*model2.ValidateModel `json:"-"`
-	IsUse      bool                    `json:"isUse,omitempty"`      // 是否 使用
-	IsSetValue bool                    `json:"isSetValue,omitempty"` // 是否 设值
+	Name       string                 `json:"name,omitempty"`
+	Comment    string                 `json:"comment,omitempty"`
+	Alias      []string               `json:"alias,omitempty"`
+	Value      string                 `json:"value,omitempty"`
+	DotName    string                 `json:"dotName,omitempty"`
+	DataInfos  []*InvokeDataInfo      `json:"dataInfos,omitempty"`
+	Parent     *InvokeDataInfo        `json:"-"`
+	DataType   *model.DataType        `json:"-"`
+	IsList     bool                   `json:"isList,omitempty"` // 是否是列表
+	IsPage     bool                   `json:"isPage,omitempty"` // 是否是列表
+	Validatas  []*model.ValidateModel `json:"-"`
+	IsUse      bool                   `json:"isUse,omitempty"`      // 是否 使用
+	IsSetValue bool                   `json:"isSetValue,omitempty"` // 是否 设值
 }
 
 func CloneDataInfo(dataInfo *InvokeDataInfo) (res *InvokeDataInfo) {
@@ -211,7 +211,7 @@ func (this_ *InvokeNamespace) GetDataInfo(name string) (res *InvokeDataInfo, err
 	return
 }
 
-func (this_ *InvokeNamespace) SetDataInfo(variable *model2.VariableModel) (err error) {
+func (this_ *InvokeNamespace) SetDataInfo(variable *model.VariableModel) (err error) {
 	if strings.HasPrefix(variable.Name, "$invoke_temp.") {
 
 		return
@@ -252,9 +252,9 @@ func GetData(app IApplication, datas *[]*InvokeData, name string) (res *InvokeDa
 			break
 		}
 	}
-	if base2.IsNotEmpty(subName) {
+	if base.IsNotEmpty(subName) {
 		if findOne == nil {
-			err = base2.NewError("", "get data [", fieldName, "] list index [", fieldIndex, "] not defind")
+			err = base.NewError("", "get data [", fieldName, "] list index [", fieldIndex, "] not defind")
 			return
 		}
 		res, err = GetData(app, &findOne.Datas, subName)
@@ -289,7 +289,7 @@ func SetData(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeD
 				findOne_ := CloneData(listRootOne)
 				findOne_.ListIndex = fieldIndex
 
-				if base2.IsEmpty(subName) && value != nil {
+				if base.IsEmpty(subName) && value != nil {
 					findOne_.Value = value
 					for _, one := range findOne_.Datas {
 						one.Value = value.(map[string]interface{})[one.Name]
@@ -312,9 +312,9 @@ func SetData(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeD
 		}
 	}
 	// fmt.Println("SetData name [", name, "] value "+base.ToJSON(value)+"")
-	if base2.IsNotEmpty(subName) {
+	if base.IsNotEmpty(subName) {
 		if findOne == nil {
-			err = base2.NewError("", "data [", fieldName, "] not defind")
+			err = base.NewError("", "data [", fieldName, "] not defind")
 			return
 		}
 		err = SetData(app, invokeNamespace, findOne, &findOne.Datas, subName, value, dataInfo)
@@ -331,7 +331,7 @@ func SetData(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeD
 			case map[string]interface{}:
 				m[fieldName] = value
 			default:
-				err = base2.NewError("", "invoke data [", parent.DotName, "] value can not to map[string]interface{}")
+				err = base.NewError("", "invoke data [", parent.DotName, "] value can not to map[string]interface{}")
 				return
 			}
 		}
@@ -352,13 +352,13 @@ func SetData(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeD
 		if value == nil {
 			if dataInfo != nil && dataInfo.DataType != nil {
 				switch dataInfo.DataType {
-				case model2.DATA_TYPE_LONG, model2.DATA_TYPE_INT, model2.DATA_TYPE_SHORT, model2.DATA_TYPE_BYTE:
+				case model.DATA_TYPE_LONG, model.DATA_TYPE_INT, model.DATA_TYPE_SHORT, model.DATA_TYPE_BYTE:
 					value = 0
-				case model2.DATA_TYPE_BOOLEAN:
+				case model.DATA_TYPE_BOOLEAN:
 					value = false
-				case model2.DATA_TYPE_DOUBLE, model2.DATA_TYPE_FLOAT:
+				case model.DATA_TYPE_DOUBLE, model.DATA_TYPE_FLOAT:
 					value = 0.0
-				case model2.DATA_TYPE_MAP:
+				case model.DATA_TYPE_MAP:
 					// value = map[string]interface{}{}
 				default:
 					if dataInfo.DataType.DataStruct != nil {
@@ -397,7 +397,7 @@ func SetData(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeD
 			}
 		}
 
-		if value != nil && fieldIndex == -1 && base2.IsEmpty(subName) {
+		if value != nil && fieldIndex == -1 && base.IsEmpty(subName) {
 			listMap, listMapOk := value.([]map[string]interface{})
 			if listMapOk && len(listMap) > 0 {
 				for index, one := range listMap {
@@ -422,9 +422,9 @@ func GetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, dataInfos *
 			break
 		}
 	}
-	if base2.IsNotEmpty(subName) {
+	if base.IsNotEmpty(subName) {
 		if findOne == nil {
-			err = base2.NewError("", "get [", name, "] data info [", fieldName, "] not defind")
+			err = base.NewError("", "get [", name, "] data info [", fieldName, "] not defind")
 			return
 		}
 		res, err = GetDataInfo(app, invokeNamespace, &findOne.DataInfos, subName)
@@ -434,7 +434,7 @@ func GetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, dataInfos *
 	return
 }
 
-func SetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeDataInfo, dataInfos *[]*InvokeDataInfo, variable *model2.VariableModel) (err error) {
+func SetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, parent *InvokeDataInfo, dataInfos *[]*InvokeDataInfo, variable *model.VariableModel) (err error) {
 	fieldName, _, subName := GetFieldNameAndSubName(variable.Name)
 	var findOne *InvokeDataInfo
 	for _, one := range *dataInfos {
@@ -443,12 +443,12 @@ func SetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, parent *Inv
 			break
 		}
 	}
-	if base2.IsNotEmpty(subName) {
+	if base.IsNotEmpty(subName) {
 		if findOne == nil {
-			err = base2.NewError("", "set [", variable.Name, "] data info [", fieldName, "] not defind")
+			err = base.NewError("", "set [", variable.Name, "] data info [", fieldName, "] not defind")
 			return
 		}
-		var subVariable = &model2.VariableModel{
+		var subVariable = &model.VariableModel{
 			Name:      subName,
 			Value:     variable.Value,
 			Comment:   variable.Comment,
@@ -479,7 +479,7 @@ func SetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, parent *Inv
 		if findOne.IsPage {
 			pageDataType := app.GetContext().GetVariableDataType("pageInfo")
 			for _, field := range pageDataType.DataStruct.Fields {
-				var subVariable = &model2.VariableModel{
+				var subVariable = &model.VariableModel{
 					Name:     field.Name,
 					Comment:  field.Comment,
 					DataType: field.DataType,
@@ -500,7 +500,7 @@ func SetDataInfo(app IApplication, invokeNamespace *InvokeNamespace, parent *Inv
 				findOne.DataType = dataType
 				if dataType.DataStruct != nil {
 					for _, field := range dataType.DataStruct.Fields {
-						var subVariable = &model2.VariableModel{
+						var subVariable = &model.VariableModel{
 							Name:     field.Name,
 							Comment:  field.Comment,
 							DataType: field.DataType,

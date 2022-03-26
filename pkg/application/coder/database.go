@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	common2 "teamide/pkg/application/common"
-	model2 "teamide/pkg/application/model"
+	"teamide/pkg/application/common"
+	"teamide/pkg/application/model"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 	ORACLE_CREATE_TABLE_COLUMN = `{column}[ {type}][ DEFAULT {default}][ NOT NULL]`
 )
 
-func GetCreateTableSqls(app common2.IApplication, database *model2.DatasourceDatabase) (sqls []string, err error) {
+func GetCreateTableSqls(app common.IApplication, database *model.DatasourceDatabase) (sqls []string, err error) {
 	var sqls_ []string
 	// sql_, err = GetDatabaseDDL(*database)
 	// if err != nil {
@@ -56,7 +56,7 @@ func GetCreateTableSqls(app common2.IApplication, database *model2.DatasourceDat
 	return
 }
 
-func GetDatabaseDDL(database *model2.DatasourceDatabase) (sql string, err error) {
+func GetDatabaseDDL(database *model.DatasourceDatabase) (sql string, err error) {
 	if database.Database == "" {
 		return
 	}
@@ -67,7 +67,7 @@ func GetDatabaseDDL(database *model2.DatasourceDatabase) (sql string, err error)
 	sql, err = foramtSql(CREATE_DATABASE, data)
 	return
 }
-func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.StructModel) (sqls []string, err error) {
+func GetTableDDL(database *model.DatasourceDatabase, structModel *model.StructModel) (sqls []string, err error) {
 	sqls = []string{}
 	if structModel.Table == "" {
 		return
@@ -96,7 +96,7 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 			dataType := one.DataType
 			var typeStr string
 			typeStr = one.ColumnType
-			if common2.DatabaseIsMySql(database) {
+			if common.DatabaseIsMySql(database) {
 				switch dataType {
 				case "long", "int64":
 					typeStr = "bigint"
@@ -127,7 +127,7 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 				} else {
 					typeStr = fmt.Sprint("", typeStr, "")
 				}
-			} else if common2.DatabaseIsOracle(database) {
+			} else if common.DatabaseIsOracle(database) {
 				switch dataType {
 				case "long", "int64":
 					typeStr = "number"
@@ -160,9 +160,9 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 				}
 			}
 			data["type"] = typeStr
-			if common2.DatabaseIsMySql(database) {
+			if common.DatabaseIsMySql(database) {
 				columnSql, err = foramtSql(CREATE_TABLE_COLUMN, data)
-			} else if common2.DatabaseIsOracle(database) {
+			} else if common.DatabaseIsOracle(database) {
 				columnSql, err = foramtSql(ORACLE_CREATE_TABLE_COLUMN, data)
 			}
 			if err != nil {
@@ -178,7 +178,7 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 		}
 	}
 
-	if common2.DatabaseIsMySql(database) && len(structModel.Indexs) > 0 {
+	if common.DatabaseIsMySql(database) && len(structModel.Indexs) > 0 {
 		var indexSql string
 		for _, one := range structModel.Indexs {
 			data = map[string]string{}
@@ -229,7 +229,7 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 	data["indexs"] = indexs
 	data["comment"] = structModel.Comment
 	var sql string
-	if common2.DatabaseIsMySql(database) {
+	if common.DatabaseIsMySql(database) {
 		sql, err = foramtSql(CREATE_TABLE, data)
 		if err != nil {
 			return
@@ -237,7 +237,7 @@ func GetTableDDL(database *model2.DatasourceDatabase, structModel *model2.Struct
 		if sql != "" {
 			sqls = append(sqls, sql)
 		}
-	} else if common2.DatabaseIsOracle(database) {
+	} else if common.DatabaseIsOracle(database) {
 		sql, err = foramtSql(ORACLE_CREATE_TABLE, data)
 		if err != nil {
 			return

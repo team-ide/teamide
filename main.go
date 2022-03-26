@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 	"sync"
-	"teamide/internal/server"
-	"teamide/internal/server/base"
+	"teamide/internal"
+	"teamide/internal/base"
+	"teamide/internal/context"
+	"teamide/pkg/util"
 	"teamide/pkg/window"
 )
 
@@ -12,7 +14,6 @@ var (
 	waitGroupForStop sync.WaitGroup
 	serverTitle      = "Team · IDE"
 	serverUrl        = ""
-	isHtmlDev        = false
 )
 
 func main() {
@@ -24,23 +25,33 @@ func main() {
 			continue
 		}
 		if v == "--isHtmlDev" {
-			isHtmlDev = true
+			base.IsHtmlDev = true
 			continue
 		}
 	}
 
 	waitGroupForStop.Add(1)
 
-	serverUrl, err = server.Start()
+	serverConf, err := GetServerConf()
 	if err != nil {
 		panic(err)
 	}
-	if isHtmlDev {
+
+	serverContext, err := context.NewServerContext(serverConf)
+	if err != nil {
+		panic(err)
+	}
+
+	serverUrl, err = internal.Start(serverContext)
+	if err != nil {
+		panic(err)
+	}
+	if base.IsHtmlDev {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
 	if base.IsStandAlone {
-		err = window.Start(serverTitle, serverUrl, func() {
+		err = window.Start(serverUrl, func() {
 			waitGroupForStop.Done()
 		})
 		if err != nil {
@@ -49,4 +60,34 @@ func main() {
 	}
 
 	waitGroupForStop.Wait()
+}
+
+func GetServerConf() (serverConf context.ServerConf, err error) {
+	serverConf = context.ServerConf{
+		Server:     base.RootDir + "conf/config.yaml",
+		PublicKey:  base.RootDir + "conf/publicKey.pem",
+		PrivateKey: base.RootDir + "conf/privateKey.pem",
+	}
+	exists, err := util.PathExists(serverConf.Server)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.Server = ""
+	}
+	exists, err = util.PathExists(serverConf.PublicKey)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.PublicKey = ""
+	}
+	exists, err = util.PathExists(serverConf.PrivateKey)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.PrivateKey = ""
+	}
+	return
 }

@@ -2,22 +2,19 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io"
 	"os"
 	"regexp"
-	"strings"
-	base2 "teamide/internal/server/base"
-	"teamide/pkg/db"
 	"teamide/pkg/util"
 )
 
 type ServerConfig struct {
-	Server         *server            `json:"server,omitempty" yaml:"server,omitempty"`
-	Mysql          *mysql             `json:"mysql,omitempty" yaml:"mysql,omitempty"`
-	Log            *log               `json:"log,omitempty" yaml:"log,omitempty"`
-	DatabaseConfig *db.DatabaseConfig `json:"-" yaml:"-"`
+	Server *server `json:"server,omitempty" yaml:"server,omitempty"`
+	Mysql  *mysql  `json:"mysql,omitempty" yaml:"mysql,omitempty"`
+	Log    *log    `json:"log,omitempty" yaml:"log,omitempty"`
 }
 
 type server struct {
@@ -43,23 +40,27 @@ type log struct {
 	Level      string `json:"level,omitempty" yaml:"level,omitempty"`
 }
 
-var (
-	Config *ServerConfig = &ServerConfig{}
-)
+func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 
-func init() {
-
-	filePath := base2.BaseDir + "conf/config.yaml"
-	exists, err := PathExists(filePath)
-	if err != nil {
-		panic(err)
-	}
-	if exists {
-		f, err := os.Open(filePath)
+	//filePath := base.RootDir + "conf/config.yaml"
+	config = &ServerConfig{}
+	if configPath != "" {
+		var exists bool
+		exists, err = util.PathExists(configPath)
 		if err != nil {
 			panic(err)
 		}
-		bs, err := io.ReadAll(f)
+		if !exists {
+			err = errors.New(fmt.Sprint("服务配置文件[", configPath, "]不存在"))
+			return
+		}
+		var f *os.File
+		f, err = os.Open(configPath)
+		if err != nil {
+			panic(err)
+		}
+		var bs []byte
+		bs, err = io.ReadAll(f)
 		if err != nil {
 			panic(err)
 		}
@@ -74,71 +75,21 @@ func init() {
 		if err != nil {
 			panic(err)
 		}
-		json.Unmarshal(bs, Config)
-	} else {
-		base2.IsStandAlone = true
+		json.Unmarshal(bs, config)
 	}
-	formatConfig()
-	fmt.Println(util.ToJSON(Config))
-}
 
-//formatConfig 格式化配置，填充默认值
-func formatConfig() {
-
-	if Config.Log == nil {
-		Config.Log = &log{
+	if config.Server == nil {
+		config.Server = &server{}
+	}
+	if config.Log == nil {
+		config.Log = &log{
 			MaxSize:    100,
 			MaxAge:     7,
 			MaxBackups: 10,
 			Level:      "info",
 		}
 	}
-	if base2.IsStandAlone {
-		Config.Server = &server{}
-		if base2.UserHomeDir != "" {
-			Config.Server.Data = base2.UserHomeDir + "TeamIDE/data"
-			Config.Log.Filename = base2.UserHomeDir + "TeamIDE/log/server.log"
-		} else {
-			Config.Server.Data = base2.BaseDir + "data"
-			Config.Log.Filename = base2.BaseDir + "log/server.log"
-		}
-		Config.DatabaseConfig = &db.DatabaseConfig{
-			Type: "sqlite",
-		}
-		if base2.UserHomeDir != "" {
-			Config.DatabaseConfig.Database = base2.UserHomeDir + "TeamIDE/data/database"
-		} else {
-			Config.DatabaseConfig.Database = base2.BaseDir + "data/database"
-		}
-	} else {
-		if Config.Server == nil || Config.Server.Host == "" || Config.Server.Port == 0 {
-			panic("请检查Server配置是否正确")
-		}
-		if Config.Mysql == nil || Config.Mysql.Host == "" || Config.Mysql.Port == 0 {
-			panic("请检查MySql配置是否正确")
-		}
-
-		Config.DatabaseConfig = &db.DatabaseConfig{
-			Type:     "mysql",
-			Host:     Config.Mysql.Host,
-			Port:     Config.Mysql.Port,
-			Database: Config.Mysql.Database,
-			Username: Config.Mysql.Username,
-			Password: Config.Mysql.Password,
-		}
-
-		if Config.Server.Data == "" {
-			Config.Server.Data = base2.BaseDir + "data"
-		} else {
-			Config.Server.Data = base2.BaseDir + strings.TrimPrefix(Config.Server.Data, "./")
-		}
-		if Config.Log.Filename == "" {
-			Config.Log.Filename = base2.BaseDir + "log/server.log"
-		} else {
-			Config.Log.Filename = base2.BaseDir + strings.TrimPrefix(Config.Log.Filename, "./")
-		}
-	}
-
+	return
 }
 
 func formatMap(mapValue map[string]interface{}) {

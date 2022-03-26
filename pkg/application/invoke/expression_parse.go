@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	base2 "teamide/pkg/application/base"
+	"teamide/pkg/application/base"
 	"teamide/pkg/application/common"
 
 	"github.com/dop251/goja/ast"
@@ -261,7 +261,7 @@ func (this_ *ExpressionParser) parseCallExpression(expression *ast.CallExpressio
 			}
 			if err != nil {
 				if parseInfo.App.GetLogger() != nil {
-					parseInfo.App.GetLogger().Error("parseCall [", funcName, "] getParseCallArgsForValue error argumentList:", base2.ToJSON(expression.ArgumentList))
+					parseInfo.App.GetLogger().Error("parseCall [", funcName, "] getParseCallArgsForValue error argumentList:", base.ToJSON(expression.ArgumentList))
 					parseInfo.App.GetLogger().Error("parseCall [", funcName, "] getParseCallArgsForValue error:", err)
 				}
 				return
@@ -317,7 +317,7 @@ func (this_ *ExpressionParser) parseAssignExpression(expression *ast.AssignExpre
 		return
 	}
 	if dataInfo == nil {
-		err = base2.NewError("", "parse assign data info [", name, "] not defind")
+		err = base.NewError("", "parse assign data info [", name, "] not defind")
 		return
 	}
 	dataInfo.IsSetValue = true

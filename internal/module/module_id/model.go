@@ -26,12 +26,17 @@ const (
 	IDTypeUserAuth = 1002
 	// IDTypeRegister 注册ID类型
 	IDTypeRegister = 2001
+
 	// IDTypeLogin 登录ID类型
 	IDTypeLogin = 3001
+
 	// IDTypePowerRole 权限角色ID类型
 	IDTypePowerRole = 4001
 	// IDTypePowerRoute 权限路由ID类型
 	IDTypePowerRoute = 4002
 	// IDTypePowerUser 权限用户ID类型
 	IDTypePowerUser = 4003
+
+	// IDTypeToolbox 工具箱ID类型
+	IDTypeToolbox = 5001
 )

@@ -1,36 +1,145 @@
 package window
 
 import (
+	"bufio"
 	"fmt"
+	"golang.org/x/net/websocket"
+	"io"
+	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 )
 
 var (
-	window_width  = getWindowWidth()
-	window_height = getWindowHeight()
+	windowWidth  = getWindowWidth()
+	windowHeight = getWindowHeight()
 )
 
 func init() {
-	if window_width == 0 {
-		window_width = 1024
+	if windowWidth == 0 {
+		windowWidth = 1024
 	}
-	if window_height == 0 {
-		window_height = 768
+	if windowHeight == 0 {
+		windowHeight = 768
 	}
-	window_width = window_width - 40
-	window_height = window_height - 80
+	windowWidth = windowWidth - 40
+	windowHeight = windowHeight - 80
 }
 
-func Start(title string, webUrl string, onClose func()) (err error) {
+func Start(webUrl string, onClose func()) (err error) {
 
-	err = startWindow(title, webUrl, onClose)
+	err = startWindow(webUrl, onClose)
 
 	if err != nil {
 		return
 	}
 
+	return
+}
+
+func startWindow(webUrl string, onClose func()) (err error) {
+
+	locateChrome := LocateChrome()
+	if locateChrome != "" {
+		var tmpDir string
+		tmpDir, err = ioutil.TempDir("", "TeamIDE")
+		if err != nil {
+			return
+		}
+		var listener net.Listener
+		listener, err = net.Listen("tcp", ":0")
+		if err != nil {
+			return
+		}
+		debuggingPort := listener.Addr().(*net.TCPAddr).Port
+
+		var args []string
+		//args = append(args, defaultChromeArgs...)
+		args = append(args, "--app="+webUrl)
+		args = append(args, fmt.Sprintf("--user-data-dir=%s", tmpDir))
+		args = append(args, "--class=TeamIDE")
+		args = append(args, "--start-maximized")
+		//args = append(args, "--window-position=20,20") // 窗口位置
+		//args = append(args, fmt.Sprintf("--window-size=%d,%d", windowWidth, windowHeight))
+		args = append(args, fmt.Sprintf("--remote-debugging-port=%d", debuggingPort))
+
+		b := &browser{
+			name: locateChrome,
+			args: args,
+		}
+		b.cmd = exec.Command(locateChrome, args...)
+
+		var pipe io.ReadCloser
+		if pipe, err = b.cmd.StderrPipe(); err != nil {
+			return
+		}
+
+		if err = b.cmd.Start(); err != nil {
+			return
+		}
+
+		re := regexp.MustCompile(`^DevTools listening on (ws://.*?)\r?\n$`)
+		var m []string
+		m, err = readUntilMatch(pipe, re)
+		if err != nil {
+			b.kill()
+			return
+		}
+		wsURL := m[1]
+
+		//fmt.Println("wsURL:", wsURL)
+		// Open a websocket
+		b.ws, err = websocket.Dial(wsURL, "", "http://127.0.0.1")
+		if err != nil {
+			b.kill()
+			return
+		}
+
+		go func() {
+			err = b.cmd.Wait()
+			if err != nil {
+				b.kill()
+			}
+			onClose()
+		}()
+		return
+	}
+
+	//var args []string
+	//args = append(args, "--class=TeamIDE")
+	//// args = append(args, "--kiosk")               // 最大化
+	//// args = append(args, "--start-maximized")     // 最大化
+	//args = append(args, "--window-position=20,20") // 窗口位置
+	//
+	//// args = append(args, "--window-size=-1,-1")   // 强制显示更新菜单项
+	//var ui lorca.UI
+	//ui, err = lorca.New("data:text/html,"+url.PathEscape(`
+	//<html>
+	//	<head>
+	//		<meta charset="utf-8">
+	//		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	//		<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	//		<title>`+title+`</title>
+	//		<link rel="icon" href="`+webUrl+`static/favicon.png">
+	//		<script type="text/javascript">
+	//			location.href="`+webUrl+`"
+	//		</script>
+	//	</head>
+	//</html>`), "", window_width, window_height, args...)
+	//if err != nil {
+	//	return
+	//}
+	//go func() {
+	//	if onClose != nil {
+	//		defer onClose()
+	//	}
+	//	defer ui.Close()
+	//	<-ui.Done()
+	//
+	//}()
 	return
 }
 
@@ -62,60 +171,36 @@ var defaultChromeArgs = []string{
 	"--use-mock-keychain",
 }
 
-func startWindow(title string, webUrl string, onClose func()) (err error) {
+type browser struct {
+	name string
+	args []string
+	cmd  *exec.Cmd
+	ws   *websocket.Conn
+}
 
-	locateChrome := LocateChrome()
-	if locateChrome != "" {
-		args := []string{}
-		args = append(args, defaultChromeArgs...)
-		args = append(args, "--app="+webUrl)
-		args = append(args, "--class=TeamIDE")
-		args = append(args, "--start-maximized")
-		args = append(args, "--window-position=20,20") // 窗口位置
-		args = append(args, fmt.Sprintf("--window-size=%d,%d", window_width, window_height))
-		cmd := exec.Command(locateChrome, args...)
-
-		err = cmd.Run()
-
-		if err != nil {
-			return
+func (c *browser) kill() error {
+	if c.ws != nil {
+		if err := c.ws.Close(); err != nil {
+			return err
 		}
-		return
 	}
+	if state := c.cmd.ProcessState; state == nil || !state.Exited() {
+		return c.cmd.Process.Kill()
+	}
+	return nil
+}
 
-	// 	var args []string
-	// 	args = append(args, "--class=TeamIDE")
-	// 	// args = append(args, "--kiosk")               // 最大化
-	// 	// args = append(args, "--start-maximized")     // 最大化
-	// 	args = append(args, "--window-position=20,20") // 窗口位置
-
-	// 	// args = append(args, "--window-size=-1,-1")   // 强制显示更新菜单项
-	// 	var ui lorca.UI
-	// 	ui, err = lorca.New("data:text/html,"+url.PathEscape(`
-	// <html>
-	// 	<head>
-	// 		<meta charset="utf-8">
-	// 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	// 		<meta name="viewport" content="width=device-width,initial-scale=1.0">
-	// 		<title>`+title+`</title>
-	// 		<link rel="icon" href="`+webUrl+`static/favicon.png">
-	// 		<script type="text/javascript">
-	// 			location.href="`+webUrl+`"
-	// 		</script>
-	// 	</head>
-	// </html>`), "", window_width, window_height, args...)
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	go func() {
-	// 		if onClose != nil {
-	// 			defer onClose()
-	// 		}
-	// 		defer ui.Close()
-	// 		<-ui.Done()
-
-	// 	}()
-	return
+func readUntilMatch(r io.ReadCloser, re *regexp.Regexp) ([]string, error) {
+	br := bufio.NewReader(r)
+	for {
+		if line, err := br.ReadString('\n'); err != nil {
+			r.Close()
+			return nil, err
+		} else if m := re.FindStringSubmatch(line); m != nil {
+			go io.Copy(ioutil.Discard, br)
+			return m, nil
+		}
+	}
 }
 
 func LocateChrome() string {

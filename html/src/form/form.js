@@ -95,9 +95,33 @@ let model = {
     ],
 };
 
+
+let toolbox = {
+    fields: [
+        {
+            label: "名称",
+            name: "name",
+            rules: [
+                {
+                    required: true,
+                    message: `工具名称不能为空!`
+                },
+
+            ],
+        },
+        {
+            label: "说明",
+            name: "comment",
+            rules: [
+            ],
+        },
+    ],
+};
+
 export default {
     login,
     register,
     app,
     model,
+    toolbox,
 };
