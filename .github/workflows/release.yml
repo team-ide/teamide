@@ -126,8 +126,8 @@ jobs:
           path: html/dist
 
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
+      - run: go build -o ./release/teamide-windows-x64/teamide.exe
+      - run: go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
