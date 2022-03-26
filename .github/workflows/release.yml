@@ -83,7 +83,7 @@ jobs:
       - run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
 
       # 打包Window StandAlone
-      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui -X buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
+      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-H windowsgui -X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
       - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
       # 发布

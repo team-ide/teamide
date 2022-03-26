@@ -16,7 +16,7 @@ var (
 	serverTitle      = "Team · IDE"
 	serverUrl        = ""
 
-	// buildFlags go build -ldflags '-X buildFlags=--isStandAlone' .
+	// buildFlags go build -ldflags '-X main.buildFlags=--isStandAlone' .
 	buildFlags = ""
 )
 
