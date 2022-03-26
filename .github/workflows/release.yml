@@ -48,7 +48,7 @@ jobs:
       - run: cd html && npm install && npm run build
 
       # 打包静态资源
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/server/static
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
       # 创建release相关目录
       - run: mkdir release
