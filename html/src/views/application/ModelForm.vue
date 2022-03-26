@@ -1,7 +1,7 @@
 <template>
   <b-modal
     ref="modal"
-    :title="group == null ? '' : group.text"
+    :title="modelType == null ? '' : modelType.text"
     :hide-header-close="false"
     :no-close-on-backdrop="true"
     :no-close-on-esc="true"
@@ -14,16 +14,16 @@
       :formData="formData"
       class="pd-10"
     >
-      <div class="pdtb-10">
-        <div
-          class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
-          :class="{ 'tm-disabled': saveBtnDisabled }"
-          @click="doSave"
-        >
-          保存
-        </div>
-      </div>
     </Form>
+    <div class="pd-10">
+      <div
+        class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
+        :class="{ 'tm-disabled': saveBtnDisabled }"
+        @click="doSave"
+      >
+        保存
+      </div>
+    </div>
   </b-modal>
 </template>
 
@@ -36,7 +36,7 @@ export default {
       formBuild: null,
       formData: null,
       saveBtnDisabled: false,
-      group: null,
+      modelType: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -44,7 +44,7 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    show(group, data, callback) {
+    show(modelType, data, callback) {
       this.formBuild = this.form.build(this.form.model);
       let formData = this.formBuild.newDefaultData();
       data = data || {};
@@ -52,7 +52,7 @@ export default {
         formData[key] = data[key];
       }
       this.formData = formData;
-      this.group = group;
+      this.modelType = modelType;
       this.callback = callback;
       this.$refs["modal"].show();
     },
@@ -65,7 +65,7 @@ export default {
         if (res.valid) {
           let param = {};
           Object.assign(param, this.formData);
-          let flag = this.callback(this.group, param);
+          let flag = this.callback(this.modelType, param);
           this.saveBtnDisabled = false;
           if (flag) {
             this.$refs["modal"].hide();

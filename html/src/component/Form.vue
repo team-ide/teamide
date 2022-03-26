@@ -11,17 +11,32 @@
           :disabled="field.disabled"
           :state="field.valid"
         >
-          <b-form-input
-            :id="`key-${key}-${field.name}-input`"
-            v-model="formData[field.name]"
-            :type="field.type"
-            :placeholder="field.placeholder"
-            :required="field.required"
-            :state="field.valid"
-          ></b-form-input>
-          <b-form-invalid-feedback v-if="field.validMessage">{{
-            field.validMessage
-          }}</b-form-invalid-feedback>
+          <template v-if="field.type == 'select'">
+            <b-form-select
+              :id="`key-${key}-${field.name}-input`"
+              v-model="formData[field.name]"
+              :placeholder="field.placeholder"
+              :required="field.required"
+              :options="field.options"
+              :state="field.valid"
+            >
+            </b-form-select>
+          </template>
+          <template v-else-if="field.type == 'switch'"> </template>
+          <template v-else>
+            <b-form-input
+              :id="`key-${key}-${field.name}-input`"
+              v-model="formData[field.name]"
+              :type="field.type"
+              :placeholder="field.placeholder"
+              :required="field.required"
+              :state="field.valid"
+            >
+            </b-form-input>
+          </template>
+          <b-form-invalid-feedback v-if="field.validMessage">
+            {{ field.validMessage }}
+          </b-form-invalid-feedback>
         </b-form-group>
       </template>
     </template>

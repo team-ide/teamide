@@ -1,5 +1,5 @@
 <template>
-  <div class="" style="display: flex">
+  <div class="application-header" style="display: flex">
     <template v-if="application.apps == null"> </template>
     <template v-else-if="application.apps.length == 0">
       <div
@@ -16,7 +16,7 @@
       >
         {{ app.name }}
       </div>
-      <b-dropdown class="mgt-10 mgl-20 pd-0" size="sm">
+      <b-dropdown class="apps-dropdown mgt-10 mgl-20 pd-0" size="sm">
         <template v-for="(one, index) in application.apps">
           <b-dropdown-item
             :disabled="one.name == app.name"
@@ -182,4 +182,9 @@ export default {
 </script>
 
 <style>
+.application-header .apps-dropdown .btn {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: 0 0 0;
+}
 </style>

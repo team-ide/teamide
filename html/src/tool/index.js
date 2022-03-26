@@ -233,6 +233,27 @@ tool.getElementLeft = (e) => {
     }
     return offset
 };
+
+tool.computeFontSize = function (str, size, family) {
+    let spanDom = document.createElement("span");
+    spanDom.style.fontSize = size;
+    spanDom.style.opacity = "0";
+    if (family) {
+        spanDom.style.fontFamily = family;
+    }
+    if (tool.isNotEmpty(str)) {
+        str = tool.replaceAll(str, " ", "&nbsp;")
+        str = tool.replaceAll(str, "<", "&lt;")
+        str = tool.replaceAll(str, ">", "&gt;")
+    }
+    spanDom.innerHTML = str;
+    document.body.append(spanDom);
+    let sizeD = {};
+    sizeD.width = spanDom.offsetWidth;
+    sizeD.height = spanDom.offsetHeight;
+    spanDom.remove();
+    return sizeD;
+};
 tool.getEnum = (type, value) => {
     let result = null;
     let options = source.ENUM_MAP[type];

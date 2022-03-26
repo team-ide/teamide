@@ -2,40 +2,69 @@ package main
 
 import (
 	"os"
+	"strings"
 	"sync"
-	"teamide/server"
-	"teamide/window"
+	"teamide/internal"
+	"teamide/internal/base"
+	"teamide/internal/context"
+	"teamide/pkg/util"
+	"teamide/pkg/window"
 )
 
 var (
 	waitGroupForStop sync.WaitGroup
-	serverTitle           = "Team · IDE"
-	serverUrl             = ""
-	IsDev            bool = false
+	serverTitle      = "Team · IDE"
+	serverUrl        = ""
+
+	// buildFlags go build -ldflags '-X buildFlags=--isStandAlone' .
+	buildFlags = ""
 )
+
+func init() {
+	if strings.Contains(buildFlags, "--isStandAlone") {
+		base.IsStandAlone = true
+	}
+	if strings.Contains(buildFlags, "--isHtmlDev") {
+		base.IsHtmlDev = true
+	}
+}
 
 func main() {
 	var err error
 
 	for _, v := range os.Args {
-		if v == "--isDev" {
-			IsDev = true
+		if v == "--isStandAlone" {
+			base.IsStandAlone = true
+			continue
+		}
+		if v == "--isHtmlDev" {
+			base.IsHtmlDev = true
 			continue
 		}
 	}
 
 	waitGroupForStop.Add(1)
 
-	serverUrl, err = server.Start()
+	serverConf, err := GetServerConf()
 	if err != nil {
 		panic(err)
 	}
-	if IsDev {
+
+	serverContext, err := context.NewServerContext(serverConf)
+	if err != nil {
+		panic(err)
+	}
+
+	serverUrl, err = internal.Start(serverContext)
+	if err != nil {
+		panic(err)
+	}
+	if base.IsHtmlDev {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
-	if !IsDev {
-		err = window.Start(serverTitle, serverUrl, func() {
+	if base.IsStandAlone {
+		err = window.Start(serverUrl, func() {
 			waitGroupForStop.Done()
 		})
 		if err != nil {
@@ -44,4 +73,34 @@ func main() {
 	}
 
 	waitGroupForStop.Wait()
+}
+
+func GetServerConf() (serverConf context.ServerConf, err error) {
+	serverConf = context.ServerConf{
+		Server:     base.RootDir + "conf/config.yaml",
+		PublicKey:  base.RootDir + "conf/publicKey.pem",
+		PrivateKey: base.RootDir + "conf/privateKey.pem",
+	}
+	exists, err := util.PathExists(serverConf.Server)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.Server = ""
+	}
+	exists, err = util.PathExists(serverConf.PublicKey)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.PublicKey = ""
+	}
+	exists, err = util.PathExists(serverConf.PrivateKey)
+	if err != nil {
+		return
+	}
+	if !exists {
+		serverConf.PrivateKey = ""
+	}
+	return
 }
