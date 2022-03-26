@@ -39,7 +39,6 @@ jobs:
       - run: cp -rf conf release/base/
       - run: cp -rf README.md release/base/
       - run: cp -rf RELEASE.md release/base/
-      - run: cp -rf internal/static/html.go release/
 
       - run: mkdir release/teamide-linux-x64
       - run: mkdir release/teamide-windows-x64
@@ -61,8 +60,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
 
   buildLinux:
     needs: buildStatic
@@ -87,10 +86,11 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
 
 
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
       - run: export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
 
       # 上传共享资源
@@ -122,11 +122,11 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
 
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
       - run: export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
-
       - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
 
       # 上传共享资源
