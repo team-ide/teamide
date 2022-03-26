@@ -83,7 +83,6 @@ jobs:
           - rm -rf internal/static/html.go
             cp -rf release/html.go internal/static/
             
-            # 打包Linux
             export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
             cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
 
@@ -117,11 +116,9 @@ jobs:
           - rm -rf internal/static/html.go
             cp -rf release/html.go internal/static/
             
-            # 打包Linux
             export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
             cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
             
-            # 打包Linux
             export GOARCH=amd64 && export GOOS=windows &&export CGO_ENABLED=1 && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
             cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
