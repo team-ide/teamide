@@ -58,6 +58,12 @@ jobs:
           name: release
           path: release
 
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: html.go
+          path: internal/static/html.go
+
   buildLinux:
     needs: buildStatic
     runs-on: ubuntu-latest
@@ -78,11 +84,14 @@ jobs:
           name: release
           path: release
 
-      - run: rm -rf internal/static/html.go
-      - run: cp -rf release/html.go internal/static/
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: html.go
+          path: internal/static/html.go
+
 
       - run: export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
-      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -110,14 +119,15 @@ jobs:
           name: release
           path: release
 
-      - run: rm -rf internal/static/html.go
-      - run: cp -rf release/html.go internal/static/
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: html.go
+          path: internal/static/html.go
 
       - run: export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
-      - run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
-      - run: export GOARCH=amd64 && export GOOS=windows &&export CGO_ENABLED=1 && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
-      - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+      - run: export GOARCH=amd64 && export GOOS=windows && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -134,6 +144,10 @@ jobs:
         with:
           name: release
           path: release
+
+      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
+      - run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
+      - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
       # 读取发布版本
       - name: Read Release Version
