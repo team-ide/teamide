@@ -32,26 +32,26 @@ jobs:
       # 创建release相关目录
       - run:
           - mkdir release
-          - cp -rf RELEASE.md release/
-          - cp -rf package.json release/
-          - mkdir release/base
-          - mkdir release/base/data
-          - mkdir release/base/log
-          - cp -rf conf release/base/
-          - cp -rf README.md release/base/
-          - cp -rf RELEASE.md release/base/
-          - cp -rf internal/static/html.go release/
-
-          - mkdir release/teamide-linux-x64
-          - mkdir release/teamide-windows-x64
-          - mkdir release/teamide-darwin-x64
-          - mkdir release/teamide-standalone-windows-x64
-
-          - cp -rf release/base/* release/teamide-linux-x64/
-          - cp -rf release/base/* release/teamide-windows-x64/
-          - cp -rf release/base/* release/teamide-darwin-x64/
-          - cp -rf release/base/* release/teamide-standalone-windows-x64
-          - rm -rf release/teamide-standalone-windows-x64/conf
+            cp -rf RELEASE.md release/
+            cp -rf package.json release/
+            mkdir release/base
+            mkdir release/base/data
+            mkdir release/base/log
+            cp -rf conf release/base/
+            cp -rf README.md release/base/
+            cp -rf RELEASE.md release/base/
+            cp -rf internal/static/html.go release/
+            
+            mkdir release/teamide-linux-x64
+            mkdir release/teamide-windows-x64
+            mkdir release/teamide-darwin-x64
+            mkdir release/teamide-standalone-windows-x64
+            
+            cp -rf release/base/* release/teamide-linux-x64/
+            cp -rf release/base/* release/teamide-windows-x64/
+            cp -rf release/base/* release/teamide-darwin-x64/
+            cp -rf release/base/* release/teamide-standalone-windows-x64
+            rm -rf release/teamide-standalone-windows-x64/conf
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -81,11 +81,11 @@ jobs:
 
       - run:
           - rm -rf internal/static/html.go
-          - cp -rf release/html.go internal/static/
-
-          # 打包Linux
-          - export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
-          - cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
+            cp -rf release/html.go internal/static/
+            
+            # 打包Linux
+            export GOARCH=amd64 && export GOOS=linux && go build -o ./release/teamide-linux-x64/teamide
+            cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -115,15 +115,15 @@ jobs:
 
       - run:
           - rm -rf internal/static/html.go
-          - cp -rf release/html.go internal/static/
-
-          # 打包Linux
-          - export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
-          - cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
-
-          # 打包Linux
-          - export GOARCH=amd64 && export GOOS=windows &&export CGO_ENABLED=1 && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
-          - cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+            cp -rf release/html.go internal/static/
+            
+            # 打包Linux
+            export GOARCH=amd64 && export GOOS=windows && go build -o ./release/teamide-windows-x64/teamide.exe
+            cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
+            
+            # 打包Linux
+            export GOARCH=amd64 && export GOOS=windows &&export CGO_ENABLED=1 && go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
+            cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
