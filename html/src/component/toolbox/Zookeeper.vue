@@ -249,8 +249,10 @@ export default {
       return res.data;
     },
     async doSave() {
-      let param = {};
-      Object.assign(param, this.form);
+      let param = {
+        path: this.form.path,
+        data: this.form.value,
+      };
 
       if (this.tool.isEmpty(param.path)) {
         this.tool.error("路径不能为空！");
