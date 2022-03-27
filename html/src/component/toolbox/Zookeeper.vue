@@ -2,82 +2,83 @@
   <div class="toolbox-zookeeper-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="100%">
-          <tm-layout :width="style.left.width" class="scrollbar">
-            <div class="pd-10">
-              <el-tree
-                ref="tree"
-                :load="loadNode"
-                lazy
-                :props="defaultProps"
-                :default-expanded-keys="expands"
-                node-key="key"
-                @node-click="nodeClick"
-                @current-change="currentChange"
-                :expand-on-click-node="false"
+        <tm-layout :width="style.left.width" class="scrollbar">
+          <div class="pd-10">
+            <el-tree
+              ref="tree"
+              :load="loadNode"
+              lazy
+              :props="defaultProps"
+              :default-expanded-keys="expands"
+              node-key="key"
+              @node-click="nodeClick"
+              @current-change="currentChange"
+              :expand-on-click-node="false"
+            >
+              <span
+                class="toolbox-editor-tree-span"
+                slot-scope="{ node, data }"
               >
-                <span class="toolbox-box-tree-span" slot-scope="{ node, data }">
-                  <template v-if="data.path == '/'">
-                    <span>/</span>
-                  </template>
-                  <template v-else>
-                    <span>{{ node.label }}</span>
-                  </template>
-                  <div class="toolbox-box-tree-btn-group">
-                    <a
-                      class="tm-link color-grey ft-14 mgr-2"
-                      @click="toReloadChildren(data)"
-                    >
-                      <i class="mdi mdi-reload"></i>
-                    </a>
-                    <a
-                      class="tm-link color-blue ft-16 mgr-2"
-                      @click="toInsert(data)"
-                    >
-                      <i class="mdi mdi-plus"></i>
-                    </a>
-                    <a
-                      class="tm-link color-orange ft-15 mgr-2"
-                      @click="toDelete(data)"
-                    >
-                      <i class="mdi mdi-delete-outline"></i>
-                    </a>
-                  </div>
-                </span>
-              </el-tree>
-            </div>
-          </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
-          <tm-layout width="auto">
-            <b-form class="pd-10">
-              <b-form-group label="Path" label-size="sm">
-                <b-form-input size="sm" v-model="form.path"> </b-form-input>
-              </b-form-group>
-              <b-form-group label="Value" label-size="sm">
+                <template v-if="data.path == '/'">
+                  <span>/</span>
+                </template>
+                <template v-else>
+                  <span>{{ node.label }}</span>
+                </template>
+                <div class="toolbox-editor-tree-btn-group">
+                  <a
+                    class="tm-link color-grey ft-14 mgr-2"
+                    @click="toReloadChildren(data)"
+                  >
+                    <i class="mdi mdi-reload"></i>
+                  </a>
+                  <a
+                    class="tm-link color-blue ft-16 mgr-2"
+                    @click="toInsert(data)"
+                  >
+                    <i class="mdi mdi-plus"></i>
+                  </a>
+                  <a
+                    class="tm-link color-orange ft-15 mgr-2"
+                    @click="toDelete(data)"
+                  >
+                    <i class="mdi mdi-delete-outline"></i>
+                  </a>
+                </div>
+              </span>
+            </el-tree>
+          </div>
+        </tm-layout>
+        <tm-layout-bar right></tm-layout-bar>
+        <tm-layout width="auto">
+          <b-form class="pd-10">
+            <b-form-group label="Path" label-size="sm">
+              <b-form-input size="sm" v-model="form.path"> </b-form-input>
+            </b-form-group>
+            <b-form-group label="Value" label-size="sm">
+              <b-form-textarea
+                size="sm"
+                rows="5"
+                max-rows="10"
+                v-model="form.value"
+              >
+              </b-form-textarea>
+            </b-form-group>
+            <template v-if="form.valueJson != null">
+              <b-form-group label="值JSON预览" label-size="sm">
                 <b-form-textarea
                   size="sm"
                   rows="5"
                   max-rows="10"
-                  v-model="form.value"
+                  v-model="form.valueJson"
                 >
                 </b-form-textarea>
               </b-form-group>
-              <template v-if="form.valueJson != null">
-                <b-form-group label="值JSON预览" label-size="sm">
-                  <b-form-textarea
-                    size="sm"
-                    rows="5"
-                    max-rows="10"
-                    v-model="form.valueJson"
-                  >
-                  </b-form-textarea>
-                </b-form-group>
-              </template>
-              <div class="pdtb-20">
-                <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
-              </div>
-            </b-form>
-          </tm-layout>
+            </template>
+            <div class="pdtb-20">
+              <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
+            </div>
+          </b-form>
         </tm-layout>
       </tm-layout>
     </template>
@@ -93,7 +94,7 @@ export default {
     return {
       style: {
         left: {
-          width: "800px",
+          width: "600px",
         },
         main: {},
       },
@@ -311,58 +312,59 @@ export default {
   /* border: 1px solid #f3f3f3; */
   border-bottom: 0px;
 }
-.toolbox-zookeeper-editor .el-tree-node__content {
+.toolbox-editor .el-tree-node__content {
   border-bottom: 1px dotted #696969;
 }
 
-.toolbox-box .el-tree {
+.toolbox-editor .el-tree {
   background-color: transparent;
   color: unset;
   width: auto;
   font-size: 12px;
+  user-select: none;
 }
-.toolbox-box .el-tree .mdi {
+.toolbox-editor .el-tree .mdi {
   vertical-align: middle;
 }
-.toolbox-box .el-tree-node__content {
+.toolbox-editor .el-tree-node__content {
   position: relative;
 }
 
-.toolbox-box .el-tree-node__content .toolbox-box-tree-btn-group {
+.toolbox-editor .el-tree-node__content .toolbox-editor-tree-btn-group {
   display: none;
 }
-.toolbox-box .el-tree-node__content:hover .toolbox-box-tree-btn-group {
+.toolbox-editor .el-tree-node__content:hover .toolbox-editor-tree-btn-group {
   display: block;
 }
-.toolbox-box .toolbox-box-tree-span .toolbox-box-tree-btn-group {
+.toolbox-editor .toolbox-editor-tree-span .toolbox-editor-tree-btn-group {
   position: absolute;
   right: 5px;
   top: -3px;
 }
-.toolbox-box .toolbox-box-tree-span {
+.toolbox-editor .toolbox-editor-tree-span {
   /* flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between; */
   font-size: 14px;
 }
-.toolbox-box .el-tree__empty-block {
+.toolbox-editor .el-tree__empty-block {
   display: none;
 }
-.toolbox-box .el-tree-node__children {
+.toolbox-editor .el-tree-node__children {
   overflow: visible !important;
 }
-.toolbox-box .el-tree-node__children.v-enter-active,
-.toolbox-box .el-tree-node__children.v-leave-active {
+.toolbox-editor .el-tree-node__children.v-enter-active,
+.toolbox-editor .el-tree-node__children.v-leave-active {
   overflow: hidden !important;
 }
-.toolbox-box .el-tree .el-tree-node.is-current > .el-tree-node__content {
+.toolbox-editor .el-tree .el-tree-node.is-current > .el-tree-node__content {
   background-color: #636363 !important;
 }
-.toolbox-box .el-tree .el-tree-node:focus > .el-tree-node__content {
+.toolbox-editor .el-tree .el-tree-node:focus > .el-tree-node__content {
   background-color: #545454;
 }
-.toolbox-box .el-tree .el-tree-node > .el-tree-node__content:hover {
+.toolbox-editor .el-tree .el-tree-node > .el-tree-node__content:hover {
   background-color: #545454;
 }
 </style>

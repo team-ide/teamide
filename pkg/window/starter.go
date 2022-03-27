@@ -21,13 +21,11 @@ var (
 
 func init() {
 	if windowWidth == 0 {
-		windowWidth = 1024
+		windowWidth = 1440
 	}
 	if windowHeight == 0 {
-		windowHeight = 768
+		windowHeight = 900
 	}
-	windowWidth = windowWidth - 40
-	windowHeight = windowHeight - 80
 }
 
 func Start(webUrl string, onClose func()) (err error) {
@@ -65,9 +63,15 @@ func startWindow(webUrl string, onClose func()) (err error) {
 	args = append(args, "--app="+webUrl)
 	args = append(args, fmt.Sprintf("--user-data-dir=%s", tmpDir))
 	args = append(args, "--class=TeamIDE")
-	args = append(args, "--start-maximized")
-	//args = append(args, "--window-position=20,20") // 窗口位置
-	//args = append(args, fmt.Sprintf("--window-size=%d,%d", windowWidth, windowHeight))
+	//args = append(args, "--start-maximized")
+
+	width := 1440
+	height := 900
+	left := (windowWidth - width) / 2
+	right := (windowHeight - height) / 2
+
+	args = append(args, fmt.Sprintf("--window-position=%d,%d", left, right)) // 窗口位置
+	args = append(args, fmt.Sprintf("--window-size=%d,%d", width, height))
 	args = append(args, fmt.Sprintf("--remote-debugging-port=%d", debuggingPort))
 
 	b := &browser{

@@ -1,6 +1,6 @@
 <template>
-  <div class="toolbox-database-editor">
-    <template v-if="ready"> database </template>
+  <div class="toolbox-database-table">
+    <template v-if="ready"> table </template>
   </div>
 </template>
 
@@ -29,7 +29,7 @@ export default {
 </script>
 
 <style>
-.toolbox-database-editor {
+.toolbox-database-table {
   width: 100%;
   height: 100%;
 }

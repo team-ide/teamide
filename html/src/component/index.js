@@ -73,6 +73,18 @@ Vue.component('ToolboxZookeeperEditor', ToolboxZookeeperEditor);
 import ToolboxElasticsearchEditor from './toolbox/Elasticsearch.vue'
 Vue.component('ToolboxElasticsearchEditor', ToolboxElasticsearchEditor);
 
-import ToolboxDatabaseEditor from './toolbox/Database.vue'
+import ToolboxDatabaseEditor from './toolbox/database/Index.vue'
 Vue.component('ToolboxDatabaseEditor', ToolboxDatabaseEditor);
+
+import ToolboxDatabaseDatabase from './toolbox/database/Database.vue'
+Vue.component('ToolboxDatabaseDatabase', ToolboxDatabaseDatabase);
+
+import ToolboxDatabaseTable from './toolbox/database/Table.vue'
+Vue.component('ToolboxDatabaseTable', ToolboxDatabaseTable);
+
+import ToolboxDatabaseTableData from './toolbox/database/TableData.vue'
+Vue.component('ToolboxDatabaseTableData', ToolboxDatabaseTableData);
+
+import ToolboxDatabaseTabs from './toolbox/database/Tabs.vue'
+Vue.component('ToolboxDatabaseTabs', ToolboxDatabaseTabs);
 export default {};

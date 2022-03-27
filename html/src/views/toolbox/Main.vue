@@ -1,11 +1,11 @@
 <template>
   <div class="toolbox-main">
     <div class="toolbox-main-header">
-      <div class="toolbox-main-tab-box">
+      <div class="toolbox-tab-box">
         <template v-for="(one, index) in toolbox.tabs">
           <div
             :key="'tab-' + index"
-            class="toolbox-main-tab"
+            class="toolbox-tab"
             :title="one.toolboxType.text + ':' + one.data.name"
             :class="{ active: one.active }"
           >
@@ -24,11 +24,11 @@
       </div>
     </div>
     <div class="toolbox-main-body">
-      <div class="toolbox-main-span-box">
+      <div class="toolbox-tab-span-box">
         <template v-for="(one, index) in toolbox.tabs">
           <div
             :key="'span-' + index"
-            class="toolbox-main-span"
+            class="toolbox-tab-span"
             :class="{ active: one.active }"
           >
             <ToolboxEditor
@@ -178,39 +178,39 @@ export default {
   position: relative;
   display: flex;
 }
-.toolbox-main-tab-box {
+.toolbox-tab-box {
   display: flex;
   position: relative;
   background-color: #383838;
 }
-.toolbox-main-tab {
+.toolbox-tab {
   display: flex;
   border-right: 1px solid #4e4e4e;
   position: relative;
   border-top-left-radius: 0px;
   border-top-right-radius: 10px;
 }
-.toolbox-main-tab.active {
+.toolbox-tab.active {
   background-color: #2d2d2d;
 }
-.toolbox-main-tab .text {
+.toolbox-tab .text {
   padding: 0px 5px 0px 10px;
   cursor: pointer;
 }
-.toolbox-main-tab .delete-btn {
+.toolbox-tab .delete-btn {
   transition: all 0.1s;
   transform: scale(0);
   margin: 0px 5px;
 }
-.toolbox-main-tab:hover .delete-btn {
+.toolbox-tab:hover .delete-btn {
   transform: scale(1);
 }
-.toolbox-main-span-box {
+.toolbox-tab-span-box {
   width: 100%;
   height: 100%;
   position: relative;
 }
-.toolbox-main-span {
+.toolbox-tab-span {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -220,7 +220,7 @@ export default {
   transform: scale(0);
   background-color: #2d2d2d;
 }
-.toolbox-main-span.active {
+.toolbox-tab-span.active {
   transform: scale(1);
 }
 </style>

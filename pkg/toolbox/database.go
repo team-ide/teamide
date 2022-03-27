@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 func init() {
@@ -29,6 +30,12 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 
 	databaseConfig := DatabaseConfig{}
 
+	if config["port"] != nil {
+		config["port"], err = strconv.Atoi(fmt.Sprint(config["port"]))
+		if err != nil {
+			return
+		}
+	}
 	var bs []byte
 	bs, err = json.Marshal(config)
 	if err != nil {

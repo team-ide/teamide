@@ -49,10 +49,17 @@ type ZKService struct {
 
 func (this_ *ZKService) init() error {
 	var err error
-	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*3)
+	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*60, func(c *zk.Conn) {
+		c.SetLogger(defaultLogger{})
+	})
 	return err
 }
 
+type defaultLogger struct{}
+
+func (defaultLogger) Printf(format string, a ...interface{}) {
+
+}
 func (this_ *ZKService) GetServers() []string {
 	var servers []string
 	if strings.Contains(this_.address, ",") {

@@ -355,4 +355,38 @@ tool.isNotTrimEmpty = function (arg) {
     return !tool.isTrimEmpty(arg);
 };
 
+tool.initTreeWidth = function (tree, treeBox) {
+
+    if (tree.initWidthIng) {
+        return;
+    }
+    tree.initWidthIng = true;
+
+    tree.$nextTick(() => {
+        let hasActive = false;
+        if (
+            tree.$el.getElementsByClassName("v-enter-active").length > 0 ||
+            tree.$el.getElementsByClassName("v-leave-active").length > 0
+        ) {
+            hasActive = true;
+        }
+        if (hasActive) {
+            window.setTimeout(() => {
+                tree.initWidthIng = false;
+                tool.initTreeWidth(tree, treeBox);
+            }, 100);
+        } else {
+            tree.$el.style.minWidth = "0px";
+            let minWidth = 0;
+            if (treeBox) {
+                if (minWidth < treeBox.scrollWidth) {
+                    minWidth = treeBox.scrollWidth;
+                }
+            }
+            tree.minWidth = minWidth;
+            tree.$el.style.minWidth = minWidth + "px";
+            tree.initWidthIng = false;
+        }
+    });
+};
 export default tool;

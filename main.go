@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go.uber.org/zap"
 	"os"
 	"strings"
 	"sync"
@@ -31,6 +32,16 @@ func init() {
 
 func main() {
 	var err error
+	var serverContext *context.ServerContext
+
+	defer func() {
+		if err := recover(); err != nil {
+			if serverContext != nil {
+				serverContext.Logger.Error("启动失败", zap.Any("error", err))
+			}
+			waitGroupForStop.Done()
+		}
+	}()
 
 	for _, v := range os.Args {
 		if v == "--isStandAlone" {
@@ -50,7 +61,7 @@ func main() {
 		panic(err)
 	}
 
-	serverContext, err := context.NewServerContext(serverConf)
+	serverContext, err = context.NewServerContext(serverConf)
 	if err != nil {
 		panic(err)
 	}
