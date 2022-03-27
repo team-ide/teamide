@@ -4,30 +4,9 @@ import "encoding/json"
 
 func init() {
 	worker_ := &Worker{
-		Name:    "elasticsearch",
-		Text:    "Elasticsearch",
-		WorkMap: map[string]func(map[string]interface{}) (map[string]interface{}, error){},
-	}
-	worker_.WorkMap["indexNames"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("indexNames", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["createIndex"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("createIndex", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["deleteIndex"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("deleteIndex", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["getMapping"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("getMapping", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["putMapping"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("putMapping", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["search"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("search", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["scroll"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return esWork("scroll", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
+		Name: "elasticsearch",
+		Text: "Elasticsearch",
+		Work: esWork,
 	}
 
 	AddWorker(worker_)

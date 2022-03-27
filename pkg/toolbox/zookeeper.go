@@ -6,21 +6,9 @@ import (
 
 func init() {
 	worker_ := &Worker{
-		Name:    "zookeeper",
-		Text:    "Zookeeper",
-		WorkMap: map[string]func(map[string]interface{}) (map[string]interface{}, error){},
-	}
-	worker_.WorkMap["get"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return zkWork("get", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["save"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return zkWork("save", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["getChildren"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return zkWork("getChildren", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["delete"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return zkWork("delete", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
+		Name: "zookeeper",
+		Text: "Zookeeper",
+		Work: zkWork,
 	}
 
 	AddWorker(worker_)

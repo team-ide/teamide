@@ -7,12 +7,9 @@ import (
 
 func init() {
 	worker_ := &Worker{
-		Name:    "redis",
-		Text:    "Redis",
-		WorkMap: map[string]func(map[string]interface{}) (map[string]interface{}, error){},
-	}
-	worker_.WorkMap["get"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return redisWork("get", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
+		Name: "redis",
+		Text: "Redis",
+		Work: redisWork,
 	}
 
 	AddWorker(worker_)
@@ -57,7 +54,8 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 	case "get":
 		var valueInfo RedisValueInfo
 		valueInfo, err = service.Get(request.Key)
-		res["value"] = valueInfo
+		res["type"] = valueInfo.Type
+		res["value"] = valueInfo.Value
 	case "keys":
 		var count int
 		var keys []string

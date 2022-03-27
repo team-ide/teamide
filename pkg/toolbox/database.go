@@ -7,12 +7,9 @@ import (
 
 func init() {
 	worker_ := &Worker{
-		Name:    "database",
-		Text:    "Database",
-		WorkMap: map[string]func(map[string]interface{}) (map[string]interface{}, error){},
-	}
-	worker_.WorkMap["databases"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return databaseWork("databases", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
+		Name: "database",
+		Text: "Database",
+		Work: databaseWork,
 	}
 
 	AddWorker(worker_)

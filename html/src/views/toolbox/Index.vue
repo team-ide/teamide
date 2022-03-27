@@ -106,9 +106,6 @@ export default {
   padding: 0px;
   position: relative;
 }
-.toolbox-box .tm-layout {
-  overflow: unset;
-}
 .toolbox-box .tm-layout > .tm-layout-bar {
   background-color: #4e4e4e;
 }

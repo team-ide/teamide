@@ -2,6 +2,7 @@ package window
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"io"
@@ -43,70 +44,72 @@ func Start(webUrl string, onClose func()) (err error) {
 func startWindow(webUrl string, onClose func()) (err error) {
 
 	locateChrome := LocateChrome()
-	if locateChrome != "" {
-		var tmpDir string
-		tmpDir, err = ioutil.TempDir("", "TeamIDE")
-		if err != nil {
-			return
-		}
-		var listener net.Listener
-		listener, err = net.Listen("tcp", ":0")
-		if err != nil {
-			return
-		}
-		debuggingPort := listener.Addr().(*net.TCPAddr).Port
-
-		var args []string
-		//args = append(args, defaultChromeArgs...)
-		args = append(args, "--app="+webUrl)
-		args = append(args, fmt.Sprintf("--user-data-dir=%s", tmpDir))
-		args = append(args, "--class=TeamIDE")
-		args = append(args, "--start-maximized")
-		//args = append(args, "--window-position=20,20") // 窗口位置
-		//args = append(args, fmt.Sprintf("--window-size=%d,%d", windowWidth, windowHeight))
-		args = append(args, fmt.Sprintf("--remote-debugging-port=%d", debuggingPort))
-
-		b := &browser{
-			name: locateChrome,
-			args: args,
-		}
-		b.cmd = exec.Command(locateChrome, args...)
-
-		var pipe io.ReadCloser
-		if pipe, err = b.cmd.StderrPipe(); err != nil {
-			return
-		}
-
-		if err = b.cmd.Start(); err != nil {
-			return
-		}
-
-		re := regexp.MustCompile(`^DevTools listening on (ws://.*?)\r?\n$`)
-		var m []string
-		m, err = readUntilMatch(pipe, re)
-		if err != nil {
-			b.kill()
-			return
-		}
-		wsURL := m[1]
-
-		//fmt.Println("wsURL:", wsURL)
-		// Open a websocket
-		b.ws, err = websocket.Dial(wsURL, "", "http://127.0.0.1")
-		if err != nil {
-			b.kill()
-			return
-		}
-
-		go func() {
-			err = b.cmd.Wait()
-			if err != nil {
-				b.kill()
-			}
-			onClose()
-		}()
+	if locateChrome == "" {
+		err = errors.New("未检测到谷歌浏览器")
 		return
 	}
+	var tmpDir string
+	tmpDir, err = ioutil.TempDir("", "TeamIDE")
+	if err != nil {
+		return
+	}
+	var listener net.Listener
+	listener, err = net.Listen("tcp", ":0")
+	if err != nil {
+		return
+	}
+	debuggingPort := listener.Addr().(*net.TCPAddr).Port
+
+	var args []string
+	//args = append(args, defaultChromeArgs...)
+	args = append(args, "--app="+webUrl)
+	args = append(args, fmt.Sprintf("--user-data-dir=%s", tmpDir))
+	args = append(args, "--class=TeamIDE")
+	args = append(args, "--start-maximized")
+	//args = append(args, "--window-position=20,20") // 窗口位置
+	//args = append(args, fmt.Sprintf("--window-size=%d,%d", windowWidth, windowHeight))
+	args = append(args, fmt.Sprintf("--remote-debugging-port=%d", debuggingPort))
+
+	b := &browser{
+		name: locateChrome,
+		args: args,
+	}
+	b.cmd = exec.Command(locateChrome, args...)
+
+	var pipe io.ReadCloser
+	if pipe, err = b.cmd.StderrPipe(); err != nil {
+		return
+	}
+
+	if err = b.cmd.Start(); err != nil {
+		return
+	}
+
+	re := regexp.MustCompile(`^DevTools listening on (ws://.*?)\r?\n$`)
+	var m []string
+	m, err = readUntilMatch(pipe, re)
+	if err != nil {
+		b.kill()
+		return
+	}
+	wsURL := m[1]
+
+	//fmt.Println("wsURL:", wsURL)
+	// Open a websocket
+	b.ws, err = websocket.Dial(wsURL, "", "http://127.0.0.1")
+	if err != nil {
+		b.kill()
+		return
+	}
+
+	go func() {
+		err = b.cmd.Wait()
+		if err != nil {
+			b.kill()
+		}
+		onClose()
+	}()
+	return
 
 	//var args []string
 	//args = append(args, "--class=TeamIDE")

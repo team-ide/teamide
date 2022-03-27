@@ -91,4 +91,34 @@ body {
 :before {
   box-sizing: border-box;
 }
+
+
+/* 滚动条样式*/
+.scrollbar {
+  overflow: scroll;
+}
+
+.scrollbar:hover::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 10px #333333;
+  background: #333333;
+}
+.scrollbar:hover::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 10px #262626;
+  background: #262626;
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+}
+.scrollbar::-webkit-scrollbar-track {
+  border-radius: 0;
+}
 </style>

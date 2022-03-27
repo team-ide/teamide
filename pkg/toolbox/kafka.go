@@ -10,33 +10,9 @@ import (
 
 func init() {
 	worker_ := &Worker{
-		Name:    "kafka",
-		Text:    "Kafka",
-		WorkMap: map[string]func(map[string]interface{}) (map[string]interface{}, error){},
-	}
-	worker_.WorkMap["topics"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("topics", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["pull"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("pull", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["push"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("push", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["commit"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("commit", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["reset"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("reset", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["deleteTopic"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("deleteTopic", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["createPartitions"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("createPartitions", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
-	}
-	worker_.WorkMap["deleteRecords"] = func(m map[string]interface{}) (map[string]interface{}, error) {
-		return kafkaWork("deleteRecords", m["config"].(map[string]interface{}), m["data"].(map[string]interface{}))
+		Name: "kafka",
+		Text: "Kafka",
+		Work: kafkaWork,
 	}
 
 	AddWorker(worker_)

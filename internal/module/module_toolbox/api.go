@@ -163,8 +163,9 @@ func (this_ *ToolboxApi) delete(requestBean *base.RequestBean, c *gin.Context) (
 }
 
 type WorkRequest struct {
-	*ToolboxModel
-	Data map[string]interface{}
+	ToolboxId int64                  `json:"toolboxId,omitempty"`
+	Work      string                 `json:"work,omitempty"`
+	Data      map[string]interface{} `json:"data,omitempty"`
 }
 
 func (this_ *ToolboxApi) work(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -174,9 +175,7 @@ func (this_ *ToolboxApi) work(requestBean *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
-	toolbox := request.ToolboxModel
-
-	res, err = this_.ToolboxService.Work(toolbox.ToolboxId, request.Data)
+	res, err = this_.ToolboxService.Work(request.ToolboxId, request.Work, request.Data)
 	if err != nil {
 		return
 	}

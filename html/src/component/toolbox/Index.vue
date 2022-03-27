@@ -1,8 +1,56 @@
 <template>
   <div class="toolbox-editor" tabindex="-1" v-if="toolboxType != null">
-    {{ data }}
-    <template v-if="option != null">
-      {{ option }}
+    <template v-if="ready">
+      <template v-if="toolboxType.name == 'redis'">
+        <ToolboxRedisEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxRedisEditor>
+      </template>
+      <template v-else-if="toolboxType.name == 'database'">
+        <ToolboxDatabaseEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxDatabaseEditor>
+      </template>
+      <template v-else-if="toolboxType.name == 'zookeeper'">
+        <ToolboxZookeeperEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxZookeeperEditor>
+      </template>
+      <template v-else-if="toolboxType.name == 'elasticsearch'">
+        <ToolboxElasticsearchEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxElasticsearchEditor>
+      </template>
+      <template v-else-if="toolboxType.name == 'kafka'">
+        <ToolboxKafkaEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxKafkaEditor>
+      </template>
     </template>
   </div>
 </template>
@@ -17,6 +65,7 @@ export default {
       key: this.tool.getNumber(),
       option: null,
       ready: false,
+      wrap: {},
     };
   },
   computed: {},
@@ -27,7 +76,9 @@ export default {
   },
   methods: {
     init() {
+      this.wrap.work = this.work;
       this.initOption();
+      this.ready = true;
     },
     initOption() {
       let option = null;
@@ -35,6 +86,18 @@ export default {
         option = JSON.parse(this.data.option);
       }
       this.set(option);
+    },
+    async work(work, data) {
+      let param = {
+        toolboxId: this.data.toolboxId,
+        work: work,
+        data: data,
+      };
+      let res = await this.server.toolbox.work(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      return res;
     },
     get() {
       return this.option;
@@ -82,5 +145,31 @@ export default {
 .toolbox-editor .input,
 .toolbox-editor .comment {
   padding: 0px 5px;
+}
+
+.toolbox-editor table {
+  padding: 0px 0px;
+  width: 100%;
+}
+.toolbox-editor table thead {
+  border: 1px solid #4e4e4e;
+}
+.toolbox-editor table th {
+  text-align: center;
+  line-height: 30px;
+}
+.toolbox-editor table td {
+  border-right: 1px solid #4e4e4e;
+  border-bottom: 1px solid #4e4e4e;
+  padding: 3px 5px;
+}
+.toolbox-editor table tbody {
+  border-left: 1px solid #4e4e4e;
+}
+.toolbox-editor table td .input {
+  padding: 0px 0px;
+}
+.toolbox-editor table td .model-input {
+  min-width: 80px;
 }
 </style>

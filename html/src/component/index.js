@@ -60,4 +60,19 @@ Vue.component('MenuItem', MenuItem);
 
 import ToolboxEditor from './toolbox/Index.vue'
 Vue.component('ToolboxEditor', ToolboxEditor);
+
+import ToolboxRedisEditor from './toolbox/Redis.vue'
+Vue.component('ToolboxRedisEditor', ToolboxRedisEditor);
+
+import ToolboxKafkaEditor from './toolbox/Kafka.vue'
+Vue.component('ToolboxKafkaEditor', ToolboxKafkaEditor);
+
+import ToolboxZookeeperEditor from './toolbox/Zookeeper.vue'
+Vue.component('ToolboxZookeeperEditor', ToolboxZookeeperEditor);
+
+import ToolboxElasticsearchEditor from './toolbox/Elasticsearch.vue'
+Vue.component('ToolboxElasticsearchEditor', ToolboxElasticsearchEditor);
+
+import ToolboxDatabaseEditor from './toolbox/Database.vue'
+Vue.component('ToolboxDatabaseEditor', ToolboxDatabaseEditor);
 export default {};

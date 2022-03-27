@@ -6,11 +6,11 @@ import (
 )
 
 type Worker struct {
-	Name    string                                                                  `json:"name,omitempty"`
-	Text    string                                                                  `json:"text,omitempty"`
-	Icon    string                                                                  `json:"icon,omitempty"`
-	Comment string                                                                  `json:"comment,omitempty"`
-	WorkMap map[string]func(map[string]interface{}) (map[string]interface{}, error) `json:"-"`
+	Name    string                                                                                                                `json:"name,omitempty"`
+	Text    string                                                                                                                `json:"text,omitempty"`
+	Icon    string                                                                                                                `json:"icon,omitempty"`
+	Comment string                                                                                                                `json:"comment,omitempty"`
+	Work    func(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) `json:"-"`
 }
 
 var (
