@@ -30,7 +30,7 @@
                 </td>
               </tr>
             </template>
-            <template v-if="topics.length == 0">
+            <template v-else-if="topics.length == 0">
               <tr>
                 <td colspan="2">
                   <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
