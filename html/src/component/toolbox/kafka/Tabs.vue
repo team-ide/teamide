@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbox-database-tabs">
+  <div class="toolbox-kafka-tabs">
     <template v-if="ready">
-      <div class="toolbox-database-tabs-header">
+      <div class="toolbox-kafka-tabs-header">
         <div class="toolbox-tab-box">
           <template v-for="(one, index) in tabs">
             <div
@@ -24,7 +24,7 @@
           </template>
         </div>
       </div>
-      <div class="toolbox-database-tabs-body">
+      <div class="toolbox-kafka-tabs-body">
         <div class="toolbox-tab-span-box">
           <template v-for="(one, index) in tabs">
             <div
@@ -32,18 +32,15 @@
               class="toolbox-tab-span"
               :class="{ active: one.active }"
             >
-              <template v-if="one.type == 'data'">
-                <ToolboxDatabaseTableData
-                  :source="source"
-                  :toolbox="toolbox"
-                  :toolboxType="toolboxType"
-                  :data="data"
-                  :wrap="wrap"
-                  :database="one.data.database"
-                  :table="one.data"
-                >
-                </ToolboxDatabaseTableData>
-              </template>
+              <ToolboxKafkaTopicData
+                :source="source"
+                :toolbox="toolbox"
+                :toolboxType="toolboxType"
+                :data="data"
+                :wrap="wrap"
+                :topic="one.data"
+              >
+              </ToolboxKafkaTopicData>
             </div>
           </template>
         </div>
@@ -128,34 +125,26 @@ export default {
         this.activeTab = tab;
       });
     },
-    getTabKeyByData(type, data) {
-      let key;
-      if (type == "data") {
-        key = "" + data.database.name + ":" + data.name;
-      }
+    getTabKeyByData(data) {
+      let key = "" + data.name;
 
       return key;
     },
-    getTabByData(type, data) {
-      let key = this.getTabKeyByData(type, data);
+    getTabByData(data) {
+      let key = this.getTabKeyByData(data);
       let tab = this.getTab(key);
       return tab;
     },
-    createTabByData(type, data) {
-      let key = this.getTabKeyByData(type, data);
+    createTabByData(data) {
+      let key = this.getTabKeyByData(data);
 
       let tab = this.getTab(key);
       if (tab == null) {
-        let title = "";
-        let name = "";
-        if (type == "data") {
-          title = data.database.name + "." + data.name;
-          name = data.database.name + "." + data.name;
-        }
+        let title = data.name;
+        let name = data.name;
         tab = {
           key,
           data,
-          type,
           title,
           name,
         };
@@ -173,18 +162,18 @@ export default {
 </script>
 
 <style>
-.toolbox-database-tabs {
+.toolbox-kafka-tabs {
   width: 100%;
   height: 100%;
 }
-.toolbox-database-tabs-header {
+.toolbox-kafka-tabs-header {
   width: 100%;
   height: 25px;
   line-height: 25px;
   font-size: 14px;
   position: relative;
 }
-.toolbox-database-tabs-body {
+.toolbox-kafka-tabs-body {
   width: 100%;
   height: calc(100% - 25px);
   border-bottom: 1px solid #4e4e4e;

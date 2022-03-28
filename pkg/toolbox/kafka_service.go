@@ -121,10 +121,10 @@ func (this_ *KafkaService) Pull(groupId string, topics []string) (msgs []*sarama
 	for {
 		time.Sleep(200 * time.Millisecond)
 		nowTime := GetNowTime()
-		if len(handler.msgs) > 0 && nowTime-startTime > 2*1000 {
+		if len(handler.msgs) > 0 && nowTime-startTime > 1*1000 {
 			break
 		}
-		if nowTime-startTime > 5*1000 {
+		if nowTime-startTime > 3*1000 {
 			break
 		}
 	}
@@ -208,6 +208,34 @@ func (this_ *KafkaService) CreatePartitions(topic string, count int32) (err erro
 	defer admin.Close()
 
 	err = admin.CreatePartitions(topic, count, nil, false)
+
+	return
+}
+
+func (this_ *KafkaService) CreateTopic(topic string, numPartitions int32, replicationFactor int16) (err error) {
+	var saramaClient sarama.Client
+	saramaClient, err = this_.getClient()
+	if err != nil {
+		return
+	}
+	defer saramaClient.Close()
+	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
+	if err != nil {
+		return
+	}
+
+	defer admin.Close()
+	if numPartitions <= 0 {
+		numPartitions = 1
+	}
+	if replicationFactor <= 0 {
+		replicationFactor = 1
+	}
+	detail := &sarama.TopicDetail{
+		NumPartitions:     numPartitions,
+		ReplicationFactor: replicationFactor,
+	}
+	err = admin.CreateTopic(topic, detail, false)
 
 	return
 }

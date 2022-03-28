@@ -205,19 +205,6 @@ export default {
       //   });
       // }, 100);
     },
-    formatDatas(parent, datas) {
-      datas = datas || [];
-      datas.forEach((data) => {
-        this.formatData(parent, data);
-      });
-    },
-    formatData(parent, data) {
-      data.path = "/" + data.name;
-      if (parent != null && parent.path != "/") {
-        data.path = parent.path + "/" + data.name;
-      }
-      data.key = data.path;
-    },
     async loadDatabases() {
       let param = {};
       let res = await this.wrap.work("databases", param);

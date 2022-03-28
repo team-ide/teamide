@@ -242,6 +242,83 @@ let toolboxOption = {
                 ],
             },
         ],
+        topic: {
+            fields: [
+                {
+                    label: "Topic（主题）",
+                    name: "topic",
+                    defaultValue: "topic_xxx",
+                    rules: [
+                        {
+                            required: true,
+                            message: `主题不能为空!`
+                        },
+                    ],
+                },
+                {
+                    label: "Partitions",
+                    name: "numPartitions",
+                    defaultValue: "1",
+                    rules: [
+                        {
+                            required: true,
+                            message: `分区不能为空!`
+                        },
+                    ],
+                },
+                {
+                    label: "ReplicationFactor",
+                    name: "replicationFactor",
+                    defaultValue: "1",
+                    rules: [
+                        {
+                            required: true,
+                            message: `ReplicationFactor不能为空!`
+                        },
+                    ],
+                },
+            ],
+        },
+        push: {
+            fields: [
+                {
+                    label: "Topic（主题）",
+                    name: "topic",
+                    rules: [
+                        {
+                            required: true,
+                            message: `主题不能为空!`
+                        },
+                    ],
+                },
+                {
+                    label: "KeyType",
+                    name: "keyType",
+                    defaultValue: "string",
+                    rules: [
+                    ],
+                },
+                {
+                    label: "Key",
+                    name: "key",
+                    rules: [
+                    ],
+                },
+                {
+                    label: "ValueType",
+                    name: "valueType",
+                    defaultValue: "string",
+                    rules: [
+                    ],
+                },
+                {
+                    label: "Value",
+                    name: "value",
+                    rules: [
+                    ],
+                },
+            ],
+        },
     },
 };
 export default {

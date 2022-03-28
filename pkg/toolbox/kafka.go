@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/Shopify/sarama"
 )
@@ -19,9 +20,12 @@ func init() {
 }
 
 type KafkaBaseRequest struct {
-	GroupId   string `json:"groupId"`
-	Topic     string `json:"topic"`
-	Partition int32  `json:"partition"`
+	GroupId           string `json:"groupId"`
+	Topic             string `json:"topic"`
+	Partition         int32  `json:"partition"`
+	NumPartitions     int32  `json:"numPartitions"`
+	ReplicationFactor int16  `json:"replicationFactor"`
+
 	Offset    int64  `json:"offset"`
 	Count     int32  `json:"count"`
 	KeyType   string `json:"keyType"`
@@ -88,9 +92,9 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 		for _, kafkaMsg := range kafkaMsgs {
 			var key interface{}
 			var value interface{}
-			if request.KeyType == "String" {
+			if strings.ToLower(request.KeyType) == "string" {
 				key = sarama.StringEncoder(kafkaMsg.Key)
-			} else if request.KeyType == "Long" {
+			} else if strings.ToLower(request.KeyType) == "long" {
 				if len(kafkaMsg.Key) == 8 {
 					key = uint64(binary.BigEndian.Uint64(kafkaMsg.Key))
 				} else {
@@ -99,9 +103,9 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 			} else {
 				key = sarama.ByteEncoder(kafkaMsg.Key)
 			}
-			if request.ValueType == "String" {
+			if strings.ToLower(request.ValueType) == "string" {
 				value = sarama.StringEncoder(kafkaMsg.Value)
-			} else if request.ValueType == "Long" {
+			} else if strings.ToLower(request.ValueType) == "long" {
 				if len(kafkaMsg.Value) == 8 {
 					value = uint64(binary.BigEndian.Uint64(kafkaMsg.Value))
 				} else {
@@ -129,9 +133,9 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 		var key sarama.Encoder
 		var value sarama.Encoder
 		if request.Key != "" {
-			if request.KeyType == "String" {
+			if strings.ToLower(request.KeyType) == "string" {
 				key = sarama.StringEncoder(request.Key)
-			} else if request.KeyType == "Long" {
+			} else if strings.ToLower(request.KeyType) == "long" {
 				longV, err := strconv.ParseInt(request.Key, 10, 64)
 				if err != nil {
 					return nil, err
@@ -145,9 +149,9 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 			}
 		}
 		if request.Value != "" {
-			if request.ValueType == "String" {
+			if strings.ToLower(request.ValueType) == "string" {
 				value = sarama.StringEncoder(request.Value)
-			} else if request.ValueType == "Long" {
+			} else if strings.ToLower(request.ValueType) == "long" {
 				longV, err := strconv.ParseInt(request.Value, 10, 64)
 				if err != nil {
 					return nil, err
@@ -191,6 +195,11 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 		}
 	case "deleteTopic":
 		err = service.DeleteTopic(request.Topic)
+		if err != nil {
+			return
+		}
+	case "createTopic":
+		err = service.CreateTopic(request.Topic, request.NumPartitions, request.ReplicationFactor)
 		if err != nil {
 			return
 		}

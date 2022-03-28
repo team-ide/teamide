@@ -64,8 +64,17 @@ Vue.component('ToolboxEditor', ToolboxEditor);
 import ToolboxRedisEditor from './toolbox/Redis.vue'
 Vue.component('ToolboxRedisEditor', ToolboxRedisEditor);
 
-import ToolboxKafkaEditor from './toolbox/Kafka.vue'
+import ToolboxKafkaEditor from './toolbox/kafka/Index.vue'
 Vue.component('ToolboxKafkaEditor', ToolboxKafkaEditor);
+
+import ToolboxKafkaTopic from './toolbox/kafka/Topic.vue'
+Vue.component('ToolboxKafkaTopic', ToolboxKafkaTopic);
+
+import ToolboxKafkaTabs from './toolbox/kafka/Tabs.vue'
+Vue.component('ToolboxKafkaTabs', ToolboxKafkaTabs);
+
+import ToolboxKafkaTopicData from './toolbox/kafka/TopicData.vue'
+Vue.component('ToolboxKafkaTopicData', ToolboxKafkaTopicData);
 
 import ToolboxZookeeperEditor from './toolbox/Zookeeper.vue'
 Vue.component('ToolboxZookeeperEditor', ToolboxZookeeperEditor);
