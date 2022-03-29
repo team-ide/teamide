@@ -1,5 +1,6 @@
 import server from "@/server/index.js";
 import source from "@/source/index.js";
+import jQuery from 'jquery'
 
 import tm from 'teamide-ui'
 
@@ -8,6 +9,7 @@ import CryptoJS from '@/tool/CryptoJS.js';
 let tool = {};
 Object.assign(tool, tm);
 tool.md5 = md5;
+tool.jQuery = jQuery;
 
 tool.init = function () {
     source.status = 'connecting';
@@ -388,5 +390,23 @@ tool.initTreeWidth = function (tree, treeBox) {
             tree.initWidthIng = false;
         }
     });
+};
+
+tool.initInputWidth = (event, options) => {
+    let target = tool.jQuery(event.target || event);
+    let value = target.val();
+    let str = value;
+    let w = 10;
+    if (target.find('option').length > 0) {
+        w = 30;
+        target.find('option').each((index, one) => {
+            one = tool.jQuery(one);
+            if (one.attr('value') == value) {
+                str = one.attr('text') || one.text();
+            }
+        });
+    }
+    let compute = tool.computeFontSize(str, "12px");
+    tool.jQuery(target).css('width', (compute.width + w) + 'px')
 };
 export default tool;

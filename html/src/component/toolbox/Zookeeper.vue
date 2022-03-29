@@ -26,24 +26,24 @@
                   <span>{{ node.label }}</span>
                 </template>
                 <div class="toolbox-editor-tree-btn-group">
-                  <a
+                  <div
                     class="tm-link color-grey ft-14 mgr-2"
                     @click="toReloadChildren(data)"
                   >
                     <i class="mdi mdi-reload"></i>
-                  </a>
-                  <a
+                  </div>
+                  <div
                     class="tm-link color-blue ft-16 mgr-2"
                     @click="toInsert(data)"
                   >
                     <i class="mdi mdi-plus"></i>
-                  </a>
-                  <a
+                  </div>
+                  <div
                     class="tm-link color-orange ft-15 mgr-2"
                     @click="toDelete(data)"
                   >
                     <i class="mdi mdi-delete-outline"></i>
-                  </a>
+                  </div>
                 </div>
               </span>
             </el-tree>

@@ -96,4 +96,7 @@ Vue.component('ToolboxDatabaseTableData', ToolboxDatabaseTableData);
 
 import ToolboxDatabaseTabs from './toolbox/database/Tabs.vue'
 Vue.component('ToolboxDatabaseTabs', ToolboxDatabaseTabs);
+
+import ToolboxDatabaseSql from './toolbox/database/Sql.vue'
+Vue.component('ToolboxDatabaseSql', ToolboxDatabaseSql);
 export default {};

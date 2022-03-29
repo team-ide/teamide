@@ -2,7 +2,7 @@
   <div class="toolbox-database-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="300px" class="scrollbar">
+        <tm-layout width="300px" class="">
           <ToolboxDatabaseDatabase
             :source="source"
             :toolbox="toolbox"

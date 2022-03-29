@@ -16,6 +16,29 @@ source.indexTypes = null;
 source.modelTypes = null;
 source.dataPlaces = null;
 source.databaseTypes = null;
+source.sqlConditionalOperations = [
+    { text: "等于", value: "=" },
+    { text: "不等于", value: "<>" },
+    { text: "大于", value: ">" },
+    { text: "大于或等于", value: ">=" },
+    { text: "小于", value: "<" },
+    { text: "小于或等于", value: "<=" },
+    { text: "包含", value: "like" },
+    { text: "不包含", value: "not like" },
+    { text: "开始以", value: "like start" },
+    { text: "开始不是以", value: "not like start" },
+    { text: "结束以", value: "like end" },
+    { text: "结束不是以", value: "not like end" },
+    { text: "是null", value: "is null" },
+    { text: "不是null", value: "is not null" },
+    { text: "是空", value: "is empty" },
+    { text: "不是空", value: "is not empty" },
+    { text: "介于", value: "between" },
+    { text: "不介于", value: "not between" },
+    { text: "在列表", value: "in" },
+    { text: "不在列表", value: "not in" },
+    { text: "自定义", value: "custom" },
+];
 
 source.toolboxTypes = null;
 

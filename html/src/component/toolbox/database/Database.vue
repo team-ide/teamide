@@ -1,46 +1,71 @@
 <template>
   <div class="toolbox-database-database">
     <template v-if="ready">
-      <div class="pd-10">
-        <el-tree
-          ref="tree"
-          :load="loadNode"
-          lazy
-          :props="defaultProps"
-          :default-expanded-keys="expands"
-          node-key="key"
-          :expand-on-click-node="false"
-          @node-click="nodeClick"
-        >
-          <span class="toolbox-editor-tree-span" slot-scope="{ node, data }">
-            <span>{{ node.label }}</span>
-            <div class="toolbox-editor-tree-btn-group">
-              <a
-                v-if="data.isDatabase || data.isDatabaseTables"
-                class="tm-link color-grey ft-14 mgr-4"
-                @click="toReloadChildren(data)"
-              >
-                <i class="mdi mdi-reload"></i>
-              </a>
-              <a
-                v-if="data.isDatabase || data.isTable"
-                class="tm-link color-grey ft-12 mgr-4"
-                title="表数据"
-                @click="toShowCreate(data)"
-              >
-                <i class="">DDL</i>
-              </a>
-              <a
-                v-if="data.isDatabase || data.isTable"
-                class="tm-link color-orange ft-15 mgr-4"
-                @click="toDelete(data)"
-              >
-                <i class="mdi mdi-delete-outline"></i>
-              </a>
+      <tm-layout height="100%">
+        <tm-layout height="50px">
+          <div class="pdlr-10 pdt-10">
+            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+              新建库
             </div>
-          </span>
-        </el-tree>
-      </div>
+            <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toOpenSql">
+              新建查询
+            </div>
+          </div>
+        </tm-layout>
+        <tm-layout height="auto" class="scrollbar">
+          <div class="pd-10">
+            <el-tree
+              ref="tree"
+              :load="loadNode"
+              lazy
+              :props="defaultProps"
+              :default-expanded-keys="expands"
+              node-key="key"
+              :expand-on-click-node="false"
+              @node-click="nodeClick"
+            >
+              <span
+                class="toolbox-editor-tree-span"
+                slot-scope="{ node, data }"
+              >
+                <span>{{ node.label }}</span>
+                <div class="toolbox-editor-tree-btn-group">
+                  <div
+                    v-if="data.isDatabase || data.isDatabaseTables"
+                    class="tm-link color-grey ft-14 mgr-4"
+                    @click="toReloadChildren(data)"
+                  >
+                    <i class="mdi mdi-reload"></i>
+                  </div>
+                  <div
+                    v-if="data.isTable"
+                    class="tm-link color-grey ft-14 mgr-4"
+                    title="表数据"
+                    @click="toOpenTable(data)"
+                  >
+                    <i class="mdi mdi-database-outline"></i>
+                  </div>
+                  <div
+                    v-if="data.isDatabase || data.isTable"
+                    class="tm-link color-grey ft-14 mgr-4"
+                    title="建表语句"
+                    @click="toShowCreate(data)"
+                  >
+                    <i class="mdi mdi-code-string"></i>
+                  </div>
+                  <div
+                    v-if="data.isDatabase || data.isTable"
+                    class="tm-link color-orange ft-15 mgr-4"
+                    @click="toDelete(data)"
+                  >
+                    <i class="mdi mdi-delete-outline"></i>
+                  </div>
+                </div>
+              </span>
+            </el-tree>
+          </div>
+        </tm-layout>
+      </tm-layout>
     </template>
   </div>
 </template>
@@ -119,6 +144,15 @@ export default {
       } else if (data.isTable) {
         this.toOpenTable(data);
       }
+    },
+    toInsert() {},
+    toOpenSql() {
+      let tab = this.wrap.createTabByData("sql", {
+        key: "sql-" + this.tool.getNumber(),
+        title: "新建SQL",
+      });
+      this.wrap.addTab(tab);
+      this.wrap.doActiveTab(tab);
     },
     toOpenTable(data) {
       let tab = this.wrap.createTabByData("data", data);
@@ -219,9 +253,28 @@ export default {
       res.data = res.data || {};
       return res.data.tables || [];
     },
+    async getTableDetail(table) {
+      let key = table.database.name + "-" + table.name;
+      this.tableCache = this.tableCache || {};
+      let res = this.tableCache[key];
+      if (res == null) {
+        res = await this.loadTableDetail(table.database.name, table.name);
+      }
+      return res;
+    },
+    async loadTableDetail(database, table) {
+      let param = {
+        database: database,
+        table: table,
+      };
+      let res = await this.wrap.work("tableDetail", param);
+      res.data = res.data || {};
+      return res.data.table;
+    },
   },
   created() {},
   mounted() {
+    this.wrap.getTableDetail = this.getTableDetail;
     this.init();
   },
 };

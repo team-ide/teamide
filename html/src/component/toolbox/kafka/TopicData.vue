@@ -39,12 +39,12 @@
                   <th>Key</th>
                   <th>Value</th>
                   <th width="150">
-                    <a
+                    <div
                       class="tm-link color-green-3 ft-14 mglr-2"
                       @click="toPush()"
                     >
                       <i class="mdi mdi-plus"></i>
-                    </a>
+                    </div>
                   </th>
                 </tr>
               </thead>

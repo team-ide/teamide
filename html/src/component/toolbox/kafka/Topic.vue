@@ -7,18 +7,18 @@
             <tr>
               <th>Topic</th>
               <th width="120">
-                <a
+                <div
                   class="tm-link color-grey-3 ft-14 mglr-2"
                   @click="loadTopics()"
                 >
                   <i class="mdi mdi-reload"></i>
-                </a>
-                <a
+                </div>
+                <div
                   class="tm-link color-green-3 ft-14 mglr-2"
                   @click="toInsert()"
                 >
                   <i class="mdi mdi-plus"></i>
-                </a>
+                </div>
               </th>
             </tr>
           </thead>

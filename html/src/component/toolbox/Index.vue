@@ -123,6 +123,7 @@ export default {
   height: 100%;
   overflow: auto;
 }
+/* 
 .toolbox-editor ul {
   margin-top: 10px;
 }
@@ -136,7 +137,7 @@ export default {
   display: block;
   line-height: 22px;
   margin-bottom: 3px;
-}
+} */
 .toolbox-editor .text {
   display: inline-block;
   min-width: 80px;
@@ -171,5 +172,72 @@ export default {
 }
 .toolbox-editor table td .model-input {
   min-width: 80px;
+}
+
+.part-box {
+  line-height: 20px;
+  font-size: 12px;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+}
+.part-box,
+.part-box li {
+  padding: 0px;
+  margin: 0px;
+  list-style: none;
+}
+.part-box li {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.part-box input,
+.part-box select {
+  color: #ffffff;
+  width: 40px;
+  min-width: 40px;
+  border: 1px dashed transparent;
+  background-color: transparent;
+  height: 20px;
+  max-width: 100%;
+  padding: 0px;
+  padding-left: 2px;
+  padding-right: 2px;
+  box-sizing: border-box;
+  outline: none;
+  font-size: 12px;
+}
+
+.part-box input {
+  border-bottom: 1px dashed #636363;
+}
+.part-box select {
+  -moz-appearance: auto;
+  -webkit-appearance: auto;
+}
+.part-box option {
+  background-color: #ffffff;
+  color: #3e3e3e;
+}
+.part-box input[type="checkbox"] {
+  width: 10px;
+  min-width: 10px;
+  height: 13px;
+  vertical-align: -3px;
+  margin-left: 6px;
+}
+
+.part-box textarea {
+  color: #ffffff;
+  height: 70px;
+  border: 1px dashed #636363;
+  text-align: left;
+  padding: 5px;
+  min-width: 500px;
+  background-color: transparent;
+  font-size: 12px;
+  vertical-align: text-top;
 }
 </style>

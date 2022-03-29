@@ -44,6 +44,17 @@
                 >
                 </ToolboxDatabaseTableData>
               </template>
+              <template v-else-if="one.type == 'sql'">
+                <ToolboxDatabaseSql
+                  :source="source"
+                  :toolbox="toolbox"
+                  :toolboxType="toolboxType"
+                  :data="data"
+                  :wrap="wrap"
+                  :sqlData="one.data"
+                >
+                </ToolboxDatabaseSql>
+              </template>
             </div>
           </template>
         </div>
@@ -132,6 +143,8 @@ export default {
       let key;
       if (type == "data") {
         key = "" + data.database.name + ":" + data.name;
+      } else {
+        key = data.key;
       }
 
       return key;
@@ -151,6 +164,9 @@ export default {
         if (type == "data") {
           title = data.database.name + "." + data.name;
           name = data.database.name + "." + data.name;
+        } else {
+          title = data.title || data.name;
+          name = data.name || data.title;
         }
         tab = {
           key,
