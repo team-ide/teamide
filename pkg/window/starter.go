@@ -70,6 +70,13 @@ func startWindow(webUrl string, onClose func()) (err error) {
 	left := (windowWidth - width) / 2
 	right := (windowHeight - height) / 2
 
+	if left < 0 {
+		left = 0
+	}
+	if right < 0 {
+		right = 0
+	}
+
 	args = append(args, fmt.Sprintf("--window-position=%d,%d", left, right)) // 窗口位置
 	args = append(args, fmt.Sprintf("--window-size=%d,%d", width, height))
 	args = append(args, fmt.Sprintf("--remote-debugging-port=%d", debuggingPort))
