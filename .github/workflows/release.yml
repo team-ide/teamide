@@ -91,7 +91,7 @@ jobs:
 
 
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: go build -ldflags "-H=windowsgui -X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-darwin-x64/teamide
+      - run: go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-darwin-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
