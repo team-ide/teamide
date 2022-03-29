@@ -21,10 +21,10 @@ var (
 
 func init() {
 	if windowWidth == 0 {
-		windowWidth = 1440
+		windowWidth = 1920
 	}
 	if windowHeight == 0 {
-		windowHeight = 900
+		windowHeight = 1080
 	}
 }
 
