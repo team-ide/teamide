@@ -37,7 +37,7 @@ func (this_ *ApplicationService) GetUserApps(JWT *base.JWTBean) string {
 		return appsDir
 	}
 	if !exist {
-		err = os.MkdirAll(appsDir, os.ModeDir)
+		err = os.MkdirAll(appsDir, 0777)
 		if err != nil {
 			this_.Logger.Error("创建目录异常", zap.Error(err))
 		}

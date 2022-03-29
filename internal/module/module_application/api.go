@@ -119,7 +119,7 @@ func (this_ *ApplicationApi) apiInsert(requestBean *base.RequestBean, c *gin.Con
 		err = errors.New(fmt.Sprint("应用", request.Name, "已存在"))
 		return
 	}
-	err = os.Mkdir(appPath, os.ModeDir)
+	err = os.Mkdir(appPath, 0777)
 	if err != nil {
 		return
 	}

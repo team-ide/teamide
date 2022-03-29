@@ -69,7 +69,7 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 		return
 	}
 	if !exist {
-		err = os.MkdirAll(serverConfig.Server.Data, os.ModeDir)
+		err = os.MkdirAll(serverConfig.Server.Data, 0777)
 		if err != nil {
 			return
 		}
