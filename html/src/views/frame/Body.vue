@@ -53,7 +53,7 @@ export default {
 <style>
 .frame-body-box {
   width: 100%;
-  height: calc(100% - 56px);
+  height: calc(100% - 40px);
   background: #ddd;
   position: relative;
   overflow: auto;

@@ -23,6 +23,7 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: base.PowerToolboxRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: base.PowerToolboxDelete, Do: this_.delete})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: base.PowerToolboxDelete, Do: this_.work})
+	//apis = append(apis, &base.ApiWorker{Apis: []string{"ws/toolbox/ssh/connection"}, Power: base.PowerToolboxSSHConnection, Do: this_.sshConnection})
 
 	return
 }

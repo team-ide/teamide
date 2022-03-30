@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"teamide/internal/base"
+	"teamide/internal/module/module_toolbox"
 	"teamide/internal/static"
 )
 
@@ -13,6 +15,14 @@ func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")
+		//fmt.Println("path=" + path)
+		if strings.HasSuffix(path, "api/ws/toolbox/ssh/connection") {
+			err := module_toolbox.SSHConnection(c)
+			if err != nil {
+				base.ResponseJSON(nil, err, c)
+			}
+			return
+		}
 		if this_.toStatic(path, c) {
 			return
 		}

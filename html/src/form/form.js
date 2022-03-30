@@ -173,6 +173,50 @@ let toolboxOption = {
             },
         ],
     },
+    ssh: {
+        fields: [
+            {
+                label: "类型",
+                name: "type",
+                type: "select",
+                defaultValue: "tcp",
+                rules: [
+                    {
+                        required: true,
+                        message: `SSH类型不能为空!`
+                    },
+
+                ],
+                options: [
+                    { text: "TCP", value: "tcp" },
+                ],
+            },
+            {
+                label: "连接地址（127.0.0.1:22",
+                name: "address",
+                defaultValue: "127.0.0.1:22",
+                rules: [
+                    {
+                        required: true,
+                        message: `连接地址不能为空!`
+                    },
+
+                ],
+            },
+            {
+                label: "User",
+                name: "user",
+                rules: [
+                ],
+            },
+            {
+                label: "Password",
+                name: "password",
+                rules: [
+                ],
+            },
+        ],
+    },
     redis: {
         fields: [
             {

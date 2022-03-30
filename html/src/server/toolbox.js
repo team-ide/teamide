@@ -25,6 +25,11 @@ let toolbox = {
     work(param) {
         return http.post('api/toolbox/work', param);
     },
+    ssh: {
+        connection(token) {
+            return http.get('api/ws/toolbox/ssh/connection?token=' + token);
+        },
+    },
 };
 
 

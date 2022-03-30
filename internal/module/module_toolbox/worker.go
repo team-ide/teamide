@@ -3,6 +3,9 @@ package module_toolbox
 import (
 	"encoding/json"
 	"errors"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"net/http"
 	"teamide/pkg/toolbox"
 )
 
@@ -42,5 +45,33 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		return
 	}
 
+	return
+}
+
+var upGrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func SSHConnection(c *gin.Context) (err error) {
+
+	token := c.Query("token")
+	//fmt.Println("token=" + token)
+	if token == "" {
+		err = errors.New("token获取失败")
+		return
+	}
+	//升级get请求为webSocket协议
+	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+		return
+	}
+	err = toolbox.WSSSHConnection(token, ws)
+	if err != nil {
+		ws.Close()
+		return
+	}
 	return
 }

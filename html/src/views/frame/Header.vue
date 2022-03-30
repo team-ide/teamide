@@ -4,6 +4,7 @@
       :toggleable="source.header.toggleable"
       :type="source.header.type"
       :variant="source.header.variant"
+      class="pdlr-10 pdtb-0"
     >
       <b-navbar-brand :href="source.url" class="ft-20 ft-900 color-grey">
         {{ source.header.title }}

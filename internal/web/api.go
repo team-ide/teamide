@@ -23,5 +23,11 @@ func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
 		}
 		c.Status(http.StatusNotFound)
 	})
+	//gouterGroup.GET("ws/toolbox/ssh/connection", func(c *gin.Context) {
+	//	err := module_toolbox.SSHConnection(c)
+	//	if err != nil {
+	//		base.ResponseJSON(nil, err, c)
+	//	}
+	//})
 	return
 }

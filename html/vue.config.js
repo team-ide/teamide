@@ -8,6 +8,11 @@ module.exports = {
         target: "http://127.0.0.1:21080/teamide/",
         changeOrigin: true
       },
+      "/api/ws": {
+        ws: true,
+        target: "http://127.0.0.1:21080/teamide/",
+        changeOrigin: true
+      },
     }
   },
   productionSourceMap: false,

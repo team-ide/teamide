@@ -51,6 +51,16 @@
         >
         </ToolboxKafkaEditor>
       </template>
+      <template v-else-if="toolboxType.name == 'ssh'">
+        <ToolboxSSHEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+        >
+        </ToolboxSSHEditor>
+      </template>
     </template>
   </div>
 </template>

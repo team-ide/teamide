@@ -99,4 +99,7 @@ Vue.component('ToolboxDatabaseTabs', ToolboxDatabaseTabs);
 
 import ToolboxDatabaseSql from './toolbox/database/Sql.vue'
 Vue.component('ToolboxDatabaseSql', ToolboxDatabaseSql);
+
+import ToolboxSSHEditor from './toolbox/ssh/Index.vue'
+Vue.component('ToolboxSSHEditor', ToolboxSSHEditor);
 export default {};
