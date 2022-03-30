@@ -20,11 +20,11 @@ import '@mdi/font/css/materialdesignicons.css'
 
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 
-import '@/app.scss'
+// import '@/app.scss'
 
 // Import Bootstrap an BootstrapVue CSS files (order is important)
-// import 'bootstrap/dist/css/bootstrap.css'
-// import 'bootstrap-vue/dist/bootstrap-vue.css'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 // Make BootstrapVue available throughout your project
 Vue.use(BootstrapVue)

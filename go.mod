@@ -11,6 +11,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2
 	github.com/gomodule/redigo v1.8.8
+	github.com/gorilla/websocket v1.5.0
 	github.com/huandu/go-clone v1.3.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/mattn/go-sqlite3 v1.14.6
