@@ -1,14 +1,11 @@
 package toolbox
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
 	"io"
-	"sync"
 	"time"
 )
 
@@ -53,25 +50,13 @@ func (this_ *SSHClient) Close() {
 	}
 }
 
-type safeWrite struct {
-	buffer bytes.Buffer
-	mu     sync.Mutex
-}
-
-func (w *safeWrite) Write(p []byte) (int, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.buffer.Write(p)
-}
-func (w *safeWrite) Bytes() []byte {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.buffer.Bytes()
-}
-func (w *safeWrite) Reset() {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	w.buffer.Reset()
+type ptyRequestMsg struct {
+	Term     string
+	Columns  uint32
+	Rows     uint32
+	Width    uint32
+	Height   uint32
+	Modelist string
 }
 
 func (this_ *SSHClient) Start(token string, ws *websocket.Conn) (err error) {
@@ -98,74 +83,109 @@ func (this_ *SSHClient) Start(token string, ws *websocket.Conn) (err error) {
 		Config:          config,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
 	}
-	if this_.client, err = ssh.Dial("tcp", this_.Config.Address, clientConfig); err != nil {
+	if this_.client, err = ssh.Dial(this_.Config.Type, this_.Config.Address, clientConfig); err != nil {
+		fmt.Println(err)
 		this_.Close()
 		return
 	}
 
-	this_.channel, _, err = this_.client.OpenChannel("session", []byte(token))
+	this_.channel, _, err = this_.client.OpenChannel("session", nil)
 	if err != nil {
+		fmt.Println(err)
 		this_.Close()
 		return
 	}
 
-	ok, err := this_.channel.SendRequest("shell", true, nil)
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          1,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
+	}
+	var modeList []byte
+	for k, v := range modes {
+		kv := struct {
+			Key byte
+			Val uint32
+		}{k, v}
+		modeList = append(modeList, ssh.Marshal(&kv)...)
+	}
+	modeList = append(modeList, 0)
+	req := ptyRequestMsg{
+		Term: "xterm",
+		//Columns:  100,
+		//Rows:     40,
+		//Width:    uint32(100 * 8),
+		//Height:   uint32(40 * 8),
+		Modelist: string(modeList),
+	}
+
+	ok, err := this_.channel.SendRequest("pty-req", true, ssh.Marshal(&req))
 	if !ok || err != nil {
+		fmt.Println(err)
+		this_.Close()
+		return
+	}
+	ok, err = this_.channel.SendRequest("shell", true, nil)
+	if !ok || err != nil {
+		fmt.Println(err)
 		this_.Close()
 		return
 	}
 	// 第一个协程获取用户的输入
 	go func() {
-		bufWriter := bufio.NewWriter(this_.channel)
 		for {
 			if this_.isClosed {
 				return
 			}
-			// p为用户输入
 			_, p, err := ws.ReadMessage()
 			if err != nil && err != io.EOF {
-				fmt.Println(err)
+				fmt.Println("ws read err:", err)
 				this_.Close()
 				return
 			}
-			fmt.Println("ws read:" + string(p))
-			if this_.isClosed {
-				return
-			}
-			_, err = bufWriter.Write(p)
-			if err != nil {
-				fmt.Println(err)
-				this_.Close()
-				return
+			//fmt.Println("ws read:" + string(p))
+			if len(p) > 0 {
+				if this_.isClosed {
+					return
+				}
+				//fmt.Println("ssh write:", p)
+				_, err = this_.channel.Write(p)
+				if err != nil {
+					fmt.Println("ssh write err:", err)
+					this_.Close()
+					return
+				}
 			}
 		}
 	}()
 
 	//第二个协程将远程主机的返回结果返回给用户
 	go func() {
-		bufReader := bufio.NewReader(this_.channel)
 		for {
 			if this_.isClosed {
 				return
 			}
 			var bs []byte = make([]byte, 1024)
-			n, err := bufReader.Read(bs)
+			n, err := this_.channel.Read(bs)
 
 			if err != nil && err != io.EOF {
-				fmt.Println(err)
+				fmt.Println("ssh read err:", err)
 				this_.Close()
 				return
 			}
 			bs = bs[0:n]
-			fmt.Print("ssh read:" + string(bs))
-			if this_.isClosed {
-				return
-			}
-			err = ws.WriteMessage(websocket.BinaryMessage, bs)
-			if err != nil {
-				fmt.Println(err)
-				this_.Close()
-				return
+			//fmt.Print("ssh read:" + string(bs))
+			if len(bs) > 0 {
+				if this_.isClosed {
+					return
+				}
+				//fmt.Println("ws write:", bs)
+				err = ws.WriteMessage(websocket.BinaryMessage, bs)
+				if err != nil {
+					fmt.Println("ws write err:", err)
+					this_.Close()
+					return
+				}
 			}
 		}
 

@@ -53,25 +53,26 @@ export default {
       url = "ws" + url + "ws/toolbox/ssh/connection?token=" + this.token;
       this.socket = new WebSocket(url);
 
-      this.socket.onopen = () => {
-        this.initTerminal();
-        setTimeout(() => {
-          // this.source.send("\r");
-        }, 1000);
-      };
-      // 当连接建立时向终端发送一个换行符，不这么做的话最初终端是没有内容的，输入换行符可让终端显示当前用户的工作路径
-      this.socket.onmessage = (event) => {
-        // 接收推送的消息
-        // let data = event.data.toString();
-        // data = data.replace(/\n/, "\r\n");
-        // this.term.write(data);
-      };
-      this.socket.onclose = () => {
-        console.log("close socket");
-      };
-      this.socket.onerror = () => {
-        console.log("socket error");
-      };
+      // this.socket.onopen = () => {
+      //   this.initTerminal();
+      //   setTimeout(() => {
+      //     // this.source.send("\r");
+      //   }, 1000);
+      // };
+      // // 当连接建立时向终端发送一个换行符，不这么做的话最初终端是没有内容的，输入换行符可让终端显示当前用户的工作路径
+      // this.socket.onmessage = (event) => {
+      //   // 接收推送的消息
+      //   // let data = event.data.toString();
+      //   // data = data.replace(/\n/, "\r\n");
+      //   // this.term.write(data);
+      // };
+      // this.socket.onclose = () => {
+      //   console.log("close socket");
+      // };
+      // this.socket.onerror = () => {
+      //   console.log("socket error");
+      // };
+      this.initTerminal();
     },
     initTerminal() {
       if (this.term != null) {
