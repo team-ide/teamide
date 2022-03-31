@@ -2,10 +2,10 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"regexp"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/static"
 )
@@ -19,7 +19,8 @@ func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 		if strings.HasSuffix(path, "api/ws/toolbox/ssh/connection") {
 			err := module_toolbox.SSHConnection(c)
 			if err != nil {
-				base.ResponseJSON(nil, err, c)
+				this_.Logger.Error("ssh connection error", zap.Error(err))
+				//base.ResponseJSON(nil, err, c)
 			}
 			return
 		}

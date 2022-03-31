@@ -2,23 +2,79 @@ package toolbox
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
-	"log"
-	"net"
+	"io"
+	"sync"
 	"time"
-	"unicode/utf8"
 )
 
 type SSHClient struct {
-	Config  *SSHConfig
-	Session *ssh.Session
-	Client  *ssh.Client
-	channel ssh.Channel
+	Config   *SSHConfig
+	client   *ssh.Client
+	channel  ssh.Channel
+	session  *ssh.Session
+	ws       *websocket.Conn
+	isClosed bool
 }
 
-func (this_ *SSHClient) GenerateClient(ws *websocket.Conn) (err error) {
+func (this_ *SSHClient) Close() {
+	if this_.isClosed {
+		return
+	}
+	this_.isClosed = true
+	var err error
+	if this_.session != nil {
+		err = this_.session.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	if this_.channel != nil {
+		err = this_.channel.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	if this_.client != nil {
+		err = this_.client.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	if this_.ws != nil {
+		err = this_.ws.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
+type safeWrite struct {
+	buffer bytes.Buffer
+	mu     sync.Mutex
+}
+
+func (w *safeWrite) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.buffer.Write(p)
+}
+func (w *safeWrite) Bytes() []byte {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.buffer.Bytes()
+}
+func (w *safeWrite) Reset() {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.buffer.Reset()
+}
+
+func (this_ *SSHClient) Start(token string, ws *websocket.Conn) (err error) {
 	if this_.Config == nil {
 		err = errors.New("令牌会话丢失")
 		return
@@ -26,10 +82,9 @@ func (this_ *SSHClient) GenerateClient(ws *websocket.Conn) (err error) {
 	var (
 		auth         []ssh.AuthMethod
 		clientConfig *ssh.ClientConfig
-		client       *ssh.Client
 		config       ssh.Config
 	)
-	auth = make([]ssh.AuthMethod, 0)
+	auth = []ssh.AuthMethod{}
 	if this_.Config.Password != "" {
 		auth = append(auth, ssh.Password(this_.Config.Password))
 	}
@@ -37,43 +92,50 @@ func (this_ *SSHClient) GenerateClient(ws *websocket.Conn) (err error) {
 		Ciphers: []string{"aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com", "arcfour256", "arcfour128", "aes128-cbc", "3des-cbc", "aes192-cbc", "aes256-cbc"},
 	}
 	clientConfig = &ssh.ClientConfig{
-		User:    this_.Config.User,
-		Auth:    auth,
-		Timeout: 5 * time.Second,
-		Config:  config,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
+		User:            this_.Config.User,
+		Auth:            auth,
+		Timeout:         5 * time.Second,
+		Config:          config,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
 	}
-	if client, err = ssh.Dial("tcp", this_.Config.Address, clientConfig); err != nil {
-		return err
-	}
-	this_.Client = client
-
-	channel, _, err := this_.Client.OpenChannel("session", nil)
-	if err != nil {
-		return nil
-	}
-	this_.channel = channel
-
-	//ok, err := channel.SendRequest("pty-req", true, ssh.Marshal(&inRequests))
-	//if !ok || err != nil {
-	//	return
-	//}
-	ok, err := channel.SendRequest("shell", true, nil)
-	if !ok || err != nil {
+	if this_.client, err = ssh.Dial("tcp", this_.Config.Address, clientConfig); err != nil {
+		this_.Close()
 		return
 	}
-	//这里第一个协程获取用户的输入
+
+	this_.channel, _, err = this_.client.OpenChannel("session", []byte(token))
+	if err != nil {
+		this_.Close()
+		return
+	}
+
+	ok, err := this_.channel.SendRequest("shell", true, nil)
+	if !ok || err != nil {
+		this_.Close()
+		return
+	}
+	// 第一个协程获取用户的输入
 	go func() {
+		bufWriter := bufio.NewWriter(this_.channel)
 		for {
-			// p为用户输入
-			_, p, err := ws.ReadMessage()
-			if err != nil {
+			if this_.isClosed {
 				return
 			}
-			_, err = this_.channel.Write(p)
+			// p为用户输入
+			_, p, err := ws.ReadMessage()
+			if err != nil && err != io.EOF {
+				fmt.Println(err)
+				this_.Close()
+				return
+			}
+			fmt.Println("ws read:" + string(p))
+			if this_.isClosed {
+				return
+			}
+			_, err = bufWriter.Write(p)
 			if err != nil {
+				fmt.Println(err)
+				this_.Close()
 				return
 			}
 		}
@@ -81,57 +143,32 @@ func (this_ *SSHClient) GenerateClient(ws *websocket.Conn) (err error) {
 
 	//第二个协程将远程主机的返回结果返回给用户
 	go func() {
-		br := bufio.NewReader(this_.channel)
-		var buf []byte
-		t := time.NewTimer(time.Microsecond * 100)
-		defer t.Stop()
-		// 构建一个信道, 一端将数据远程主机的数据写入, 一段读取数据写入ws
-		r := make(chan rune)
-
-		// 另起一个协程, 一个死循环不断的读取ssh channel的数据, 并传给r信道直到连接断开
-		go func() {
-			defer this_.Client.Close()
-			defer this_.Session.Close()
-
-			for {
-				x, size, err := br.ReadRune()
-				if err != nil {
-					log.Println(err)
-					ws.WriteMessage(websocket.TextMessage, []byte(err.Error()))
-					ws.Close()
-					return
-				}
-				if size > 0 {
-					r <- x
-				}
-			}
-		}()
-
-		// 主循环
+		bufReader := bufio.NewReader(this_.channel)
 		for {
-			select {
-			// 每隔100微秒, 只要buf的长度不为0就将数据写入ws, 并重置时间和buf
-			case <-t.C:
-				if len(buf) != 0 {
-					err := ws.WriteMessage(websocket.TextMessage, buf)
-					buf = []byte{}
-					if err != nil {
-						log.Println(err)
-						return
-					}
-				}
-				t.Reset(time.Microsecond * 100)
-			// 前面已经将ssh channel里读取的数据写入创建的通道r, 这里读取数据, 不断增加buf的长度, 在设定的 100 microsecond后由上面判定长度是否返送数据
-			case d := <-r:
-				if d != utf8.RuneError {
-					p := make([]byte, utf8.RuneLen(d))
-					utf8.EncodeRune(p, d)
-					buf = append(buf, p...)
-				} else {
-					buf = append(buf, []byte("@")...)
-				}
+			if this_.isClosed {
+				return
+			}
+			var bs []byte = make([]byte, 1024)
+			n, err := bufReader.Read(bs)
+
+			if err != nil && err != io.EOF {
+				fmt.Println(err)
+				this_.Close()
+				return
+			}
+			bs = bs[0:n]
+			fmt.Print("ssh read:" + string(bs))
+			if this_.isClosed {
+				return
+			}
+			err = ws.WriteMessage(websocket.BinaryMessage, bs)
+			if err != nil {
+				fmt.Println(err)
+				this_.Close()
+				return
 			}
 		}
+
 	}()
 	return
 }
@@ -145,7 +182,7 @@ func WSSSHConnection(token string, ws *websocket.Conn) (err error) {
 	SSHClient := &SSHClient{
 		Config: sshConfig,
 	}
-	err = SSHClient.GenerateClient(ws)
+	err = SSHClient.Start(token, ws)
 
 	return
 }

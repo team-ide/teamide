@@ -66,7 +66,6 @@ func SSHConnection(c *gin.Context) (err error) {
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
-		return
 	}
 	err = toolbox.WSSSHConnection(token, ws)
 	if err != nil {
