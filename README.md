@@ -37,17 +37,27 @@ go build -ldflags "-H=windowsgui -X main.buildFlags=--isStandAlone" .
 
 ## Toolbox 模块
 
-工具箱，用于连接Redis、Zookeeper、Database等
+工具箱，用于连接Redis、Zookeeper、Database、SSH、SFTP、Kafka、Elasticsearch等
 
 ### Toolbox 功能
 
-#### Toolbox edis（完成）
+#### Toolbox Redis（完成）
 
 连接Redis，支持单机、集群，增删改查等操作，批量删除等
 
 #### Toolbox Zookeeper（完成）
 
 连接Zookeeper，支持单机、集群，增删改查等操作，批量删除等
+
+#### Toolbox Kafka（完成）
+
+连接Kafka，增删改查主题，推送主题消息，自定义消费主题消息等
+
+#### Toolbox SSH、SFTP（完成）
+
+配置Linux服务器SSH连接，在线连接服务执行命令
+SSH模块可以点击SFTP，进行本地和远程文件管理
+SFTP：上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等功能
 
 #### Toolbox Database（开发中）
 
@@ -56,7 +66,3 @@ go build -ldflags "-H=windowsgui -X main.buildFlags=--isStandAlone" .
 #### Toolbox Elasticsearch（开发中）
 
 连接Elasticsearch，编辑索引，增删改查索引数据等
-
-#### Toolbox Kafka（开发中）
-
-连接Kafka，增删改查主题，推送主题消息，自定义消费主题消息等
