@@ -36,6 +36,7 @@
               :toolbox="source.toolbox"
               :toolboxType="one.toolboxType"
               :data="one.data"
+              :extend="one.extend"
             ></ToolboxEditor>
           </div>
         </template>
@@ -116,6 +117,9 @@ export default {
     },
     getTabKeyByData(data) {
       let key = "" + data.toolboxId;
+      if (data.toolboxType == "ssh") {
+        key += "-" + this.tool.getNumber();
+      }
       return key;
     },
     getTabByData(data) {
@@ -123,7 +127,7 @@ export default {
       let tab = this.getTab(key);
       return tab;
     },
-    createTabByData(toolboxType, data) {
+    createTabByData(toolboxType, data, extend) {
       let key = this.getTabKeyByData(data);
 
       let tab = this.getTab(key);
@@ -132,6 +136,7 @@ export default {
           key,
           data,
           toolboxType,
+          extend,
         };
         tab.active = false;
         tab.changed = false;

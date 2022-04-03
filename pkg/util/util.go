@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -31,6 +32,17 @@ func GetIpFromAddr(addr net.Addr) net.IP {
 	}
 
 	return ip
+}
+
+func FormatPath(path string) string {
+
+	var abs string
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return path
+	}
+	res := filepath.ToSlash(abs)
+	return res
 }
 
 func ToJSON(data interface{}) string {

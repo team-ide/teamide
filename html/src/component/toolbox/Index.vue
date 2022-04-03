@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-editor" tabindex="-1" v-if="toolboxType != null">
+  <div class="toolbox-editor" v-if="toolboxType != null">
     <template v-if="ready">
       <template v-if="toolboxType.name == 'redis'">
         <ToolboxRedisEditor
@@ -52,14 +52,26 @@
         </ToolboxKafkaEditor>
       </template>
       <template v-else-if="toolboxType.name == 'ssh'">
-        <ToolboxSSHEditor
-          :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
-          :data="data"
-          :wrap="wrap"
-        >
-        </ToolboxSSHEditor>
+        <template v-if="extend && extend.isFTP">
+          <ToolboxFTPEditor
+            :source="source"
+            :toolbox="toolbox"
+            :toolboxType="toolboxType"
+            :data="data"
+            :wrap="wrap"
+          >
+          </ToolboxFTPEditor>
+        </template>
+        <template v-else>
+          <ToolboxSSHEditor
+            :source="source"
+            :toolbox="toolbox"
+            :toolboxType="toolboxType"
+            :data="data"
+            :wrap="wrap"
+          >
+          </ToolboxSSHEditor>
+        </template>
       </template>
     </template>
   </div>
@@ -69,7 +81,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox"],
+  props: ["source", "data", "extend", "toolboxType", "toolbox"],
   data() {
     return {
       key: this.tool.getNumber(),

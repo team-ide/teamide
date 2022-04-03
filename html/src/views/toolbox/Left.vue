@@ -92,6 +92,13 @@
                       </div>
                       <div class="toolbox-btn-type ft-12">
                         <span
+                          v-if="toolboxType.name == 'ssh'"
+                          class="tm-pointer color-blue mgl-5"
+                          @click="dataOpenSfpt(toolboxType, data)"
+                        >
+                          <i class="mdi mdi-folder color-orange ft-13"></i>
+                        </span>
+                        <span
                           class="tm-pointer color-blue mgl-5"
                           @click="toUpdate(toolboxType, data)"
                         >
@@ -172,6 +179,13 @@ export default {
     },
     dataOpen(toolboxType, data) {
       let tab = this.toolbox.createTabByData(toolboxType, data);
+      this.toolbox.addTab(tab);
+      this.toolbox.doActiveTab(tab);
+    },
+    dataOpenSfpt(toolboxType, data) {
+      let tab = this.toolbox.createTabByData(toolboxType, data, {
+        isFTP: true,
+      });
       this.toolbox.addTab(tab);
       this.toolbox.doActiveTab(tab);
     },

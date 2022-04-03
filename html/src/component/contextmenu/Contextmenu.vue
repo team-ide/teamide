@@ -18,9 +18,8 @@
 </template>
 
 <script>
-import ContextmenuMenus from "./ContextmenuMenus";
 export default {
-  components: { ContextmenuMenus },
+  components: {},
   props: ["contextmenu"],
   data() {
     return {

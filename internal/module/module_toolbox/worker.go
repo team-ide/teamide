@@ -74,3 +74,30 @@ func SSHConnection(c *gin.Context) (err error) {
 	}
 	return
 }
+
+func SFTPConnection(c *gin.Context) (err error) {
+
+	token := c.Query("token")
+	//fmt.Println("token=" + token)
+	if token == "" {
+		err = errors.New("token获取失败")
+		return
+	}
+	//升级get请求为webSocket协议
+	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		return
+	}
+	err = toolbox.WSSFPTConnection(token, ws)
+	if err != nil {
+		ws.Close()
+		return
+	}
+	return
+}
+
+func SFTPUpload(c *gin.Context) (res interface{}, err error) {
+
+	res, err = toolbox.SFTPUpload(c)
+	return
+}

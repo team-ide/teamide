@@ -23,6 +23,13 @@ func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 				//base.ResponseJSON(nil, err, c)
 			}
 			return
+		} else if strings.HasSuffix(path, "api/ws/toolbox/sfpt/connection") {
+			err := module_toolbox.SFTPConnection(c)
+			if err != nil {
+				this_.Logger.Error("sfpt connection error", zap.Error(err))
+				//base.ResponseJSON(nil, err, c)
+			}
+			return
 		}
 		if this_.toStatic(path, c) {
 			return

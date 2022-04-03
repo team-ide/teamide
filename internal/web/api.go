@@ -4,7 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
+	"strings"
+	"teamide/internal/base"
 	"teamide/internal/module"
+	"teamide/internal/module/module_toolbox"
 )
 
 func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
@@ -18,6 +21,12 @@ func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")
+		if strings.HasSuffix(path, "api/upload") {
+			res, err := upload(c)
+			base.ResponseJSON(res, err, c)
+			return
+		}
+
 		if api.DoApi(path, c) {
 			return
 		}
@@ -29,5 +38,18 @@ func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
 	//		base.ResponseJSON(nil, err, c)
 	//	}
 	//})
+	return
+}
+
+func upload(c *gin.Context) (res interface{}, err error) {
+
+	uploadType := c.PostForm("type")
+
+	switch uploadType {
+	case "sftp":
+		res, err = module_toolbox.SFTPUpload(c)
+		break
+	}
+
 	return
 }

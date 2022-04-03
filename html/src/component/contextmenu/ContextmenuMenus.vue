@@ -46,10 +46,8 @@
 </template>
 
 <script>
-import ContextmenuMenus from "@/components/ContextmenuMenus";
 export default {
-  name: "ContextmenuMenus",
-  components: { ContextmenuMenus },
+  components: {},
   props: ["contextmenu", "menus", "isSub"],
   data() {
     return {};

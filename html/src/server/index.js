@@ -21,6 +21,9 @@ let server = {
     register(param) {
         return http.post('api/register', param,);
     },
+    upload(param) {
+        return http.post('api/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
+    },
     application,
     toolbox,
 };

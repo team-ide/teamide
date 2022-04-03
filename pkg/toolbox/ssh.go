@@ -23,6 +23,7 @@ type SSHConfig struct {
 }
 
 type SSHBaseRequest struct {
+	Token string `json:"token"`
 }
 
 var (

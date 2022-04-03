@@ -15,6 +15,11 @@ Vue.component('Login', Login);
 import Register from './Register.vue'
 Vue.component('Register', Register);
 
+import Contextmenu from './contextmenu/Contextmenu.vue'
+Vue.component('Contextmenu', Contextmenu);
+import ContextmenuMenus from './contextmenu/ContextmenuMenus.vue'
+Vue.component('ContextmenuMenus', ContextmenuMenus);
+
 import Form from './Form.vue'
 Vue.component('Form', Form);
 
@@ -102,4 +107,8 @@ Vue.component('ToolboxDatabaseSql', ToolboxDatabaseSql);
 
 import ToolboxSSHEditor from './toolbox/ssh/Index.vue'
 Vue.component('ToolboxSSHEditor', ToolboxSSHEditor);
+import ToolboxFTPEditor from './toolbox/ssh/FTP.vue'
+Vue.component('ToolboxFTPEditor', ToolboxFTPEditor);
+import ToolboxFTPFiles from './toolbox/ssh/Files.vue'
+Vue.component('ToolboxFTPFiles', ToolboxFTPFiles);
 export default {};

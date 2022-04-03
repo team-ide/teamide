@@ -25,23 +25,20 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    token() {
-      this.$nextTick(() => {
-        this.initSocket();
-      });
-    },
-  },
+  watch: {},
   methods: {
     async init() {
       this.ready = true;
       await this.initToken();
+      this.initSocket();
     },
     async initToken() {
-      let param = {};
-      let res = await this.wrap.work("createToken", param);
-      res.data = res.data || {};
-      this.token = res.data.token;
+      if (this.tool.isEmpty(this.token)) {
+        let param = {};
+        let res = await this.wrap.work("createToken", param);
+        res.data = res.data || {};
+        this.token = res.data.token;
+      }
     },
     initSocket() {
       if (this.socket != null) {
