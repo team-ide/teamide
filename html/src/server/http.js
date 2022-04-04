@@ -3,7 +3,7 @@ import tool from "@/tool/index.js";
 import source from "@/source/index.js";
 
 let axiosConfig = {};
-axiosConfig.timeout = 1000 * 60 * 10;
+axiosConfig.timeout = 1000 * 60 * 60;
 axiosConfig.baseURL = location.pathname;
 axiosConfig.withCredentials = true; // 请求带上cookie
 let axiosInstance = axios.create(axiosConfig);

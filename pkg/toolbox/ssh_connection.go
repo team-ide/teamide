@@ -116,7 +116,7 @@ func (this_ *SSHClient) StartSSH(ws *websocket.Conn) (err error) {
 					return
 				}
 				//fmt.Println("ws write:", bs)
-				err = this_.ws.WriteMessage(websocket.BinaryMessage, bs)
+				err = this_.WSWriteMessage(bs)
 				if err != nil {
 					fmt.Println("ws write err:", err)
 					this_.Close()

@@ -13,6 +13,7 @@
               @open="openFile"
               @openDir="openDir"
               @upload="doUploadFile"
+              @download="doDownloadFile"
               @remove="doRemoveFile"
               @rename="doRenameFile"
               @refresh="toRefresh"
@@ -30,6 +31,7 @@
               @open="openFile"
               @openDir="openDir"
               @upload="doUploadFile"
+              @download="doDownloadFile"
               @remove="doRemoveFile"
               @rename="doRenameFile"
               @refresh="toRefresh"
@@ -37,7 +39,7 @@
             ></ToolboxFTPFiles>
           </tm-layout>
         </tm-layout>
-        <tm-layout-bar bottom></tm-layout-bar>
+        <tm-layout-bar top></tm-layout-bar>
         <tm-layout height="100px">
           <div
             class="works-box scrollbar"
@@ -46,6 +48,7 @@
             <template v-for="(one, index) in works">
               <div :key="'work-' + index" class="work-box">
                 <div class="work-text">
+                  <span class="pdr-5">{{ one.startTime }}</span>
                   <template v-if="one.place == 'local'">
                     <span class="pdr-5 color-grey-2">本地</span>
                   </template>
@@ -86,6 +89,42 @@
                   </template>
                 </div>
                 <div class="work-status">
+                  <template v-if="one.progress != null">
+                    <template v-if="one.progress.count != null">
+                      <span class="color-grey-2 mgr-5">
+                        文件：
+                        {{ one.progress.count }}
+                        /
+                        {{ one.progress.successCount }}
+                      </span>
+                    </template>
+                    <template v-if="one.progress.unitSize != null">
+                      <span class="color-grey-2 mgr-5">
+                        大小：
+                        {{ one.progress.unitSize }}
+                        {{ one.progress.unit }}
+                        <template v-if="one.progress.unitSuccessSize != null">
+                          /
+                          {{ one.progress.unitSuccessSize }}
+                          {{ one.progress.unitSuccess }}
+                        </template>
+                      </span>
+                    </template>
+                    <template v-if="one.progress.unitSleepSize != null">
+                      <span class="color-grey-2 mgr-5">
+                        速度：
+                        {{ one.progress.unitSleepSize }}
+                        {{ one.progress.unitSleep }}
+                        / 秒
+                      </span>
+                    </template>
+                    <template v-if="one.progress.percentage != null">
+                      <span class="color-grey-2 mgr-5">
+                        进度：
+                        {{ one.progress.percentage }}
+                      </span>
+                    </template>
+                  </template>
                   <template v-if="one.msg">
                     <span class="color-red">{{ one.msg }}</span>
                   </template>
@@ -194,6 +233,8 @@ export default {
       Object.assign(work, data);
       work.status = "working";
       work.isEnd = false;
+      work.progress = null;
+      work.startTime = this.tool.formatDate(new Date(), "yyyy-MM-dd hh:mm:ss");
       this.works.push(work);
     },
     onWorkSuccess(data) {
@@ -204,11 +245,56 @@ export default {
       work.msg = data.msg;
       work.status = "worked";
       work.isEnd = true;
+    },
+    onWorkProgress(data) {
+      let work = this.getWork(data.workId);
+      if (work == null) {
+        return;
+      }
+      work.progress = data.progress;
+      if (work.progress.size) {
+        this.wrap.formatSize(work.progress, "size", "unitSize", "unit");
 
-      // data.workId = this.tool.getNumber();
-      // let work = {};
-      // Object.assign(work, data);
-      // this.works.push(work);
+        if (work.progress.successSize) {
+          this.wrap.formatSize(
+            work.progress,
+            "successSize",
+            "unitSuccessSize",
+            "unitSuccess"
+          );
+
+          if (work.progress.size > 0 && work.progress.successSize > 0) {
+            let percentage = Number(
+              (work.progress.successSize / work.progress.size) * 100
+            ).toFixed(0);
+            work.progress.percentage = percentage + "%";
+          } else {
+            if (work.progress.size == work.progress.successSize) {
+              work.progress.percentage = "100%";
+            } else {
+              work.progress.percentage = "0%";
+            }
+          }
+
+          if (work.progress.startTime && work.progress.timestamp) {
+            let usetime = work.progress.timestamp - work.progress.startTime;
+            if (work.progress.endTime) {
+              usetime = work.progress.endTime - work.progress.startTime;
+            }
+            let sleepSize = Number(
+              (work.progress.successSize / usetime) * 1000
+            ).toFixed(2);
+            work.progress.sleepSize = sleepSize;
+
+            this.wrap.formatSize(
+              work.progress,
+              "sleepSize",
+              "unitSleepSize",
+              "unitSleep"
+            );
+          }
+        }
+      }
     },
     openFile(place, dir, file) {
       if (file.isDir) {
@@ -285,9 +371,45 @@ export default {
       let message = JSON.stringify(request);
       this.socket.send(message);
     },
+    onConfirm(response) {
+      let confirm = response.confirm;
+      let okTitle = "确认";
+      let cancelTitle = "取消";
+      if (response.isFileExist) {
+        confirm = "文件[" + response.path + "]已存在，请选择操作！";
+        okTitle = "覆盖";
+        cancelTitle = "跳过";
+      }
+      this.tool
+        .confirm(confirm, okTitle, cancelTitle)
+        .then(() => {
+          let request = {
+            confirmId: response.confirmId,
+            work: "confirmResult",
+            isOk: true,
+          };
+          this.send(request);
+        })
+        .catch((e) => {
+          let request = {
+            confirmId: response.confirmId,
+            work: "confirmResult",
+            isCancel: true,
+          };
+          this.send(request);
+        });
+    },
     onResponse(response) {
       if (this.tool.isNotEmpty(response.msg)) {
         this.tool.error(response.msg);
+      }
+      if (response.isProgress) {
+        this.onWorkProgress(response);
+        return;
+      }
+      if (response.isConfirm) {
+        this.onConfirm(response);
+        return;
       }
       if (response.work == "files") {
         if (response.place == "local") {
@@ -338,6 +460,35 @@ export default {
         return false;
       }
       return true;
+    },
+    async doDownloadFile(place, dir, file) {
+      let url =
+        this.source.api +
+        "api/download?type=sftp&token=" +
+        this.token +
+        "&place=" +
+        place +
+        "&dir=" +
+        dir +
+        "&path=" +
+        file.path;
+      window.location.href = url;
+
+      // let request = {
+      //   work: "download",
+      //   type: "sftp",
+      //   place: place,
+      //   dir: dir,
+      //   path: file.path,
+      //   name: file.name,
+      //   token: this.token,
+      // };
+      // let res = await this.server.download(request);
+      // if (res && res.code != 0) {
+      //   this.tool.error(res.msg);
+      //   return false;
+      // }
+      // return true;
     },
     initSocket() {
       if (this.socket != null) {

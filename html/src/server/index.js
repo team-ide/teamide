@@ -24,6 +24,9 @@ let server = {
     upload(param) {
         return http.post('api/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
+    download(param) {
+        return http.post('api/download', param, { responseType: "blob" });
+    },
     application,
     toolbox,
 };

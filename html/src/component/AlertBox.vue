@@ -44,7 +44,7 @@ export default {
         this.alerts.splice(this.alerts.indexOf(alert), 1);
       });
     },
-    show(title, msg, hasCancel) {
+    show(title, msg, hasCancel, okTitle, cancelTitle) {
       return new Promise((resolve, reject) => {
         let alert = {
           id: "alert-" + this.tool.getRandom(),
@@ -55,13 +55,13 @@ export default {
             this.del(alert);
           },
           okOnly: true,
-          okTitle: "确认",
+          okTitle: okTitle || "确认",
           ok: () => {
             if (resolve) {
               resolve();
             }
           },
-          cancelTitle: "取消",
+          cancelTitle: cancelTitle || "取消",
           cancel: () => {
             if (reject) {
               reject();
@@ -80,11 +80,11 @@ export default {
   },
   // 在实例创建完成后被立即调用
   created() {
-    this.tool.alert = (msg) => {
-      return this.show("提示", msg, false);
+    this.tool.alert = (msg, okTitle) => {
+      return this.show("提示", msg, false, okTitle);
     };
-    this.tool.confirm = (msg) => {
-      return this.show("提示", msg, true);
+    this.tool.confirm = (msg, okTitle, cancelTitle) => {
+      return this.show("提示", msg, true, okTitle, cancelTitle);
     };
   },
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用

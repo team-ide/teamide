@@ -101,3 +101,8 @@ func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 	res, err = toolbox.SFTPUpload(c)
 	return
 }
+
+func SFTPDownload(data map[string]string, c *gin.Context) (err error) {
+	err = toolbox.SFTPDownload(data, c)
+	return
+}

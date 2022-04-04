@@ -25,6 +25,19 @@ func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
 			res, err := upload(c)
 			base.ResponseJSON(res, err, c)
 			return
+		} else if strings.HasSuffix(path, "api/download") {
+			data := map[string]string{}
+			err = c.BindJSON(&data)
+			if err != nil {
+				base.ResponseJSON(nil, err, c)
+				return
+			}
+			err = download(data, c)
+			if err != nil {
+				base.ResponseJSON(nil, err, c)
+				return
+			}
+			return
 		}
 
 		if api.DoApi(path, c) {
@@ -48,6 +61,18 @@ func upload(c *gin.Context) (res interface{}, err error) {
 	switch uploadType {
 	case "sftp":
 		res, err = module_toolbox.SFTPUpload(c)
+		break
+	}
+
+	return
+}
+
+func download(data map[string]string, c *gin.Context) (err error) {
+
+	uploadType := data["type"]
+	switch uploadType {
+	case "sftp":
+		err = module_toolbox.SFTPDownload(data, c)
 		break
 	}
 

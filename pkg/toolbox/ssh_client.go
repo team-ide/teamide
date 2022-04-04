@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"mime/multipart"
+	"sync"
 	"time"
 )
 
@@ -15,15 +16,28 @@ var (
 )
 
 type SSHClient struct {
-	Token      string
-	Config     *SSHConfig
-	sshClient  *ssh.Client
-	sshChannel ssh.Channel
-	sshSession *ssh.Session
-	ws         *websocket.Conn
-	sftpClient *sftp.Client
-	isClosed   bool
-	UploadFile chan *UploadFile
+	Token       string
+	Config      *SSHConfig
+	sshClient   *ssh.Client
+	sshChannel  ssh.Channel
+	sshSession  *ssh.Session
+	ws          *websocket.Conn
+	sftpClient  *sftp.Client
+	isClosed    bool
+	UploadFile  chan *UploadFile
+	wsWriteLock sync.RWMutex
+	confirmMap  map[string]chan *ConfirmInfo
+}
+
+type ConfirmInfo struct {
+	ConfirmId   string `json:"confirmId,omitempty"`
+	IsConfirm   bool   `json:"isConfirm,omitempty"`
+	Confirm     string `json:"confirm,omitempty"`
+	Path        string `json:"path,omitempty"`
+	Name        string `json:"name,omitempty"`
+	IsFileExist bool   `json:"isFileExist,omitempty"`
+	IsOk        bool   `json:"isOk,omitempty"`
+	IsCancel    bool   `json:"isCancel,omitempty"`
 }
 
 type UploadFile struct {

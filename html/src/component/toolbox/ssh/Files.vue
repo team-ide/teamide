@@ -64,6 +64,21 @@
         </tm-layout>
       </tm-layout>
     </template>
+    <input
+      ref="chooseFolder"
+      type="file"
+      name="file"
+      id="file"
+      style="
+        width: 0px;
+        height: 0px;
+        position: fixed;
+        left: -100px;
+        top: -100px;
+        z-index: -1000;
+      "
+      multiple
+    />
   </div>
 </template>
 
@@ -121,6 +136,12 @@ export default {
         });
       }
       return file;
+    },
+    toChooseFolder() {
+      this.$refs.chooseFolder.click();
+    },
+    toSaveFile(file) {
+      this.toChooseFolder();
     },
     getFileIndex(path) {
       let index = -1;
@@ -233,6 +254,20 @@ export default {
             this.toRename(files[0]);
           },
         });
+        if (!files[0].isDir) {
+          // menus.push({
+          //   text: "另存为",
+          //   onClick: () => {
+          //     this.toSaveFile(files[0]);
+          //   },
+          // });
+          menus.push({
+            text: "下载",
+            onClick: () => {
+              this.toDownload(files[0]);
+            },
+          });
+        }
       }
       if (files.length > 0) {
         menus.push({
@@ -382,6 +417,9 @@ export default {
     },
     toRemove(files) {
       this.$emit("remove", this.place, this.dir, files);
+    },
+    toDownload(file) {
+      this.$emit("download", this.place, this.dir, file);
     },
     toRename(file) {
       file.newname = file.name;
