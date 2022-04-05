@@ -35,8 +35,8 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		return
 	}
 
-	var ints []net.Interface
-	ints, err = net.Interfaces()
+	var ins []net.Interface
+	ins, err = net.Interfaces()
 	if err != nil {
 		return
 	}
@@ -45,19 +45,19 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
 			httpServer := fmt.Sprint("127.0.0.1", ":", this_.ServerPort)
 			println("\t", "http://"+httpServer+this_.ServerContext.ServerContext)
-			for _, iface := range ints {
+			for _, iface := range ins {
 				if iface.Flags&net.FlagUp == 0 {
-					continue // interface down
+					continue
 				}
 				if iface.Flags&net.FlagLoopback != 0 {
-					continue // loopback interface
+					continue
 				}
-				var addrs []net.Addr
-				addrs, err = iface.Addrs()
+				var adders []net.Addr
+				adders, err = iface.Addrs()
 				if err != nil {
 					return
 				}
-				for _, addr := range addrs {
+				for _, addr := range adders {
 					ip := util.GetIpFromAddr(addr)
 					if ip == nil {
 						continue

@@ -5,26 +5,6 @@ server:
   context: / # 如直接通过IP+端口访问，则填写:“” 或 “/”
   data: ./data # 数据存储目录，存储文件等
 
-# MySql配置
-# mysql:
-#   host: mysql
-#   port: 3306
-#   database: teamide
-#   username: root
-#   password: 123456
-
-# Redis配置
-# redis:
-#   address: redis:6379
-#   auth: # 如有密码，需要填写密码
-#   prefix: teamide # Key前缀，Team IDE所有存储将以该字符作为前缀
-
-# Zookeeper配置
-# zookeeper:
-#   address: zookeeper:2181
-#   auth: # 如有密码，需要填写密码
-#   prefix: teamide # Key前缀，Team IDE所有存储将以该字符作为前缀
-
 # 日志配置
 log:
   filename: ./log/server.log

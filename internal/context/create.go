@@ -58,11 +58,29 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 //init 格式化配置，填充默认值
 func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) {
 	if !this_.IsStandAlone {
-		if serverConfig.Server.Host == "" || serverConfig.Server.Port == 0 {
+		if serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
 			return
 		}
 	}
+
+	if serverConfig.Server.Host == "" {
+		serverConfig.Server.Host = "0.0.0.0"
+	}
+	if this_.IsHtmlDev {
+		serverConfig.Server.Host = "127.0.0.1"
+		serverConfig.Server.Port = 21080
+	}
+	if serverConfig.Server.Port == 0 {
+		var listener net.Listener
+		listener, err = net.Listen("tcp", ":0")
+		if err != nil {
+			this_.Logger.Error("随机端口获取失败", zap.Error(err))
+			return
+		}
+		serverConfig.Server.Port = listener.Addr().(*net.TCPAddr).Port
+	}
+
 	if serverConfig.Server.Data == "" {
 		serverConfig.Server.Data = this_.RootDir + "data"
 	} else {
@@ -113,28 +131,10 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 	this_.ServerHost = serverConfig.Server.Host
 	this_.ServerPort = serverConfig.Server.Port
 
-	if this_.ServerHost == "" {
-		this_.ServerHost = "127.0.0.1"
-	}
-
-	if this_.ServerPort == 0 {
-		if this_.IsHtmlDev {
-			this_.ServerPort = 21080
-		} else {
-			var listener net.Listener
-			listener, err = net.Listen("tcp", ":0")
-			if err != nil {
-				this_.Logger.Error("随机端口获取失败", zap.Error(err))
-				return
-			}
-			this_.ServerPort = listener.Addr().(*net.TCPAddr).Port
-		}
-	}
-
 	if this_.ServerHost == "0.0.0.0" || this_.ServerHost == ":" || this_.ServerHost == "::" {
 		this_.ServerUrl = fmt.Sprint("http://127.0.0.1:", this_.ServerPort)
 	} else {
-		this_.ServerUrl = fmt.Sprint("http://", this_.ServerHost, ":", this_.ServerPort)
+		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
 	}
 
 	this_.DatabaseConfig = databaseConfig

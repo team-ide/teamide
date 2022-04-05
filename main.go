@@ -131,29 +131,34 @@ func main() {
 }
 
 func formatServerConf(serverConf *context.ServerConf) (err error) {
-	serverConf.Server = serverConf.RootDir + "conf/config.yaml"
-	serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
-	serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
-	exists, err := util.PathExists(serverConf.Server)
-	if err != nil {
-		return
-	}
-	if !exists {
-		serverConf.Server = ""
-	}
-	exists, err = util.PathExists(serverConf.PublicKey)
-	if err != nil {
-		return
-	}
-	if !exists {
-		serverConf.PublicKey = ""
-	}
-	exists, err = util.PathExists(serverConf.PrivateKey)
-	if err != nil {
-		return
-	}
-	if !exists {
-		serverConf.PrivateKey = ""
+	if !serverConf.IsStandAlone {
+
+		serverConf.Server = serverConf.RootDir + "conf/config.yaml"
+		serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
+		serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
+
+		var exists bool
+		exists, err := util.PathExists(serverConf.Server)
+		if err != nil {
+			return
+		}
+		if !exists {
+			serverConf.Server = ""
+		}
+		exists, err = util.PathExists(serverConf.PublicKey)
+		if err != nil {
+			return
+		}
+		if !exists {
+			serverConf.PublicKey = ""
+		}
+		exists, err = util.PathExists(serverConf.PrivateKey)
+		if err != nil {
+			return
+		}
+		if !exists {
+			serverConf.PrivateKey = ""
+		}
 	}
 	return
 }
