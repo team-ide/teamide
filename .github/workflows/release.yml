@@ -64,7 +64,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    runs-on: macOS-latest
+    runs-on: macos-latest
     steps:
       # 下载源码
       - name: Checkout code
@@ -196,9 +196,12 @@ jobs:
           path: release/package.json
           property: version
 
-      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
-      - run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
-      - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+      - if: steps.release_teamide.outputs.value == true
+        run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
+      - if: steps.release_teamide.outputs.value == true
+        run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
+      - if: steps.release_teamide.outputs.value == true
+        run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
 
       # 读取发布说明

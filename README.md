@@ -16,7 +16,6 @@ pkg/            # 工具等
 ```
 
 **前端打包**
-
 ```shell
 # 前端打包
 
@@ -30,7 +29,7 @@ npm install
 npm run build
 ```
 
-**服务端打包**
+**静态资源打包为Go文件**
 ```shell
 # 安装依赖
 go mod tidy
@@ -38,14 +37,26 @@ go mod tidy
 # 前端文件发布到服务中
 # 将自动将前端文件打包成到internal/static/html.go文件中
 go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+```
 
-# 作为服务的打包，可以部署到服务器让整个团队使用
-# 需要conf目录
-go build .
+**单机版可执行文件打包，单机版运行需要谷歌浏览器**
+```shell
+# 安装依赖
+go mod tidy
 
 # 打包单机运行，需要本地安装谷歌浏览器，用于单个人员使用
 # 不需要conf目录
 go build -ldflags "-X main.buildFlags=--isStandAlone" .
+```
+
+**作为服务部署打包**
+```shell
+# 安装依赖
+go mod tidy
+
+# 作为服务端部署，通过浏览器打开，可供团队使用
+# 需要conf目录
+go build .
 ```
 
 ## Toolbox 模块
