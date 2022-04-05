@@ -28,7 +28,7 @@ jobs:
 
   buildStatic:
     needs: checkRelease
-    if: ${{env.RELEASE_TEAMIDE == true}}
+    if: ${{env.RELEASE_TEAMIDE}} == true
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -85,7 +85,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    if: ${{env.RELEASE_TEAMIDE == true}}
+    if: ${{env.RELEASE_TEAMIDE}} == true
     runs-on: macOS-latest
     steps:
       # 下载源码
@@ -122,7 +122,7 @@ jobs:
 
   buildLinux:
     needs: buildMAC
-    if: ${{env.RELEASE_TEAMIDE == true}}
+    if: ${{env.RELEASE_TEAMIDE}} == true
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -159,7 +159,7 @@ jobs:
 
   buildWindow:
     needs: buildLinux
-    if: ${{env.RELEASE_TEAMIDE == true}}
+    if: ${{env.RELEASE_TEAMIDE}} == true
     runs-on: windows-latest
     steps:
       # 下载源码
@@ -195,7 +195,7 @@ jobs:
 
   release:
     needs: buildWindow
-    if: ${{env.RELEASE_TEAMIDE == true}}
+    if: ${{env.RELEASE_TEAMIDE}} == true
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源
