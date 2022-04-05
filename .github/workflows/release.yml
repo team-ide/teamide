@@ -7,7 +7,27 @@ on:
       - main
       # - dev
 jobs:
+  checkRelease:
+    runs-on: ubuntu-latest
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 读取是否发布
+      - name: Read Release
+        id: release
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: release
+      - name: Set Release ENV
+        env:
+          release_teamide: ${{steps.release.outputs.value}}
+
   buildStatic:
+    needs: checkRelease
+    if: ${{jobs.checkRelease.env.release_teamide == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -64,6 +84,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
+    if: ${{jobs.checkRelease.env.release_teamide == true}}
     runs-on: macOS-latest
     steps:
       # 下载源码
@@ -100,6 +121,7 @@ jobs:
 
   buildLinux:
     needs: buildMAC
+    if: ${{jobs.checkRelease.env.release_teamide == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -136,6 +158,7 @@ jobs:
 
   buildWindow:
     needs: buildLinux
+    if: ${{jobs.checkRelease.env.release_teamide == true}}
     runs-on: windows-latest
     steps:
       # 下载源码
@@ -171,6 +194,7 @@ jobs:
 
   release:
     needs: buildWindow
+    if: ${{jobs.checkRelease.env.release_teamide == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源

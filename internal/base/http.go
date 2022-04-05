@@ -6,6 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type RequestBean struct {
+	JWT  *JWTBean
+	Path string
+}
+
+type JWTBean struct {
+	Sign   string `json:"sign,omitempty"`
+	UserId int64  `json:"userId,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Time   int64  `json:"time,omitempty"`
+}
+
 type HttpResponse struct {
 	Code string      `json:"code"`
 	Msg  string      `json:"msg,omitempty"`

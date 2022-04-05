@@ -25,19 +25,40 @@ func NewApplicationApi(ApplicationService *ApplicationService) *ApplicationApi {
 	}
 }
 
+var (
+	// 应用 权限
+
+	// PowerApplication 应用基本 权限
+	PowerApplication        = base.AppendPower(&base.PowerAction{Action: "application", Text: "应用", ShouldLogin: true, StandAlone: false})
+	PowerApplicationPage    = base.AppendPower(&base.PowerAction{Action: "application_page", Text: "应用页面", Parent: PowerApplication, ShouldLogin: true, StandAlone: false})
+	PowerApplicationList    = base.AppendPower(&base.PowerAction{Action: "application_list", Text: "应用列表", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationInsert  = base.AppendPower(&base.PowerAction{Action: "application_insert", Text: "应用新增", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationUpdate  = base.AppendPower(&base.PowerAction{Action: "application_update", Text: "应用修改", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationRename  = base.AppendPower(&base.PowerAction{Action: "application_rename", Text: "应用重命名", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationDelete  = base.AppendPower(&base.PowerAction{Action: "application_delete", Text: "应用删除", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationStart   = base.AppendPower(&base.PowerAction{Action: "application_start", Text: "应用启动", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationStop    = base.AppendPower(&base.PowerAction{Action: "application_stop", Text: "应用停止", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+	PowerApplicationRestart = base.AppendPower(&base.PowerAction{Action: "application_restart", Text: "应用重启", Parent: PowerApplicationPage, ShouldLogin: true, StandAlone: false})
+
+	// PowerApplicationContext 应用Context 权限
+	PowerApplicationContext     = base.AppendPower(&base.PowerAction{Action: "application_context", Text: "应用Context", ShouldLogin: true, StandAlone: false})
+	PowerApplicationContextLoad = base.AppendPower(&base.PowerAction{Action: "application_context_load", Text: "应用Context加载", Parent: PowerApplicationContext, ShouldLogin: true, StandAlone: false})
+	PowerApplicationContextSave = base.AppendPower(&base.PowerAction{Action: "application_context_save", Text: "应用Context保存", Parent: PowerApplicationContext, ShouldLogin: true, StandAlone: false})
+)
+
 func (this_ *ApplicationApi) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/list"}, Power: base.PowerApplicationList, Do: this_.apiList})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/insert"}, Power: base.PowerApplicationInsert, Do: this_.apiInsert})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/rename"}, Power: base.PowerApplicationRename, Do: this_.apiRename})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/delete"}, Power: base.PowerApplicationDelete, Do: this_.apiDelete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/list"}, Power: PowerApplicationList, Do: this_.apiList})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/insert"}, Power: PowerApplicationInsert, Do: this_.apiInsert})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/rename"}, Power: PowerApplicationRename, Do: this_.apiRename})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/delete"}, Power: PowerApplicationDelete, Do: this_.apiDelete})
 
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/context/load"}, Power: base.PowerApplicationContextLoad, Do: this_.apiContextLoad})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/context/save"}, Power: base.PowerApplicationContextSave, Do: this_.apiContextSave})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/context/load"}, Power: PowerApplicationContextLoad, Do: this_.apiContextLoad})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/context/save"}, Power: PowerApplicationContextSave, Do: this_.apiContextSave})
 
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/insert"}, Power: base.PowerApplicationContextSave, Do: this_.apiModelInsert})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/save"}, Power: base.PowerApplicationContextSave, Do: this_.apiModelSave})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/delete"}, Power: base.PowerApplicationContextSave, Do: this_.apiModelDelete})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/rename"}, Power: base.PowerApplicationContextSave, Do: this_.apiModelRename})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/insert"}, Power: PowerApplicationContextSave, Do: this_.apiModelInsert})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/save"}, Power: PowerApplicationContextSave, Do: this_.apiModelSave})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/delete"}, Power: PowerApplicationContextSave, Do: this_.apiModelDelete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"application/model/rename"}, Power: PowerApplicationContextSave, Do: this_.apiModelRename})
 
 	return
 }

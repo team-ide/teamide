@@ -7,20 +7,28 @@ import (
 	"net"
 	"os"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/config"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 )
 
 type ServerConf struct {
-	Server     string
-	PublicKey  string
-	PrivateKey string
+	Server       string
+	PublicKey    string
+	PrivateKey   string
+	IsStandAlone bool
+	IsHtmlDev    bool
+	RootDir      string
+	UserHomeDir  string
 }
 
 func NewServerContext(serverConf ServerConf) (context *ServerContext, err error) {
-	context = &ServerContext{}
+	context = &ServerContext{
+		IsStandAlone: serverConf.IsStandAlone,
+		IsHtmlDev:    serverConf.IsHtmlDev,
+		RootDir:      serverConf.RootDir,
+		UserHomeDir:  serverConf.UserHomeDir,
+	}
 	context.HttpAesKey = "Q56hFAauWk18Gy2i"
 	var serverConfig *config.ServerConfig
 	serverConfig, err = config.CreateServerConfig(serverConf.Server)
@@ -49,16 +57,16 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 
 //init 格式化配置，填充默认值
 func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) {
-	if !base.IsStandAlone {
+	if !this_.IsStandAlone {
 		if serverConfig.Server.Host == "" || serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
 			return
 		}
 	}
 	if serverConfig.Server.Data == "" {
-		serverConfig.Server.Data = base.RootDir + "data"
+		serverConfig.Server.Data = this_.RootDir + "data"
 	} else {
-		serverConfig.Server.Data = base.RootDir + strings.TrimPrefix(serverConfig.Server.Data, "./")
+		serverConfig.Server.Data = this_.RootDir + strings.TrimPrefix(serverConfig.Server.Data, "./")
 	}
 
 	if !strings.HasSuffix(serverConfig.Server.Data, "/") {
@@ -75,16 +83,16 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 		}
 	}
 	if serverConfig.Log.Filename == "" {
-		serverConfig.Log.Filename = base.RootDir + "log/server.log"
+		serverConfig.Log.Filename = this_.RootDir + "log/server.log"
 	} else {
-		serverConfig.Log.Filename = base.RootDir + strings.TrimPrefix(serverConfig.Log.Filename, "./")
+		serverConfig.Log.Filename = this_.RootDir + strings.TrimPrefix(serverConfig.Log.Filename, "./")
 	}
 
 	var databaseConfig *db.DatabaseConfig
 	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
 		databaseConfig = &db.DatabaseConfig{
 			Type:     "sqlite",
-			Database: base.RootDir + "data/database",
+			Database: this_.RootDir + "data/database",
 		}
 	} else {
 		databaseConfig = &db.DatabaseConfig{
@@ -110,7 +118,7 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	if this_.ServerPort == 0 {
-		if base.IsHtmlDev {
+		if this_.IsHtmlDev {
 			this_.ServerPort = 21080
 		} else {
 			var listener net.Listener

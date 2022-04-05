@@ -37,7 +37,7 @@ func CreateESService(address string) (*ESService, error) {
 	return service, err
 }
 
-//注册处理器在线信息等
+//ESService 注册处理器在线信息等
 type ESService struct {
 	address     string
 	lastUseTime int64

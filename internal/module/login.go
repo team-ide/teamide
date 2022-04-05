@@ -140,7 +140,7 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 	if request.JWT != nil {
 		userId = request.JWT.UserId
 	} else {
-		if base.IsStandAlone {
+		if this_.IsStandAlone {
 			userId = this_.getStandAloneUserId()
 		}
 	}

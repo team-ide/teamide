@@ -27,7 +27,7 @@ type DataResponse struct {
 	ToolboxTypes  []*toolbox.Worker     `json:"toolboxTypes,omitempty"`
 }
 
-func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	path := requestBean.Path[0:strings.LastIndex(requestBean.Path, "api/")]
 	request := &DataRequest{}
 	if !base.RequestJSON(request, c) {
@@ -49,7 +49,7 @@ func apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, er
 
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
-	response.IsStandAlone = base.IsStandAlone
+	response.IsStandAlone = this_.IsStandAlone
 	response.ColumnTypes = model.COLUMN_TYPES
 	response.DataTypes = model.DATA_TYPES
 	response.ModelTypes = model.MODEL_TYPES

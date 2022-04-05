@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	base2 "teamide/pkg/application/base"
+	"teamide/pkg/application/base"
 	"teamide/pkg/application/common"
 
 	"github.com/dop251/goja/ast"
@@ -147,11 +147,11 @@ func (this_ *ExpressionParser) invokeBinaryExpression(expression *ast.BinaryExpr
 		return
 	}
 
-	leftInt64, leftInt64Ok := base2.ToInt64(leftValue)
-	leftFloat64, leftFloat64Ok := base2.ToFloat64(leftValue)
+	leftInt64, leftInt64Ok := base.ToInt64(leftValue)
+	leftFloat64, leftFloat64Ok := base.ToFloat64(leftValue)
 
-	rightInt64, rightInt64Ok := base2.ToInt64(rightValue)
-	rightFloat64, rightFloat64Ok := base2.ToFloat64(rightValue)
+	rightInt64, rightInt64Ok := base.ToInt64(rightValue)
+	rightFloat64, rightFloat64Ok := base.ToFloat64(rightValue)
 
 	switch expression.Operator.String() {
 	case "+":
@@ -482,7 +482,7 @@ func (this_ *ExpressionParser) invokeBracketExpression(expression *ast.BracketEx
 		return
 	}
 	if data == nil {
-		err = base2.NewError("", "invoke bracket data [", name, "] not defind")
+		err = base.NewError("", "invoke bracket data [", name, "] not defind")
 		if invokeInfo.App.GetLogger() != nil {
 			invokeInfo.App.GetLogger().Error("invoke bracket [", name, "] data error:", err)
 		}
@@ -512,7 +512,7 @@ func (this_ *ExpressionParser) invokeDotExpression(expression *ast.DotExpression
 		return
 	}
 	if data == nil {
-		err = base2.NewError("", "invoke dot data [", name, "] not defind")
+		err = base.NewError("", "invoke dot data [", name, "] not defind")
 		if invokeInfo.App.GetLogger() != nil {
 			invokeInfo.App.GetLogger().Error("invoke dot [", name, "] data error:", err)
 		}
@@ -535,7 +535,7 @@ func (this_ *ExpressionParser) invokeIdentifier(expression *ast.Identifier, invo
 		return
 	}
 	if data == nil {
-		err = base2.NewError("", "data [", name, "] not defind")
+		err = base.NewError("", "data [", name, "] not defind")
 		if invokeInfo.App.GetLogger() != nil {
 			invokeInfo.App.GetLogger().Error("invoke identifier [", name, "] data error:", err)
 		}
@@ -551,8 +551,8 @@ func (this_ *ExpressionParser) invokeStringLiteral(expression *ast.StringLiteral
 }
 
 func (this_ *ExpressionParser) invokeNumberLiteral(expression *ast.NumberLiteral, invokeInfo *InvokeInfo) (res interface{}, err error) {
-	reT := base2.GetRefType(expression.Value)
-	reV := base2.GetRefValue(expression.Value)
-	res = base2.GetFieldTypeValue(reT, reV)
+	reT := base.GetRefType(expression.Value)
+	reV := base.GetRefValue(expression.Value)
+	res = base.GetFieldTypeValue(reT, reV)
 	return
 }

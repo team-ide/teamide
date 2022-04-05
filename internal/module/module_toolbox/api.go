@@ -16,14 +16,30 @@ func NewToolboxApi(ToolboxService *ToolboxService) *ToolboxApi {
 	}
 }
 
+var (
+	// 工具 权限
+
+	// PowerToolbox 工具基本 权限
+	PowerToolbox              = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerToolboxPage          = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
+	PowerToolboxList          = base.AppendPower(&base.PowerAction{Action: "toolbox_list", Text: "工具列表", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxContext       = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxInsert        = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdate        = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxRename        = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxDelete        = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxWork          = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具工作", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHConnection = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_connection", Text: "工具SSH连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+)
+
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/context"}, Power: base.PowerToolboxContext, Do: this_.context})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/insert"}, Power: base.PowerToolboxInsert, Do: this_.insert})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/update"}, Power: base.PowerToolboxUpdate, Do: this_.update})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: base.PowerToolboxRename, Do: this_.rename})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: base.PowerToolboxDelete, Do: this_.delete})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: base.PowerToolboxDelete, Do: this_.work})
-	//apis = append(apis, &base.ApiWorker{Apis: []string{"ws/toolbox/ssh/connection"}, Power: base.PowerToolboxSSHConnection, Do: this_.sshConnection})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/context"}, Power: PowerToolboxContext, Do: this_.context})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/insert"}, Power: PowerToolboxInsert, Do: this_.insert})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/update"}, Power: PowerToolboxUpdate, Do: this_.update})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: PowerToolboxRename, Do: this_.rename})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: PowerToolboxDelete, Do: this_.delete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: PowerToolboxDelete, Do: this_.work})
+	//apis = append(apis, &base.ApiWorker{Apis: []string{"ws/toolbox/ssh/connection"}, Power: PowerToolboxSSHConnection, Do: this_.sshConnection})
 
 	return
 }

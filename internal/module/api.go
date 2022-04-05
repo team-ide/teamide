@@ -47,7 +47,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	}
 	ps := base.GetPowers()
 	for _, one := range ps {
-		if base.IsStandAlone {
+		if ServerContext.IsStandAlone {
 			if !one.StandAlone {
 				continue
 			}
@@ -63,7 +63,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		return
 	}
 	// 如果是单机 初始化一些用户
-	if base.IsStandAlone {
+	if ServerContext.IsStandAlone {
 		err = api.InitStandAlone()
 		if err != nil {
 			return
@@ -86,13 +86,24 @@ type Api struct {
 	apiCache           map[string]*base.ApiWorker
 }
 
+var (
+
+	//PowerRegister 基础权限
+	PowerRegister  = base.AppendPower(&base.PowerAction{Action: "register", Text: "注册", StandAlone: false})
+	PowerData      = base.AppendPower(&base.PowerAction{Action: "data", Text: "数据", StandAlone: true})
+	PowerSession   = base.AppendPower(&base.PowerAction{Action: "session", Text: "会话", StandAlone: true})
+	PowerLogin     = base.AppendPower(&base.PowerAction{Action: "login", Text: "登录", StandAlone: false})
+	PowerLogout    = base.AppendPower(&base.PowerAction{Action: "logout", Text: "登出", StandAlone: false})
+	PowerAutoLogin = base.AppendPower(&base.PowerAction{Action: "auto_login", Text: "自动登录", StandAlone: false})
+)
+
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"", "/", "data"}, Power: base.PowerData, Do: apiData})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"login"}, Power: base.PowerLogin, Do: this_.apiLogin})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"autoLogin"}, Power: base.PowerAutoLogin, Do: this_.apiLogin})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: base.PowerLogout, Do: this_.apiLogout})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"register"}, Power: base.PowerRegister, Do: this_.apiRegister})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: base.PowerSession, Do: this_.apiSession})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"", "/", "data"}, Power: PowerData, Do: this_.apiData})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"login"}, Power: PowerLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"autoLogin"}, Power: PowerAutoLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: PowerLogout, Do: this_.apiLogout})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"register"}, Power: PowerRegister, Do: this_.apiRegister})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: PowerSession, Do: this_.apiSession})
 
 	apis = append(apis, module_application.NewApplicationApi(this_.applicationService).GetApis()...)
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
@@ -114,7 +125,7 @@ func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 			return
 		}
 
-		if base.IsStandAlone {
+		if this_.IsStandAlone {
 			if !api.Power.StandAlone {
 				continue
 			}

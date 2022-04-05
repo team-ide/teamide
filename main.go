@@ -3,10 +3,11 @@ package main
 import (
 	"go.uber.org/zap"
 	"os"
+	"os/user"
+	"path/filepath"
 	"strings"
 	"sync"
 	"teamide/internal"
-	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/util"
 	"teamide/pkg/window"
@@ -18,15 +19,53 @@ var (
 	serverUrl        = ""
 
 	// buildFlags go build -ldflags '-X main.buildFlags=--isStandAlone' .
-	buildFlags = ""
+	buildFlags   = ""
+	isStandAlone = false
+	isHtmlDev    = false
+	rootDir      string
+	userHomeDir  string
 )
 
+func getUserHome() string {
+	user, err := user.Current()
+	if nil == err {
+		return user.HomeDir
+	}
+	return ""
+}
 func init() {
+	var err error
 	if strings.Contains(buildFlags, "--isStandAlone") {
-		base.IsStandAlone = true
+		isStandAlone = true
 	}
 	if strings.Contains(buildFlags, "--isHtmlDev") {
-		base.IsHtmlDev = true
+		isHtmlDev = true
+	}
+	rootDir, err = os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	rootDir, err = filepath.Abs(rootDir)
+	if err != nil {
+		panic(err)
+	}
+	rootDir = filepath.ToSlash(rootDir)
+	if !strings.HasSuffix(rootDir, "/") {
+		rootDir += "/"
+	}
+
+	userHome := getUserHome()
+	if userHome != "" {
+		userHome, err = filepath.Abs(userHome)
+		if err != nil {
+			panic(err)
+		}
+		userHomeDir = filepath.ToSlash(userHome)
+		if !strings.HasSuffix(userHomeDir, "/") {
+			userHomeDir += "/"
+		}
+
 	}
 }
 
@@ -45,36 +84,41 @@ func main() {
 
 	for _, v := range os.Args {
 		if v == "--isStandAlone" {
-			base.IsStandAlone = true
+			isStandAlone = true
 			continue
 		}
 		if v == "--isHtmlDev" {
-			base.IsHtmlDev = true
+			isHtmlDev = true
 			continue
 		}
 	}
 
 	waitGroupForStop.Add(1)
 
-	serverConf, err := GetServerConf()
+	serverConf := &context.ServerConf{
+		IsStandAlone: isStandAlone,
+		IsHtmlDev:    isHtmlDev,
+		RootDir:      rootDir,
+		UserHomeDir:  userHomeDir,
+	}
+	err = formatServerConf(serverConf)
 	if err != nil {
 		panic(err)
 	}
 
-	serverContext, err = context.NewServerContext(serverConf)
+	serverContext, err = context.NewServerContext(*serverConf)
 	if err != nil {
 		panic(err)
 	}
-
 	serverUrl, err = internal.Start(serverContext)
 	if err != nil {
 		panic(err)
 	}
-	if base.IsHtmlDev {
+	if serverContext.IsHtmlDev {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
-	if base.IsStandAlone {
+	if serverContext.IsStandAlone {
 		err = window.Start(serverUrl, func() {
 			waitGroupForStop.Done()
 		})
@@ -86,12 +130,10 @@ func main() {
 	waitGroupForStop.Wait()
 }
 
-func GetServerConf() (serverConf context.ServerConf, err error) {
-	serverConf = context.ServerConf{
-		Server:     base.RootDir + "conf/config.yaml",
-		PublicKey:  base.RootDir + "conf/publicKey.pem",
-		PrivateKey: base.RootDir + "conf/privateKey.pem",
-	}
+func formatServerConf(serverConf *context.ServerConf) (err error) {
+	serverConf.Server = serverConf.RootDir + "conf/config.yaml"
+	serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
+	serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
 	exists, err := util.PathExists(serverConf.Server)
 	if err != nil {
 		return

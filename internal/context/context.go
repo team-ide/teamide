@@ -18,4 +18,8 @@ type ServerContext struct {
 	Logger         *zap.Logger        `json:"-" yaml:"-"`
 	Decryption     *Decryption        `json:"-" yaml:"-"`
 	HttpAesKey     string             `json:"-" yaml:"-"`
+	IsStandAlone   bool
+	IsHtmlDev      bool
+	RootDir        string
+	UserHomeDir    string
 }
