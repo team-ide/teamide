@@ -22,13 +22,13 @@ jobs:
           path: release/package.json
           property: release
       - name: Set Release ENV
-        run: echo "${{ env.release_teamide }}"
+        run: echo "${{ env.RELEASE_TEAMIDE }}"
         env:
-          release_teamide: ${{steps.release.outputs.value}}
+          RELEASE_TEAMIDE: ${{steps.release.outputs.value}}
 
   buildStatic:
     needs: checkRelease
-    if: ${{jobs.checkRelease.env.release_teamide == true}}
+    if: ${{env.RELEASE_TEAMIDE == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -85,7 +85,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    if: ${{jobs.checkRelease.env.release_teamide == true}}
+    if: ${{env.RELEASE_TEAMIDE == true}}
     runs-on: macOS-latest
     steps:
       # 下载源码
@@ -122,7 +122,7 @@ jobs:
 
   buildLinux:
     needs: buildMAC
-    if: ${{jobs.checkRelease.env.release_teamide == true}}
+    if: ${{env.RELEASE_TEAMIDE == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -159,7 +159,7 @@ jobs:
 
   buildWindow:
     needs: buildLinux
-    if: ${{jobs.checkRelease.env.release_teamide == true}}
+    if: ${{env.RELEASE_TEAMIDE == true}}
     runs-on: windows-latest
     steps:
       # 下载源码
@@ -195,7 +195,7 @@ jobs:
 
   release:
     needs: buildWindow
-    if: ${{jobs.checkRelease.env.release_teamide == true}}
+    if: ${{env.RELEASE_TEAMIDE == true}}
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源
