@@ -22,7 +22,7 @@ jobs:
           path: release/package.json
           property: release
       - name: Set Release ENV
-        run: echo "${{ jobs.checkRelease.env.release_teamide }}"
+        run: echo "${{ env.release_teamide }}"
         env:
           release_teamide: ${{steps.release.outputs.value}}
 
