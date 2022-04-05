@@ -7,28 +7,7 @@ on:
       - main
       # - dev
 jobs:
-  checkRelease:
-    runs-on: ubuntu-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 读取是否发布
-      - name: Read Release
-        id: release
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: release/package.json
-          property: release
-      - name: Set Release ENV
-        run: echo "${{ env.RELEASE_TEAMIDE }}"
-        env:
-          RELEASE_TEAMIDE: ${{steps.release.outputs.value}}
-
   buildStatic:
-    needs: checkRelease
-    if: jobs.checkRelease.env.RELEASE_TEAMIDE == true
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -85,7 +64,6 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    if: jobs.checkRelease.env.RELEASE_TEAMIDE == true
     runs-on: macOS-latest
     steps:
       # 下载源码
@@ -122,7 +100,6 @@ jobs:
 
   buildLinux:
     needs: buildMAC
-    if: jobs.checkRelease.env.RELEASE_TEAMIDE == true
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -159,7 +136,6 @@ jobs:
 
   buildWindow:
     needs: buildLinux
-    if: jobs.checkRelease.env.RELEASE_TEAMIDE == true
     runs-on: windows-latest
     steps:
       # 下载源码
@@ -195,7 +171,6 @@ jobs:
 
   release:
     needs: buildWindow
-    if: jobs.checkRelease.env.RELEASE_TEAMIDE == true
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源
@@ -204,21 +179,32 @@ jobs:
           name: release
           path: release
 
-      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
-      - run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
-      - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+      # 读取是否发布
+      - name: Read Release
+        id: release_teamide
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: release
 
       # 读取发布版本
       - name: Read Release Version
         id: release_version
+        if: steps.release_teamide.outputs.value == true
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
           path: release/package.json
           property: version
 
+      - run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
+      - run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
+      - run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+
+
       # 读取发布说明
       - name: Read Release Description
         id: release_body
+        if: steps.release_teamide.outputs.value == true
         uses: juliangruber/read-file-action@v1
         with:
           path: release/RELEASE.md
@@ -226,6 +212,7 @@ jobs:
       # 发布
       - name: Create Release
         id: create_release
+        if: steps.release_teamide.outputs.value == true
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -239,6 +226,7 @@ jobs:
       # 上传构建结果到 Release（把打包的zip上传到Release）
       - name: Upload Go linux Release Asset
         id: upload-go-linux-release-asset
+        if: steps.release_teamide.outputs.value == true
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -250,6 +238,7 @@ jobs:
 
       - name: Upload Go darwin standalone Release Asset
         id: upload-go-windows-release-asset
+        if: steps.release_teamide.outputs.value == true
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -261,6 +250,7 @@ jobs:
 
       - name: Upload Go windows standalone Release Asset
         id: upload-go-windows-standalone-release-asset
+        if: steps.release_teamide.outputs.value == true
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
