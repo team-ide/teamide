@@ -138,7 +138,7 @@ func formatServerConf(serverConf *context.ServerConf) (err error) {
 		serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
 
 		var exists bool
-		exists, err := util.PathExists(serverConf.Server)
+		exists, err = util.PathExists(serverConf.Server)
 		if err != nil {
 			return
 		}
