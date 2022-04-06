@@ -1,21 +1,38 @@
 package toolbox
 
 import (
-	"errors"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
-func WSSFPTConnection(token string, ws *websocket.Conn) (err error) {
+func WSSSHConnection(token string, ws *websocket.Conn, Logger zap.Logger) (err error) {
 	var sshConfig *SSHConfig = sshTokenCache[token]
-	if sshConfig == nil {
-		err = errors.New("令牌会话丢失")
-		return
-	}
-	SSHClient := &SSHClient{
+	client := SSHClient{
 		Token:  token,
 		Config: sshConfig,
+		ws:     ws,
+		Logger: Logger,
 	}
-	err = SSHClient.StartSftp(ws)
+	shellClient := &SSHShellClient{
+		SSHClient: client,
+	}
+	err = shellClient.start()
+
+	return
+}
+
+func WSSFPTConnection(token string, ws *websocket.Conn, Logger zap.Logger) (err error) {
+	var sshConfig *SSHConfig = sshTokenCache[token]
+	client := SSHClient{
+		Token:  token,
+		Config: sshConfig,
+		ws:     ws,
+		Logger: Logger,
+	}
+	sftpClient := &SSHSftpClient{
+		SSHClient: client,
+	}
+	err = sftpClient.start()
 
 	return
 }

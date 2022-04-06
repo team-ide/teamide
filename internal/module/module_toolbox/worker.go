@@ -67,11 +67,7 @@ func SSHConnection(c *gin.Context) (err error) {
 	if err != nil {
 		return
 	}
-	err = toolbox.WSSSHConnection(token, ws)
-	if err != nil {
-		ws.Close()
-		return
-	}
+	toolbox.WSSSHConnection(token, ws)
 	return
 }
 
