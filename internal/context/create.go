@@ -79,6 +79,10 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 			return
 		}
 		serverConfig.Server.Port = listener.Addr().(*net.TCPAddr).Port
+		err = listener.Close()
+		if err != nil {
+			return
+		}
 	}
 
 	if serverConfig.Server.Data == "" {
