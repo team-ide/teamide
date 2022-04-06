@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
+	"strconv"
 	"teamide/pkg/toolbox"
 )
 
@@ -54,7 +55,7 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-func SSHConnection(c *gin.Context) (err error) {
+func (this_ *ToolboxService) SSHConnection(c *gin.Context) (err error) {
 
 	token := c.Query("token")
 	//fmt.Println("token=" + token)
@@ -67,11 +68,14 @@ func SSHConnection(c *gin.Context) (err error) {
 	if err != nil {
 		return
 	}
-	toolbox.WSSSHConnection(token, ws)
+
+	cols, _ := strconv.Atoi(c.Query("cols"))
+	rows, _ := strconv.Atoi(c.Query("rows"))
+	toolbox.WSSSHConnection(token, cols, rows, ws, this_.Logger)
 	return
 }
 
-func SFTPConnection(c *gin.Context) (err error) {
+func (this_ *ToolboxService) SFTPConnection(c *gin.Context) (err error) {
 
 	token := c.Query("token")
 	//fmt.Println("token=" + token)
@@ -84,7 +88,7 @@ func SFTPConnection(c *gin.Context) (err error) {
 	if err != nil {
 		return
 	}
-	err = toolbox.WSSFPTConnection(token, ws)
+	err = toolbox.WSSFPTConnection(token, ws, this_.Logger)
 	if err != nil {
 		ws.Close()
 		return

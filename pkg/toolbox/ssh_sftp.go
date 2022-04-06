@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/pkg/sftp"
 	"go.uber.org/zap"
-	"io"
+	"strings"
 )
 
 type SSHSftpClient struct {
@@ -43,6 +43,26 @@ func (this_ *SSHSftpClient) createSftp() (err error) {
 		return
 	}
 
+	if this_.UploadFile == nil {
+		this_.UploadFile = make(chan *UploadFile, 10)
+
+		go func() {
+			for {
+				select {
+				case uploadFile := <-this_.UploadFile:
+					this_.work(&SFTPRequest{
+						Work:     "upload",
+						WorkId:   uploadFile.WorkId,
+						Dir:      uploadFile.Dir,
+						Place:    uploadFile.Place,
+						File:     uploadFile.File,
+						FullPath: uploadFile.FullPath,
+					})
+				}
+			}
+
+		}()
+	}
 	this_.sftpClient, err = sftp.NewClient(this_.sshClient)
 	if err != nil {
 		this_.WSWriteError("SSH FTP创建失败:" + err.Error())
@@ -53,59 +73,31 @@ func (this_ *SSHSftpClient) createSftp() (err error) {
 	return
 }
 
-func (this_ *SSHSftpClient) start() (err error) {
-	err = this_.initSftp()
-	if err != nil {
-		return
-	}
-	if this_.UploadFile == nil {
-		this_.UploadFile = make(chan *UploadFile, 10)
-	}
-	go func() {
-		for {
-			select {
-			case uploadFile := <-this_.UploadFile:
-				this_.work(&SFTPRequest{
-					Work:     "upload",
-					WorkId:   uploadFile.WorkId,
-					Dir:      uploadFile.Dir,
-					Place:    uploadFile.Place,
-					File:     uploadFile.File,
-					FullPath: uploadFile.FullPath,
-				})
-			}
-		}
+func (this_ *SSHSftpClient) start() {
+	go this_.ListenWS(this_.onEvent, this_.onMessage, this_.CloseSftp)
+	this_.WSWriteEvent("ready")
+}
 
-	}()
-	// 第一个协程获取用户的输入
-	go func() {
-		for {
-			if this_.isClosedSftp {
-				return
-			}
-			_, p, err := this_.ws.ReadMessage()
-			if err != nil && err != io.EOF {
-				fmt.Println("sftp ws read err:", err)
-				this_.CloseSftp()
-				return
-			}
-			//fmt.Println("sftp ws read:" + string(p))
-			if len(p) > 0 {
-				if this_.isClosedSftp {
-					return
-				}
-
-				go func() {
-					var request *SFTPRequest
-					err = json.Unmarshal(p, &request)
-					if err != nil {
-						fmt.Println("sftp ws message to struct err:", err)
-						return
-					}
-					this_.work(request)
-				}()
-			}
+func (this_ *SSHSftpClient) onEvent(event string) {
+	var err error
+	switch strings.ToLower(event) {
+	case "start":
+		err = this_.initSftp()
+		if err != nil {
+			return
 		}
+	}
+}
+
+func (this_ *SSHSftpClient) onMessage(bs []byte) {
+
+	go func() {
+		var request *SFTPRequest
+		err := json.Unmarshal(bs, &request)
+		if err != nil {
+			fmt.Println("sftp ws message to struct err:", err)
+			return
+		}
+		this_.work(request)
 	}()
-	return
 }

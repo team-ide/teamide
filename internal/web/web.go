@@ -7,16 +7,19 @@ import (
 	"net"
 	"net/http"
 	"teamide/internal/context"
+	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/util"
 )
 
 type Server struct {
 	*context.ServerContext
+	toolboxService *module_toolbox.ToolboxService
 }
 
 func NewWebServer(ServerContext *context.ServerContext) (webServer *Server) {
 	webServer = &Server{
-		ServerContext: ServerContext,
+		ServerContext:  ServerContext,
+		toolboxService: module_toolbox.NewToolboxService(ServerContext),
 	}
 	return
 }

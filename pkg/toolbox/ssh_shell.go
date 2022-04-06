@@ -3,12 +3,15 @@ package toolbox
 import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
+	"strings"
 )
 
 type SSHShellClient struct {
 	SSHClient
 	sshChannel    ssh.Channel
 	isClosedShell bool
+	Cols          int
+	Rows          int
 }
 
 type ptyRequestMsg struct {
@@ -68,9 +71,9 @@ func (this_ *SSHShellClient) createShell() (err error) {
 	}
 	modeList = append(modeList, 0)
 	req := ptyRequestMsg{
-		Term: "xterm",
-		//Columns:  100,
-		//Rows:     40,
+		Term:    "xterm",
+		Columns: uint32(this_.Cols),
+		Rows:    uint32(this_.Rows),
 		//Width:    uint32(100 * 8),
 		//Height:   uint32(40 * 8),
 		Modelist: string(modeList),
@@ -92,11 +95,55 @@ func (this_ *SSHShellClient) createShell() (err error) {
 	return
 }
 
-func (this_ *SSHShellClient) start() (err error) {
-	err = this_.initShell()
-	if err != nil {
+func (this_ *SSHShellClient) start() {
+	go this_.ListenWS(this_.onEvent, this_.onMessage, this_.CloseShell)
+	this_.WSWriteEvent("ready")
+}
+
+func (this_ *SSHShellClient) onEvent(event string) {
+	this_.Logger.Info("SSH Shell On Event:", zap.Any("event", event))
+	var err error
+	switch strings.ToLower(event) {
+	case "start":
+		err = this_.initShell()
+		if err != nil {
+			return
+		}
+		this_.WSWriteEvent("shell created")
+		go this_.ListenShell()
+	}
+}
+
+func (this_ *SSHShellClient) ListenShell() {
+
+	// 第一个协程获取用户的输入
+	for {
+		if this_.isClosedShell {
+			return
+		}
+		var bs = make([]byte, 1024)
+		n, err := this_.sshChannel.Read(bs)
+		if err != nil {
+			this_.WSWriteError("SSH Shell Read失败:" + err.Error())
+			continue
+		}
+		bs = bs[0:n]
+		err = this_.WSWrite(bs)
+		//if err != nil {
+		//	this_.WSWriteError("SSH Shell Read失败:" + err.Error())
+		//	continue
+		//}
+	}
+}
+
+func (this_ *SSHShellClient) onMessage(bs []byte) {
+	if this_.isClosedShell {
 		return
 	}
+	var err error
 
-	return
+	_, err = this_.sshChannel.Write(bs)
+	if err != nil {
+		this_.WSWriteError("SSH Shell Write失败:" + err.Error())
+	}
 }

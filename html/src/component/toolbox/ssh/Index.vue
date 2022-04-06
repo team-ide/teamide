@@ -30,7 +30,9 @@ export default {
     async init() {
       this.ready = true;
       await this.initToken();
-      this.initSocket();
+      this.$nextTick(() => {
+        this.initSocket();
+      });
     },
     async initToken() {
       if (this.tool.isEmpty(this.token)) {
@@ -45,31 +47,43 @@ export default {
         this.socket.close();
       }
 
+      this.initTerminal();
       let url = this.source.api;
       url = url.substring(url.indexOf(":"));
       url = "ws" + url + "ws/toolbox/ssh/connection?token=" + this.token;
+      url += "&cols=" + this.cols;
+      url += "&rows=" + this.rows;
       this.socket = new WebSocket(url);
 
       // this.socket.onopen = () => {
       //   this.initTerminal();
       //   setTimeout(() => {
-      //     // this.source.send("\r");
+      //     // this.socket.send("\r");
       //   }, 1000);
       // };
       // // 当连接建立时向终端发送一个换行符，不这么做的话最初终端是没有内容的，输入换行符可让终端显示当前用户的工作路径
-      // this.socket.onmessage = (event) => {
-      //   // 接收推送的消息
-      //   // let data = event.data.toString();
-      //   // data = data.replace(/\n/, "\r\n");
-      //   // this.term.write(data);
-      // };
+      this.socket.onmessage = (event) => {
+        // 接收推送的消息
+        let data = event.data.toString();
+        if (data == '{"event":"ready"}') {
+          this.socket.send("TeamIDE:event:start");
+        } else if (data == '{"event":"shell created"}') {
+          this.initAttachAddon();
+        } else {
+          console.log("data");
+        }
+      };
       // this.socket.onclose = () => {
       //   console.log("close socket");
       // };
       // this.socket.onerror = () => {
       //   console.log("socket error");
       // };
-      this.initTerminal();
+    },
+    initAttachAddon() {
+      var attachAddon = new AttachAddon(this.socket);
+
+      this.term.loadAddon(attachAddon);
     },
     initTerminal() {
       if (this.term != null) {
@@ -95,19 +109,17 @@ export default {
       });
       this.term.open(this.$refs.terminal);
 
-      var attachAddon = new AttachAddon(this.socket);
-
-      this.term.loadAddon(attachAddon);
-
-      var fitAddon = new FitAddon();
-      this.term.loadAddon(fitAddon);
-      fitAddon.fit();
+      this.fitAddon = new FitAddon();
+      this.term.loadAddon(this.fitAddon);
+      this.fitAddon.fit();
 
       this.term.focus();
-
+      console.log(this.fitAddon);
+      this.cols = this.fitAddon._terminal.cols;
+      this.rows = this.fitAddon._terminal.rows;
       window.onresize = function () {
         // 窗口尺寸变化时，终端尺寸自适应
-        fitAddon.fit();
+        this.fitAddon.fit();
       };
     },
   },

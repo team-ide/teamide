@@ -24,7 +24,7 @@ type SSHClient struct {
 	isClosedClient bool
 	isClosedWS     bool
 	wsWriteLock    sync.RWMutex
-	Logger         zap.Logger
+	Logger         *zap.Logger
 }
 
 type ConfirmInfo struct {
@@ -107,11 +107,17 @@ func (this_ *SSHClient) createClient() (err error) {
 		this_.WSWriteError("连接失败:" + err.Error())
 		return
 	}
-	this_.WSWriteEvent("ssh created")
 	return
 }
 
-func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs []byte)) (err error) {
+func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs []byte), onClose func()) {
+	defer func() {
+		if x := recover(); x != nil {
+			this_.CloseWS()
+			return
+		}
+	}()
+	defer onClose()
 	// 第一个协程获取用户的输入
 	for {
 		if this_.isClosedWS {
@@ -120,16 +126,15 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 		_, bs, err := this_.ws.ReadMessage()
 		if err != nil {
 			if websocket.IsCloseError(err) {
-				this_.CloseClient()
 				this_.CloseWS()
 				return
 			}
 			continue
 		}
 		if len(bs) > TeamIDEEventByteLength {
-			str := string(bs[0 : TeamIDEEventByteLength-1])
-			if strings.EqualFold(str, TeamIDEEvent) {
-				onEvent(string(bs[TeamIDEEventByteLength]))
+			msg := string(bs[0:TeamIDEEventByteLength])
+			if strings.EqualFold(msg, TeamIDEEvent) {
+				onEvent(string(bs[TeamIDEEventByteLength:]))
 				continue
 			}
 		}
@@ -144,6 +149,12 @@ var (
 )
 
 func (this_ *SSHClient) WSWrite(bs []byte) (err error) {
+	defer func() {
+		if x := recover(); x != nil {
+			this_.CloseWS()
+			return
+		}
+	}()
 
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()

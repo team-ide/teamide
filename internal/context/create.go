@@ -126,7 +126,16 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 			Password: serverConfig.Mysql.Password,
 		}
 	}
-	this_.Logger = newZapLogger(serverConfig)
+	if this_.IsHtmlDev {
+		loggerConfig := zap.NewDevelopmentConfig()
+		loggerConfig.Development = false
+		this_.Logger, err = loggerConfig.Build()
+		if err != nil {
+			return
+		}
+	} else {
+		this_.Logger = newZapLogger(serverConfig)
+	}
 
 	this_.ServerContext = serverConfig.Server.Context
 	if this_.ServerContext == "" || !strings.HasSuffix(this_.ServerContext, "/") {
