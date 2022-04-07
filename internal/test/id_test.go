@@ -8,7 +8,7 @@ import (
 
 func TestIDMysql(t *testing.T) {
 	var err error
-	service := module_id.NewIDService(getMysqlDBWorker())
+	service := module_id.NewIDService(getMysqlServerContext())
 	id, err := service.GetNextID(module_id.IDTypeUser)
 	if err != nil {
 		panic(err)
@@ -18,7 +18,7 @@ func TestIDMysql(t *testing.T) {
 
 func TestIDSqlite(t *testing.T) {
 	var err error
-	service := module_id.NewIDService(getSqliteDBWorker())
+	service := module_id.NewIDService(getSqliteServerContext())
 	id, err := service.GetNextID(module_id.IDTypeUser)
 	if err != nil {
 		panic(err)

@@ -133,7 +133,7 @@ func main() {
 func formatServerConf(serverConf *context.ServerConf) (err error) {
 	if !serverConf.IsStandAlone {
 
-		serverConf.Server = serverConf.RootDir + "conf/config.yaml"
+		serverConf.Server = serverConf.RootDir + "conf/sqlite.yaml"
 		serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
 		serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
 

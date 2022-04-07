@@ -59,6 +59,7 @@
             :toolboxType="toolboxType"
             :data="data"
             :wrap="wrap"
+            :extend="extend"
           >
           </ToolboxFTPEditor>
         </template>
@@ -69,6 +70,7 @@
             :toolboxType="toolboxType"
             :data="data"
             :wrap="wrap"
+            :extend="extend"
           >
           </ToolboxSSHEditor>
         </template>

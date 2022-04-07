@@ -81,7 +81,8 @@ func (this_ *SSHClient) createClient() (err error) {
 
 	if this_.Token == "" || this_.Config == nil {
 		err = errors.New("令牌会话丢失")
-		this_.WSWriteError("令牌会话丢失")
+		this_.Logger.Error("令牌验证失败", zap.Error(err))
+		this_.WSWriteError(err.Error())
 		return
 	}
 	var (
@@ -104,6 +105,7 @@ func (this_ *SSHClient) createClient() (err error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
 	}
 	if this_.sshClient, err = ssh.Dial(this_.Config.Type, this_.Config.Address, clientConfig); err != nil {
+		this_.Logger.Error("createClient error", zap.Error(err))
 		this_.WSWriteError("连接失败:" + err.Error())
 		return
 	}
@@ -113,6 +115,7 @@ func (this_ *SSHClient) createClient() (err error) {
 func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs []byte), onClose func()) {
 	defer func() {
 		if x := recover(); x != nil {
+			this_.Logger.Error("WebSocket信息监听异常", zap.Any("err", x))
 			this_.CloseWS()
 			return
 		}
@@ -125,6 +128,7 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 		}
 		_, bs, err := this_.ws.ReadMessage()
 		if err != nil {
+			this_.Logger.Error("WebSocket信息读取异常", zap.Error(err))
 			if websocket.IsCloseError(err) {
 				this_.CloseWS()
 				return
@@ -142,25 +146,34 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 	}
 }
 
-const TeamIDEEvent = "TeamIDE:event:"
+const (
+	TeamIDEEvent   = "TeamIDE:event:"
+	TeamIDEMessage = "TeamIDE:message:"
+	TeamIDEError   = "TeamIDE:error:"
+)
 
 var (
 	TeamIDEEventByteLength = len([]byte(TeamIDEEvent))
 )
 
-func (this_ *SSHClient) WSWrite(bs []byte) (err error) {
+func (this_ *SSHClient) WSWrite(bs []byte) {
 	defer func() {
 		if x := recover(); x != nil {
+			this_.Logger.Error("WebSocket信息写入异常", zap.Any("err", x))
 			this_.CloseWS()
 			return
 		}
 	}()
+	if this_.isClosedWS {
+		return
+	}
 
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
-	err = this_.ws.WriteMessage(websocket.TextMessage, bs)
+	err := this_.ws.WriteMessage(websocket.TextMessage, bs)
 
 	if err != nil {
+		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
 		if websocket.IsCloseError(err) {
 			this_.CloseClient()
 			this_.CloseWS()
@@ -171,48 +184,26 @@ func (this_ *SSHClient) WSWrite(bs []byte) (err error) {
 
 func (this_ *SSHClient) WSWriteData(obj interface{}) (err error) {
 
-	res := map[string]interface{}{}
-	res["value"] = obj
-	res["code"] = 0
 	bs, err := json.Marshal(obj)
 	if err != nil {
+		this_.Logger.Error("WSWriteData转换JSON异常", zap.Error(err))
 		return
 	}
-	err = this_.WSWrite(bs)
+	this_.WSWrite(bs)
 	return
 }
 
 func (this_ *SSHClient) WSWriteError(message string) {
-	res := map[string]interface{}{}
-	res["msg"] = message
-	res["code"] = -1
-	bs, err := json.Marshal(res)
-	if err != nil {
-		return
-	}
-	err = this_.WSWrite(bs)
+	this_.WSWrite([]byte(TeamIDEError + message))
 	return
 }
 
-func (this_ *SSHClient) WSWriteMessage(message string) (err error) {
-	res := map[string]interface{}{}
-	res["msg"] = message
-	res["code"] = 0
-	bs, err := json.Marshal(res)
-	if err != nil {
-		return
-	}
-	err = this_.WSWrite(bs)
+func (this_ *SSHClient) WSWriteMessage(message string) {
+	this_.WSWrite([]byte(TeamIDEMessage + message))
 	return
 }
 
 func (this_ *SSHClient) WSWriteEvent(event string) {
-	res := map[string]interface{}{}
-	res["event"] = event
-	bs, err := json.Marshal(res)
-	if err != nil {
-		return
-	}
-	err = this_.WSWrite(bs)
+	this_.WSWrite([]byte(TeamIDEEvent + event))
 	return
 }

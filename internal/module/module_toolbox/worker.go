@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
-	"strconv"
 	"teamide/pkg/toolbox"
 )
 
@@ -68,10 +67,7 @@ func (this_ *ToolboxService) SSHConnection(c *gin.Context) (err error) {
 	if err != nil {
 		return
 	}
-
-	cols, _ := strconv.Atoi(c.Query("cols"))
-	rows, _ := strconv.Atoi(c.Query("rows"))
-	toolbox.WSSSHConnection(token, cols, rows, ws, this_.Logger)
+	toolbox.WSSSHConnection(token, ws, this_.Logger)
 	return
 }
 

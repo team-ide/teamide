@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func WSSSHConnection(token string, cols int, rows int, ws *websocket.Conn, Logger *zap.Logger) (err error) {
+func WSSSHConnection(token string, ws *websocket.Conn, Logger *zap.Logger) (err error) {
 	var sshConfig *SSHConfig = sshTokenCache[token]
 	client := SSHClient{
 		Token:  token,
@@ -15,8 +15,6 @@ func WSSSHConnection(token string, cols int, rows int, ws *websocket.Conn, Logge
 	}
 	shellClient := &SSHShellClient{
 		SSHClient: client,
-		Cols:      cols,
-		Rows:      rows,
 	}
 	shellClient.start()
 

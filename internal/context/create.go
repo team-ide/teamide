@@ -35,9 +35,9 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	if err != nil {
 		return
 	}
-	context.ServerConf = serverConf
-	context.ServerConfig = serverConfig
-	err = context.init(serverConfig)
+	//context.ServerConf = serverConf
+	//context.ServerConfig = serverConfig
+	err = context.Init(serverConfig)
 	if err != nil {
 		return
 	}
@@ -55,8 +55,8 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	return
 }
 
-//init 格式化配置，填充默认值
-func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) {
+//Init 格式化配置，填充默认值
+func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) {
 	if !this_.IsStandAlone {
 		if serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
@@ -114,7 +114,7 @@ func (this_ *ServerContext) init(serverConfig *config.ServerConfig) (err error) 
 	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
 		databaseConfig = &db.DatabaseConfig{
 			Type:     "sqlite",
-			Database: this_.RootDir + "data/database",
+			Database: serverConfig.Server.Data + "database",
 		}
 	} else {
 		databaseConfig = &db.DatabaseConfig{

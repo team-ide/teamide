@@ -7,13 +7,13 @@ import (
 )
 
 func TestLoginMysql(t *testing.T) {
-	service := module_login.NewLoginService(getMysqlDBWorker())
+	service := module_login.NewLoginService(getMysqlServerContext())
 
 	testLogin(service)
 }
 
 func TestLoginSqlite(t *testing.T) {
-	service := module_login.NewLoginService(getSqliteDBWorker())
+	service := module_login.NewLoginService(getSqliteServerContext())
 
 	testLogin(service)
 }

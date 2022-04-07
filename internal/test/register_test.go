@@ -7,13 +7,13 @@ import (
 )
 
 func TestRegisterMysql(t *testing.T) {
-	service := module_register.NewRegisterService(getMysqlDBWorker())
+	service := module_register.NewRegisterService(getMysqlServerContext())
 
 	testRegister(service)
 }
 
 func TestRegisterSqlite(t *testing.T) {
-	service := module_register.NewRegisterService(getSqliteDBWorker())
+	service := module_register.NewRegisterService(getSqliteServerContext())
 
 	testRegister(service)
 }

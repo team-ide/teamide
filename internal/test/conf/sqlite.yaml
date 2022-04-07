@@ -1,0 +1,2 @@
+server:
+  data: ./data # 数据存储目录，存储文件等

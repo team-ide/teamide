@@ -107,8 +107,10 @@ Vue.component('ToolboxDatabaseSql', ToolboxDatabaseSql);
 
 import ToolboxSSHEditor from './toolbox/ssh/Index.vue'
 Vue.component('ToolboxSSHEditor', ToolboxSSHEditor);
-import ToolboxFTPEditor from './toolbox/ssh/FTP.vue'
-Vue.component('ToolboxFTPEditor', ToolboxFTPEditor);
+import ToolboxSSH from './toolbox/ssh/SSH.vue'
+Vue.component('ToolboxSSH', ToolboxSSH);
+import ToolboxFTP from './toolbox/ssh/FTP.vue'
+Vue.component('ToolboxFTP', ToolboxFTP);
 import ToolboxFTPFiles from './toolbox/ssh/Files.vue'
 Vue.component('ToolboxFTPFiles', ToolboxFTPFiles);
 export default {};

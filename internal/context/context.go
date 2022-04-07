@@ -7,11 +7,11 @@ import (
 )
 
 type ServerContext struct {
-	ServerContext  string
-	ServerHost     string
-	ServerPort     int
-	ServerUrl      string
-	ServerConf     ServerConf
+	ServerContext string
+	ServerHost    string
+	ServerPort    int
+	ServerUrl     string
+	//ServerConf     ServerConf
 	ServerConfig   *config.ServerConfig
 	DatabaseWorker db.DatabaseWorker
 	DatabaseConfig *db.DatabaseConfig `json:"-" yaml:"-"`

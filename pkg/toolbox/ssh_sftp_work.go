@@ -119,10 +119,7 @@ func (this_ *SSHSftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmI
 		fmt.Println("call confirm to json err:", err)
 		return
 	}
-	err = this_.WSWrite(bs)
-	if err != nil {
-		return
-	}
+	this_.WSWrite(bs)
 	//fmt.Println("等待[", confirmInfo.ConfirmId, "]结果")
 	res = <-this_.confirmMap[confirmInfo.ConfirmId]
 	//fmt.Println("接收[", confirmInfo.ConfirmId, "]结果", res)
@@ -356,12 +353,7 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 		fmt.Println("sftp message to json err:", err)
 		return
 	}
-	err = this_.WSWrite(bs)
-	if err != nil {
-		fmt.Println("sftp ws write err:", err)
-		this_.CloseSftp()
-		return
-	}
+	this_.WSWrite(bs)
 
 	return
 }

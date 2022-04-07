@@ -7,13 +7,13 @@ import (
 )
 
 func TestPowerMysql(t *testing.T) {
-	service := module_power.NewPowerRoleService(getMysqlDBWorker())
+	service := module_power.NewPowerRoleService(getMysqlServerContext())
 
 	testPower(service)
 }
 
 func TestPowerSqlite(t *testing.T) {
-	service := module_power.NewPowerRoleService(getSqliteDBWorker())
+	service := module_power.NewPowerRoleService(getSqliteServerContext())
 
 	testPower(service)
 }

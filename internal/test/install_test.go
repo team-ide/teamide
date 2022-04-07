@@ -7,7 +7,7 @@ import (
 
 func TestCheckMysql(t *testing.T) {
 	var err error
-	installService := module.NewInstallService(getMysqlDBWorker())
+	installService := module.NewInstallService(getMysqlServerContext())
 	err = installService.Check()
 	if err != nil {
 		panic(err)
@@ -16,7 +16,7 @@ func TestCheckMysql(t *testing.T) {
 
 func TestCheckSqlite(t *testing.T) {
 	var err error
-	installService := module.NewInstallService(getSqliteDBWorker())
+	installService := module.NewInstallService(getSqliteServerContext())
 	err = installService.Check()
 	if err != nil {
 		panic(err)
@@ -25,7 +25,7 @@ func TestCheckSqlite(t *testing.T) {
 
 func TestInstallMysql(t *testing.T) {
 	var err error
-	installService := module.NewInstallService(getMysqlDBWorker())
+	installService := module.NewInstallService(getMysqlServerContext())
 	err = installService.Install()
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func TestInstallMysql(t *testing.T) {
 
 func TestInstallSqlite(t *testing.T) {
 	var err error
-	installService := module.NewInstallService(getSqliteDBWorker())
+	installService := module.NewInstallService(getSqliteServerContext())
 	err = installService.Install()
 	if err != nil {
 		panic(err)
