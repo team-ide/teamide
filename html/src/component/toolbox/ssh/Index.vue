@@ -115,7 +115,11 @@ export default {
 
       let url = this.source.api;
       url = url.substring(url.indexOf(":"));
-      url = "ws" + url + "ws/toolbox/ssh/connection?token=" + this.token;
+      if (this.extend && this.extend.isFTP) {
+        url = "ws" + url + "ws/toolbox/sfpt/connection?token=" + this.token;
+      } else {
+        url = "ws" + url + "ws/toolbox/ssh/connection?token=" + this.token;
+      }
       this.socket = new WebSocket(url);
 
       this.socket.onopen = () => {

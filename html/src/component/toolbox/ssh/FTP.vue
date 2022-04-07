@@ -1,157 +1,159 @@
 <template>
   <div class="toolbox-ssh-editor">
-    <template v-if="ready">
-      <tm-layout height="100%">
-        <tm-layout height="auto">
-          <tm-layout width="50%">
-            <ToolboxFTPFiles
-              :source="source"
-              place="local"
-              :dir="localDir"
-              :files="localFiles"
-              :wrap="wrap"
-              @open="openFile"
-              @openDir="openDir"
-              @upload="doUploadFile"
-              @download="doDownloadFile"
-              @remove="doRemoveFile"
-              @rename="doRenameFile"
-              @refresh="toRefresh"
-              @copy="toCopy"
-            ></ToolboxFTPFiles>
-          </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
-          <tm-layout width="auto">
-            <ToolboxFTPFiles
-              :source="source"
-              place="remote"
-              :dir="remoteDir"
-              :files="remoteFiles"
-              :wrap="wrap"
-              @open="openFile"
-              @openDir="openDir"
-              @upload="doUploadFile"
-              @download="doDownloadFile"
-              @remove="doRemoveFile"
-              @rename="doRenameFile"
-              @refresh="toRefresh"
-              @copy="toCopy"
-            ></ToolboxFTPFiles>
-          </tm-layout>
+    <tm-layout height="100%">
+      <tm-layout height="auto">
+        <tm-layout width="50%">
+          <ToolboxFTPFiles
+            :source="source"
+            place="local"
+            :dir="localDir"
+            :files="localFiles"
+            :wrap="wrap"
+            @open="openFile"
+            @openDir="openDir"
+            @upload="doUploadFile"
+            @download="doDownloadFile"
+            @remove="doRemoveFile"
+            @rename="doRenameFile"
+            @refresh="toRefresh"
+            @copy="toCopy"
+          ></ToolboxFTPFiles>
         </tm-layout>
-        <tm-layout-bar top></tm-layout-bar>
-        <tm-layout height="100px">
-          <div
-            class="works-box scrollbar"
-            @contextmenu.prevent="workContextmenu"
-          >
-            <template v-for="(one, index) in works">
-              <div :key="'work-' + index" class="work-box">
-                <div class="work-text">
-                  <span class="pdr-5">{{ one.startTime }}</span>
-                  <template v-if="one.place == 'local'">
-                    <span class="pdr-5 color-grey-2">本地</span>
-                  </template>
-                  <template v-else-if="one.place == 'remote'">
-                    <span class="pdr-5 color-grey-2">远程</span>
-                  </template>
-                  <template v-if="one.work == 'rename'">
-                    <span class="pdr-5">重命名</span>
-                    <span class="pdr-5">修改：{{ one.oldPath }}</span>
-                    <span class="pdr-5">为：{{ one.newPath }}</span>
-                  </template>
-                  <template v-else-if="one.work == 'copy'">
-                    <span class="pdr-5">复制</span>
-                    <template v-if="one.fromFile.place == 'local'">
-                      <span class="pdr-5 color-grey-2">本地</span>
-                    </template>
-                    <template v-else-if="one.fromFile.place == 'remote'">
-                      <span class="pdr-5 color-grey-2">远程</span>
-                    </template>
-                    <span class="pdr-5">{{ one.fromFile.path }}</span>
-                    <span class="pdr-5">到</span>
-                    <template v-if="one.toFile.place == 'local'">
-                      <span class="pdr-5 color-grey-2">本地</span>
-                    </template>
-                    <template v-else-if="one.toFile.place == 'remote'">
-                      <span class="pdr-5 color-grey-2">远程</span>
-                    </template>
-                    <span class="pdr-5">{{ one.toFile.path }}</span>
-                  </template>
-                  <template v-else-if="one.work == 'upload'">
-                    <span class="pdr-5">文件上传</span>
-                    <span class="pdr-5">上传文件：{{ one.fileName }}</span>
-                    <span class="pdr-5">目录：{{ one.dir }}</span>
-                  </template>
-                  <template v-else-if="one.work == 'remove'">
-                    <span class="pdr-5">删除文件</span>
-                    <span class="pdr-5">{{ one.path }}</span>
-                  </template>
-                </div>
-                <div class="work-status">
-                  <template v-if="one.progress != null">
-                    <template v-if="one.progress.count != null">
-                      <span class="color-grey-2 mgr-5">
-                        文件：
-                        {{ one.progress.count }}
-                        /
-                        {{ one.progress.successCount }}
-                      </span>
-                    </template>
-                    <template v-if="one.progress.unitSize != null">
-                      <span class="color-grey-2 mgr-5">
-                        大小：
-                        {{ one.progress.unitSize }}
-                        {{ one.progress.unit }}
-                        <template v-if="one.progress.unitSuccessSize != null">
-                          /
-                          {{ one.progress.unitSuccessSize }}
-                          {{ one.progress.unitSuccess }}
-                        </template>
-                      </span>
-                    </template>
-                    <template v-if="one.progress.unitSleepSize != null">
-                      <span class="color-grey-2 mgr-5">
-                        速度：
-                        {{ one.progress.unitSleepSize }}
-                        {{ one.progress.unitSleep }}
-                        / 秒
-                      </span>
-                    </template>
-                    <template v-if="one.progress.percentage != null">
-                      <span class="color-grey-2 mgr-5">
-                        进度：
-                        {{ one.progress.percentage }}
-                      </span>
-                    </template>
-                  </template>
-                  <template v-if="one.msg">
-                    <span class="color-red">{{ one.msg }}</span>
-                  </template>
-                  <template v-else-if="one.isEnd">
-                    <span class="color-green">完成</span>
-                  </template>
-                  <template v-else>
-                    <span class="color-orange">执行中</span>
-                  </template>
-                </div>
-              </div>
-            </template>
-          </div>
+        <tm-layout-bar right></tm-layout-bar>
+        <tm-layout width="auto">
+          <ToolboxFTPFiles
+            :source="source"
+            place="remote"
+            :dir="remoteDir"
+            :files="remoteFiles"
+            :wrap="wrap"
+            @open="openFile"
+            @openDir="openDir"
+            @upload="doUploadFile"
+            @download="doDownloadFile"
+            @remove="doRemoveFile"
+            @rename="doRenameFile"
+            @refresh="toRefresh"
+            @copy="toCopy"
+          ></ToolboxFTPFiles>
         </tm-layout>
       </tm-layout>
-    </template>
+      <tm-layout-bar top></tm-layout-bar>
+      <tm-layout height="100px">
+        <div class="works-box scrollbar" @contextmenu.prevent="workContextmenu">
+          <template v-for="(one, index) in works">
+            <div :key="'work-' + index" class="work-box">
+              <div class="work-text">
+                <span class="pdr-5">{{ one.startTime }}</span>
+                <template v-if="one.place == 'local'">
+                  <span class="pdr-5 color-grey-2">本地</span>
+                </template>
+                <template v-else-if="one.place == 'remote'">
+                  <span class="pdr-5 color-grey-2">远程</span>
+                </template>
+                <template v-if="one.work == 'rename'">
+                  <span class="pdr-5">重命名</span>
+                  <span class="pdr-5">修改：{{ one.oldPath }}</span>
+                  <span class="pdr-5">为：{{ one.newPath }}</span>
+                </template>
+                <template v-else-if="one.work == 'copy'">
+                  <span class="pdr-5">复制</span>
+                  <template v-if="one.fromFile.place == 'local'">
+                    <span class="pdr-5 color-grey-2">本地</span>
+                  </template>
+                  <template v-else-if="one.fromFile.place == 'remote'">
+                    <span class="pdr-5 color-grey-2">远程</span>
+                  </template>
+                  <span class="pdr-5">{{ one.fromFile.path }}</span>
+                  <span class="pdr-5">到</span>
+                  <template v-if="one.toFile.place == 'local'">
+                    <span class="pdr-5 color-grey-2">本地</span>
+                  </template>
+                  <template v-else-if="one.toFile.place == 'remote'">
+                    <span class="pdr-5 color-grey-2">远程</span>
+                  </template>
+                  <span class="pdr-5">{{ one.toFile.path }}</span>
+                </template>
+                <template v-else-if="one.work == 'upload'">
+                  <span class="pdr-5">文件上传</span>
+                  <span class="pdr-5">上传文件：{{ one.fileName }}</span>
+                  <span class="pdr-5">目录：{{ one.dir }}</span>
+                </template>
+                <template v-else-if="one.work == 'remove'">
+                  <span class="pdr-5">删除文件</span>
+                  <span class="pdr-5">{{ one.path }}</span>
+                </template>
+              </div>
+              <div class="work-status">
+                <template v-if="one.progress != null">
+                  <template v-if="one.progress.count != null">
+                    <span class="color-grey-2 mgr-5">
+                      文件：
+                      {{ one.progress.count }}
+                      /
+                      {{ one.progress.successCount }}
+                    </span>
+                  </template>
+                  <template v-if="one.progress.unitSize != null">
+                    <span class="color-grey-2 mgr-5">
+                      大小：
+                      {{ one.progress.unitSize }}
+                      {{ one.progress.unit }}
+                      <template v-if="one.progress.unitSuccessSize != null">
+                        /
+                        {{ one.progress.unitSuccessSize }}
+                        {{ one.progress.unitSuccess }}
+                      </template>
+                    </span>
+                  </template>
+                  <template v-if="one.progress.unitSleepSize != null">
+                    <span class="color-grey-2 mgr-5">
+                      速度：
+                      {{ one.progress.unitSleepSize }}
+                      {{ one.progress.unitSleep }}
+                      / 秒
+                    </span>
+                  </template>
+                  <template v-if="one.progress.percentage != null">
+                    <span class="color-grey-2 mgr-5">
+                      进度：
+                      {{ one.progress.percentage }}
+                    </span>
+                  </template>
+                </template>
+                <template v-if="one.msg">
+                  <span class="color-red">{{ one.msg }}</span>
+                </template>
+                <template v-else-if="one.isEnd">
+                  <span class="color-green">完成</span>
+                </template>
+                <template v-else>
+                  <span class="color-orange">执行中</span>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </tm-layout>
+    </tm-layout>
   </div>
 </template>
 
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: [
+    "source",
+    "data",
+    "toolboxType",
+    "toolbox",
+    "option",
+    "wrap",
+    "token",
+    "socket",
+  ],
   data() {
     return {
-      ready: false,
-      token: null,
       localDir: null,
       localFiles: null,
       remoteDir: null,
@@ -162,11 +164,8 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    async init() {
+    init() {
       this.wrap.formatSize = this.formatSize;
-      this.ready = true;
-      await this.initToken();
-      this.initSocket();
     },
     formatSize(data, name, sizeName, sizeUnitName) {
       data[name] = data[name] || 0;
@@ -186,14 +185,6 @@ export default {
       if (!data[sizeUnitName]) {
         data[sizeName] = data[name];
         data[sizeUnitName] = "b";
-      }
-    },
-    async initToken() {
-      if (this.tool.isEmpty(this.token)) {
-        let param = {};
-        let res = await this.wrap.work("createToken", param);
-        res.data = res.data || {};
-        this.token = res.data.token;
       }
     },
     workContextmenu(e) {
@@ -369,7 +360,7 @@ export default {
     },
     send(request) {
       let message = JSON.stringify(request);
-      this.socket.send(message);
+      this.wrap.writeData(message);
     },
     onConfirm(response) {
       let confirm = response.confirm;
@@ -490,32 +481,23 @@ export default {
       // }
       // return true;
     },
-    initSocket() {
-      if (this.socket != null) {
-        this.socket.close();
-      }
-
-      let url = this.source.api;
-      url = url.substring(url.indexOf(":"));
-      url = "ws" + url + "ws/toolbox/sfpt/connection?token=" + this.token;
-      this.socket = new WebSocket(url);
-
-      this.socket.onopen = () => {
+    onEvent(event) {
+      if (event == "ftp ready") {
+        this.toStart();
+      } else if (event == "ftp created") {
         this.loadFiles("local");
         this.loadFiles("remote");
-      };
-      this.socket.onmessage = (event) => {
-        // 接收推送的消息
-        let data = event.data.toString();
-        let response = JSON.parse(data);
-        this.onResponse(response);
-      };
-      this.socket.onclose = () => {
-        console.log("close socket");
-      };
-      this.socket.onerror = () => {
-        console.log("socket error");
-      };
+      }
+    },
+    onError(error) {
+      this.tool.error(error);
+    },
+    onData(data) {
+      let response = JSON.parse(data);
+      this.onResponse(response);
+    },
+    toStart() {
+      this.wrap.writeEvent("ftp start");
     },
   },
   created() {},

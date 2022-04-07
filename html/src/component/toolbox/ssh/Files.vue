@@ -15,15 +15,15 @@
           <div class="drag-file" v-show="dragFile.show" :style="dragFile.style">
             <div class="drag-file-name">{{ dragFile.name }}</div>
           </div>
-          <template v-if="files == null">
-            <div class="text-center pdtb-10 ft-15">加载中...</div>
-          </template>
           <div
             class="files-box scrollbar"
             @contextmenu.prevent="fileContextmenu"
             ref="filesBox"
             @click="filesBoxClick"
           >
+            <template v-if="files == null">
+              <div class="text-center pdtb-10 ft-15">加载中...</div>
+            </template>
             <template v-for="(one, index) in list">
               <div
                 :key="'file-' + index"

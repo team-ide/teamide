@@ -52,28 +52,15 @@
         </ToolboxKafkaEditor>
       </template>
       <template v-else-if="toolboxType.name == 'ssh'">
-        <template v-if="extend && extend.isFTP">
-          <ToolboxFTPEditor
-            :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :data="data"
-            :wrap="wrap"
-            :extend="extend"
-          >
-          </ToolboxFTPEditor>
-        </template>
-        <template v-else>
-          <ToolboxSSHEditor
-            :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :data="data"
-            :wrap="wrap"
-            :extend="extend"
-          >
-          </ToolboxSSHEditor>
-        </template>
+        <ToolboxSSHEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :data="data"
+          :wrap="wrap"
+          :extend="extend"
+        >
+        </ToolboxSSHEditor>
       </template>
     </template>
   </div>

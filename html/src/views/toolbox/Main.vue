@@ -6,12 +6,10 @@
           <div
             :key="'tab-' + index"
             class="toolbox-tab"
-            :title="one.toolboxType.text + ':' + one.data.name"
+            :title="one.title"
             :class="{ active: one.active }"
           >
-            <span class="text" @click="toSelectTab(one)">{{
-              one.data.name
-            }}</span>
+            <span class="text" @click="toSelectTab(one)">{{ one.name }}</span>
             <span
               class="delete-btn tm-pointer color-orange"
               @click="toDeleteTab(one)"
@@ -132,9 +130,20 @@ export default {
 
       let tab = this.getTab(key);
       if (tab == null) {
+        let title = toolboxType.text + ":" + data.name;
+        let name = data.name;
+        if (extend && extend.isFTP) {
+          title = "FTP:" + data.name;
+          name = "FTP:" + data.name;
+        } else if (toolboxType.name == "ssh") {
+          title = "SSH:" + data.name;
+          name = "SSH:" + data.name;
+        }
         tab = {
           key,
           data,
+          title,
+          name,
           toolboxType,
           extend,
         };

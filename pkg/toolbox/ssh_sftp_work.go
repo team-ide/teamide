@@ -19,21 +19,21 @@ import (
 )
 
 type SFTPRequest struct {
-	Work      string                `json:"work,omitempty"`
-	WorkId    string                `json:"workId,omitempty"`
-	Dir       string                `json:"dir,omitempty"`
-	Place     string                `json:"place,omitempty"`
-	Path      string                `json:"path,omitempty"`
-	FullPath  string                `json:"fullPath,omitempty"`
-	Name      string                `json:"name,omitempty"`
-	OldPath   string                `json:"oldPath,omitempty"`
-	NewPath   string                `json:"newPath,omitempty"`
-	File      *multipart.FileHeader `json:"-`
-	FromFile  *SFTPFile             `json:"fromFile,omitempty"`
-	ToFile    *SFTPFile             `json:"toFile,omitempty"`
-	ConfirmId string                `json:"confirmId,omitempty"`
-	IsOk      bool                  `json:"isOk,omitempty"`
-	IsCancel  bool                  `json:"isCancel,omitempty"`
+	Work      string `json:"work,omitempty"`
+	WorkId    string `json:"workId,omitempty"`
+	Dir       string `json:"dir,omitempty"`
+	Place     string `json:"place,omitempty"`
+	Path      string `json:"path,omitempty"`
+	FullPath  string `json:"fullPath,omitempty"`
+	Name      string `json:"name,omitempty"`
+	OldPath   string `json:"oldPath,omitempty"`
+	NewPath   string `json:"newPath,omitempty"`
+	File      *multipart.FileHeader
+	FromFile  *SFTPFile `json:"fromFile,omitempty"`
+	ToFile    *SFTPFile `json:"toFile,omitempty"`
+	ConfirmId string    `json:"confirmId,omitempty"`
+	IsOk      bool      `json:"isOk,omitempty"`
+	IsCancel  bool      `json:"isCancel,omitempty"`
 }
 type SFTPResponse struct {
 	Work   string      `json:"work,omitempty"`
@@ -134,7 +134,7 @@ func (this_ *SSHSftpClient) callProgress(request *SFTPRequest, progress interfac
 	for {
 		time.Sleep(100 * time.Millisecond)
 
-		if this_.isClosedSftp {
+		if this_.isClosedWS {
 			return
 		}
 		var waitCall bool
@@ -269,9 +269,6 @@ func SFTPDownload(data map[string]string, c *gin.Context) (err error) {
 }
 
 func (this_ *SSHSftpClient) work(request *SFTPRequest) {
-	if this_.isClosedSftp {
-		return
-	}
 	response := &SFTPResponse{}
 	var err error
 	switch request.Work {
@@ -348,12 +345,8 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 	response.Work = request.Work
 	response.WorkId = request.WorkId
 	response.Place = request.Place
-	bs, err := json.Marshal(response)
-	if err != nil {
-		fmt.Println("sftp message to json err:", err)
-		return
-	}
-	this_.WSWrite(bs)
+
+	this_.WSWriteData(response)
 
 	return
 }
@@ -454,13 +447,13 @@ func (this_ *SSHSftpClient) localUpdate(request *SFTPRequest, progress *UploadPr
 	if err != nil {
 		return
 	}
-	defer fileInfo.Close()
+	defer closeFile(fileInfo)
 
 	uploadF, err := request.File.Open()
 	if err != nil {
 		return
 	}
-	defer uploadF.Close()
+	defer closeUploadFile(uploadF)
 
 	err = CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
 		progress.SuccessSize += writeSize
@@ -492,10 +485,18 @@ func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadP
 	}
 
 	pathDir := path[0:strings.LastIndex(path, "/")]
-	_, err = this_.sftpClient.Lstat(pathDir)
+
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
+	_, err = sftpClient.Lstat(pathDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err = this_.sftpClient.MkdirAll(pathDir)
+			err = sftpClient.MkdirAll(pathDir)
 			if err != nil {
 				return
 			}
@@ -504,7 +505,7 @@ func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadP
 		}
 	}
 
-	_, err = this_.sftpClient.Lstat(path)
+	_, err = sftpClient.Lstat(path)
 	if err == nil {
 		progress.WaitCall = true
 		defer func() {
@@ -528,17 +529,17 @@ func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadP
 		progress.WaitCall = false
 	}
 
-	fileInfo, err := this_.sftpClient.Create(path)
+	fileInfo, err := sftpClient.Create(path)
 	if err != nil {
 		return
 	}
-	defer fileInfo.Close()
+	defer closeFtpFile(fileInfo)
 
 	uploadF, err := request.File.Open()
 	if err != nil {
 		return
 	}
-	defer uploadF.Close()
+	defer closeUploadFile(uploadF)
 
 	err = CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
 		progress.SuccessSize += writeSize
@@ -568,7 +569,7 @@ func (this_ *SSHSftpClient) localDownload(c *gin.Context, path string) (err erro
 	if err != nil {
 		return
 	}
-	defer fileInfo.Close()
+	defer closeFile(fileInfo)
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fileName))
@@ -588,9 +589,16 @@ func (this_ *SSHSftpClient) localDownload(c *gin.Context, path string) (err erro
 
 func (this_ *SSHSftpClient) remoteDownload(c *gin.Context, path string) (err error) {
 
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
 	var fileName string
 	var fileSize int64
-	ff, err := this_.sftpClient.Lstat(path)
+	ff, err := sftpClient.Lstat(path)
 	if err != nil {
 		return
 	}
@@ -598,11 +606,11 @@ func (this_ *SSHSftpClient) remoteDownload(c *gin.Context, path string) (err err
 	fileSize = ff.Size()
 
 	var fileInfo *sftp.File
-	fileInfo, err = this_.sftpClient.Open(path)
+	fileInfo, err = sftpClient.Open(path)
 	if err != nil {
 		return
 	}
-	defer fileInfo.Close()
+	defer closeFtpFile(fileInfo)
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fileName))
@@ -625,7 +633,17 @@ func (this_ *SSHSftpClient) copy(request *SFTPRequest, progress *CopyProgress) (
 		progress.EndTime = util.GetNowTime()
 	}()
 	progress.StartTime = util.GetNowTime()
-	progress.Count, progress.Size, err = this_.fileCount(request.FromFile.Place, request.FromFile.Path)
+
+	var sftpClient *sftp.Client
+	if request.FromFile.Place == "remote" || request.ToFile.Place == "remote" {
+		sftpClient, err = this_.newSftp()
+		if err != nil {
+			return
+		}
+		defer this_.closeSftClient(sftpClient)
+	}
+
+	progress.Count, progress.Size, err = this_.fileCount(request.FromFile.Place, request.FromFile.Path, sftpClient)
 	if err != nil {
 		return
 	}
@@ -633,14 +651,43 @@ func (this_ *SSHSftpClient) copy(request *SFTPRequest, progress *CopyProgress) (
 		Path: request.Path,
 		Dir:  request.Dir,
 	}
-	err = this_.copyAll(request.FromFile.Place, request.FromFile.Path, request.ToFile.Place, request.ToFile.Path, progress)
+	err = this_.copyAll(request.FromFile.Place, request.FromFile.Path, request.ToFile.Place, request.ToFile.Path, sftpClient, progress)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace string, toPath string, progress *CopyProgress) (err error) {
+func closeUploadFile(obj multipart.File) {
+	if obj == nil {
+		return
+	}
+	_ = obj.Close()
+}
+func closeFile(obj *os.File) {
+	if obj == nil {
+		return
+	}
+	_ = obj.Close()
+}
+
+func closeFtpFile(obj *sftp.File) {
+	if obj == nil {
+		return
+	}
+	_ = obj.Close()
+}
+func closeIfCloser(obj interface{}) {
+	if obj == nil {
+		return
+	}
+	closer, closerOk := obj.(io.Closer)
+	if closerOk {
+		_ = closer.Close()
+	}
+}
+
+func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace string, toPath string, sftpClient *sftp.Client, progress *CopyProgress) (err error) {
 
 	var isDir bool
 	var fileName string
@@ -659,7 +706,7 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 		}
 	} else if fromPlace == "remote" {
 		var info os.FileInfo
-		info, err = this_.sftpClient.Lstat(fromPath)
+		info, err = sftpClient.Lstat(fromPath)
 		if err != nil {
 			return
 		}
@@ -673,26 +720,26 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 	if isDir {
 		progress.SuccessCount++
 		if fromPlace == "local" {
-			var fs []os.DirEntry
-			fs, err = os.ReadDir(fromPath)
+			var dirFiles []os.DirEntry
+			dirFiles, err = os.ReadDir(fromPath)
 			if err != nil {
 				return
 			}
 
-			for _, f := range fs {
-				err = this_.copyAll(fromPlace, fromPath+"/"+f.Name(), toPlace, toPath+"/"+f.Name(), progress)
+			for _, f := range dirFiles {
+				err = this_.copyAll(fromPlace, fromPath+"/"+f.Name(), toPlace, toPath+"/"+f.Name(), sftpClient, progress)
 				if err != nil {
 					return
 				}
 			}
 		} else if fromPlace == "remote" {
-			var fs []os.FileInfo
-			fs, err = this_.sftpClient.ReadDir(fromPath)
+			var dirFiles []os.FileInfo
+			dirFiles, err = sftpClient.ReadDir(fromPath)
 			if err != nil {
 				return
 			}
-			for _, f := range fs {
-				err = this_.copyAll(fromPlace, fromPath+"/"+f.Name(), toPlace, toPath+"/"+f.Name(), progress)
+			for _, f := range dirFiles {
+				err = this_.copyAll(fromPlace, fromPath+"/"+f.Name(), toPlace, toPath+"/"+f.Name(), sftpClient, progress)
 				if err != nil {
 					return
 				}
@@ -709,7 +756,7 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 				isExist = true
 			}
 		} else if toPlace == "remote" {
-			_, err = this_.sftpClient.Lstat(toPath)
+			_, err = sftpClient.Lstat(toPath)
 			if err == nil {
 				isExist = true
 			}
@@ -740,14 +787,14 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 		if fromPlace == "local" {
 			fromReader, err = os.Open(fromPath)
 		} else if fromPlace == "remote" {
-			fromReader, err = this_.sftpClient.Open(fromPath)
+			fromReader, err = sftpClient.Open(fromPath)
 		}
 
 		if err != nil {
 			return
 		}
 
-		defer fromReader.(io.Closer).Close()
+		defer closeIfCloser(fromReader)
 		var toWriter io.Writer
 
 		if toPlace == "local" {
@@ -769,10 +816,10 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 		} else if toPlace == "remote" {
 
 			pathDir := toPath[0:strings.LastIndex(toPath, "/")]
-			_, err = this_.sftpClient.Lstat(pathDir)
+			_, err = sftpClient.Lstat(pathDir)
 			if err != nil {
 				if os.IsNotExist(err) {
-					err = this_.sftpClient.MkdirAll(pathDir)
+					err = sftpClient.MkdirAll(pathDir)
 					if err != nil {
 						return
 					}
@@ -781,13 +828,13 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 				}
 			}
 
-			toWriter, err = this_.sftpClient.Create(toPath)
+			toWriter, err = sftpClient.Create(toPath)
 		}
 		if err != nil {
 			return
 		}
 
-		defer toWriter.(io.Closer).Close()
+		defer closeIfCloser(toWriter)
 
 		Copying := &Copying{}
 		Copying.Name = fileName
@@ -813,7 +860,8 @@ func (this_ *SSHSftpClient) localRemove(request *SFTPRequest, progress *RemovePr
 		progress.EndTime = util.GetNowTime()
 	}()
 	progress.StartTime = util.GetNowTime()
-	progress.Count, progress.Size, err = this_.fileCount("local", request.Path)
+
+	progress.Count, progress.Size, err = this_.fileCount("local", request.Path, nil)
 	if err != nil {
 		return
 	}
@@ -841,12 +889,12 @@ func (this_ *SSHSftpClient) localRemoveAll(path string, progress *RemoveProgress
 	isDir = info.IsDir()
 
 	if isDir {
-		var fs []os.DirEntry
-		fs, err = os.ReadDir(path)
+		var dirFiles []os.DirEntry
+		dirFiles, err = os.ReadDir(path)
 		if err != nil {
 			return
 		}
-		for _, f := range fs {
+		for _, f := range dirFiles {
 			err = this_.localRemoveAll(path+"/"+f.Name(), progress)
 			if err != nil {
 				return
@@ -862,7 +910,7 @@ func (this_ *SSHSftpClient) localRemoveAll(path string, progress *RemoveProgress
 	return
 }
 
-func (this_ *SSHSftpClient) fileCount(place string, path string) (fileCount int64, fileSize int64, err error) {
+func (this_ *SSHSftpClient) fileCount(place string, path string, sftpClient *sftp.Client) (fileCount int64, fileSize int64, err error) {
 	var isDir bool
 
 	var thisFileSize int64
@@ -878,7 +926,7 @@ func (this_ *SSHSftpClient) fileCount(place string, path string) (fileCount int6
 		}
 	} else if place == "remote" {
 		var info os.FileInfo
-		info, err = this_.sftpClient.Lstat(path)
+		info, err = sftpClient.Lstat(path)
 		if err != nil {
 			return
 		}
@@ -892,16 +940,16 @@ func (this_ *SSHSftpClient) fileCount(place string, path string) (fileCount int6
 	fileSize += thisFileSize
 	if isDir {
 		if place == "local" {
-			var fs []os.DirEntry
-			fs, err = os.ReadDir(path)
+			var dirFiles []os.DirEntry
+			dirFiles, err = os.ReadDir(path)
 			if err != nil {
 				return
 			}
 
-			for _, f := range fs {
+			for _, f := range dirFiles {
 				var fileCount_ int64
 				var fileSize_ int64
-				fileCount_, fileSize_, err = this_.fileCount(place, path+"/"+f.Name())
+				fileCount_, fileSize_, err = this_.fileCount(place, path+"/"+f.Name(), sftpClient)
 				if err != nil {
 					return
 				}
@@ -909,15 +957,15 @@ func (this_ *SSHSftpClient) fileCount(place string, path string) (fileCount int6
 				fileSize += fileSize_
 			}
 		} else if place == "remote" {
-			var fs []os.FileInfo
-			fs, err = this_.sftpClient.ReadDir(path)
+			var dirFiles []os.FileInfo
+			dirFiles, err = sftpClient.ReadDir(path)
 			if err != nil {
 				return
 			}
-			for _, f := range fs {
+			for _, f := range dirFiles {
 				var fileCount_ int64
 				var fileSize_ int64
-				fileCount_, fileSize_, err = this_.fileCount(place, path+"/"+f.Name())
+				fileCount_, fileSize_, err = this_.fileCount(place, path+"/"+f.Name(), sftpClient)
 				if err != nil {
 					return
 				}
@@ -935,7 +983,14 @@ func (this_ *SSHSftpClient) remoteRemove(request *SFTPRequest, progress *RemoveP
 		progress.EndTime = util.GetNowTime()
 	}()
 	progress.StartTime = util.GetNowTime()
-	progress.Count, progress.Size, err = this_.fileCount("remote", request.Path)
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
+	progress.Count, progress.Size, err = this_.fileCount("remote", request.Path, sftpClient)
 	if err != nil {
 		return
 	}
@@ -944,7 +999,7 @@ func (this_ *SSHSftpClient) remoteRemove(request *SFTPRequest, progress *RemoveP
 		Dir:  request.Dir,
 	}
 
-	err = this_.remoteRemoveAll(request.Path, progress)
+	err = this_.remoteRemoveAll(request.Path, sftpClient, progress)
 	if err != nil {
 		return
 	}
@@ -952,31 +1007,31 @@ func (this_ *SSHSftpClient) remoteRemove(request *SFTPRequest, progress *RemoveP
 	return
 }
 
-func (this_ *SSHSftpClient) remoteRemoveAll(path string, progress *RemoveProgress) (err error) {
+func (this_ *SSHSftpClient) remoteRemoveAll(path string, sftpClient *sftp.Client, progress *RemoveProgress) (err error) {
 	var isDir bool
 
 	var info os.FileInfo
-	info, err = this_.sftpClient.Lstat(path)
+	info, err = sftpClient.Lstat(path)
 	if err != nil {
 		return
 	}
 	isDir = info.IsDir()
 
 	if isDir {
-		var fs []os.FileInfo
-		fs, err = this_.sftpClient.ReadDir(path)
+		var dirFiles []os.FileInfo
+		dirFiles, err = sftpClient.ReadDir(path)
 		if err != nil {
 			return
 		}
-		for _, f := range fs {
-			err = this_.remoteRemoveAll(path+"/"+f.Name(), progress)
+		for _, f := range dirFiles {
+			err = this_.remoteRemoveAll(path+"/"+f.Name(), sftpClient, progress)
 			if err != nil {
 				return
 			}
 		}
 
 	}
-	err = this_.sftpClient.Remove(path)
+	err = sftpClient.Remove(path)
 	if err != nil {
 		return
 	}
@@ -1005,13 +1060,19 @@ func (this_ *SSHSftpClient) remoteRename(request *SFTPRequest) (response *SFTPRe
 		Path: request.OldPath,
 		Dir:  request.Dir,
 	}
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
 
-	_, err = this_.sftpClient.Lstat(request.OldPath)
+	_, err = sftpClient.Lstat(request.OldPath)
 	if err != nil {
 		return
 	}
 
-	err = this_.sftpClient.Rename(request.OldPath, request.NewPath)
+	err = sftpClient.Rename(request.OldPath, request.NewPath)
 	if err != nil {
 		return
 	}
@@ -1046,7 +1107,7 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 		return
 	}
 	response.Dir = dir
-	fs, err := os.ReadDir(dir)
+	dirFiles, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
@@ -1054,7 +1115,7 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 	var fileNames []string
 
 	fMap := map[string]os.DirEntry{}
-	for _, f := range fs {
+	for _, f := range dirFiles {
 		fName := f.Name()
 		fMap[fName] = f
 		if f.IsDir() {
@@ -1099,15 +1160,22 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 	response = &SFTPResponse{
 		Files: []*SFTPFile{},
 	}
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
 	dir := request.Dir
 	if dir == "" {
-		dir, err = this_.sftpClient.Getwd()
+		dir, err = sftpClient.Getwd()
 		if err != nil {
 			return
 		}
 	}
 
-	fileInfo, err := this_.sftpClient.Lstat(dir)
+	fileInfo, err := sftpClient.Lstat(dir)
 	if err != nil {
 		return
 	}
@@ -1117,12 +1185,12 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 		return
 	}
 
-	dir, err = this_.sftpClient.RealPath(dir)
+	dir, err = sftpClient.RealPath(dir)
 	if err != nil {
 		return
 	}
 	response.Dir = dir
-	fs, err := this_.sftpClient.ReadDir(dir)
+	dirFiles, err := sftpClient.ReadDir(dir)
 	if err != nil {
 		return
 	}
@@ -1130,7 +1198,7 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 	var fileNames []string
 
 	fMap := map[string]os.FileInfo{}
-	for _, f := range fs {
+	for _, f := range dirFiles {
 		fName := f.Name()
 		fMap[fName] = f
 		if f.IsDir() {

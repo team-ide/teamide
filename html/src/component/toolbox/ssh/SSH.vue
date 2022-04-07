@@ -53,6 +53,14 @@ export default {
       data.height = 0;
       this.wrap.writeEvent("shell start" + JSON.stringify(data));
     },
+    changeSize() {
+      let data = {};
+      data.cols = this.cols;
+      data.rows = this.rows;
+      data.width = 0;
+      data.height = 0;
+      this.wrap.writeEvent("change size" + JSON.stringify(data));
+    },
     initAttachAddon() {
       this.attachAddon = new AttachAddon(this.socket);
       this.term.loadAddon(this.attachAddon);
@@ -88,9 +96,12 @@ export default {
       this.term.focus();
       this.cols = this.term.cols;
       this.rows = this.term.rows;
-      window.onresize = function () {
+      window.onresize = () => {
         // 窗口尺寸变化时，终端尺寸自适应
         this.fitAddon.fit();
+        this.cols = this.term.cols;
+        this.rows = this.term.rows;
+        this.changeSize();
       };
     },
   },

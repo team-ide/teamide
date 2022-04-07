@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	SSHSftpCache = map[string]*SSHSftpClient{}
+	SSHSftpCache  = map[string]*SSHSftpClient{}
+	SSHShellCache = map[string]*SSHShellClient{}
 )
 
 type SSHClient struct {
@@ -59,6 +60,7 @@ func (this_ *SSHClient) CloseClient() {
 
 func (this_ *SSHClient) CloseWS() {
 	delete(SSHSftpCache, this_.Token)
+	delete(SSHShellCache, this_.Token)
 	this_.isClosedWS = true
 	if this_.ws != nil {
 		err := this_.ws.Close()
@@ -112,6 +114,11 @@ func (this_ *SSHClient) createClient() (err error) {
 	return
 }
 
+func WSIsCloseError(err error) bool {
+	_, ok := err.(*websocket.CloseError)
+	return ok
+}
+
 func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs []byte), onClose func()) {
 	defer func() {
 		if x := recover(); x != nil {
@@ -128,11 +135,11 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 		}
 		_, bs, err := this_.ws.ReadMessage()
 		if err != nil {
-			this_.Logger.Error("WebSocket信息读取异常", zap.Error(err))
-			if websocket.IsCloseError(err) {
+			if WSIsCloseError(err) {
 				this_.CloseWS()
 				return
 			}
+			this_.Logger.Error("WebSocket信息读取异常", zap.Error(err))
 			continue
 		}
 		if len(bs) > TeamIDEEventByteLength {
@@ -173,16 +180,16 @@ func (this_ *SSHClient) WSWrite(bs []byte) {
 	err := this_.ws.WriteMessage(websocket.TextMessage, bs)
 
 	if err != nil {
-		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
-		if websocket.IsCloseError(err) {
-			this_.CloseClient()
+		if WSIsCloseError(err) {
 			this_.CloseWS()
+			return
 		}
+		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
 	}
 	return
 }
 
-func (this_ *SSHClient) WSWriteData(obj interface{}) (err error) {
+func (this_ *SSHClient) WSWriteData(obj interface{}) {
 
 	bs, err := json.Marshal(obj)
 	if err != nil {
