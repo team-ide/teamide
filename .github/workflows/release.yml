@@ -99,7 +99,7 @@ jobs:
           path: release
 
   buildLinux:
-    needs: buildMAC
+    needs: buildStatic
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -135,7 +135,7 @@ jobs:
           path: release
 
   buildWindow:
-    needs: buildLinux
+    needs: buildStatic
     runs-on: windows-latest
     steps:
       # 下载源码
@@ -170,7 +170,10 @@ jobs:
           path: release
 
   release:
-    needs: buildWindow
+    needs:
+      - buildMAC
+      - buildLinux
+      - buildWindow
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源
@@ -187,26 +190,30 @@ jobs:
           path: release/package.json
           property: release
 
+      - env:
+          release_status: $(curl -I -m 10 -o /dev/null -s -w %{http_code} github.com/team-ide/teamide/releases/tag/${{ steps.release_version.outputs.value }})
+
       # 读取发布版本
       - name: Read Release Version
         id: release_version
+        if: ${{release_status != '200'}}
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
           path: release/package.json
           property: version
 
-      - if: steps.release_version.outputs.value != ""
+      - if: ${{release_status != '200'}}
         run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
-      - if: steps.release_version.outputs.value != ""
+      - if: ${{release_status != '200'}}
         run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
-      - if: steps.release_version.outputs.value != ""
+      - if: ${{release_status != '200'}}
         run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
 
 
       # 读取发布说明
       - name: Read Release Description
         id: release_body
-        if: steps.release_version.outputs.value != ""
+        if: ${{release_status != '200'}}
         uses: juliangruber/read-file-action@v1
         with:
           path: release/RELEASE.md
@@ -214,7 +221,7 @@ jobs:
       # 发布
       - name: Create Release
         id: create_release
-        if: steps.release_version.outputs.value != ""
+        if: ${{release_status != '200'}}
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -228,7 +235,7 @@ jobs:
       # 上传构建结果到 Release（把打包的zip上传到Release）
       - name: Upload Go linux Release Asset
         id: upload-go-linux-release-asset
-        if: steps.release_version.outputs.value != ""
+        if: ${{release_status != '200'}}
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -240,7 +247,7 @@ jobs:
 
       - name: Upload Go darwin standalone Release Asset
         id: upload-go-windows-release-asset
-        if: steps.release_version.outputs.value != ""
+        if: ${{release_status != '200'}}
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -252,7 +259,7 @@ jobs:
 
       - name: Upload Go windows standalone Release Asset
         id: upload-go-windows-standalone-release-asset
-        if: steps.release_version.outputs.value != ""
+        if: ${{release_status != '200'}}
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
