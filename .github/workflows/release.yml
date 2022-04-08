@@ -190,8 +190,7 @@ jobs:
           path: release/package.json
           property: release
 
-      - env:
-          release_status: $(curl -I -m 10 -o /dev/null -s -w %{http_code} github.com/team-ide/teamide/releases/tag/${{ steps.release_version.outputs.value }})
+      - run: export release_status=$(curl -I -m 10 -o /dev/null -s -w %{http_code} github.com/team-ide/teamide/releases/tag/${{ steps.release_version.outputs.value }})
 
       # 读取发布版本
       - name: Read Release Version
