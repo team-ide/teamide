@@ -77,21 +77,21 @@ export default {
     },
   },
   methods: {
-    init() {
+    async init() {
       if (this.ready) {
         return;
       }
       if (!this.tool.isToolboxPage(this.$route.path)) {
         return;
       }
-      this.ready = true;
       this.source.toolbox.initContext = this.initContext;
       if (this.source.toolbox.context == null) {
-        this.initContext();
+        await this.initContext();
       }
+      this.ready = true;
     },
-    initContext() {
-      this.loadContext();
+    async initContext() {
+      await this.loadContext();
     },
     async loadContext() {
       let param = {};

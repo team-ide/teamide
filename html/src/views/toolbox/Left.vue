@@ -178,16 +178,97 @@ export default {
       }
     },
     dataOpen(toolboxType, data) {
-      let tab = this.toolbox.createTabByData(toolboxType, data);
-      this.toolbox.addTab(tab);
-      this.toolbox.doActiveTab(tab);
+      this.open(data);
     },
     dataOpenSfpt(toolboxType, data) {
-      let tab = this.toolbox.createTabByData(toolboxType, data, {
+      this.open(data, {
         isFTP: true,
       });
+    },
+    async open(data, extend) {
+      let extendStr = null;
+      if (extend != null) {
+        extendStr = JSON.stringify(extend);
+      }
+      let param = {
+        toolboxId: data.toolboxId,
+        extend: extendStr,
+      };
+      let res = await this.server.toolbox.open(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      let openData = res.data.open;
+      let tab = await this.openByOpenData(openData);
+      if (tab != null) {
+        this.toolbox.doActiveTab(tab);
+      }
+    },
+    async openByOpenData(openData) {
+      let data = this.getToolboxData(openData.toolboxId);
+      if (data == null) {
+        await this.closeOpen(openData.openId);
+        return;
+      }
+      let toolboxType = this.getToolboxType(data.toolboxType);
+      if (toolboxType == null) {
+        await this.closeOpen(openData.openId);
+      }
+      openData.data = data;
+      openData.toolboxType = toolboxType;
+      if (this.tool.isNotEmpty(openData.extend)) {
+        openData.extend = JSON.parse(openData.extend);
+      } else {
+        openData.extend = null;
+      }
+      let tab = this.toolbox.createTabByData(openData);
       this.toolbox.addTab(tab);
-      this.toolbox.doActiveTab(tab);
+      return tab;
+    },
+    async activeOpen(openId) {
+      let param = {
+        openId: openId,
+      };
+      let res = await this.server.toolbox.open(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+    },
+    async closeOpen(openId) {
+      let param = {
+        openId: openId,
+      };
+      let res = await this.server.toolbox.close(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+    },
+    getToolboxType(type) {
+      let res = null;
+      this.source.toolboxTypes.forEach((one) => {
+        if (one == type || one.name == type || one.name == type.name) {
+          res = one;
+        }
+      });
+      return res;
+    },
+    getToolboxData(data) {
+      let res = null;
+      for (let type in this.context) {
+        if (this.context[type] == null) {
+          continue;
+        }
+        this.context[type].forEach((one) => {
+          if (
+            one == data ||
+            one.toolboxId == data ||
+            one.toolboxId == data.toolboxId
+          ) {
+            res = one;
+          }
+        });
+      }
+      return res;
     },
     toInsert(toolboxType) {
       let data = {};
@@ -254,11 +335,48 @@ export default {
         return false;
       }
     },
+    async initOpens() {
+      let opens = await this.loadOpens();
+
+      await opens.forEach(async (openData) => {
+        await this.openByOpenData(openData);
+      });
+
+      // 激活最后
+      let activeOpenData = null;
+      opens.forEach(async (openData) => {
+        if (activeOpenData == null) {
+          activeOpenData = openData;
+        } else {
+          if (
+            new Date(openData.openTime).getTime() >
+            new Date(activeOpenData.openTime).getTime()
+          ) {
+            activeOpenData = openData;
+          }
+        }
+      });
+      if (activeOpenData != null) {
+        this.toolbox.doActiveTab(activeOpenData.openId);
+      }
+    },
+    async loadOpens() {
+      let param = {};
+      let res = await this.server.toolbox.queryOpens(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      let opens = res.data.opens || [];
+      return opens;
+    },
   },
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
+    this.initOpens();
+    this.toolbox.closeOpen = this.closeOpen;
+    this.toolbox.activeOpen = this.activeOpen;
     this.toolbox.saveToolbox = this.saveToolbox;
   },
 };

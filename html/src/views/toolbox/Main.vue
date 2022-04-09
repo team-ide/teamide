@@ -35,6 +35,7 @@
               :toolboxType="one.toolboxType"
               :data="one.data"
               :extend="one.extend"
+              :active="one.active"
             ></ToolboxEditor>
           </div>
         </template>
@@ -96,6 +97,7 @@ export default {
         }
         this.doActiveTab(this.toolbox.tabs[nextTabIndex]);
       }
+      this.toolbox.closeOpen(find.openId);
     },
     doActiveTab(tab) {
       this.$nextTick(() => {
@@ -111,25 +113,28 @@ export default {
           }
         });
         this.toolbox.activeTab = tab;
+        if (tab != null) {
+          this.toolbox.activeOpen(tab.openId);
+        }
       });
     },
-    getTabKeyByData(data) {
-      let key = "" + data.toolboxId;
-      if (data.toolboxType == "ssh") {
-        key += "-" + this.tool.getNumber();
-      }
+    getTabKeyByData(openData) {
+      let key = "" + openData.openId;
       return key;
     },
-    getTabByData(data) {
-      let key = this.getTabKeyByData(data);
+    getTabByData(openData) {
+      let key = this.getTabKeyByData(openData);
       let tab = this.getTab(key);
       return tab;
     },
-    createTabByData(toolboxType, data, extend) {
-      let key = this.getTabKeyByData(data);
+    createTabByData(openData) {
+      let key = this.getTabKeyByData(openData);
 
       let tab = this.getTab(key);
       if (tab == null) {
+        let toolboxType = openData.toolboxType;
+        let data = openData.data;
+        let extend = openData.extend;
         let title = toolboxType.text + " : " + data.name;
         let name = data.name;
 
@@ -149,9 +154,9 @@ export default {
           name,
           toolboxType,
           extend,
+          openId: openData.openId,
         };
         tab.active = false;
-        tab.changed = false;
       }
       return tab;
     },

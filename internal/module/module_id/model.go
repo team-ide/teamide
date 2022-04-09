@@ -39,4 +39,6 @@ const (
 
 	// IDTypeToolbox 工具箱ID类型
 	IDTypeToolbox = 5001
+	// IDTypeToolboxOpen 工具箱开启ID类型
+	IDTypeToolboxOpen = 5002
 )

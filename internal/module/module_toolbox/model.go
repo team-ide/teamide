@@ -9,6 +9,8 @@ const (
 	ModuleToolbox = "toolbox"
 	// TableToolbox 工具箱信息表
 	TableToolbox = "TM_TOOLBOX"
+	// TableToolboxOpen 工具箱打开信息表
+	TableToolboxOpen = "TM_TOOLBOX_OPEN"
 )
 
 // ToolboxModel 工具箱模型，和工具箱表对应
@@ -23,4 +25,15 @@ type ToolboxModel struct {
 	CreateTime   time.Time `json:"createTime,omitempty"`
 	UpdateTime   time.Time `json:"updateTime,omitempty"`
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
+}
+
+// ToolboxOpenModel 工具箱打开模型，和工具箱打开表对应
+type ToolboxOpenModel struct {
+	OpenId     int64     `json:"openId,omitempty"`
+	UserId     int64     `json:"userId,omitempty"`
+	ToolboxId  int64     `json:"toolboxId,omitempty"`
+	Extend     string    `json:"extend,omitempty"`
+	CreateTime time.Time `json:"createTime,omitempty"`
+	UpdateTime time.Time `json:"updateTime,omitempty"`
+	OpenTime   time.Time `json:"openTime,omitempty"`
 }

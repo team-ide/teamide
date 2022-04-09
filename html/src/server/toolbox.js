@@ -25,6 +25,15 @@ let toolbox = {
     work(param) {
         return http.post('api/toolbox/work', param);
     },
+    open(param) {
+        return http.post('api/toolbox/open', param);
+    },
+    close(param) {
+        return http.post('api/toolbox/close', param);
+    },
+    queryOpens(param) {
+        return http.post('api/toolbox/queryOpens', param);
+    },
     ssh: {
         ftp: {
             upload(param) {

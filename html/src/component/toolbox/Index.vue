@@ -75,7 +75,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "extend", "toolboxType", "toolbox"],
+  props: ["source", "data", "extend", "toolboxType", "toolbox", "active"],
   data() {
     return {
       key: "toolbox-" + this.tool.getNumber(),
@@ -89,9 +89,19 @@ export default {
     data() {
       this.initOption();
     },
+    active() {
+      this.init();
+    },
   },
   methods: {
     init() {
+      if (this.inited) {
+        return;
+      }
+      if (!this.active) {
+        return;
+      }
+      this.inited = true;
       this.wrap.work = this.work;
       this.initOption();
       this.ready = true;

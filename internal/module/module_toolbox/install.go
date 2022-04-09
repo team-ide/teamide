@@ -51,6 +51,43 @@ CREATE TABLE ` + TableToolbox + ` (
 				},
 			},
 		},
+		// 创建工具箱表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleToolbox,
+			Stage:   `创建表[` + TableToolboxOpen + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableToolboxOpen + ` (
+	openId bigint(20) NOT NULL COMMENT '用户ID',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	toolboxId bigint(20) NOT NULL COMMENT '工具箱ID',
+	extend varchar(2000) NOT NULL COMMENT '扩展',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	openTime datetime DEFAULT NULL COMMENT '打开时间',
+	PRIMARY KEY (openId),
+	KEY index_userId (userId),
+	KEY index_toolboxId (toolboxId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱开启';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableToolboxOpen + ` (
+	openId bigint(20) DEFAULT NULL,
+	userId bigint(20) DEFAULT NULL,
+	toolboxId bigint(20) NOT NULL,
+	extend varchar(2000) NOT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	openTime datetime DEFAULT NULL,
+	PRIMARY KEY (openId)
+);
+`,
+					`CREATE INDEX ` + TableToolboxOpen + `_index_userId on ` + TableToolboxOpen + ` (userId);`,
+					`CREATE INDEX ` + TableToolboxOpen + `_index_toolboxId on ` + TableToolboxOpen + ` (toolboxId);`,
+				},
+			},
+		},
 	}
 
 }

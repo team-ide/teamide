@@ -138,6 +138,71 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 	return
 }
 
+// Open 新增
+func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected int64, err error) {
+
+	if toolboxOpen.CreateTime.IsZero() {
+		toolboxOpen.CreateTime = time.Now()
+	}
+	if toolboxOpen.OpenTime.IsZero() {
+		toolboxOpen.OpenTime = time.Now()
+	}
+	if toolboxOpen.OpenId != 0 {
+		if toolboxOpen.UpdateTime.IsZero() {
+			toolboxOpen.UpdateTime = time.Now()
+		}
+
+		sql := `UPDATE ` + TableToolboxOpen + ` SET openTime=?,updateTime=? WHERE openId=? `
+		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenTime, toolboxOpen.UpdateTime, toolboxOpen.OpenId})
+		if err != nil {
+			return
+		}
+	} else {
+		toolboxOpen.OpenId, err = this_.idService.GetNextID(module_id.IDTypeToolboxOpen)
+		if err != nil {
+			return
+		}
+
+		sql := `INSERT INTO ` + TableToolboxOpen + `(openId, userId, toolboxId, extend, createTime, openTime) VALUES (?, ?, ?, ?, ?, ?) `
+
+		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenId, toolboxOpen.UserId, toolboxOpen.ToolboxId, toolboxOpen.Extend, toolboxOpen.CreateTime, toolboxOpen.OpenTime})
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+// QueryOpens 查询
+func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, err error) {
+
+	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? `
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(ToolboxOpenModel{}))
+	if err != nil {
+		return
+	}
+
+	err = util.ToStruct(list, &res)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// Close 更新
+func (this_ *ToolboxService) Close(openId int64) (rowsAffected int64, err error) {
+
+	sql := `DELETE FROM ` + TableToolboxOpen + ` WHERE openId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{openId})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // Update 更新
 func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, err error) {
 	if toolbox.Name != "" {

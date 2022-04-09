@@ -34,6 +34,9 @@ var (
 	PowerToolboxUpdate         = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxRename         = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxDelete         = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxOpen           = base.AppendPower(&base.PowerAction{Action: "toolbox_open", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQueryOpens     = base.AppendPower(&base.PowerAction{Action: "toolbox_query_opens", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxClose          = base.AppendPower(&base.PowerAction{Action: "toolbox_close", Text: "工具关闭", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxWork           = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具工作", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxSSHShell       = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_shell", Text: "工具SSH Shell连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxSSHFtp         = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp", Text: "工具SSH FTP连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -50,6 +53,9 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: PowerToolboxRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: PowerToolboxDelete, Do: this_.delete})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: PowerToolboxWork, Do: this_.work})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/open"}, Power: PowerToolboxOpen, Do: this_.open})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpens"}, Power: PowerToolboxQueryOpens, Do: this_.queryOpens})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/close"}, Power: PowerToolboxClose, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/shell"}, Power: PowerToolboxSSHShell, Do: this_.sshShell, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp"}, Power: PowerToolboxSSHFtp, Do: this_.sshFtp, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp/upload"}, Power: PowerToolboxSSHFtpUpload, Do: this_.sshFtpUpload})
@@ -115,6 +121,84 @@ func (this_ *ToolboxApi) insert(requestBean *base.RequestBean, c *gin.Context) (
 	toolbox.UserId = requestBean.JWT.UserId
 
 	_, err = this_.ToolboxService.Insert(toolbox)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type OpenRequest struct {
+	*ToolboxOpenModel
+}
+
+type OpenResponse struct {
+	Open *ToolboxOpenModel `json:"open,omitempty"`
+}
+
+func (this_ *ToolboxApi) open(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &OpenRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &OpenResponse{}
+
+	toolboxOpen := request.ToolboxOpenModel
+	toolboxOpen.UserId = requestBean.JWT.UserId
+
+	_, err = this_.ToolboxService.Open(toolboxOpen)
+	if err != nil {
+		return
+	}
+
+	response.Open = toolboxOpen
+
+	res = response
+	return
+}
+
+type QueryOpensRequest struct {
+}
+
+type QueryOpensResponse struct {
+	Opens []*ToolboxOpenModel `json:"opens,omitempty"`
+}
+
+func (this_ *ToolboxApi) queryOpens(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &QueryOpensRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &QueryOpensResponse{}
+
+	response.Opens, err = this_.ToolboxService.QueryOpens(requestBean.JWT.UserId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type CloseRequest struct {
+	*ToolboxOpenModel
+}
+
+type CloseResponse struct {
+}
+
+func (this_ *ToolboxApi) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &CloseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &CloseResponse{}
+
+	_, err = this_.ToolboxService.Close(request.OpenId)
 	if err != nil {
 		return
 	}
