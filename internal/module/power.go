@@ -3,6 +3,7 @@ package module
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wxnacy/wgo/arrays"
+	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
 )
@@ -10,6 +11,7 @@ import (
 func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
 
 	if api.Power.ShouldLogin && (JWT == nil || JWT.UserId == 0) {
+		this_.Logger.Error("权限验证失败", zap.Error(base.ShouldLoginError))
 		base.ResponseJSON(nil, base.ShouldLoginError, c)
 		return false
 	}
@@ -25,7 +27,7 @@ func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Cont
 	if find {
 		return find
 	}
-
+	this_.Logger.Error("权限验证失败", zap.Error(base.NoPowerError))
 	base.ResponseJSON(nil, base.NoPowerError, c)
 	return find
 }

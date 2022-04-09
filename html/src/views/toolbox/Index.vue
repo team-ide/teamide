@@ -1,32 +1,34 @@
 <template>
   <div class="toolbox-box" :style="boxStyleObject">
-    <tm-layout height="100%">
-      <tm-layout height="auto">
-        <tm-layout height="100%">
-          <tm-layout :width="style.left.width">
-            <Left
-              ref="left"
-              v-if="source.toolbox.context != null"
-              :source="source"
-              :toolbox="source.toolbox"
-              :context="source.toolbox.context"
-              :style="leftStyleObject"
-            ></Left>
-          </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
-          <tm-layout width="auto">
-            <Main
-              ref="main"
-              v-if="source.toolbox.context != null"
-              :source="source"
-              :toolbox="source.toolbox"
-              :context="source.toolbox.context"
-              :style="mainStyleObject"
-            ></Main>
+    <template v-if="ready">
+      <tm-layout height="100%">
+        <tm-layout height="auto">
+          <tm-layout height="100%">
+            <tm-layout :width="style.left.width">
+              <Left
+                ref="left"
+                v-if="source.toolbox.context != null"
+                :source="source"
+                :toolbox="source.toolbox"
+                :context="source.toolbox.context"
+                :style="leftStyleObject"
+              ></Left>
+            </tm-layout>
+            <tm-layout-bar right></tm-layout-bar>
+            <tm-layout width="auto">
+              <Main
+                ref="main"
+                v-if="source.toolbox.context != null"
+                :source="source"
+                :toolbox="source.toolbox"
+                :context="source.toolbox.context"
+                :style="mainStyleObject"
+              ></Main>
+            </tm-layout>
           </tm-layout>
         </tm-layout>
       </tm-layout>
-    </tm-layout>
+    </template>
     <ToolboxForm :source="source" :toolbox="source.toolbox"></ToolboxForm>
   </div>
 </template>
@@ -41,6 +43,7 @@ export default {
   props: ["source"],
   data() {
     return {
+      ready: false,
       style: {
         backgroundColor: "#2d2d2d",
         color: "#adadad",
@@ -68,9 +71,20 @@ export default {
     },
   },
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "$route.path"() {
+      this.init();
+    },
+  },
   methods: {
     init() {
+      if (this.ready) {
+        return;
+      }
+      if (!this.tool.isToolboxPage(this.$route.path)) {
+        return;
+      }
+      this.ready = true;
       this.source.toolbox.initContext = this.initContext;
       if (this.source.toolbox.context == null) {
         this.initContext();

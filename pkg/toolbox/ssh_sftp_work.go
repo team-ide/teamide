@@ -187,27 +187,23 @@ func (this_ *SSHSftpClient) callProgress(request *SFTPRequest, progress interfac
 	}
 }
 
-func SFTPUpload(c *gin.Context) (res error, err error) {
+func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 	token := c.PostForm("token")
-	//fmt.Println("token=" + token)
 	if token == "" {
 		err = errors.New("token获取失败")
 		return
 	}
 	dir := c.PostForm("dir")
-	//fmt.Println("token=" + token)
 	if dir == "" {
 		err = errors.New("dir获取失败")
 		return
 	}
 	place := c.PostForm("place")
-	//fmt.Println("token=" + token)
 	if place == "" {
 		err = errors.New("place获取失败")
 		return
 	}
 	workId := c.PostForm("workId")
-	//fmt.Println("token=" + token)
 	if workId == "" {
 		err = errors.New("workId获取失败")
 		return
@@ -237,19 +233,16 @@ func SFTPUpload(c *gin.Context) (res error, err error) {
 func SFTPDownload(data map[string]string, c *gin.Context) (err error) {
 
 	token := data["token"]
-	//fmt.Println("token=" + token)
 	if token == "" {
 		err = errors.New("token获取失败")
 		return
 	}
 	place := data["place"]
-	//fmt.Println("token=" + token)
 	if place == "" {
 		err = errors.New("place获取失败")
 		return
 	}
 	path := data["path"]
-	//fmt.Println("path=" + path)
 	if path == "" {
 		err = errors.New("path获取失败")
 		return

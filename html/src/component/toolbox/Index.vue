@@ -7,6 +7,7 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
+          :extend="extend"
           :wrap="wrap"
         >
         </ToolboxRedisEditor>
@@ -17,6 +18,7 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
+          :extend="extend"
           :wrap="wrap"
         >
         </ToolboxDatabaseEditor>
@@ -27,6 +29,7 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
+          :extend="extend"
           :wrap="wrap"
         >
         </ToolboxZookeeperEditor>
@@ -37,6 +40,7 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
+          :extend="extend"
           :wrap="wrap"
         >
         </ToolboxElasticsearchEditor>
@@ -47,6 +51,7 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
+          :extend="extend"
           :wrap="wrap"
         >
         </ToolboxKafkaEditor>
@@ -57,8 +62,8 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
-          :wrap="wrap"
           :extend="extend"
+          :wrap="wrap"
         >
         </ToolboxSSHEditor>
       </template>
@@ -73,7 +78,7 @@ export default {
   props: ["source", "data", "extend", "toolboxType", "toolbox"],
   data() {
     return {
-      key: this.tool.getNumber(),
+      key: "toolbox-" + this.tool.getNumber(),
       option: null,
       ready: false,
       wrap: {},
@@ -124,6 +129,12 @@ export default {
   created() {},
   mounted() {
     this.init();
+  },
+  updated() {},
+  beforeDestroy() {
+    if (this.wrap.destroy != null) {
+      this.wrap.destroy();
+    }
   },
 };
 </script>

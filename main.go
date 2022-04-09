@@ -22,6 +22,7 @@ var (
 	buildFlags   = ""
 	isStandAlone = false
 	isHtmlDev    = false
+	isServerDev  = false
 	rootDir      string
 	userHomeDir  string
 )
@@ -38,8 +39,11 @@ func init() {
 	if strings.Contains(buildFlags, "--isStandAlone") {
 		isStandAlone = true
 	}
-	if strings.Contains(buildFlags, "--isHtmlDev") {
+	if strings.Contains(buildFlags, "--isDev") || strings.Contains(buildFlags, "--isHtmlDev") {
 		isHtmlDev = true
+	}
+	if strings.Contains(buildFlags, "--isDev") || strings.Contains(buildFlags, "--isServerDev") {
+		isServerDev = true
 	}
 	rootDir, err = os.Getwd()
 	if err != nil {
@@ -85,11 +89,12 @@ func main() {
 	for _, v := range os.Args {
 		if v == "--isStandAlone" {
 			isStandAlone = true
-			continue
 		}
-		if v == "--isHtmlDev" {
+		if v == "--isDev" || v == "--isHtmlDev" {
 			isHtmlDev = true
-			continue
+		}
+		if v == "--isDev" || v == "--isServerDev" {
+			isServerDev = true
 		}
 	}
 
@@ -98,6 +103,7 @@ func main() {
 	serverConf := &context.ServerConf{
 		IsStandAlone: isStandAlone,
 		IsHtmlDev:    isHtmlDev,
+		IsServerDev:  isServerDev,
 		RootDir:      rootDir,
 		UserHomeDir:  userHomeDir,
 	}

@@ -12,9 +12,6 @@
           </div>
         </tm-layout>
         <tm-layout height="auto">
-          <div class="drag-file" v-show="dragFile.show" :style="dragFile.style">
-            <div class="drag-file-name">{{ dragFile.name }}</div>
-          </div>
           <div
             class="files-box scrollbar"
             @contextmenu.prevent="fileContextmenu"
@@ -91,11 +88,6 @@ export default {
     return {
       ready: false,
       list: [],
-      dragFile: {
-        show: false,
-        style: {},
-        name: "上传文件",
-      },
       form: {
         dir: null,
       },
@@ -311,14 +303,12 @@ export default {
       console.log("ondrag", e);
     },
     ondragleave(e) {
-      this.dragFile.show = false;
       e.preventDefault();
     },
     ondragover(e) {
       e.preventDefault();
     },
     ondrop(e) {
-      this.dragFile.show = false;
       e.preventDefault();
       let putFile = this.getFileByTarget(e.target);
       let putDir = null;
@@ -473,7 +463,9 @@ export default {
     },
     formatFiles() {
       let files = this.files || [];
-      let list = [];
+      if (this.list) {
+        this.list.splice(0, this.list.length);
+      }
       files.forEach((one) => {
         one = Object.assign({}, one);
         one.dir = this.dir;
@@ -484,9 +476,8 @@ export default {
         if (!one.isDir) {
           this.wrap.formatSize(one, "size", "unitSize", "unit");
         }
-        list.push(one);
+        this.list.push(one);
       });
-      this.list = list;
     },
     initEvent() {
       this.$nextTick(() => {

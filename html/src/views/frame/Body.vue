@@ -23,8 +23,28 @@
         </div>
       </template>
       <template v-else>
-        <router-view :source="source"></router-view>
+        <template
+          v-if="
+            !tool.isToolboxPage($route.path) &&
+            !tool.isApplicationPage($route.path) &&
+            !tool.isWorkspacePage($route.path)
+          "
+        >
+          <router-view :source="source"></router-view>
+        </template>
       </template>
+      <Toolbox
+        v-show="tool.isToolboxPage($route.path)"
+        :source="source"
+      ></Toolbox>
+      <Application
+        v-show="tool.isApplicationPage($route.path)"
+        :source="source"
+      ></Application>
+      <Workspace
+        v-show="tool.isWorkspacePage($route.path)"
+        :source="source"
+      ></Workspace>
     </template>
   </div>
 </template>
@@ -32,8 +52,11 @@
 <script>
 import ManageNav from "@/views/manage/Nav.vue";
 import UserNav from "@/views/user/Nav.vue";
+import Toolbox from "@/views/toolbox/Index";
+import Workspace from "@/views/workspace/Index";
+import Application from "@/views/application/Index";
 export default {
-  components: { ManageNav, UserNav },
+  components: { ManageNav, UserNav, Toolbox, Workspace, Application },
   props: ["source"],
   data() {
     return {};

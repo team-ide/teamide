@@ -86,6 +86,24 @@ tool.isUserPage = function (path) {
     }
     return false;
 };
+tool.isToolboxPage = function (path) {
+    if (path == '/toolbox' || path.indexOf('/toolbox/') == 0) {
+        return true;
+    }
+    return false;
+};
+tool.isApplicationPage = function (path) {
+    if (path == '/application' || path.indexOf('/application/') == 0) {
+        return true;
+    }
+    return false;
+};
+tool.isWorkspacePage = function (path) {
+    if (path == '/workspace' || path.indexOf('/workspace/') == 0) {
+        return true;
+    }
+    return false;
+};
 tool.toLogin = function () {
     tool.hideRegister();
     source.login.remove = false;

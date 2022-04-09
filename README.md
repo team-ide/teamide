@@ -15,6 +15,40 @@ internal/       # 服务源码
 pkg/            # 工具等
 ```
 
+### 源码调试运行
+
+**前端调试运行**
+```shell
+# 前端打包
+
+# 进入html目录
+cd html
+
+# 安装依赖
+npm install
+
+# 运行
+npm run serve
+```
+
+**服务端调试运行**
+```shell
+# 安装依赖
+go mod tidy
+
+# 运行
+# --isDev dev模式，自动打开到 前端调试页面，日志输出控制台
+# --isStandAlone 单机版运行
+
+# 单机版调试运行，需要谷歌浏览器
+go run . --isDev --isStandAlone
+
+# 服务端调试运行，需要配置conf
+go run . --isDev
+```
+
+### 打包
+
 **前端打包**
 ```shell
 # 前端打包

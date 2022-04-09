@@ -11,6 +11,10 @@ type RequestBean struct {
 	Path string
 }
 
+var (
+	HttpNotResponse = &HttpResponse{}
+)
+
 type JWTBean struct {
 	Sign   string `json:"sign,omitempty"`
 	UserId int64  `json:"userId,omitempty"`

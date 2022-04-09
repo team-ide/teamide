@@ -19,6 +19,7 @@ export default {
     "toolboxType",
     "toolbox",
     "option",
+    "extend",
     "wrap",
     "token",
     "socket",
@@ -104,15 +105,18 @@ export default {
         this.changeSize();
       };
     },
+    dispose() {
+      if (this.term != null) {
+        this.term.dispose();
+      }
+    },
   },
   created() {},
   mounted() {
     this.init();
   },
   beforeDestroy() {
-    if (this.term != null) {
-      this.term.dispose();
-    }
+    this.dispose();
   },
 };
 </script>

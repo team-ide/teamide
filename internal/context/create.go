@@ -18,6 +18,7 @@ type ServerConf struct {
 	PrivateKey   string
 	IsStandAlone bool
 	IsHtmlDev    bool
+	IsServerDev  bool
 	RootDir      string
 	UserHomeDir  string
 }
@@ -26,6 +27,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	context = &ServerContext{
 		IsStandAlone: serverConf.IsStandAlone,
 		IsHtmlDev:    serverConf.IsHtmlDev,
+		IsServerDev:  serverConf.IsServerDev,
 		RootDir:      serverConf.RootDir,
 		UserHomeDir:  serverConf.UserHomeDir,
 	}
@@ -126,7 +128,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 			Password: serverConfig.Mysql.Password,
 		}
 	}
-	if this_.IsHtmlDev {
+	if this_.IsServerDev {
 		loggerConfig := zap.NewDevelopmentConfig()
 		loggerConfig.Development = false
 		this_.Logger, err = loggerConfig.Build()

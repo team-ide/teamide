@@ -1,9 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import Toolbox from '@/views/toolbox/Index'
-import Workspace from '@/views/workspace/Index'
-import Application from '@/views/application/Index'
 
 import Manage from '@/views/manage/Index'
 import ManageUserIndex from '@/views/manage/user/Index'
@@ -18,18 +15,6 @@ Vue.use(Router)
 
 export default new Router({
   routes: [
-    {
-      path: '/toolbox',
-      component: Toolbox
-    },
-    {
-      path: '/workspace',
-      component: Workspace
-    },
-    {
-      path: '/application',
-      component: Application
-    },
     {
       path: '/manage',
       component: Manage

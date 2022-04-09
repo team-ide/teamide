@@ -23,9 +23,9 @@
     </div>
     <div class="toolbox-main-body">
       <div class="toolbox-tab-span-box">
-        <template v-for="(one, index) in toolbox.tabs">
+        <template v-for="one in toolbox.tabs">
           <div
-            :key="'span-' + index"
+            :key="one.key"
             class="toolbox-tab-span"
             :class="{ active: one.active }"
           >
@@ -130,14 +130,17 @@ export default {
 
       let tab = this.getTab(key);
       if (tab == null) {
-        let title = toolboxType.text + ":" + data.name;
+        let title = toolboxType.text + " : " + data.name;
         let name = data.name;
-        if (extend && extend.isFTP) {
-          title = "FTP:" + data.name;
-          name = "FTP:" + data.name;
+
+        extend = extend || {};
+        this.toolbox.formatExtend(toolboxType, data, extend);
+        if (extend.isFTP) {
+          title = "FTP : " + data.name;
+          name = "FTP : " + data.name;
         } else if (toolboxType.name == "ssh") {
-          title = "SSH:" + data.name;
-          name = "SSH:" + data.name;
+          title = "SSH : " + data.name;
+          name = "SSH : " + data.name;
         }
         tab = {
           key,

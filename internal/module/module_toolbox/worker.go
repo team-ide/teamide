@@ -3,9 +3,6 @@ package module_toolbox
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"net/http"
 	"teamide/pkg/toolbox"
 )
 
@@ -45,60 +42,5 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		return
 	}
 
-	return
-}
-
-var upGrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (this_ *ToolboxService) SSHConnection(c *gin.Context) (err error) {
-
-	token := c.Query("token")
-	//fmt.Println("token=" + token)
-	if token == "" {
-		err = errors.New("token获取失败")
-		return
-	}
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-	toolbox.WSSSHConnection(token, ws, this_.Logger)
-	return
-}
-
-func (this_ *ToolboxService) SFTPConnection(c *gin.Context) (err error) {
-
-	token := c.Query("token")
-	//fmt.Println("token=" + token)
-	if token == "" {
-		err = errors.New("token获取失败")
-		return
-	}
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-	err = toolbox.WSSFPTConnection(token, ws, this_.Logger)
-	if err != nil {
-		ws.Close()
-		return
-	}
-	return
-}
-
-func SFTPUpload(c *gin.Context) (res interface{}, err error) {
-
-	res, err = toolbox.SFTPUpload(c)
-	return
-}
-
-func SFTPDownload(data map[string]string, c *gin.Context) (err error) {
-	err = toolbox.SFTPDownload(data, c)
 	return
 }

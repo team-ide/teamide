@@ -20,6 +20,7 @@ type ServerContext struct {
 	HttpAesKey     string             `json:"-" yaml:"-"`
 	IsStandAlone   bool
 	IsHtmlDev      bool
+	IsServerDev    bool
 	RootDir        string
 	UserHomeDir    string
 }

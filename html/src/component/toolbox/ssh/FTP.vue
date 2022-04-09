@@ -148,6 +148,7 @@ export default {
     "toolboxType",
     "toolbox",
     "option",
+    "extend",
     "wrap",
     "token",
     "socket",
@@ -244,10 +245,10 @@ export default {
       }
       work.progress = data.progress;
       if (work.progress.size) {
-        this.wrap.formatSize(work.progress, "size", "unitSize", "unit");
+        this.formatSize(work.progress, "size", "unitSize", "unit");
 
         if (work.progress.successSize) {
-          this.wrap.formatSize(
+          this.formatSize(
             work.progress,
             "successSize",
             "unitSuccessSize",
@@ -277,7 +278,7 @@ export default {
             ).toFixed(2);
             work.progress.sleepSize = sleepSize;
 
-            this.wrap.formatSize(
+            this.formatSize(
               work.progress,
               "sleepSize",
               "unitSleepSize",
@@ -299,13 +300,13 @@ export default {
       this.openDir(place, dir);
     },
     loadFiles(place, dir) {
-      // if (place == "local") {
-      //   this.localDir = dir;
-      //   this.localFiles = null;
-      // } else if (place == "remote") {
-      //   this.remoteDir = dir;
-      //   this.remoteFiles = null;
-      // }
+      if (place == "local") {
+        this.localDir = dir;
+        this.localFiles = null;
+      } else if (place == "remote") {
+        this.remoteDir = dir;
+        this.remoteFiles = null;
+      }
       let request = {
         place: place,
         dir: dir,
@@ -432,7 +433,6 @@ export default {
     async doUploadFile(place, dir, file, fullPath) {
       let request = {
         work: "upload",
-        type: "sftp",
         place: place,
         dir: dir,
         token: this.token,
@@ -445,7 +445,7 @@ export default {
         form.append(key, request[key]);
       }
       form.append("file", file);
-      let res = await this.server.upload(form);
+      let res = await this.server.toolbox.ssh.ftp.upload(form);
       if (res.code != 0) {
         this.tool.error(res.msg);
         return false;
@@ -455,31 +455,17 @@ export default {
     async doDownloadFile(place, dir, file) {
       let url =
         this.source.api +
-        "api/download?type=sftp&token=" +
-        this.token +
+        "api/toolbox/ssh/ftp/download?token=" +
+        encodeURIComponent(this.token) +
+        "&jwt=" +
+        encodeURIComponent(this.tool.getJWT()) +
         "&place=" +
-        place +
+        encodeURIComponent(place) +
         "&dir=" +
-        dir +
+        encodeURIComponent(dir) +
         "&path=" +
-        file.path;
+        encodeURIComponent(file.path);
       window.location.href = url;
-
-      // let request = {
-      //   work: "download",
-      //   type: "sftp",
-      //   place: place,
-      //   dir: dir,
-      //   path: file.path,
-      //   name: file.name,
-      //   token: this.token,
-      // };
-      // let res = await this.server.download(request);
-      // if (res && res.code != 0) {
-      //   this.tool.error(res.msg);
-      //   return false;
-      // }
-      // return true;
     },
     onEvent(event) {
       if (event == "ftp ready") {
@@ -499,15 +485,15 @@ export default {
     toStart() {
       this.wrap.writeEvent("ftp start");
     },
+    dispose() {},
   },
   created() {},
   mounted() {
     this.init();
   },
+  beforeUpdate() {},
   beforeDestroy() {
-    if (this.socket != null) {
-      this.socket.close();
-    }
+    this.dispose();
   },
 };
 </script>

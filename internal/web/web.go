@@ -7,12 +7,14 @@ import (
 	"net"
 	"net/http"
 	"teamide/internal/context"
+	"teamide/internal/module"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/util"
 )
 
 type Server struct {
 	*context.ServerContext
+	api            *module.Api
 	toolboxService *module_toolbox.ToolboxService
 }
 
@@ -26,6 +28,11 @@ func NewWebServer(ServerContext *context.ServerContext) (webServer *Server) {
 
 func (this_ *Server) Start() (serverUrl string, err error) {
 
+	this_.api, err = module.NewApi(this_.ServerContext)
+	if err != nil {
+		return
+	}
+
 	gin.DefaultWriter = &nullWriter{}
 
 	router := gin.Default()
@@ -33,6 +40,7 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 	routerGroup := router.Group(this_.ServerContext.ServerContext)
 
 	this_.bindGet(routerGroup)
+
 	err = this_.bindApi(routerGroup)
 	if err != nil {
 		return

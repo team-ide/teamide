@@ -25,6 +25,16 @@ let toolbox = {
     work(param) {
         return http.post('api/toolbox/work', param);
     },
+    ssh: {
+        ftp: {
+            upload(param) {
+                return http.post('api/toolbox/ssh/ftp/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
+            },
+            download(param) {
+                return http.post('api/toolbox/ssh/ftp/download', param, { responseType: "blob" });
+            },
+        },
+    },
 };
 
 

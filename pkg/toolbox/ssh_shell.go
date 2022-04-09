@@ -3,7 +3,6 @@ package toolbox
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -62,7 +61,10 @@ func (this_ *SSHShellClient) closeSession(session *ssh.Session) {
 	}
 	err := session.Close()
 	if err != nil {
-		fmt.Println("SSH Shell Session close error", err)
+		if err == io.EOF {
+			return
+		}
+		this_.Logger.Error("SSH Shell Session Close Error", zap.Error(err))
 		return
 	}
 }
@@ -85,14 +87,14 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	}
 	err = this_.initClient()
 	if err != nil {
-		this_.Logger.Error("createShell initClient error", zap.Error(err))
+		this_.Logger.Error("Create Shell Init Client Error", zap.Error(err))
 		this_.WSWriteError("SSH客户端创建失败:" + err.Error())
 		return
 	}
 
 	this_.shellSession, err = this_.sshClient.NewSession()
 	if err != nil {
-		this_.Logger.Error("createShell OpenChannel error", zap.Error(err))
+		this_.Logger.Error("Create Shell Open Channel Error", zap.Error(err))
 		this_.WSWriteError("SSH会话创建失败:" + err.Error())
 		return
 	}
@@ -126,16 +128,16 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	}
 	_, err = this_.shellSession.SendRequest("pty-req", true, ssh.Marshal(&req))
 	if err != nil {
-		this_.Logger.Error("createShell SendRequest pty-req error", zap.Error(err))
+		this_.Logger.Error("Create Shell SendRequest pty-req error", zap.Error(err))
 		return
 	}
 
 	this_.shellOK, err = this_.shellSession.SendRequest("shell", true, nil)
 	if !this_.shellOK || err != nil {
 		if err != nil {
-			err = errors.New("ssh shell send request fail")
+			err = errors.New("SSH Shell Send Request Fail")
 		}
-		this_.Logger.Error("createShell SendRequest shell error", zap.Error(err))
+		this_.Logger.Error("Create Shell Send Request Shell Error", zap.Error(err))
 		this_.WSWriteError("SSH Shell创建失败:" + err.Error())
 		return
 	}
@@ -185,7 +187,7 @@ func (this_ *SSHShellClient) onEvent(event string) {
 		go func() {
 			err = this_.startShell(*terminalSize)
 			if err != nil {
-				this_.Logger.Error("SSH Shell startShell error", zap.Error(err))
+				this_.Logger.Error("SSH Shell Start Shell error", zap.Error(err))
 			}
 		}()
 		for {

@@ -8,8 +8,8 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
-          :wrap="wrap"
           :extend="extend"
+          :wrap="wrap"
           :token="token"
           :socket="socket"
         >
@@ -22,8 +22,8 @@
           :toolbox="toolbox"
           :toolboxType="toolboxType"
           :data="data"
-          :wrap="wrap"
           :extend="extend"
+          :wrap="wrap"
           :token="token"
           :socket="socket"
         >
@@ -43,8 +43,8 @@ export default {
     "toolboxType",
     "toolbox",
     "option",
-    "wrap",
     "extend",
+    "wrap",
   ],
   data() {
     return {
@@ -62,8 +62,8 @@ export default {
     async init() {
       this.wrap.writeData = this.writeData;
       this.wrap.writeMessage = this.writeMessage;
-      this.wrap.writeError = this.writeError;
       this.wrap.writeEvent = this.writeEvent;
+      this.wrap.writeError = this.writeError;
       await this.initToken();
       this.initSocket();
       this.ready = true;
@@ -116,10 +116,12 @@ export default {
       let url = this.source.api;
       url = url.substring(url.indexOf(":"));
       if (this.extend && this.extend.isFTP) {
-        url = "ws" + url + "ws/toolbox/sfpt/connection?token=" + this.token;
+        url = "ws" + url + "api/toolbox/ssh/ftp";
       } else {
-        url = "ws" + url + "ws/toolbox/ssh/connection?token=" + this.token;
+        url = "ws" + url + "api/toolbox/ssh/shell";
       }
+      url += "?token=" + encodeURIComponent(this.token);
+      url += "&jwt=" + encodeURIComponent(this.tool.getJWT());
       this.socket = new WebSocket(url);
 
       this.socket.onopen = () => {
@@ -140,20 +142,25 @@ export default {
       };
       this.socket.onclose = () => {
         this.onEvent("socket close");
+        this.socket = null;
       };
       this.socket.onerror = () => {
         console.log("socket error");
       };
+    },
+    destroy() {
+      if (this.socket != null) {
+        this.socket.close();
+      }
     },
   },
   created() {},
   mounted() {
     this.init();
   },
+  beforeUpdate() {},
   beforeDestroy() {
-    if (this.socket != null) {
-      this.socket.close();
-    }
+    this.destroy();
   },
 };
 </script>

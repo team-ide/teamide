@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"os/user"
+	"strings"
 	"teamide/internal/base"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_user"
@@ -85,6 +86,11 @@ const (
 
 func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	jwt := c.GetHeader(JwtKey)
+	if jwt == "" {
+		if strings.EqualFold(c.Request.Method, "get") {
+			jwt = c.Query("jwt")
+		}
+	}
 	if jwt == "" {
 		return nil
 	}

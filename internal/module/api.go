@@ -42,8 +42,8 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	}
 
 	var apiPowerMap = make(map[string]bool)
-	for _, api := range api.apiCache {
-		apiPowerMap[api.Power.Action] = true
+	for _, one := range api.apiCache {
+		apiPowerMap[one.Power.Action] = true
 	}
 	ps := base.GetPowers()
 	for _, one := range ps {
@@ -75,7 +75,6 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 // Api ID服务
 type Api struct {
 	config.ServerConfig
-	zap.Logger
 	*context.ServerContext
 	applicationService *module_application.ApplicationService
 	toolboxService     *module_toolbox.ToolboxService
@@ -156,23 +155,33 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	if index < 0 {
 		return false
 	}
-	requestBean := this_.getRequestBean(c)
-	requestBean.Path = path
 	name := path[index+len("api/"):]
 
 	api := this_.apiCache[name]
 	if api == nil {
 		return false
 	}
+	if api.IsGet && !strings.EqualFold(c.Request.Method, "get") {
+		return false
+	}
+	if api.IsWebSocket && !strings.EqualFold(c.Request.Method, "get") {
+		return false
+	}
+	requestBean := this_.getRequestBean(c)
+	requestBean.Path = path
 	if !this_.checkPower(api, requestBean.JWT, c) {
 		return true
 	}
 	if api.Do != nil {
+		this_.Logger.Info("处理操作", zap.String("path", path))
 		res, err := api.Do(requestBean, c)
+		if err != nil {
+			this_.Logger.Error("操作异常", zap.String("path", path), zap.Error(err))
+		}
+		if res == base.HttpNotResponse {
+			return true
+		}
 		base.ResponseJSON(res, err, c)
-	}
-	if api.DoOther != nil {
-		api.DoOther(requestBean, c)
 	}
 	return true
 }

@@ -2,11 +2,9 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"net/http"
 	"regexp"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/static"
 )
 
@@ -15,33 +13,8 @@ func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")
-		//fmt.Println("path=" + path)
-		if strings.HasSuffix(path, "api/ws/toolbox/ssh/connection") {
-			err := this_.toolboxService.SSHConnection(c)
-			if err != nil {
-				this_.Logger.Error("ssh connection error", zap.Error(err))
-				//base.ResponseJSON(nil, err, c)
-			}
-			return
-		} else if strings.HasSuffix(path, "api/ws/toolbox/sfpt/connection") {
-			err := this_.toolboxService.SFTPConnection(c)
-			if err != nil {
-				this_.Logger.Error("sfpt connection error", zap.Error(err))
-				//base.ResponseJSON(nil, err, c)
-			}
-			return
-		} else if strings.HasSuffix(path, "api/download") {
-			data := map[string]string{}
-			err := c.Bind(&data)
-			if err != nil {
-				base.ResponseJSON(nil, err, c)
-				return
-			}
-			err = download(data, c)
-			if err != nil {
-				base.ResponseJSON(nil, err, c)
-				return
-			}
+
+		if this_.api.DoApi(path, c) {
 			return
 		}
 		if this_.toStatic(path, c) {

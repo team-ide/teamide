@@ -31,9 +31,9 @@
     </div>
     <div class="application-main-body">
       <div class="application-main-span-box">
-        <template v-for="(one, index) in application.tabs">
+        <template v-for="one in application.tabs">
           <div
-            :key="'span-' + index"
+            :key="one.key"
             class="application-main-span"
             :class="{ active: one.active }"
           >

@@ -1,48 +1,50 @@
 <template>
   <div class="application-box" :style="boxStyleObject">
-    <tm-layout height="100%">
-      <tm-layout
-        class="application-layout-header"
-        :height="style.header.height"
-      >
-        <Header
-          ref="header"
-          :source="source"
-          :application="source.application"
-          :app="source.application.app"
-          :style="headerStyleObject"
-        ></Header>
-      </tm-layout>
-      <tm-layout height="auto">
-        <tm-layout height="100%">
-          <tm-layout :width="style.left.width">
-            <Left
-              ref="left"
-              v-if="source.application.context != null"
-              :source="source"
-              :application="source.application"
-              :app="source.application.app"
-              :context="source.application.context"
-              :style="leftStyleObject"
-            ></Left>
-          </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
-          <tm-layout width="auto">
-            <Main
-              ref="main"
-              v-if="source.application.context != null"
-              :source="source"
-              :application="source.application"
-              :app="source.application.app"
-              :context="source.application.context"
-              :style="mainStyleObject"
-            ></Main>
+    <template v-if="ready">
+      <tm-layout height="100%">
+        <tm-layout
+          class="application-layout-header"
+          :height="style.header.height"
+        >
+          <Header
+            ref="header"
+            :source="source"
+            :application="source.application"
+            :app="source.application.app"
+            :style="headerStyleObject"
+          ></Header>
+        </tm-layout>
+        <tm-layout height="auto">
+          <tm-layout height="100%">
+            <tm-layout :width="style.left.width">
+              <Left
+                ref="left"
+                v-if="source.application.context != null"
+                :source="source"
+                :application="source.application"
+                :app="source.application.app"
+                :context="source.application.context"
+                :style="leftStyleObject"
+              ></Left>
+            </tm-layout>
+            <tm-layout-bar right></tm-layout-bar>
+            <tm-layout width="auto">
+              <Main
+                ref="main"
+                v-if="source.application.context != null"
+                :source="source"
+                :application="source.application"
+                :app="source.application.app"
+                :context="source.application.context"
+                :style="mainStyleObject"
+              ></Main>
+            </tm-layout>
           </tm-layout>
         </tm-layout>
       </tm-layout>
-    </tm-layout>
-    <AppForm :source="source" :application="source.application"></AppForm>
-    <ModelForm :source="source" :application="source.application"></ModelForm>
+      <AppForm :source="source" :application="source.application"></AppForm>
+      <ModelForm :source="source" :application="source.application"></ModelForm>
+    </template>
   </div>
 </template>
 
@@ -58,6 +60,7 @@ export default {
   props: ["source"],
   data() {
     return {
+      ready: false,
       style: {
         backgroundColor: "#2d2d2d",
         color: "#adadad",
@@ -98,9 +101,20 @@ export default {
         this.initContext();
       }
     },
+    "$route.path"() {
+      this.init();
+    },
   },
   methods: {
-    init() {},
+    init() {
+      if (this.ready) {
+        return;
+      }
+      if (!this.tool.isApplicationPage(this.$route.path)) {
+        return;
+      }
+      this.ready = true;
+    },
     initContext() {
       if (this.source.application.app == null) {
         this.source.application.context = null;
