@@ -79,68 +79,79 @@ func (this_ *KafkaService) getClient() (saramaClient sarama.Client, err error) {
 	SaramaConfig.Consumer.Return.Errors = true
 	SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 	SaramaConfig.Consumer.MaxWaitTime = time.Second * 1
-	addrs := strings.Split(this_.address, ",")
-	saramaClient, err = sarama.NewClient(addrs, SaramaConfig)
+	adders := strings.Split(this_.address, ",")
+	saramaClient, err = sarama.NewClient(adders, SaramaConfig)
 	if err != nil {
 		return
 	}
 	return
 }
-
-func (service *KafkaService) GetTopics() (topics []string, err error) {
-	var saramaClient sarama.Client
-	saramaClient, err = service.getClient()
-	if err != nil {
-		return
-	}
-	defer saramaClient.Close()
-	topics, err = saramaClient.Topics()
-	return
+func closeSaramaClient(saramaClient sarama.Client) {
+	_ = saramaClient.Close()
+}
+func closeClusterAdmin(clusterAdmin sarama.ClusterAdmin) {
+	_ = clusterAdmin.Close()
 }
 
-func (this_ *KafkaService) Pull(groupId string, topics []string) (msgs []*sarama.ConsumerMessage, err error) {
+func (this_ *KafkaService) GetTopics() (topics []string, err error) {
 	var saramaClient sarama.Client
 	saramaClient, err = this_.getClient()
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
+	topics, err = saramaClient.Topics()
+	return
+}
+func (this_ *KafkaService) Pull(groupId string, topics []string, PullSize int, PullTimeout int) (msgs []*sarama.ConsumerMessage, err error) {
+	if PullSize <= 0 {
+		PullSize = 10
+	}
+	if PullTimeout <= 0 {
+		PullTimeout = 1000
+	}
+	var saramaClient sarama.Client
+	saramaClient, err = this_.getClient()
+	if err != nil {
+		return
+	}
+	defer closeSaramaClient(saramaClient)
 	group, err := sarama.NewConsumerGroupFromClient(groupId, saramaClient)
 	if err != nil {
 		return
 	}
-	handler := &consumerGroupHandler{}
+	handler := &consumerGroupHandler{
+		size: PullSize,
+	}
 	go func() {
 		ctx := context.Background()
 		err = group.Consume(ctx, topics, handler)
+
 		if err != nil {
 			fmt.Println("group.Consume error:", err)
 		}
 	}()
 	startTime := GetNowTime()
 	for {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		nowTime := GetNowTime()
-		if len(handler.msgs) > 0 && nowTime-startTime > 1*1000 {
-			break
-		}
-		if nowTime-startTime > 3*1000 {
+		if handler.appended || nowTime-startTime >= int64(PullTimeout) {
 			break
 		}
 	}
-	// go func() {
 	err = group.Close()
 	if err != nil {
 		fmt.Println("group.Close error:", err)
 		return
 	}
-	// }()
-	msgs = handler.msgs
+	msgs = handler.messages
 	return
 }
 
 type consumerGroupHandler struct {
-	msgs []*sarama.ConsumerMessage
+	messages []*sarama.ConsumerMessage
+	appended bool
+	size     int
 }
 
 func (consumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
@@ -148,8 +159,12 @@ func (consumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { retur
 func (handler *consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	chanMessages := claim.Messages()
 	for msg := range chanMessages {
-		handler.msgs = append(handler.msgs, msg)
+		handler.messages = append(handler.messages, msg)
+		if len(handler.messages) >= handler.size {
+			break
+		}
 	}
+	handler.appended = true
 	return nil
 }
 
@@ -159,7 +174,7 @@ func (this_ *KafkaService) MarkOffset(groupId string, topic string, partition in
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	offsetManager, err := sarama.NewOffsetManagerFromClient(groupId, saramaClient)
 	if err != nil {
 		return
@@ -179,7 +194,7 @@ func (this_ *KafkaService) ResetOffset(groupId string, topic string, partition i
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	offsetManager, err := sarama.NewOffsetManagerFromClient(groupId, saramaClient)
 	if err != nil {
 		return
@@ -199,13 +214,13 @@ func (this_ *KafkaService) CreatePartitions(topic string, count int32) (err erro
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
 	if err != nil {
 		return
 	}
 
-	defer admin.Close()
+	defer closeClusterAdmin(admin)
 
 	err = admin.CreatePartitions(topic, count, nil, false)
 
@@ -218,13 +233,13 @@ func (this_ *KafkaService) CreateTopic(topic string, numPartitions int32, replic
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
 	if err != nil {
 		return
 	}
 
-	defer admin.Close()
+	defer closeClusterAdmin(admin)
 	if numPartitions <= 0 {
 		numPartitions = 1
 	}
@@ -246,13 +261,13 @@ func (this_ *KafkaService) DeleteTopic(topic string) (err error) {
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
 	if err != nil {
 		return
 	}
 
-	defer admin.Close()
+	defer closeClusterAdmin(admin)
 
 	err = admin.DeleteTopic(topic)
 
@@ -265,13 +280,13 @@ func (this_ *KafkaService) DeleteConsumerGroup(groupId string) (err error) {
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
 	if err != nil {
 		return
 	}
 
-	defer admin.Close()
+	defer closeClusterAdmin(admin)
 
 	err = admin.DeleteConsumerGroup(groupId)
 
@@ -284,13 +299,13 @@ func (this_ *KafkaService) DeleteRecords(topic string, partitionOffsets map[int3
 	if err != nil {
 		return
 	}
-	defer saramaClient.Close()
+	defer closeSaramaClient(saramaClient)
 	admin, err := sarama.NewClusterAdminFromClient(saramaClient)
 	if err != nil {
 		return
 	}
 
-	defer admin.Close()
+	defer closeClusterAdmin(admin)
 
 	err = admin.DeleteRecords(topic, partitionOffsets)
 

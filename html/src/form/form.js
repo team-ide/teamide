@@ -258,9 +258,9 @@ let toolboxOption = {
     elasticsearch: {
         fields: [
             {
-                label: "连接地址（127.0.0.1:9200）",
-                name: "address",
-                defaultValue: "127.0.0.1:9200",
+                label: "连接地址（http://127.0.0.1:9200）",
+                name: "url",
+                defaultValue: "http://127.0.0.1:9200",
                 rules: [
                     {
                         required: true,
@@ -270,6 +270,21 @@ let toolboxOption = {
                 ],
             },
         ],
+        index: {
+            fields: [
+                {
+                    label: "IndexName（索引）",
+                    name: "indexName",
+                    defaultValue: "index_xxx",
+                    rules: [
+                        {
+                            required: true,
+                            message: `索引不能为空!`
+                        },
+                    ],
+                },
+            ],
+        },
     },
     kafka: {
         fields: [
@@ -358,6 +373,7 @@ let toolboxOption = {
                 {
                     label: "Value",
                     name: "value",
+                    type: "textarea",
                     rules: [
                     ],
                 },

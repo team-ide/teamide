@@ -22,7 +22,7 @@ type ElasticsearchBaseRequest struct {
 
 func esWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 	var service *ESService
-	service, err = getESService(config["address"].(string))
+	service, err = getESService(config["url"].(string))
 	if err != nil {
 		return
 	}

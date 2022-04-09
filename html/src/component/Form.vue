@@ -23,6 +23,17 @@
             </b-form-select>
           </template>
           <template v-else-if="field.type == 'switch'"> </template>
+          <template v-else-if="field.type == 'textarea'">
+            <b-form-textarea
+              :id="`key-${key}-${field.name}-textarea`"
+              v-model="formData[field.name]"
+              :type="field.type"
+              :placeholder="field.placeholder"
+              :required="field.required"
+              :state="field.valid"
+            >
+            </b-form-textarea>
+          </template>
           <template v-else>
             <b-form-input
               :id="`key-${key}-${field.name}-input`"

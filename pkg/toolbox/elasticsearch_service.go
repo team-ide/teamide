@@ -6,12 +6,12 @@ import (
 	elastic "github.com/olivere/elastic/v7"
 )
 
-func getESService(address string) (res *ESService, err error) {
-	key := "elasticsearch-" + address
+func getESService(url string) (res *ESService, err error) {
+	key := "elasticsearch-" + url
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *ESService
-		s, err = CreateESService(address)
+		s, err = CreateESService(url)
 		if err != nil {
 			return
 		}
@@ -29,9 +29,9 @@ func getESService(address string) (res *ESService, err error) {
 	return
 }
 
-func CreateESService(address string) (*ESService, error) {
+func CreateESService(url string) (*ESService, error) {
 	service := &ESService{
-		address: address,
+		url: url,
 	}
 	err := service.init()
 	return service, err
@@ -39,7 +39,7 @@ func CreateESService(address string) (*ESService, error) {
 
 //ESService 注册处理器在线信息等
 type ESService struct {
-	address     string
+	url         string
 	lastUseTime int64
 }
 
@@ -52,7 +52,7 @@ func (this_ *ESService) GetClient() (client *elastic.Client, err error) {
 		this_.lastUseTime = GetNowTime()
 	}()
 	client, err = elastic.NewClient(
-		elastic.SetURL(this_.address),
+		elastic.SetURL(this_.url),
 		//docker
 		elastic.SetSniff(false),
 	)

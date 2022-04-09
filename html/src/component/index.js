@@ -84,8 +84,19 @@ Vue.component('ToolboxKafkaTopicData', ToolboxKafkaTopicData);
 import ToolboxZookeeperEditor from './toolbox/Zookeeper.vue'
 Vue.component('ToolboxZookeeperEditor', ToolboxZookeeperEditor);
 
-import ToolboxElasticsearchEditor from './toolbox/Elasticsearch.vue'
+
+import ToolboxElasticsearchEditor from './toolbox/elasticsearch/Index.vue'
 Vue.component('ToolboxElasticsearchEditor', ToolboxElasticsearchEditor);
+
+import ToolboxElasticsearchIndexNames from './toolbox/elasticsearch/IndexNames.vue'
+Vue.component('ToolboxElasticsearchIndexNames', ToolboxElasticsearchIndexNames);
+
+import ToolboxElasticsearchTabs from './toolbox/elasticsearch/Tabs.vue'
+Vue.component('ToolboxElasticsearchTabs', ToolboxElasticsearchTabs);
+
+import ToolboxElasticsearchIndexData from './toolbox/elasticsearch/IndexData.vue'
+Vue.component('ToolboxElasticsearchIndexData', ToolboxElasticsearchIndexData);
+
 
 import ToolboxDatabaseEditor from './toolbox/database/Index.vue'
 Vue.component('ToolboxDatabaseEditor', ToolboxDatabaseEditor);

@@ -1,31 +1,31 @@
 <template>
-  <div class="toolbox-kafka-editor">
+  <div class="toolbox-elasticsearch-editor">
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="400px" class="scrollbar">
-          <ToolboxKafkaTopic
+          <ToolboxElasticsearchIndexNames
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :data="data"
             :wrap="wrap"
           >
-          </ToolboxKafkaTopic>
+          </ToolboxElasticsearchIndexNames>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <ToolboxKafkaTabs
+          <ToolboxElasticsearchTabs
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :data="data"
             :wrap="wrap"
           >
-          </ToolboxKafkaTabs>
+          </ToolboxElasticsearchTabs>
         </tm-layout>
       </tm-layout>
-      <TopicForm :source="source" :toolbox="toolbox" :wrap="wrap"> </TopicForm>
-      <PushForm :source="source" :toolbox="toolbox" :wrap="wrap"> </PushForm>
+      <IndexForm :source="source" :toolbox="toolbox" :wrap="wrap"> </IndexForm>
+      <DataForm :source="source" :toolbox="toolbox" :wrap="wrap"> </DataForm>
       <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
     </template>
   </div>
@@ -33,11 +33,11 @@
 
 
 <script>
-import TopicForm from "./TopicForm";
-import PushForm from "./PushForm";
+import IndexForm from "./IndexForm";
+import DataForm from "./DataForm";
 import ShowData from "./ShowData";
 export default {
-  components: { TopicForm, PushForm, ShowData },
+  components: { IndexForm, DataForm, ShowData },
   props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
@@ -59,7 +59,7 @@ export default {
 </script>
 
 <style>
-.toolbox-kafka-editor {
+.toolbox-elasticsearch-editor {
   width: 100%;
   height: 100%;
 }

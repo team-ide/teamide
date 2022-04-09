@@ -1,30 +1,27 @@
 <template>
-  <div class="toolbox-kafka-topic-data">
+  <div class="toolbox-elasticsearch-indexName-data">
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="140px">
           <b-form inline class="pdt-20 mglr-10">
             <b-form-group label="Topic" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.topic"> </b-form-input>
+              <b-form-input size="sm" v-model="searchForm.indexName">
+              </b-form-input>
             </b-form-group>
             <b-form-group label="GroupId" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.groupId">
+              <b-form-input size="sm" v-model="searchForm.pageIndex">
               </b-form-input>
             </b-form-group>
             <b-form-group label="KeyType" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.keyType">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="ValueType" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.valueType">
+              <b-form-input size="sm" v-model="searchForm.pageSize">
               </b-form-input>
             </b-form-group>
             <b-form-group label="">
               <div class="pdt-25">
-                <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toPull">
-                  拉取
+                <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
+                  搜索
                 </div>
-                <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toPush">
+                <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toIndex">
                   新增
                 </div>
               </div>
@@ -40,14 +37,7 @@
                   <th width="80">Offset</th>
                   <th>Key</th>
                   <th>Value</th>
-                  <th width="150">
-                    <div
-                      class="tm-link color-green-3 ft-14 mglr-2"
-                      @click="toPush()"
-                    >
-                      <i class="mdi mdi-plus"></i>
-                    </div>
-                  </th>
+                  <th width="150"></th>
                 </tr>
               </thead>
               <tbody>
@@ -81,12 +71,6 @@
                             查看
                           </div>
                           <div
-                            class="tm-btn color-blue tm-btn-xs"
-                            @click="toCommit(one)"
-                          >
-                            消费
-                          </div>
-                          <div
                             class="tm-btn color-orange tm-btn-xs"
                             @click="toDelete(one)"
                           >
@@ -116,19 +100,16 @@ export default {
     "toolboxType",
     "toolbox",
     "option",
-    "topic",
+    "indexName",
     "wrap",
   ],
   data() {
     return {
       ready: false,
-      pullForm: {
-        groupId: "test-group",
-        topic: this.topic.name,
-        keyType: "string",
-        valueType: "string",
-        pullSize: 10,
-        pullTimeout: 1000,
+      searchForm: {
+        indexName: this.indexName.name,
+        pageIndex: 1,
+        pageSize: 10,
       },
       msgs: null,
     };
@@ -138,10 +119,10 @@ export default {
   methods: {
     init() {
       this.ready = true;
-      this.toPull();
+      this.toSearch();
     },
-    async toPull() {
-      await this.doPull();
+    async toSearch() {
+      await this.doSearch();
     },
     rowClick(data) {
       this.rowClickTimeCache = this.rowClickTimeCache || {};
@@ -159,100 +140,35 @@ export default {
     rowDbClick(data) {
       this.wrap.showData(data);
     },
-    toPush() {
-      let data = {
-        topic: this.pullForm.topic,
-        keyType: this.pullForm.keyType,
-        valueType: this.pullForm.valueType,
-      };
-      this.wrap.showPushForm(data, (m) => {
-        let flag = this.doPush(m);
-        return flag;
-      });
-    },
-    async doPush(data) {
-      let param = {};
-      Object.assign(param, data);
-      let res = await this.wrap.work("push", param);
-      if (res.code == 0) {
-        this.doPull();
-        return true;
-      } else {
-        return false;
-      }
-    },
-    toCommit(data) {
-      let groupId = this.pullForm.groupId;
-      let topic = data.topic;
-      let partition = data.partition;
-      let offset = data.offset + 1;
-
-      let msg =
-        "使用groupId[" +
-        groupId +
-        "]消费主题[" +
-        topic +
-        "]分区[" +
-        partition +
-        "]位置[" +
-        offset +
-        "]";
-      msg += "?";
-      this.tool
-        .confirm(msg)
-        .then(async () => {
-          this.doCommit({ groupId, topic, partition, offset });
-        })
-        .catch((e) => {});
-    },
-    async doCommit(data) {
-      let param = {};
-      Object.assign(param, data);
-      let res = await this.wrap.work("commit", param);
-      if (res.code == 0) {
-        this.doPull();
-        return true;
-      } else {
-        return false;
-      }
-    },
     toDelete(data) {
-      let topic = data.topic;
-      let partition = data.partition;
-      let offset = data.offset + 1;
+      let indexName = data.indexName;
+      let _id = data._id;
 
-      let msg =
-        "确认删除主题[" +
-        topic +
-        "]分区[" +
-        partition +
-        "]位置[" +
-        offset +
-        "]包含之前所有数据";
+      let msg = "确认删除索引[" + indexName + "]数据[" + _id + "]";
       msg += "?";
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doDelete({ topic, partition, offset });
+          this.doDelete({ indexName, _id });
         })
         .catch((e) => {});
     },
     async doDelete(data) {
       let param = {};
       Object.assign(param, data);
-      let res = await this.wrap.work("deleteRecords", param);
+      let res = await this.wrap.work("deleteData", param);
       if (res.code == 0) {
-        this.doPull();
+        this.doSearch();
         return true;
       } else {
         return false;
       }
     },
-    async doPull() {
+    async doSearch() {
       this.msgs = null;
       let param = {};
-      Object.assign(param, this.pullForm);
-      let res = await this.wrap.work("pull", param);
+      Object.assign(param, this.searchForm);
+      let res = await this.wrap.work("search", param);
       res.data = res.data || {};
       let msgs = res.data.msgs;
       msgs.forEach((one) => {
@@ -281,7 +197,7 @@ export default {
 </script>
 
 <style>
-.toolbox-kafka-topic-data {
+.toolbox-elasticsearch-indexName-data {
   width: 100%;
   height: 100%;
 }

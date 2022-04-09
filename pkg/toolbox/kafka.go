@@ -22,6 +22,8 @@ func init() {
 type KafkaBaseRequest struct {
 	GroupId           string `json:"groupId"`
 	Topic             string `json:"topic"`
+	PullSize          int    `json:"pullSize"`
+	PullTimeout       int    `json:"pullTimeout"`
 	Partition         int32  `json:"partition"`
 	NumPartitions     int32  `json:"numPartitions"`
 	ReplicationFactor int16  `json:"replicationFactor"`
@@ -84,7 +86,7 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 			return
 		}
 	case "pull":
-		kafkaMsgs, err := service.Pull(request.GroupId, []string{request.Topic})
+		kafkaMsgs, err := service.Pull(request.GroupId, []string{request.Topic}, request.PullSize, request.PullTimeout)
 		if err != nil {
 			return nil, err
 		}

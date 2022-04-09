@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbox-kafka-tabs">
+  <div class="toolbox-elasticsearch-tabs">
     <template v-if="ready">
-      <div class="toolbox-kafka-tabs-header">
+      <div class="toolbox-elasticsearch-tabs-header">
         <div class="toolbox-tab-box">
           <template v-for="(one, index) in tabs">
             <div
@@ -24,7 +24,7 @@
           </template>
         </div>
       </div>
-      <div class="toolbox-kafka-tabs-body">
+      <div class="toolbox-elasticsearch-tabs-body">
         <div class="toolbox-tab-span-box">
           <template v-for="one in tabs">
             <div
@@ -32,15 +32,15 @@
               class="toolbox-tab-span"
               :class="{ active: one.active }"
             >
-              <ToolboxKafkaTopicData
+              <ToolboxElasticsearchIndexData
                 :source="source"
                 :toolbox="toolbox"
                 :toolboxType="toolboxType"
                 :data="data"
                 :wrap="wrap"
-                :topic="one.data"
+                :indexName="one.data"
               >
-              </ToolboxKafkaTopicData>
+              </ToolboxElasticsearchIndexData>
             </div>
           </template>
         </div>
@@ -162,18 +162,18 @@ export default {
 </script>
 
 <style>
-.toolbox-kafka-tabs {
+.toolbox-elasticsearch-tabs {
   width: 100%;
   height: 100%;
 }
-.toolbox-kafka-tabs-header {
+.toolbox-elasticsearch-tabs-header {
   width: 100%;
   height: 25px;
   line-height: 25px;
   font-size: 14px;
   position: relative;
 }
-.toolbox-kafka-tabs-body {
+.toolbox-elasticsearch-tabs-body {
   width: 100%;
   height: calc(100% - 25px);
   border-bottom: 1px solid #4e4e4e;

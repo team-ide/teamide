@@ -1,16 +1,16 @@
 <template>
-  <div class="toolbox-kafka-topic">
+  <div class="toolbox-elasticsearch-indexName">
     <template v-if="ready">
       <div class="pd-10">
         <table>
           <thead>
             <tr>
-              <th>Topic</th>
+              <th>IndexName</th>
               <th>
                 <div style="width: 120px">
                   <div
                     class="tm-link color-grey-3 ft-14 mglr-2"
-                    @click="loadTopics()"
+                    @click="loadIndexs()"
                   >
                     <i class="mdi mdi-reload"></i>
                   </div>
@@ -25,14 +25,14 @@
             </tr>
           </thead>
           <tbody>
-            <template v-if="topics == null">
+            <template v-if="indexNames == null">
               <tr>
                 <td colspan="2">
                   <div class="text-center ft-13 pdtb-10">加载中...</div>
                 </td>
               </tr>
             </template>
-            <template v-else-if="topics.length == 0">
+            <template v-else-if="indexNames.length == 0">
               <tr>
                 <td colspan="2">
                   <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
@@ -40,13 +40,13 @@
               </tr>
             </template>
             <template v-else>
-              <template v-for="(one, index) in topics">
+              <template v-for="(one, index) in indexNames">
                 <tr :key="index" @click="rowClick(one)">
                   <td>{{ one.name }}</td>
                   <td>
                     <div
                       class="tm-btn color-blue tm-btn-xs"
-                      @click="toOpenTopic(one)"
+                      @click="toOpenIndexName(one)"
                     >
                       数据
                     </div>
@@ -75,7 +75,7 @@ export default {
   data() {
     return {
       ready: false,
-      topics: null,
+      indexNames: null,
     };
   },
   computed: {},
@@ -83,7 +83,7 @@ export default {
   methods: {
     init() {
       this.ready = true;
-      this.loadTopics();
+      this.loadIndexNames();
     },
     rowClick(data) {
       this.rowClickTimeCache = this.rowClickTimeCache || {};
@@ -99,29 +99,27 @@ export default {
       }
     },
     rowDbClick(data) {
-      this.toOpenTopic(data);
+      this.toOpenIndexName(data);
     },
-    toOpenTopic(data) {
+    toOpenIndexName(data) {
       let tab = this.wrap.createTabByData(data);
       this.wrap.addTab(tab);
       this.wrap.doActiveTab(tab);
     },
     toInsert() {
       let data = {};
-      this.wrap.showTopicForm(data, (m) => {
+      this.wrap.showIndexForm(data, (m) => {
         let flag = this.doInsert(m);
         return flag;
       });
     },
     async doInsert(data) {
       let param = {
-        topic: data.topic,
-        numPartitions: Number(data.numPartitions),
-        replicationFactor: Number(data.replicationFactor),
+        indexName: data.indexName,
       };
-      let res = await this.wrap.work("createTopic", param);
+      let res = await this.wrap.work("createIndex", param);
       if (res.code == 0) {
-        await this.loadTopics();
+        await this.loadIndexNames();
         return true;
       } else {
         return false;
@@ -129,7 +127,7 @@ export default {
     },
     toDelete(data) {
       let msg = "确认删除";
-      msg += "主题[" + data.name + "]";
+      msg += "索引[" + data.name + "]";
       msg += "?";
       this.tool
         .confirm(msg)
@@ -138,30 +136,30 @@ export default {
         })
         .catch((e) => {});
     },
-    async doDelete(topic) {
+    async doDelete(indexName) {
       let param = {
-        topic: topic,
+        indexName: indexName,
       };
-      let res = await this.wrap.work("deleteTopic", param);
+      let res = await this.wrap.work("deleteIndex", param);
       if (res.code == 0) {
         this.tool.info("删除成功!");
-        this.loadTopics();
+        this.loadIndexNames();
       }
     },
-    async loadTopics() {
-      this.topics = null;
+    async loadIndexNames() {
+      this.indexNames = null;
       let param = {};
-      let res = await this.wrap.work("topics", param);
+      let res = await this.wrap.work("indexNames", param);
       res.data = res.data || {};
-      res.data.topics = res.data.topics || [];
-      let topics = [];
-      res.data.topics.forEach((one) => {
-        let topic = {};
-        topic.name = one;
+      res.data.indexNames = res.data.indexNames || [];
+      let indexNames = [];
+      res.data.indexNames.forEach((one) => {
+        let indexName = {};
+        indexName.name = one;
 
-        topics.push(topic);
+        indexNames.push(indexName);
       });
-      this.topics = topics;
+      this.indexNames = indexNames;
     },
   },
   created() {},
@@ -172,7 +170,7 @@ export default {
 </script>
 
 <style>
-.toolbox-kafka-topic {
+.toolbox-elasticsearch-indexName {
   width: 100%;
   height: 100%;
 }

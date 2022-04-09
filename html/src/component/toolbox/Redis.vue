@@ -55,7 +55,7 @@
                     </template>
                     <template v-else>
                       <template v-for="(one, index) in searchResult.keys">
-                        <tr :key="index">
+                        <tr :key="index" @click="rowClick(one)">
                           <td>{{ one }}</td>
                           <td>
                             <div
@@ -192,6 +192,22 @@ export default {
       this.form.type = "string";
       this.form.key = null;
       this.form.value = null;
+    },
+    rowClick(data) {
+      this.rowClickTimeCache = this.rowClickTimeCache || {};
+      let nowTime = new Date().getTime();
+      let clickTime = this.rowClickTimeCache[data];
+      this.rowClickTimeCache[data] = nowTime;
+      if (clickTime) {
+        let timeout = nowTime - clickTime;
+        if (timeout < 300) {
+          delete this.rowClickTimeCache[data];
+          this.rowDbClick(data);
+        }
+      }
+    },
+    rowDbClick(data) {
+      this.toUpdate(data);
     },
     async toUpdate(one) {
       let data = await this.get(one);
