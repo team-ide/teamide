@@ -215,6 +215,12 @@ let toolboxOption = {
                 rules: [
                 ],
             },
+            {
+                label: "PublicKey",
+                name: "publicKey",
+                rules: [
+                ],
+            },
         ],
     },
     redis: {

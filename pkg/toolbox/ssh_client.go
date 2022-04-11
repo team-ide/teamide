@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
+	"github.com/wxnacy/wgo/file"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"mime/multipart"
@@ -79,6 +80,53 @@ func (this_ *SSHClient) initClient() (err error) {
 	return
 }
 
+func NewSSHClient(config SSHConfig) (client *ssh.Client, err error) {
+	var (
+		auth         []ssh.AuthMethod
+		clientConfig *ssh.ClientConfig
+		sshConfig    ssh.Config
+	)
+	auth = []ssh.AuthMethod{}
+
+	if config.PublicKey != "" {
+		var publicKeyContent string
+		publicKeyContent, err = file.ReadFile(config.PublicKey)
+		if err != nil {
+			return
+		}
+		publicKeyBytes := []byte(publicKeyContent)
+		var publicKeySigner ssh.Signer
+		if config.Password != "" {
+			publicKeySigner, err = ssh.ParsePrivateKeyWithPassphrase(publicKeyBytes, []byte(config.Password))
+		} else {
+			publicKeySigner, err = ssh.ParsePrivateKey(publicKeyBytes)
+		}
+		if err != nil {
+			return
+		}
+		auth = append(auth, ssh.PublicKeys(publicKeySigner))
+
+	} else if config.Password != "" {
+		auth = append(auth, ssh.Password(config.Password))
+	}
+
+	sshConfig = ssh.Config{
+		Ciphers: []string{"aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com", "arcfour256", "arcfour128", "aes128-cbc", "3des-cbc", "aes192-cbc", "aes256-cbc"},
+	}
+	clientConfig = &ssh.ClientConfig{
+		User:            config.User,
+		Auth:            auth,
+		Timeout:         5 * time.Second,
+		Config:          sshConfig,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
+	}
+	client, err = ssh.Dial(config.Type, config.Address, clientConfig)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (this_ *SSHClient) createClient() (err error) {
 
 	if this_.Token == "" || this_.Config == nil {
@@ -87,26 +135,7 @@ func (this_ *SSHClient) createClient() (err error) {
 		this_.WSWriteError(err.Error())
 		return
 	}
-	var (
-		auth         []ssh.AuthMethod
-		clientConfig *ssh.ClientConfig
-		config       ssh.Config
-	)
-	auth = []ssh.AuthMethod{}
-	if this_.Config.Password != "" {
-		auth = append(auth, ssh.Password(this_.Config.Password))
-	}
-	config = ssh.Config{
-		Ciphers: []string{"aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com", "arcfour256", "arcfour128", "aes128-cbc", "3des-cbc", "aes192-cbc", "aes256-cbc"},
-	}
-	clientConfig = &ssh.ClientConfig{
-		User:            this_.Config.User,
-		Auth:            auth,
-		Timeout:         5 * time.Second,
-		Config:          config,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
-	}
-	if this_.sshClient, err = ssh.Dial(this_.Config.Type, this_.Config.Address, clientConfig); err != nil {
+	if this_.sshClient, err = NewSSHClient(*this_.Config); err != nil {
 		this_.Logger.Error("createClient error", zap.Error(err))
 		this_.WSWriteError("连接失败:" + err.Error())
 		return

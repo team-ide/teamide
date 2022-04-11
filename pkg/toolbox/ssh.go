@@ -16,10 +16,11 @@ func init() {
 }
 
 type SSHConfig struct {
-	Type     string `json:"type"`
-	Address  string `json:"address"`
-	User     string `json:"user"`
-	Password string `json:"password"`
+	Type      string `json:"type"`
+	Address   string `json:"address"`
+	User      string `json:"user"`
+	Password  string `json:"password"`
+	PublicKey string `json:"publicKey"`
 }
 
 type SSHBaseRequest struct {

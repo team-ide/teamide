@@ -1,5 +1,7 @@
 .history
 *.log
 .idea
+data/
+log/
 teamide
 teamide.exe

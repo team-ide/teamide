@@ -68,6 +68,49 @@ func (this_ *SSHShellClient) closeSession(session *ssh.Session) {
 		return
 	}
 }
+
+func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error) {
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          1,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
+	}
+	var modeList []byte
+	for k, v := range modes {
+		kv := struct {
+			Key byte
+			Val uint32
+		}{k, v}
+		modeList = append(modeList, ssh.Marshal(&kv)...)
+	}
+	modeList = append(modeList, 0)
+	req := ptyRequestMsg{
+		Term:     "xterm",
+		Modelist: string(modeList),
+	}
+	if terminalSize.Cols > 0 && terminalSize.Rows > 0 {
+		req.Columns = uint32(terminalSize.Cols)
+		req.Rows = uint32(terminalSize.Rows)
+	}
+	if terminalSize.Width > 0 && terminalSize.Height > 0 {
+		req.Width = uint32(terminalSize.Width)
+		req.Height = uint32(terminalSize.Height)
+	}
+	_, err = sshSession.SendRequest("pty-req", true, ssh.Marshal(&req))
+	if err != nil {
+		return
+	}
+
+	var ok bool
+	ok, err = sshSession.SendRequest("shell", true, nil)
+	if !ok || err != nil {
+		if err != nil {
+			err = errors.New("SSH Shell Send Request Fail")
+		}
+		return
+	}
+	return
+}
 func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	this_.shellOK = false
 	this_.startReadChannel = false
@@ -100,44 +143,9 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	}
 	defer this_.closeSession(this_.shellSession)
 
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          1,
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
-	}
-	var modeList []byte
-	for k, v := range modes {
-		kv := struct {
-			Key byte
-			Val uint32
-		}{k, v}
-		modeList = append(modeList, ssh.Marshal(&kv)...)
-	}
-	modeList = append(modeList, 0)
-	req := ptyRequestMsg{
-		Term:     "xterm",
-		Modelist: string(modeList),
-	}
-	if terminalSize.Cols > 0 && terminalSize.Rows > 0 {
-		req.Columns = uint32(terminalSize.Cols)
-		req.Rows = uint32(terminalSize.Rows)
-	}
-	if terminalSize.Width > 0 && terminalSize.Height > 0 {
-		req.Width = uint32(terminalSize.Width)
-		req.Height = uint32(terminalSize.Height)
-	}
-	_, err = this_.shellSession.SendRequest("pty-req", true, ssh.Marshal(&req))
+	err = NewSSHShell(terminalSize, this_.shellSession)
 	if err != nil {
-		this_.Logger.Error("Create Shell SendRequest pty-req error", zap.Error(err))
-		return
-	}
-
-	this_.shellOK, err = this_.shellSession.SendRequest("shell", true, nil)
-	if !this_.shellOK || err != nil {
-		if err != nil {
-			err = errors.New("SSH Shell Send Request Fail")
-		}
-		this_.Logger.Error("Create Shell Send Request Shell Error", zap.Error(err))
+		this_.Logger.Error("Create Shell Error", zap.Error(err))
 		this_.WSWriteError("SSH Shell创建失败:" + err.Error())
 		return
 	}
