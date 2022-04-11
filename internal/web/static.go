@@ -1,11 +1,16 @@
 package web
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
+	"teamide/internal/base"
 	"teamide/internal/static"
+	"teamide/pkg/util"
 )
 
 func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
@@ -20,7 +25,7 @@ func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
 		if this_.toStatic(path, c) {
 			return
 		}
-		if this_.toUploads(path, c) {
+		if this_.toFiles(path, c) {
 			return
 		}
 		this_.toIndex(c)
@@ -65,19 +70,37 @@ func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 	return true
 }
 
-func (this_ *Server) toUploads(path string, c *gin.Context) bool {
+func (this_ *Server) toFiles(path string, c *gin.Context) bool {
 
-	index := strings.LastIndex(path, "uploads/")
+	index := strings.LastIndex(path, "files/")
 	if index < 0 {
 		return false
 	}
-	name := path[index:]
+	name := path[index+len("files/"):]
 
-	bytes := static.Asset(name)
-	if bytes == nil {
-		return false
+	filePath := this_.GetFilesFile(name)
+
+	exist, err := util.PathExists(filePath)
+	if err != nil {
+		base.ResponseJSON(nil, err, c)
+		return true
 	}
-	c.Writer.Write(bytes)
+	if !exist {
+		err = errors.New("文件[" + name + "]不存在")
+		base.ResponseJSON(nil, err, c)
+		return true
+	}
+	fileInfo, err := os.Open(filePath)
+	if fileInfo == nil {
+		base.ResponseJSON(nil, err, c)
+		return true
+	}
+	defer fileInfo.Close()
+	_, err = io.Copy(c.Writer, fileInfo)
+	if err != nil {
+		base.ResponseJSON(nil, err, c)
+		return true
+	}
 	c.Status(http.StatusOK)
 	return true
 }

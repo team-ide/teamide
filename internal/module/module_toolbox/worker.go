@@ -37,6 +37,11 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		return
 	}
 
+	publicKey, publicKeyOk := option["publicKey"]
+	if publicKeyOk && publicKey != "" {
+		option["publicKey"] = this_.GetFilesFile(publicKey.(string))
+	}
+
 	res, err = toolboxWorker.Work(work, option, data)
 	if err != nil {
 		return

@@ -24,3 +24,11 @@ type ServerContext struct {
 	RootDir        string
 	UserHomeDir    string
 }
+
+func (this_ *ServerContext) GetFilesDir() string {
+	return this_.ServerConfig.Server.Data + "files/"
+}
+
+func (this_ *ServerContext) GetFilesFile(path string) string {
+	return this_.GetFilesDir() + path
+}

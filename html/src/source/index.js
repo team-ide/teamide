@@ -10,6 +10,7 @@ source.status = null;
 source.ready = false;
 source.url = null;
 source.api = null;
+source.filesUrl = null;
 source.columnTypes = null;
 source.dataTypes = null;
 source.indexTypes = null;
@@ -315,6 +316,7 @@ source.init = (data) => {
     if (data != null) {
         source.url = data.url;
         source.api = data.api;
+        source.filesUrl = data.filesUrl;
         source.columnTypes = data.columnTypes;
         source.dataTypes = data.dataTypes;
         source.indexTypes = data.indexTypes;

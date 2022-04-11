@@ -19,6 +19,7 @@
     <Form
       v-if="formOptionBuild != null"
       :form="formOptionBuild"
+      :source="source"
       :formData="formOptionData"
       class=""
     >

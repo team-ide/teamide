@@ -130,4 +130,7 @@ body {
 .scrollbar::-webkit-scrollbar-track {
   border-radius: 0;
 }
+.tm-link {
+  text-decoration: none !important; /* 去除默认的下划线 */
+}
 </style>

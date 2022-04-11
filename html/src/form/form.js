@@ -218,6 +218,8 @@ let toolboxOption = {
             {
                 label: "PublicKey",
                 name: "publicKey",
+                placeholder: "请上传PublicKey文件",
+                type: "file",
                 rules: [
                 ],
             },

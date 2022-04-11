@@ -38,7 +38,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 		return
 	}
 	//context.ServerConf = serverConf
-	//context.ServerConfig = serverConfig
+	context.ServerConfig = serverConfig
 	err = context.Init(serverConfig)
 	if err != nil {
 		return
