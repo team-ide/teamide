@@ -204,6 +204,7 @@ export default {
   display: flex;
   position: relative;
   background-color: #383838;
+  overflow: hidden;
 }
 .toolbox-tab {
   display: flex;

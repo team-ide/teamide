@@ -10,7 +10,7 @@
                 <div style="width: 120px">
                   <div
                     class="tm-link color-grey-3 ft-14 mglr-2"
-                    @click="loadIndexs()"
+                    @click="loadIndexNames()"
                   >
                     <i class="mdi mdi-reload"></i>
                   </div>

@@ -8,11 +8,11 @@
               <b-form-input size="sm" v-model="searchForm.indexName">
               </b-form-input>
             </b-form-group>
-            <b-form-group label="GroupId" label-size="sm" class="pdr-10">
+            <b-form-group label="PageIndex" label-size="sm" class="pdr-10">
               <b-form-input size="sm" v-model="searchForm.pageIndex">
               </b-form-input>
             </b-form-group>
-            <b-form-group label="KeyType" label-size="sm" class="pdr-10">
+            <b-form-group label="PageSize" label-size="sm" class="pdr-10">
               <b-form-input size="sm" v-model="searchForm.pageSize">
               </b-form-input>
             </b-form-group>
@@ -124,6 +124,7 @@ export default {
     async toSearch() {
       await this.doSearch();
     },
+    toIndex() {},
     rowClick(data) {
       this.rowClickTimeCache = this.rowClickTimeCache || {};
       let nowTime = new Date().getTime();
@@ -170,23 +171,8 @@ export default {
       Object.assign(param, this.searchForm);
       let res = await this.wrap.work("search", param);
       res.data = res.data || {};
-      let msgs = res.data.msgs;
-      msgs.forEach((one) => {
-        if (this.tool.isNotEmpty(one.value)) {
-          try {
-            if (
-              (one.value.startsWith("{") && one.value.endsWith("}")) ||
-              (one.value.startsWith("[") && one.value.endsWith("]"))
-            ) {
-              let data = JSON.parse(one.value);
-              one.valueJson = JSON.stringify(data, null, "    ");
-            }
-          } catch (e) {
-            one.valueJsonError = e;
-          }
-        }
-      });
-      this.msgs = res.data.msgs || [];
+      let result = res.data.result || {};
+      this.result = result;
     },
   },
   created() {},

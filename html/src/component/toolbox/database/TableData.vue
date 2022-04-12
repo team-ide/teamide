@@ -155,12 +155,15 @@
                   <input
                     :checked="selects.indexOf(scope.row) >= 0"
                     type="checkbox"
+                    class="mgl-5"
+                    style="width: auto"
                   />
+                  <span class="mgl-5">{{ scope.$index }}</span>
                   <template v-if="updates.indexOf(scope.row) >= 0">
-                    <i class="mdi mdi-text-box-outline"></i>
+                    <i class="mgl-5 mdi mdi-text-box-outline"></i>
                   </template>
                   <template v-if="inserts.indexOf(scope.row) >= 0">
-                    <i class="mdi mdi-text-box-plus-outline"></i>
+                    <i class="mgl-5 mdi mdi-text-box-plus-outline"></i>
                   </template>
                 </template>
               </el-table-column>
@@ -197,7 +200,7 @@
               text-center
               toolbox-database-table-data-pagination
             "
-            v-if="tableDetail != null && total > 0"
+            v-if="tableDetail != null && sql != null"
           >
             <el-pagination
               small
@@ -208,15 +211,16 @@
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
               :total="total"
+              :disabled="total <= 0"
             >
             </el-pagination>
           </div>
         </tm-layout>
         <tm-layout-bar top></tm-layout-bar>
-        <tm-layout height="25px">
-          <div class="ft-12 pdl-10" v-if="tableDetail != null && sql != null">
-            <div style="line-height: 25px">
-              <span>{{ sql }}</span>
+        <tm-layout height="50px" class="scrollbar">
+          <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
+            <div style="line-height: 20px">
+              <span style="word-break: break-all">{{ sql }}</span>
             </div>
           </div>
         </tm-layout>
@@ -250,7 +254,7 @@ export default {
       inserts: [],
       updates: [],
       selects: [],
-      pageSize: 100,
+      pageSize: 10,
       pageIndex: 1,
       total: 0,
       form: {
@@ -275,6 +279,7 @@ export default {
         this.form.columns.push(column);
       });
       this.ready = true;
+      this.doSearch();
     },
     async initTable() {
       this.tableDetail = await this.wrap.getTableDetail(this.table);
@@ -496,11 +501,16 @@ export default {
 .toolbox-database-table-data-pagination .el-pagination .el-input__inner {
   height: 22px !important;
   line-height: 22px !important;
+  background-color: transparent;
+  border: 0px solid #dcdfe6;
 }
 .toolbox-database-table-data-pagination .el-pagination .el-input__icon {
   line-height: 22px !important;
 }
 .toolbox-database-table-data-pagination .el-pagination button:disabled {
+  background-color: transparent;
+}
+.toolbox-database-table-data-pagination .el-input.is-disabled .el-input__inner {
   background-color: transparent;
 }
 .toolbox-database-table-data-pagination .el-pagination .btn-next,
