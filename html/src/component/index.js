@@ -29,6 +29,9 @@ Vue.component('ShouldLogin', ShouldLogin);
 import NoPower from './NoPower.vue'
 Vue.component('NoPower', NoPower);
 
+import TabEditor from './tab-editor/Index.vue'
+Vue.component('TabEditor', TabEditor);
+
 import ModelEditor from './modelEditor/Index.vue'
 Vue.component('ModelEditor', ModelEditor);
 
