@@ -1,64 +1,38 @@
 <template>
   <div class="toolbox-database-tabs">
     <template v-if="ready">
-      <div class="toolbox-database-tabs-header">
-        <div class="toolbox-tab-box">
-          <template v-for="(one, index) in tabs">
-            <div
-              :key="'tab-' + index"
-              class="toolbox-tab"
-              :title="one.title"
-              :class="{ active: one.active }"
+      <TabEditor
+        ref="TabEditor"
+        :source="source"
+        :onRemoveTab="onRemoveTab"
+        :onActiveTab="onActiveTab"
+      >
+        <template v-slot:body="{ tab }">
+          <template v-if="tab.type == 'data'">
+            <ToolboxDatabaseTableData
+              :source="source"
+              :toolbox="toolbox"
+              :toolboxType="toolboxType"
+              :data="data"
+              :wrap="wrap"
+              :database="tab.data.database"
+              :table="tab.data"
             >
-              <span class="text" @click="toSelectTab(one)">
-                {{ one.name }}
-              </span>
-              <span
-                class="delete-btn tm-pointer color-orange"
-                @click="toDeleteTab(one)"
-                title="关闭"
-              >
-                <b-icon icon="x"></b-icon>
-              </span>
-            </div>
+            </ToolboxDatabaseTableData>
           </template>
-        </div>
-      </div>
-      <div class="toolbox-database-tabs-body">
-        <div class="toolbox-tab-span-box">
-          <template v-for="(one, index) in tabs">
-            <div
-              :key="'span-' + index"
-              class="toolbox-tab-span"
-              :class="{ active: one.active }"
+          <template v-else-if="tab.type == 'sql'">
+            <ToolboxDatabaseSql
+              :source="source"
+              :toolbox="toolbox"
+              :toolboxType="toolboxType"
+              :data="data"
+              :wrap="wrap"
+              :sqlData="tab.data"
             >
-              <template v-if="one.type == 'data'">
-                <ToolboxDatabaseTableData
-                  :source="source"
-                  :toolbox="toolbox"
-                  :toolboxType="toolboxType"
-                  :data="data"
-                  :wrap="wrap"
-                  :database="one.data.database"
-                  :table="one.data"
-                >
-                </ToolboxDatabaseTableData>
-              </template>
-              <template v-else-if="one.type == 'sql'">
-                <ToolboxDatabaseSql
-                  :source="source"
-                  :toolbox="toolbox"
-                  :toolboxType="toolboxType"
-                  :data="data"
-                  :wrap="wrap"
-                  :sqlData="one.data"
-                >
-                </ToolboxDatabaseSql>
-              </template>
-            </div>
+            </ToolboxDatabaseSql>
           </template>
-        </div>
-      </div>
+        </template>
+      </TabEditor>
     </template>
   </div>
 </template>
@@ -71,8 +45,6 @@ export default {
   data() {
     return {
       ready: false,
-      tabs: [],
-      activeTab: null,
     };
   },
   computed: {},
@@ -86,58 +58,16 @@ export default {
       this.wrap.addTab = this.addTab;
       this.ready = true;
     },
-    toSelectTab(tab) {
-      this.doActiveTab(tab);
-    },
     getTab(tab) {
-      let res = null;
-      this.tabs.forEach((one) => {
-        if (one == tab || one.key == tab || one.key == tab.key) {
-          res = one;
-        }
-      });
-      return res;
+      return this.$refs.TabEditor.getTab(tab);
     },
-    toDeleteTab(tab) {
-      this.removeTab(tab);
-    },
+    onRemoveTab(tab) {},
+    onActiveTab(tab) {},
     addTab(tab) {
-      let find = this.getTab(tab);
-      if (find != null) {
-        return;
-      }
-      this.tabs.push(tab);
-    },
-    removeTab(tab) {
-      let find = this.getTab(tab);
-      if (find == null) {
-        return;
-      }
-      let tabIndex = this.tabs.indexOf(find);
-      this.tabs.splice(tabIndex, 1);
-      if (find.active) {
-        let nextTabIndex = tabIndex - 1;
-        if (nextTabIndex < 0) {
-          nextTabIndex = 0;
-        }
-        this.doActiveTab(this.tabs[nextTabIndex]);
-      }
+      return this.$refs.TabEditor.addTab(tab);
     },
     doActiveTab(tab) {
-      this.$nextTick(() => {
-        tab = this.getTab(tab);
-        this.tabs.forEach((one) => {
-          if (one != tab) {
-            one.active = false;
-          }
-        });
-        this.tabs.forEach((one) => {
-          if (one == tab) {
-            one.active = true;
-          }
-        });
-        this.activeTab = tab;
-      });
+      return this.$refs.TabEditor.doActiveTab(tab);
     },
     getTabKeyByData(type, data) {
       let key;
@@ -192,18 +122,6 @@ export default {
 .toolbox-database-tabs {
   width: 100%;
   height: 100%;
-}
-.toolbox-database-tabs-header {
-  width: 100%;
-  height: 25px;
-  line-height: 25px;
-  font-size: 14px;
-  position: relative;
-}
-.toolbox-database-tabs-body {
-  width: 100%;
-  height: calc(100% - 25px);
-  border-bottom: 1px solid #4e4e4e;
   position: relative;
 }
 </style>
