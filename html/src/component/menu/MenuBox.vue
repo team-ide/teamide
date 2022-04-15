@@ -1,5 +1,5 @@
 <template>
-  <div class="menu-box">
+  <div class="menu-box" :class="{ 'menu-sub-left': subLeft }">
     <slot></slot>
   </div>
 </template>
@@ -7,7 +7,7 @@
 <script>
 export default {
   components: {},
-  props: [],
+  props: ["subLeft"],
   data() {
     return {};
   },

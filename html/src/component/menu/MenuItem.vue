@@ -6,11 +6,12 @@
       disabled: disabled,
       header: header,
       'has-sub-box': hasSubBox,
+      'menu-sub-left': subLeft,
     }"
     @click="onClick"
   >
     <a class :class="aClass" :target="target" :href="href">
-      <slot ></slot>
+      <slot></slot>
     </a>
     <slot name="MenuSubBox"></slot>
   </div>
@@ -19,7 +20,15 @@
 <script>
 export default {
   components: {},
-  props: ["divider", "disabled", "header", "target", "href", "aClass"],
+  props: [
+    "divider",
+    "disabled",
+    "header",
+    "target",
+    "href",
+    "aClass",
+    "subLeft",
+  ],
   data() {
     return {
       hasSubBox: false,
@@ -144,5 +153,19 @@ export default {
 
 .menu-item.has-sub-box > a:hover > a:after {
   border-left-color: #fff;
+}
+
+.menu-sub-left .menu-item.has-sub-box > a {
+  padding-left: 30px;
+}
+
+.menu-sub-left .menu-item.has-sub-box > a:after {
+  float: left;
+  border-width: 5px 5px 5px 0;
+  border-right-color: #ccc;
+  margin-left: -20px;
+}
+.menu-sub-left .menu-item.has-sub-box > a:hover > a:after {
+  border-right-color: #fff;
 }
 </style>

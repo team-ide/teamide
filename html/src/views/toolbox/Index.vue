@@ -2,31 +2,15 @@
   <div class="toolbox-box" :style="boxStyleObject">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="auto">
-          <tm-layout height="100%">
-            <tm-layout :width="style.left.width">
-              <Left
-                ref="left"
-                v-if="source.toolbox.context != null"
-                :source="source"
-                :toolbox="source.toolbox"
-                :context="source.toolbox.context"
-                :style="leftStyleObject"
-              ></Left>
-            </tm-layout>
-            <tm-layout-bar right></tm-layout-bar>
-            <tm-layout width="auto">
-              <Main
-                ref="main"
-                v-if="source.toolbox.context != null"
-                :source="source"
-                :toolbox="source.toolbox"
-                :context="source.toolbox.context"
-                :style="mainStyleObject"
-              ></Main>
-            </tm-layout>
-          </tm-layout>
-        </tm-layout>
+        <Main
+          ref="main"
+          v-if="source.toolbox.context != null"
+          :source="source"
+          :toolbox="source.toolbox"
+          :context="source.toolbox.context"
+          :style="mainStyleObject"
+        >
+        </Main>
       </tm-layout>
     </template>
     <ToolboxForm :source="source" :toolbox="source.toolbox"></ToolboxForm>
@@ -34,12 +18,11 @@
 </template>
 
 <script>
-import Left from "./Left";
 import Main from "./Main";
 import ToolboxForm from "./ToolboxForm";
 
 export default {
-  components: { Left, Main, ToolboxForm },
+  components: { Main, ToolboxForm },
   props: ["source"],
   data() {
     return {
@@ -128,5 +111,16 @@ export default {
 }
 .toolbox-box .toolbox-layout-header {
   border-bottom: 1px solid #4e4e4e;
+}
+.toolbox-box input,
+.toolbox-box input:focus,
+.toolbox-box select,
+.toolbox-box select:focus,
+.toolbox-box textarea,
+.toolbox-box textarea:focus {
+  background-color: transparent;
+  color: #d9d9d9;
+  outline: none;
+  border: 1px solid #4e4e4e;
 }
 </style>

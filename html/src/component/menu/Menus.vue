@@ -45,7 +45,7 @@
 import Menus from "./Menus";
 export default {
   components: { Menus },
-  props: ["menus", "isSub"],
+  props: ["menus", "isSub", "subLeft"],
   data() {
     return {};
   },
@@ -159,7 +159,6 @@ li > a:focus,
   padding: 5px 0px;
   border-left: 1px solid #ddd;
 }
-
 li:hover > .submenu {
   display: block;
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="tab-editor">
-    <div class="tab-editor-header">
+    <div class="tab-editor-header" ref="tabEditorHeader">
       <div class="tab-header-left" v-if="leftTabs.length > 0">
         <el-dropdown trigger="click" @command="handleCommand">
           <div class="tab-header-nav tm-pointer">
@@ -56,6 +56,7 @@
           </el-dropdown-menu>
         </el-dropdown>
       </div>
+      <slot name="extend" ref="extend"></slot>
     </div>
     <div class="tab-editor-body">
       <div class="tab-body-box">
@@ -77,7 +78,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "onActive", "onRemoveTab"],
+  props: ["source", "onActive", "onRemoveTab", "onOffsetRightDistance"],
   data() {
     return {
       activeTab: null,
@@ -88,6 +89,10 @@ export default {
       tabs: [],
       headerBoxWidth: 0,
       tabHeaderWidthCount: 0,
+      tabEditorHeaderWidth: 0,
+      extendWidth: "0px",
+      leftWidth: "0px",
+      rightWidth: "0px",
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -117,6 +122,7 @@ export default {
       let leftTabs = [];
       let rightTabs = [];
       let scrollLeft = 0;
+      let offsetRightDistance = 0;
       this.initTabHeaderWidth();
       let activeIndex = this.tabs.indexOf(this.activeTab);
       let showWidth = 0;
@@ -132,6 +138,10 @@ export default {
             rightTabs.push(one);
           }
         });
+      } else {
+        this.tabs.forEach((one, index) => {
+          showWidth += Number(one.headerWidth);
+        });
       }
       this.leftTabs = leftTabs;
       this.rightTabs = rightTabs;
@@ -143,8 +153,16 @@ export default {
         scrollLeft = parseInt(scrollLeft);
       }
       this.tool.jQuery(this.$refs.headerBox).scrollLeft(scrollLeft);
+
+      offsetRightDistance =
+        this.tabEditorHeaderWidth - this.tabHeaderWidthCount;
+      this.onOffsetRightDistance &&
+        this.onOffsetRightDistance(offsetRightDistance);
     },
     initTabHeaderWidth() {
+      this.tabEditorHeaderWidth = this.tool
+        .jQuery(this.$refs.tabEditorHeader)
+        .width();
       this.headerBoxWidth = this.tool.jQuery(this.$refs.headerBox).width();
       this.tabHeaderWidthCount = 0;
       this.tabs.forEach((one) => {
@@ -162,6 +180,7 @@ export default {
       });
     },
     toSelectTab(tab) {
+      console.log("toSelectTab:", tab);
       this.doActiveTab(tab);
     },
     getTab(tab) {
@@ -232,7 +251,7 @@ export default {
   height: 100%;
   position: relative;
   background-color: #383838;
-  color: #ffffff;
+  color: #d9d9d9;
 }
 .tab-editor-header {
   width: 100%;
@@ -264,18 +283,23 @@ export default {
 .tab-header-left {
   display: flex;
   position: relative;
-  overflow: hidden;
-  width: 25px;
   text-align: center;
-  background-color: #4e4e4e;
+  background-color: #2a3036;
+  padding: 0px 5px;
+}
+.tab-header-extend {
+  display: flex;
+  position: relative;
+  text-align: center;
+  background-color: #2a3036;
+  padding: 0px 5px;
 }
 .tab-header-right {
   display: flex;
   position: relative;
-  overflow: hidden;
-  width: 25px;
   text-align: center;
-  background-color: #4e4e4e;
+  background-color: #2a3036;
+  padding: 0px 5px;
 }
 .tab-header-box {
   display: flex;
