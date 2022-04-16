@@ -12,7 +12,7 @@ Team IDE 团队在线开发工具
 
 <table>
     <tr>
-        <th>模块</th>
+        <th width="180px">模块</th>
         <th>功能说明</th>
         <th width="80px">状态</th>
     </tr>
@@ -50,15 +50,15 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td>哈希值编辑</td>
-        <td>完成</td>
+        <td>进行中</td>
     </tr>
     <tr>
         <td>列表值编辑</td>
-        <td>完成</td>
+        <td>进行中</td>
     </tr>
     <tr>
         <td>集合值编辑</td>
-        <td>完成</td>
+        <td>进行中</td>
     </tr>
     <tr>
         <td rowspan="2">Toolbox Elasticsearch</td>
