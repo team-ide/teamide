@@ -4,6 +4,7 @@
       <tm-layout height="auto">
         <tm-layout width="50%">
           <ToolboxFTPFiles
+            ref="localToolboxFTPFiles"
             :source="source"
             place="local"
             :dir="localDir"
@@ -22,6 +23,7 @@
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
           <ToolboxFTPFiles
+            ref="remoteToolboxFTPFiles"
             :source="source"
             place="remote"
             :dir="remoteDir"
@@ -167,6 +169,13 @@ export default {
   methods: {
     init() {
       this.wrap.formatSize = this.formatSize;
+    },
+    onFocus() {
+      this.$refs.remoteToolboxFTPFiles.onFocus();
+    },
+    refresh() {
+      this.$refs.localToolboxFTPFiles.refresh();
+      this.$refs.remoteToolboxFTPFiles.refresh();
     },
     formatSize(data, name, sizeName, sizeUnitName) {
       data[name] = data[name] || 0;

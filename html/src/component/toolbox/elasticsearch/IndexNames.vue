@@ -6,8 +6,8 @@
           <thead>
             <tr>
               <th>IndexName</th>
-              <th>
-                <div style="width: 120px">
+              <th width="100px">
+                <div style="width: 100px">
                   <div
                     class="tm-link color-grey-3 ft-14 mglr-2"
                     @click="loadIndexNames()"
@@ -83,6 +83,9 @@ export default {
   methods: {
     init() {
       this.ready = true;
+      this.loadIndexNames();
+    },
+    refresh() {
       this.loadIndexNames();
     },
     rowClick(data) {

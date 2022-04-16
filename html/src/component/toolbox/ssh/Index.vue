@@ -68,6 +68,16 @@ export default {
       this.initSocket();
       this.ready = true;
     },
+    onFocus() {
+      this.$children.forEach((one) => {
+        one.onFocus && one.onFocus();
+      });
+    },
+    refresh() {
+      this.$children.forEach((one) => {
+        one.refresh && one.refresh();
+      });
+    },
     async initToken() {
       if (this.tool.isEmpty(this.token)) {
         let param = {};

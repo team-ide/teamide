@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-ftp-files">
+  <div class="toolbox-ftp-files" tabindex="-1">
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="50px">
@@ -110,6 +110,12 @@ export default {
       this.$nextTick(() => {
         this.initEvent();
       });
+    },
+    onFocus() {
+      this.$el.focus();
+    },
+    refresh() {
+      this.toRefresh();
     },
     inputOnEnter(e) {
       e = e || window.event;
@@ -489,6 +495,28 @@ export default {
       // this.$el.ondragend = this.ondragend;
       // this.$el.ondrag = this.ondrag;
     },
+    onKeyDown() {
+      let files = this.getSelectFiles();
+      if (files == null || files.length == 0) {
+        return;
+      }
+      if (this.tool.keyIsF2()) {
+        this.tool.stopEvent();
+        this.toRename(files[0]);
+      } else if (this.tool.keyIsDelete()) {
+        this.tool.stopEvent();
+        this.toRemove(files);
+      }
+    },
+    bindEvent() {
+      if (this.bindEvented) {
+        return;
+      }
+      this.bindEvented = true;
+      this.$el.addEventListener("keydown", (e) => {
+        this.onKeyDown(e);
+      });
+    },
   },
   created() {},
   mounted() {
@@ -499,6 +527,7 @@ export default {
       e.preventDefault(); //阻止 document.ondrop的默认行为  *** 在新窗口中打开拖进的图片
     };
     this.init();
+    this.bindEvent();
   },
   beforeDestroy() {},
 };
@@ -510,6 +539,7 @@ export default {
   height: 100%;
   user-select: none;
   position: relative;
+  outline: none;
 }
 .files-box {
   width: 100%;

@@ -15,6 +15,21 @@ Vue.component('Login', Login);
 import Register from './Register.vue'
 Vue.component('Register', Register);
 
+import IconDatabase from './icon/Database.vue'
+Vue.component('IconDatabase', IconDatabase);
+import IconElasticsearch from './icon/Elasticsearch.vue'
+Vue.component('IconElasticsearch', IconElasticsearch);
+import IconFtp from './icon/Ftp.vue'
+Vue.component('IconFtp', IconFtp);
+import IconKafka from './icon/Kafka.vue'
+Vue.component('IconKafka', IconKafka);
+import IconRedis from './icon/Redis.vue'
+Vue.component('IconRedis', IconRedis);
+import IconSsh from './icon/Ssh.vue'
+Vue.component('IconSsh', IconSsh);
+import IconZookeeper from './icon/Zookeeper.vue'
+Vue.component('IconZookeeper', IconZookeeper);
+
 import Contextmenu from './contextmenu/Contextmenu.vue'
 Vue.component('Contextmenu', Contextmenu);
 import ContextmenuMenus from './contextmenu/ContextmenuMenus.vue'

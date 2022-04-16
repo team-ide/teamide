@@ -75,12 +75,25 @@ export default {
       this.contextmenu.menus = menus;
       this.$refs.Contextmenu.show(e);
     },
+    onKeyDown(event) {
+      event = event || window.event;
+    },
+    bindEvent() {
+      if (this.bindEvented) {
+        return;
+      }
+      this.bindEvented = true;
+      window.addEventListener("keydown", (e) => {
+        this.onKeyDown(e);
+      });
+    },
   },
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
     this.tool.showContextmenu = this.showContextmenu;
+    this.bindEvent();
   },
   destroyed() {},
 };
@@ -115,6 +128,9 @@ body {
   box-shadow: inset 0 0 10px #262626;
   background: #262626;
 }
+.scrollbar:hover::-webkit-scrollbar-corner {
+  background: #262626;
+}
 
 .scrollbar::-webkit-scrollbar {
   width: 10px;
@@ -130,7 +146,65 @@ body {
 .scrollbar::-webkit-scrollbar-track {
   border-radius: 0;
 }
+.scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.scrollbar-textarea textarea::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 10px #333333;
+  background: #333333;
+}
+.scrollbar-textarea textarea:hover::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 10px #262626;
+  background: #262626;
+}
+.scrollbar-textarea textarea:hover::-webkit-scrollbar-corner {
+  background: #262626;
+}
+
+.scrollbar-textarea textarea::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar-textarea textarea:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar-textarea textarea::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+}
+.scrollbar-textarea textarea::-webkit-scrollbar-track {
+  border-radius: 0;
+}
+.scrollbar-textarea textarea::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.xterm .xterm-viewport:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+  box-shadow: inset 0 0 10px #333333;
+  background: #333333;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+  border-radius: 0;
+  box-shadow: inset 0 0 10px #ddd;
+  background: #262626;
+}
+.xterm .xterm-viewport::-webkit-scrollbar-corner {
+  background: #262626;
+}
 .tm-link {
   text-decoration: none !important; /* 去除默认的下划线 */
+}
+.mdi {
+  vertical-align: middle;
 }
 </style>

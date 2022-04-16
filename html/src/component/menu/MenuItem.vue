@@ -67,7 +67,7 @@ export default {
 
 .menu-item.header {
   display: block;
-  padding: 3px 30px 3px 15px;
+  padding: 3px 30px 3px 5px;
   font-size: 12px;
   font-weight: 700;
   line-height: 24px;
@@ -83,35 +83,23 @@ export default {
 
 .menu-item > a {
   display: block;
-  padding: 3px 20px;
+  padding: 0px 10px;
   clear: both;
   font-weight: 400;
-  line-height: 24px;
+  line-height: 30px;
   color: #333 !important;
   white-space: nowrap;
   text-decoration: none;
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
-.menu-item > a:hover,
-.menu-item > a:focus {
-  color: #fff !important;
+.menu-box.menu-mini .menu-item > a {
+  line-height: 22px;
+}
+.menu-item:hover > a,
+.menu-item:focus > a {
   text-decoration: none;
-  background-color: #009688;
-  background-image: -moz-linear-gradient(top, #00897b, #00796b);
-  background-image: -webkit-gradient(
-    linear,
-    0 0,
-    0 100%,
-    from(#00897b),
-    to(#00796b)
-  );
-  background-image: -webkit-linear-gradient(top, #00897b, #00796b);
-  background-image: -o-linear-gradient(top, #00897b, #00796b);
-  background-image: linear-gradient(to bottom, #00897b, #00796b);
-  background-repeat: repeat-x;
-  filter: progid:dximagetransform.microsoft.gradient(startColorstr='#ff0088cc',
-		endColorstr='#ff0077b3', GradientType=0);
+  background-color: #ddd;
 }
 .menu-item.disabled {
   cursor: no-drop;

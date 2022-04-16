@@ -4,6 +4,9 @@
       <tm-layout height="100%">
         <tm-layout height="50px">
           <div class="pdlr-10 pdt-10">
+            <div class="tm-btn tm-btn-sm bg-grey-6 ft-13" @click="refresh">
+              刷新
+            </div>
             <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
               新建库
             </div>
@@ -93,16 +96,15 @@ export default {
     init() {
       this.ready = true;
     },
+    refresh() {
+      this.reloadChildren(this.$refs.tree.root);
+    },
     toReloadChildren(data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       this.reloadChildren(data);
     },
     reloadChildren(key) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       let node = this.$refs.tree.getNode(key);
       if (node) {
         node.loaded = false;
@@ -160,9 +162,7 @@ export default {
       this.wrap.doActiveTab(tab);
     },
     toDelete(data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       let msg = "确认删除";
       if (data.isDatabase) {
         msg += "库[" + data.name + "]";

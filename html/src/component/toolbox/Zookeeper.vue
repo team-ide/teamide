@@ -136,16 +136,15 @@ export default {
     init() {
       this.ready = true;
     },
+    refresh() {
+      this.reloadChildren(this.$refs.tree.root);
+    },
     toReloadChildren(data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       this.reloadChildren(data);
     },
     reloadChildren(key) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       let node = this.$refs.tree.getNode(key);
       if (node) {
         node.loaded = false;
@@ -201,9 +200,7 @@ export default {
       this.doSave();
     },
     toInsert(one) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       if (one.path.endsWith("/")) {
         this.form.path = one.path + "xxx";
       } else {
@@ -212,9 +209,7 @@ export default {
       this.form.value = null;
     },
     async toUpdate(one) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       let data = await this.get(one.path);
       if (data == null) {
         data = {};
@@ -223,9 +218,7 @@ export default {
       this.form.value = data.data;
     },
     toDelete(data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-      }
+      this.tool.stopEvent();
       this.tool
         .confirm(
           "将删除[" + data.path + "]节点和该节点下所有子节点，确认删除？"

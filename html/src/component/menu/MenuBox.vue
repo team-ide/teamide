@@ -1,5 +1,8 @@
 <template>
-  <div class="menu-box" :class="{ 'menu-sub-left': subLeft }">
+  <div
+    class="menu-box"
+    :class="{ 'menu-sub-left': subLeft, 'menu-mini': size == 'mini' }"
+  >
     <slot></slot>
   </div>
 </template>
@@ -7,7 +10,7 @@
 <script>
 export default {
   components: {},
-  props: ["subLeft"],
+  props: ["subLeft", "size"],
   data() {
     return {};
   },
@@ -50,6 +53,8 @@ export default {
   -moz-background-clip: padding;
   background-clip: padding-box;
   text-align: left;
-  width: 200px;
+}
+.menu-box.menu-mini {
+  font-size: 12px;
 }
 </style>

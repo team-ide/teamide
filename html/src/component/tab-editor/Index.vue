@@ -20,25 +20,32 @@
           <div
             :ref="'tab:' + one.key"
             :key="one.key"
+            :tab-key="one.key"
             class="tab-header"
             :title="one.title"
             :class="{ active: one.active }"
+            @contextmenu.prevent="tabContextmenu"
+            @mouseup="tabMouseup"
           >
-            <template v-if="$slots.tab">
-              <slot name="tab" :tab="one"></slot>
-            </template>
-            <template v-else>
-              <span class="text" @click="toSelectTab(one)">
+            <span
+              class="text"
+              @click="toSelectTab(one)"
+              @dblclick="toCopyTab(one)"
+            >
+              <template v-if="slotTab">
+                <slot name="tab" :tab="one"></slot>
+              </template>
+              <template v-else>
                 {{ one.name || one.title }}
-              </span>
-              <span
-                class="tab-delete-btn tm-pointer color-orange"
-                @click="toDeleteTab(one)"
-                title="关闭"
-              >
-                <b-icon icon="x"></b-icon>
-              </span>
-            </template>
+              </template>
+            </span>
+            <span
+              class="tab-delete-btn tm-pointer color-orange"
+              @click="toDeleteTab(one)"
+              title="关闭"
+            >
+              <b-icon icon="x"></b-icon>
+            </span>
           </div>
         </template>
       </div>
@@ -62,7 +69,7 @@
       <div class="tab-body-box">
         <template v-for="one in tabs">
           <div :key="one.key" class="tab-body" :class="{ active: one.active }">
-            <slot name="body" :tab="one"></slot>
+            <slot name="body" :tab="one"> </slot>
           </div>
         </template>
       </div>
@@ -78,7 +85,15 @@
 <script>
 export default {
   components: {},
-  props: ["source", "onActive", "onRemoveTab", "onOffsetRightDistance"],
+  props: [
+    "source",
+    "onActive",
+    "onRemoveTab",
+    "onActiveTab",
+    "onOffsetRightDistance",
+    "slotTab",
+    "copyTab",
+  ],
   data() {
     return {
       activeTab: null,
@@ -112,9 +127,95 @@ export default {
       this.$nextTick(() => {
         this.initHeader();
       });
+      this.onActiveTabFocue();
     },
   },
   methods: {
+    resize() {
+      this.leftTabs = [];
+      this.rightTabs = [];
+      this.$nextTick(() => {
+        this.initHeader();
+      });
+    },
+    onFocus() {
+      this.onActiveTabFocue();
+    },
+    onActiveTabFocue() {
+      if (this.activeTab) {
+        let tabBodySlot = this.getTabBodySlot(this.activeTab);
+        if (tabBodySlot == null) {
+          return;
+        }
+        tabBodySlot.onFocus && tabBodySlot.onFocus();
+      }
+    },
+    getTabByTarget(target) {
+      let res = null;
+      if (target) {
+        let box = this.tool.jQuery(target).closest(".tab-header");
+        if (box.length > 0) {
+          let key = box.attr("tab-key");
+          res = this.getTab(key);
+        }
+      }
+      return res;
+    },
+    tabMouseup(e) {
+      e = e || window.event;
+      if (e.button != 1) {
+        return;
+      }
+      let tab = this.getTabByTarget(e.target);
+      if (tab == null) {
+        return;
+      }
+      this.toDeleteTab(tab);
+    },
+    tabContextmenu(e) {
+      e = e || window.event;
+      let tab = this.getTabByTarget(e.target);
+      if (tab == null) {
+        return;
+      }
+      let menus = [];
+
+      menus.push({
+        header: tab.name,
+      });
+      menus.push({
+        text: "关闭",
+        onClick: () => {
+          this.toDeleteTab(tab);
+        },
+      });
+      menus.push({
+        text: "打开新标签",
+        onClick: () => {
+          this.toCopyTab(tab);
+        },
+      });
+      menus.push({
+        text: "选择",
+        onClick: () => {
+          this.toSelectTab(tab);
+        },
+      });
+      menus.push({
+        text: "关闭其它",
+        onClick: () => {
+          this.toDeleteOtherTab(tab);
+        },
+      });
+      menus.push({
+        text: "关闭所有",
+        onClick: () => {
+          this.toDeleteAll();
+        },
+      });
+
+      this.tool.showContextmenu(menus);
+    },
     handleCommand(tab) {
       this.toSelectTab(tab);
     },
@@ -180,8 +281,16 @@ export default {
       });
     },
     toSelectTab(tab) {
-      console.log("toSelectTab:", tab);
       this.doActiveTab(tab);
+    },
+    getTabBodySlot(tab) {
+      let slot = null;
+      this.$children.forEach((one) => {
+        if (one.tab == tab) {
+          slot = one;
+        }
+      });
+      return slot;
     },
     getTab(tab) {
       let res = null;
@@ -195,12 +304,44 @@ export default {
     toDeleteTab(tab) {
       this.removeTab(tab);
     },
-    addTab(tab) {
+    addTab(tab, fromTab) {
       let find = this.getTab(tab);
       if (find != null) {
         return;
       }
-      this.tabs.push(tab);
+      let fromIndex = this.tabs.indexOf(fromTab);
+      if (fromIndex < 0) {
+        this.tabs.push(tab);
+      } else {
+        this.tabs.splice(fromIndex, 0, tab);
+      }
+    },
+    toCopyTab(tab) {
+      this.copyTab && this.copyTab(tab);
+    },
+    toDeleteOtherTab(tab) {
+      this.toSelectTab(tab);
+      let deleteTabs = [];
+      this.tabs.forEach((one) => {
+        if (one != tab) {
+          deleteTabs.push(one);
+        }
+      });
+      this.toDeleteTabs(deleteTabs);
+    },
+    toDeleteAll() {
+      let deleteTabs = [];
+      this.tabs.forEach((one) => {
+        deleteTabs.push(one);
+      });
+      this.toDeleteTabs(deleteTabs);
+    },
+    toDeleteTabs(deleteTabs) {
+      deleteTabs.forEach((one) => {
+        let tabIndex = this.tabs.indexOf(one);
+        this.tabs.splice(tabIndex, 1);
+        this.onRemoveTab && this.onRemoveTab(one);
+      });
     },
     removeTab(tab) {
       let find = this.getTab(tab);
@@ -241,7 +382,12 @@ export default {
   // 在实例创建完成后被立即调用
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {},
+  mounted() {
+    window.addEventListener("resize", this.resize);
+  },
+  destroyed() {
+    window.removeEventListener("resize", this.resize);
+  },
 };
 </script>
 
@@ -314,12 +460,16 @@ export default {
   border-top-right-radius: 10px;
 }
 .tab-header.active {
-  background-color: #2d2d2d;
+  background-color: #172029;
 }
 .tab-header .text {
   padding: 0px 5px 0px 10px;
   cursor: pointer;
   white-space: nowrap;
+  line-height: 23px;
+}
+.tab-header .text .mdi {
+  vertical-align: -1px;
 }
 .tab-header .tab-delete-btn {
   transition: all 0.1s;
@@ -333,6 +483,7 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
+  background-color: #172029;
 }
 .tab-body {
   width: 100%;

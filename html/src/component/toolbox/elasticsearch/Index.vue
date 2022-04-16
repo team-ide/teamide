@@ -4,6 +4,7 @@
       <tm-layout height="100%">
         <tm-layout width="400px" class="scrollbar">
           <ToolboxElasticsearchIndexNames
+            ref="ToolboxElasticsearchIndexNames"
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
@@ -49,6 +50,9 @@ export default {
   methods: {
     init() {
       this.ready = true;
+    },
+    refresh() {
+      this.$refs.ToolboxElasticsearchIndexNames.refresh();
     },
   },
   created() {},

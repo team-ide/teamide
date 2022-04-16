@@ -2,8 +2,9 @@
   <div class="toolbox-database-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="300px" class="">
+        <tm-layout width="400px" class="">
           <ToolboxDatabaseDatabase
+            ref="ToolboxDatabaseDatabase"
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
@@ -48,6 +49,9 @@ export default {
   methods: {
     init() {
       this.ready = true;
+    },
+    refresh() {
+      this.$refs.ToolboxDatabaseDatabase.refresh();
     },
   },
   created() {},

@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-editor" v-if="toolboxType != null">
+  <div class="toolbox-editor" v-if="toolboxType != null" tabindex="-1">
     <template v-if="ready">
       <template v-if="toolboxType.name == 'redis'">
         <ToolboxRedisEditor
@@ -75,10 +75,17 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "extend", "toolboxType", "toolbox", "active"],
+  props: [
+    "source",
+    "data",
+    "extend",
+    "toolboxType",
+    "toolbox",
+    "active",
+    "tab",
+  ],
   data() {
     return {
-      key: "toolbox-" + this.tool.getNumber(),
       option: null,
       ready: false,
       wrap: {},
@@ -134,11 +141,35 @@ export default {
     refresh() {
       this.initData();
     },
+    onFocus() {
+      this.$el.focus();
+      this.$children.forEach((one) => {
+        one.onFocus && one.onFocus();
+      });
+    },
     reload() {},
+    onKeyDown() {
+      if (this.tool.keyIsF5()) {
+        this.tool.stopEvent();
+        this.$children.forEach((one) => {
+          one.refresh && one.refresh();
+        });
+      }
+    },
+    bindEvent() {
+      if (this.bindEvented) {
+        return;
+      }
+      this.bindEvented = true;
+      this.$el.addEventListener("keydown", (e) => {
+        this.onKeyDown(e);
+      });
+    },
   },
   created() {},
   mounted() {
     this.init();
+    this.bindEvent();
   },
   updated() {},
   beforeDestroy() {
@@ -154,6 +185,8 @@ export default {
   width: 100%;
   height: 100%;
   overflow: auto;
+  border: 0px;
+  outline: 0px;
 }
 /* 
 .toolbox-editor ul {

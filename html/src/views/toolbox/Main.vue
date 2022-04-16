@@ -6,16 +6,62 @@
       :onRemoveTab="onRemoveTab"
       :onActiveTab="onActiveTab"
       :onOffsetRightDistance="onOffsetRightDistance"
+      :slotTab="true"
+      :copyTab="toCopyTab"
     >
+      <template v-slot:tab="{ tab }">
+        <span>
+          <template v-if="tab.toolboxType.name == 'database'">
+            <i class="mgr-3">
+              <IconDatabase></IconDatabase>
+            </i>
+          </template>
+          <template v-else-if="tab.toolboxType.name == 'redis'">
+            <i class="mgr-3">
+              <IconRedis></IconRedis>
+            </i>
+          </template>
+          <template v-else-if="tab.toolboxType.name == 'elasticsearch'">
+            <i class="mgr-3">
+              <IconElasticsearch></IconElasticsearch>
+            </i>
+          </template>
+          <template v-else-if="tab.toolboxType.name == 'kafka'">
+            <i class="mgr-3">
+              <IconKafka></IconKafka>
+            </i>
+          </template>
+          <template v-else-if="tab.toolboxType.name == 'zookeeper'">
+            <i class="mgr-3">
+              <IconZookeeper></IconZookeeper>
+            </i>
+          </template>
+          <template
+            v-else-if="tab.toolboxType.name == 'ssh' && tab.extend.isFTP"
+          >
+            <i class="mgr-3">
+              <IconFtp></IconFtp>
+            </i>
+          </template>
+          <template v-else-if="tab.toolboxType.name == 'ssh'">
+            <i class="mgr-3">
+              <IconSsh></IconSsh>
+            </i>
+          </template>
+          {{ tab.name }}
+        </span>
+      </template>
       <template v-slot:body="{ tab }">
         <ToolboxEditor
           :source="source"
           :toolbox="toolbox"
           :toolboxType="tab.toolboxType"
+          :tab="tab"
           :data="tab.data"
           :extend="tab.extend"
           :active="tab.active"
-        ></ToolboxEditor>
+        >
+        </ToolboxEditor>
       </template>
       <div slot="extend" class="tab-header-extend">
         <el-dropdown
@@ -28,53 +74,99 @@
           <div class="tab-header-nav tm-pointer">
             <i class="mdi mdi-plus"></i>
           </div>
-          <el-dropdown-menu slot="dropdown">
-            <MenuBox class="bd-0" :subLeft="dropdownMenuSubLeft">
+          <el-dropdown-menu slot="dropdown" class="pd-0">
+            <MenuBox class="bd-0" :subLeft="dropdownMenuSubLeft" size="mini">
               <template v-for="toolboxType in source.toolboxTypes">
                 <MenuItem :key="toolboxType.name">
+                  <template v-if="toolboxType.name == 'database'">
+                    <i class="mgr-3">
+                      <IconDatabase></IconDatabase>
+                    </i>
+                  </template>
+                  <template v-else-if="toolboxType.name == 'redis'">
+                    <i class="mgr-3">
+                      <IconRedis></IconRedis>
+                    </i>
+                  </template>
+                  <template v-else-if="toolboxType.name == 'elasticsearch'">
+                    <i class="mgr-3">
+                      <IconElasticsearch></IconElasticsearch>
+                    </i>
+                  </template>
+                  <template v-else-if="toolboxType.name == 'kafka'">
+                    <i class="mgr-3">
+                      <IconKafka></IconKafka>
+                    </i>
+                  </template>
+                  <template v-else-if="toolboxType.name == 'zookeeper'">
+                    <i class="mgr-3">
+                      <IconZookeeper></IconZookeeper>
+                    </i>
+                  </template>
+                  <template v-else-if="toolboxType.name == 'ssh'">
+                    <i class="mgr-3">
+                      <IconSsh></IconSsh>
+                    </i>
+                    <i class="mgr-3">
+                      <IconFtp></IconFtp>
+                    </i>
+                  </template>
                   {{ toolboxType.text || toolboxType.name }}
+                  <span
+                    class="tm-link color-green mgl-10"
+                    title="新增"
+                    @click="toInsert(toolboxType)"
+                  >
+                    <i class="mdi mdi-plus ft-14"></i>
+                  </span>
                   <MenuSubBox slot="MenuSubBox">
-                    <MenuItem @click="toInsert(toolboxType)">
-                      <span class="tm-pointer color-green" title="新增">
+                    <MenuItem
+                      class="tm-pointer"
+                      @click="toInsert(toolboxType)"
+                      title="新增"
+                    >
+                      <span class="tm-link color-green">
                         <i class="mdi mdi-plus ft-16"></i>
                       </span>
                     </MenuItem>
                     <template v-if="context[toolboxType.name] != null">
                       <template v-for="data in context[toolboxType.name]">
-                        <MenuItem
-                          :key="data.toolboxId"
-                          @click="dataOpen(toolboxType, data)"
-                        >
-                          {{ data.name }}
-
+                        <MenuItem :key="data.toolboxId"
+                          ><span
+                            class="tm-link color-green mgr-10"
+                            title="打开"
+                            @click="dataOpen(toolboxType, data)"
+                          >
+                            {{ data.name }}
+                          </span>
                           <span
                             title="打开FTP"
                             v-if="toolboxType.name == 'ssh'"
-                            class="tm-pointer color-orange mgl-5"
+                            class="tm-link color-orange mgr-10"
                             @click="dataOpenSfpt(toolboxType, data)"
                           >
-                            <i class="mdi mdi-folder-outline ft-16"></i>
+                            <i class="mdi mdi-folder-outline ft-13"></i>
                           </span>
                           <span
                             title="编辑"
-                            class="tm-pointer color-blue mgl-5"
+                            class="tm-link color-blue mgr-10"
                             @click="toUpdate(toolboxType, data)"
                           >
-                            <i class="mdi mdi-folder-edit-outline ft-16"></i>
+                            <i class="mdi mdi-folder-edit-outline ft-13"></i>
                           </span>
                           <span
                             title="复制"
-                            class="tm-pointer color-green mgl-5"
+                            class="tm-link color-green mgr-10"
                             @click="toCopy(toolboxType, data)"
                           >
-                            <i class="mdi mdi-content-copy ft-15"></i>
+                            <i class="mdi mdi-content-copy ft-12"></i>
                           </span>
                           <span
                             title="删除"
-                            class="tm-pointer color-orange mgl-5"
+                            class="tm-link color-orange mgr-10"
                             @click="toDelete(toolboxType, data)"
                           >
-                            <i class="mdi mdi-delete-outline ft-15"></i>
+                            <i class="mdi mdi-delete-outline ft-14"></i>
                           </span>
                         </MenuItem>
                       </template>
@@ -96,7 +188,7 @@ export default {
   props: ["source", "toolbox", "context"],
   data() {
     return {
-      dropdownPlacement: "right",
+      dropdownPlacement: "bottom-start",
       dropdownVisible: false,
       dropdownMenuSubLeft: false,
     };
@@ -104,15 +196,22 @@ export default {
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "$route.path"() {
+      if (!this.tool.isToolboxPage(this.$route.path)) {
+        return;
+      }
+      this.$refs.TabEditor.onFocus();
+    },
+  },
   methods: {
     onOffsetRightDistance(offsetRightDistance) {
       offsetRightDistance = parseInt(offsetRightDistance);
       if (offsetRightDistance < 500) {
-        this.dropdownPlacement = "left";
+        this.dropdownPlacement = "bottom-end";
         this.dropdownMenuSubLeft = true;
       } else {
-        this.dropdownPlacement = "right";
+        this.dropdownPlacement = "bottom-start";
         this.dropdownMenuSubLeft = false;
       }
     },
@@ -125,8 +224,8 @@ export default {
     onActiveTab(tab) {
       this.toolbox.activeOpen(tab.openId);
     },
-    addTab(tab) {
-      return this.$refs.TabEditor.addTab(tab);
+    addTab(tab, fromTab) {
+      return this.$refs.TabEditor.addTab(tab, fromTab);
     },
     doActiveTab(tab) {
       return this.$refs.TabEditor.doActiveTab(tab);
@@ -148,17 +247,17 @@ export default {
         let toolboxType = openData.toolboxType;
         let data = openData.data;
         let extend = openData.extend;
-        let title = toolboxType.text + " : " + data.name;
+        let title = toolboxType.text + ":" + data.name;
         let name = data.name;
 
         extend = extend || {};
         this.toolbox.formatExtend(toolboxType, data, extend);
         if (extend.isFTP) {
-          title = "FTP : " + data.name;
-          name = "FTP : " + data.name;
+          title = "FTP:" + data.name;
+          name = data.name;
         } else if (toolboxType.name == "ssh") {
-          title = "SSH : " + data.name;
-          name = "SSH : " + data.name;
+          title = "SSH:" + data.name;
+          name = data.name;
         }
         tab = {
           key,
@@ -174,25 +273,22 @@ export default {
       return tab;
     },
 
-    dataOpen(toolboxType, data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+    dataOpen(toolboxType, data, fromTab) {
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      this.open(data);
+      this.open(data, null, fromTab);
+    },
+    toCopyTab(tab) {
+      this.open(tab.data, tab.extend, tab);
     },
     dataOpenSfpt(toolboxType, data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
       this.open(data, {
         isFTP: true,
       });
     },
-    async open(data, extend) {
+    async open(data, extend, fromTab) {
       let extendStr = null;
       if (extend != null) {
         extendStr = JSON.stringify(extend);
@@ -206,12 +302,12 @@ export default {
         this.tool.error(res.msg);
       }
       let openData = res.data.open;
-      let tab = await this.openByOpenData(openData);
+      let tab = await this.openByOpenData(openData, fromTab);
       if (tab != null) {
         this.toolbox.doActiveTab(tab);
       }
     },
-    async openByOpenData(openData) {
+    async openByOpenData(openData, fromTab) {
       let data = this.getToolboxData(openData.toolboxId);
       if (data == null) {
         await this.closeOpen(openData.openId);
@@ -229,7 +325,7 @@ export default {
         openData.extend = null;
       }
       let tab = this.toolbox.createTabByData(openData);
-      this.toolbox.addTab(tab);
+      this.toolbox.addTab(tab, fromTab);
       return tab;
     },
     async activeOpen(openId) {
@@ -278,10 +374,7 @@ export default {
       return res;
     },
     toInsert(toolboxType) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
       let data = {};
       this.toolbox.showToolboxForm(toolboxType, data, (g, m) => {
@@ -290,10 +383,7 @@ export default {
       });
     },
     toCopy(toolboxType, copy) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
       let data = {};
       Object.assign(data, copy);
@@ -305,10 +395,7 @@ export default {
       });
     },
     toUpdate(toolboxType, data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
       this.updateData = data;
       this.toolbox.showToolboxForm(toolboxType, data, (g, m) => {
@@ -317,10 +404,7 @@ export default {
       });
     },
     toDelete(toolboxType, data) {
-      if (window.event) {
-        window.event.stopPropagation && window.event.stopPropagation();
-        window.event.preventDefault && window.event.preventDefault();
-      }
+      this.tool.stopEvent();
       this.$refs.dropdown.hide();
       this.tool
         .confirm(

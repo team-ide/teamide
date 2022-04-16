@@ -5,9 +5,11 @@ import jQuery from 'jquery'
 import tm from 'teamide-ui'
 
 import md5 from 'js-md5';
-import CryptoJS from '@/tool/CryptoJS.js';
+import cryptoJS from '@/tool/cryptoJS.js';
+import keyCode from '@/tool/keyCode.js';
 let tool = {};
 Object.assign(tool, tm);
+Object.assign(tool, keyCode.keyEvent);
 tool.md5 = md5;
 tool.jQuery = jQuery;
 
@@ -74,6 +76,7 @@ tool.initSession = function () {
     }
 };
 
+
 tool.isManagePage = function (path) {
     if (path == '/manage' || path.indexOf('/manage/') == 0) {
         return true;
@@ -134,6 +137,14 @@ tool.toLogout = function () {
         }
     }).catch(() => {
     })
+};
+
+tool.stopEvent = function (event) {
+    event = event || window.event;
+    if (event) {
+        event.stopPropagation && event.stopPropagation();
+        event.preventDefault && event.preventDefault();
+    }
 };
 tool.setJWT = function (jwt) {
     if (tool.isNotEmpty(jwt)) {
@@ -212,11 +223,11 @@ tool.stringToByte = function (str) {
 let k = tool.byteToString([81, 53, 54, 104, 70, 65, 97, 117, 87, 107, 49, 56, 71, 121, 50, 105]);
 // 加密
 tool.aesEncrypt = function (str) {
-    return CryptoJS.encrypt(str, k);
+    return cryptoJS.encrypt(str, k);
 };
 // 解密
 tool.aesDecrypt = function (str) {
-    return CryptoJS.decrypt(str, k);
+    return cryptoJS.decrypt(str, k);
 };
 tool.formatDateByTime = function (time, format) {
     if (time == null || time <= 0) {

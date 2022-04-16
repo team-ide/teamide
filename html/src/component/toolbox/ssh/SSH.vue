@@ -50,6 +50,10 @@ export default {
     init() {
       this.initTerminal();
     },
+    onFocus() {
+      this.term && this.term.focus();
+    },
+    refresh() {},
     onEvent(event) {
       if (event == "shell ready") {
         this.toStart();

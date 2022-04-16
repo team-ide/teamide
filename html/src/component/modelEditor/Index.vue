@@ -176,8 +176,7 @@ export default {
     keydown(event) {
       //ctrl+s
       if (event.keyCode === 83 && event.ctrlKey) {
-        event.preventDefault && event.preventDefault();
-        event.stopPropagation && event.stopPropagation();
+        this.tool.stopEvent();
         this.save();
         return false;
       }

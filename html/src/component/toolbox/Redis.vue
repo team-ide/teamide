@@ -182,6 +182,9 @@ export default {
       this.ready = true;
       this.loadKeys();
     },
+    refresh() {
+      this.toSearch();
+    },
     toSearch() {
       this.loadKeys();
     },
