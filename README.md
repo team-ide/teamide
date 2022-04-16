@@ -14,7 +14,7 @@ Team IDE 团队在线开发工具
     <tr>
         <th>模块</th>
         <th>功能说明</th>
-        <th style="width: 70px;">状态</th>
+        <th style="width: 80px;">状态</th>
     </tr>
     <tr>
         <td rowspan="2">Toolbox SSH</td>
