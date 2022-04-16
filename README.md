@@ -2,6 +2,92 @@
 
 Team IDE 团队在线开发工具
 
+[![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
+[![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
+[![Release Latest](https://img.shields.io/badge/Release-V0.2.2-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-standalone-windows-x64.zip)
+[![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-standalone-darwin-x64.zip)
+
+## Team · IDE 功能模块
+
+<table>
+    <tr>
+        <th>模块</th>
+        <th>功能说明</th>
+        <th>状态</th>
+    </tr>
+    <tr>
+        <td rowspan="2">Toolbox SSH</td>
+        <td>配置SSH连接，连接远程服务器，执行命令</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>点击FTP连接方式，上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td >Toolbox Zookeeper</td>
+        <td>支持单机、集群，增删改查等操作，批量删除等</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td rowspan="2">Toolbox Kafka</td>
+        <td>对Kafka主题增删改查等操作</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>选择主题，推送、消费、删除数据等</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td rowspan="5">Toolbox Redis</td>
+        <td>Redis Key搜索、模糊查询、删除、新增等</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>字符串值编辑</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>哈希值编辑</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>列表值编辑</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>集合值编辑</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td rowspan="2">Toolbox Elasticsearch</td>
+        <td>索引增删改查等操作</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>选择索引，增删改查数据等</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td rowspan="4">Toolbox Database</td>
+        <td>MySql库列表、库表数据加载</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>MySql表数据增删改查、批量新增、修改、删除等操作</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td>自定义SQL执行面板，结果查看器</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td>适配Oracle等主流数据库</td>
+        <td>进行中</td>
+    </tr>
+</table>
+
 ## 目录结构
 
 服务端：go开发
@@ -98,86 +184,6 @@ go mod tidy
 # 需要conf目录
 go build .
 ```
-
-## Team · IDE 功能模块
-
-<table>
-    <tr>
-        <th>模块</th>
-        <th>功能说明</th>
-        <th>状态</th>
-    </tr>
-    <tr>
-        <td rowspan="2">Toolbox SSH</td>
-        <td>配置SSH连接，连接远程服务器，执行命令</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>点击FTP连接方式，上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td >Toolbox Zookeeper</td>
-        <td>支持单机、集群，增删改查等操作，批量删除等</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td rowspan="2">Toolbox Kafka</td>
-        <td>对Kafka主题增删改查等操作</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>选择主题，推送、消费、删除数据等</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td rowspan="5">Toolbox Redis</td>
-        <td>Redis Key搜索、模糊查询、删除、新增等</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>字符串值编辑</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>哈希值编辑</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>列表值编辑</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>集合值编辑</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td rowspan="2">Toolbox Elasticsearch</td>
-        <td>索引增删改查等操作</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>选择索引，增删改查数据等</td>
-        <td>进行中</td>
-    </tr>
-    <tr>
-        <td rowspan="4">Toolbox Database</td>
-        <td>MySql库列表、库表数据加载</td>
-        <td>完成</td>
-    </tr>
-    <tr>
-        <td>MySql表数据增删改查、批量新增、修改、删除等操作</td>
-        <td>进行中</td>
-    </tr>
-    <tr>
-        <td>自定义SQL执行面板，结果查看器</td>
-        <td>进行中</td>
-    </tr>
-    <tr>
-        <td>适配Oracle等主流数据库</td>
-        <td>进行中</td>
-    </tr>
-</table>
 
 ## Toolbox 模块
 

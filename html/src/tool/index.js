@@ -5,7 +5,7 @@ import jQuery from 'jquery'
 import tm from 'teamide-ui'
 
 import md5 from 'js-md5';
-import cryptoJS from '@/tool/cryptoJS.js';
+import cryptoJS from 'crypto-js';
 import keyCode from '@/tool/keyCode.js';
 let tool = {};
 Object.assign(tool, tm);
@@ -221,13 +221,46 @@ tool.stringToByte = function (str) {
     return bytes;
 }
 let k = tool.byteToString([81, 53, 54, 104, 70, 65, 97, 117, 87, 107, 49, 56, 71, 121, 50, 105]);
+
+//加密
+tool.encrypt = function (word, key) {
+    const keyParse = cryptoJS.enc.Utf8.parse(key)
+    const srcs = cryptoJS.enc.Utf8.parse(word)
+    const encrypted = cryptoJS.AES.encrypt(srcs, keyParse, {
+        iv: keyParse,
+        mode: cryptoJS.mode.CBC,
+        padding: cryptoJS.pad.Pkcs7
+    })
+    return encrypted.toString()
+};
+//解密
+tool.decrypt = function (word, key) {
+    const keyParse = cryptoJS.enc.Utf8.parse(key)
+    const decrypted = cryptoJS.AES.decrypt(word, keyParse, {
+        iv: keyParse,
+        mode: cryptoJS.mode.CBC,
+        padding: cryptoJS.pad.Pkcs7
+    })
+    return cryptoJS.enc.Utf8.stringify(decrypted).toString()
+};
+//随机生成指定数量的16进制key
+tool.generatekey = function (num) {
+    let library = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let key = "";
+    for (var i = 0; i < num; i++) {
+        let randomPoz = Math.floor(Math.random() * library.length);
+        key += library.substring(randomPoz, randomPoz + 1);
+    }
+    return key;
+};
+
 // 加密
 tool.aesEncrypt = function (str) {
-    return cryptoJS.encrypt(str, k);
+    return tool.encrypt(str, k);
 };
 // 解密
 tool.aesDecrypt = function (str) {
-    return cryptoJS.decrypt(str, k);
+    return tool.decrypt(str, k);
 };
 tool.formatDateByTime = function (time, format) {
     if (time == null || time <= 0) {
