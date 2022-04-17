@@ -8,7 +8,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxElasticsearchIndexNames>
@@ -19,7 +18,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxElasticsearchTabs>
@@ -39,7 +37,7 @@ import DataForm from "./DataForm";
 import ShowData from "./ShowData";
 export default {
   components: { IndexForm, DataForm, ShowData },
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,

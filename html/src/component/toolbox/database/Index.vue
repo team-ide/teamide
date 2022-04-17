@@ -8,7 +8,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxDatabaseDatabase>
@@ -19,7 +18,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxDatabaseTabs>
@@ -38,7 +36,7 @@ import ShowTableCreate from "./ShowTableCreate";
 
 export default {
   components: { ShowDatabaseCreate, ShowTableCreate },
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,

@@ -146,7 +146,6 @@ export default {
   components: {},
   props: [
     "source",
-    "data",
     "toolboxType",
     "toolbox",
     "option",

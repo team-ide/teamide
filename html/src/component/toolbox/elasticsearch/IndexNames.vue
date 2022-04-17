@@ -71,7 +71,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,
@@ -105,9 +105,13 @@ export default {
       this.toOpenIndexName(data);
     },
     toOpenIndexName(data) {
-      let tab = this.wrap.createTabByData(data);
-      this.wrap.addTab(tab);
-      this.wrap.doActiveTab(tab);
+      let extend = {
+        name: data.name,
+        title: data.name,
+        type: "data",
+        indexName: data.name,
+      };
+      this.wrap.openTabByExtend(extend);
     },
     toInsert() {
       let data = {};

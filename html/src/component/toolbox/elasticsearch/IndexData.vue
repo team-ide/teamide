@@ -94,20 +94,12 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "data",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "indexName",
-    "wrap",
-  ],
+  props: ["source", "toolboxType", "toolbox", "option", "indexName", "wrap"],
   data() {
     return {
       ready: false,
       searchForm: {
-        indexName: this.indexName.name,
+        indexName: this.indexName,
         pageIndex: 1,
         pageSize: 10,
       },

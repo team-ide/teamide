@@ -8,7 +8,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxKafkaTopic>
@@ -19,7 +18,6 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
           >
           </ToolboxKafkaTabs>
@@ -39,7 +37,7 @@ import PushForm from "./PushForm";
 import ShowData from "./ShowData";
 export default {
   components: { TopicForm, PushForm, ShowData },
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,
