@@ -141,7 +141,7 @@ func (this_ *ZKService) CreateIfNotExists(path string, data []byte) (err error) 
 	}
 	if strings.LastIndex(path, "/") > 0 {
 		parentPath := path[0:strings.LastIndex(path, "/")]
-		err = this_.CreateIfNotExists(parentPath, data)
+		err = this_.CreateIfNotExists(parentPath, []byte{})
 		if err != nil {
 			return err
 		}

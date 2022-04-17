@@ -41,4 +41,6 @@ const (
 	IDTypeToolbox = 5001
 	// IDTypeToolboxOpen 工具箱开启ID类型
 	IDTypeToolboxOpen = 5002
+	// IDTypeToolboxOpenTab 工具箱开启标签页ID类型
+	IDTypeToolboxOpenTab = 5003
 )

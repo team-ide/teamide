@@ -3,6 +3,7 @@ package module_toolbox
 import (
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
@@ -34,6 +35,7 @@ func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error)
 	sql := `SELECT * FROM ` + TableToolbox + ` WHERE toolboxId=? `
 	list, err := this_.DatabaseWorker.Query(sql, []interface{}{toolboxId}, util.GetStructFieldTypes(ToolboxModel{}))
 	if err != nil {
+		this_.Logger.Error("Get Error", zap.Error(err))
 		return
 	}
 
@@ -66,11 +68,13 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 
 	list, err := this_.DatabaseWorker.Query(sql, values, util.GetStructFieldTypes(ToolboxModel{}))
 	if err != nil {
+		this_.Logger.Error("Query Error", zap.Error(err))
 		return
 	}
 
 	err = util.ToStruct(list, &res)
 	if err != nil {
+		this_.Logger.Error("ToStruct Error", zap.Error(err))
 		return
 	}
 
@@ -84,6 +88,7 @@ func (this_ *ToolboxService) CheckUserToolboxExist(toolboxType string, name stri
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{userId, toolboxType, name})
 	if err != nil {
+		this_.Logger.Error("CheckUserToolboxExist Error", zap.Error(err))
 		return
 	}
 
@@ -98,6 +103,7 @@ func (this_ *ToolboxService) GetUserToolboxByName(toolboxType string, name strin
 	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 AND (userId = ? AND toolboxType = ? AND name = ?)`
 	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId, toolboxType, name}, util.GetStructFieldTypes(ToolboxModel{}))
 	if err != nil {
+		this_.Logger.Error("GetUserToolboxByName Error", zap.Error(err))
 		return
 	}
 
@@ -132,6 +138,7 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolbox.ToolboxId, toolbox.ToolboxType, toolbox.Name, toolbox.Option, toolbox.UserId, toolbox.CreateTime})
 	if err != nil {
+		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
 	}
 
@@ -155,6 +162,7 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 		sql := `UPDATE ` + TableToolboxOpen + ` SET openTime=?,updateTime=? WHERE openId=? `
 		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenTime, toolboxOpen.UpdateTime, toolboxOpen.OpenId})
 		if err != nil {
+			this_.Logger.Error("Open Error", zap.Error(err))
 			return
 		}
 	} else {
@@ -167,6 +175,7 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 
 		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenId, toolboxOpen.UserId, toolboxOpen.ToolboxId, toolboxOpen.Extend, toolboxOpen.CreateTime, toolboxOpen.OpenTime})
 		if err != nil {
+			this_.Logger.Error("Open Error", zap.Error(err))
 			return
 		}
 	}
@@ -180,11 +189,13 @@ func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, 
 	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? `
 	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(ToolboxOpenModel{}))
 	if err != nil {
+		this_.Logger.Error("QueryOpens Error", zap.Error(err))
 		return
 	}
 
 	err = util.ToStruct(list, &res)
 	if err != nil {
+		this_.Logger.Error("ToStruct Error", zap.Error(err))
 		return
 	}
 
@@ -197,6 +208,118 @@ func (this_ *ToolboxService) Close(openId int64) (rowsAffected int64, err error)
 	sql := `DELETE FROM ` + TableToolboxOpen + ` WHERE openId=? `
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{openId})
 	if err != nil {
+		this_.Logger.Error("Close Error", zap.Error(err))
+		return
+	}
+	_, err = this_.CloseOpenTabs(openId)
+	if err != nil {
+		this_.Logger.Error("CloseOpenTabs Error", zap.Error(err))
+		return
+	}
+	return
+}
+
+// OpenTab 新增
+func (this_ *ToolboxService) OpenTab(toolboxOpenTab *ToolboxOpenTabModel) (rowsAffected int64, err error) {
+
+	if toolboxOpenTab.CreateTime.IsZero() {
+		toolboxOpenTab.CreateTime = time.Now()
+	}
+	if toolboxOpenTab.OpenTime.IsZero() {
+		toolboxOpenTab.OpenTime = time.Now()
+	}
+	if toolboxOpenTab.TabId != 0 {
+		if toolboxOpenTab.UpdateTime.IsZero() {
+			toolboxOpenTab.UpdateTime = time.Now()
+		}
+
+		sql := `UPDATE ` + TableToolboxOpenTab + ` SET openTime=?,updateTime=? WHERE tabId=? `
+		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.OpenTime, toolboxOpenTab.UpdateTime, toolboxOpenTab.TabId})
+		if err != nil {
+			this_.Logger.Error("OpenTab Error", zap.Error(err))
+			return
+		}
+	} else {
+		toolboxOpenTab.TabId, err = this_.idService.GetNextID(module_id.IDTypeToolboxOpenTab)
+		if err != nil {
+			return
+		}
+
+		sql := `INSERT INTO ` + TableToolboxOpenTab + `(tabId, openId, userId, toolboxId, extend, createTime, openTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
+
+		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.TabId, toolboxOpenTab.OpenId, toolboxOpenTab.UserId, toolboxOpenTab.ToolboxId, toolboxOpenTab.Extend, toolboxOpenTab.CreateTime, toolboxOpenTab.OpenTime})
+		if err != nil {
+			this_.Logger.Error("OpenTab Error", zap.Error(err))
+			return
+		}
+	}
+
+	return
+}
+
+// QueryOpenTabs 查询
+func (this_ *ToolboxService) QueryOpenTabs(openId int64) (res []*ToolboxOpenTabModel, err error) {
+
+	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE openId=? `
+	list, err := this_.DatabaseWorker.Query(sql, []interface{}{openId}, util.GetStructFieldTypes(ToolboxOpenTabModel{}))
+	if err != nil {
+		this_.Logger.Error("QueryOpenTabs Error", zap.Error(err))
+		return
+	}
+
+	err = util.ToStruct(list, &res)
+	if err != nil {
+		this_.Logger.Error("ToStruct Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// CloseTab 更新
+func (this_ *ToolboxService) CloseTab(tabId int64) (rowsAffected int64, err error) {
+
+	sql := `DELETE FROM ` + TableToolboxOpenTab + ` WHERE tabId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{tabId})
+	if err != nil {
+		this_.Logger.Error("CloseTab Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// CloseOpenTabs 更新
+func (this_ *ToolboxService) CloseOpenTabs(openId int64) (rowsAffected int64, err error) {
+
+	sql := `DELETE FROM ` + TableToolboxOpenTab + ` WHERE openId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{openId})
+	if err != nil {
+		this_.Logger.Error("CloseOpenTabs Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// UpdateOpenTabExtend 新增
+func (this_ *ToolboxService) UpdateOpenTabExtend(toolboxOpenTab *ToolboxOpenTabModel) (rowsAffected int64, err error) {
+	sql := `UPDATE ` + TableToolboxOpenTab + ` SET extend=?,updateTime=? WHERE tabId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.Extend, toolboxOpenTab.UpdateTime, toolboxOpenTab.TabId})
+	if err != nil {
+		this_.Logger.Error("UpdateOpenTabExtend Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// UpdateOpenExtend 新增
+func (this_ *ToolboxService) UpdateOpenExtend(toolboxOpen *ToolboxOpenModel) (rowsAffected int64, err error) {
+	sql := `UPDATE ` + TableToolboxOpen + ` SET extend=?,updateTime=? WHERE openId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.Extend, toolboxOpen.UpdateTime, toolboxOpen.OpenId})
+	if err != nil {
+		this_.Logger.Error("UpdateOpenExtend Error", zap.Error(err))
 		return
 	}
 
@@ -251,6 +374,7 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
 	if err != nil {
+		this_.Logger.Error("Update Error", zap.Error(err))
 		return
 	}
 
@@ -264,6 +388,7 @@ func (this_ *ToolboxService) Rename(toolboxId int64, name string) (rowsAffected 
 		Name:      name,
 	})
 	if err != nil {
+		this_.Logger.Error("Rename Error", zap.Error(err))
 		return
 	}
 
@@ -276,6 +401,7 @@ func (this_ *ToolboxService) Delete(toolboxId int64) (rowsAffected int64, err er
 	sql := `UPDATE ` + TableToolbox + ` SET deleted=?,deleteTime=? WHERE toolboxId=? `
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), toolboxId})
 	if err != nil {
+		this_.Logger.Error("Delete Error", zap.Error(err))
 		return
 	}
 

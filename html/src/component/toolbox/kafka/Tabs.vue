@@ -12,9 +12,8 @@
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
-            :data="data"
             :wrap="wrap"
-            :topic="tab.data"
+            :topic="tab.extend.topic"
           >
           </ToolboxKafkaTopicData>
         </template>
@@ -27,7 +26,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,
@@ -38,50 +37,24 @@ export default {
   methods: {
     init() {
       this.wrap.doActiveTab = this.doActiveTab;
-      this.wrap.createTab = this.createTab;
-      this.wrap.createTabByData = this.createTabByData;
-      this.wrap.getTabByData = this.getTabByData;
       this.wrap.addTab = this.addTab;
+      this.wrap.getTab = this.getTab;
       this.ready = true;
     },
     getTab(tab) {
       return this.$refs.TabEditor.getTab(tab);
     },
-    onRemoveTab(tab) {},
-    onActiveTab(tab) {},
+    onRemoveTab(tab) {
+      this.wrap.onRemoveTab(tab);
+    },
+    onActiveTab(tab) {
+      this.wrap.onActiveTab(tab);
+    },
     addTab(tab) {
       return this.$refs.TabEditor.addTab(tab);
     },
     doActiveTab(tab) {
       return this.$refs.TabEditor.doActiveTab(tab);
-    },
-    getTabKeyByData(data) {
-      let key = "" + data.name;
-
-      return key;
-    },
-    getTabByData(data) {
-      let key = this.getTabKeyByData(data);
-      let tab = this.getTab(key);
-      return tab;
-    },
-    createTabByData(data) {
-      let key = this.getTabKeyByData(data);
-
-      let tab = this.getTab(key);
-      if (tab == null) {
-        let title = data.name;
-        let name = data.name;
-        tab = {
-          key,
-          data,
-          title,
-          name,
-        };
-        tab.active = false;
-        tab.changed = false;
-      }
-      return tab;
     },
   },
   created() {},

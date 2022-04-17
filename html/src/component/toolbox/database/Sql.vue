@@ -10,15 +10,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "data",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "wrap",
-    "sqlData",
-  ],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap", "sqlData"],
   data() {
     return {
       ready: false,

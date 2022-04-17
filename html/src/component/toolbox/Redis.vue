@@ -135,7 +135,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       style: {

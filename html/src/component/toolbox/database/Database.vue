@@ -77,7 +77,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "data", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
       ready: false,
@@ -149,17 +149,22 @@ export default {
     },
     toInsert() {},
     toOpenSql() {
-      let tab = this.wrap.createTabByData("sql", {
-        key: "sql-" + this.tool.getNumber(),
+      let extend = {
+        name: "新建SQL",
         title: "新建SQL",
-      });
-      this.wrap.addTab(tab);
-      this.wrap.doActiveTab(tab);
+        type: "sql",
+      };
+      this.wrap.openTabByExtend(extend);
     },
     toOpenTable(data) {
-      let tab = this.wrap.createTabByData("data", data);
-      this.wrap.addTab(tab);
-      this.wrap.doActiveTab(tab);
+      let extend = {
+        name: data.database.name + "." + data.name,
+        title: data.database.name + "." + data.name,
+        type: "data",
+        database: data.database.name,
+        table: data.name,
+      };
+      this.wrap.openTabByExtend(extend);
     },
     toDelete(data) {
       this.tool.stopEvent();
@@ -253,12 +258,15 @@ export default {
       res.data = res.data || {};
       return res.data.tables || [];
     },
-    async getTableDetail(table) {
-      let key = table.database.name + "-" + table.name;
+    async getTableDetail(database, table) {
+      let key = database + "-" + table;
       this.tableCache = this.tableCache || {};
       let res = this.tableCache[key];
       if (res == null) {
-        res = await this.loadTableDetail(table.database.name, table.name);
+        res = await this.loadTableDetail(database, table);
+        if (res != null) {
+          this.tableCache[key] = res;
+        }
       }
       return res;
     },
@@ -268,6 +276,10 @@ export default {
         table: table,
       };
       let res = await this.wrap.work("tableDetail", param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+        return null;
+      }
       res.data = res.data || {};
       return res.data.table;
     },

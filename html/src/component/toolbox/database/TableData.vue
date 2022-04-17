@@ -235,7 +235,6 @@ export default {
   components: {},
   props: [
     "source",
-    "data",
     "toolboxType",
     "toolbox",
     "option",
@@ -269,20 +268,28 @@ export default {
   methods: {
     async init() {
       await this.initTable();
+      if (this.tableDetail == null) {
+        return;
+      }
       this.result = null;
       this.form.wheres = [];
       this.form.orders = [];
       this.form.columns = [];
-      this.tableDetail.columns.forEach((one) => {
-        let column = Object.assign({}, one);
-        column.checked = true;
-        this.form.columns.push(column);
-      });
+      if (this.tableDetail && this.tableDetail.columns) {
+        this.tableDetail.columns.forEach((one) => {
+          let column = Object.assign({}, one);
+          column.checked = true;
+          this.form.columns.push(column);
+        });
+      }
       this.ready = true;
       this.doSearch();
     },
     async initTable() {
-      this.tableDetail = await this.wrap.getTableDetail(this.table);
+      this.tableDetail = await this.wrap.getTableDetail(
+        this.database,
+        this.table
+      );
     },
     handleSizeChange(pageSize) {
       this.pageSize = pageSize;
@@ -321,22 +328,24 @@ export default {
         andOr: "and",
       };
       let column = null;
-      if (this.tableDetail.columns.length > 0) {
-        this.tableDetail.columns.forEach((one) => {
-          if (column != null) {
-            return;
-          }
-          let find = false;
-          this.form.wheres.forEach((w) => {
-            if (w.name == one.name) {
-              find = true;
+      if (this.tableDetail && this.tableDetail.columns) {
+        if (this.tableDetail.columns.length > 0) {
+          this.tableDetail.columns.forEach((one) => {
+            if (column != null) {
+              return;
             }
+            let find = false;
+            this.form.wheres.forEach((w) => {
+              if (w.name == one.name) {
+                find = true;
+              }
+            });
+            if (find) {
+              return;
+            }
+            column = one;
           });
-          if (find) {
-            return;
-          }
-          column = one;
-        });
+        }
       }
       if (column != null) {
         where.name = column.name;
@@ -371,8 +380,8 @@ export default {
         columns.push(column);
       });
       let data = {};
-      data.database = this.database.name;
-      data.table = this.table.name;
+      data.database = this.database;
+      data.table = this.table;
       data.wheres = wheres;
       data.orders = orders;
       data.columns = columns;

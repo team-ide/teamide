@@ -7,7 +7,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
           :token="token"
@@ -21,7 +20,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
           :token="token"
@@ -37,15 +35,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "data",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "extend",
-    "wrap",
-  ],
+  props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
   data() {
     return {
       ready: false,

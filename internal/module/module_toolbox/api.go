@@ -27,21 +27,26 @@ var (
 	// 工具 权限
 
 	// PowerToolbox 工具基本 权限
-	PowerToolbox               = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerToolboxPage           = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
-	PowerToolboxContext        = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxInsert         = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxUpdate         = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxRename         = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxDelete         = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxOpen           = base.AppendPower(&base.PowerAction{Action: "toolbox_open", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxQueryOpens     = base.AppendPower(&base.PowerAction{Action: "toolbox_query_opens", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxClose          = base.AppendPower(&base.PowerAction{Action: "toolbox_close", Text: "工具关闭", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxWork           = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具工作", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHShell       = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_shell", Text: "工具SSH Shell连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtp         = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp", Text: "工具SSH FTP连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtpUpload   = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_upload", Text: "工具SSH FTP上传", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtpDownload = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
+	PowerToolbox                    = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerToolboxPage                = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
+	PowerToolboxContext             = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxInsert              = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdate              = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxRename              = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxDelete              = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxOpen                = base.AppendPower(&base.PowerAction{Action: "toolbox_open", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdateOpenExtend    = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_extend", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQueryOpens          = base.AppendPower(&base.PowerAction{Action: "toolbox_query_opens", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxClose               = base.AppendPower(&base.PowerAction{Action: "toolbox_close", Text: "工具关闭", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxOpenTab             = base.AppendPower(&base.PowerAction{Action: "toolbox_open_tab", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQueryOpenTabs       = base.AppendPower(&base.PowerAction{Action: "toolbox_query_open_tabs", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxCloseTab            = base.AppendPower(&base.PowerAction{Action: "toolbox_close_tab", Text: "工具关闭", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdateOpenTabExtend = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_tab_extend", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxWork                = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具工作", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHShell            = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_shell", Text: "工具SSH Shell连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHFtp              = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp", Text: "工具SSH FTP连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHFtpUpload        = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_upload", Text: "工具SSH FTP上传", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHFtpDownload      = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
@@ -56,6 +61,11 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/open"}, Power: PowerToolboxOpen, Do: this_.open})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpens"}, Power: PowerToolboxQueryOpens, Do: this_.queryOpens})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/close"}, Power: PowerToolboxClose, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenExtend"}, Power: PowerToolboxUpdateOpenExtend, Do: this_.updateOpenExtend})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpenTabs"}, Power: PowerToolboxQueryOpenTabs, Do: this_.queryOpenTabs})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/openTab"}, Power: PowerToolboxOpenTab, Do: this_.openTab})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/closeTab"}, Power: PowerToolboxCloseTab, Do: this_.closeTab})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenTabExtend"}, Power: PowerToolboxUpdateOpenTabExtend, Do: this_.updateOpenTabExtend})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/shell"}, Power: PowerToolboxSSHShell, Do: this_.sshShell, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp"}, Power: PowerToolboxSSHFtp, Do: this_.sshFtp, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp/upload"}, Power: PowerToolboxSSHFtpUpload, Do: this_.sshFtpUpload})
@@ -199,6 +209,133 @@ func (this_ *ToolboxApi) close(requestBean *base.RequestBean, c *gin.Context) (r
 	response := &CloseResponse{}
 
 	_, err = this_.ToolboxService.Close(request.OpenId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type OpenTabRequest struct {
+	*ToolboxOpenTabModel
+}
+
+type OpenTabResponse struct {
+	Tab *ToolboxOpenTabModel `json:"tab,omitempty"`
+}
+
+func (this_ *ToolboxApi) openTab(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &OpenTabRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &OpenTabResponse{}
+
+	toolboxOpenTab := request.ToolboxOpenTabModel
+	toolboxOpenTab.UserId = requestBean.JWT.UserId
+
+	_, err = this_.ToolboxService.OpenTab(toolboxOpenTab)
+	if err != nil {
+		return
+	}
+
+	response.Tab = toolboxOpenTab
+
+	res = response
+	return
+}
+
+type QueryOpenTabsRequest struct {
+	*ToolboxOpenTabModel
+}
+
+type QueryOpenTabsResponse struct {
+	Tabs []*ToolboxOpenTabModel `json:"tabs,omitempty"`
+}
+
+func (this_ *ToolboxApi) queryOpenTabs(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &QueryOpenTabsRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &QueryOpenTabsResponse{}
+
+	response.Tabs, err = this_.ToolboxService.QueryOpenTabs(request.OpenId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type CloseTabRequest struct {
+	*ToolboxOpenTabModel
+}
+
+type CloseTabResponse struct {
+}
+
+func (this_ *ToolboxApi) closeTab(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &CloseTabRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &CloseTabResponse{}
+
+	_, err = this_.ToolboxService.CloseTab(request.TabId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type UpdateOpenTabExtendRequest struct {
+	*ToolboxOpenTabModel
+}
+
+type UpdateOpenTabExtendResponse struct {
+}
+
+func (this_ *ToolboxApi) updateOpenTabExtend(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateOpenTabExtendRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateOpenTabExtendResponse{}
+
+	_, err = this_.ToolboxService.UpdateOpenTabExtend(request.ToolboxOpenTabModel)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type UpdateOpenExtendRequest struct {
+	*ToolboxOpenModel
+}
+
+type UpdateOpenExtendResponse struct {
+}
+
+func (this_ *ToolboxApi) updateOpenExtend(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateOpenExtendRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateOpenExtendResponse{}
+
+	_, err = this_.ToolboxService.UpdateOpenExtend(request.ToolboxOpenModel)
 	if err != nil {
 		return
 	}

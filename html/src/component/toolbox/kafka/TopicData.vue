@@ -110,21 +110,13 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "data",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "topic",
-    "wrap",
-  ],
+  props: ["source", "toolboxType", "toolbox", "option", "topic", "wrap"],
   data() {
     return {
       ready: false,
       pullForm: {
         groupId: "test-group",
-        topic: this.topic.name,
+        topic: this.topic,
         keyType: "string",
         valueType: "string",
         pullSize: 10,

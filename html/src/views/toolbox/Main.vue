@@ -56,8 +56,8 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="tab.toolboxType"
-          :tab="tab"
-          :data="tab.data"
+          :openId="tab.openId"
+          :toolboxData="tab.toolboxData"
           :extend="tab.extend"
           :active="tab.active"
         >
@@ -130,41 +130,43 @@
                       </span>
                     </MenuItem>
                     <template v-if="context[toolboxType.name] != null">
-                      <template v-for="data in context[toolboxType.name]">
-                        <MenuItem :key="data.toolboxId"
+                      <template
+                        v-for="toolboxData in context[toolboxType.name]"
+                      >
+                        <MenuItem :key="toolboxData.toolboxId"
                           ><span
                             class="tm-link color-green mgr-10"
                             title="打开"
-                            @click="dataOpen(toolboxType, data)"
+                            @click="toolboxDataOpen(toolboxData)"
                           >
-                            {{ data.name }}
+                            {{ toolboxData.name }}
                           </span>
                           <span
                             title="打开FTP"
                             v-if="toolboxType.name == 'ssh'"
                             class="tm-link color-orange mgr-10"
-                            @click="dataOpenSfpt(toolboxType, data)"
+                            @click="toolboxDataOpenSfpt(toolboxData)"
                           >
                             <i class="mdi mdi-folder-outline ft-13"></i>
                           </span>
                           <span
                             title="编辑"
                             class="tm-link color-blue mgr-10"
-                            @click="toUpdate(toolboxType, data)"
+                            @click="toUpdate(toolboxType, toolboxData)"
                           >
                             <i class="mdi mdi-folder-edit-outline ft-13"></i>
                           </span>
                           <span
                             title="复制"
                             class="tm-link color-green mgr-10"
-                            @click="toCopy(toolboxType, data)"
+                            @click="toCopy(toolboxType, toolboxData)"
                           >
                             <i class="mdi mdi-content-copy ft-12"></i>
                           </span>
                           <span
                             title="删除"
                             class="tm-link color-orange mgr-10"
-                            @click="toDelete(toolboxType, data)"
+                            @click="toDelete(toolboxType, toolboxData)"
                           >
                             <i class="mdi mdi-delete-outline ft-14"></i>
                           </span>
@@ -239,112 +241,64 @@ export default {
       let tab = this.getTab(key);
       return tab;
     },
-    createTabByData(openData) {
+    createTabByOpenData(openData) {
       let key = this.getTabKeyByData(openData);
 
       let tab = this.getTab(key);
       if (tab == null) {
-        let toolboxType = openData.toolboxType;
-        let data = openData.data;
-        let extend = openData.extend;
-        let title = toolboxType.text + ":" + data.name;
-        let name = data.name;
-
-        extend = extend || {};
-        this.toolbox.formatExtend(toolboxType, data, extend);
-        if (extend.isFTP) {
-          title = "FTP:" + data.name;
-          name = data.name;
-        } else if (toolboxType.name == "ssh") {
-          title = "SSH:" + data.name;
-          name = data.name;
-        }
-        tab = {
-          key,
-          data,
-          title,
-          name,
-          toolboxType,
-          extend,
-          openId: openData.openId,
-        };
-        tab.active = false;
+        tab = this.toolbox.createToolboxDataTab(openData);
+        tab.key = key;
       }
       return tab;
     },
 
-    dataOpen(toolboxType, data, fromTab) {
+    toolboxDataOpen(toolboxData, fromTab) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      this.open(data, null, fromTab);
+
+      let extend = {};
+      this.openByToolboxData(toolboxData, extend, fromTab);
     },
     toCopyTab(tab) {
-      this.open(tab.data, tab.extend, tab);
+      let extend = tab.extend;
+      this.openByToolboxData(tab.toolboxData, extend, tab);
     },
-    dataOpenSfpt(toolboxType, data) {
+    toolboxDataOpenSfpt(toolboxData) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      this.open(data, {
-        isFTP: true,
-      });
+
+      this.openByToolboxData(toolboxData, { isFTP: true });
     },
-    async open(data, extend, fromTab) {
-      let extendStr = null;
-      if (extend != null) {
-        extendStr = JSON.stringify(extend);
+    async openByToolboxData(toolboxData, extend, fromTab) {
+      let openData = await this.toolbox.open(toolboxData.toolboxId, extend);
+      if (openData == null) {
+        return;
       }
-      let param = {
-        toolboxId: data.toolboxId,
-        extend: extendStr,
-      };
-      let res = await this.server.toolbox.open(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
-      let openData = res.data.open;
       let tab = await this.openByOpenData(openData, fromTab);
       if (tab != null) {
-        this.toolbox.doActiveTab(tab);
+        this.doActiveTab(tab);
       }
     },
     async openByOpenData(openData, fromTab) {
-      let data = this.getToolboxData(openData.toolboxId);
-      if (data == null) {
-        await this.closeOpen(openData.openId);
+      let toolboxData = this.getToolboxData(openData.toolboxId);
+      if (toolboxData == null) {
+        await this.toolbox.closeOpen(openData.openId);
         return;
       }
-      let toolboxType = this.getToolboxType(data.toolboxType);
+      let toolboxType = this.getToolboxType(toolboxData.toolboxType);
       if (toolboxType == null) {
-        await this.closeOpen(openData.openId);
+        await this.toolbox.closeOpen(openData.openId);
       }
-      openData.data = data;
+      openData.toolboxData = toolboxData;
       openData.toolboxType = toolboxType;
       if (this.tool.isNotEmpty(openData.extend)) {
         openData.extend = JSON.parse(openData.extend);
       } else {
         openData.extend = null;
       }
-      let tab = this.toolbox.createTabByData(openData);
-      this.toolbox.addTab(tab, fromTab);
+      let tab = this.createTabByOpenData(openData);
+      this.addTab(tab, fromTab);
       return tab;
-    },
-    async activeOpen(openId) {
-      let param = {
-        openId: openId,
-      };
-      let res = await this.server.toolbox.open(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
-    },
-    async closeOpen(openId) {
-      let param = {
-        openId: openId,
-      };
-      let res = await this.server.toolbox.close(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
     },
     getToolboxType(type) {
       let res = null;
@@ -355,7 +309,7 @@ export default {
       });
       return res;
     },
-    getToolboxData(data) {
+    getToolboxData(toolboxData) {
       let res = null;
       for (let type in this.context) {
         if (this.context[type] == null) {
@@ -363,9 +317,9 @@ export default {
         }
         this.context[type].forEach((one) => {
           if (
-            one == data ||
-            one.toolboxId == data ||
-            one.toolboxId == data.toolboxId
+            one == toolboxData ||
+            one.toolboxId == toolboxData ||
+            one.toolboxId == toolboxData.toolboxId
           ) {
             res = one;
           }
@@ -376,8 +330,8 @@ export default {
     toInsert(toolboxType) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      let data = {};
-      this.toolbox.showToolboxForm(toolboxType, data, (g, m) => {
+      let toolboxData = {};
+      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
         let flag = this.doInsert(g, m);
         return flag;
       });
@@ -385,25 +339,25 @@ export default {
     toCopy(toolboxType, copy) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      let data = {};
-      Object.assign(data, copy);
-      delete data.toolboxId;
-      data.name = data.name + " Copy";
-      this.toolbox.showToolboxForm(toolboxType, data, (g, m) => {
+      let toolboxData = {};
+      Object.assign(toolboxData, copy);
+      delete toolboxData.toolboxId;
+      toolboxData.name = toolboxData.name + " Copy";
+      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
         let flag = this.doInsert(g, m);
         return flag;
       });
     },
-    toUpdate(toolboxType, data) {
+    toUpdate(toolboxType, toolboxData) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
-      this.updateData = data;
-      this.toolbox.showToolboxForm(toolboxType, data, (g, m) => {
+      this.updateData = toolboxData;
+      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
         let flag = this.doUpdate(g, m);
         return flag;
       });
     },
-    toDelete(toolboxType, data) {
+    toDelete(toolboxType, toolboxData) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
       this.tool
@@ -411,16 +365,16 @@ export default {
           "删除[" +
             toolboxType.text +
             "]工具[" +
-            data.name +
+            toolboxData.name +
             "]将无法回复，确定删除？"
         )
         .then(async () => {
-          return this.doDelete(toolboxType, data);
+          return this.doDelete(toolboxType, toolboxData);
         })
         .catch((e) => {});
     },
-    async doDelete(toolboxType, data) {
-      let res = await this.server.toolbox.delete(data);
+    async doDelete(toolboxType, toolboxData) {
+      let res = await this.server.toolbox.delete(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
         return true;
@@ -429,15 +383,15 @@ export default {
         return false;
       }
     },
-    async doUpdate(toolboxType, data) {
-      data.toolboxType = toolboxType.name;
-      data.toolboxId = this.updateData.toolboxId;
-      let res = await this.server.toolbox.update(data);
+    async doUpdate(toolboxType, toolboxData) {
+      toolboxData.toolboxType = toolboxType.name;
+      toolboxData.toolboxId = this.updateData.toolboxId;
+      let res = await this.server.toolbox.update(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
-        let tab = this.toolbox.getTabByData(data);
+        let tab = this.getTabByData(toolboxData);
         if (tab != null) {
-          Object.assign(tab.data, data);
+          Object.assign(tab.toolboxData, toolboxData);
         }
         return true;
       } else {
@@ -445,9 +399,9 @@ export default {
         return false;
       }
     },
-    async doInsert(toolboxType, data) {
-      data.toolboxType = toolboxType.name;
-      let res = await this.server.toolbox.insert(data);
+    async doInsert(toolboxType, toolboxData) {
+      toolboxData.toolboxType = toolboxType.name;
+      let res = await this.server.toolbox.insert(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
         return true;
@@ -457,7 +411,7 @@ export default {
       }
     },
     async initOpens() {
-      let opens = await this.loadOpens();
+      let opens = await this.toolbox.loadOpens();
 
       await opens.forEach(async (openData) => {
         await this.openByOpenData(openData);
@@ -478,17 +432,8 @@ export default {
         }
       });
       if (activeOpenData != null) {
-        this.toolbox.doActiveTab(activeOpenData.openId);
+        this.doActiveTab(activeOpenData.openId);
       }
-    },
-    async loadOpens() {
-      let param = {};
-      let res = await this.server.toolbox.queryOpens(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
-      let opens = res.data.opens || [];
-      return opens;
     },
   },
   // 在实例创建完成后被立即调用
@@ -496,15 +441,6 @@ export default {
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
     this.initOpens();
-    this.toolbox.closeOpen = this.closeOpen;
-    this.toolbox.activeOpen = this.activeOpen;
-    this.toolbox.saveToolbox = this.saveToolbox;
-
-    this.toolbox.doActiveTab = this.doActiveTab;
-    this.toolbox.createTab = this.createTab;
-    this.toolbox.createTabByData = this.createTabByData;
-    this.toolbox.getTabByData = this.getTabByData;
-    this.toolbox.addTab = this.addTab;
   },
 };
 </script>

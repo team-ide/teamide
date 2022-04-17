@@ -6,7 +6,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -17,7 +16,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -28,7 +26,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -39,7 +36,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -50,7 +46,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -61,7 +56,6 @@
           :source="source"
           :toolbox="toolbox"
           :toolboxType="toolboxType"
-          :data="data"
           :extend="extend"
           :wrap="wrap"
         >
@@ -77,25 +71,23 @@ export default {
   components: {},
   props: [
     "source",
-    "data",
     "extend",
+    "toolboxData",
     "toolboxType",
     "toolbox",
     "active",
-    "tab",
+    "openId",
   ],
   data() {
     return {
-      option: null,
       ready: false,
-      wrap: {},
+      wrap: {
+        tabs: [],
+      },
     };
   },
   computed: {},
   watch: {
-    data() {
-      this.initOption();
-    },
     active() {
       this.init();
     },
@@ -110,19 +102,15 @@ export default {
       }
       this.inited = true;
       this.wrap.work = this.work;
-      this.initOption();
+      this.wrap.openTabByExtend = this.openTabByExtend;
+      this.wrap.onActiveTab = this.onActiveTab;
+      this.wrap.onRemoveTab = this.onRemoveTab;
       this.ready = true;
-    },
-    initOption() {
-      let option = null;
-      if (this.tool.isNotEmpty(this.data.option)) {
-        option = JSON.parse(this.data.option);
-      }
-      this.set(option);
+      this.initOpenTabs();
     },
     async work(work, data) {
       let param = {
-        toolboxId: this.data.toolboxId,
+        toolboxId: this.toolboxData.toolboxId,
         work: work,
         data: data,
       };
@@ -132,15 +120,6 @@ export default {
       }
       return res;
     },
-    get() {
-      return this.option;
-    },
-    set(option) {
-      this.option = option;
-    },
-    refresh() {
-      this.initData();
-    },
     onFocus() {
       this.$el.focus();
       this.$children.forEach((one) => {
@@ -148,6 +127,75 @@ export default {
       });
     },
     reload() {},
+    onRemoveTab(tab) {
+      this.toolbox.closeOpenTab(tab.tabId);
+    },
+    onActiveTab(tab) {
+      this.toolbox.activeOpenTab(tab.tabId);
+    },
+    doActiveTab(tab) {
+      this.wrap.doActiveTab(tab);
+    },
+    async openTabByExtend(extend, fromTab) {
+      let data = {
+        openId: this.openId,
+        toolboxId: this.toolboxData.toolboxId,
+      };
+
+      let tabData = await this.toolbox.openTab(data, extend);
+      if (tabData == null) {
+        return;
+      }
+      let tab = await this.openByTabData(tabData, fromTab);
+      if (tab != null) {
+        this.doActiveTab(tab);
+      }
+    },
+    async openByTabData(tabData, fromTab) {
+      if (this.tool.isNotEmpty(tabData.extend)) {
+        tabData.extend = JSON.parse(tabData.extend);
+      } else {
+        tabData.extend = null;
+      }
+      let tab = this.createTabByTabData(tabData);
+      this.wrap.addTab(tab, fromTab);
+      return tab;
+    },
+    createTabByTabData(tabData) {
+      let key = tabData.tabId;
+
+      let tab = this.wrap.getTab(key);
+      if (tab == null) {
+        tab = this.toolbox.createOpenTabTab(tabData);
+        tab.key = key;
+      }
+      return tab;
+    },
+    async initOpenTabs() {
+      let tabs = await this.toolbox.loadOpenTabs(this.openId);
+
+      await tabs.forEach(async (tabData) => {
+        await this.openByTabData(tabData);
+      });
+
+      // 激活最后
+      let activeTabData = null;
+      tabs.forEach(async (tabData) => {
+        if (activeTabData == null) {
+          activeTabData = tabData;
+        } else {
+          if (
+            new Date(tabData.openTime).getTime() >
+            new Date(activeTabData.openTime).getTime()
+          ) {
+            activeTabData = tabData;
+          }
+        }
+      });
+      if (activeTabData != null) {
+        this.doActiveTab(activeTabData.tabId);
+      }
+    },
     onKeyDown() {
       if (this.tool.keyIsF5()) {
         this.tool.stopEvent();
