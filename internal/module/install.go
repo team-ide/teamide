@@ -211,11 +211,15 @@ func (this_ *InstallService) execStageSql(historyStageDetails *StageDetails, sta
 			exeSQLs = append(exeSQLs, sq)
 			startIndex = index
 			if index >= len(sqs) {
-				err = errors.New(fmt.Sprint("检测到安装脚本与历史不一致!"))
+				this_.Logger.Error("安装脚本SQL数量小于已安装脚本SQL")
+				err = errors.New(fmt.Sprint("安装脚本SQL数量小于已安装脚本SQL!"))
 				return
 			}
 			if sq != sqs[index] {
-				err = errors.New(fmt.Sprint("检测到安装脚本与历史不一致!"))
+				this_.Logger.Error("安装脚本SQL与已安装脚本SQL不一致")
+				this_.Logger.Error("安装脚本SQL：" + sqs[index])
+				this_.Logger.Error("已安装SQL：" + sq)
+				err = errors.New(fmt.Sprint("安装脚本SQL与已安装脚本SQL不一致!"))
 				return
 			}
 		}

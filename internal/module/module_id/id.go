@@ -1,6 +1,7 @@
 package module_id
 
 import (
+	"go.uber.org/zap"
 	"teamide/internal/context"
 	"teamide/internal/module/module_lock"
 	"teamide/pkg/util"
@@ -24,6 +25,7 @@ type IDService struct {
 func (this_ *IDService) GetNextID(idType IDType) (id int64, err error) {
 	ids, err := this_.GetNextIDs(idType, 1)
 	if err != nil {
+		this_.Logger.Error("GetNextID Error", zap.Error(err))
 		return
 	}
 	id = ids[0]

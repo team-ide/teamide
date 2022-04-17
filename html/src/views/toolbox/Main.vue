@@ -219,10 +219,10 @@ export default {
       return this.$refs.TabEditor.getTab(tab);
     },
     onRemoveTab(tab) {
-      this.toolbox.closeOpen(tab.openId);
+      this.closeOpen(tab.openId);
     },
     onActiveTab(tab) {
-      this.toolbox.activeOpen(tab.openId);
+      this.activeOpen(tab.openId);
     },
     addTab(tab, fromTab) {
       return this.$refs.TabEditor.addTab(tab, fromTab);
@@ -304,7 +304,7 @@ export default {
       let openData = res.data.open;
       let tab = await this.openByOpenData(openData, fromTab);
       if (tab != null) {
-        this.toolbox.doActiveTab(tab);
+        this.doActiveTab(tab);
       }
     },
     async openByOpenData(openData, fromTab) {
@@ -324,8 +324,8 @@ export default {
       } else {
         openData.extend = null;
       }
-      let tab = this.toolbox.createTabByData(openData);
-      this.toolbox.addTab(tab, fromTab);
+      let tab = this.createTabByData(openData);
+      this.addTab(tab, fromTab);
       return tab;
     },
     async activeOpen(openId) {
@@ -435,7 +435,7 @@ export default {
       let res = await this.server.toolbox.update(data);
       if (res.code == 0) {
         this.toolbox.initContext();
-        let tab = this.toolbox.getTabByData(data);
+        let tab = this.getTabByData(data);
         if (tab != null) {
           Object.assign(tab.data, data);
         }
@@ -478,7 +478,7 @@ export default {
         }
       });
       if (activeOpenData != null) {
-        this.toolbox.doActiveTab(activeOpenData.openId);
+        this.doActiveTab(activeOpenData.openId);
       }
     },
     async loadOpens() {
@@ -496,15 +496,6 @@ export default {
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
     this.initOpens();
-    this.toolbox.closeOpen = this.closeOpen;
-    this.toolbox.activeOpen = this.activeOpen;
-    this.toolbox.saveToolbox = this.saveToolbox;
-
-    this.toolbox.doActiveTab = this.doActiveTab;
-    this.toolbox.createTab = this.createTab;
-    this.toolbox.createTabByData = this.createTabByData;
-    this.toolbox.getTabByData = this.getTabByData;
-    this.toolbox.addTab = this.addTab;
   },
 };
 </script>

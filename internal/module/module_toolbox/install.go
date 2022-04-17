@@ -51,7 +51,7 @@ CREATE TABLE ` + TableToolbox + ` (
 				},
 			},
 		},
-		// 创建工具箱表
+		// 创建工具箱打开记录表
 		&install.StageModel{
 			Version: "1.0",
 			Module:  ModuleToolbox,
@@ -59,10 +59,10 @@ CREATE TABLE ` + TableToolbox + ` (
 			Sql: &install.StageSqlModel{
 				Mysql: []string{`
 CREATE TABLE ` + TableToolboxOpen + ` (
-	openId bigint(20) NOT NULL COMMENT '用户ID',
+	openId bigint(20) NOT NULL COMMENT '开启ID',
 	userId bigint(20) NOT NULL COMMENT '用户ID',
 	toolboxId bigint(20) NOT NULL COMMENT '工具箱ID',
-	extend varchar(2000) NOT NULL COMMENT '扩展',
+	extend varchar(4000) DEFAULT NULL COMMENT '扩展',
 	createTime datetime NOT NULL COMMENT '创建时间',
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	openTime datetime DEFAULT NULL COMMENT '打开时间',
@@ -73,10 +73,10 @@ CREATE TABLE ` + TableToolboxOpen + ` (
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolboxOpen + ` (
-	openId bigint(20) DEFAULT NULL,
-	userId bigint(20) DEFAULT NULL,
+	openId bigint(20) NOT NULL,
+	userId bigint(20) NOT NULL,
 	toolboxId bigint(20) NOT NULL,
-	extend varchar(2000) NOT NULL,
+	extend varchar(4000) DEFAULT NULL,
 	createTime datetime NOT NULL,
 	updateTime datetime DEFAULT NULL,
 	openTime datetime DEFAULT NULL,
@@ -85,6 +85,47 @@ CREATE TABLE ` + TableToolboxOpen + ` (
 `,
 					`CREATE INDEX ` + TableToolboxOpen + `_index_userId on ` + TableToolboxOpen + ` (userId);`,
 					`CREATE INDEX ` + TableToolboxOpen + `_index_toolboxId on ` + TableToolboxOpen + ` (toolboxId);`,
+				},
+			},
+		},
+		// 创建工具箱打开标签页表
+		&install.StageModel{
+			Version: "1.0",
+			Module:  ModuleToolbox,
+			Stage:   `创建表[` + TableToolboxOpenTab + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableToolboxOpenTab + ` (
+	tabId bigint(20) NOT NULL COMMENT '标签页ID',
+	openId bigint(20) NOT NULL COMMENT '开启ID',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	toolboxId bigint(20) NOT NULL COMMENT '工具箱ID',
+	extend varchar(4000) DEFAULT NULL COMMENT '扩展',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	openTime datetime DEFAULT NULL COMMENT '打开时间',
+	PRIMARY KEY (tabId),
+	KEY index_openId (openId),
+	KEY index_userId (userId),
+	KEY index_toolboxId (toolboxId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱开启标签页';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableToolboxOpenTab + ` (
+	tabId bigint(20) NOT NULL,
+	openId bigint(20) NOT NULL,
+	userId bigint(20) NOT NULL,
+	toolboxId bigint(20) NOT NULL,
+	extend varchar(4000) DEFAULT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	openTime datetime DEFAULT NULL,
+	PRIMARY KEY (tabId)
+);
+`,
+					`CREATE INDEX ` + TableToolboxOpenTab + `_index_openId on ` + TableToolboxOpenTab + ` (openId);`,
+					`CREATE INDEX ` + TableToolboxOpenTab + `_index_userId on ` + TableToolboxOpenTab + ` (userId);`,
+					`CREATE INDEX ` + TableToolboxOpenTab + `_index_toolboxId on ` + TableToolboxOpenTab + ` (toolboxId);`,
 				},
 			},
 		},
