@@ -47,13 +47,18 @@
                     {{ one.name }}
                   </template>
                 </div>
-                <div class="file-size" v-if="!one.isDir">
-                  <span class="file-size-unitSize">
-                    {{ one.unitSize }}
-                  </span>
-                  <span class="file-size-unit">
-                    {{ one.unit }}
-                  </span>
+                <div class="file-date">
+                  {{ one.dateTime }}
+                </div>
+                <div class="file-size">
+                  <template v-if="!one.isDir">
+                    <span class="file-size-unitSize">
+                      {{ one.unitSize }}
+                    </span>
+                    <span class="file-size-unit">
+                      {{ one.unit }}
+                    </span>
+                  </template>
                 </div>
               </div>
             </template>
@@ -91,6 +96,7 @@ export default {
       form: {
         dir: null,
       },
+      selectPaths: [],
     };
   },
   computed: {},
@@ -103,6 +109,19 @@ export default {
     },
   },
   methods: {
+    setScrollTop(scrollTop) {
+      if (scrollTop >= 0) {
+        this.$nextTick(() => {
+          this.tool.jQuery(this.$refs.filesBox).scrollTop(scrollTop);
+        });
+      }
+    },
+    getScrollTop() {
+      var scrollTop = parseInt(
+        this.tool.jQuery(this.$refs.filesBox).scrollTop()
+      );
+      return scrollTop;
+    },
     async init(e) {
       this.form.dir = this.dir;
       this.formatFiles();
@@ -174,6 +193,18 @@ export default {
       }
       return files;
     },
+    setSelect(file) {
+      if (this.selectPaths.indexOf(file.path) < 0) {
+        this.selectPaths.push(file.path);
+      }
+      file.select = true;
+    },
+    setUnselect(file) {
+      if (this.selectPaths.indexOf(file.path) >= 0) {
+        this.selectPaths.splice(this.selectPaths.indexOf(file.path), 1);
+      }
+      file.select = false;
+    },
     selectFile(file) {
       if (this.list) {
         let fileIndex = this.getFileIndex(file);
@@ -195,17 +226,17 @@ export default {
           });
         } else if (window.event.ctrlKey) {
           if (fileIndex >= 0) {
-            this.list[fileIndex].select = true;
+            this.setSelect(this.list[fileIndex]);
           }
           return;
         }
         this.list.forEach((one, i) => {
           if (one.name == "..") {
-            one.select = false;
+            this.setUnselect(one);
           } else if (i >= startIndex && i <= endIndex) {
-            one.select = true;
+            this.setSelect(one);
           } else {
-            one.select = false;
+            this.setUnselect(one);
           }
         });
       }
@@ -214,7 +245,7 @@ export default {
       e = e || window.event;
       let file = this.getFileByTarget(e.target);
       if (file && file.select) {
-        file.select = false;
+        this.setUnselect(file);
         return;
       }
       this.selectFile(file);
@@ -468,22 +499,33 @@ export default {
       );
     },
     formatFiles() {
-      let files = this.files || [];
       if (this.list) {
         this.list.splice(0, this.list.length);
       }
-      files.forEach((one) => {
-        one = Object.assign({}, one);
-        one.dir = this.dir;
-        one.path = one.dir + "/" + one.name;
-        one.select = false;
-        one.rename = false;
-        one.size = one.size || 0;
-        if (!one.isDir) {
-          this.wrap.formatSize(one, "size", "unitSize", "unit");
-        }
-        this.list.push(one);
-      });
+      if (this.files) {
+        this.files.forEach((one) => {
+          one = Object.assign({}, one);
+          one.dir = this.dir;
+          one.path = one.dir + "/" + one.name;
+          one.rename = false;
+          one.size = one.size || 0;
+          if (!one.isDir) {
+            this.wrap.formatSize(one, "size", "unitSize", "unit");
+          }
+          if (one.modTime) {
+            one.dateTime = this.tool.formatDate(
+              new Date(one.modTime),
+              "yyyy-MM-dd hh:mm:ss"
+            );
+          }
+          one.select = false;
+          if (this.selectPaths.indexOf(one.path) >= 0) {
+            one.select = true;
+          }
+          this.list.push(one);
+        });
+        this.selectPaths = [];
+      }
     },
     initEvent() {
       this.$nextTick(() => {
@@ -567,9 +609,21 @@ export default {
   padding: 0px 5px;
   flex: 1;
 }
+.file-box .file-date {
+  padding: 0px 5px;
+  font-size: 12px;
+  width: 150px;
+}
 .file-box .file-size {
   padding: 0px 5px;
   font-size: 12px;
+  width: 90px;
+  text-align: right;
+}
+.file-box .file-size .file-size-unit {
+  width: 20px;
+  display: inline-block;
+  text-align: left;
 }
 .drag-file {
   position: absolute;
