@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/sftp"
+	"go.uber.org/zap"
 	"io"
 	"io/fs"
 	"mime/multipart"
@@ -34,23 +35,26 @@ type SFTPRequest struct {
 	ConfirmId string    `json:"confirmId,omitempty"`
 	IsOk      bool      `json:"isOk,omitempty"`
 	IsCancel  bool      `json:"isCancel,omitempty"`
+	ScrollTop int       `json:"scrollTop,omitempty"`
 }
 type SFTPResponse struct {
-	Work   string      `json:"work,omitempty"`
-	WorkId string      `json:"workId,omitempty"`
-	Dir    string      `json:"dir,omitempty"`
-	Msg    string      `json:"msg,omitempty"`
-	Files  []*SFTPFile `json:"files,omitempty"`
-	Place  string      `json:"place,omitempty"`
-	Path   string      `json:"path,omitempty"`
-	Name   string      `json:"name,omitempty"`
+	Work      string      `json:"work,omitempty"`
+	WorkId    string      `json:"workId,omitempty"`
+	Dir       string      `json:"dir,omitempty"`
+	Msg       string      `json:"msg,omitempty"`
+	Files     []*SFTPFile `json:"files,omitempty"`
+	Place     string      `json:"place,omitempty"`
+	Path      string      `json:"path,omitempty"`
+	Name      string      `json:"name,omitempty"`
+	ScrollTop int         `json:"scrollTop,omitempty"`
 }
 type SFTPFile struct {
-	Name  string `json:"name,omitempty"`
-	IsDir bool   `json:"isDir,omitempty"`
-	Size  int64  `json:"size,omitempty"`
-	Place string `json:"place,omitempty"`
-	Path  string `json:"path,omitempty"`
+	Name    string     `json:"name,omitempty"`
+	IsDir   bool       `json:"isDir,omitempty"`
+	Size    int64      `json:"size,omitempty"`
+	Place   string     `json:"place,omitempty"`
+	Path    string     `json:"path,omitempty"`
+	ModTime *time.Time `json:"modTime,omitempty"`
 }
 
 type RemoveProgress struct {
@@ -333,11 +337,13 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 		response = &SFTPResponse{}
 	}
 	if err != nil {
+		this_.Logger.Error("ssh ftp work{"+request.Work+"} error", zap.Error(err))
 		response.Msg = err.Error()
 	}
 	response.Work = request.Work
 	response.WorkId = request.WorkId
 	response.Place = request.Place
+	response.ScrollTop = request.ScrollTop
 
 	this_.WSWriteData(response)
 
@@ -1075,7 +1081,13 @@ func (this_ *SSHSftpClient) remoteRename(request *SFTPRequest) (response *SFTPRe
 
 func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
-		Files: []*SFTPFile{},
+		Files: []*SFTPFile{
+			&SFTPFile{
+				Name:  "..",
+				IsDir: true,
+				Place: "local",
+			},
+		},
 	}
 	dir := request.Dir
 	if dir == "" {
@@ -1085,8 +1097,18 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 		}
 	}
 
+	dir = util.FormatPath(dir)
+	if err != nil {
+		return
+	}
+	response.Dir = dir
+
 	fileInfo, err := os.Lstat(dir)
 	if err != nil {
+		if err == os.ErrNotExist {
+			err = nil
+			return
+		}
 		return
 	}
 
@@ -1095,16 +1117,11 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 		return
 	}
 
-	dir = util.FormatPath(dir)
-	if err != nil {
-		return
-	}
-	response.Dir = dir
 	dirFiles, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
-	dirNames := []string{".."}
+	var dirNames []string
 	var fileNames []string
 
 	fMap := map[string]os.DirEntry{}
@@ -1122,27 +1139,33 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 	sort.Strings(fileNames)
 
 	for _, one := range dirNames {
+		f := fMap[one]
+		var fi os.FileInfo
+		fi, err = f.Info()
+		if err != nil {
+			return
+		}
+		ModTime := fi.ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:  one,
-			IsDir: true,
-			Place: "local",
+			Name:    one,
+			IsDir:   true,
+			Place:   "local",
+			ModTime: &ModTime,
 		})
 	}
 	for _, one := range fileNames {
 		f := fMap[one]
-		var size int64
-		if !f.IsDir() {
-			var fi os.FileInfo
-			fi, err = f.Info()
-			if err != nil {
-				return
-			}
-			size = fi.Size()
+		var fi os.FileInfo
+		fi, err = f.Info()
+		if err != nil {
+			return
 		}
+		ModTime := fi.ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:  one,
-			Size:  size,
-			Place: "local",
+			Name:    one,
+			Size:    fi.Size(),
+			Place:   "local",
+			ModTime: &ModTime,
 		})
 	}
 
@@ -1151,7 +1174,13 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 
 func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
-		Files: []*SFTPFile{},
+		Files: []*SFTPFile{
+			&SFTPFile{
+				Name:  "..",
+				IsDir: true,
+				Place: "remote",
+			},
+		},
 	}
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.newSftp()
@@ -1168,6 +1197,12 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 		}
 	}
 
+	dir, err = sftpClient.RealPath(dir)
+	if err != nil {
+		return
+	}
+	response.Dir = dir
+
 	fileInfo, err := sftpClient.Lstat(dir)
 	if err != nil {
 		return
@@ -1178,16 +1213,11 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 		return
 	}
 
-	dir, err = sftpClient.RealPath(dir)
-	if err != nil {
-		return
-	}
-	response.Dir = dir
 	dirFiles, err := sftpClient.ReadDir(dir)
 	if err != nil {
 		return
 	}
-	dirNames := []string{".."}
+	var dirNames []string
 	var fileNames []string
 
 	fMap := map[string]os.FileInfo{}
@@ -1205,17 +1235,21 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 	sort.Strings(fileNames)
 
 	for _, one := range dirNames {
+		ModTime := fMap[one].ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:  one,
-			IsDir: true,
-			Place: "remote",
+			Name:    one,
+			IsDir:   true,
+			Place:   "remote",
+			ModTime: &ModTime,
 		})
 	}
 	for _, one := range fileNames {
+		ModTime := fMap[one].ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:  one,
-			Size:  fMap[one].Size(),
-			Place: "remote",
+			Name:    one,
+			Size:    fMap[one].Size(),
+			Place:   "remote",
+			ModTime: &ModTime,
 		})
 	}
 

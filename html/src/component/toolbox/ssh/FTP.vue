@@ -182,7 +182,7 @@ export default {
         { size: 1024 * 1024 * 1024 * 1024, unit: "TB" },
         { size: 1024 * 1024 * 1024, unit: "GB" },
         { size: 1024 * 1024, unit: "MB" },
-        { size: 1024, unit: "kb" },
+        { size: 1024, unit: "KB" },
       ];
 
       sizeMap.forEach((one) => {
@@ -193,7 +193,7 @@ export default {
       });
       if (!data[sizeUnitName]) {
         data[sizeName] = data[name];
-        data[sizeUnitName] = "b";
+        data[sizeUnitName] = "B";
       }
     },
     workContextmenu(e) {
@@ -308,17 +308,21 @@ export default {
       this.openDir(place, dir);
     },
     loadFiles(place, dir) {
+      let scrollTop = 0;
       if (place == "local") {
         this.localDir = dir;
         this.localFiles = null;
+        scrollTop = this.$refs.localToolboxFTPFiles.getScrollTop();
       } else if (place == "remote") {
         this.remoteDir = dir;
         this.remoteFiles = null;
+        scrollTop = this.$refs.remoteToolboxFTPFiles.getScrollTop();
       }
       let request = {
         place: place,
         dir: dir,
         work: "files",
+        scrollTop: Number(scrollTop),
       };
 
       this.send(request);
@@ -415,9 +419,11 @@ export default {
         if (response.place == "local") {
           this.localDir = response.dir;
           this.localFiles = response.files || [];
+          this.$refs.localToolboxFTPFiles.setScrollTop(response.scrollTop);
         } else if (response.place == "remote") {
           this.remoteDir = response.dir;
           this.remoteFiles = response.files || [];
+          this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
         }
       }
       this.onWorkSuccess(response);
