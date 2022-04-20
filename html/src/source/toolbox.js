@@ -149,7 +149,10 @@ toolbox.formatExtend = (toolboxType, data, extend) => {
     }
 };
 toolbox.formatSSHExtend = (toolboxType, data, extend) => {
-
+    extend.local = extend.local || {};
+    extend.remote = extend.remote || {};
+    extend.local.dir = extend.local.dir || "";
+    extend.remote.dir = extend.remote.dir || "";
 };
 
 export default toolbox;

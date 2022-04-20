@@ -7,7 +7,7 @@
             ref="localToolboxFTPFiles"
             :source="source"
             place="local"
-            :dir="localDir"
+            :dir="extend.local.dir"
             :files="localFiles"
             :wrap="wrap"
             @open="openFile"
@@ -26,7 +26,7 @@
             ref="remoteToolboxFTPFiles"
             :source="source"
             place="remote"
-            :dir="remoteDir"
+            :dir="extend.remote.dir"
             :files="remoteFiles"
             :wrap="wrap"
             @open="openFile"
@@ -156,9 +156,7 @@ export default {
   ],
   data() {
     return {
-      localDir: null,
       localFiles: null,
-      remoteDir: null,
       remoteFiles: null,
       works: [],
     };
@@ -308,13 +306,14 @@ export default {
       this.openDir(place, dir);
     },
     loadFiles(place, dir) {
+      this.doLoadFiles(place, dir);
+    },
+    doLoadFiles(place, dir) {
       let scrollTop = 0;
       if (place == "local") {
-        this.localDir = dir;
         this.localFiles = null;
         scrollTop = this.$refs.localToolboxFTPFiles.getScrollTop();
       } else if (place == "remote") {
-        this.remoteDir = dir;
         this.remoteFiles = null;
         scrollTop = this.$refs.remoteToolboxFTPFiles.getScrollTop();
       }
@@ -417,11 +416,15 @@ export default {
       }
       if (response.work == "files") {
         if (response.place == "local") {
-          this.localDir = response.dir;
+          if (this.extend.local.dir != response.dir) {
+            this.wrap.updateExtend(["local", "dir"], response.dir);
+          }
           this.localFiles = response.files || [];
           this.$refs.localToolboxFTPFiles.setScrollTop(response.scrollTop);
         } else if (response.place == "remote") {
-          this.remoteDir = response.dir;
+          if (this.extend.remote.dir != response.dir) {
+            this.wrap.updateExtend(["remote", "dir"], response.dir);
+          }
           this.remoteFiles = response.files || [];
           this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
         }
@@ -434,12 +437,12 @@ export default {
         response.work == "rename"
       ) {
         if (response.place == "local") {
-          if (response.dir == this.localDir) {
-            this.loadFiles("local", this.localDir);
+          if (response.dir == this.extend.local.dir) {
+            this.loadFiles("local", this.extend.local.dir);
           }
         } else if (response.place == "remote") {
-          if (response.dir == this.remoteDir) {
-            this.loadFiles("remote", this.remoteDir);
+          if (response.dir == this.extend.remote.dir) {
+            this.loadFiles("remote", this.extend.remote.dir);
           }
         }
       }
@@ -485,8 +488,8 @@ export default {
       if (event == "ftp ready") {
         this.toStart();
       } else if (event == "ftp created") {
-        this.loadFiles("local");
-        this.loadFiles("remote");
+        this.doLoadFiles("local", this.extend.local.dir);
+        this.doLoadFiles("remote", this.extend.remote.dir);
       }
     },
     onError(error) {

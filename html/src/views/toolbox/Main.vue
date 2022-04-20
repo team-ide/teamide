@@ -60,6 +60,7 @@
           :toolboxData="tab.toolboxData"
           :extend="tab.extend"
           :active="tab.active"
+          :updateOpenExtend="updateOpenExtend"
         >
         </ToolboxEditor>
       </template>
@@ -251,7 +252,29 @@ export default {
       }
       return tab;
     },
-
+    async updateOpenExtend(openId, keys, value) {
+      let tab = this.getTab("" + openId);
+      if (tab == null) {
+        return;
+      }
+      let obj = tab.extend;
+      keys.forEach((key, index) => {
+        if (index < keys.length - 1) {
+          obj[key] = obj[key] || {};
+          obj = obj[key];
+        } else {
+          obj[key] = value;
+        }
+      });
+      let param = {
+        openId: openId,
+        extend: JSON.stringify(tab.extend),
+      };
+      let res = await this.server.toolbox.updateOpenExtend(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+    },
     toolboxDataOpen(toolboxData, fromTab) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
@@ -294,7 +317,7 @@ export default {
       if (this.tool.isNotEmpty(openData.extend)) {
         openData.extend = JSON.parse(openData.extend);
       } else {
-        openData.extend = null;
+        openData.extend = {};
       }
       let tab = this.createTabByOpenData(openData);
       this.addTab(tab, fromTab);
