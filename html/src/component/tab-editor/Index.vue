@@ -313,7 +313,7 @@ export default {
       if (fromIndex < 0) {
         this.tabs.push(tab);
       } else {
-        this.tabs.splice(fromIndex, 0, tab);
+        this.tabs.splice(fromIndex + 1, 0, tab);
       }
     },
     toCopyTab(tab) {
