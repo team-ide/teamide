@@ -34,6 +34,9 @@ let toolbox = {
     queryOpens(param) {
         return http.post('api/toolbox/queryOpens', param);
     },
+    updateOpenExtend(param) {
+        return http.post('api/toolbox/updateOpenExtend', param);
+    },
     openTab(param) {
         return http.post('api/toolbox/openTab', param);
     },
@@ -42,6 +45,9 @@ let toolbox = {
     },
     queryOpenTabs(param) {
         return http.post('api/toolbox/queryOpenTabs', param);
+    },
+    updateOpenTabExtend(param) {
+        return http.post('api/toolbox/updateOpenTabExtend', param);
     },
     ssh: {
         ftp: {

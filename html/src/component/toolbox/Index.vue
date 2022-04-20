@@ -77,9 +77,11 @@ export default {
     "toolbox",
     "active",
     "openId",
+    "updateOpenExtend",
   ],
   data() {
     return {
+      extendJSON: null,
       ready: false,
       wrap: {
         tabs: [],
@@ -90,6 +92,15 @@ export default {
   watch: {
     active() {
       this.init();
+    },
+    extend(newExtent, oldExtent) {
+      if (newExtent == null || oldExtent == null) {
+        return;
+      }
+      if (JSON.stringify(newExtent) == JSON.stringify(oldExtent)) {
+        return;
+      }
+      this.wrap.updateOpenExtend(this.extend);
     },
   },
   methods: {
@@ -105,6 +116,9 @@ export default {
       this.wrap.openTabByExtend = this.openTabByExtend;
       this.wrap.onActiveTab = this.onActiveTab;
       this.wrap.onRemoveTab = this.onRemoveTab;
+      this.wrap.updateOpenExtend = this.updateOpenExtend;
+      this.wrap.updateOpenTabExtend = this.updateOpenTabExtend;
+      this.wrap.updateExtend = this.updateExtend;
       this.ready = true;
       this.initOpenTabs();
     },
@@ -135,6 +149,9 @@ export default {
     },
     doActiveTab(tab) {
       this.wrap.doActiveTab(tab);
+    },
+    updateExtend(keys, value) {
+      this.updateOpenExtend(this.openId, keys, value);
     },
     async openTabByExtend(extend, fromTab) {
       let data = {
