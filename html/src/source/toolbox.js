@@ -2,7 +2,7 @@ import server from "../server";
 import tool from "../tool";
 
 let toolbox = {
-    async open(toolboxId, extend) {
+    async open(toolboxId, extend, createTime) {
         let extendStr = null;
         if (extend != null) {
             extendStr = JSON.stringify(extend);
@@ -11,6 +11,9 @@ let toolbox = {
             toolboxId: toolboxId,
             extend: extendStr,
         };
+        if (createTime) {
+            param.createTime = createTime;
+        }
         let res = await server.toolbox.open(param);
         if (res.code != 0) {
             tool.error(res.msg);
@@ -41,6 +44,7 @@ let toolbox = {
             toolboxType,
             extend,
             openId: openData.openId,
+            openData: openData,
         };
         tab.active = false;
         return tab;

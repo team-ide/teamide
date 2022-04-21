@@ -15,6 +15,9 @@ Vue.component('Login', Login);
 import Register from './Register.vue'
 Vue.component('Register', Register);
 
+import WaterfallLayout from './WaterfallLayout.vue'
+Vue.component('WaterfallLayout', WaterfallLayout);
+
 import IconDatabase from './icon/Database.vue'
 Vue.component('IconDatabase', IconDatabase);
 import IconElasticsearch from './icon/Elasticsearch.vue'
