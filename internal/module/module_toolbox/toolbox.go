@@ -186,7 +186,7 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 // QueryOpens 查询
 func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, err error) {
 
-	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? `
+	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? ORDER BY createTime ASC `
 	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(ToolboxOpenModel{}))
 	if err != nil {
 		this_.Logger.Error("QueryOpens Error", zap.Error(err))
@@ -260,7 +260,7 @@ func (this_ *ToolboxService) OpenTab(toolboxOpenTab *ToolboxOpenTabModel) (rowsA
 // QueryOpenTabs 查询
 func (this_ *ToolboxService) QueryOpenTabs(openId int64) (res []*ToolboxOpenTabModel, err error) {
 
-	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE openId=? `
+	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE openId=? ORDER BY createTime ASC `
 	list, err := this_.DatabaseWorker.Query(sql, []interface{}{openId}, util.GetStructFieldTypes(ToolboxOpenTabModel{}))
 	if err != nil {
 		this_.Logger.Error("QueryOpenTabs Error", zap.Error(err))

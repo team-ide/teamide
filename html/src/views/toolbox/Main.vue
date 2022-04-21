@@ -69,115 +69,130 @@
           trigger="click"
           size="mini"
           :placement="dropdownPlacement"
-          :visible-change="dropdownVisible"
+          @visible-change="dropdownVisible"
           ref="dropdown"
         >
           <div class="tab-header-nav tm-pointer">
             <i class="mdi mdi-plus"></i>
           </div>
-          <el-dropdown-menu slot="dropdown" class="pd-0">
-            <MenuBox class="bd-0" :subLeft="dropdownMenuSubLeft" size="mini">
-              <template v-for="toolboxType in source.toolboxTypes">
-                <MenuItem :key="toolboxType.name">
-                  <template v-if="toolboxType.name == 'database'">
-                    <i class="mgr-3">
-                      <IconDatabase></IconDatabase>
-                    </i>
-                  </template>
-                  <template v-else-if="toolboxType.name == 'redis'">
-                    <i class="mgr-3">
-                      <IconRedis></IconRedis>
-                    </i>
-                  </template>
-                  <template v-else-if="toolboxType.name == 'elasticsearch'">
-                    <i class="mgr-3">
-                      <IconElasticsearch></IconElasticsearch>
-                    </i>
-                  </template>
-                  <template v-else-if="toolboxType.name == 'kafka'">
-                    <i class="mgr-3">
-                      <IconKafka></IconKafka>
-                    </i>
-                  </template>
-                  <template v-else-if="toolboxType.name == 'zookeeper'">
-                    <i class="mgr-3">
-                      <IconZookeeper></IconZookeeper>
-                    </i>
-                  </template>
-                  <template v-else-if="toolboxType.name == 'ssh'">
-                    <i class="mgr-3">
-                      <IconSsh></IconSsh>
-                    </i>
-                    <i class="mgr-3">
-                      <IconFtp></IconFtp>
-                    </i>
-                  </template>
-                  {{ toolboxType.text || toolboxType.name }}
-                  <span
-                    class="tm-link color-green mgl-10"
-                    title="新增"
-                    @click="toInsert(toolboxType)"
+          <el-dropdown-menu slot="dropdown" class="toolbox-dropdown-box-menu">
+            <div class="toolbox-dropdown-box">
+              <WaterfallLayout
+                class="toolbox-type-box"
+                :columns="3"
+                :gap="10"
+                :startLeft="10"
+                :startTop="10"
+                ref="WaterfallLayout"
+              >
+                <template v-for="toolboxType in source.toolboxTypes">
+                  <div
+                    :key="toolboxType.name"
+                    class="toolbox-type-one waterfall-layout-item"
                   >
-                    <i class="mdi mdi-plus ft-14"></i>
-                  </span>
-                  <MenuSubBox slot="MenuSubBox">
-                    <MenuItem
-                      class="tm-pointer"
-                      @click="toInsert(toolboxType)"
-                      title="新增"
-                    >
-                      <span class="tm-link color-green">
-                        <i class="mdi mdi-plus ft-16"></i>
-                      </span>
-                    </MenuItem>
-                    <template v-if="context[toolboxType.name] != null">
-                      <template
-                        v-for="toolboxData in context[toolboxType.name]"
-                      >
-                        <MenuItem :key="toolboxData.toolboxId"
-                          ><span
-                            class="tm-link color-green mgr-10"
-                            title="打开"
-                            @click="toolboxDataOpen(toolboxData)"
-                          >
-                            {{ toolboxData.name }}
-                          </span>
-                          <span
-                            title="打开FTP"
-                            v-if="toolboxType.name == 'ssh'"
-                            class="tm-link color-orange mgr-10"
-                            @click="toolboxDataOpenSfpt(toolboxData)"
-                          >
-                            <i class="mdi mdi-folder-outline ft-13"></i>
-                          </span>
-                          <span
-                            title="编辑"
-                            class="tm-link color-blue mgr-10"
-                            @click="toUpdate(toolboxType, toolboxData)"
-                          >
-                            <i class="mdi mdi-folder-edit-outline ft-13"></i>
-                          </span>
-                          <span
-                            title="复制"
-                            class="tm-link color-green mgr-10"
-                            @click="toCopy(toolboxType, toolboxData)"
-                          >
-                            <i class="mdi mdi-content-copy ft-12"></i>
-                          </span>
-                          <span
-                            title="删除"
-                            class="tm-link color-orange mgr-10"
-                            @click="toDelete(toolboxType, toolboxData)"
-                          >
-                            <i class="mdi mdi-delete-outline ft-14"></i>
-                          </span>
-                        </MenuItem>
+                    <div class="toolbox-type-title">
+                      <template v-if="toolboxType.name == 'database'">
+                        <i class="mgr-3">
+                          <IconDatabase></IconDatabase>
+                        </i>
                       </template>
-                    </template>
-                  </MenuSubBox>
-                </MenuItem>
-              </template>
-            </MenuBox>
+                      <template v-else-if="toolboxType.name == 'redis'">
+                        <i class="mgr-3">
+                          <IconRedis></IconRedis>
+                        </i>
+                      </template>
+                      <template v-else-if="toolboxType.name == 'elasticsearch'">
+                        <i class="mgr-3">
+                          <IconElasticsearch></IconElasticsearch>
+                        </i>
+                      </template>
+                      <template v-else-if="toolboxType.name == 'kafka'">
+                        <i class="mgr-3">
+                          <IconKafka></IconKafka>
+                        </i>
+                      </template>
+                      <template v-else-if="toolboxType.name == 'zookeeper'">
+                        <i class="mgr-3">
+                          <IconZookeeper></IconZookeeper>
+                        </i>
+                      </template>
+                      <template v-else-if="toolboxType.name == 'ssh'">
+                        <i class="mgr-3">
+                          <IconSsh></IconSsh>
+                        </i>
+                        <i class="mgr-3">
+                          <IconFtp></IconFtp>
+                        </i>
+                      </template>
+                      <span class="toolbox-type-text">
+                        {{ toolboxType.text || toolboxType.name }}
+                      </span>
+                      <span
+                        class="tm-link color-green mgl-10"
+                        title="新增"
+                        @click="toInsert(toolboxType)"
+                      >
+                        <i class="mdi mdi-plus ft-14"></i>
+                      </span>
+                    </div>
+                    <div class="toolbox-type-data-box">
+                      <template v-if="context[toolboxType.name] != null">
+                        <template
+                          v-for="toolboxData in context[toolboxType.name]"
+                        >
+                          <div
+                            :key="toolboxData.toolboxId"
+                            class="toolbox-type-data"
+                          >
+                            <span
+                              class="
+                                toolbox-type-data-text
+                                tm-link
+                                color-green
+                                mgr-10
+                              "
+                              title="打开"
+                              @click="toolboxDataOpen(toolboxData)"
+                            >
+                              {{ toolboxData.name }}
+                            </span>
+                            <span
+                              title="打开FTP"
+                              v-if="toolboxType.name == 'ssh'"
+                              class="tm-link color-orange mgr-10"
+                              @click="toolboxDataOpenSfpt(toolboxData)"
+                            >
+                              <i class="mdi mdi-folder-outline ft-13"></i>
+                            </span>
+                            <span
+                              title="编辑"
+                              class="tm-link color-blue mgr-10"
+                              @click="toUpdate(toolboxType, toolboxData)"
+                            >
+                              <i class="mdi mdi-folder-edit-outline ft-13"></i>
+                            </span>
+                            <span
+                              title="复制"
+                              class="tm-link color-green mgr-10"
+                              @click="toCopy(toolboxType, toolboxData)"
+                            >
+                              <i class="mdi mdi-content-copy ft-12"></i>
+                            </span>
+                            <span
+                              title="删除"
+                              class="tm-link color-orange mgr-10"
+                              @click="toDelete(toolboxType, toolboxData)"
+                            >
+                              <i class="mdi mdi-delete-outline ft-14"></i>
+                            </span>
+                          </div>
+                        </template>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </WaterfallLayout>
+            </div>
           </el-dropdown-menu>
         </el-dropdown>
       </div>
@@ -192,7 +207,6 @@ export default {
   data() {
     return {
       dropdownPlacement: "bottom-start",
-      dropdownVisible: false,
       dropdownMenuSubLeft: false,
     };
   },
@@ -208,15 +222,22 @@ export default {
     },
   },
   methods: {
-    onOffsetRightDistance(offsetRightDistance) {
-      offsetRightDistance = parseInt(offsetRightDistance);
-      if (offsetRightDistance < 500) {
-        this.dropdownPlacement = "bottom-end";
-        this.dropdownMenuSubLeft = true;
-      } else {
-        this.dropdownPlacement = "bottom-start";
-        this.dropdownMenuSubLeft = false;
+    dropdownVisible(dropdownVisible) {
+      if (dropdownVisible) {
+        this.$nextTick(() => {
+          this.$refs.WaterfallLayout && this.$refs.WaterfallLayout.doLayout();
+        });
       }
+    },
+    onOffsetRightDistance(offsetRightDistance) {
+      // offsetRightDistance = parseInt(offsetRightDistance);
+      // if (offsetRightDistance < 500) {
+      //   this.dropdownPlacement = "bottom-end";
+      //   this.dropdownMenuSubLeft = true;
+      // } else {
+      //   this.dropdownPlacement = "bottom-start";
+      //   this.dropdownMenuSubLeft = false;
+      // }
     },
     getTab(tab) {
       return this.$refs.TabEditor.getTab(tab);
@@ -284,7 +305,12 @@ export default {
     },
     toCopyTab(tab) {
       let extend = tab.extend;
-      this.openByToolboxData(tab.toolboxData, extend, tab);
+      this.openByToolboxData(
+        tab.toolboxData,
+        extend,
+        tab,
+        tab.openData.createTime
+      );
     },
     toolboxDataOpenSfpt(toolboxData) {
       this.tool.stopEvent();
@@ -292,8 +318,12 @@ export default {
 
       this.openByToolboxData(toolboxData, { isFTP: true });
     },
-    async openByToolboxData(toolboxData, extend, fromTab) {
-      let openData = await this.toolbox.open(toolboxData.toolboxId, extend);
+    async openByToolboxData(toolboxData, extend, fromTab, createTime) {
+      let openData = await this.toolbox.open(
+        toolboxData.toolboxId,
+        extend,
+        createTime
+      );
       if (openData == null) {
         return;
       }
@@ -473,5 +503,49 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
+}
+.el-dropdown-menu.toolbox-dropdown-box-menu {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-shadow: none;
+  background: transparent;
+}
+.toolbox-dropdown-box {
+  width: 940px;
+  /* height: 600px; */
+  /* background: #2a4a67; */
+  background: transparent;
+}
+
+.toolbox-type-box {
+  width: 100%;
+  font-size: 12px;
+  padding: 10px;
+}
+
+.toolbox-type-one {
+  width: 300px;
+}
+.toolbox-type-title {
+  padding: 0px 5px;
+  background: #2b3f51;
+  color: #ffffff;
+  line-height: 26px;
+}
+.toolbox-type-data-box {
+  background: #1b2a38;
+  padding: 5px 10px;
+}
+.toolbox-type-data {
+  line-height: 20px;
+  display: flex;
+  overflow: hidden;
+}
+.toolbox-type-data-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
 }
 </style>
