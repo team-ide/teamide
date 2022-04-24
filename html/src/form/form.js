@@ -152,6 +152,7 @@ let toolboxOption = {
                 label: "Port（3306）",
                 name: "port",
                 defaultValue: "3306",
+                isNumber: true,
                 rules: [
                     {
                         required: true,
@@ -168,6 +169,7 @@ let toolboxOption = {
             {
                 label: "Password",
                 name: "password",
+                type: "password",
                 rules: [
                 ],
             },
@@ -192,7 +194,7 @@ let toolboxOption = {
                 ],
             },
             {
-                label: "连接地址（127.0.0.1:22",
+                label: "连接地址（127.0.0.1:22）",
                 name: "address",
                 defaultValue: "127.0.0.1:22",
                 rules: [
@@ -204,14 +206,15 @@ let toolboxOption = {
                 ],
             },
             {
-                label: "User",
-                name: "user",
+                label: "Username",
+                name: "username",
                 rules: [
                 ],
             },
             {
                 label: "Password",
                 name: "password",
+                type: "password",
                 rules: [
                 ],
             },
@@ -242,6 +245,7 @@ let toolboxOption = {
             {
                 label: "密码",
                 name: "auth",
+                type: "password",
                 rules: [
                 ],
             },

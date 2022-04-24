@@ -106,6 +106,11 @@ let validateFields = function (data, fields, all) {
 let validateField = function (data, field) {
     return new Promise((resolve, reject) => {
 
+        if (data[field.name] != null) {
+            if (field.isNumber) {
+                data[field.name] = Number(data[field.name]);
+            }
+        }
         let rules = field.rules || [];
         let valid = true;
         let process = function (index) {

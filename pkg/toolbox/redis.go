@@ -26,19 +26,30 @@ type RedisBaseRequest struct {
 	Field   string `json:"field"`
 }
 
+type RedisConfig struct {
+	Address string `json:"address"`
+	Auth    string `json:"auth"`
+}
+
 func redisWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-	var service RedisService
-	var address string = config["address"].(string)
-	var auth string
-	if config["auth"] != nil {
-		auth = config["auth"].(string)
+
+	var redisConfig RedisConfig
+	var bs []byte
+	bs, err = json.Marshal(config)
+	if err != nil {
+		return
 	}
-	service, err = getRedisService(address, auth)
+	err = json.Unmarshal(bs, &redisConfig)
 	if err != nil {
 		return
 	}
 
-	var bs []byte
+	var service RedisService
+	service, err = getRedisService(redisConfig)
+	if err != nil {
+		return
+	}
+
 	bs, err = json.Marshal(data)
 	if err != nil {
 		return
@@ -100,12 +111,12 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 	return
 }
 
-func getRedisService(address string, auth string) (res RedisService, err error) {
-	key := "redis-" + address + "-" + auth
+func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
+	key := "redis-" + redisConfig.Address + "-" + redisConfig.Auth
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s RedisService
-		s, err = CreateRedisService(address, auth)
+		s, err = CreateRedisService(redisConfig)
 		if err != nil {
 			return
 		}
@@ -123,19 +134,19 @@ func getRedisService(address string, auth string) (res RedisService, err error) 
 	return
 }
 
-func CreateRedisService(address string, auth string) (service RedisService, err error) {
-	if !strings.Contains(address, ",") && !strings.Contains(address, ";") {
-		service, err = CreateRedisPoolService(address, auth)
+func CreateRedisService(redisConfig RedisConfig) (service RedisService, err error) {
+	if !strings.Contains(redisConfig.Address, ",") && !strings.Contains(redisConfig.Address, ";") {
+		service, err = CreateRedisPoolService(redisConfig.Address, redisConfig.Auth)
 	} else {
 		var servers []string
-		if strings.Contains(address, ",") {
-			servers = strings.Split(address, ",")
-		} else if strings.Contains(address, ";") {
-			servers = strings.Split(address, ";")
+		if strings.Contains(redisConfig.Address, ",") {
+			servers = strings.Split(redisConfig.Address, ",")
+		} else if strings.Contains(redisConfig.Address, ";") {
+			servers = strings.Split(redisConfig.Address, ";")
 		} else {
-			servers = []string{address}
+			servers = []string{redisConfig.Address}
 		}
-		service, err = CreateRedisClusterService(servers, auth)
+		service, err = CreateRedisClusterService(servers, redisConfig.Auth)
 	}
 	return
 }

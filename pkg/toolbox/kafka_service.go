@@ -9,12 +9,12 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func getKafkaService(address string) (res *KafkaService, err error) {
-	key := "kafka-" + address
+func getKafkaService(kafkaConfig KafkaConfig) (res *KafkaService, err error) {
+	key := "kafka-" + kafkaConfig.Address
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *KafkaService
-		s, err = CreateKafkaService(address)
+		s, err = CreateKafkaService(kafkaConfig)
 		if err != nil {
 			return
 		}
@@ -32,9 +32,9 @@ func getKafkaService(address string) (res *KafkaService, err error) {
 	return
 }
 
-func CreateKafkaService(address string) (*KafkaService, error) {
+func CreateKafkaService(kafkaConfig KafkaConfig) (*KafkaService, error) {
 	service := &KafkaService{
-		address: address,
+		address: kafkaConfig.Address,
 	}
 	err := service.init()
 	return service, err

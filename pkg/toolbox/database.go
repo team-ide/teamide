@@ -3,7 +3,6 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 func init() {
@@ -28,14 +27,7 @@ type DatabaseBaseRequest struct {
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 	var service DatabaseService
 
-	databaseConfig := DatabaseConfig{}
-
-	if config["port"] != nil {
-		config["port"], err = strconv.Atoi(fmt.Sprint(config["port"]))
-		if err != nil {
-			return
-		}
-	}
+	var databaseConfig DatabaseConfig
 	var bs []byte
 	bs, err = json.Marshal(config)
 	if err != nil {

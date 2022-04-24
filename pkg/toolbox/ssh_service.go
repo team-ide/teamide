@@ -6,10 +6,10 @@ import (
 )
 
 func WSSSHConnection(token string, ws *websocket.Conn, Logger *zap.Logger) (err error) {
-	var sshConfig *SSHConfig = sshTokenCache[token]
+	var sshConfig = sshTokenCache[token]
 	client := SSHClient{
 		Token:  token,
-		Config: sshConfig,
+		Config: *sshConfig,
 		ws:     ws,
 		Logger: Logger,
 	}
@@ -22,10 +22,10 @@ func WSSSHConnection(token string, ws *websocket.Conn, Logger *zap.Logger) (err 
 }
 
 func WSSFPTConnection(token string, ws *websocket.Conn, Logger *zap.Logger) (err error) {
-	var sshConfig *SSHConfig = sshTokenCache[token]
+	var sshConfig = sshTokenCache[token]
 	client := SSHClient{
 		Token:  token,
-		Config: sshConfig,
+		Config: *sshConfig,
 		ws:     ws,
 		Logger: Logger,
 	}

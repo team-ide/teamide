@@ -1,22 +1,26 @@
 <template>
   <b-form v-if="ready">
     <template v-if="key != null && formData != null && fileData != null">
-      <template v-for="(field, index) in form.fields">
+      <template v-for="field in form.fields">
         <b-form-group
-          :key="`key-${key}-${field.name}-${index}`"
-          :id="`form-${key}-group-${field.name}-${index}`"
+          :key="`key-${key}-${field.name}`"
+          :id="`form-${key}-group-${field.name}`"
           :label="field.label"
+          :label-for="`form-${key}-${field.name}`"
           :description="field.description"
           :disabled="field.disabled"
           :state="field.valid"
+          label-size="sm"
         >
           <template v-if="field.type == 'select'">
             <b-form-select
               v-model="formData[field.name]"
+              :id="`form-${key}-${field.name}`"
               :placeholder="field.placeholder"
               :required="field.required"
               :options="field.options"
               :state="field.valid"
+              size="sm"
             >
             </b-form-select>
           </template>
@@ -35,30 +39,36 @@
             </div>
             <b-form-file
               v-model="fileData[field.name]"
+              :id="`form-${key}-${field.name}`"
               :placeholder="field.placeholder"
               :required="field.required"
               :state="field.valid"
               browse-text="选择文件"
               @input="fileInput(field.name, $event)"
+              size="sm"
             >
             </b-form-file>
           </template>
           <template v-else-if="field.type == 'textarea'">
             <b-form-textarea
               v-model="formData[field.name]"
+              :id="`form-${key}-${field.name}`"
               :placeholder="field.placeholder"
               :required="field.required"
               :state="field.valid"
+              size="sm"
             >
             </b-form-textarea>
           </template>
           <template v-else>
             <b-form-input
               v-model="formData[field.name]"
+              :id="`form-${key}-${field.name}`"
               :type="field.type"
               :placeholder="field.placeholder"
               :required="field.required"
               :state="field.valid"
+              size="sm"
             >
             </b-form-input>
           </template>
@@ -102,7 +112,6 @@ export default {
     },
     async fileInput(name, event) {
       let file = this.fileData[name];
-      console.log(file);
       let form = new FormData();
       form.append("place", "other");
       form.append("file", file);
