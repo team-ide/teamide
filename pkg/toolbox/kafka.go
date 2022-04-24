@@ -52,14 +52,29 @@ type KafkaMessage struct {
 	Headers   []KafkaMessageHeader `json:"headers"`
 }
 
+type KafkaConfig struct {
+	Address string `json:"address"`
+}
+
 func kafkaWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-	var service *KafkaService
-	service, err = getKafkaService(config["address"].(string))
+
+	var kafkaConfig KafkaConfig
+	var bs []byte
+	bs, err = json.Marshal(config)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(bs, &kafkaConfig)
 	if err != nil {
 		return
 	}
 
-	var bs []byte
+	var service *KafkaService
+	service, err = getKafkaService(kafkaConfig)
+	if err != nil {
+		return
+	}
+
 	bs, err = json.Marshal(data)
 	if err != nil {
 		return

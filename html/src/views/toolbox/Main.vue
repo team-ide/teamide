@@ -136,7 +136,21 @@
                       </span>
                     </div>
                     <div class="toolbox-type-data-box">
-                      <template v-if="context[toolboxType.name] != null">
+                      <template
+                        v-if="
+                          context[toolboxType.name] == null ||
+                          context[toolboxType.name].length == 0
+                        "
+                      >
+                        <span
+                          class="tm-link color-green"
+                          title="新增"
+                          @click="toInsert(toolboxType)"
+                        >
+                          新增
+                        </span>
+                      </template>
+                      <template v-else>
                         <template
                           v-for="toolboxData in context[toolboxType.name]"
                         >
@@ -148,7 +162,7 @@
                               class="
                                 toolbox-type-data-text
                                 tm-link
-                                color-green
+                                color-grey
                                 mgr-10
                               "
                               title="打开"
@@ -173,14 +187,14 @@
                             </span>
                             <span
                               title="复制"
-                              class="tm-link color-green mgr-10"
+                              class="tm-link color-grey mgr-10"
                               @click="toCopy(toolboxType, toolboxData)"
                             >
                               <i class="mdi mdi-content-copy ft-12"></i>
                             </span>
                             <span
                               title="删除"
-                              class="tm-link color-orange mgr-10"
+                              class="tm-link color-red mgr-10"
                               @click="toDelete(toolboxType, toolboxData)"
                             >
                               <i class="mdi mdi-delete-outline ft-14"></i>
@@ -509,13 +523,21 @@ export default {
   margin: 0px;
   border: 0px;
   box-shadow: none;
-  background: transparent;
+  background: #2a3036;
+  padding: 0px 0px 10px;
+}
+.el-dropdown-menu.toolbox-dropdown-box-menu.el-popper[x-placement^="bottom"]
+  .popper__arrow {
+  border-bottom-color: #2a3036;
+}
+.el-dropdown-menu.toolbox-dropdown-box-menu.el-popper[x-placement^="bottom"]
+  .popper__arrow::after {
+  border-bottom-color: #2a3036;
 }
 .toolbox-dropdown-box {
   width: 940px;
   /* height: 600px; */
   /* background: #2a4a67; */
-  background: transparent;
 }
 
 .toolbox-type-box {
@@ -528,24 +550,29 @@ export default {
   width: 300px;
 }
 .toolbox-type-title {
-  padding: 0px 5px;
+  padding: 3px 5px;
   background: #2b3f51;
   color: #ffffff;
-  line-height: 26px;
+}
+.toolbox-type-title .tm-link {
+  padding: 0px;
 }
 .toolbox-type-data-box {
   background: #1b2a38;
   padding: 5px 10px;
 }
 .toolbox-type-data {
-  line-height: 20px;
   display: flex;
   overflow: hidden;
+  padding: 2px 0px;
 }
 .toolbox-type-data-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
+}
+.toolbox-type-data .tm-link {
+  padding: 0px;
 }
 </style>

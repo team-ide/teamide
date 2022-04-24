@@ -6,12 +6,12 @@ import (
 	elastic "github.com/olivere/elastic/v7"
 )
 
-func getESService(url string) (res *ESService, err error) {
-	key := "elasticsearch-" + url
+func getESService(esConfig ESConfig) (res *ESService, err error) {
+	key := "elasticsearch-" + esConfig.Url
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *ESService
-		s, err = CreateESService(url)
+		s, err = CreateESService(esConfig)
 		if err != nil {
 			return
 		}
@@ -29,9 +29,9 @@ func getESService(url string) (res *ESService, err error) {
 	return
 }
 
-func CreateESService(url string) (*ESService, error) {
+func CreateESService(esConfig ESConfig) (*ESService, error) {
 	service := &ESService{
-		url: url,
+		url: esConfig.Url,
 	}
 	err := service.init()
 	return service, err

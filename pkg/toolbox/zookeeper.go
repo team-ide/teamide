@@ -20,13 +20,24 @@ type ZookeeperBaseRequest struct {
 }
 
 func zkWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-	var service *ZKService
-	service, err = getZKService(config["address"].(string))
+
+	var zkConfig ZKConfig
+	var bs []byte
+	bs, err = json.Marshal(config)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(bs, &zkConfig)
 	if err != nil {
 		return
 	}
 
-	var bs []byte
+	var service *ZKService
+	service, err = getZKService(zkConfig)
+	if err != nil {
+		return
+	}
+
 	bs, err = json.Marshal(data)
 	if err != nil {
 		return

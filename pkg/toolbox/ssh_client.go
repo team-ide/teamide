@@ -20,7 +20,7 @@ var (
 
 type SSHClient struct {
 	Token          string
-	Config         *SSHConfig
+	Config         SSHConfig
 	sshClient      *ssh.Client
 	ws             *websocket.Conn
 	isClosedClient bool
@@ -114,7 +114,7 @@ func NewSSHClient(config SSHConfig) (client *ssh.Client, err error) {
 		Ciphers: []string{"aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com", "arcfour256", "arcfour128", "aes128-cbc", "3des-cbc", "aes192-cbc", "aes256-cbc"},
 	}
 	clientConfig = &ssh.ClientConfig{
-		User:            config.User,
+		User:            config.Username,
 		Auth:            auth,
 		Timeout:         5 * time.Second,
 		Config:          sshConfig,
@@ -129,13 +129,13 @@ func NewSSHClient(config SSHConfig) (client *ssh.Client, err error) {
 
 func (this_ *SSHClient) createClient() (err error) {
 
-	if this_.Token == "" || this_.Config == nil {
+	if this_.Token == "" || this_.Config.Address == "" {
 		err = errors.New("令牌会话丢失")
 		this_.Logger.Error("令牌验证失败", zap.Error(err))
 		this_.WSWriteError(err.Error())
 		return
 	}
-	if this_.sshClient, err = NewSSHClient(*this_.Config); err != nil {
+	if this_.sshClient, err = NewSSHClient(this_.Config); err != nil {
 		this_.Logger.Error("createClient error", zap.Error(err))
 		this_.WSWriteError("连接失败:" + err.Error())
 		return

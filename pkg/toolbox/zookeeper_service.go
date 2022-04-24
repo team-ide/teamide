@@ -8,12 +8,16 @@ import (
 	"github.com/go-zookeeper/zk"
 )
 
-func getZKService(address string) (res *ZKService, err error) {
-	key := "zookeeper-" + address
+type ZKConfig struct {
+	Address string `json:"address"`
+}
+
+func getZKService(zkConfig ZKConfig) (res *ZKService, err error) {
+	key := "zookeeper-" + zkConfig.Address
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *ZKService
-		s, err = CreateZKService(address)
+		s, err = CreateZKService(zkConfig)
 		if err != nil {
 			return
 		}
@@ -31,9 +35,9 @@ func getZKService(address string) (res *ZKService, err error) {
 	return
 }
 
-func CreateZKService(address string) (*ZKService, error) {
+func CreateZKService(zkConfig ZKConfig) (*ZKService, error) {
 	service := &ZKService{
-		address: address,
+		address: zkConfig.Address,
 	}
 	err := service.init()
 	return service, err

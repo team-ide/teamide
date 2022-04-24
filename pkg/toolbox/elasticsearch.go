@@ -20,14 +20,29 @@ type ElasticsearchBaseRequest struct {
 	ScrollId  string                 `json:"scrollId"`
 }
 
+type ESConfig struct {
+	Url string `json:"url"`
+}
+
 func esWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-	var service *ESService
-	service, err = getESService(config["url"].(string))
+
+	var esConfig ESConfig
+	var bs []byte
+	bs, err = json.Marshal(config)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(bs, &esConfig)
 	if err != nil {
 		return
 	}
 
-	var bs []byte
+	var service *ESService
+	service, err = getESService(esConfig)
+	if err != nil {
+		return
+	}
+
 	bs, err = json.Marshal(data)
 	if err != nil {
 		return

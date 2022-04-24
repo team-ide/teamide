@@ -18,7 +18,7 @@ func init() {
 type SSHConfig struct {
 	Type      string `json:"type"`
 	Address   string `json:"address"`
-	User      string `json:"user"`
+	Username  string `json:"username"`
 	Password  string `json:"password"`
 	PublicKey string `json:"publicKey"`
 }

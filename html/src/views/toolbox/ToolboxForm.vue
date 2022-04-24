@@ -60,8 +60,10 @@ export default {
 
       this.formBuild = this.form.build(this.form.toolbox);
       let formData = this.formBuild.newDefaultData();
-      for (let key in formData) {
-        formData[key] = data[key];
+      if (Object.keys(data).length > 0) {
+        for (let key in formData) {
+          formData[key] = data[key];
+        }
       }
       this.formData = formData;
 
