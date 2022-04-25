@@ -8,15 +8,15 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@mdi/font": "^5.9.55",
+    "@mdi/font": "^6.6.96",
     "axios": "^0.21.1",
     "bootstrap": "^4.5.3",
     "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
+    "element-ui": "^2.15.6",
     "jquery": "^3.6.0",
     "js-md5": "^0.7.3",
     "teamide-ui": "^1.2.7",
-    "element-ui": "^2.15.6",
     "vue": "^2.6.11",
     "vue-router": "^3.5.1",
     "xterm": "^4.13.0",

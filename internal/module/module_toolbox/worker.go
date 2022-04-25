@@ -3,7 +3,6 @@ package module_toolbox
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"teamide/pkg/toolbox"
 )
 
@@ -39,8 +38,6 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 	}
 
 	publicKey, publicKeyOk := option["publicKey"]
-	fmt.Println("publicKeyOk:", publicKeyOk)
-	fmt.Println("publicKey:", publicKey)
 	if publicKeyOk && publicKey != nil && publicKey != "" {
 		option["publicKey"] = this_.GetFilesFile(publicKey.(string))
 	}

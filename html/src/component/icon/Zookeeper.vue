@@ -1,12 +1,6 @@
 <template>
   <svg
-    style="
-      width: 15px;
-      height: 15px;
-      vertical-align: -3px;
-      fill: currentColor;
-      overflow: hidden;
-    "
+    style="width: 15px; height: 15px; fill: currentColor; overflow: hidden"
     viewBox="0 0 1024 1024"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"

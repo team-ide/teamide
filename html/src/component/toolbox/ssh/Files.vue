@@ -377,15 +377,31 @@ export default {
             );
           });
         } else {
+          let names = [];
           files.forEach((one) => {
-            this.$emit(
-              "rename",
-              this.place,
-              dir,
-              one.path,
-              putDir + "/" + one.name
-            );
+            names.push(one.name);
           });
+          this.tool
+            .confirm(
+              "移动[" +
+                names.join(",") +
+                "]到[" +
+                putDir +
+                "/" +
+                "]后无法恢复，确定移动？"
+            )
+            .then(async () => {
+              files.forEach((one) => {
+                this.$emit(
+                  "rename",
+                  this.place,
+                  dir,
+                  one.path,
+                  putDir + "/" + one.name
+                );
+              });
+            })
+            .catch((e) => {});
         }
       } else if (
         e.dataTransfer &&
@@ -652,10 +668,10 @@ export default {
   font-size: 15px;
 }
 .file-rename-input {
-  color: #ffffff;
+  color: #3c3c3c !important;
   width: 100%;
   border: 1px solid #ddd;
-  background-color: transparent;
+  background-color: #ddd !important;
   line-height: 16px;
   box-sizing: border-box;
   outline: none;

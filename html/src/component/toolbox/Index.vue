@@ -78,6 +78,7 @@ export default {
     "active",
     "openId",
     "updateOpenExtend",
+    "updateOpenComment",
   ],
   data() {
     return {
@@ -116,6 +117,7 @@ export default {
       this.wrap.openTabByExtend = this.openTabByExtend;
       this.wrap.onActiveTab = this.onActiveTab;
       this.wrap.onRemoveTab = this.onRemoveTab;
+      this.wrap.updateComment = this.updateComment;
       this.wrap.updateOpenExtend = this.updateOpenExtend;
       this.wrap.updateOpenTabExtend = this.updateOpenTabExtend;
       this.wrap.updateExtend = this.updateExtend;
@@ -152,6 +154,9 @@ export default {
     },
     updateExtend(keys, value) {
       this.updateOpenExtend(this.openId, keys, value);
+    },
+    updateComment(comment) {
+      this.updateOpenComment(this.openId, comment);
     },
     async openTabByExtend(extend, fromTab) {
       let data = {
