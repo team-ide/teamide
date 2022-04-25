@@ -10,45 +10,48 @@
       :copyTab="toCopyTab"
     >
       <template v-slot:tab="{ tab }">
-        <span>
+        <span class="toolbox-tab-title">
           <template v-if="tab.toolboxType.name == 'database'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconDatabase></IconDatabase>
             </i>
           </template>
           <template v-else-if="tab.toolboxType.name == 'redis'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconRedis></IconRedis>
             </i>
           </template>
           <template v-else-if="tab.toolboxType.name == 'elasticsearch'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconElasticsearch></IconElasticsearch>
             </i>
           </template>
           <template v-else-if="tab.toolboxType.name == 'kafka'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconKafka></IconKafka>
             </i>
           </template>
           <template v-else-if="tab.toolboxType.name == 'zookeeper'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconZookeeper></IconZookeeper>
             </i>
           </template>
           <template
             v-else-if="tab.toolboxType.name == 'ssh' && tab.extend.isFTP"
           >
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconFtp></IconFtp>
             </i>
           </template>
           <template v-else-if="tab.toolboxType.name == 'ssh'">
-            <i class="mgr-3">
+            <i class="mgr-5">
               <IconSsh></IconSsh>
             </i>
           </template>
           {{ tab.name }}
+          <template v-if="tool.isNotEmpty(tab.comment)">
+            >{{ tab.comment }}
+          </template>
         </span>
       </template>
       <template v-slot:body="{ tab }">
@@ -61,6 +64,7 @@
           :extend="tab.extend"
           :active="tab.active"
           :updateOpenExtend="updateOpenExtend"
+          :updateOpenComment="updateOpenComment"
         >
         </ToolboxEditor>
       </template>
@@ -92,35 +96,35 @@
                   >
                     <div class="toolbox-type-title">
                       <template v-if="toolboxType.name == 'database'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconDatabase></IconDatabase>
                         </i>
                       </template>
                       <template v-else-if="toolboxType.name == 'redis'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconRedis></IconRedis>
                         </i>
                       </template>
                       <template v-else-if="toolboxType.name == 'elasticsearch'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconElasticsearch></IconElasticsearch>
                         </i>
                       </template>
                       <template v-else-if="toolboxType.name == 'kafka'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconKafka></IconKafka>
                         </i>
                       </template>
                       <template v-else-if="toolboxType.name == 'zookeeper'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconZookeeper></IconZookeeper>
                         </i>
                       </template>
                       <template v-else-if="toolboxType.name == 'ssh'">
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconSsh></IconSsh>
                         </i>
-                        <i class="mgr-3">
+                        <i class="mgr-5">
                           <IconFtp></IconFtp>
                         </i>
                       </template>
@@ -286,6 +290,13 @@ export default {
         tab.key = key;
       }
       return tab;
+    },
+    updateOpenComment(openId, comment) {
+      let tab = this.getTab("" + openId);
+      if (tab == null) {
+        return;
+      }
+      tab.comment = comment;
     },
     async updateOpenExtend(openId, keys, value) {
       let tab = this.getTab("" + openId);
@@ -518,6 +529,12 @@ export default {
   height: 100%;
   position: relative;
 }
+.toolbox-tab-title {
+  font-size: 13px;
+}
+.toolbox-tab-title svg {
+  vertical-align: -2px;
+}
 .el-dropdown-menu.toolbox-dropdown-box-menu {
   padding: 0px;
   margin: 0px;
@@ -550,9 +567,13 @@ export default {
   width: 300px;
 }
 .toolbox-type-title {
-  padding: 3px 5px;
+  padding: 0px 10px;
   background: #2b3f51;
   color: #ffffff;
+  line-height: 23px;
+}
+.toolbox-type-title svg {
+  vertical-align: -3px;
 }
 .toolbox-type-title .tm-link {
   padding: 0px;

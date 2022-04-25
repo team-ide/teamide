@@ -425,6 +425,16 @@ export default {
           if (this.extend.remote.dir != response.dir) {
             this.wrap.updateExtend(["remote", "dir"], response.dir);
           }
+          if (response.dir.split("/").length > 3) {
+            let ss = response.dir.split("/");
+            let d = "..";
+            for (var i = ss.length - 2; i < ss.length; i++) {
+              d += "/" + ss[i];
+            }
+            this.wrap.updateComment(d);
+          } else {
+            this.wrap.updateComment(response.dir);
+          }
           this.remoteFiles = response.files || [];
           this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
         }

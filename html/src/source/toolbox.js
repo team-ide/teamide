@@ -45,6 +45,7 @@ let toolbox = {
             extend,
             openId: openData.openId,
             openData: openData,
+            comment: "",
         };
         tab.active = false;
         return tab;
@@ -106,6 +107,7 @@ let toolbox = {
             extend,
             tabId: tabData.tabId,
             openId: tabData.openId,
+            comment: "",
         };
         tab.active = false;
         return tab;

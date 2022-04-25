@@ -403,7 +403,7 @@ export default {
   width: 100%;
   height: 25px;
   line-height: 25px;
-  font-size: 14px;
+  font-size: 12px;
   position: relative;
   user-select: none;
   display: flex;
@@ -411,7 +411,7 @@ export default {
 }
 .tab-editor-body {
   width: 100%;
-  height: calc(100% - 26px - 20px);
+  height: calc(100% - 25px - 20px);
   border-bottom: 1px solid #4e4e4e;
   position: relative;
 }
