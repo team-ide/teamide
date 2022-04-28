@@ -116,6 +116,41 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 	return
 }
 
+type SqlConditionalOperation struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	SqlConditionalOperations []*SqlConditionalOperation
+)
+
+func init() {
+	SqlConditionalOperations = []*SqlConditionalOperation{
+		{Text: "等于", Value: "="},
+		{Text: "不等于", Value: "<>"},
+		{Text: "大于", Value: ">"},
+		{Text: "大于或等于", Value: ">="},
+		{Text: "小于", Value: "<"},
+		{Text: "小于或等于", Value: "<="},
+		{Text: "包含", Value: "like"},
+		{Text: "不包含", Value: "not like"},
+		{Text: "开始以", Value: "like start"},
+		{Text: "开始不是以", Value: "not like start"},
+		{Text: "结束以", Value: "like end"},
+		{Text: "结束不是以", Value: "not like end"},
+		{Text: "是null", Value: "is null"},
+		{Text: "不是null", Value: "is not null"},
+		{Text: "是空", Value: "is empty"},
+		{Text: "不是空", Value: "is not empty"},
+		{Text: "介于", Value: "between"},
+		{Text: "不介于", Value: "not between"},
+		{Text: "在列表", Value: "in"},
+		{Text: "不在列表", Value: "not in"},
+		{Text: "自定义", Value: "custom"},
+	}
+}
+
 func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port, "-", config.Username, "-", config.Password)
 	var service Service
