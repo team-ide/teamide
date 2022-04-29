@@ -15,17 +15,18 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url           string                `json:"url,omitempty"`
-	Api           string                `json:"api,omitempty"`
-	FilesUrl      string                `json:"filesUrl,omitempty"`
-	IsStandAlone  bool                  `json:"isStandAlone,omitempty"`
-	ColumnTypes   []*model.ColumnType   `json:"columnTypes,omitempty"`
-	DataTypes     []*model.DataType     `json:"dataTypes,omitempty"`
-	IndexTypes    []*model.IndexType    `json:"indexTypes,omitempty"`
-	ModelTypes    []*model.ModelType    `json:"modelTypes,omitempty"`
-	DataPlaces    []*model.DataPlace    `json:"dataPlaces,omitempty"`
-	DatabaseTypes []*model.DatabaseType `json:"databaseTypes,omitempty"`
-	ToolboxTypes  []*toolbox.Worker     `json:"toolboxTypes,omitempty"`
+	Url                      string                             `json:"url,omitempty"`
+	Api                      string                             `json:"api,omitempty"`
+	FilesUrl                 string                             `json:"filesUrl,omitempty"`
+	IsStandAlone             bool                               `json:"isStandAlone,omitempty"`
+	ColumnTypes              []*model.ColumnType                `json:"columnTypes,omitempty"`
+	DataTypes                []*model.DataType                  `json:"dataTypes,omitempty"`
+	IndexTypes               []*model.IndexType                 `json:"indexTypes,omitempty"`
+	ModelTypes               []*model.ModelType                 `json:"modelTypes,omitempty"`
+	DataPlaces               []*model.DataPlace                 `json:"dataPlaces,omitempty"`
+	DatabaseTypes            []*model.DatabaseType              `json:"databaseTypes,omitempty"`
+	ToolboxTypes             []*toolbox.Worker                  `json:"toolboxTypes,omitempty"`
+	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
 }
 
 func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -59,6 +60,7 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.DataPlaces = model.DATA_PLACES
 	response.DatabaseTypes = model.DATABASE_TYPES
 	response.ToolboxTypes = toolbox.GetWorkers()
+	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
 
 	res = response
 	return

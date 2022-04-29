@@ -98,7 +98,7 @@ var (
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"", "/", "data"}, Power: PowerData, Do: this_.apiData})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"data"}, Power: PowerData, Do: this_.apiData})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"login"}, Power: PowerLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"autoLogin"}, Power: PowerAutoLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: PowerLogout, Do: this_.apiLogout})

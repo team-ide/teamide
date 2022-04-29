@@ -78,12 +78,40 @@ func zkWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 		if isEx {
-			var children []string
-			children, err = service.GetChildren(request.Path)
+
+			var children []map[string]interface{}
+
+			var names []string
+			names, err = service.GetChildren(request.Path)
 			if err != nil {
 				return
 			}
+			for _, name := range names {
+				var one = map[string]interface{}{}
+				one["name"] = name
+
+				//var nameSubs []string
+				//nameSubs, _ = service.GetChildren(request.Path + "/" + name)
+				//one["hasChildren"] = len(nameSubs) > 0
+
+				children = append(children, one)
+			}
 			res["children"] = children
+		}
+	case "hasChildren":
+		var isEx bool
+		isEx, err = service.Exists(request.Path)
+		if err != nil {
+			return
+		}
+		if isEx {
+
+			var names []string
+			names, err = service.GetChildren(request.Path)
+			if err != nil {
+				return
+			}
+			res["hasChildren"] = len(names) > 0
 		}
 	case "delete":
 		var isEx bool

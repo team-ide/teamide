@@ -7,7 +7,7 @@ let server = {
         param = param || {};
         param.origin = location.origin;
         param.pathname = location.pathname;
-        return http.post('api/', param,);
+        return http.post('api/data', param,);
     },
     session(param) {
         return http.post('api/session', param);

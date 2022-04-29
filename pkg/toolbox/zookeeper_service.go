@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"errors"
+	"sort"
 	"strings"
 	"time"
 
@@ -173,6 +174,7 @@ func (this_ *ZKService) Get(path string) (data []byte, err error) {
 //判断节点是否存在
 func (this_ *ZKService) GetChildren(path string) (children []string, err error) {
 	children, _, err = this_.GetConn().Children(path)
+	sort.Strings(children)
 	return
 }
 
