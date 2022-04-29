@@ -143,6 +143,27 @@ export default {
       this.tool.stopEvent();
       this.reloadChildren(data);
     },
+    nodeClick(data, node) {
+      this.rowClickTimeCache = this.rowClickTimeCache || {};
+      let nowTime = new Date().getTime();
+      let clickTime = this.rowClickTimeCache[node];
+      this.rowClickTimeCache[node] = nowTime;
+      if (clickTime) {
+        let timeout = nowTime - clickTime;
+        if (timeout < 300) {
+          delete this.rowClickTimeCache[node];
+          this.nodeDbClick(node);
+        }
+      }
+    },
+    nodeDbClick(node) {
+      if (node.expanded) {
+        node.expanded = false;
+      } else {
+        node.loaded = false;
+        node.expand();
+      }
+    },
     reloadChildren(key) {
       this.tool.stopEvent();
       let node = this.$refs.tree.getNode(key);
@@ -170,8 +191,10 @@ export default {
       } else {
         let list = res.data.children || [];
         let datas = [];
-        list.forEach((name) => {
-          datas.push({ name: name });
+        list.forEach((one) => {
+          let name = one.name;
+          let oneData = { name: name };
+          datas.push(oneData);
         });
         this.formatDatas(parent, datas);
         resolve(datas);
@@ -191,8 +214,20 @@ export default {
         data.path = parent.path + "/" + data.name;
       }
       data.key = data.path;
+      data.leaf = false;
+
+      this.loadHasChildren(data.path).then((res) => {
+        if (res.code == 0) {
+          if (!res.data.hasChildren) {
+            data.leaf = true;
+            let node = this.$refs.tree.getNode(data);
+            if (node != null) {
+              node.isLeaf = true;
+            }
+          }
+        }
+      });
     },
-    nodeClick() {},
     currentChange(data) {
       this.toUpdate(data);
     },
@@ -227,6 +262,13 @@ export default {
           this.doDelete(data.path);
         })
         .catch((e) => {});
+    },
+    async loadHasChildren(path) {
+      let param = {
+        path: path,
+      };
+      let res = await this.wrap.work("hasChildren", param);
+      return res;
     },
     async loadChildren(path) {
       let param = {
