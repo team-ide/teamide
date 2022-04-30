@@ -14,12 +14,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.17"
-
       # 打包构建 html
       - name: use Node.js 10
         uses: actions/setup-node@v1
@@ -27,9 +21,6 @@ jobs:
           node-version: 10
       # npm install
       - run: cd html && npm install && npm run build
-
-      # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
       # 创建release相关目录
       - run: mkdir release
@@ -56,8 +47,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: internal/static/html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
 
   buildMAC:
     needs: buildStatic
@@ -82,8 +73,11 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: internal/static/html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
+
+      # 将静态资源打包html.go
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
       - run: go build -o ./release/teamide-darwin-x64/teamide
 
@@ -116,8 +110,11 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: internal/static/html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
+
+      # 将静态资源打包html.go
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
       - run: go build -o ./release/teamide-linux-x64/teamide
 
@@ -152,8 +149,11 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: internal/static/html.go
-          path: internal/static/html.go
+          name: html
+          path: html/dist
+
+      # 将静态资源打包html.go
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
       - run: go build -ldflags "-H=windowsgui" -o ./release/teamide-windows-x64/teamide.exe
 
