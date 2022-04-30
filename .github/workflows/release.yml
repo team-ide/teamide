@@ -34,9 +34,10 @@ jobs:
       # 创建release相关目录
       - run: mkdir release
       - run: mkdir release/base
-      - run: cp -rf README.md release/base
-      - run: cp -rf RELEASE.md release/base
-      - run: cp -rf RELEASE_HISTORY.md release/base
+      - run: cp -rf package.json release/
+      - run: cp -rf RELEASE.md release/
+      - run: cp -rf README.md release/base/
+      - run: cp -rf RELEASE_HISTORY.md release/base/RELEASE.md
 
       - run: cp -rf release/base release/teamide-linux-x64
       - run: cp -rf release/base release/teamide-server-linux-x64
@@ -44,7 +45,7 @@ jobs:
       - run: cp -rf release/base release/teamide-windows-x64
 
       - run: mkdir release/teamide-server-linux-x64/conf
-      - run: cp -rf conf/release/* release/teamide-server-linux-x64/conf
+      - run: cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
