@@ -56,7 +56,7 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: html.go
+          name: internal/static/html.go
           path: internal/static/html.go
 
   buildMAC:
@@ -82,7 +82,7 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html.go
+          name: internal/static/html.go
           path: internal/static/html.go
 
       - run: go build -o ./release/teamide-darwin-x64/teamide
@@ -116,7 +116,7 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html.go
+          name: internal/static/html.go
           path: internal/static/html.go
 
       - run: go build -o ./release/teamide-linux-x64/teamide
@@ -152,7 +152,7 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html.go
+          name: internal/static/html.go
           path: internal/static/html.go
 
       - run: go build -ldflags "-H=windowsgui" -o ./release/teamide-windows-x64/teamide.exe
@@ -221,7 +221,7 @@ jobs:
           prerelease: false # 是否是预发布
 
       # 上传构建结果到 Release（把打包的zip上传到Release）
-      - name: Upload teamide linux Release Asset
+      - name: Upload TeamIDE Linux Release Asset
         id: upload-teamide-linux-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
@@ -233,7 +233,7 @@ jobs:
           asset_name: teamide-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload teamide server linux Server Release Asset
+      - name: Upload TeamIDE Server Linux Release Asset
         id: upload-teamide-server-linux-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
@@ -245,7 +245,7 @@ jobs:
           asset_name: teamide-server-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload teamide darwin Release Asset
+      - name: Upload TeamIDE MAC Release Asset
         id: upload-teamide-darwin-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
@@ -257,7 +257,7 @@ jobs:
           asset_name: teamide-darwin-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload teamide windows Release Asset
+      - name: Upload TeamIDE Windows Release Asset
         id: upload-teamide-windows-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
