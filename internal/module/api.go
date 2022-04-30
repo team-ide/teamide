@@ -47,7 +47,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	}
 	ps := base.GetPowers()
 	for _, one := range ps {
-		if ServerContext.IsStandAlone {
+		if !ServerContext.IsServer {
 			if !one.StandAlone {
 				continue
 			}
@@ -63,7 +63,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		return
 	}
 	// 如果是单机 初始化一些用户
-	if ServerContext.IsStandAlone {
+	if !ServerContext.IsServer {
 		err = api.InitStandAlone()
 		if err != nil {
 			return
@@ -126,7 +126,7 @@ func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 			return
 		}
 
-		if this_.IsStandAlone {
+		if !this_.IsServer {
 			if !api.Power.StandAlone {
 				continue
 			}

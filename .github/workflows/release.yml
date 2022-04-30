@@ -28,27 +28,16 @@ jobs:
       # npm install
       - run: cd html && npm install && npm run build
 
+      # 将静态资源打包html.go
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+
       # 创建release相关目录
       - run: mkdir release
-      - run: cp -rf RELEASE.md release/
-      - run: cp -rf package.json release/
-      - run: mkdir release/base
-      - run: mkdir release/base/data
-      - run: mkdir release/base/log
-      - run: cp -rf conf release/base/
-      - run: cp -rf README.md release/base/
-      - run: cp -rf RELEASE.md release/base/
 
       - run: mkdir release/teamide-linux-x64
-      - run: mkdir release/teamide-standalone-darwin-x64
-      - run: mkdir release/teamide-standalone-windows-x64
-
-      - run: cp -rf release/base/* release/teamide-linux-x64/
-      - run: cp -rf release/base/* release/teamide-standalone-darwin-x64/
-      - run: cp -rf release/base/* release/teamide-standalone-windows-x64/
-
-      - run: rm -rf release/teamide-standalone-darwin-x64/conf
-      - run: rm -rf release/teamide-standalone-windows-x64/conf
+      - run: mkdir release/teamide-server-linux-x64
+      - run: mkdir release/teamide-darwin-x64
+      - run: mkdir release/teamide-windows-x64
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -59,8 +48,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: html.go
+          path: internal/static/html.go
 
   buildMAC:
     needs: buildStatic
@@ -85,12 +74,10 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: html.go
+          path: internal/static/html.go
 
-
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: go build -ldflags "-X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-darwin-x64/teamide
+      - run: go build -o ./release/teamide-darwin-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -121,12 +108,14 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: html.go
+          path: internal/static/html.go
 
-
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
       - run: go build -o ./release/teamide-linux-x64/teamide
+
+      - run: go build -ldflags "-X main.buildFlags=--isServer" -o ./release/teamide-server-linux-x64/teamide
+      - run: mkdir release/teamide-server-linux-x64/conf
+      - run: cp -rf conf/release/* release/teamide-server-linux-x64/conf
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -157,11 +146,10 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: html.go
+          path: internal/static/html.go
 
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: go build -ldflags "-H=windowsgui -X main.buildFlags=--isStandAlone" -o ./release/teamide-standalone-windows-x64/teamide.exe
+      - run: go build -ldflags "-H=windowsgui" -o ./release/teamide-windows-x64/teamide.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -197,9 +185,11 @@ jobs:
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        run: cd release && zip -q -r teamide-standalone-darwin-x64.zip teamide-standalone-darwin-x64
+        run: cd release && zip -q -r teamide-server-linux-x64.zip teamide-server-linux-x64
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        run: cd release && zip -q -r teamide-standalone-windows-x64.zip teamide-standalone-windows-x64
+        run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
 
       # 读取发布说明
@@ -237,7 +227,31 @@ jobs:
           asset_name: teamide-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload Go darwin standalone Release Asset
+      - name: Upload Go linux Server Release Asset
+        id: upload-go-linux-release-asset
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/teamide-server-linux-x64.zip # 要上传文件
+          asset_name: teamide-server-linux-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+
+      - name: Upload Go darwin Release Asset
+        id: upload-go-darwin-release-asset
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: ./release/teamide-darwin-x64.zip # 要上传文件
+          asset_name: teamide-darwin-x64.zip # 上传后的文件名
+          asset_content_type: application/zip
+
+      - name: Upload Go windows Release Asset
         id: upload-go-windows-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
@@ -245,18 +259,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/teamide-standalone-darwin-x64.zip # 要上传文件
-          asset_name: teamide-standalone-darwin-x64.zip # 上传后的文件名
-          asset_content_type: application/zip
-
-      - name: Upload Go windows standalone Release Asset
-        id: upload-go-windows-standalone-release-asset
-        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: ./release/teamide-standalone-windows-x64.zip # 要上传文件
-          asset_name: teamide-standalone-windows-x64.zip # 上传后的文件名
+          asset_path: ./release/teamide-windows-x64.zip # 要上传文件
+          asset_name: teamide-windows-x64.zip # 上传后的文件名
           asset_content_type: application/zip

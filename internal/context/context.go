@@ -7,18 +7,17 @@ import (
 )
 
 type ServerContext struct {
-	ServerContext string
-	ServerHost    string
-	ServerPort    int
-	ServerUrl     string
-	//ServerConf     ServerConf
+	ServerContext  string
+	ServerHost     string
+	ServerPort     int
+	ServerUrl      string
 	ServerConfig   *config.ServerConfig
 	DatabaseWorker db.DatabaseWorker
 	DatabaseConfig *db.DatabaseConfig `json:"-" yaml:"-"`
 	Logger         *zap.Logger        `json:"-" yaml:"-"`
 	Decryption     *Decryption        `json:"-" yaml:"-"`
 	HttpAesKey     string             `json:"-" yaml:"-"`
-	IsStandAlone   bool
+	IsServer       bool
 	IsHtmlDev      bool
 	IsServerDev    bool
 	RootDir        string
