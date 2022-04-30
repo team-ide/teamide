@@ -18,7 +18,7 @@ type DataResponse struct {
 	Url                      string                             `json:"url,omitempty"`
 	Api                      string                             `json:"api,omitempty"`
 	FilesUrl                 string                             `json:"filesUrl,omitempty"`
-	IsStandAlone             bool                               `json:"isStandAlone,omitempty"`
+	IsServer                 bool                               `json:"isServer,omitempty"`
 	ColumnTypes              []*model.ColumnType                `json:"columnTypes,omitempty"`
 	DataTypes                []*model.DataType                  `json:"dataTypes,omitempty"`
 	IndexTypes               []*model.IndexType                 `json:"indexTypes,omitempty"`
@@ -52,7 +52,7 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.Url = request.Origin + pathname
 	response.Api = response.Url + "api/"
 	response.FilesUrl = response.Api + "files/"
-	response.IsStandAlone = this_.IsStandAlone
+	response.IsServer = this_.IsServer
 	response.ColumnTypes = model.COLUMN_TYPES
 	response.DataTypes = model.DATA_TYPES
 	response.ModelTypes = model.MODEL_TYPES

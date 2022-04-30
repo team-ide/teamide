@@ -4,9 +4,17 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V0.2.6-brightgreen)](https://github.com/team-ide/teamide/releases)
-[![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-standalone-windows-x64.zip)
-[![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-standalone-darwin-x64.zip)
+[![Release Latest](https://img.shields.io/badge/Release-V0.2.7-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
+[![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
+[![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
+
+## 注意
+
+> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
+
+> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/TeamIDE`下，本地`需要安装谷歌浏览器`
+
 
 ## Team · IDE 功能模块
 
@@ -126,13 +134,13 @@ go mod tidy
 
 # 运行
 # --isDev dev模式，自动打开到 前端调试页面，日志输出控制台
-# --isStandAlone 单机版运行
+# --isServer 作为服务运行，读取配置文件
 
 # 单机版调试运行，需要谷歌浏览器
-go run . --isDev --isStandAlone
+go run . --isDev
 
 # 服务端调试运行，需要配置conf
-go run . --isDev
+go run . --isDev --isServer
 ```
 
 ### 打包
@@ -171,7 +179,7 @@ go mod tidy
 
 # 打包单机运行，需要本地安装谷歌浏览器，用于单个人员使用
 # 不需要conf目录
-go build -ldflags "-X main.buildFlags=--isStandAlone" .
+go build .
 ```
 
 **作为服务部署打包**
@@ -182,7 +190,7 @@ go mod tidy
 
 # 作为服务端部署，通过浏览器打开，可供团队使用
 # 需要conf目录
-go build .
+go build -ldflags "-X main.buildFlags=--isServer" .
 ```
 
 ## Toolbox 模块

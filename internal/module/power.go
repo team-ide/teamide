@@ -53,7 +53,7 @@ func (this_ *Api) getPowersByJWT(JWT *base.JWTBean) (powers []*base.PowerAction)
 func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
 
 	ps := base.GetPowers()
-	if this_.IsStandAlone {
+	if !this_.IsServer {
 		for _, power := range ps {
 			if power.StandAlone {
 				powers = append(powers, power.Action)

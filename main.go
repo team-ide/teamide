@@ -18,13 +18,13 @@ var (
 	serverTitle      = "Team · IDE"
 	serverUrl        = ""
 
-	// buildFlags go build -ldflags '-X main.buildFlags=--isStandAlone' .
-	buildFlags   = ""
-	isStandAlone = false
-	isHtmlDev    = false
-	isServerDev  = false
-	rootDir      string
-	userHomeDir  string
+	// buildFlags go build -ldflags '-X main.buildFlags=--isServer' .
+	buildFlags  = ""
+	isServer    = false
+	isHtmlDev   = false
+	isServerDev = false
+	rootDir     string
+	userHomeDir string
 )
 
 func getUserHome() string {
@@ -36,8 +36,8 @@ func getUserHome() string {
 }
 func init() {
 	var err error
-	if strings.Contains(buildFlags, "--isStandAlone") {
-		isStandAlone = true
+	if strings.Contains(buildFlags, "--isServer") {
+		isServer = true
 	}
 	if strings.Contains(buildFlags, "--isDev") || strings.Contains(buildFlags, "--isHtmlDev") {
 		isHtmlDev = true
@@ -87,8 +87,8 @@ func main() {
 	}()
 
 	for _, v := range os.Args {
-		if v == "--isStandAlone" {
-			isStandAlone = true
+		if v == "--isServer" {
+			isServer = true
 		}
 		if v == "--isDev" || v == "--isHtmlDev" {
 			isHtmlDev = true
@@ -101,11 +101,11 @@ func main() {
 	waitGroupForStop.Add(1)
 
 	serverConf := &context.ServerConf{
-		IsStandAlone: isStandAlone,
-		IsHtmlDev:    isHtmlDev,
-		IsServerDev:  isServerDev,
-		RootDir:      rootDir,
-		UserHomeDir:  userHomeDir,
+		IsServer:    isServer,
+		IsHtmlDev:   isHtmlDev,
+		IsServerDev: isServerDev,
+		RootDir:     rootDir,
+		UserHomeDir: userHomeDir,
 	}
 	err = formatServerConf(serverConf)
 	if err != nil {
@@ -124,7 +124,7 @@ func main() {
 		serverUrl = "http://127.0.0.1:21081/"
 	}
 
-	if serverContext.IsStandAlone {
+	if !serverContext.IsServer {
 		err = window.Start(serverUrl, func() {
 			waitGroupForStop.Done()
 		})
@@ -137,7 +137,7 @@ func main() {
 }
 
 func formatServerConf(serverConf *context.ServerConf) (err error) {
-	if !serverConf.IsStandAlone {
+	if serverConf.IsServer {
 
 		serverConf.Server = serverConf.RootDir + "conf/sqlite.yaml"
 		serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"

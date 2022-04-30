@@ -13,23 +13,23 @@ import (
 )
 
 type ServerConf struct {
-	Server       string
-	PublicKey    string
-	PrivateKey   string
-	IsStandAlone bool
-	IsHtmlDev    bool
-	IsServerDev  bool
-	RootDir      string
-	UserHomeDir  string
+	Server      string
+	PublicKey   string
+	PrivateKey  string
+	IsServer    bool
+	IsHtmlDev   bool
+	IsServerDev bool
+	RootDir     string
+	UserHomeDir string
 }
 
 func NewServerContext(serverConf ServerConf) (context *ServerContext, err error) {
 	context = &ServerContext{
-		IsStandAlone: serverConf.IsStandAlone,
-		IsHtmlDev:    serverConf.IsHtmlDev,
-		IsServerDev:  serverConf.IsServerDev,
-		RootDir:      serverConf.RootDir,
-		UserHomeDir:  serverConf.UserHomeDir,
+		IsServer:    serverConf.IsServer,
+		IsHtmlDev:   serverConf.IsHtmlDev,
+		IsServerDev: serverConf.IsServerDev,
+		RootDir:     serverConf.RootDir,
+		UserHomeDir: serverConf.UserHomeDir,
 	}
 	context.HttpAesKey = "Q56hFAauWk18Gy2i"
 	var serverConfig *config.ServerConfig
@@ -59,7 +59,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 
 //Init 格式化配置，填充默认值
 func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) {
-	if !this_.IsStandAlone {
+	if this_.IsServer {
 		if serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
 			return
@@ -87,11 +87,35 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		}
 	}
 
-	if serverConfig.Server.Data == "" {
-		serverConfig.Server.Data = this_.RootDir + "data"
+	if this_.IsServer {
+		if serverConfig.Server.Data == "" {
+			serverConfig.Server.Data = this_.RootDir + "data"
+		} else {
+			serverConfig.Server.Data = this_.RootDir + strings.TrimPrefix(serverConfig.Server.Data, "./")
+		}
+		if serverConfig.Log.Filename == "" {
+			serverConfig.Log.Filename = this_.RootDir + "log/server.log"
+		} else {
+			serverConfig.Log.Filename = this_.RootDir + strings.TrimPrefix(serverConfig.Log.Filename, "./")
+		}
 	} else {
-		serverConfig.Server.Data = this_.RootDir + strings.TrimPrefix(serverConfig.Server.Data, "./")
+		if this_.UserHomeDir == "" {
+			err = errors.New("用户目录读取失败")
+		}
+		TeamIDEDir := this_.UserHomeDir + "/TeamIDE/"
+
+		if serverConfig.Server.Data == "" {
+			serverConfig.Server.Data = TeamIDEDir + "data"
+		} else {
+			serverConfig.Server.Data = TeamIDEDir + strings.TrimPrefix(serverConfig.Server.Data, "./")
+		}
+		if serverConfig.Log.Filename == "" {
+			serverConfig.Log.Filename = TeamIDEDir + "log/server.log"
+		} else {
+			serverConfig.Log.Filename = TeamIDEDir + strings.TrimPrefix(serverConfig.Log.Filename, "./")
+		}
 	}
+	serverConfig.Server.Data = util.FormatPath(serverConfig.Server.Data)
 
 	if !strings.HasSuffix(serverConfig.Server.Data, "/") {
 		serverConfig.Server.Data += "/"
@@ -105,11 +129,6 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		if err != nil {
 			return
 		}
-	}
-	if serverConfig.Log.Filename == "" {
-		serverConfig.Log.Filename = this_.RootDir + "log/server.log"
-	} else {
-		serverConfig.Log.Filename = this_.RootDir + strings.TrimPrefix(serverConfig.Log.Filename, "./")
 	}
 
 	var databaseConfig *db.DatabaseConfig
