@@ -215,8 +215,8 @@ jobs:
           prerelease: false # 是否是预发布
 
       # 上传构建结果到 Release（把打包的zip上传到Release）
-      - name: Upload Go linux Release Asset
-        id: upload-go-linux-release-asset
+      - name: Upload teamide linux Release Asset
+        id: upload-teamide-linux-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
         env:
@@ -227,8 +227,8 @@ jobs:
           asset_name: teamide-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload Go linux Server Release Asset
-        id: upload-go-linux-release-asset
+      - name: Upload teamide server linux Server Release Asset
+        id: upload-teamide-server-linux-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
         env:
@@ -239,8 +239,8 @@ jobs:
           asset_name: teamide-server-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload Go darwin Release Asset
-        id: upload-go-darwin-release-asset
+      - name: Upload teamide darwin Release Asset
+        id: upload-teamide-darwin-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
         env:
@@ -251,8 +251,8 @@ jobs:
           asset_name: teamide-darwin-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-      - name: Upload Go windows Release Asset
-        id: upload-go-windows-release-asset
+      - name: Upload teamide windows Release Asset
+        id: upload-teamide-windows-release-asset
         if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
         env:
