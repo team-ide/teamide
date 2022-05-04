@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"strings"
+	"teamide/pkg/form"
 )
 
 func init() {
@@ -10,6 +11,16 @@ func init() {
 		Name: "redis",
 		Text: "Redis",
 		Work: redisWork,
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{Label: "连接地址（127.0.0.1:6379）", Name: "address", DefaultValue: "127.0.0.1:6379",
+					Rules: []*form.Rule{
+						{Required: true, Message: "连接地址不能为空"},
+					},
+				},
+				{Label: "密码", Name: "auth", Type: "password"},
+			},
+		},
 	}
 
 	AddWorker(worker_)
