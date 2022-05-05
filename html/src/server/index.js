@@ -1,8 +1,8 @@
 import http from '@/server/http';
 
-import application from "./application.js";
 import toolbox from "./toolbox.js";
 let server = {
+    toolbox,
     data(param) {
         param = param || {};
         param.origin = location.origin;
@@ -27,8 +27,6 @@ let server = {
     download(param) {
         return http.post('api/download', param, { responseType: "blob" });
     },
-    application,
-    toolbox,
 };
 
 export default server;

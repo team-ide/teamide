@@ -12,45 +12,31 @@
       <template v-slot:tab="{ tab }">
         <span class="toolbox-tab-title">
           <template v-if="tab.toolboxType.name == 'database'">
-            <i class="mgr-5">
-              <IconDatabase></IconDatabase>
-            </i>
+            <IconFont class="teamide-database"> </IconFont>
           </template>
           <template v-else-if="tab.toolboxType.name == 'redis'">
-            <i class="mgr-5">
-              <IconRedis></IconRedis>
-            </i>
+            <IconFont class="teamide-redis"> </IconFont>
           </template>
           <template v-else-if="tab.toolboxType.name == 'elasticsearch'">
-            <i class="mgr-5">
-              <IconElasticsearch></IconElasticsearch>
-            </i>
+            <IconFont class="teamide-elasticsearch"> </IconFont>
           </template>
           <template v-else-if="tab.toolboxType.name == 'kafka'">
-            <i class="mgr-5">
-              <IconKafka></IconKafka>
-            </i>
+            <IconFont class="teamide-kafka"> </IconFont>
           </template>
           <template v-else-if="tab.toolboxType.name == 'zookeeper'">
-            <i class="mgr-5">
-              <IconZookeeper></IconZookeeper>
-            </i>
+            <IconFont class="teamide-zookeeper"> </IconFont>
           </template>
           <template
             v-else-if="tab.toolboxType.name == 'ssh' && tab.extend.isFTP"
           >
-            <i class="mgr-5">
-              <IconFtp></IconFtp>
-            </i>
+            <IconFont class="teamide-ftp"> </IconFont>
           </template>
           <template v-else-if="tab.toolboxType.name == 'ssh'">
-            <i class="mgr-5">
-              <IconSsh></IconSsh>
-            </i>
+            <IconFont class="teamide-ssh"> </IconFont>
           </template>
-          {{ tab.name }}
+          <span>{{ tab.name }}</span>
           <template v-if="tool.isNotEmpty(tab.comment)">
-            >{{ tab.comment }}
+            <span>>{{ tab.comment }}</span>
           </template>
         </span>
       </template>
@@ -96,37 +82,23 @@
                   >
                     <div class="toolbox-type-title">
                       <template v-if="toolboxType.name == 'database'">
-                        <i class="mgr-5">
-                          <IconDatabase></IconDatabase>
-                        </i>
+                        <IconFont class="teamide-database"> </IconFont>
                       </template>
                       <template v-else-if="toolboxType.name == 'redis'">
-                        <i class="mgr-5">
-                          <IconRedis></IconRedis>
-                        </i>
+                        <IconFont class="teamide-redis"> </IconFont>
                       </template>
                       <template v-else-if="toolboxType.name == 'elasticsearch'">
-                        <i class="mgr-5">
-                          <IconElasticsearch></IconElasticsearch>
-                        </i>
+                        <IconFont class="teamide-elasticsearch"> </IconFont>
                       </template>
                       <template v-else-if="toolboxType.name == 'kafka'">
-                        <i class="mgr-5">
-                          <IconKafka></IconKafka>
-                        </i>
+                        <IconFont class="teamide-kafka"> </IconFont>
                       </template>
                       <template v-else-if="toolboxType.name == 'zookeeper'">
-                        <i class="mgr-5">
-                          <IconZookeeper></IconZookeeper>
-                        </i>
+                        <IconFont class="teamide-zookeeper"> </IconFont>
                       </template>
                       <template v-else-if="toolboxType.name == 'ssh'">
-                        <i class="mgr-5">
-                          <IconSsh></IconSsh>
-                        </i>
-                        <i class="mgr-5">
-                          <IconFtp></IconFtp>
-                        </i>
+                        <IconFont class="teamide-ssh"> </IconFont>
+                        <IconFont class="teamide-ftp"> </IconFont>
                       </template>
                       <span class="toolbox-type-text">
                         {{ toolboxType.text || toolboxType.name }}
@@ -531,9 +503,10 @@ export default {
 }
 .toolbox-tab-title {
   font-size: 13px;
+  line-height: 24px;
 }
-.toolbox-tab-title svg {
-  vertical-align: -2px;
+.toolbox-tab-title .icon {
+  margin-right: 5px;
 }
 .el-dropdown-menu.toolbox-dropdown-box-menu {
   padding: 0px;
@@ -572,8 +545,8 @@ export default {
   color: #ffffff;
   line-height: 23px;
 }
-.toolbox-type-title svg {
-  vertical-align: -3px;
+.toolbox-type-title .icon {
+  margin-right: 5px;
 }
 .toolbox-type-title .tm-link {
   padding: 0px;

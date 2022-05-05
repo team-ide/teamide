@@ -19,11 +19,6 @@ type DataResponse struct {
 	Api                      string                             `json:"api,omitempty"`
 	FilesUrl                 string                             `json:"filesUrl,omitempty"`
 	IsServer                 bool                               `json:"isServer,omitempty"`
-	ColumnTypes              []*model.ColumnType                `json:"columnTypes,omitempty"`
-	DataTypes                []*model.DataType                  `json:"dataTypes,omitempty"`
-	IndexTypes               []*model.IndexType                 `json:"indexTypes,omitempty"`
-	ModelTypes               []*model.ModelType                 `json:"modelTypes,omitempty"`
-	DataPlaces               []*model.DataPlace                 `json:"dataPlaces,omitempty"`
 	DatabaseTypes            []*model.DatabaseType              `json:"databaseTypes,omitempty"`
 	ToolboxTypes             []*toolbox.Worker                  `json:"toolboxTypes,omitempty"`
 	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
@@ -53,11 +48,6 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.Api = response.Url + "api/"
 	response.FilesUrl = response.Api + "files/"
 	response.IsServer = this_.IsServer
-	response.ColumnTypes = model.COLUMN_TYPES
-	response.DataTypes = model.DATA_TYPES
-	response.ModelTypes = model.MODEL_TYPES
-	response.IndexTypes = model.INDEX_TYPES
-	response.DataPlaces = model.DATA_PLACES
 	response.DatabaseTypes = model.DATABASE_TYPES
 	response.ToolboxTypes = toolbox.GetWorkers()
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations

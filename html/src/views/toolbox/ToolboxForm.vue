@@ -57,7 +57,6 @@ export default {
   methods: {
     show(toolboxType, data, callback) {
       data = data || {};
-
       this.formBuild = this.form.build(this.form.toolbox);
       let formData = this.formBuild.newDefaultData();
       if (Object.keys(data).length > 0) {
@@ -72,9 +71,7 @@ export default {
         option = JSON.parse(data.option);
       }
 
-      this.formOptionBuild = this.form.build(
-        this.form.toolboxOption[toolboxType.name]
-      );
+      this.formOptionBuild = this.form.build(toolboxType.configForm);
       let formOptionData = this.formOptionBuild.newDefaultData();
       if (Object.keys(option).length > 0) {
         for (let key in formOptionData) {

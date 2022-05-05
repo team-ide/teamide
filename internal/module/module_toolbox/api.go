@@ -74,7 +74,26 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	return
 }
 
+type IndexRequest struct {
+}
+
+type IndexResponse struct {
+	Types                    []*toolbox.Worker                  `json:"types,omitempty"`
+	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
+}
+
 func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &IndexRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &IndexResponse{}
+
+	response.Types = toolbox.GetWorkers()
+	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
+
+	res = response
 	return
 }
 

@@ -1,21 +1,14 @@
 import tool from "@/tool/index.js";
 
-import application from "./application.js";
-import workspace from "./workspace.js";
 import toolbox from "./toolbox.js";
 
-let source = {};
+let source = { toolbox };
 
 source.status = null;
 source.ready = false;
 source.url = null;
 source.api = null;
 source.filesUrl = null;
-source.columnTypes = null;
-source.dataTypes = null;
-source.indexTypes = null;
-source.modelTypes = null;
-source.dataPlaces = null;
 source.databaseTypes = null;
 source.sqlConditionalOperations = null;
 
@@ -47,9 +40,6 @@ source.register = {
     remove: true,
 }
 
-source.workspace = workspace
-source.toolbox = toolbox
-source.application = application
 
 source.enum = {
 };
@@ -295,11 +285,6 @@ source.init = (data) => {
         source.url = data.url;
         source.api = data.api;
         source.filesUrl = data.filesUrl;
-        source.columnTypes = data.columnTypes;
-        source.dataTypes = data.dataTypes;
-        source.indexTypes = data.indexTypes;
-        source.modelTypes = data.modelTypes;
-        source.dataPlaces = data.dataPlaces;
         source.databaseTypes = data.databaseTypes;
         source.toolboxTypes = data.toolboxTypes;
         source.sqlConditionalOperations = data.sqlConditionalOperations;

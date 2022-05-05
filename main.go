@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"os"
 	"os/user"
@@ -79,6 +80,7 @@ func main() {
 
 	defer func() {
 		if err := recover(); err != nil {
+			fmt.Println("启动失败:", err)
 			if serverContext != nil {
 				serverContext.Logger.Error("启动失败", zap.Any("error", err))
 			}

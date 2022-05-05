@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"teamide/pkg/form"
 
 	"github.com/Shopify/sarama"
 )
@@ -14,6 +15,15 @@ func init() {
 		Name: "kafka",
 		Text: "Kafka",
 		Work: kafkaWork,
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{Label: "连接地址（127.0.0.1:9092）", Name: "address", DefaultValue: "127.0.0.1:9092",
+					Rules: []*form.Rule{
+						{Required: true, Message: "连接地址不能为空"},
+					},
+				},
+			},
+		},
 	}
 
 	AddWorker(worker_)
