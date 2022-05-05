@@ -12,7 +12,8 @@ func init() {
 		Work: zkWork,
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
-				{Label: "连接地址（127.0.0.1:2181）", Name: "address", DefaultValue: "127.0.0.1:2181",
+				{
+					Label: "连接地址（127.0.0.1:2181）", Name: "address", DefaultValue: "127.0.0.1:2181",
 					Rules: []*form.Rule{
 						{Required: true, Message: "连接地址不能为空"},
 					},

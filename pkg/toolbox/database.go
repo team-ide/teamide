@@ -13,7 +13,8 @@ func init() {
 		Work: databaseWork,
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
-				{Label: "类型", Name: "type", Type: "select", DefaultValue: "mysql",
+				{
+					Label: "类型", Name: "type", Type: "select", DefaultValue: "mysql",
 					Options: []*form.Option{
 						{Text: "MySql", Value: "mysql"},
 					},
@@ -21,18 +22,20 @@ func init() {
 						{Required: true, Message: "数据库类型不能为空"},
 					},
 				},
-				{Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1",
+				{
+					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1",
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接地址不能为空"},
 					},
 				},
-				{Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306",
+				{
+					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306",
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
 				},
 				{Label: "Username", Name: "username"},
-				{Label: "Password", Name: "password"},
+				{Label: "Password", Name: "password", Type: "password"},
 			},
 		},
 	}

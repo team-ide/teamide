@@ -12,10 +12,11 @@
             class="tm-link mgr-10"
             :key="index"
             @click="$router.push(`${one.link}`)"
-            :active="
-              $route.path == `${one.link}` ||
-              (one.match && one.match($route.path))
-            "
+            :class="{
+              'tm-active':
+                $route.path == `${one.link}` ||
+                (one.match && one.match($route.path)),
+            }"
           >
             {{ one.name }}
           </div>

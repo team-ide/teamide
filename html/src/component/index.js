@@ -1,5 +1,7 @@
 import Vue from 'vue'
 
+import './iconfont/iconfont.css'
+
 import InfoBox from './InfoBox.vue'
 Vue.component('InfoBox', InfoBox);
 
@@ -18,20 +20,10 @@ Vue.component('Register', Register);
 import WaterfallLayout from './WaterfallLayout.vue'
 Vue.component('WaterfallLayout', WaterfallLayout);
 
-import IconDatabase from './icon/Database.vue'
-Vue.component('IconDatabase', IconDatabase);
-import IconElasticsearch from './icon/Elasticsearch.vue'
-Vue.component('IconElasticsearch', IconElasticsearch);
-import IconFtp from './icon/Ftp.vue'
-Vue.component('IconFtp', IconFtp);
-import IconKafka from './icon/Kafka.vue'
-Vue.component('IconKafka', IconKafka);
-import IconRedis from './icon/Redis.vue'
-Vue.component('IconRedis', IconRedis);
-import IconSsh from './icon/Ssh.vue'
-Vue.component('IconSsh', IconSsh);
-import IconZookeeper from './icon/Zookeeper.vue'
-Vue.component('IconZookeeper', IconZookeeper);
+import IconFont from './IconFont.vue'
+Vue.component('IconFont', IconFont);
+import Icon from './Icon.vue'
+Vue.component('Icon', Icon);
 
 import Contextmenu from './contextmenu/Contextmenu.vue'
 Vue.component('Contextmenu', Contextmenu);
@@ -49,30 +41,6 @@ Vue.component('NoPower', NoPower);
 
 import TabEditor from './tab-editor/Index.vue'
 Vue.component('TabEditor', TabEditor);
-
-import ModelEditor from './modelEditor/Index.vue'
-Vue.component('ModelEditor', ModelEditor);
-
-import ModelEditorFieldInput from './modelEditor/FieldInput.vue'
-Vue.component('ModelEditorFieldInput', ModelEditorFieldInput);
-
-import ModelEditorFields from './modelEditor/Fields.vue'
-Vue.component('ModelEditorFields', ModelEditorFields);
-
-import ModelEditorField from './modelEditor/Field.vue'
-Vue.component('ModelEditorField', ModelEditorField);
-
-import ModelEditorFieldList from './modelEditor/FieldList.vue'
-Vue.component('ModelEditorFieldList', ModelEditorFieldList);
-
-import ModelEditorAction from './modelEditor/Action.vue'
-Vue.component('ModelEditorAction', ModelEditorAction);
-
-import ModelEditorStep from './modelEditor/Step.vue'
-Vue.component('ModelEditorStep', ModelEditorStep);
-
-import ModelEditorSteps from './modelEditor/Steps.vue'
-Vue.component('ModelEditorSteps', ModelEditorSteps);
 
 import MenuBox from './menu/MenuBox.vue'
 Vue.component('MenuBox', MenuBox);

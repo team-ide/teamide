@@ -12,7 +12,8 @@ func init() {
 		Work: esWork,
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
-				{Label: "连接地址（http://127.0.0.1:9200）", Name: "url", DefaultValue: "http://127.0.0.1:9200",
+				{
+					Label: "连接地址（http://127.0.0.1:9200）", Name: "url", DefaultValue: "http://127.0.0.1:9200",
 					Rules: []*form.Rule{
 						{Required: true, Message: "连接地址不能为空"},
 					},

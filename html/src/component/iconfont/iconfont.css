@@ -1,0 +1,43 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 3372744 */
+  src: url('iconfont.woff2?t=1651492950380') format('woff2'),
+       url('iconfont.woff?t=1651492950380') format('woff'),
+       url('iconfont.ttf?t=1651492950380') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.teamide-database:before {
+  content: "\e6be";
+}
+
+.teamide-kafka:before {
+  content: "\e65a";
+}
+
+.teamide-redis:before {
+  content: "\e619";
+}
+
+.teamide-ssh:before {
+  content: "\e73c";
+}
+
+.teamide-ftp:before {
+  content: "\e6b2";
+}
+
+.teamide-elasticsearch:before {
+  content: "\e73d";
+}
+
+.teamide-zookeeper:before {
+  content: "\e73e";
+}
+

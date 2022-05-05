@@ -13,7 +13,8 @@ func init() {
 		Work: sshWork,
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
-				{Label: "类型", Name: "type", Type: "select", DefaultValue: "tcp",
+				{
+					Label: "类型", Name: "type", Type: "select", DefaultValue: "tcp",
 					Options: []*form.Option{
 						{Text: "TCP", Value: "tcp"},
 					},
@@ -21,13 +22,14 @@ func init() {
 						{Required: true, Message: "SSH类型不能为空"},
 					},
 				},
-				{Label: "连接地址（127.0.0.1:22）", Name: "host", DefaultValue: "127.0.0.1:22",
+				{
+					Label: "连接地址（127.0.0.1:22）", Name: "address", DefaultValue: "127.0.0.1:22",
 					Rules: []*form.Rule{
 						{Required: true, Message: "连接地址不能为空"},
 					},
 				},
 				{Label: "Username", Name: "username"},
-				{Label: "Password", Name: "password"},
+				{Label: "Password", Name: "password", Type: "password"},
 				{Label: "PublicKey", Name: "publicKey", Type: "file", Placeholder: "请上传PublicKey文件"},
 			},
 		},

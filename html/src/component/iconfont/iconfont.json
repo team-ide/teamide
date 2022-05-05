@@ -1,0 +1,58 @@
+{
+  "id": "3372744",
+  "name": "teamide",
+  "font_family": "iconfont",
+  "css_prefix_text": "teamide-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "929216",
+      "name": "database",
+      "font_class": "database",
+      "unicode": "e6be",
+      "unicode_decimal": 59070
+    },
+    {
+      "icon_id": "981325",
+      "name": "Kafka",
+      "font_class": "kafka",
+      "unicode": "e65a",
+      "unicode_decimal": 58970
+    },
+    {
+      "icon_id": "3876165",
+      "name": "redis",
+      "font_class": "redis",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "7712749",
+      "name": "ssh",
+      "font_class": "ssh",
+      "unicode": "e73c",
+      "unicode_decimal": 59196
+    },
+    {
+      "icon_id": "22601871",
+      "name": "ftp",
+      "font_class": "ftp",
+      "unicode": "e6b2",
+      "unicode_decimal": 59058
+    },
+    {
+      "icon_id": "29432250",
+      "name": "ElasticSearch",
+      "font_class": "elasticsearch",
+      "unicode": "e73d",
+      "unicode_decimal": 59197
+    },
+    {
+      "icon_id": "29432251",
+      "name": "Zookeeper",
+      "font_class": "zookeeper",
+      "unicode": "e73e",
+      "unicode_decimal": 59198
+    }
+  ]
+}
