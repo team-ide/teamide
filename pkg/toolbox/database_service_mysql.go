@@ -184,12 +184,17 @@ func (this_ *MysqlService) Tables(database string) (tables []TableInfo, err erro
 	return
 }
 
-func (this_ *MysqlService) TableDetail(database string, table string) (tableDetail TableDetailInfo, err error) {
+func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []TableDetailInfo, err error) {
 
-	sql_ := "show table status from `" + database + "` where Name=?"
+	sql_ := "show table status from `" + database + "` "
+	var params []interface{}
+	if table != "" {
+		sql_ += " where Name=? "
+		params = append(params, table)
+	}
 	sqlParam := SqlParam{
 		Sql:    sql_,
-		Params: []interface{}{table},
+		Params: params,
 	}
 	res, err := this_.Query(sqlParam)
 	if err != nil {
@@ -198,23 +203,28 @@ func (this_ *MysqlService) TableDetail(database string, table string) (tableDeta
 	if len(res) == 0 {
 		return
 	}
-	tableDetail = TableDetailInfo{
-		Name:    string(res[0]["Name"]),
-		Comment: string(res[0]["Comment"]),
-	}
-	var columns []TableColumnInfo
-	columns, err = this_.TableColumns(database, table)
-	if err != nil {
-		return
-	}
-	tableDetail.Columns = columns
+	for _, one := range res {
 
-	var indexs []TableIndexInfo
-	indexs, err = this_.TableIndexs(database, table)
-	if err != nil {
-		return
+		var tableDetail = TableDetailInfo{
+			Name:    string(one["Name"]),
+			Comment: string(one["Comment"]),
+		}
+		var columns []TableColumnInfo
+		columns, err = this_.TableColumns(database, tableDetail.Name)
+		if err != nil {
+			return
+		}
+		tableDetail.Columns = columns
+
+		var indexs []TableIndexInfo
+		indexs, err = this_.TableIndexs(database, tableDetail.Name)
+		if err != nil {
+			return
+		}
+		tableDetail.Indexs = indexs
+
+		tableDetails = append(tableDetails, tableDetail)
 	}
-	tableDetail.Indexs = indexs
 	return
 }
 
@@ -283,9 +293,16 @@ func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []
 		if Key_name == "PRIMARY" {
 			continue
 		}
+		var indexType = ""
+		if string(one["Non_unique"]) == "0" {
+			indexType = "unique"
+		}
+		columns := string(one["Column_name"])
 		info := TableIndexInfo{
 			Name:    Key_name,
-			Comment: string(one["Comment"]),
+			Comment: string(one["Index_comment"]),
+			Columns: columns,
+			Type:    indexType,
 		}
 		indexs = append(indexs, info)
 	}

@@ -50,7 +50,7 @@
                   </div>
                   <div
                     v-if="data.isDatabase || data.isTable"
-                    class="tm-link color-grey ft-14 mgr-4"
+                    class="tm-link color-grey ft-13 mgr-4"
                     title="DDL"
                     @click="toShowDDL(data)"
                   >
