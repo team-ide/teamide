@@ -6,6 +6,27 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "2654344",
+      "name": "SQL",
+      "font_class": "sql",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
+      "icon_id": "18986812",
+      "name": "SQL",
+      "font_class": "SQL2",
+      "unicode": "e8d7",
+      "unicode_decimal": 59607
+    },
+    {
+      "icon_id": "22272983",
+      "name": "suffix-sql",
+      "font_class": "suffix-sql",
+      "unicode": "e66a",
+      "unicode_decimal": 58986
+    },
+    {
       "icon_id": "929216",
       "name": "database",
       "font_class": "database",

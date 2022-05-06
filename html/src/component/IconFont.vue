@@ -19,7 +19,7 @@ export default {
 <template  >
   <i
     class="icon teamide-iconfont"
-    :style="{ 'font-size': `${size}px`, cursor: pointer ? 'pointer' : 'auto' }"
+    :style="{ 'font-size': `${size}px`, cursor: pointer ? 'auto' : 'pointer' }"
   >
     <slot></slot>
   </i>

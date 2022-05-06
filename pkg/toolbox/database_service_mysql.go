@@ -1,11 +1,10 @@
 package toolbox
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -15,6 +14,7 @@ func CreateMysqlService(config DatabaseConfig) (service *MysqlService, err error
 	service = &MysqlService{
 		config: config,
 	}
+	service.lastUseTime = GetNowTime()
 	err = service.init()
 	return
 }
@@ -86,6 +86,9 @@ func (this_ *MysqlService) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
 
+func (this_ *MysqlService) SetLastUseTime() {
+	this_.lastUseTime = GetNowTime()
+}
 func (this_ *MysqlService) Stop() {
 	this_.db.Close()
 }
@@ -231,12 +234,23 @@ func (this_ *MysqlService) TableColumns(database string, table string) (columns 
 			Name:    string(one["Field"]),
 			Comment: string(one["Comment"]),
 		}
+		if one["Key"] != nil {
+			key := string(one["Key"])
+			if key == "PRI" {
+				info.PrimaryKey = true
+			}
+		}
+		if one["Null"] != nil {
+			null := string(one["Null"])
+			if null == "NO" {
+				info.NotNull = true
+			}
+		}
 		columnTypeStr := string(one["Type"])
 		columnType := columnTypeStr
-
 		if strings.Contains(columnTypeStr, "(") {
 			columnType = columnTypeStr[0:strings.Index(columnTypeStr, "(")]
-			lengthStr := columnTypeStr[strings.Index(columnTypeStr, "(")+1:]
+			lengthStr := columnTypeStr[strings.Index(columnTypeStr, "(")+1 : strings.Index(columnTypeStr, ")")]
 			if strings.Contains(lengthStr, ",") {
 				length, _ := strconv.Atoi(lengthStr[0:strings.Index(lengthStr, ",")])
 				decimal, _ := strconv.Atoi(lengthStr[strings.Index(lengthStr, ",")+1:])

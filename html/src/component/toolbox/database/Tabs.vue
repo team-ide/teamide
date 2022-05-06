@@ -27,6 +27,15 @@
             >
             </ToolboxDatabaseSql>
           </template>
+          <template v-else-if="tab.extend.type == 'ddl'">
+            <DDL
+              :source="source"
+              :wrap="wrap"
+              :database="tab.extend.database"
+              :table="tab.extend.table"
+            >
+            </DDL>
+          </template>
         </template>
       </TabEditor>
     </template>
@@ -35,8 +44,10 @@
 
 
 <script>
+import DDL from "./DDL";
+
 export default {
-  components: {},
+  components: {DDL},
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
