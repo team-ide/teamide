@@ -69,7 +69,11 @@ func startServiceTimer() {
 		time.Sleep(1 * time.Second)
 		nowTime := GetNowTime()
 		for key, one := range serviceCache {
-			if one.GetWaitTime() > 0 && nowTime-one.GetLastUseTime() >= one.GetWaitTime() {
+			if one.GetWaitTime() <= 0 {
+				continue
+			}
+			t := nowTime - one.GetLastUseTime()
+			if t >= one.GetWaitTime() {
 				delete(serviceCache, key)
 				one.Stop()
 			}

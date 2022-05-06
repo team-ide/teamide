@@ -50,11 +50,14 @@
                   </div>
                   <div
                     v-if="data.isDatabase || data.isTable"
-                    class="tm-link color-grey ft-14 mgr-4"
-                    title="建表语句"
-                    @click="toShowCreate(data)"
+                    class="tm-link color-grey ft-13 mgr-4"
+                    title="DDL"
+                    @click="toShowDDL(data)"
                   >
-                    <i class="mdi mdi-code-string"></i>
+                    <IconFont
+                      class="teamide-suffix-sql"
+                      style="vertical-align: -1px"
+                    ></IconFont>
                   </div>
                   <div
                     v-if="data.isDatabase || data.isTable"
@@ -111,11 +114,24 @@ export default {
         node.expand();
       }
     },
-    async toShowCreate(data) {
+    async toShowDDL(data) {
       if (data.isDatabase) {
-        this.wrap.showDatabaseCreate(data);
+        let extend = {
+          name: data.name + ">DDL",
+          title: data.name + ">DDL",
+          type: "ddl",
+          database: data.name,
+        };
+        this.wrap.openTabByExtend(extend);
       } else if (data.isTable) {
-        this.wrap.showTableCreate(data);
+        let extend = {
+          name: data.database.name + "." + data.name + ">DDL",
+          title: data.database.name + "." + data.name + ">DDL",
+          type: "ddl",
+          database: data.database.name,
+          table: data.name,
+        };
+        this.wrap.openTabByExtend(extend);
       }
     },
     nodeClick(data, node, nodeView) {

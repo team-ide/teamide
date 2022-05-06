@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 3372744 */
-  src: url('iconfont.woff2?t=1651492950380') format('woff2'),
-       url('iconfont.woff?t=1651492950380') format('woff'),
-       url('iconfont.ttf?t=1651492950380') format('truetype');
+  src: url('iconfont.woff2?t=1651837045258') format('woff2'),
+       url('iconfont.woff?t=1651837045258') format('woff'),
+       url('iconfont.ttf?t=1651837045258') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,18 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.teamide-sql:before {
+  content: "\e68c";
+}
+
+.teamide-SQL2:before {
+  content: "\e8d7";
+}
+
+.teamide-suffix-sql:before {
+  content: "\e66a";
 }
 
 .teamide-database:before {

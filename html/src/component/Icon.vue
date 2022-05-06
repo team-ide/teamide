@@ -20,7 +20,7 @@ export default {
 <template  >
   <i
     class="mdi-icon mdi"
-    :style="{ 'font-size': `${size}px`, cursor: pointer ? 'pointer' : 'auto' }"
+    :style="{ 'font-size': `${size}px`, cursor: pointer ? 'auto' : 'pointer' }"
   >
     <slot></slot>
   </i>

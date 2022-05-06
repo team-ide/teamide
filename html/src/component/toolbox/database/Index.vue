@@ -25,6 +25,7 @@
       </tm-layout>
       <ShowDatabaseCreate :source="source" :wrap="wrap"> </ShowDatabaseCreate>
       <ShowTableCreate :source="source" :wrap="wrap"> </ShowTableCreate>
+      <ShowTableDDL :source="source" :wrap="wrap"> </ShowTableDDL>
     </template>
   </div>
 </template>
@@ -33,9 +34,10 @@
 <script>
 import ShowDatabaseCreate from "./ShowDatabaseCreate";
 import ShowTableCreate from "./ShowTableCreate";
+import ShowTableDDL from "./ShowTableDDL";
 
 export default {
-  components: { ShowDatabaseCreate, ShowTableCreate },
+  components: { ShowDatabaseCreate, ShowTableCreate, ShowTableDDL },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {

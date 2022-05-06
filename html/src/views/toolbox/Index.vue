@@ -123,4 +123,8 @@ export default {
   outline: none;
   border: 1px solid #4e4e4e;
 }
+.toolbox-box select option {
+  background-color: #ffffff;
+  color: #3e3e3e;
+}
 </style>

@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"teamide/pkg/form"
 )
 
@@ -44,12 +45,13 @@ func init() {
 }
 
 type DatabaseBaseRequest struct {
-	Database  string            `json:"database"`
-	Table     string            `json:"table"`
-	Columns   []TableColumnInfo `json:"columns"`
-	Wheres    []Where           `json:"wheres"`
-	PageIndex int               `json:"pageIndex"`
-	PageSize  int               `json:"pageSize"`
+	Database     string            `json:"database"`
+	Table        string            `json:"table"`
+	Columns      []TableColumnInfo `json:"columns"`
+	Wheres       []Where           `json:"wheres"`
+	PageIndex    int               `json:"pageIndex"`
+	PageSize     int               `json:"pageSize"`
+	DatabaseType string            `json:"databaseType"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -117,12 +119,44 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		}
 		res["create"] = create
 	case "tableDetail":
-		var table TableDetailInfo
-		table, err = service.TableDetail(request.Database, request.Table)
+		var tables []TableDetailInfo
+		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
 		}
-		res["table"] = table
+		if len(tables) > 0 {
+			res["table"] = tables[0]
+		}
+	case "ddl":
+		var databaseType string = request.DatabaseType
+		if databaseType == "" {
+			databaseType = databaseConfig.Type
+		}
+		var sqls []string
+		if request.Table == "" {
+			var sqls_ []string
+			sqls_, err = ToDatabaseDDL(request.Database, databaseType)
+			if err != nil {
+				return
+			}
+			sqls = append(sqls, sqls_...)
+		}
+
+		var tables []TableDetailInfo
+		tables, err = service.TableDetails(request.Database, request.Table)
+		if err != nil {
+			return
+		}
+		for _, table := range tables {
+			var sqls_ []string
+			sqls_, err = ToTableDDL(databaseType, table)
+			if err != nil {
+				return
+			}
+			sqls = append(sqls, sqls_...)
+		}
+
+		res["sqls"] = sqls
 	case "datas":
 		var datasRequest DatasResult
 		datasRequest, err = service.Datas(DatasParam{
@@ -142,6 +176,12 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["datas"] = datasRequest.Datas
 	}
 	return
+}
+func DatabaseIsMySql(databaseType string) bool {
+	return strings.ToLower(databaseType) == "mysql"
+}
+func DatabaseIsOracle(databaseType string) bool {
+	return strings.ToLower(databaseType) == "oracle"
 }
 
 type SqlConditionalOperation struct {
@@ -199,6 +239,7 @@ func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) 
 		return
 	}
 	res = service.(DatabaseService)
+	res.SetLastUseTime()
 	return
 }
 
@@ -210,11 +251,12 @@ func CreateDatabaseService(config DatabaseConfig) (service DatabaseService, err 
 type DatabaseService interface {
 	GetWaitTime() int64
 	GetLastUseTime() int64
+	SetLastUseTime()
 	Stop()
 	Open() error
 	Databases() ([]DatabaseInfo, error)
 	Tables(database string) ([]TableInfo, error)
-	TableDetail(database string, table string) (TableDetailInfo, error)
+	TableDetails(database string, table string) ([]TableDetailInfo, error)
 	ShowCreateDatabase(database string) (string, error)
 	ShowCreateTable(database string, table string) (string, error)
 	Datas(datasParam DatasParam) (DatasResult, error)
@@ -245,15 +287,20 @@ type TableDetailInfo struct {
 }
 
 type TableColumnInfo struct {
-	Name    string `json:"name"`
-	Comment string `json:"comment"`
-	Type    string `json:"type"`
-	Length  int    `json:"length"`
-	Decimal int    `json:"decimal"`
+	Name       string `json:"name"`
+	Comment    string `json:"comment"`
+	Type       string `json:"type"`
+	Length     int    `json:"length"`
+	Decimal    int    `json:"decimal"`
+	PrimaryKey bool   `json:"primaryKey"`
+	NotNull    bool   `json:"notNull"`
+	Default    string `json:"default"`
 }
 
 type TableIndexInfo struct {
 	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Columns string `json:"columns"`
 	Comment string `json:"comment"`
 }
 
