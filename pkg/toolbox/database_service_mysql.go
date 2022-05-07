@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"teamide/pkg/sql_ddl"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -184,9 +185,9 @@ func (this_ *MysqlService) Tables(database string) (tables []TableInfo, err erro
 	return
 }
 
-func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []TableDetailInfo, err error) {
+func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []sql_ddl.TableDetailInfo, err error) {
 
-	sql_ := "show table status from `" + database + "` "
+	sql_ := "show table status from " + database + " "
 	var params []interface{}
 	if table != "" {
 		sql_ += " where Name=? "
@@ -203,20 +204,22 @@ func (this_ *MysqlService) TableDetails(database string, table string) (tableDet
 	if len(res) == 0 {
 		return
 	}
+	fmt.Println("Database:", database)
 	for _, one := range res {
 
-		var tableDetail = TableDetailInfo{
+		var tableDetail = sql_ddl.TableDetailInfo{
 			Name:    string(one["Name"]),
 			Comment: string(one["Comment"]),
 		}
-		var columns []TableColumnInfo
+		fmt.Println("Table:", tableDetail.Name)
+		var columns []sql_ddl.TableColumnInfo
 		columns, err = this_.TableColumns(database, tableDetail.Name)
 		if err != nil {
 			return
 		}
 		tableDetail.Columns = columns
 
-		var indexs []TableIndexInfo
+		var indexs []sql_ddl.TableIndexInfo
 		indexs, err = this_.TableIndexs(database, tableDetail.Name)
 		if err != nil {
 			return
@@ -228,9 +231,9 @@ func (this_ *MysqlService) TableDetails(database string, table string) (tableDet
 	return
 }
 
-func (this_ *MysqlService) TableColumns(database string, table string) (columns []TableColumnInfo, err error) {
+func (this_ *MysqlService) TableColumns(database string, table string) (columns []sql_ddl.TableColumnInfo, err error) {
 
-	sql_ := "show full columns from  `" + database + "`.`" + table + "`"
+	sql_ := "show full columns from  " + database + "." + table + ""
 	sqlParam := SqlParam{
 		Sql:    sql_,
 		Params: []interface{}{},
@@ -240,7 +243,7 @@ func (this_ *MysqlService) TableColumns(database string, table string) (columns 
 		return
 	}
 	for _, one := range res {
-		info := TableColumnInfo{
+		info := sql_ddl.TableColumnInfo{
 			Name:    string(one["Field"]),
 			Comment: string(one["Comment"]),
 		}
@@ -277,9 +280,9 @@ func (this_ *MysqlService) TableColumns(database string, table string) (columns 
 	return
 }
 
-func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []TableIndexInfo, err error) {
+func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []sql_ddl.TableIndexInfo, err error) {
 
-	sql_ := "show indexes from  `" + database + "`.`" + table + "`"
+	sql_ := "show indexes from  " + database + "." + table + ""
 	sqlParam := SqlParam{
 		Sql:    sql_,
 		Params: []interface{}{},
@@ -298,7 +301,7 @@ func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []
 			indexType = "unique"
 		}
 		columns := string(one["Column_name"])
-		info := TableIndexInfo{
+		info := sql_ddl.TableIndexInfo{
 			Name:    Key_name,
 			Comment: string(one["Index_comment"]),
 			Columns: columns,
@@ -315,7 +318,7 @@ func (this_ *MysqlService) Datas(datasParam DatasParam) (datasResult DatasResult
 	countSql := "SELECT "
 	params_ := []interface{}{}
 
-	columnMap := make(map[string]TableColumnInfo)
+	columnMap := make(map[string]sql_ddl.TableColumnInfo)
 
 	for _, column := range datasParam.Columns {
 		columnMap[column.Name] = column

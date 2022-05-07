@@ -3,8 +3,8 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"teamide/pkg/form"
+	"teamide/pkg/sql_ddl"
 )
 
 func init() {
@@ -45,13 +45,13 @@ func init() {
 }
 
 type DatabaseBaseRequest struct {
-	Database     string            `json:"database"`
-	Table        string            `json:"table"`
-	Columns      []TableColumnInfo `json:"columns"`
-	Wheres       []Where           `json:"wheres"`
-	PageIndex    int               `json:"pageIndex"`
-	PageSize     int               `json:"pageSize"`
-	DatabaseType string            `json:"databaseType"`
+	Database     string                    `json:"database"`
+	Table        string                    `json:"table"`
+	Columns      []sql_ddl.TableColumnInfo `json:"columns"`
+	Wheres       []Where                   `json:"wheres"`
+	PageIndex    int                       `json:"pageIndex"`
+	PageSize     int                       `json:"pageSize"`
+	DatabaseType string                    `json:"databaseType"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -119,7 +119,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		}
 		res["create"] = create
 	case "tableDetail":
-		var tables []TableDetailInfo
+		var tables []sql_ddl.TableDetailInfo
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
@@ -135,21 +135,21 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		var sqls []string
 		if request.Table == "" {
 			var sqls_ []string
-			sqls_, err = ToDatabaseDDL(request.Database, databaseType)
+			sqls_, err = sql_ddl.ToDatabaseDDL(request.Database, databaseType)
 			if err != nil {
 				return
 			}
 			sqls = append(sqls, sqls_...)
 		}
 
-		var tables []TableDetailInfo
+		var tables []sql_ddl.TableDetailInfo
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
 		}
 		for _, table := range tables {
 			var sqls_ []string
-			sqls_, err = ToTableDDL(databaseType, table)
+			sqls_, err = sql_ddl.ToTableDDL(databaseType, table)
 			if err != nil {
 				return
 			}
@@ -176,12 +176,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["datas"] = datasRequest.Datas
 	}
 	return
-}
-func DatabaseIsMySql(databaseType string) bool {
-	return strings.ToLower(databaseType) == "mysql"
-}
-func DatabaseIsOracle(databaseType string) bool {
-	return strings.ToLower(databaseType) == "oracle"
 }
 
 type SqlConditionalOperation struct {
@@ -256,7 +250,7 @@ type DatabaseService interface {
 	Open() error
 	Databases() ([]DatabaseInfo, error)
 	Tables(database string) ([]TableInfo, error)
-	TableDetails(database string, table string) ([]TableDetailInfo, error)
+	TableDetails(database string, table string) ([]sql_ddl.TableDetailInfo, error)
 	ShowCreateDatabase(database string) (string, error)
 	ShowCreateTable(database string, table string) (string, error)
 	Datas(datasParam DatasParam) (DatasResult, error)
@@ -279,38 +273,13 @@ type TableInfo struct {
 	Comment string `json:"comment"`
 }
 
-type TableDetailInfo struct {
-	Name    string            `json:"name"`
-	Comment string            `json:"comment"`
-	Columns []TableColumnInfo `json:"columns"`
-	Indexs  []TableIndexInfo  `json:"indexs"`
-}
-
-type TableColumnInfo struct {
-	Name       string `json:"name"`
-	Comment    string `json:"comment"`
-	Type       string `json:"type"`
-	Length     int    `json:"length"`
-	Decimal    int    `json:"decimal"`
-	PrimaryKey bool   `json:"primaryKey"`
-	NotNull    bool   `json:"notNull"`
-	Default    string `json:"default"`
-}
-
-type TableIndexInfo struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Columns string `json:"columns"`
-	Comment string `json:"comment"`
-}
-
 type DatasParam struct {
-	Database  string            `json:"database"`
-	Table     string            `json:"table"`
-	Columns   []TableColumnInfo `json:"columns"`
-	Wheres    []Where           `json:"wheres"`
-	PageIndex int               `json:"pageIndex"`
-	PageSize  int               `json:"pageSize"`
+	Database  string                    `json:"database"`
+	Table     string                    `json:"table"`
+	Columns   []sql_ddl.TableColumnInfo `json:"columns"`
+	Wheres    []Where                   `json:"wheres"`
+	PageIndex int                       `json:"pageIndex"`
+	PageSize  int                       `json:"pageSize"`
 }
 
 type DatasResult struct {

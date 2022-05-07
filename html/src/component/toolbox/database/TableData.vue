@@ -136,6 +136,9 @@
             <div class="color-red tm-link mgr-10">删除</div>
             <div class="color-green tm-link mgr-10">保存修改</div>
             <div class="color-blue tm-link mgr-10">新增</div>
+            <div @click="exportDataForInsert" class="color-grey tm-link mgr-10">
+              导出（Insert）
+            </div>
           </div>
         </tm-layout>
         <tm-layout height="auto" v-loading="datas_loading">
@@ -152,11 +155,13 @@
             >
               <el-table-column width="70">
                 <template slot-scope="scope" label="">
+                  <!-- :checked="selects.indexOf(scope.row) >= 0" -->
                   <input
-                    :checked="selects.indexOf(scope.row) >= 0"
                     type="checkbox"
                     class="mgl-5"
                     style="width: auto"
+                    v-model="selects"
+                    :value="scope.row"
                   />
                   <span class="mgl-5">{{ scope.$index }}</span>
                   <template v-if="updates.indexOf(scope.row) >= 0">
@@ -405,6 +410,9 @@ export default {
       this.total = Number(res.data.total || 0);
       this.params = res.data.params;
       this.datas_loading = false;
+    },
+    exportDataForInsert() {
+      this.wrap.showSqlForInsert(this.tableDetail, this.selects);
     },
   },
   created() {},

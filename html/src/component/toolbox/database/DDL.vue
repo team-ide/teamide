@@ -11,6 +11,9 @@
               { value: '', text: '当前库类型' },
               { value: 'mysql', text: 'MySql' },
               { value: 'oracle', text: 'Oracle' },
+              { value: 'dameng', text: '达梦' },
+              { value: 'shentong', text: '神通' },
+              { value: 'kingbase', text: '金仓' },
             ]"
           >
           </b-form-select>
