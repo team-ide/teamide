@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"teamide/pkg/form"
+	"teamide/pkg/util"
 )
 
 func init() {
@@ -123,7 +124,10 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 }
 
 func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
-	key := "redis-" + redisConfig.Address + "-" + redisConfig.Auth
+	key := "redis-" + redisConfig.Address
+	if redisConfig.Auth != "" {
+		key += "-" + util.GetMd5String(key+redisConfig.Auth)
+	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s RedisService

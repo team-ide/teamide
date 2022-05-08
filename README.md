@@ -233,6 +233,10 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 
 ![avatar](doc/toolbox-database.png)
 
+![avatar](doc/toolbox-database-ddl.png)
+
+![avatar](doc/toolbox-database-import-1.png)
+
 #### Toolbox Elasticsearch（开发中）
 
 连接Elasticsearch，编辑索引，增删改查索引数据等

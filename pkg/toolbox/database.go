@@ -418,7 +418,13 @@ func init() {
 }
 
 func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) {
-	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port, "-", config.Username, "-", config.Password)
+	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
+	if config.Username != "" {
+		key += "-" + util.GetMd5String(key+config.Username)
+	}
+	if config.Password != "" {
+		key += "-" + util.GetMd5String(key+config.Password)
+	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s DatabaseService
