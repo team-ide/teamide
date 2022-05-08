@@ -12,7 +12,6 @@ import (
 
 	"context"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx"
 )
 
 func CreateMysqlService(config DatabaseConfig) (service *MysqlService, err error) {
@@ -71,7 +70,6 @@ func ResultToMap(rows *sql.Rows) ([]map[string][]byte, error) {
 
 type MysqlService struct {
 	config      DatabaseConfig
-	db          *sqlx.DB
 	dbDao       *zorm.DBDao
 	lastUseTime int64
 	ctx         context.Context
@@ -123,6 +121,13 @@ func (this_ *MysqlService) init() (err error) {
 
 	// 根据dbDaoConfig创建dbDao, 一个数据库只执行一次,第一个执行的数据库为 defaultDao,后续zorm.xxx方法,默认使用的就是defaultDao
 	this_.dbDao, err = zorm.NewDBDao(&dbDaoConfig)
+	if err != nil {
+		return
+	}
+	this_.ctx, err = this_.dbDao.BindContextDBConnection(this_.ctx)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -139,7 +144,7 @@ func (this_ *MysqlService) SetLastUseTime() {
 }
 
 func (this_ *MysqlService) Stop() {
-	this_.dbDao.CloseDB()
+	_ = this_.dbDao.CloseDB()
 }
 
 func (this_ *MysqlService) Databases() (databases []*DatabaseInfo, err error) {
@@ -419,55 +424,6 @@ func (this_ *MysqlService) Execs(sqlParams []*SqlParam) (res int, err error) {
 
 		return nil, err
 	})
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *MysqlService) Query(sqlParam SqlParam) (res []map[string][]byte, err error) {
-	rows, err := this_.db.Query(sqlParam.Sql, sqlParam.Params...)
-	if err != nil {
-		return
-	}
-	res, err = ResultToMap(rows)
-	if err != nil {
-		return
-	}
-	rows.Close()
-	return
-}
-
-func (this_ *MysqlService) Insert(sqlParam SqlParam) (rowsAffected int64, err error) {
-
-	result, err := this_.db.Exec(sqlParam.Sql, sqlParam.Params...)
-	if err != nil {
-		return
-	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *MysqlService) Update(sqlParam SqlParam) (rowsAffected int64, err error) {
-	result, err := this_.db.Exec(sqlParam.Sql, sqlParam.Params...)
-	if err != nil {
-		return
-	}
-	rowsAffected, err = result.RowsAffected()
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *MysqlService) Delete(sqlParam SqlParam) (rowsAffected int64, err error) {
-	result, err := this_.db.Exec(sqlParam.Sql, sqlParam.Params...)
-	if err != nil {
-		return
-	}
-	rowsAffected, err = result.RowsAffected()
 	if err != nil {
 		return
 	}
