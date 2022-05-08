@@ -1,24 +1,28 @@
 <template>
   <div class="toolbox-database-ddl">
     <template v-if="ready">
-      <b-form inline class="pdt-20 mglr-10">
-        <b-form-group label="数据库类型" label-size="sm" class="pdr-10">
-          <b-form-select
-            size="sm"
+      <el-form
+        class="mgt-10"
+        ref="form"
+        :model="form"
+        label-width="110px"
+        size="mini"
+        :inline="true"
+      >
+        <el-form-item label="数据库类型">
+          <el-select
+            placeholder="当前库类型"
             v-model="form.databaseType"
             @change="toLoad"
-            :options="[
-              { value: '', text: '当前库类型' },
-              { value: 'mysql', text: 'MySql' },
-              { value: 'oracle', text: 'Oracle' },
-              { value: 'dameng', text: '达梦' },
-              { value: 'shentong', text: '神通' },
-              { value: 'kingbase', text: '金仓' },
-            ]"
           >
-          </b-form-select>
-        </b-form-group>
-      </b-form>
+            <el-option label="MySql" value="mysql"> </el-option>
+            <el-option label="Oracle" value="oracle"> </el-option>
+            <el-option label="达梦" value="dameng"> </el-option>
+            <el-option label="神通" value="shentong"> </el-option>
+            <el-option label="金仓" value="kingbase"> </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
       <b-form-textarea
         size="sm"
         rows="10"
@@ -91,7 +95,7 @@ export default {
 }
 .toolbox-database-textarea {
   width: 100%;
-  height: calc(100% - 100px) !important;
+  height: calc(100% - 70px) !important;
   margin-top: 23px;
   letter-spacing: 1px;
   word-spacing: 5px;

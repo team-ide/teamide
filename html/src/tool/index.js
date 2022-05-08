@@ -75,8 +75,6 @@ tool.initSession = function () {
         }, 1000 * 60 * 10);
     }
 };
-
-
 tool.isManagePage = function (path) {
     if (path == '/manage' || path.indexOf('/manage/') == 0) {
         return true;
