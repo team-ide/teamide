@@ -111,34 +111,52 @@
                 <div @click="addWhere" class="color-green tm-link mgr-10">
                   添加条件
                 </div>
-                <div @click="doSearch" class="color-green tm-link mgr-10">
-                  查询
-                </div>
               </li>
             </ul>
           </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
+          <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout width="400px">
             <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
               <li></li>
             </ul>
           </tm-layout>
-          <tm-layout-bar right></tm-layout-bar>
+          <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout>
             <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
               <li></li>
             </ul>
           </tm-layout>
         </tm-layout>
-        <tm-layout-bar bottom></tm-layout-bar>
+        <!-- <tm-layout-bar bottom></tm-layout-bar> -->
         <tm-layout height="20px">
           <div class="ft-12 pdl-10" v-if="tableDetail != null">
-            <div class="color-red tm-link mgr-10">删除</div>
-            <div class="color-green tm-link mgr-10">保存修改</div>
-            <div class="color-blue tm-link mgr-10">新增</div>
-            <div @click="exportDataForInsert" class="color-grey tm-link mgr-10">
-              导出（Insert）
+            <div
+              class="color-red tm-link mgr-10"
+              :class="{ 'tm-disabled': selects.length == 0 }"
+            >
+              删除({{ selects.length }})
             </div>
+            <div
+              class="color-green tm-link mgr-10"
+              :class="{ 'tm-disabled': selects.length == 0 }"
+            >
+              保存修改({{ selects.length }})
+            </div>
+            <div class="color-blue tm-link mgr-10">新增</div>
+            <div
+              @click="importDataForStrategy"
+              class="color-grey tm-link mgr-10"
+            >
+              导入(策略)
+            </div>
+            <div
+              @click="exportDataForInsert"
+              class="color-grey tm-link mgr-10"
+              :class="{ 'tm-disabled': selects.length == 0 }"
+            >
+              导出(Insert)({{ selects.length }})
+            </div>
+            <div @click="doSearch" class="color-green tm-link mgr-10">查询</div>
           </div>
         </tm-layout>
         <tm-layout height="auto" v-loading="datas_loading">
@@ -153,8 +171,8 @@
               style="width: 100%"
               size="mini"
             >
-              <el-table-column width="70">
-                <template slot-scope="scope" label="">
+              <el-table-column width="70" label="序号">
+                <template slot-scope="scope">
                   <!-- :checked="selects.indexOf(scope.row) >= 0" -->
                   <input
                     type="checkbox"
@@ -178,7 +196,7 @@
                     :key="index"
                     :prop="column.name"
                     :label="column.name"
-                    width="150"
+                    width="120"
                   >
                     <template slot-scope="scope">
                       <div class="">
@@ -195,6 +213,14 @@
                 </template>
               </template>
             </el-table>
+          </div>
+        </tm-layout>
+        <!-- <tm-layout-bar top></tm-layout-bar> -->
+        <tm-layout height="50px" class="scrollbar">
+          <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
+            <div style="line-height: 20px">
+              <span style="word-break: break-all">{{ executeSql }}</span>
+            </div>
           </div>
         </tm-layout>
         <tm-layout height="30px">
@@ -219,14 +245,6 @@
               :disabled="total <= 0"
             >
             </el-pagination>
-          </div>
-        </tm-layout>
-        <tm-layout-bar top></tm-layout-bar>
-        <tm-layout height="50px" class="scrollbar">
-          <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
-            <div style="line-height: 20px">
-              <span style="word-break: break-all">{{ sql }}</span>
-            </div>
           </div>
         </tm-layout>
       </tm-layout>
@@ -255,6 +273,7 @@ export default {
       datas: null,
       sql: null,
       params: null,
+      executeSql: null,
       inserts: [],
       updates: [],
       selects: [],
@@ -281,7 +300,7 @@ export default {
       this.form.orders = [];
       this.form.columns = [];
       if (this.tableDetail && this.tableDetail.columns) {
-        this.tableDetail.columns.forEach((one) => {
+        this.tableDetail.columns.forEach((one, index) => {
           let column = Object.assign({}, one);
           column.checked = true;
           this.form.columns.push(column);
@@ -289,6 +308,16 @@ export default {
       }
       this.ready = true;
       this.doSearch();
+      this.$nextTick(() => {
+        if (this.tableDetail && this.tableDetail.columns) {
+          this.tableDetail.columns.forEach((one, index) => {
+            if (index < 3) {
+              let where = this.addWhere();
+              where.checked = false;
+            }
+          });
+        }
+      });
     },
     async initTable() {
       this.tableDetail = await this.wrap.getTableDetail(
@@ -330,7 +359,7 @@ export default {
         before: null,
         after: null,
         sqlConditionalOperation: "=",
-        andOr: "and",
+        andOr: "AND",
       };
       let column = null;
       if (this.tableDetail && this.tableDetail.columns) {
@@ -358,6 +387,7 @@ export default {
 
       this.form.wheres.push(where);
       this.initInputWidth();
+      return where;
     },
     async doSearch() {
       let wheres = [];
@@ -395,9 +425,10 @@ export default {
       this.datas_loading = true;
 
       this.datas = null;
-      this.sql = null;
       this.total = 0;
+      this.sql = null;
       this.params = null;
+      this.executeSql = null;
       this.updates = [];
       this.inserts = [];
       this.selects = [];
@@ -408,8 +439,21 @@ export default {
       this.datas = res.data.datas;
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
-      this.params = res.data.params;
+      this.params = res.data.params || [];
       this.datas_loading = false;
+      let executeSql = this.sql;
+      executeSql = executeSql.replace(new RegExp("\\?", "g"), "{$v#-}");
+      this.params.forEach((v, i) => {
+        if (typeof v == "string") {
+          executeSql = executeSql.replace("{$v#-}", `'` + v + `'`);
+        } else {
+          executeSql = executeSql.replace("{$v#-}", v);
+        }
+      });
+      this.executeSql = executeSql;
+    },
+    importDataForStrategy() {
+      this.wrap.showImportDataForStrategy(this.database, this.tableDetail);
     },
     exportDataForInsert() {
       this.wrap.showSqlForInsert(this.tableDetail, this.selects);
@@ -426,10 +470,17 @@ export default {
 .toolbox-database-table-data {
   width: 100%;
   height: 100%;
+  user-select: none;
+}
+.toolbox-database-table-data .el-table__header-wrapper th.el-table__cell {
+  user-select: text;
 }
 .toolbox-database-table-data-table {
   width: 100%;
   height: 100%;
+}
+.toolbox-database-table-data .el-table input[type="checkbox"] {
+  vertical-align: -2px;
 }
 
 .toolbox-database-table-data .el-table,
@@ -441,7 +492,7 @@ export default {
 }
 .toolbox-database-table-data .el-table td.el-table__cell,
 .toolbox-database-table-data .el-table th.el-table__cell.is-leaf {
-  border-bottom: 1px solid #473939;
+  background: transparent;
 }
 .toolbox-database-table-data .el-table th,
 .toolbox-database-table-data .el-table tr {
@@ -497,7 +548,7 @@ export default {
 }
 .toolbox-database-table-data .el-table tr,
 .toolbox-database-table-data .el-table th.el-table__cell {
-  background-color: #2d2d2d;
+  background-color: transparent;
 }
 .toolbox-database-table-data .el-table tbody .cell {
   padding-left: 0px !important;
@@ -543,6 +594,52 @@ export default {
   color: #929292;
 }
 .toolbox-database-table-data-pagination .el-pager li {
+  background: transparent;
+}
+
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 10px #333333;
+  background: #333333;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper:hover::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 10px #262626;
+  background: #262626;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper:hover::-webkit-scrollbar-corner {
+  background: #262626;
+}
+
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper:hover::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper::-webkit-scrollbar-track {
+  border-radius: 0;
+}
+.toolbox-database-table-data-table
+  .el-table--scrollable-x
+  .el-table__body-wrapper::-webkit-scrollbar-corner {
   background: transparent;
 }
 </style>

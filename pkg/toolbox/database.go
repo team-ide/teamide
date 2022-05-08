@@ -3,8 +3,14 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dop251/goja"
+	"go.uber.org/zap"
+	"strings"
 	"teamide/pkg/form"
+	"teamide/pkg/javascript"
 	"teamide/pkg/sql_ddl"
+	"teamide/pkg/util"
+	"time"
 )
 
 func init() {
@@ -47,11 +53,13 @@ func init() {
 type DatabaseBaseRequest struct {
 	Database     string                    `json:"database"`
 	Table        string                    `json:"table"`
+	TaskKey      string                    `json:"taskKey"`
 	Columns      []sql_ddl.TableColumnInfo `json:"columns"`
 	Wheres       []Where                   `json:"wheres"`
 	PageIndex    int                       `json:"pageIndex"`
 	PageSize     int                       `json:"pageSize"`
 	DatabaseType string                    `json:"databaseType"`
+	ImportDatas  []map[string]interface{}  `json:"importDatas"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -85,13 +93,8 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 
 	res = map[string]interface{}{}
 	switch work {
-	case "checkConnect":
-		err = service.Open()
-		if err != nil {
-			return
-		}
 	case "databases":
-		var databases []DatabaseInfo
+		var databases []*DatabaseInfo
 		databases, err = service.Databases()
 		if err != nil {
 			return
@@ -104,22 +107,8 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 		res["tables"] = tables
-	case "showCreateDatabase":
-		var create string
-		create, err = service.ShowCreateDatabase(request.Database)
-		if err != nil {
-			return
-		}
-		res["create"] = create
-	case "showCreateTable":
-		var create string
-		create, err = service.ShowCreateTable(request.Database, request.Table)
-		if err != nil {
-			return
-		}
-		res["create"] = create
 	case "tableDetail":
-		var tables []sql_ddl.TableDetailInfo
+		var tables []*sql_ddl.TableDetailInfo
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
@@ -142,7 +131,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			sqls = append(sqls, sqls_...)
 		}
 
-		var tables []sql_ddl.TableDetailInfo
+		var tables []*sql_ddl.TableDetailInfo
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
@@ -174,6 +163,221 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["params"] = datasRequest.Params
 		res["total"] = datasRequest.Total
 		res["datas"] = datasRequest.Datas
+	case "importDataForStrategy":
+		taskKey := util.GenerateUUID()
+		importDataForStrategyTask := &importDataForStrategyTask{
+			Key:         taskKey,
+			Database:    request.Database,
+			Table:       request.Table,
+			Columns:     request.Columns,
+			ImportDatas: request.ImportDatas,
+			service:     service,
+		}
+		addImportDataForStrategyTask(importDataForStrategyTask)
+
+		res["taskKey"] = taskKey
+	case "importDataForStrategyStatus":
+		importDataForStrategyTask := importDataForStrategyTaskCache[request.TaskKey]
+		res["task"] = importDataForStrategyTask
+	case "importDataForStrategyStop":
+		importDataForStrategyTask := importDataForStrategyTaskCache[request.TaskKey]
+		if importDataForStrategyTask != nil {
+			importDataForStrategyTask.Stop()
+		}
+	case "importDataForStrategyClean":
+		delete(importDataForStrategyTaskCache, request.TaskKey)
+	}
+	return
+}
+
+var (
+	importDataForStrategyTaskCache = map[string]*importDataForStrategyTask{}
+)
+
+func addImportDataForStrategyTask(task *importDataForStrategyTask) {
+	importDataForStrategyTaskCache[task.Key] = task
+	go task.Start()
+}
+
+type importDataForStrategyTask struct {
+	Key               string                    `json:"key,omitempty"`
+	Database          string                    `json:"database,omitempty"`
+	Table             string                    `json:"table,omitempty"`
+	Columns           []sql_ddl.TableColumnInfo `json:"columns,omitempty"`
+	ImportDatas       []map[string]interface{}  `json:"importDatas,omitempty"`
+	ImportBatchNumber int                       `json:"importBatchNumber,omitempty"`
+	DataCount         int                       `json:"dataCount"`
+	ReadyDataCount    int                       `json:"readyDataCount"`
+	ImportSuccess     int                       `json:"importSuccess"`
+	ImportError       int                       `json:"importError"`
+	IsEnd             bool                      `json:"isEnd,omitempty"`
+	StartTime         time.Time                 `json:"startTime,omitempty"`
+	EndTime           time.Time                 `json:"endTime,omitempty"`
+	Error             string                    `json:"error,omitempty"`
+	UseTime           int64                     `json:"useTime"`
+	IsStop            bool                      `json:"isStop"`
+	service           DatabaseService
+}
+
+func (this_ *importDataForStrategyTask) Stop() {
+	this_.IsStop = true
+}
+func (this_ *importDataForStrategyTask) Start() {
+	this_.StartTime = time.Now()
+	defer func() {
+		if err := recover(); err != nil {
+			Logger.Error("根据策略导入数据异常", zap.Any("error", err))
+			this_.Error = fmt.Sprint(err)
+		}
+		this_.EndTime = time.Now()
+		this_.IsEnd = true
+		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
+	}()
+
+	for _, importData := range this_.ImportDatas {
+		importCount := 0
+		if importData["_$importCount"] != nil {
+			importCount = int(importData["_$importCount"].(float64))
+		}
+		if importCount <= 0 {
+			importCount = 0
+		}
+		importData["_$importCount"] = importCount
+		this_.DataCount += importCount
+	}
+
+	for _, importData := range this_.ImportDatas {
+		if this_.IsStop {
+			break
+		}
+		err := this_.importData(this_.Database, this_.Table, this_.Columns, importData)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+func (this_ *importDataForStrategyTask) importData(database, table string, columns []sql_ddl.TableColumnInfo, importData map[string]interface{}) (err error) {
+	importCount := importData["_$importCount"].(int)
+	if importCount <= 0 {
+		return
+	}
+	if this_.IsStop {
+		return
+	}
+
+	var dataList []map[string]interface{}
+	importBatchNumber := this_.ImportBatchNumber
+	if importBatchNumber <= 0 {
+		importBatchNumber = 10
+	}
+	scriptContext := javascript.GetContext()
+
+	vm := goja.New()
+
+	for key, value := range scriptContext {
+		vm.Set(key, value)
+	}
+
+	for i := 0; i < importCount; i++ {
+		data := map[string]interface{}{}
+		vm.Set("_$index", i)
+
+		for _, column := range columns {
+
+			if this_.IsStop {
+				return
+			}
+
+			value, valueOk := importData[column.Name]
+			if !valueOk {
+				continue
+			}
+			valueString, valueStringOk := value.(string)
+			if valueStringOk && valueString != "" {
+				var scriptValue goja.Value
+				scriptValue, err = vm.RunString(valueString)
+				if err != nil {
+					Logger.Error("表达式执行异常", zap.Any("script", valueString), zap.Error(err))
+					return
+				}
+				value = scriptValue.Export()
+			}
+			data[column.Name] = value
+			vm.Set(column.Name, value)
+		}
+		this_.ReadyDataCount++
+		dataList = append(dataList, data)
+		if len(dataList) >= importBatchNumber {
+
+			if this_.IsStop {
+				return
+			}
+			err = this_.doImportData(database, table, columns, dataList)
+			if err != nil {
+				this_.ImportError += len(dataList)
+				return
+			} else {
+				this_.ImportSuccess += len(dataList)
+			}
+			dataList = []map[string]interface{}{}
+		}
+	}
+	err = this_.doImportData(database, table, columns, dataList)
+	if err != nil {
+		this_.ImportError += len(dataList)
+		return
+	} else {
+		this_.ImportSuccess += len(dataList)
+	}
+	return
+}
+
+func (this_ *importDataForStrategyTask) doImportData(database, table string, columns []sql_ddl.TableColumnInfo, dataList []map[string]interface{}) (err error) {
+
+	if len(dataList) == 0 {
+		return
+	}
+	var sqlParams []*SqlParam
+	for _, data := range dataList {
+		var sqlParam *SqlParam
+		sqlParam, err = this_.getImportDataFinder(database, table, columns, data)
+		if err != nil {
+			return
+		}
+		sqlParams = append(sqlParams, sqlParam)
+	}
+
+	_, err = this_.service.Execs(sqlParams)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *importDataForStrategyTask) getImportDataFinder(database, table string, columns []sql_ddl.TableColumnInfo, data map[string]interface{}) (sqlParam *SqlParam, err error) {
+
+	insertColumns := ""
+	insertValues := ""
+	var values []interface{}
+	for _, column := range columns {
+		value, valueOk := data[column.Name]
+		if !valueOk {
+			continue
+		}
+		insertColumns += column.Name + ","
+		insertValues += "?,"
+		values = append(values, value)
+	}
+	insertColumns = strings.TrimSuffix(insertColumns, ",")
+	insertValues = strings.TrimSuffix(insertValues, ",")
+	sql := "INSERT INTO " + database + "." + table + ""
+	sql += "(" + insertColumns + ")"
+	sql += " VALUES "
+	sql += "(" + insertValues + ")"
+
+	sqlParam = &SqlParam{
+		Sql:    sql,
+		Params: values,
 	}
 	return
 }
@@ -222,10 +426,6 @@ func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) 
 		if err != nil {
 			return
 		}
-		_, err = s.Databases()
-		if err != nil {
-			return
-		}
 		res = s
 		return
 	})
@@ -247,13 +447,11 @@ type DatabaseService interface {
 	GetLastUseTime() int64
 	SetLastUseTime()
 	Stop()
-	Open() error
-	Databases() ([]DatabaseInfo, error)
+	Databases() ([]*DatabaseInfo, error)
 	Tables(database string) ([]TableInfo, error)
-	TableDetails(database string, table string) ([]sql_ddl.TableDetailInfo, error)
-	ShowCreateDatabase(database string) (string, error)
-	ShowCreateTable(database string, table string) (string, error)
+	TableDetails(database string, table string) ([]*sql_ddl.TableDetailInfo, error)
 	Datas(datasParam DatasParam) (DatasResult, error)
+	Execs(sqlParams []*SqlParam) (int, error)
 }
 
 type DatabaseConfig struct {
@@ -265,7 +463,7 @@ type DatabaseConfig struct {
 }
 
 type DatabaseInfo struct {
-	Name string `json:"name"`
+	Name string `json:"name" column:"name"`
 }
 
 type TableInfo struct {
@@ -280,11 +478,12 @@ type DatasParam struct {
 	Wheres    []Where                   `json:"wheres"`
 	PageIndex int                       `json:"pageIndex"`
 	PageSize  int                       `json:"pageSize"`
+	Orders    []Order                   `json:"orders"`
 }
 
 type DatasResult struct {
 	Sql    string                   `json:"sql"`
-	Total  string                   `json:"total"`
+	Total  int                      `json:"total"`
 	Params []interface{}            `json:"params"`
 	Datas  []map[string]interface{} `json:"datas"`
 }
@@ -297,4 +496,9 @@ type Where struct {
 	CustomSql               string `json:"customSql"`
 	SqlConditionalOperation string `json:"sqlConditionalOperation"`
 	AndOr                   string `json:"andOr"`
+}
+
+type Order struct {
+	Name    string `json:"name"`
+	DescAsc string `json:"descAsc"`
 }

@@ -2,7 +2,7 @@
   <div class="toolbox-database-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="400px" class="">
+        <tm-layout width="300px" class="">
           <ToolboxDatabaseDatabase
             ref="ToolboxDatabaseDatabase"
             :source="source"
@@ -26,6 +26,8 @@
       <ShowDatabaseCreate :source="source" :wrap="wrap"> </ShowDatabaseCreate>
       <ShowTableCreate :source="source" :wrap="wrap"> </ShowTableCreate>
       <ShowSqlForInsert :source="source" :wrap="wrap"> </ShowSqlForInsert>
+      <ShowImportDataForStrategy :source="source" :wrap="wrap">
+      </ShowImportDataForStrategy>
     </template>
   </div>
 </template>
@@ -35,12 +37,14 @@
 import ShowDatabaseCreate from "./ShowDatabaseCreate";
 import ShowTableCreate from "./ShowTableCreate";
 import ShowSqlForInsert from "./ShowSqlForInsert";
+import ShowImportDataForStrategy from "./ShowImportDataForStrategy";
 
 export default {
   components: {
     ShowDatabaseCreate,
     ShowTableCreate,
     ShowSqlForInsert,
+    ShowImportDataForStrategy,
   },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {

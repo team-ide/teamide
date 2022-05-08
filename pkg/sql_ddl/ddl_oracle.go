@@ -53,7 +53,7 @@ func ToDatabaseDDLForOracle(database string) (sqls []string, err error) {
 	return
 }
 
-func ToTableDDLForOracle(table TableDetailInfo) (sqls []string, err error) {
+func ToTableDDLForOracle(table *TableDetailInfo) (sqls []string, err error) {
 	sqls = []string{}
 	var columns string
 	var primaryKeys string

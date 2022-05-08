@@ -53,7 +53,7 @@ func ToDatabaseDDLForKingBase(database string) (sqls []string, err error) {
 	return
 }
 
-func ToTableDDLForKingBase(table TableDetailInfo) (sqls []string, err error) {
+func ToTableDDLForKingBase(table *TableDetailInfo) (sqls []string, err error) {
 	sqls = []string{}
 	var columns string
 	var primaryKeys string

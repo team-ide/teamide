@@ -53,7 +53,7 @@ func ToDatabaseDDLForDaMeng(database string) (sqls []string, err error) {
 	return
 }
 
-func ToTableDDLForDaMeng(table TableDetailInfo) (sqls []string, err error) {
+func ToTableDDLForDaMeng(table *TableDetailInfo) (sqls []string, err error) {
 	sqls = []string{}
 	var columns string
 	var primaryKeys string

@@ -6,28 +6,30 @@ import (
 )
 
 type TableDetailInfo struct {
-	Name    string            `json:"name"`
-	Comment string            `json:"comment"`
-	Columns []TableColumnInfo `json:"columns"`
-	Indexs  []TableIndexInfo  `json:"indexs"`
+	Name    string             `json:"name" column:"name"`
+	Comment string             `json:"comment" column:"comment"`
+	Columns []*TableColumnInfo `json:"columns"`
+	Indexs  []*TableIndexInfo  `json:"indexs"`
 }
 
 type TableColumnInfo struct {
-	Name       string `json:"name"`
-	Comment    string `json:"comment"`
-	Type       string `json:"type"`
+	Name       string `json:"name" column:"name"`
+	Comment    string `json:"comment" column:"comment"`
+	Type       string `json:"type" column:"type"`
 	Length     int    `json:"length"`
 	Decimal    int    `json:"decimal"`
 	PrimaryKey bool   `json:"primaryKey"`
 	NotNull    bool   `json:"notNull"`
-	Default    string `json:"default"`
+	Default    string `json:"default" column:"default"`
+	ISNullable string `json:"-" column:"IS_NULLABLE"`
 }
 
 type TableIndexInfo struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Columns string `json:"columns"`
-	Comment string `json:"comment"`
+	Name      string `json:"name" column:"name"`
+	Type      string `json:"type" column:"type"`
+	Columns   string `json:"columns" column:"columns"`
+	Comment   string `json:"comment" column:"comment"`
+	NONUnique string `json:"-" column:"NON_UNIQUE"`
 }
 
 func DatabaseIsMySql(databaseType string) bool {

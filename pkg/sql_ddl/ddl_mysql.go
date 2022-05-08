@@ -62,7 +62,7 @@ func ToDatabaseDDLForMySql(database string) (sqls []string, err error) {
 	return
 }
 
-func ToTableDDLForMySql(table TableDetailInfo) (sqls []string, err error) {
+func ToTableDDLForMySql(table *TableDetailInfo) (sqls []string, err error) {
 	sqls = []string{}
 	var columns string
 	var primaryKeys string

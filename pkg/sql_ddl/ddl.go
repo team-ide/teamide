@@ -17,7 +17,7 @@ func ToDatabaseDDL(database string, databaseType string) (sqls []string, err err
 	return
 }
 
-func ToTableDDL(databaseType string, table TableDetailInfo) (sqls []string, err error) {
+func ToTableDDL(databaseType string, table *TableDetailInfo) (sqls []string, err error) {
 	if DatabaseIsMySql(databaseType) {
 		sqls, err = ToTableDDLForMySql(table)
 	} else if DatabaseIsOracle(databaseType) {

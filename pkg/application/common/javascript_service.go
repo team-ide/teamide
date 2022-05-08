@@ -7,6 +7,7 @@ import (
 	"strings"
 	"teamide/pkg/application/base"
 	"teamide/pkg/application/model"
+	"teamide/pkg/util"
 )
 
 func GetJavascriptMethodName(name string) (methodName string) {
@@ -307,7 +308,7 @@ func getJavascriptByVariables(app IApplication, variables []*model.VariableModel
 func getJavascriptByStepLock(app IApplication, step *model.ActionStepLock, tab int) (javascript string, err error) {
 	name := step.Lock.Name
 	if base.IsEmpty(name) {
-		name = "$lock_" + app.GetScript().RandString(10, 10)
+		name = "$lock_" + util.GenerateUUID()
 	}
 	key := step.Lock.Key
 	if base.IsEmpty(key) {
