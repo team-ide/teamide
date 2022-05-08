@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"teamide/pkg/sql_ddl"
+	"teamide/pkg/util"
+	"time"
 
 	"context"
 	_ "github.com/go-sql-driver/mysql"
@@ -399,6 +401,18 @@ func (this_ *MysqlService) Datas(datasParam DatasParam) (datasResult DatasResult
 	listMap, err := zorm.QueryMap(this_.ctx, finder, page)
 	if err != nil {
 		return
+	}
+	for _, one := range listMap {
+		for k, v := range one {
+			t, tOk := v.(time.Time)
+			if tOk {
+				if t.IsZero() {
+					one[k] = 0
+				} else {
+					one[k] = util.GetTimeTime(t)
+				}
+			}
+		}
 	}
 	datasResult.Sql, err = finder.GetSQL()
 	datasResult.Params = params

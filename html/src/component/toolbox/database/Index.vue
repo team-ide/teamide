@@ -25,7 +25,7 @@
       </tm-layout>
       <ShowDatabaseCreate :source="source" :wrap="wrap"> </ShowDatabaseCreate>
       <ShowTableCreate :source="source" :wrap="wrap"> </ShowTableCreate>
-      <ShowSqlForInsert :source="source" :wrap="wrap"> </ShowSqlForInsert>
+      <ShowExportSql :source="source" :wrap="wrap"> </ShowExportSql>
       <ShowImportDataForStrategy :source="source" :wrap="wrap">
       </ShowImportDataForStrategy>
     </template>
@@ -36,14 +36,14 @@
 <script>
 import ShowDatabaseCreate from "./ShowDatabaseCreate";
 import ShowTableCreate from "./ShowTableCreate";
-import ShowSqlForInsert from "./ShowSqlForInsert";
+import ShowExportSql from "./ShowExportSql";
 import ShowImportDataForStrategy from "./ShowImportDataForStrategy";
 
 export default {
   components: {
     ShowDatabaseCreate,
     ShowTableCreate,
-    ShowSqlForInsert,
+    ShowExportSql,
     ShowImportDataForStrategy,
   },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],

@@ -130,19 +130,29 @@
         <!-- <tm-layout-bar bottom></tm-layout-bar> -->
         <tm-layout height="20px">
           <div class="ft-12 pdl-10" v-if="tableDetail != null">
+            <div class="color-grey tm-link mgr-10" @click="toSelectAll">
+              全选
+            </div>
+            <div class="color-grey tm-link mgr-10" @click="toUnselectAll">
+              取消全选
+            </div>
             <div
               class="color-red tm-link mgr-10"
+              @click="toDeleteSelect"
               :class="{ 'tm-disabled': selects.length == 0 }"
             >
-              删除({{ selects.length }})
+              删除选中({{ selects.length }})
             </div>
             <div
               class="color-green tm-link mgr-10"
-              :class="{ 'tm-disabled': selects.length == 0 }"
+              @click="toSaveSelect"
+              :class="{
+                'tm-disabled': updates.length == 0 && inserts.length == 0,
+              }"
             >
-              保存修改({{ selects.length }})
+              保存修改(编辑:{{ updates.length }}/新增:{{ inserts.length }})
             </div>
-            <div class="color-blue tm-link mgr-10">新增</div>
+            <div @click="toInsert" class="color-blue tm-link mgr-10">新增</div>
             <div
               @click="importDataForStrategy"
               class="color-grey tm-link mgr-10"
@@ -150,11 +160,11 @@
               导入(策略)
             </div>
             <div
-              @click="exportDataForInsert"
+              @click="showExportSql"
               class="color-grey tm-link mgr-10"
               :class="{ 'tm-disabled': selects.length == 0 }"
             >
-              导出(Insert)({{ selects.length }})
+              导出选中(SQL)({{ selects.length }})
             </div>
             <div @click="doSearch" class="color-green tm-link mgr-10">查询</div>
           </div>
@@ -183,10 +193,16 @@
                   />
                   <span class="mgl-5">{{ scope.$index }}</span>
                   <template v-if="updates.indexOf(scope.row) >= 0">
-                    <i class="mgl-5 mdi mdi-text-box-outline"></i>
+                    <i
+                      class="mgl-5 mdi mdi-database-edit-outline"
+                      style="vertical-align: 0px"
+                    ></i>
                   </template>
                   <template v-if="inserts.indexOf(scope.row) >= 0">
-                    <i class="mgl-5 mdi mdi-text-box-plus-outline"></i>
+                    <i
+                      class="mgl-5 mdi mdi-database-plus-outline"
+                      style="vertical-align: 0px"
+                    ></i>
                   </template>
                 </template>
               </el-table-column>
@@ -202,6 +218,7 @@
                       <div class="">
                         <input
                           v-model="scope.row[column.name]"
+                          @change="inputValueChange(scope.row, column, $event)"
                           :placeholder="
                             scope.row[column.name] == null ? 'null' : ''
                           "
@@ -270,7 +287,7 @@ export default {
       ready: false,
       tableDetail: null,
       datas_loading: false,
-      datas: null,
+      datas: [],
       sql: null,
       params: null,
       executeSql: null,
@@ -424,7 +441,7 @@ export default {
       data.pageSize = this.pageSize;
       this.datas_loading = true;
 
-      this.datas = null;
+      this.datas = [];
       this.total = 0;
       this.sql = null;
       this.params = null;
@@ -436,6 +453,22 @@ export default {
       let res = await this.wrap.work("datas", data);
       res.data = res.data || {};
 
+      res.data.datas = res.data.datas || [];
+      res.data.datas.forEach((data) => {
+        this.tableDetail.columns.forEach((column) => {
+          if (data[column.name] != null)
+            if (column.type == "datetime") {
+              try {
+                data[column.name] = this.tool.formatDate(
+                  new Date(data[column.name]),
+                  "yyyy-MM-dd hh:mm:ss.SSS"
+                );
+              } catch (e) {
+                this.tool.error(e);
+              }
+            }
+        });
+      });
       this.datas = res.data.datas;
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
@@ -452,11 +485,49 @@ export default {
       });
       this.executeSql = executeSql;
     },
+    toSelectAll() {
+      if (this.datas.length == this.selects.length) {
+        return;
+      } else {
+        this.datas.forEach((one) => {
+          if (this.selects.indexOf(one) < 0) {
+            this.selects.push(one);
+          }
+        });
+      }
+    },
+    inputValueChange(data, column, $input) {
+      if (this.inserts.indexOf(data) >= 0) {
+        return;
+      }
+      // let value = $input.target.value;
+      // console.log(data, column, $input);
+      if (this.updates.indexOf(data) < 0) {
+        this.updates.push(data);
+      }
+    },
+    toUnselectAll() {
+      this.selects.splice(0, this.selects.length);
+    },
+    toDeleteSelect() {
+      this.tool.warn("功能开发中，敬请期待！");
+    },
+    toSaveSelect() {
+      this.tool.warn("功能开发中，敬请期待！");
+    },
+    toInsert() {
+      let data = {};
+      this.tableDetail.columns.forEach((column) => {
+        data[column.name] = null;
+      });
+      this.inserts.push(data);
+      this.datas.push(data);
+    },
     importDataForStrategy() {
       this.wrap.showImportDataForStrategy(this.database, this.tableDetail);
     },
-    exportDataForInsert() {
-      this.wrap.showSqlForInsert(this.tableDetail, this.selects);
+    showExportSql() {
+      this.wrap.showExportSql(this.tableDetail, this.selects);
     },
   },
   created() {},
