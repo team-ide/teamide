@@ -3,6 +3,7 @@ module teamide
 go 1.17
 
 require (
+	gitee.com/chunanyong/zorm v1.5.5
 	github.com/Chain-Zhang/pinyin v0.1.3
 	github.com/Shopify/sarama v1.31.1
 	github.com/dop251/goja v0.0.0-20220110113543-261677941f3c
@@ -17,6 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/pkg/sftp v1.13.4
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/wxnacy/wgo v1.0.4
 	go.uber.org/zap v1.20.0
@@ -31,6 +33,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91 // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
