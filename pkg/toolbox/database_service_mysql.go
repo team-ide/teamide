@@ -28,7 +28,7 @@ type SqlParam struct {
 type MysqlService struct {
 	config         db.DatabaseConfig
 	lastUseTime    int64
-	DatabaseWorker db.DatabaseWorker
+	DatabaseWorker *db.DatabaseWorker
 }
 
 func (this_ *MysqlService) init() (err error) {
