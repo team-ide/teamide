@@ -1,33 +1,64 @@
 package sql_ddl
 
+import (
+	"errors"
+	"teamide/pkg/db"
+)
+
 func ToDatabaseDDL(database string, databaseType string) (sqls []string, err error) {
 
-	if DatabaseIsMySql(databaseType) {
+	switch db.GetDatabaseType(databaseType) {
+	case db.DatabaseTypeMySql:
 		sqls, err = ToDatabaseDDLForMySql(database)
-	} else if DatabaseIsOracle(databaseType) {
+		break
+	case db.DatabaseTypeSqlite:
+		sqls, err = ToDatabaseDDLForSqlite(database)
+		break
+	case db.DatabaseTypeOracle:
 		sqls, err = ToDatabaseDDLForOracle(database)
-	} else if DatabaseIsShenTong(databaseType) {
+		break
+	case db.DatabaseTypeShenTong:
 		sqls, err = ToDatabaseDDLForShenTong(database)
-	} else if DatabaseIsDaMeng(databaseType) {
+		break
+	case db.DatabaseTypeDM:
 		sqls, err = ToDatabaseDDLForDaMeng(database)
-	} else if DatabaseIsKingbase(databaseType) {
+		break
+	case db.DatabaseTypeKingBase:
 		sqls, err = ToDatabaseDDLForKingBase(database)
+		break
+	case nil:
+		err = errors.New("数据库类型[" + databaseType + "]暂不支持")
+		break
+
 	}
 
 	return
 }
 
 func ToTableDDL(databaseType string, table *TableDetailInfo) (sqls []string, err error) {
-	if DatabaseIsMySql(databaseType) {
+
+	switch db.GetDatabaseType(databaseType) {
+	case db.DatabaseTypeMySql:
 		sqls, err = ToTableDDLForMySql(table)
-	} else if DatabaseIsOracle(databaseType) {
+		break
+	case db.DatabaseTypeSqlite:
+		sqls, err = ToTableDDLForSqlite(table)
+		break
+	case db.DatabaseTypeOracle:
 		sqls, err = ToTableDDLForOracle(table)
-	} else if DatabaseIsShenTong(databaseType) {
+		break
+	case db.DatabaseTypeShenTong:
 		sqls, err = ToTableDDLForShenTong(table)
-	} else if DatabaseIsDaMeng(databaseType) {
+		break
+	case db.DatabaseTypeDM:
 		sqls, err = ToTableDDLForDaMeng(table)
-	} else if DatabaseIsKingbase(databaseType) {
+		break
+	case db.DatabaseTypeKingBase:
 		sqls, err = ToTableDDLForKingBase(table)
+		break
+	case nil:
+		err = errors.New("数据库类型[" + databaseType + "]暂不支持")
+		break
 	}
 	return
 }

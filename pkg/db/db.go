@@ -4,29 +4,53 @@ import (
 	"context"
 	"errors"
 	"gitee.com/chunanyong/zorm"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
+	"strconv"
 	"strings"
 )
 
 type DatabaseType struct {
-	DSNFormat       string
-	DriverName      string
-	DBType          string
-	ColumnTypeInfos []*ColumnTypeInfo
+	DSNFormat         string
+	DriverName        string
+	DBType            string
+	ColumnTypeInfoMap map[string]*ColumnTypeInfo
+}
+
+func (this_ *DatabaseType) GetColumnTypeInfo(name string) (c *ColumnTypeInfo) {
+	c = this_.ColumnTypeInfoMap[name]
+	if c == nil {
+		for key, one := range this_.ColumnTypeInfoMap {
+			if strings.ToLower(key) == strings.ToLower(name) {
+				c = one
+				break
+			}
+		}
+	}
+	return
 }
 
 var (
-	DatabaseTypeMySql    = &DatabaseType{DSNFormat: "$username:$password@tcp($host:$port)/$database?charset=utf8mb4&parseTime=true", DriverName: "mysql", DBType: "mysql"}
-	DatabaseTypeSqlite   = &DatabaseType{DSNFormat: "$database", DriverName: "sqlite3", DBType: "sqlite"}
-	DatabaseTypeOracle   = &DatabaseType{}
-	DatabaseTypeShenTong = &DatabaseType{}
-	DatabaseTypeDM       = &DatabaseType{}
-	DatabaseTypeKingBase = &DatabaseType{}
-	DatabaseTypeKunLun   = &DatabaseType{}
-	DatabaseTypeGBase    = &DatabaseType{}
+	DatabaseTypeMySql    = addDatabaseType(&DatabaseType{DSNFormat: "$username:$password@tcp($host:$port)/$database?charset=utf8mb4&parseTime=true", DriverName: "mysql", DBType: "mysql"})
+	DatabaseTypeSqlite   = addDatabaseType(&DatabaseType{DSNFormat: "$database", DriverName: "sqlite3", DBType: "sqlite"})
+	DatabaseTypeOracle   = addDatabaseType(&DatabaseType{})
+	DatabaseTypeShenTong = addDatabaseType(&DatabaseType{})
+	DatabaseTypeDM       = addDatabaseType(&DatabaseType{})
+	DatabaseTypeKingBase = addDatabaseType(&DatabaseType{})
+	DatabaseTypeKunLun   = addDatabaseType(&DatabaseType{})
+	DatabaseTypeGBase    = addDatabaseType(&DatabaseType{})
 
-	DatabaseTypes = []*DatabaseType{DatabaseTypeMySql, DatabaseTypeSqlite, DatabaseTypeOracle, DatabaseTypeShenTong, DatabaseTypeDM, DatabaseTypeKingBase, DatabaseTypeKunLun, DatabaseTypeGBase}
+	DatabaseTypes []*DatabaseType
 )
+
+func addDatabaseType(databaseType *DatabaseType) *DatabaseType {
+	if databaseType.ColumnTypeInfoMap == nil {
+		databaseType.ColumnTypeInfoMap = make(map[string]*ColumnTypeInfo)
+	}
+	DatabaseTypes = append(DatabaseTypes, databaseType)
+	return databaseType
+}
 
 func GetDatabaseType(databaseType string) *DatabaseType {
 	switch strings.ToLower(databaseType) {
@@ -64,7 +88,7 @@ func init() {
 type DatabaseConfig struct {
 	Type     string `json:"type,omitempty"`
 	Host     string `json:"host,omitempty"`
-	Port     int32  `json:"port,omitempty"`
+	Port     int    `json:"port,omitempty"`
 	Database string `json:"database,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
@@ -80,15 +104,12 @@ func NewDatabaseWorker(config DatabaseConfig) (databaseWorker *DatabaseWorker, e
 	return databaseWorker, nil
 }
 
-var (
-	baseContext = context.Background()
-)
-
 // DatabaseWorker 基础操作
 type DatabaseWorker struct {
 	config       DatabaseConfig
 	databaseType *DatabaseType
 	dbDao        *zorm.DBDao
+	baseContext  context.Context
 }
 
 func (this_ *DatabaseWorker) init() (err error) {
@@ -99,11 +120,11 @@ func (this_ *DatabaseWorker) init() (err error) {
 	}
 
 	dns := this_.databaseType.DSNFormat
-	dns = strings.ReplaceAll(dns, "$username", this_.config.Username)
-	dns = strings.ReplaceAll(dns, "$password", this_.config.Password)
-	dns = strings.ReplaceAll(dns, "$host", this_.config.Host)
-	dns = strings.ReplaceAll(dns, "$port", string(this_.config.Port))
-	dns = strings.ReplaceAll(dns, "$database", this_.config.Database)
+	dns = strings.ReplaceAll(dns, `$username`, this_.config.Username)
+	dns = strings.ReplaceAll(dns, `$password`, this_.config.Password)
+	dns = strings.ReplaceAll(dns, `$host`, this_.config.Host)
+	dns = strings.ReplaceAll(dns, `$port`, strconv.Itoa(this_.config.Port))
+	dns = strings.ReplaceAll(dns, `$database`, this_.config.Database)
 	// 自定义zorm日志输出
 	// zorm.LogCallDepth = 4 //日志调用的层级
 
@@ -120,7 +141,7 @@ func (this_ *DatabaseWorker) init() (err error) {
 	zorm.FuncPrintSQL = func(sqlstr string, args []interface{}) {
 		//Logger.Info("Exec Sql", zap.Any("sql", sqlstr), zap.Any("args", args))
 	}
-
+	//fmt.Println("dns:" + dns)
 	// dbDaoConfig 数据库的配置.这里只是模拟,生产应该是读取配置配置文件,构造DataSourceConfig
 	dbDaoConfig := zorm.DataSourceConfig{
 		//DSN 数据库的连接字符串
@@ -151,11 +172,12 @@ func (this_ *DatabaseWorker) init() (err error) {
 	if err != nil {
 		return
 	}
+	this_.baseContext = context.Background()
 	return
 }
 
 func (this_ *DatabaseWorker) GetContext() (ctx context.Context) {
-	ctx, _ = this_.dbDao.BindContextDBConnection(baseContext)
+	ctx, _ = this_.dbDao.BindContextDBConnection(this_.baseContext)
 	return ctx
 }
 

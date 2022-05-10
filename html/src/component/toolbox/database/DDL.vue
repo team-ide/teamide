@@ -16,6 +16,7 @@
             @change="toLoad"
           >
             <el-option label="MySql" value="mysql"> </el-option>
+            <el-option label="Sqlite" value="sqlite"> </el-option>
             <el-option label="Oracle" value="oracle"> </el-option>
             <el-option label="达梦" value="dameng"> </el-option>
             <el-option label="神通" value="shentong"> </el-option>

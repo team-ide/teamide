@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"teamide/pkg/db"
 )
 
 const (
@@ -85,12 +86,12 @@ func ToTableDDLForMySql(table *TableDetailInfo) (sqls []string, err error) {
 			if one.NotNull {
 				data["NOT NULL"] = "true"
 			}
-			var typeFunc = MysqlTypeMap[strings.ToLower(one.Type)]
-			if typeFunc == nil {
-				err = errors.New("字段类型[" + one.Type + "]未映射!")
+			var c = db.DatabaseTypeMySql.GetColumnTypeInfo(one.Type)
+			if c == nil {
+				err = errors.New("MySql字段类型[" + one.Type + "]未映射!")
 				return
 			}
-			data["type"] = typeFunc(one.Length, one.Decimal)
+			data["type"] = c.FormatColumnType(one.Length, one.Decimal)
 			columnSql, err = formatSql(MySqlCreateTableColumn, data)
 			if err != nil {
 				return
