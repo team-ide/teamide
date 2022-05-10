@@ -29,6 +29,14 @@ type ToolboxModel struct {
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
 }
 
+func (entity *ToolboxModel) GetTableName() string {
+	return TableToolbox
+}
+
+func (entity *ToolboxModel) GetPKColumnName() string {
+	return ""
+}
+
 // ToolboxOpenModel 工具箱打开模型，和工具箱打开表对应
 type ToolboxOpenModel struct {
 	OpenId     int64     `json:"openId,omitempty"`
@@ -38,6 +46,14 @@ type ToolboxOpenModel struct {
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 	OpenTime   time.Time `json:"openTime,omitempty"`
+}
+
+func (entity *ToolboxOpenModel) GetTableName() string {
+	return TableToolboxOpen
+}
+
+func (entity *ToolboxOpenModel) GetPKColumnName() string {
+	return ""
 }
 
 // ToolboxOpenTabModel 工具箱打开模型，和工具箱打开表对应
@@ -50,4 +66,12 @@ type ToolboxOpenTabModel struct {
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 	OpenTime   time.Time `json:"openTime,omitempty"`
+}
+
+func (entity *ToolboxOpenTabModel) GetTableName() string {
+	return TableToolboxOpenTab
+}
+
+func (entity *ToolboxOpenTabModel) GetPKColumnName() string {
+	return ""
 }

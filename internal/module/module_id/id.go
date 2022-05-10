@@ -4,7 +4,6 @@ import (
 	"go.uber.org/zap"
 	"teamide/internal/context"
 	"teamide/internal/module/module_lock"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -63,22 +62,21 @@ func (this_ *IDService) GetNextIDs(idType IDType, size int64) (ids []int64, err 
 func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 
 	sql := `SELECT value FROM ` + TableID + ` WHERE idType=? `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{idType}, util.GetStructFieldTypes(IDModel{}))
+
+	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{int(idType)}, &id)
 	if err != nil {
 		return
 	}
 
-	if len(list) == 0 {
+	if !find {
 		id = 0
 
 		sql = `INSERT INTO ` + TableID + ` (idType, value, createTime) VALUES(?, ?, ?)`
-		_, err = this_.DatabaseWorker.Exec(sql, []interface{}{idType, id, time.Now()})
+		_, err = this_.DatabaseWorker.Exec(sql, []interface{}{int(idType), id, time.Now()})
 		if err != nil {
 			return
 		}
 
-	} else {
-		id = list[0]["value"].(int64)
 	}
 	return
 }
@@ -87,7 +85,7 @@ func (this_ *IDService) getID(idType IDType) (id int64, err error) {
 func (this_ *IDService) updateID(idType IDType, id int64) (err error) {
 
 	sql := `UPDATE ` + TableID + ` SET value=?,updateTime=? WHERE idType=?`
-	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{id, time.Now(), idType})
+	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{id, time.Now(), int(idType)})
 	if err != nil {
 		return
 	}

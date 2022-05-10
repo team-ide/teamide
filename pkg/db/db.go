@@ -4,8 +4,20 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"gitee.com/chunanyong/zorm"
+	"go.uber.org/zap"
 	"strings"
 )
+
+var (
+	Logger *zap.Logger
+)
+
+func init() {
+	loggerConfig := zap.NewDevelopmentConfig()
+	loggerConfig.Development = false
+	Logger, _ = loggerConfig.Build()
+}
 
 // DatabaseWorker 基础操作
 type DatabaseWorker interface {
@@ -13,8 +25,19 @@ type DatabaseWorker interface {
 	Open() (err error)
 	Close() (err error)
 	Exec(sql string, params []interface{}) (rowsAffected int64, err error)
+	Execs(sqlList []string, paramsList [][]interface{}) (rowsAffected int64, err error)
 	Count(sql string, params []interface{}) (count int64, err error)
-	Query(sql string, params []interface{}, columnTypes map[string]string) (list []map[string]interface{}, err error)
+	FinderCount(finder *zorm.Finder) (count int64, err error)
+	Query(sql string, params []interface{}, list interface{}) (err error)
+	FinderQuery(finder *zorm.Finder, list interface{}) (err error)
+	QueryOne(sql string, params []interface{}, one interface{}) (find bool, err error)
+	FinderQueryOne(finder *zorm.Finder, one interface{}) (find bool, err error)
+	QueryMap(sql string, params []interface{}) (list []map[string]interface{}, err error)
+	FinderQueryMap(finder *zorm.Finder) (list []map[string]interface{}, err error)
+	QueryPage(sql string, params []interface{}, list interface{}, page *zorm.Page) (err error)
+	FinderQueryPage(finder *zorm.Finder, list interface{}, page *zorm.Page) (err error)
+	QueryMapPage(sql string, params []interface{}, page *zorm.Page) (list []map[string]interface{}, err error)
+	FinderQueryMapPage(finder *zorm.Finder, page *zorm.Page) (list []map[string]interface{}, err error)
 }
 
 // DatabaseConfig 数据库配置

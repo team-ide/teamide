@@ -139,9 +139,10 @@ func (this_ *InstallService) InstallStep(stage *install.StageModel) (err error) 
 
 // checkExist 检测是否安装
 func (this_ *InstallService) checkInstalled(version, module, stage string) (res *StageDetails, err error) {
+	var list []map[string]interface{}
 
 	sql := `SELECT details FROM ` + install.TableInstall + ` WHERE version=? AND module=? AND stage=? `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{version, module, stage}, map[string]string{"details": "string"})
+	list, err = this_.DatabaseWorker.QueryMap(sql, []interface{}{version, module, stage})
 	if err != nil {
 		return
 	}

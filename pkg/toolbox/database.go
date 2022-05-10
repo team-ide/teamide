@@ -6,6 +6,7 @@ import (
 	"github.com/dop251/goja"
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/db"
 	"teamide/pkg/form"
 	"teamide/pkg/javascript"
 	"teamide/pkg/sql_ddl"
@@ -65,7 +66,7 @@ type DatabaseBaseRequest struct {
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 	var service DatabaseService
 
-	var databaseConfig DatabaseConfig
+	var databaseConfig db.DatabaseConfig
 	var bs []byte
 	bs, err = json.Marshal(config)
 	if err != nil {
@@ -337,17 +338,19 @@ func (this_ *importDataForStrategyTask) doImportData(database, table string, col
 	if len(dataList) == 0 {
 		return
 	}
-	var sqlParams []*SqlParam
+	var sqlList []string
+	var paramsList [][]interface{}
 	for _, data := range dataList {
 		var sqlParam *SqlParam
 		sqlParam, err = this_.getImportDataFinder(database, table, columns, data)
 		if err != nil {
 			return
 		}
-		sqlParams = append(sqlParams, sqlParam)
+		sqlList = append(sqlList, sqlParam.Sql)
+		paramsList = append(paramsList, sqlParam.Params)
 	}
 
-	_, err = this_.service.Execs(sqlParams)
+	_, err = this_.service.Execs(sqlList, paramsList)
 	if err != nil {
 		return
 	}
@@ -417,7 +420,7 @@ func init() {
 	}
 }
 
-func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) {
+func getDatabaseService(config db.DatabaseConfig) (res DatabaseService, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
 	if config.Username != "" {
 		key += "-" + util.GetMd5String(key+config.Username)
@@ -443,7 +446,7 @@ func getDatabaseService(config DatabaseConfig) (res DatabaseService, err error) 
 	return
 }
 
-func CreateDatabaseService(config DatabaseConfig) (service DatabaseService, err error) {
+func CreateDatabaseService(config db.DatabaseConfig) (service DatabaseService, err error) {
 	service, err = CreateMysqlService(config)
 	return
 }
@@ -457,15 +460,7 @@ type DatabaseService interface {
 	Tables(database string) ([]TableInfo, error)
 	TableDetails(database string, table string) ([]*sql_ddl.TableDetailInfo, error)
 	Datas(datasParam DatasParam) (DatasResult, error)
-	Execs(sqlParams []*SqlParam) (int, error)
-}
-
-type DatabaseConfig struct {
-	Type     string `json:"type"`
-	Host     string `json:"host"`
-	Port     int32  `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
 }
 
 type DatabaseInfo struct {

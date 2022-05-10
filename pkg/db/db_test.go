@@ -128,14 +128,10 @@ func query(config DatabaseConfig) {
 
 	var err error
 	databaseWorker, err := NewDatabaseWorker(config)
-	list, err := databaseWorker.Query(`
+	var list []map[string]interface{}
+	err = databaseWorker.Query(`
 select userId, name, createTime, updateTime from TM_USER
-`, []interface{}{}, map[string]string{
-		"userId":     "int64",
-		"name":       "string",
-		"createTime": "time",
-		"updateTime": "time",
-	})
+`, []interface{}{}, &list)
 	if err != nil {
 		panic(err)
 	}
