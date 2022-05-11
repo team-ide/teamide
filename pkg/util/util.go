@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -209,106 +208,10 @@ func GetLock(key string) (lock *sync.Mutex) {
 	return lock
 }
 
-func GetColumnNameByType(fieldType reflect.StructField) string {
-	name := fieldType.Tag.Get("column") // field tag
-	return name
-}
-
-func GetJsonNameByType(fieldType reflect.StructField) string {
-	name := fieldType.Tag.Get("json") // field tag
-	if strings.Index(name, ",") > 0 {
-		name = name[0:strings.Index(name, ",")]
-	}
-	return name
-}
-
 type ColumnType struct {
 	Column    string
 	FieldType *reflect.StructField
 	Value     *reflect.Value
-}
-
-func GetColumnTypes(bean interface{}) map[string]ColumnType {
-	refType := GetRefType(bean)
-	refValue := GetRefValue(bean)
-
-	fieldCount := refType.NumField() // field count
-	columnTypes := map[string]ColumnType{}
-	for i := 0; i < fieldCount; i++ {
-		fieldType := refType.Field(i) // field type
-		fieldValue := refValue.Field(i)
-		columnName := GetColumnNameByType(fieldType) // field tag
-		columnTypes[columnName] = ColumnType{
-			Column:    columnName,
-			FieldType: &fieldType,
-			Value:     &fieldValue,
-		}
-	}
-	return columnTypes
-}
-
-func GetFieldTypeValue(t reflect.Type, v reflect.Value) interface{} {
-	var value interface{}
-	switch t.Name() {
-	case "string":
-		value = v.String()
-	case "bool":
-		value = v.Bool()
-	case "float32", "float64":
-		value = v.Float()
-	case "Time", "time.Time":
-		t := v.Interface().(time.Time)
-		if t.UnixNano() <= 0 {
-			value = nil
-		} else {
-			value = t
-		}
-	case "int", "int8", "int16", "int32", "int64":
-		value = v.Int()
-	default:
-		if !v.IsNil() {
-			value = v.Interface()
-		}
-	}
-	return value
-}
-
-func GetStringValue(bean interface{}) string {
-	var value string
-	if bean == nil {
-		return value
-	}
-	refValue := GetRefValue(bean)
-	if refValue.IsZero() {
-		return value
-	}
-	switch refValue.Type().Name() {
-	case "string":
-		value = refValue.String()
-	case "bool":
-		value = fmt.Sprint(refValue.Bool())
-	case "float32", "float64":
-		v := refValue.Float()
-		if v != 0. {
-			value = fmt.Sprint(v)
-		}
-	case "Time", "time.Time":
-		t := refValue.Interface().(time.Time)
-		if t.UnixNano() > 0 {
-			value = Format(t)
-		}
-	case "int", "int8", "int16", "int32", "int64":
-		v := refValue.Int()
-		if v != 0 {
-			value = fmt.Sprint(v)
-		}
-	default:
-		if !refValue.IsNil() {
-			v := refValue.Interface()
-			value = fmt.Sprint(v)
-		}
-	}
-	return value
 }
 
 func GetRefValue(bean interface{}) reflect.Value {
@@ -318,51 +221,8 @@ func GetRefValue(bean interface{}) reflect.Value {
 	return reflect.ValueOf(bean)
 }
 
-func BeanToMap(bean interface{}) (res map[string]interface{}) {
-	if bean == nil {
-		return nil
-	}
-
-	res = map[string]interface{}{}
-
-	refType := GetRefType(bean)
-	refValue := GetRefValue(bean)
-
-	fieldCount := refType.NumField() // field count
-	for i := 0; i < fieldCount; i++ {
-		fieldType := refType.Field(i) // field type
-		jsonName := GetJsonNameByType(fieldType)
-		if jsonName == "" {
-			continue
-		}
-		fieldValue := refValue.Field(i) // field vlaue
-		value := GetFieldTypeValue(fieldType.Type, fieldValue)
-		switch fieldType.Type.Name() {
-		case "string", "int", "int8", "int16", "int32", "int64", "float32", "float64", "bool", "Time", "time.Time":
-			res[jsonName] = value
-		default:
-			if fieldType.Type.Kind() == reflect.Array || fieldType.Type.Kind() == reflect.Slice {
-				len := fieldValue.Len()
-				values := []map[string]interface{}{}
-				if len > 0 {
-					var i int
-					for i = 0; i < len; i++ {
-						oneValue := fieldValue.Index(i).Interface()
-						oneMap := BeanToMap(oneValue)
-						values = append(values, oneMap)
-					}
-				}
-				res[jsonName] = values
-			} else if fieldType.Type.Kind() == reflect.Map {
-				res[jsonName] = value
-			} else {
-				oneMap := BeanToMap(value)
-				res[jsonName] = oneMap
-			}
-
-		}
-	}
-	return
+func IsPtr(v interface{}) bool {
+	return reflect.ValueOf(v).Kind() == reflect.Ptr
 }
 
 var (

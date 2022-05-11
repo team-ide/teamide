@@ -10,7 +10,7 @@
     :before-close="hide"
     width="1200px"
   >
-    <div class="mgt--20">
+    <div class="mgt--20 toolbox-database-export-sql">
       <el-form
         class="mgt-10"
         ref="form"
@@ -30,11 +30,34 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="追加库名">
+          <el-switch v-model="form.appendDatabase" @change="toLoad">
+          </el-switch>
+        </el-form-item>
+        <template v-if="form.appendDatabase">
+          <el-form-item label="库名包装">
+            <el-select
+              placeholder="不包装"
+              v-model="form.databasePackingCharacter"
+              @change="toLoad"
+              style="width: 100px"
+            >
+              <el-option
+                v-for="(one, index) in packingCharacters"
+                :key="index"
+                :value="one.value"
+              >
+                {{ one.text }}
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </template>
         <el-form-item label="表名包装">
           <el-select
             placeholder="不包装"
             v-model="form.tablePackingCharacter"
             @change="toLoad"
+            style="width: 100px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -50,6 +73,7 @@
             placeholder="不包装"
             v-model="form.columnPackingCharacter"
             @change="toLoad"
+            style="width: 100px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -65,6 +89,7 @@
             placeholder="不包装"
             v-model="form.stringPackingCharacter"
             @change="toLoad"
+            style="width: 100px"
           >
             <el-option
               v-for="(one, index) in stringPackingCharacters"
@@ -76,21 +101,8 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div
-        v-if="sqls != null"
-        style="
-          letter-spacing: 1px;
-          word-break: break-all;
-          font-size: 12px;
-          border: 1px solid #ddd;
-          padding: 0px 5px;
-        "
-      >
-        <template v-for="(sql, index) in sqls">
-          <div :key="index" class="mgt-10">
-            {{ sql }}
-          </div>
-        </template>
+      <div>
+        <textarea v-model="showSQL"> </textarea>
       </div>
     </div>
   </el-dialog>
@@ -103,7 +115,7 @@ export default {
   data() {
     return {
       showDialog: false,
-      sqls: null,
+      showSQL: null,
       tableDetail: null,
       sqlTypes: [
         { value: "insert", text: "Insert" },
@@ -122,6 +134,8 @@ export default {
       ],
       form: {
         sqlType: "insert",
+        appendDatabase: false,
+        databasePackingCharacter: null,
         tablePackingCharacter: null,
         columnPackingCharacter: null,
         stringPackingCharacter: "'",
@@ -133,8 +147,9 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    async show(tableDetail, datas) {
-      this.datas = datas || [];
+    async show(database, tableDetail, dataList) {
+      this.database = database;
+      this.dataList = dataList || [];
       this.tableDetail = tableDetail;
       await this.toLoad();
       this.showDialog = true;
@@ -143,7 +158,24 @@ export default {
       this.showDialog = false;
     },
     async toLoad() {
-      this.sqls = await this.initSqls();
+      this.showSQL = "";
+      let sqls = await this.initSqls();
+      sqls.forEach((sql) => {
+        this.showSQL += sql + ";\n";
+      });
+    },
+    packingCharacterDatabase(value) {
+      if (
+        this.tool.isEmpty(this.form.databasePackingCharacter) ||
+        this.tool.isEmpty(value)
+      ) {
+        return value;
+      }
+      return (
+        this.form.databasePackingCharacter +
+        value +
+        this.form.databasePackingCharacter
+      );
     },
     packingCharacterTable(value) {
       if (
@@ -176,6 +208,9 @@ export default {
         this.tool.isEmpty(this.form.stringPackingCharacter) ||
         this.tool.isEmpty(value)
       ) {
+        return value;
+      }
+      if (typeof value != "string") {
         return value;
       }
       if (value.indexOf(this.form.stringPackingCharacter) < 0) {
@@ -214,25 +249,36 @@ export default {
       }
 
       let keys = [];
-      this.tableDetail.columns.forEach((column) => {
+      this.tableDetail.columnList.forEach((column) => {
         if (column.primaryKey) {
           keys.push(column.name);
         }
       });
-      this.datas.forEach((one) => {
-        let insertSql =
-          "INSERT INTO " + this.packingCharacterTable(this.tableDetail.name);
+      this.dataList.forEach((one) => {
+        let insertSql = "INSERT INTO ";
 
-        let updateSql =
-          "UPDATE " +
-          this.packingCharacterTable(this.tableDetail.name) +
-          " SET ";
+        if (this.form.appendDatabase) {
+          insertSql += this.packingCharacterDatabase(this.database) + ".";
+        }
+        insertSql += this.packingCharacterTable(this.tableDetail.name);
 
-        let deleteSql =
-          "DELETE FROM " + this.packingCharacterTable(this.tableDetail.name);
+        let updateSql = "UPDATE ";
+
+        if (this.form.appendDatabase) {
+          updateSql += this.packingCharacterDatabase(this.database) + ".";
+        }
+        updateSql +=
+          this.packingCharacterTable(this.tableDetail.name) + " SET ";
+
+        let deleteSql = "DELETE FROM ";
+
+        if (this.form.appendDatabase) {
+          deleteSql += this.packingCharacterDatabase(this.database) + ".";
+        }
+        deleteSql += this.packingCharacterTable(this.tableDetail.name);
 
         insertSql += " (";
-        this.tableDetail.columns.forEach((column) => {
+        this.tableDetail.columnList.forEach((column) => {
           insertSql += "" + this.packingCharacterColumn(column.name) + ", ";
         });
         if (insertSql.endsWith(", ")) {
@@ -244,30 +290,16 @@ export default {
 
         let whereSql = "WHERE ";
 
-        this.tableDetail.columns.forEach((column) => {
+        this.tableDetail.columnList.forEach((column) => {
           let value = one[column.name];
           let valueSql = value;
           if (value == null) {
             valueSql = "NULL";
           } else {
-            if (
-              column.type == "int" ||
-              column.type == "bigint" ||
-              column.type == "bit" ||
-              column.type == "number"
-            ) {
+            if (this.wrap.columnIsNumber(column)) {
               valueSql = value;
             } else {
-              if (column.type == "datetime") {
-                try {
-                  value = this.tool.formatDate(
-                    new Date(value),
-                    "yyyy-MM-dd hh:mm:ss.SSS"
-                  );
-                } catch (e) {
-                  this.tool.error(e);
-                }
-              }
+              value = this.wrap.formatDateColumn(column, value);
               valueSql = this.packingCharacterString(value);
             }
           }
@@ -313,13 +345,13 @@ export default {
         deleteSql += " " + whereSql;
         switch (this.form.sqlType) {
           case "insert":
-            sqls.push(insertSql + ";");
+            sqls.push(insertSql);
             break;
           case "update":
-            sqls.push(updateSql + ";");
+            sqls.push(updateSql);
             break;
           case "delete":
-            sqls.push(deleteSql + ";");
+            sqls.push(deleteSql);
             break;
         }
       });
@@ -338,4 +370,16 @@ export default {
 </script>
 
 <style>
+.toolbox-database-export-sql textarea {
+  width: 100%;
+  height: 400px;
+  letter-spacing: 1px;
+  word-spacing: 5px;
+  word-break: break-all;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  padding: 0px 5px;
+  outline: none;
+  user-select: none;
+}
 </style>

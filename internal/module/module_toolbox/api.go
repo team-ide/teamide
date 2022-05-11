@@ -16,7 +16,6 @@ type ToolboxApi struct {
 }
 
 func NewToolboxApi(ToolboxService *ToolboxService) *ToolboxApi {
-	toolbox.Logger = ToolboxService.Logger
 	return &ToolboxApi{
 		ServerContext:  ToolboxService.ServerContext,
 		ToolboxService: ToolboxService,

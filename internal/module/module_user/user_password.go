@@ -27,8 +27,10 @@ type UserPasswordService struct {
 
 // CheckPassword 检测密码是否一致
 func (this_ *UserPasswordService) CheckPassword(userId int64, password string) (res bool, err error) {
+	var list []*UserPasswordModel
+
 	sql := `SELECT salt,password FROM ` + TableUserPassword + ` WHERE userId=? `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserPasswordModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{userId}, &list)
 	if err != nil {
 		return
 	}
@@ -37,9 +39,9 @@ func (this_ *UserPasswordService) CheckPassword(userId int64, password string) (
 		return
 	}
 
-	pwd := util.EncodePassword(list[0]["salt"].(string), password)
+	pwd := util.EncodePassword(list[0].Salt, password)
 
-	res = pwd == list[0]["password"].(string)
+	res = pwd == list[0].Password
 
 	return
 }

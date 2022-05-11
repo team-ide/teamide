@@ -79,7 +79,7 @@ jobs:
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
-      - run: go build -o ./release/teamide-darwin-x64/teamide
+      - run: go build -ldflags="-w -s" -o ./release/teamide-darwin-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -116,9 +116,9 @@ jobs:
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
-      - run: go build -o ./release/teamide-linux-x64/teamide
+      - run: go build -ldflags="-w -s" -o ./release/teamide-linux-x64/teamide
 
-      - run: go build -ldflags "-X main.buildFlags=--isServer" -o ./release/teamide-server-linux-x64/teamide
+      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer" -o ./release/teamide-server-linux-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -155,7 +155,7 @@ jobs:
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
 
-      - run: go build -ldflags "-H=windowsgui" -o ./release/teamide-windows-x64/teamide.exe
+      - run: go build -ldflags "-w -s -H=windowsgui" -o ./release/teamide-windows-x64/teamide.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2

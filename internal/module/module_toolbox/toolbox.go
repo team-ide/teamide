@@ -7,7 +7,6 @@ import (
 	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -31,18 +30,16 @@ type ToolboxService struct {
 
 // Get 查询单个
 func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error) {
+	res = &ToolboxModel{}
 
 	sql := `SELECT * FROM ` + TableToolbox + ` WHERE toolboxId=? `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{toolboxId}, util.GetStructFieldTypes(ToolboxModel{}))
+	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{toolboxId}, res)
 	if err != nil {
 		this_.Logger.Error("Get Error", zap.Error(err))
 		return
 	}
 
-	if len(list) > 0 {
-		res = &ToolboxModel{}
-		err = util.ToStruct(list[0], res)
-	} else {
+	if !find {
 		res = nil
 	}
 	return
@@ -66,15 +63,9 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 		values = append(values, fmt.Sprint("%", toolbox.Name, "%"))
 	}
 
-	list, err := this_.DatabaseWorker.Query(sql, values, util.GetStructFieldTypes(ToolboxModel{}))
+	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {
 		this_.Logger.Error("Query Error", zap.Error(err))
-		return
-	}
-
-	err = util.ToStruct(list, &res)
-	if err != nil {
-		this_.Logger.Error("ToStruct Error", zap.Error(err))
 		return
 	}
 
@@ -99,17 +90,17 @@ func (this_ *ToolboxService) CheckUserToolboxExist(toolboxType string, name stri
 
 // GetUserToolboxByName 根据类型和名称
 func (this_ *ToolboxService) GetUserToolboxByName(toolboxType string, name string, userId int64) (res *ToolboxModel, err error) {
+	var list []*ToolboxModel
 
 	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 AND (userId = ? AND toolboxType = ? AND name = ?)`
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId, toolboxType, name}, util.GetStructFieldTypes(ToolboxModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{userId, toolboxType, name}, &list)
 	if err != nil {
 		this_.Logger.Error("GetUserToolboxByName Error", zap.Error(err))
 		return
 	}
 
 	if len(list) > 0 {
-		res = &ToolboxModel{}
-		err = util.ToStruct(list[0], res)
+		res = list[0]
 	} else {
 		res = nil
 	}
@@ -187,18 +178,11 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, err error) {
 
 	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? ORDER BY createTime ASC `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(ToolboxOpenModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{userId}, &res)
 	if err != nil {
 		this_.Logger.Error("QueryOpens Error", zap.Error(err))
 		return
 	}
-
-	err = util.ToStruct(list, &res)
-	if err != nil {
-		this_.Logger.Error("ToStruct Error", zap.Error(err))
-		return
-	}
-
 	return
 }
 
@@ -261,15 +245,9 @@ func (this_ *ToolboxService) OpenTab(toolboxOpenTab *ToolboxOpenTabModel) (rowsA
 func (this_ *ToolboxService) QueryOpenTabs(openId int64) (res []*ToolboxOpenTabModel, err error) {
 
 	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE openId=? ORDER BY createTime ASC `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{openId}, util.GetStructFieldTypes(ToolboxOpenTabModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{openId}, &res)
 	if err != nil {
 		this_.Logger.Error("QueryOpenTabs Error", zap.Error(err))
-		return
-	}
-
-	err = util.ToStruct(list, &res)
-	if err != nil {
-		this_.Logger.Error("ToStruct Error", zap.Error(err))
 		return
 	}
 

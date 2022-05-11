@@ -5,7 +5,6 @@ import (
 	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -29,16 +28,15 @@ type UserService struct {
 
 // Get 查询单个
 func (this_ *UserService) Get(userId int64) (res *UserModel, err error) {
-
+	var list []*UserModel
 	sql := `SELECT * FROM ` + TableUser + ` WHERE userId=? `
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{userId}, util.GetStructFieldTypes(UserModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{userId}, &list)
 	if err != nil {
 		return
 	}
 
 	if len(list) > 0 {
-		res = &UserModel{}
-		err = util.ToStruct(list[0], res)
+		res = list[0]
 	} else {
 		res = nil
 	}
@@ -75,12 +73,7 @@ func (this_ *UserService) Query(user *UserModel) (res []*UserModel, err error) {
 		values = append(values, fmt.Sprint("%", user.Email, "%"))
 	}
 
-	list, err := this_.DatabaseWorker.Query(sql, values, util.GetStructFieldTypes(UserModel{}))
-	if err != nil {
-		return
-	}
-
-	err = util.ToStruct(list, &res)
+	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {
 		return
 	}
@@ -117,15 +110,16 @@ func (this_ *UserService) CheckExist(account string, email string) (res bool, er
 // GetByAccount 根据账号查询
 func (this_ *UserService) GetByAccount(account string) (res *UserModel, err error) {
 
+	var list []*UserModel
+
 	sql := `SELECT * FROM ` + TableUser + ` WHERE deleted=2 AND (account = ? OR email = ?)`
-	list, err := this_.DatabaseWorker.Query(sql, []interface{}{account, account}, util.GetStructFieldTypes(UserModel{}))
+	err = this_.DatabaseWorker.Query(sql, []interface{}{account, account}, &list)
 	if err != nil {
 		return
 	}
 
 	if len(list) > 0 {
-		res = &UserModel{}
-		err = util.ToStruct(list[0], res)
+		res = list[0]
 	} else {
 		res = nil
 	}
