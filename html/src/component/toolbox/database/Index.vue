@@ -56,7 +56,66 @@ export default {
   watch: {},
   methods: {
     init() {
+      this.wrap.columnIsNumber = this.columnIsNumber;
+      this.wrap.columnIsDate = this.columnIsDate;
+      this.wrap.formatDateColumn = this.formatDateColumn;
       this.ready = true;
+    },
+    columnIsNumber(column) {
+      let type = ("" + column.type).toLowerCase();
+      if (
+        type == "int" ||
+        type == "bigint" ||
+        type == "bit" ||
+        type == "number" ||
+        type == "tinyint" ||
+        type == "smallint" ||
+        type == "integer" ||
+        type == "float" ||
+        type == "double" ||
+        type == "dec" ||
+        type == "decimal"
+      ) {
+        return true;
+      }
+      return false;
+    },
+    columnIsDate(column) {
+      let type = ("" + column.type).toLowerCase();
+      if (
+        type == "year" ||
+        type == "date" ||
+        type == "time" ||
+        type == "datetime" ||
+        type == "timestamp"
+      ) {
+        return true;
+      }
+      return false;
+    },
+    formatDateColumn(column, value) {
+      if (value == null) {
+        return;
+      }
+      let type = ("" + column.type).toLowerCase();
+
+      try {
+        if (type == "year") {
+          value = this.tool.formatDate(new Date(value), "yyyy");
+        } else if (type == "date") {
+          value = this.tool.formatDate(new Date(value), "yyyy-MM-dd");
+        } else if (type == "time") {
+          value = this.tool.formatDate(new Date(value), "hh:mm:ss");
+        } else if (type == "datetime" || type == "timestamp") {
+          value = this.tool.formatDate(
+            new Date(value),
+            "yyyy-MM-dd hh:mm:ss"
+          );
+        }
+      } catch (e) {
+        this.tool.error(e);
+      }
+      return value;
     },
     refresh() {
       this.$refs.ToolboxDatabaseDatabase.refresh();

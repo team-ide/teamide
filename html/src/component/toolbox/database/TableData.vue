@@ -191,7 +191,7 @@
                     v-model="selects"
                     :value="scope.row"
                   />
-                  <span class="mgl-5">{{ scope.$index }}</span>
+                  <span class="mgl-5">{{ scope.$index + 1 }}</span>
                   <template v-if="updates.indexOf(scope.row) >= 0">
                     <i
                       class="mgl-5 mdi mdi-database-edit-outline"
@@ -454,27 +454,24 @@ export default {
       res.data = res.data || {};
 
       let dataList = res.data.dataList || [];
+      this.dataListCache = [];
       dataList.forEach((data) => {
         this.tableDetail.columnList.forEach((column) => {
-          if (data[column.name] != null)
-            if (column.type == "datetime") {
-              try {
-                data[column.name] = this.tool.formatDate(
-                  new Date(data[column.name]),
-                  "yyyy-MM-dd hh:mm:ss.SSS"
-                );
-              } catch (e) {
-                this.tool.error(e);
-              }
-            }
+          if (data[column.name] != null) {
+            data[column.name] = this.wrap.formatDateColumn(
+              column,
+              data[column.name]
+            );
+          }
         });
+        this.dataListCache.push(Object.assign({}, data));
       });
       this.dataList = dataList;
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
       this.params = res.data.params || [];
       this.dataList_loading = false;
-      let executeSql = this.sql;
+      let executeSql = this.sql || "";
       executeSql = executeSql.replace(new RegExp("\\?", "g"), "{$v#-}");
       this.params.forEach((v, i) => {
         if (typeof v == "string") {
@@ -501,19 +498,116 @@ export default {
         return;
       }
       // let value = $input.target.value;
-      // console.log(data, column, $input);
-      if (this.updates.indexOf(data) < 0) {
-        this.updates.push(data);
+      // data[column.name] = value;
+      let dataUpdated = false;
+      let dataIndex = this.dataList.indexOf(data);
+      let dataCache = this.dataListCache[dataIndex];
+      for (let key in data) {
+        if (data[key] != dataCache[key]) {
+          dataUpdated = true;
+          break;
+        }
+      }
+      let dataUpdateIndex = this.updates.indexOf(data);
+      if (dataUpdated) {
+        if (dataUpdateIndex < 0) {
+          this.updates.push(data);
+        }
+      } else {
+        if (dataUpdateIndex >= 0) {
+          this.updates.splice(dataUpdateIndex, 1);
+        }
       }
     },
     toUnselectAll() {
       this.selects.splice(0, this.selects.length);
     },
     toDeleteSelect() {
-      this.tool.warn("功能开发中，敬请期待！");
+      let deletes = [];
+      this.selects.forEach((one) => {
+        if (this.inserts.indexOf(one) >= 0) {
+          return;
+        }
+        deletes.push(one);
+      });
+      if (deletes.length == 0) {
+        this.tool.warn("暂无需要删除的数据");
+        return;
+      }
+      let msg = "此次将删除（" + deletes.length + "）条数据";
+      msg += "，确认删除？";
+      this.tool
+        .confirm(msg)
+        .then(async () => {
+          this.doDelete(deletes);
+        })
+        .catch((e) => {});
     },
     toSaveSelect() {
-      this.tool.warn("功能开发中，敬请期待！");
+      if (this.updates.length == 0 && this.inserts.length == 0) {
+        this.tool.warn("暂无需要保存的数据");
+        return;
+      }
+      let msg =
+        "此次将更新（" +
+        this.updates.length +
+        "）条数据，新增（" +
+        this.inserts.length +
+        "）条数据";
+      msg += "，确认保存？";
+      this.tool
+        .confirm(msg)
+        .then(async () => {
+          this.doSave(this.updates, this.inserts);
+        })
+        .catch((e) => {});
+    },
+    async doSave(updates, inserts) {
+      let data = {};
+      data.database = this.database;
+      data.table = this.table;
+      data.columnList = this.tableDetail.columnList;
+      data.updateList = updates;
+      data.insertList = inserts;
+
+      let res = await this.wrap.work("saveDataList", data);
+      if (res.code != 0) {
+        return;
+      }
+      res.data = res.data || {};
+      let task = res.data.task || {};
+      let info = "保存成功，";
+      info +=
+        "成功记录数（" +
+        task.saveSuccess +
+        "）条，耗时（" +
+        task.useTime +
+        "）毫秒！";
+      this.tool.success(info);
+      this.doSearch();
+    },
+    async doDelete(deletes) {
+      let data = {};
+      data.database = this.database;
+      data.table = this.table;
+      data.columnList = this.tableDetail.columnList;
+      data.deleteList = deletes;
+
+      let res = await this.wrap.work("saveDataList", data);
+      if (res.code != 0) {
+        return;
+      }
+      res.data = res.data || {};
+      let task = res.data.task || {};
+      let info = "删除成功，";
+      info +=
+        "成功记录数（" +
+        task.saveSuccess +
+        "）条，耗时（" +
+        task.useTime +
+        "）毫秒！";
+      this.tool.success(info);
+      this.doSearch();
     },
     toInsert() {
       let data = {};
@@ -527,7 +621,7 @@ export default {
       this.wrap.showImportDataForStrategy(this.database, this.tableDetail);
     },
     showExportSql() {
-      this.wrap.showExportSql(this.tableDetail, this.selects);
+      this.wrap.showExportSql(this.database, this.tableDetail, this.selects);
     },
   },
   created() {},

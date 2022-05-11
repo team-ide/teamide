@@ -32,22 +32,24 @@
           <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>
         </el-form-item>
-        <el-form-item label="库名包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.databasePackingCharacter"
-            @change="toLoad"
-            style="width: 100px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
+        <template v-if="form.appendDatabase">
+          <el-form-item label="库名包装">
+            <el-select
+              placeholder="不包装"
+              v-model="form.databasePackingCharacter"
+              @change="toLoad"
+              style="width: 100px"
             >
-              {{ one.text }}
-            </el-option>
-          </el-select>
-        </el-form-item>
+              <el-option
+                v-for="(one, index) in packingCharacters"
+                :key="index"
+                :value="one.value"
+              >
+                {{ one.text }}
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </template>
         <el-form-item label="表名包装">
           <el-select
             placeholder="不包装"
@@ -97,14 +99,7 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <b-form-textarea
-        size="sm"
-        rows="10"
-        max-rows="30"
-        v-model="showDDL"
-        class="toolbox-database-textarea"
-      >
-      </b-form-textarea>
+      <textarea v-model="showDDL"> </textarea>
     </template>
   </div>
 </template>
@@ -184,7 +179,7 @@ export default {
   width: 100%;
   height: 100%;
 }
-.toolbox-database-textarea {
+.toolbox-database-ddl textarea {
   width: 100%;
   height: calc(100% - 140px) !important;
   margin-top: 23px;

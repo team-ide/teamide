@@ -60,6 +60,9 @@ type DatabaseBaseRequest struct {
 	PageSize       int                      `json:"pageSize"`
 	DatabaseType   string                   `json:"databaseType"`
 	ImportDataList []map[string]interface{} `json:"importDataList"`
+	InsertList     []map[string]interface{} `json:"insertList"`
+	UpdateList     []map[string]interface{} `json:"updateList"`
+	DeleteList     []map[string]interface{} `json:"deleteList"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -169,6 +172,21 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["params"] = dataListRequest.Params
 		res["total"] = dataListRequest.Total
 		res["dataList"] = dataListRequest.DataList
+	case "saveDataList":
+		saveDataListTask := &saveDataListTask{
+			Database:   request.Database,
+			Table:      request.Table,
+			ColumnList: request.ColumnList,
+			InsertList: request.InsertList,
+			UpdateList: request.UpdateList,
+			DeleteList: request.DeleteList,
+			service:    service,
+		}
+		err = saveDataListTask.Start()
+		if err != nil {
+			return
+		}
+		res["task"] = saveDataListTask
 	case "importDataForStrategy":
 		taskKey := util.GenerateUUID()
 		importDataForStrategyTask := &importDataForStrategyTask{
@@ -397,6 +415,171 @@ func (this_ *importDataForStrategyTask) getImportDataFinder(database, table stri
 		Sql:    sql,
 		Params: values,
 	}
+	return
+}
+
+type saveDataListTask struct {
+	Key             string                   `json:"key,omitempty"`
+	Database        string                   `json:"database,omitempty"`
+	Table           string                   `json:"table,omitempty"`
+	ColumnList      []*db.TableColumnModel   `json:"columnList,omitempty"`
+	UpdateList      []map[string]interface{} `json:"-"`
+	InsertList      []map[string]interface{} `json:"-"`
+	DeleteList      []map[string]interface{} `json:"-"`
+	SaveBatchNumber int                      `json:"saveBatchNumber,omitempty"`
+	DataCount       int                      `json:"dataCount"`
+	ReadyDataCount  int                      `json:"readyDataCount"`
+	SaveSuccess     int                      `json:"saveSuccess"`
+	SaveError       int                      `json:"saveError"`
+	IsEnd           bool                     `json:"isEnd,omitempty"`
+	StartTime       time.Time                `json:"startTime,omitempty"`
+	EndTime         time.Time                `json:"endTime,omitempty"`
+	Error           string                   `json:"error,omitempty"`
+	UseTime         int64                    `json:"useTime"`
+	IsStop          bool                     `json:"isStop"`
+	service         DatabaseService
+}
+
+func (this_ *saveDataListTask) Stop() {
+	this_.IsStop = true
+}
+
+func (this_ *saveDataListTask) Start() (err error) {
+	this_.StartTime = time.Now()
+	defer func() {
+		if err := recover(); err != nil {
+			Logger.Error("根据保存数据异常", zap.Any("error", err))
+			this_.Error = fmt.Sprint(err)
+		}
+		this_.EndTime = time.Now()
+		this_.IsEnd = true
+		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
+	}()
+	this_.DataCount += len(this_.InsertList)
+	this_.DataCount += len(this_.UpdateList)
+	this_.DataCount += len(this_.DeleteList)
+
+	saveBatchNumber := this_.SaveBatchNumber
+	if saveBatchNumber <= 0 {
+		saveBatchNumber = 10
+	}
+
+	var sql string
+	var values []interface{}
+	var sqlList []string
+	var paramsList [][]interface{}
+	if len(this_.InsertList) > 0 {
+		for _, data := range this_.InsertList {
+			sql, values, err = this_.getFinder(this_.Database, this_.Table, this_.ColumnList, data, saveDataListWorkTypeInsert)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sql)
+			paramsList = append(paramsList, values)
+		}
+	}
+	if len(this_.UpdateList) > 0 {
+		for _, data := range this_.UpdateList {
+			sql, values, err = this_.getFinder(this_.Database, this_.Table, this_.ColumnList, data, saveDataListWorkTypeUpdate)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sql)
+			paramsList = append(paramsList, values)
+		}
+	}
+	if len(this_.DeleteList) > 0 {
+		for _, data := range this_.DeleteList {
+			sql, values, err = this_.getFinder(this_.Database, this_.Table, this_.ColumnList, data, saveDataListWorkTypeDelete)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sql)
+			paramsList = append(paramsList, values)
+		}
+	}
+	_, err = this_.service.Execs(sqlList, paramsList)
+	if err != nil {
+		this_.SaveError += len(sqlList)
+		return
+	}
+	this_.SaveSuccess += len(sqlList)
+	return
+}
+
+type saveDataListWorkType int
+
+var (
+	saveDataListWorkTypeInsert saveDataListWorkType = 1
+	saveDataListWorkTypeUpdate saveDataListWorkType = 2
+	saveDataListWorkTypeDelete saveDataListWorkType = 3
+)
+
+func (this_ *saveDataListTask) getFinder(database, table string, columnList []*db.TableColumnModel, data map[string]interface{}, workType saveDataListWorkType) (sql string, values []interface{}, err error) {
+	var keys []string
+	for _, column := range columnList {
+		if column.PrimaryKey {
+			keys = append(keys, column.Name)
+		}
+	}
+	if workType == saveDataListWorkTypeInsert {
+		insertColumns := ""
+		insertValues := ""
+		for _, column := range columnList {
+			value, valueOk := data[column.Name]
+			if !valueOk {
+				continue
+			}
+			insertColumns += column.Name + ","
+			insertValues += "?,"
+			values = append(values, value)
+		}
+		insertColumns = strings.TrimSuffix(insertColumns, ",")
+		insertValues = strings.TrimSuffix(insertValues, ",")
+		sql = "INSERT INTO " + database + "." + table + ""
+		sql += "(" + insertColumns + ")"
+		sql += " VALUES "
+		sql += "(" + insertValues + ")"
+	} else if workType == saveDataListWorkTypeUpdate {
+		sql = "UPDATE " + database + "." + table + " "
+
+		sql += "SET "
+
+		for _, column := range columnList {
+			sql += "" + column.Name + " = ? , "
+			values = append(values, data[column.Name])
+		}
+		sql = strings.TrimSuffix(sql, " , ")
+
+		sql += " WHERE "
+		if len(keys) > 0 {
+			for _, key := range keys {
+				sql += "" + key + " = ? AND "
+				values = append(values, data[key])
+			}
+		} else {
+			for _, column := range columnList {
+				sql += "" + column.Name + " = ? AND "
+				values = append(values, data[column.Name])
+			}
+		}
+		sql = strings.TrimSuffix(sql, " AND ")
+	} else if workType == saveDataListWorkTypeDelete {
+		sql = "DELETE FROM " + database + "." + table + " WHERE "
+		if len(keys) > 0 {
+			for _, key := range keys {
+				sql += "" + key + " = ? AND "
+				values = append(values, data[key])
+			}
+		} else {
+			for _, column := range columnList {
+				sql += "" + column.Name + " = ? AND "
+				values = append(values, data[column.Name])
+			}
+		}
+		sql = strings.TrimSuffix(sql, " AND ")
+	}
+
 	return
 }
 
