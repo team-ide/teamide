@@ -17,7 +17,7 @@
                       class="part-form-input"
                     >
                       <option :value="null" text="请选择">请选择</option>
-                      <template v-for="(one, index) in tableDetail.columns">
+                      <template v-for="(one, index) in tableDetail.columnList">
                         <option
                           :key="index"
                           :value="one.name"
@@ -169,13 +169,13 @@
             <div @click="doSearch" class="color-green tm-link mgr-10">查询</div>
           </div>
         </tm-layout>
-        <tm-layout height="auto" v-loading="datas_loading">
+        <tm-layout height="auto" v-loading="dataList_loading">
           <div
             class="toolbox-database-table-data-table"
             v-if="tableDetail != null"
           >
             <el-table
-              :data="datas"
+              :data="dataList"
               :border="true"
               height="100%"
               style="width: 100%"
@@ -206,7 +206,7 @@
                   </template>
                 </template>
               </el-table-column>
-              <template v-for="(column, index) in form.columns">
+              <template v-for="(column, index) in form.columnList">
                 <template v-if="column.checked">
                   <el-table-column
                     :key="index"
@@ -286,8 +286,8 @@ export default {
     return {
       ready: false,
       tableDetail: null,
-      datas_loading: false,
-      datas: [],
+      dataList_loading: false,
+      dataList: [],
       sql: null,
       params: null,
       executeSql: null,
@@ -300,7 +300,7 @@ export default {
       form: {
         wheres: [],
         orders: [],
-        columns: [],
+        columnList: [],
       },
     };
   },
@@ -315,19 +315,19 @@ export default {
       this.result = null;
       this.form.wheres = [];
       this.form.orders = [];
-      this.form.columns = [];
-      if (this.tableDetail && this.tableDetail.columns) {
-        this.tableDetail.columns.forEach((one, index) => {
+      this.form.columnList = [];
+      if (this.tableDetail && this.tableDetail.columnList) {
+        this.tableDetail.columnList.forEach((one, index) => {
           let column = Object.assign({}, one);
           column.checked = true;
-          this.form.columns.push(column);
+          this.form.columnList.push(column);
         });
       }
       this.ready = true;
       this.doSearch();
       this.$nextTick(() => {
-        if (this.tableDetail && this.tableDetail.columns) {
-          this.tableDetail.columns.forEach((one, index) => {
+        if (this.tableDetail && this.tableDetail.columnList) {
+          this.tableDetail.columnList.forEach((one, index) => {
             if (index < 3) {
               let where = this.addWhere();
               where.checked = false;
@@ -379,9 +379,9 @@ export default {
         andOr: "AND",
       };
       let column = null;
-      if (this.tableDetail && this.tableDetail.columns) {
-        if (this.tableDetail.columns.length > 0) {
-          this.tableDetail.columns.forEach((one) => {
+      if (this.tableDetail && this.tableDetail.columnList) {
+        if (this.tableDetail.columnList.length > 0) {
+          this.tableDetail.columnList.forEach((one) => {
             if (column != null) {
               return;
             }
@@ -409,7 +409,7 @@ export default {
     async doSearch() {
       let wheres = [];
       let orders = [];
-      let columns = [];
+      let columnList = [];
       this.form.wheres.forEach((where) => {
         if (!where.checked) {
           return;
@@ -425,23 +425,23 @@ export default {
         }
         orders.push(order);
       });
-      this.form.columns.forEach((column) => {
+      this.form.columnList.forEach((column) => {
         if (!column.checked) {
           return;
         }
-        columns.push(column);
+        columnList.push(column);
       });
       let data = {};
       data.database = this.database;
       data.table = this.table;
       data.wheres = wheres;
       data.orders = orders;
-      data.columns = columns;
+      data.columnList = columnList;
       data.pageIndex = this.pageIndex;
       data.pageSize = this.pageSize;
-      this.datas_loading = true;
+      this.dataList_loading = true;
 
-      this.datas = [];
+      this.dataList = [];
       this.total = 0;
       this.sql = null;
       this.params = null;
@@ -450,12 +450,12 @@ export default {
       this.inserts = [];
       this.selects = [];
 
-      let res = await this.wrap.work("datas", data);
+      let res = await this.wrap.work("dataList", data);
       res.data = res.data || {};
 
-      res.data.datas = res.data.datas || [];
-      res.data.datas.forEach((data) => {
-        this.tableDetail.columns.forEach((column) => {
+      let dataList = res.data.dataList || [];
+      dataList.forEach((data) => {
+        this.tableDetail.columnList.forEach((column) => {
           if (data[column.name] != null)
             if (column.type == "datetime") {
               try {
@@ -469,11 +469,11 @@ export default {
             }
         });
       });
-      this.datas = res.data.datas;
+      this.dataList = dataList;
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
       this.params = res.data.params || [];
-      this.datas_loading = false;
+      this.dataList_loading = false;
       let executeSql = this.sql;
       executeSql = executeSql.replace(new RegExp("\\?", "g"), "{$v#-}");
       this.params.forEach((v, i) => {
@@ -486,10 +486,10 @@ export default {
       this.executeSql = executeSql;
     },
     toSelectAll() {
-      if (this.datas.length == this.selects.length) {
+      if (this.dataList.length == this.selects.length) {
         return;
       } else {
-        this.datas.forEach((one) => {
+        this.dataList.forEach((one) => {
           if (this.selects.indexOf(one) < 0) {
             this.selects.push(one);
           }
@@ -517,11 +517,11 @@ export default {
     },
     toInsert() {
       let data = {};
-      this.tableDetail.columns.forEach((column) => {
+      this.tableDetail.columnList.forEach((column) => {
         data[column.name] = null;
       });
       this.inserts.push(data);
-      this.datas.push(data);
+      this.dataList.push(data);
     },
     importDataForStrategy() {
       this.wrap.showImportDataForStrategy(this.database, this.tableDetail);

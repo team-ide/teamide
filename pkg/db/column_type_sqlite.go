@@ -4,13 +4,13 @@ var (
 
 	/** 数值类型 **/
 
-	SqliteBIT       = addSqliteColumnType(&ColumnTypeInfo{Name: "BIT", TypeFormat: "NUMBER($l)", HasLength: false, IsNumber: true})
-	SqliteTINYINT   = addSqliteColumnType(&ColumnTypeInfo{Name: "TINYINT", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
-	SqliteSMALLINT  = addSqliteColumnType(&ColumnTypeInfo{Name: "SMALLINT", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
-	SqliteMEDIUMINT = addSqliteColumnType(&ColumnTypeInfo{Name: "MEDIUMINT", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
-	SqliteINT       = addSqliteColumnType(&ColumnTypeInfo{Name: "INT", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
-	SqliteINTEGER   = addSqliteColumnType(&ColumnTypeInfo{Name: "INTEGER", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
-	SqliteBIGINT    = addSqliteColumnType(&ColumnTypeInfo{Name: "BIGINT", TypeFormat: "NUMBER($l)", HasLength: true, IsNumber: true})
+	SqliteBIT       = addSqliteColumnType(&ColumnTypeInfo{Name: "BIT", TypeFormat: "NUMBER($l, $d)", HasLength: false, IsNumber: true})
+	SqliteTINYINT   = addSqliteColumnType(&ColumnTypeInfo{Name: "TINYINT", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteSMALLINT  = addSqliteColumnType(&ColumnTypeInfo{Name: "SMALLINT", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteMEDIUMINT = addSqliteColumnType(&ColumnTypeInfo{Name: "MEDIUMINT", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteINT       = addSqliteColumnType(&ColumnTypeInfo{Name: "INT", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteINTEGER   = addSqliteColumnType(&ColumnTypeInfo{Name: "INTEGER", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteBIGINT    = addSqliteColumnType(&ColumnTypeInfo{Name: "BIGINT", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
 
 	/** 小数 **/
 
@@ -18,6 +18,7 @@ var (
 	SqliteDOUBLE  = addSqliteColumnType(&ColumnTypeInfo{Name: "DOUBLE", TypeFormat: "NUMBER($l, $d)", HasLength: true, HasDecimal: true, IsNumber: true})
 	SqliteDEC     = addSqliteColumnType(&ColumnTypeInfo{Name: "DEC", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
 	SqliteDECIMAL = addSqliteColumnType(&ColumnTypeInfo{Name: "DECIMAL", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+	SqliteNUMBER  = addSqliteColumnType(&ColumnTypeInfo{Name: "NUMBER", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
 
 	/** 日期/时间类型 **/
 

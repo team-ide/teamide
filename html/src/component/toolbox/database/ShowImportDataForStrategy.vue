@@ -10,7 +10,7 @@
     :before-close="hide"
     width="1200px"
   >
-    <div class="ft-12 mgt--20" v-if="tableDetail != null && datas != null">
+    <div class="ft-12 mgt--20" v-if="tableDetail != null && dataList != null">
       <div class="color-grey ft-12">
         <div>
           <span class="color-orange pdr-10">表达式</span>
@@ -55,7 +55,7 @@
       </div>
       <div class="mgt-20" style="user-select: none">
         <el-table
-          :data="datas"
+          :data="dataList"
           :border="true"
           height="100%"
           style="width: 100%"
@@ -66,7 +66,7 @@
               <input v-model="scope.row._$importCount" style="width: 100%" />
             </template>
           </el-table-column>
-          <template v-for="(column, index) in tableDetail.columns">
+          <template v-for="(column, index) in tableDetail.columnList">
             <el-table-column
               :key="index"
               :prop="column.name"
@@ -174,7 +174,7 @@ export default {
       sql: null,
       database: null,
       tableDetail: null,
-      datas: null,
+      dataList: null,
       task: null,
       taskKey: null,
     };
@@ -189,7 +189,7 @@ export default {
       this.tableDetail = tableDetail;
       this.task = null;
       this.taskKey = null;
-      this.datas = [];
+      this.dataList = [];
       await this.addData();
       this.showDialog = true;
     },
@@ -206,14 +206,14 @@ export default {
       this.loadStatus();
     },
     async doImport() {
-      this.datas.forEach((one) => {
+      this.dataList.forEach((one) => {
         one._$importCount = Number(one._$importCount);
       });
       let param = {
         database: this.database,
         table: this.tableDetail.name,
-        columns: this.tableDetail.columns,
-        importDatas: this.datas,
+        columnList: this.tableDetail.columnList,
+        importDataList: this.dataList,
       };
       let res = await this.wrap.work("importDataForStrategy", param);
       res.data = res.data || {};
@@ -227,7 +227,7 @@ export default {
       data._$importCount = 1;
 
       let keys = [];
-      this.tableDetail.columns.forEach((column) => {
+      this.tableDetail.columnList.forEach((column) => {
         if (column.primaryKey) {
           keys.push(column.name);
           if (
@@ -264,7 +264,7 @@ export default {
           data[column.name] = null;
         }
       });
-      this.datas.push(data);
+      this.dataList.push(data);
     },
     async loadStatus() {
       if (this.taskKey == null) {

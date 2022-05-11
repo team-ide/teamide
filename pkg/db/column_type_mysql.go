@@ -48,6 +48,8 @@ var (
 	MySqlDEC     = addMySqlColumnType(&ColumnTypeInfo{Name: "DEC", TypeFormat: "DEC($l, $d)", HasLength: true, IsNumber: true})
 	MySqlDECIMAL = addMySqlColumnType(&ColumnTypeInfo{Name: "DECIMAL", TypeFormat: "DOUBLE($l, $d)", HasLength: true, IsNumber: true})
 
+	MySqlNUMBER = addMySqlColumnType(&ColumnTypeInfo{Name: "NUMBER", TypeFormat: "NUMBER($l, $d)", HasLength: true, IsNumber: true})
+
 	/** 日期/时间类型 **/
 	/**
 	表示时间值的日期和时间类型为DATETIME、DATE、TIMESTAMP、TIME和YEAR。

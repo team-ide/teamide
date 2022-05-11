@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"teamide/pkg/db"
-	"teamide/pkg/sql_ddl"
 	"teamide/pkg/util"
 	"time"
 )
@@ -55,7 +54,7 @@ func (this_ *MysqlService) Stop() {
 	_ = this_.DatabaseWorker.Close()
 }
 
-func (this_ *MysqlService) Databases() (databases []*DatabaseInfo, err error) {
+func (this_ *MysqlService) Databases() (databases []*db.DatabaseModel, err error) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.SCHEMATA", "SCHEMA_NAME name")
 
@@ -66,7 +65,7 @@ func (this_ *MysqlService) Databases() (databases []*DatabaseInfo, err error) {
 		return
 	}
 	for _, one := range listMap {
-		database := &DatabaseInfo{
+		database := &db.DatabaseModel{
 			Name: one["name"].(string),
 		}
 		databases = append(databases, database)
@@ -74,7 +73,7 @@ func (this_ *MysqlService) Databases() (databases []*DatabaseInfo, err error) {
 	return
 }
 
-func (this_ *MysqlService) Tables(database string) (tables []TableInfo, err error) {
+func (this_ *MysqlService) Tables(database string) (tables []*db.TableModel, err error) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.tables", "TABLE_NAME AS name,TABLE_COMMENT AS comment")
 
@@ -89,7 +88,7 @@ func (this_ *MysqlService) Tables(database string) (tables []TableInfo, err erro
 	return
 }
 
-func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []*sql_ddl.TableDetailInfo, err error) {
+func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []*db.TableModel, err error) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.tables", "TABLE_NAME AS name,TABLE_COMMENT AS comment")
@@ -107,12 +106,12 @@ func (this_ *MysqlService) TableDetails(database string, table string) (tableDet
 
 	for _, one := range tableDetails {
 
-		one.Columns, err = this_.TableColumns(database, one.Name)
+		one.ColumnList, err = this_.TableColumnList(database, one.Name)
 		if err != nil {
 			return
 		}
 
-		one.Indexs, err = this_.TableIndexs(database, one.Name)
+		one.IndexList, err = this_.TableIndexList(database, one.Name)
 		if err != nil {
 			return
 		}
@@ -121,7 +120,7 @@ func (this_ *MysqlService) TableDetails(database string, table string) (tableDet
 	return
 }
 
-func (this_ *MysqlService) TableColumns(database string, table string) (columns []*sql_ddl.TableColumnInfo, err error) {
+func (this_ *MysqlService) TableColumnList(database string, table string) (columnList []*db.TableColumnModel, err error) {
 
 	keys, err := this_.TablePrimaryKeys(database, table)
 	if err != nil {
@@ -134,11 +133,11 @@ func (this_ *MysqlService) TableColumns(database string, table string) (columns 
 	finder.Append(" WHERE TABLE_SCHEMA=?", database)
 	finder.Append(" AND TABLE_NAME=?", table)
 	//执行查询
-	err = this_.DatabaseWorker.FinderQuery(finder, &columns)
+	err = this_.DatabaseWorker.FinderQuery(finder, &columnList)
 	if err != nil { //标记测试失败
 		return
 	}
-	for _, one := range columns {
+	for _, one := range columnList {
 		if one.ISNullable == "NO" {
 			one.NotNull = true
 		}
@@ -184,7 +183,7 @@ func (this_ *MysqlService) TablePrimaryKeys(database string, table string) (keys
 	return
 }
 
-func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []*sql_ddl.TableIndexInfo, err error) {
+func (this_ *MysqlService) TableIndexList(database string, table string) (indexList []*db.TableIndexModel, err error) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.statistics", "INDEX_NAME name,NON_UNIQUE,INDEX_COMMENT comment,COLUMN_NAME columns")
@@ -192,28 +191,28 @@ func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []
 	finder.Append("WHERE TABLE_SCHEMA=?", database)
 	finder.Append(" AND TABLE_NAME=?", table)
 	finder.Append(" AND INDEX_NAME != ?", "PRIMARY")
-	var indexs_ []*sql_ddl.TableIndexInfo
+	var indexList_ []*db.TableIndexModel
 	//执行查询
-	err = this_.DatabaseWorker.FinderQuery(finder, &indexs_)
+	err = this_.DatabaseWorker.FinderQuery(finder, &indexList_)
 	if err != nil { //标记测试失败
 		return
 	}
 
-	for _, one := range indexs_ {
+	for _, one := range indexList_ {
 
-		var info *sql_ddl.TableIndexInfo
+		var info *db.TableIndexModel
 		if one.NONUnique == "0" {
 			one.Type = "UNIQUE"
 		}
 
-		for _, in := range indexs {
+		for _, in := range indexList {
 			if in.Name == one.Name {
 				info = in
 				break
 			}
 		}
 		if info == nil {
-			indexs = append(indexs, one)
+			indexList = append(indexList, one)
 		} else {
 			info.Columns += "," + one.Columns
 		}
@@ -222,19 +221,19 @@ func (this_ *MysqlService) TableIndexs(database string, table string) (indexs []
 	return
 }
 
-func (this_ *MysqlService) Datas(datasParam DatasParam) (datasResult DatasResult, err error) {
+func (this_ *MysqlService) DataList(dataListParam DataListParam) (dataListResult DataListResult, err error) {
 
 	var params []interface{}
 	selectColumns := ""
-	for _, column := range datasParam.Columns {
+	for _, column := range dataListParam.ColumnList {
 		selectColumns += "`" + column.Name + "`,"
 	}
 	selectColumns = selectColumns[0 : len(selectColumns)-1]
 	//构造查询用的finder
-	finder := zorm.NewSelectFinder(datasParam.Database+"."+datasParam.Table, selectColumns)
-	if len(datasParam.Wheres) > 0 {
+	finder := zorm.NewSelectFinder(dataListParam.Database+"."+dataListParam.Table, selectColumns)
+	if len(dataListParam.Wheres) > 0 {
 		finder.Append(" WHERE")
-		for index, where := range datasParam.Wheres {
+		for index, where := range dataListParam.Wheres {
 			value := where.Value
 			switch where.SqlConditionalOperation {
 			case "like":
@@ -282,28 +281,28 @@ func (this_ *MysqlService) Datas(datasParam DatasParam) (datasResult DatasResult
 				params = append(params, value)
 			}
 			// params_ = append(params_, where.Value)
-			if index < len(datasParam.Wheres)-1 {
+			if index < len(dataListParam.Wheres)-1 {
 				finder.Append(" " + where.AndOr + " ")
 			}
 		}
 	}
-	if len(datasParam.Orders) > 0 {
+	if len(dataListParam.Orders) > 0 {
 		finder.Append(" ORDER BY")
-		for index, order := range datasParam.Orders {
+		for index, order := range dataListParam.Orders {
 			finder.Append(" " + order.Name)
 			if order.DescAsc != "" {
 				finder.Append(" " + order.DescAsc)
 			}
 			// params_ = append(params_, where.Value)
-			if index < len(datasParam.Orders)-1 {
+			if index < len(dataListParam.Orders)-1 {
 				finder.Append(",")
 			}
 		}
 
 	}
 	page := zorm.NewPage()
-	page.PageSize = datasParam.PageSize
-	page.PageNo = datasParam.PageIndex
+	page.PageSize = dataListParam.PageSize
+	page.PageNo = dataListParam.PageIndex
 	listMap, err := this_.DatabaseWorker.FinderQueryMapPage(finder, page)
 	if err != nil {
 		return
@@ -320,10 +319,10 @@ func (this_ *MysqlService) Datas(datasParam DatasParam) (datasResult DatasResult
 			}
 		}
 	}
-	datasResult.Sql, err = finder.GetSQL()
-	datasResult.Params = params
-	datasResult.Total = page.TotalCount
-	datasResult.Datas = listMap
+	dataListResult.Sql, err = finder.GetSQL()
+	dataListResult.Params = params
+	dataListResult.Total = page.TotalCount
+	dataListResult.DataList = listMap
 	return
 }
 

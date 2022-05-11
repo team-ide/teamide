@@ -133,8 +133,8 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    async show(tableDetail, datas) {
-      this.datas = datas || [];
+    async show(tableDetail, dataList) {
+      this.dataList = dataList || [];
       this.tableDetail = tableDetail;
       await this.toLoad();
       this.showDialog = true;
@@ -178,6 +178,9 @@ export default {
       ) {
         return value;
       }
+      if (typeof value != "string") {
+        return value;
+      }
       if (value.indexOf(this.form.stringPackingCharacter) < 0) {
         return (
           this.form.stringPackingCharacter +
@@ -214,12 +217,12 @@ export default {
       }
 
       let keys = [];
-      this.tableDetail.columns.forEach((column) => {
+      this.tableDetail.columnList.forEach((column) => {
         if (column.primaryKey) {
           keys.push(column.name);
         }
       });
-      this.datas.forEach((one) => {
+      this.dataList.forEach((one) => {
         let insertSql =
           "INSERT INTO " + this.packingCharacterTable(this.tableDetail.name);
 
@@ -232,7 +235,7 @@ export default {
           "DELETE FROM " + this.packingCharacterTable(this.tableDetail.name);
 
         insertSql += " (";
-        this.tableDetail.columns.forEach((column) => {
+        this.tableDetail.columnList.forEach((column) => {
           insertSql += "" + this.packingCharacterColumn(column.name) + ", ";
         });
         if (insertSql.endsWith(", ")) {
@@ -244,7 +247,7 @@ export default {
 
         let whereSql = "WHERE ";
 
-        this.tableDetail.columns.forEach((column) => {
+        this.tableDetail.columnList.forEach((column) => {
           let value = one[column.name];
           let valueSql = value;
           if (value == null) {

@@ -9,7 +9,6 @@ import (
 	"teamide/pkg/db"
 	"teamide/pkg/form"
 	"teamide/pkg/javascript"
-	"teamide/pkg/sql_ddl"
 	"teamide/pkg/util"
 	"time"
 )
@@ -52,15 +51,15 @@ func init() {
 }
 
 type DatabaseBaseRequest struct {
-	Database     string                    `json:"database"`
-	Table        string                    `json:"table"`
-	TaskKey      string                    `json:"taskKey"`
-	Columns      []sql_ddl.TableColumnInfo `json:"columns"`
-	Wheres       []Where                   `json:"wheres"`
-	PageIndex    int                       `json:"pageIndex"`
-	PageSize     int                       `json:"pageSize"`
-	DatabaseType string                    `json:"databaseType"`
-	ImportDatas  []map[string]interface{}  `json:"importDatas"`
+	Database       string                   `json:"database"`
+	Table          string                   `json:"table"`
+	TaskKey        string                   `json:"taskKey"`
+	ColumnList     []*db.TableColumnModel   `json:"columnList"`
+	Wheres         []Where                  `json:"wheres"`
+	PageIndex      int                      `json:"pageIndex"`
+	PageSize       int                      `json:"pageSize"`
+	DatabaseType   string                   `json:"databaseType"`
+	ImportDataList []map[string]interface{} `json:"importDataList"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -82,12 +81,12 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		return
 	}
 
-	bs, err = json.Marshal(data)
+	dataBS, err := json.Marshal(data)
 	if err != nil {
 		return
 	}
 	request := &DatabaseBaseRequest{}
-	err = json.Unmarshal(bs, request)
+	err = json.Unmarshal(dataBS, request)
 	if err != nil {
 		return
 	}
@@ -95,21 +94,21 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 	res = map[string]interface{}{}
 	switch work {
 	case "databases":
-		var databases []*DatabaseInfo
+		var databases []*db.DatabaseModel
 		databases, err = service.Databases()
 		if err != nil {
 			return
 		}
 		res["databases"] = databases
 	case "tables":
-		var tables []TableInfo
+		var tables []*db.TableModel
 		tables, err = service.Tables(request.Database)
 		if err != nil {
 			return
 		}
 		res["tables"] = tables
 	case "tableDetail":
-		var tables []*sql_ddl.TableDetailInfo
+		var tables []*db.TableModel
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
@@ -118,61 +117,67 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			res["table"] = tables[0]
 		}
 	case "ddl":
-		var databaseType string = request.DatabaseType
-		if databaseType == "" {
-			databaseType = databaseConfig.Type
+		var generateParam = &db.GenerateParam{}
+		err = json.Unmarshal(dataBS, generateParam)
+		if err != nil {
+			return
 		}
-		var sqls []string
-		if request.Table == "" {
-			var sqls_ []string
-			sqls_, err = sql_ddl.ToDatabaseDDL(request.Database, databaseType)
+
+		if generateParam.DatabaseType == "" {
+			generateParam.DatabaseType = databaseConfig.Type
+		}
+
+		var sqlList []string
+		if generateParam.GenerateDatabase {
+			var sqlList_ []string
+			sqlList_, err = db.ToDatabaseDDL(generateParam, &db.DatabaseModel{Name: request.Database})
 			if err != nil {
 				return
 			}
-			sqls = append(sqls, sqls_...)
+			sqlList = append(sqlList, sqlList_...)
 		}
 
-		var tables []*sql_ddl.TableDetailInfo
+		var tables []*db.TableModel
 		tables, err = service.TableDetails(request.Database, request.Table)
 		if err != nil {
 			return
 		}
 		for _, table := range tables {
-			var sqls_ []string
-			sqls_, err = sql_ddl.ToTableDDL(databaseType, table)
+			var sqlList_ []string
+			sqlList_, err = db.ToTableDDL(generateParam, request.Database, table)
 			if err != nil {
 				return
 			}
-			sqls = append(sqls, sqls_...)
+			sqlList = append(sqlList, sqlList_...)
 		}
 
-		res["sqls"] = sqls
-	case "datas":
-		var datasRequest DatasResult
-		datasRequest, err = service.Datas(DatasParam{
-			Database:  request.Database,
-			Table:     request.Table,
-			Columns:   request.Columns,
-			Wheres:    request.Wheres,
-			PageIndex: request.PageIndex,
-			PageSize:  request.PageSize,
+		res["sqlList"] = sqlList
+	case "dataList":
+		var dataListRequest DataListResult
+		dataListRequest, err = service.DataList(DataListParam{
+			Database:   request.Database,
+			Table:      request.Table,
+			ColumnList: request.ColumnList,
+			Wheres:     request.Wheres,
+			PageIndex:  request.PageIndex,
+			PageSize:   request.PageSize,
 		})
 		if err != nil {
 			return
 		}
-		res["sql"] = datasRequest.Sql
-		res["params"] = datasRequest.Params
-		res["total"] = datasRequest.Total
-		res["datas"] = datasRequest.Datas
+		res["sql"] = dataListRequest.Sql
+		res["params"] = dataListRequest.Params
+		res["total"] = dataListRequest.Total
+		res["dataList"] = dataListRequest.DataList
 	case "importDataForStrategy":
 		taskKey := util.GenerateUUID()
 		importDataForStrategyTask := &importDataForStrategyTask{
-			Key:         taskKey,
-			Database:    request.Database,
-			Table:       request.Table,
-			Columns:     request.Columns,
-			ImportDatas: request.ImportDatas,
-			service:     service,
+			Key:            taskKey,
+			Database:       request.Database,
+			Table:          request.Table,
+			ColumnList:     request.ColumnList,
+			ImportDataList: request.ImportDataList,
+			service:        service,
 		}
 		addImportDataForStrategyTask(importDataForStrategyTask)
 
@@ -201,22 +206,22 @@ func addImportDataForStrategyTask(task *importDataForStrategyTask) {
 }
 
 type importDataForStrategyTask struct {
-	Key               string                    `json:"key,omitempty"`
-	Database          string                    `json:"database,omitempty"`
-	Table             string                    `json:"table,omitempty"`
-	Columns           []sql_ddl.TableColumnInfo `json:"columns,omitempty"`
-	ImportDatas       []map[string]interface{}  `json:"importDatas,omitempty"`
-	ImportBatchNumber int                       `json:"importBatchNumber,omitempty"`
-	DataCount         int                       `json:"dataCount"`
-	ReadyDataCount    int                       `json:"readyDataCount"`
-	ImportSuccess     int                       `json:"importSuccess"`
-	ImportError       int                       `json:"importError"`
-	IsEnd             bool                      `json:"isEnd,omitempty"`
-	StartTime         time.Time                 `json:"startTime,omitempty"`
-	EndTime           time.Time                 `json:"endTime,omitempty"`
-	Error             string                    `json:"error,omitempty"`
-	UseTime           int64                     `json:"useTime"`
-	IsStop            bool                      `json:"isStop"`
+	Key               string                   `json:"key,omitempty"`
+	Database          string                   `json:"database,omitempty"`
+	Table             string                   `json:"table,omitempty"`
+	ColumnList        []*db.TableColumnModel   `json:"columnList,omitempty"`
+	ImportDataList    []map[string]interface{} `json:"importDataList,omitempty"`
+	ImportBatchNumber int                      `json:"importBatchNumber,omitempty"`
+	DataCount         int                      `json:"dataCount"`
+	ReadyDataCount    int                      `json:"readyDataCount"`
+	ImportSuccess     int                      `json:"importSuccess"`
+	ImportError       int                      `json:"importError"`
+	IsEnd             bool                     `json:"isEnd,omitempty"`
+	StartTime         time.Time                `json:"startTime,omitempty"`
+	EndTime           time.Time                `json:"endTime,omitempty"`
+	Error             string                   `json:"error,omitempty"`
+	UseTime           int64                    `json:"useTime"`
+	IsStop            bool                     `json:"isStop"`
 	service           DatabaseService
 }
 
@@ -235,7 +240,7 @@ func (this_ *importDataForStrategyTask) Start() {
 		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
 
-	for _, importData := range this_.ImportDatas {
+	for _, importData := range this_.ImportDataList {
 		importCount := 0
 		if importData["_$importCount"] != nil {
 			importCount = int(importData["_$importCount"].(float64))
@@ -247,17 +252,17 @@ func (this_ *importDataForStrategyTask) Start() {
 		this_.DataCount += importCount
 	}
 
-	for _, importData := range this_.ImportDatas {
+	for _, importData := range this_.ImportDataList {
 		if this_.IsStop {
 			break
 		}
-		err := this_.importData(this_.Database, this_.Table, this_.Columns, importData)
+		err := this_.importData(this_.Database, this_.Table, this_.ColumnList, importData)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
-func (this_ *importDataForStrategyTask) importData(database, table string, columns []sql_ddl.TableColumnInfo, importData map[string]interface{}) (err error) {
+func (this_ *importDataForStrategyTask) importData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
 	importCount := importData["_$importCount"].(int)
 	if importCount <= 0 {
 		return
@@ -276,14 +281,20 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 	vm := goja.New()
 
 	for key, value := range scriptContext {
-		vm.Set(key, value)
+		err = vm.Set(key, value)
+		if err != nil {
+			return
+		}
 	}
 
 	for i := 0; i < importCount; i++ {
 		data := map[string]interface{}{}
-		vm.Set("_$index", i)
+		err = vm.Set("_$index", i)
+		if err != nil {
+			return
+		}
 
-		for _, column := range columns {
+		for _, column := range columnList {
 
 			if this_.IsStop {
 				return
@@ -304,7 +315,11 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 				value = scriptValue.Export()
 			}
 			data[column.Name] = value
-			vm.Set(column.Name, value)
+			err = vm.Set(column.Name, value)
+
+			if err != nil {
+				return
+			}
 		}
 		this_.ReadyDataCount++
 		dataList = append(dataList, data)
@@ -313,7 +328,7 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 			if this_.IsStop {
 				return
 			}
-			err = this_.doImportData(database, table, columns, dataList)
+			err = this_.doImportData(database, table, columnList, dataList)
 			if err != nil {
 				this_.ImportError += len(dataList)
 				return
@@ -323,7 +338,7 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 			dataList = []map[string]interface{}{}
 		}
 	}
-	err = this_.doImportData(database, table, columns, dataList)
+	err = this_.doImportData(database, table, columnList, dataList)
 	if err != nil {
 		this_.ImportError += len(dataList)
 		return
@@ -333,7 +348,7 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 	return
 }
 
-func (this_ *importDataForStrategyTask) doImportData(database, table string, columns []sql_ddl.TableColumnInfo, dataList []map[string]interface{}) (err error) {
+func (this_ *importDataForStrategyTask) doImportData(database, table string, columnList []*db.TableColumnModel, dataList []map[string]interface{}) (err error) {
 
 	if len(dataList) == 0 {
 		return
@@ -342,7 +357,7 @@ func (this_ *importDataForStrategyTask) doImportData(database, table string, col
 	var paramsList [][]interface{}
 	for _, data := range dataList {
 		var sqlParam *SqlParam
-		sqlParam, err = this_.getImportDataFinder(database, table, columns, data)
+		sqlParam, err = this_.getImportDataFinder(database, table, columnList, data)
 		if err != nil {
 			return
 		}
@@ -357,12 +372,12 @@ func (this_ *importDataForStrategyTask) doImportData(database, table string, col
 	return
 }
 
-func (this_ *importDataForStrategyTask) getImportDataFinder(database, table string, columns []sql_ddl.TableColumnInfo, data map[string]interface{}) (sqlParam *SqlParam, err error) {
+func (this_ *importDataForStrategyTask) getImportDataFinder(database, table string, columnList []*db.TableColumnModel, data map[string]interface{}) (sqlParam *SqlParam, err error) {
 
 	insertColumns := ""
 	insertValues := ""
 	var values []interface{}
-	for _, column := range columns {
+	for _, column := range columnList {
 		value, valueOk := data[column.Name]
 		if !valueOk {
 			continue
@@ -456,37 +471,28 @@ type DatabaseService interface {
 	GetLastUseTime() int64
 	SetLastUseTime()
 	Stop()
-	Databases() ([]*DatabaseInfo, error)
-	Tables(database string) ([]TableInfo, error)
-	TableDetails(database string, table string) ([]*sql_ddl.TableDetailInfo, error)
-	Datas(datasParam DatasParam) (DatasResult, error)
+	Databases() ([]*db.DatabaseModel, error)
+	Tables(database string) ([]*db.TableModel, error)
+	TableDetails(database string, table string) ([]*db.TableModel, error)
+	DataList(dataListParam DataListParam) (DataListResult, error)
 	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
 }
 
-type DatabaseInfo struct {
-	Name string `json:"name" column:"name"`
+type DataListParam struct {
+	Database   string                 `json:"database"`
+	Table      string                 `json:"table"`
+	ColumnList []*db.TableColumnModel `json:"columnList"`
+	Wheres     []Where                `json:"wheres"`
+	PageIndex  int                    `json:"pageIndex"`
+	PageSize   int                    `json:"pageSize"`
+	Orders     []Order                `json:"orders"`
 }
 
-type TableInfo struct {
-	Name    string `json:"name"`
-	Comment string `json:"comment"`
-}
-
-type DatasParam struct {
-	Database  string                    `json:"database"`
-	Table     string                    `json:"table"`
-	Columns   []sql_ddl.TableColumnInfo `json:"columns"`
-	Wheres    []Where                   `json:"wheres"`
-	PageIndex int                       `json:"pageIndex"`
-	PageSize  int                       `json:"pageSize"`
-	Orders    []Order                   `json:"orders"`
-}
-
-type DatasResult struct {
-	Sql    string                   `json:"sql"`
-	Total  int                      `json:"total"`
-	Params []interface{}            `json:"params"`
-	Datas  []map[string]interface{} `json:"datas"`
+type DataListResult struct {
+	Sql      string                   `json:"sql"`
+	Total    int                      `json:"total"`
+	Params   []interface{}            `json:"params"`
+	DataList []map[string]interface{} `json:"dataList"`
 }
 
 type Where struct {

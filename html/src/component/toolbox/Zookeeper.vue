@@ -190,21 +190,21 @@ export default {
         this.initTreeWidth();
       } else {
         let list = res.data.children || [];
-        let datas = [];
+        let dataList = [];
         list.forEach((one) => {
           let name = one.name;
           let oneData = { name: name };
-          datas.push(oneData);
+          dataList.push(oneData);
         });
-        this.formatDatas(parent, datas);
-        resolve(datas);
+        this.formatDataList(parent, dataList);
+        resolve(dataList);
         this.initTreeWidth();
       }
     },
     initTreeWidth() {},
-    formatDatas(parent, datas) {
-      datas = datas || [];
-      datas.forEach((data) => {
+    formatDataList(parent, dataList) {
+      dataList = dataList || [];
+      dataList.forEach((data) => {
         this.formatData(parent, data);
       });
     },
