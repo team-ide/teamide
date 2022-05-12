@@ -240,6 +240,31 @@ func (this_ *DatabaseWorker) Execs(sqlList []string, paramsList [][]interface{})
 	return
 }
 
+func (this_ *DatabaseWorker) FinderExec(finder *zorm.Finder) (rowsAffected int64, err error) {
+
+	_, err = zorm.Transaction(this_.GetContext(), func(ctx context.Context) (interface{}, error) {
+
+		var err error
+
+		var updated int
+		updated, err = zorm.UpdateFinder(ctx, finder)
+		if err != nil {
+			sql_, _ := finder.GetSQL()
+			Logger.Error("FinderExec Error", zap.Any("sql", sql_), zap.Error(err))
+			return nil, err
+		}
+		rowsAffected += int64(updated)
+
+		//如果返回的err不是nil,事务就会回滚
+		return nil, err
+	})
+
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (this_ *DatabaseWorker) Count(sql string, params []interface{}) (count int64, err error) {
 
 	finder := zorm.NewFinder()

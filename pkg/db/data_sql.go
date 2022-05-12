@@ -93,9 +93,9 @@ func DataListUpdateSql(param *GenerateParam, database string, table string, colu
 				continue
 			}
 			if param.AppendSqlValue {
-				sql += "" + param.packingCharacterColumn(column.Name) + " = " + param.packingCharacterColumnStringValue(column, value) + ", "
+				sql += "" + param.packingCharacterColumn(column.Name) + "=" + param.packingCharacterColumnStringValue(column, value) + ", "
 			} else {
-				sql += "" + param.packingCharacterColumn(column.Name) + " = ?, "
+				sql += "" + param.packingCharacterColumn(column.Name) + "=?, "
 				values = append(values, param.formatColumnValue(column, value))
 			}
 		}
@@ -108,9 +108,9 @@ func DataListUpdateSql(param *GenerateParam, database string, table string, colu
 		} else {
 			for _, column := range whereColumnList {
 				if param.AppendSqlValue {
-					sql += "" + param.packingCharacterColumn(column.Name) + " = " + param.packingCharacterColumnStringValue(column, dataWhere[column.Name]) + " AND "
+					sql += "" + param.packingCharacterColumn(column.Name) + "=" + param.packingCharacterColumnStringValue(column, dataWhere[column.Name]) + " AND "
 				} else {
-					sql += "" + param.packingCharacterColumn(column.Name) + " = ? AND "
+					sql += "" + param.packingCharacterColumn(column.Name) + "=? AND "
 					values = append(values, param.formatColumnValue(column, dataWhere[column.Name]))
 				}
 			}
@@ -155,9 +155,9 @@ func DataListDeleteSql(param *GenerateParam, database string, table string, colu
 		} else {
 			for _, column := range whereColumnList {
 				if param.AppendSqlValue {
-					sql += "" + param.packingCharacterColumn(column.Name) + " = " + param.packingCharacterColumnStringValue(column, dataWhere[column.Name]) + " AND "
+					sql += "" + param.packingCharacterColumn(column.Name) + "=" + param.packingCharacterColumnStringValue(column, dataWhere[column.Name]) + " AND "
 				} else {
-					sql += "" + param.packingCharacterColumn(column.Name) + " = ? AND "
+					sql += "" + param.packingCharacterColumn(column.Name) + "=? AND "
 					values = append(values, param.formatColumnValue(column, dataWhere[column.Name]))
 				}
 			}

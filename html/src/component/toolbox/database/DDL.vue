@@ -28,6 +28,7 @@
           <el-switch v-model="form.generateDatabase" @change="toLoad">
           </el-switch>
         </el-form-item>
+
         <el-form-item label="追加库名">
           <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>
@@ -38,7 +39,7 @@
               placeholder="不包装"
               v-model="form.databasePackingCharacter"
               @change="toLoad"
-              style="width: 100px"
+              style="width: 90px"
             >
               <el-option
                 v-for="(one, index) in packingCharacters"
@@ -55,7 +56,7 @@
             placeholder="不包装"
             v-model="form.tablePackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -71,7 +72,7 @@
             placeholder="不包装"
             v-model="form.columnPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -84,10 +85,9 @@
         </el-form-item>
         <el-form-item label="字符值包装">
           <el-select
-            placeholder="不包装"
             v-model="form.stringPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 60px"
           >
             <el-option
               v-for="(one, index) in stringPackingCharacters"

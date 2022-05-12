@@ -9,6 +9,7 @@
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
+            :databasesChange="databasesChange"
           >
           </ToolboxDatabaseDatabase>
         </tm-layout>
@@ -19,6 +20,7 @@
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
+            :databases="databases"
           >
           </ToolboxDatabaseTabs>
         </tm-layout>
@@ -53,6 +55,7 @@ export default {
   data() {
     return {
       ready: false,
+      databases: [],
     };
   },
   computed: {},
@@ -63,6 +66,9 @@ export default {
       this.wrap.columnIsDate = this.columnIsDate;
       this.wrap.formatDateColumn = this.formatDateColumn;
       this.ready = true;
+    },
+    databasesChange(databases) {
+      this.databases = databases;
     },
     columnIsNumber(column) {
       let type = ("" + column.type).toLowerCase();

@@ -142,18 +142,28 @@ func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColum
 	switch v := formatColumnValue.(type) {
 	case int:
 		return strconv.FormatInt(int64(v), 10)
+	case uint:
+		return strconv.FormatInt(int64(v), 10)
 	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case uint8:
 		return strconv.FormatInt(int64(v), 10)
 	case int16:
 		return strconv.FormatInt(int64(v), 10)
+	case uint16:
+		return strconv.FormatInt(int64(v), 10)
 	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case uint32:
 		return strconv.FormatInt(int64(v), 10)
 	case int64:
 		return strconv.FormatInt(v, 10)
+	case uint64:
+		return strconv.FormatInt(int64(v), 10)
 	case float32:
-		return strconv.FormatFloat(float64(v), 'f', column.Decimal, 64)
+		return strconv.FormatFloat(float64(v), 'f', -1, 64)
 	case float64:
-		return strconv.FormatFloat(v, 'f', column.Decimal, 64)
+		return strconv.FormatFloat(v, 'f', -1, 64)
 	case bool:
 		if v {
 			return "1"
@@ -163,11 +173,13 @@ func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColum
 		if v.IsZero() {
 			return "NULL"
 		}
-		valueString = v.Format("2006-01-02 15:04:05.000")
+		valueString = v.Format("2006-01-02 15:04:05")
 		break
 	case string:
 		valueString = v
 		break
+	case []byte:
+		valueString = string(v)
 	default:
 		newValue, _ := json.Marshal(value)
 		valueString = string(newValue)
@@ -187,22 +199,13 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 		Logger.Warn("字段类型[" + column.Type + "]未引射信息")
 		return value
 	}
-	var stringValue = ""
-	if value != "" {
-		newValue, err := json.Marshal(value)
-		if err != nil {
-			Logger.Error("值转化异常", zap.Error(err))
-			return value
-		} else {
-			stringValue = string(newValue)
-		}
-	}
+	var stringValue = GetStringValue(value)
 	if columnTypeInfo.IsNumber {
 		if stringValue == "" {
-			return 0
+			return nil
 		}
 		if column.Decimal > 0 {
-			f64, err := strconv.ParseFloat(stringValue, column.Decimal)
+			f64, err := strconv.ParseFloat(stringValue, 64)
 			if err != nil {
 				Logger.Error("值["+stringValue+"]转化float64异常", zap.Error(err))
 				return value
@@ -221,7 +224,26 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 		if stringValue == "" {
 			return nil
 		}
-		timeValue, err := time.Parse("2006-01-02 03:04:05.000", stringValue)
+		format := "2006-01-02 15:04:05.000"
+		valueLen := len(stringValue)
+		if valueLen >= len("2006-01-02 15:04:05.000") {
+			format = "2006-01-02 15:04:05.000"
+		} else if valueLen >= len("2006-01-02 15:04:05") {
+			format = "2006-01-02 15:04:05"
+		} else if valueLen >= len("2006-01-02 15:04") {
+			format = "2006-01-02 15:04"
+		} else if valueLen >= len("2006-01-02 15") {
+			format = "2006-01-02 15"
+		} else if valueLen >= len("2006-01-02") {
+			format = "2006-01-02"
+		} else if valueLen >= len("15:04:05") {
+			format = "15:04:05"
+		} else if valueLen >= len("15:04") {
+			format = "15:04"
+		} else if valueLen >= len("2006") {
+			format = "2006"
+		}
+		timeValue, err := time.ParseInLocation(format, stringValue, time.Local)
 		if err != nil {
 			Logger.Error("值["+stringValue+"]转化time异常", zap.Error(err))
 			return value
@@ -229,6 +251,58 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 		return timeValue
 	}
 	return value
+}
+
+func GetStringValue(value interface{}) string {
+
+	var valueString string
+	switch v := value.(type) {
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case uint:
+		return strconv.FormatInt(int64(v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case uint8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case uint16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case uint32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case uint64:
+		return strconv.FormatInt(int64(v), 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 64)
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case bool:
+		if v {
+			return "1"
+		}
+		return "0"
+	case time.Time:
+		if v.IsZero() {
+			return "NULL"
+		}
+		valueString = v.Format("2006-01-02 15:04:05")
+		break
+	case string:
+		valueString = v
+		break
+	case []byte:
+		valueString = string(v)
+	default:
+		newValue, _ := json.Marshal(value)
+		valueString = string(newValue)
+		break
+	}
+	return valueString
 }
 
 func formatStringValue(packingCharacter string, valueString string) string {

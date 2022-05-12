@@ -20,7 +20,11 @@
         :inline="true"
       >
         <el-form-item label="SQL类型">
-          <el-select v-model="form.sqlType" @change="toLoad">
+          <el-select
+            v-model="form.sqlType"
+            @change="toLoad"
+            style="width: 100px"
+          >
             <el-option
               v-for="(one, index) in sqlTypes"
               :key="index"
@@ -40,7 +44,7 @@
               placeholder="不包装"
               v-model="form.databasePackingCharacter"
               @change="toLoad"
-              style="width: 100px"
+              style="width: 90px"
             >
               <el-option
                 v-for="(one, index) in packingCharacters"
@@ -57,7 +61,7 @@
             placeholder="不包装"
             v-model="form.tablePackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -73,7 +77,7 @@
             placeholder="不包装"
             v-model="form.columnPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -86,10 +90,9 @@
         </el-form-item>
         <el-form-item label="字符值包装">
           <el-select
-            placeholder="不包装"
             v-model="form.stringPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 60px"
           >
             <el-option
               v-for="(one, index) in stringPackingCharacters"
@@ -262,5 +265,6 @@ export default {
   padding: 0px 5px;
   outline: none;
   user-select: none;
+  resize: none;
 }
 </style>
