@@ -20,16 +20,16 @@ func (this_ *DatabaseKingBaseDialect) TableDDL(param *GenerateParam, database st
 	createTableSql := `CREATE TABLE `
 
 	if param.AppendDatabase {
-		createTableSql += this_.packingCharacterDatabase(param, database) + "."
+		createTableSql += param.packingCharacterDatabase(database) + "."
 	}
-	createTableSql += this_.packingCharacterTable(param, table.Name)
+	createTableSql += param.packingCharacterTable(table.Name)
 
 	createTableSql += `(`
 	createTableSql += "\n"
 	primaryKeys := ""
 	if len(table.ColumnList) > 0 {
 		for _, one := range table.ColumnList {
-			var columnSql = this_.packingCharacterColumn(param, one.Name)
+			var columnSql = param.packingCharacterColumn(one.Name)
 			var c = DatabaseTypeKingBase.GetColumnTypeInfo(one.Type)
 			if c == nil {
 				err = errors.New("KingBase字段类型[" + one.Type + "]未映射!")
@@ -59,7 +59,7 @@ func (this_ *DatabaseKingBaseDialect) TableDDL(param *GenerateParam, database st
 	}
 	if primaryKeys != "" {
 		primaryKeys = strings.TrimSuffix(primaryKeys, ",")
-		createTableSql += "\tPRIMARY KEY (" + this_.packingCharacterColumns(param, primaryKeys) + ")"
+		createTableSql += "\tPRIMARY KEY (" + param.packingCharacterColumns(primaryKeys) + ")"
 	}
 
 	createTableSql = strings.TrimSuffix(createTableSql, ",\n")
@@ -108,9 +108,9 @@ func (this_ *DatabaseKingBaseDialect) TableDDL(param *GenerateParam, database st
 func (this_ *DatabaseKingBaseDialect) TableComment(param *GenerateParam, database string, table string, comment string) (sqlList []string) {
 	sql := "COMMENT ON TABLE  "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
+	sql += "" + param.packingCharacterTable(table)
 	sql += " IS " + formatStringValue("'", comment)
 	sqlList = append(sqlList, sql)
 	return
@@ -119,10 +119,10 @@ func (this_ *DatabaseKingBaseDialect) TableComment(param *GenerateParam, databas
 func (this_ *DatabaseKingBaseDialect) ColumnComment(param *GenerateParam, database string, table string, column string, comment string) (sqlList []string) {
 	sql := "COMMENT ON COLUMN "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
-	sql += "." + this_.packingCharacterColumn(param, column)
+	sql += "" + param.packingCharacterTable(table)
+	sql += "." + param.packingCharacterColumn(column)
 	sql += " IS " + formatStringValue("'", comment)
 	sqlList = append(sqlList, sql)
 	return
@@ -142,11 +142,11 @@ func (this_ *DatabaseKingBaseDialect) Index(param *GenerateParam, database strin
 	}
 	sql += " ON "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
+	sql += "" + param.packingCharacterTable(table)
 
-	sql += "(" + this_.packingCharacterColumns(param, columns) + ")"
+	sql += "(" + param.packingCharacterColumns(columns) + ")"
 
 	sqlList = append(sqlList, sql)
 	return

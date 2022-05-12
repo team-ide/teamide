@@ -10,7 +10,7 @@
     :before-close="hide"
     width="1200px"
   >
-    <div class="mgt--20 toolbox-database-export-sql">
+    <div class="mgt--20 toolbox-database-save-sql">
       <el-form
         class="mgt-10"
         ref="form"
@@ -19,17 +19,6 @@
         size="mini"
         :inline="true"
       >
-        <el-form-item label="SQL类型">
-          <el-select v-model="form.sqlType" @change="toLoad">
-            <el-option
-              v-for="(one, index) in sqlTypes"
-              :key="index"
-              :value="one.value"
-            >
-              {{ one.text }}
-            </el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="追加库名">
           <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>
@@ -117,11 +106,6 @@ export default {
       showDialog: false,
       showSQL: null,
       tableDetail: null,
-      sqlTypes: [
-        { value: "insert", text: "Insert" },
-        { value: "update", text: "Update" },
-        { value: "delete", text: "Delete" },
-      ],
       packingCharacters: [
         { value: "", text: "不包装" },
         { value: "'", text: "'" },
@@ -133,7 +117,6 @@ export default {
         { value: '"', text: '"' },
       ],
       form: {
-        sqlType: "insert",
         appendDatabase: false,
         databasePackingCharacter: null,
         tablePackingCharacter: null,
@@ -147,10 +130,13 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    async show(database, tableDetail, dataList) {
+    async show(database, tableDetail, params) {
       this.database = database;
-      this.dataList = dataList || [];
       this.tableDetail = tableDetail;
+      this.insertList = params.insertList;
+      this.updateList = params.updateList;
+      this.updateWhereList = params.updateWhereList;
+      this.deleteList = params.deleteList;
       await this.toLoad();
       this.showDialog = true;
     },
@@ -168,69 +154,16 @@ export default {
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
-      let insertList = [];
-      let updateList = [];
-      let updateWhereList = [];
-      let deleteList = [];
-
-      let keys = [];
-      this.tableDetail.columnList.forEach((column) => {
-        if (column.primaryKey) {
-          keys.push(column.name);
-        }
-      });
-
-      this.dataList.forEach((data) => {
-        switch (this.form.sqlType) {
-          case "insert":
-            insertList.push(data);
-            break;
-          case "update":
-            if (keys.length > 0) {
-              let whereData = {};
-              keys.forEach((key) => {
-                whereData[key] = data[key];
-              });
-              updateWhereList.push(whereData);
-            } else {
-              updateWhereList.push(data);
-            }
-
-            if (keys.length > 0) {
-              let updateData = {};
-              for (let name in data) {
-                if (keys.indexOf(name) < 0) {
-                  updateData[name] = data[name];
-                }
-              }
-              updateList.push(updateData);
-            } else {
-              updateList.push(data);
-            }
-            break;
-          case "delete":
-            if (keys.length > 0) {
-              let whereData = {};
-              keys.forEach((key) => {
-                whereData[key] = data[key];
-              });
-              deleteList.push(whereData);
-            } else {
-              deleteList.push(data);
-            }
-            break;
-        }
-      });
 
       data.appendSqlValue = true;
       data.database = this.database;
       data.table = this.tableDetail.name;
       data.columnList = this.tableDetail.columnList;
 
-      data.insertList = insertList;
-      data.updateList = updateList;
-      data.updateWhereList = updateWhereList;
-      data.deleteList = deleteList;
+      data.insertList = this.insertList;
+      data.updateList = this.updateList;
+      data.updateWhereList = this.updateWhereList;
+      data.deleteList = this.deleteList;
 
       let res = await this.wrap.work("dataListSql", data);
       if (res.code != 0) {
@@ -244,14 +177,14 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.wrap.showExportSql = this.show;
+    this.wrap.showSaveSql = this.show;
     this.init();
   },
 };
 </script>
 
 <style>
-.toolbox-database-export-sql textarea {
+.toolbox-database-save-sql textarea {
   width: 100%;
   height: 400px;
   letter-spacing: 1px;

@@ -136,6 +136,7 @@
             <div class="color-grey tm-link mgr-10" @click="toUnselectAll">
               取消全选
             </div>
+            <div @click="toInsert" class="color-blue tm-link mgr-10">新增</div>
             <div
               class="color-red tm-link mgr-10"
               @click="toDeleteSelect"
@@ -152,7 +153,20 @@
             >
               保存修改(编辑:{{ updates.length }}/新增:{{ inserts.length }})
             </div>
-            <div @click="toInsert" class="color-blue tm-link mgr-10">新增</div>
+            <div
+              class="color-grey tm-link mgr-10"
+              @click="showSaveSql"
+              :class="{
+                'tm-disabled':
+                  updates.length == 0 &&
+                  inserts.length == 0 &&
+                  selects.length == 0,
+              }"
+            >
+              查看SQL(编辑:{{ updates.length }}/新增:{{
+                inserts.length
+              }}/删除:{{ selects.length }})
+            </div>
             <div
               @click="importDataForStrategy"
               class="color-grey tm-link mgr-10"
@@ -294,6 +308,7 @@ export default {
       inserts: [],
       updates: [],
       selects: [],
+      keys: [],
       pageSize: 10,
       pageIndex: 1,
       total: 0,
@@ -313,11 +328,15 @@ export default {
         return;
       }
       this.result = null;
+      this.keys = [];
       this.form.wheres = [];
       this.form.orders = [];
       this.form.columnList = [];
       if (this.tableDetail && this.tableDetail.columnList) {
         this.tableDetail.columnList.forEach((one, index) => {
+          if (one.primaryKey) {
+            this.keys.push(one.name);
+          }
           let column = Object.assign({}, one);
           column.checked = true;
           this.form.columnList.push(column);
@@ -502,7 +521,7 @@ export default {
       let dataUpdated = false;
       let dataIndex = this.dataList.indexOf(data);
       let dataCache = this.dataListCache[dataIndex];
-      for (let key in data) {
+      for (let key in dataCache) {
         if (data[key] != dataCache[key]) {
           dataUpdated = true;
           break;
@@ -522,53 +541,123 @@ export default {
     toUnselectAll() {
       this.selects.splice(0, this.selects.length);
     },
-    toDeleteSelect() {
-      let deletes = [];
-      this.selects.forEach((one) => {
-        if (this.inserts.indexOf(one) >= 0) {
+    getCacheData(data) {
+      let dataIndex = this.dataList.indexOf(data);
+      if (dataIndex < 0 || dataIndex >= this.dataListCache.length) {
+        return null;
+      }
+      let dataCache = this.dataListCache[dataIndex];
+      return dataCache;
+    },
+    getDeleteList() {
+      let deleteList = [];
+      this.selects.forEach((data) => {
+        let dataCache = this.getCacheData(data);
+        if (dataCache == null) {
           return;
         }
-        deletes.push(one);
+        if (this.keys.length > 0) {
+          let deleteData = {};
+          this.keys.forEach((key) => {
+            deleteData[key] = dataCache[key];
+          });
+          deleteList.push(deleteData);
+        } else {
+          deleteList.push(dataCache);
+        }
       });
-      if (deletes.length == 0) {
+      return deleteList;
+    },
+    toDeleteSelect() {
+      let deleteList = this.getDeleteList();
+      if (deleteList.length == 0) {
         this.tool.warn("暂无需要删除的数据");
         return;
       }
-      let msg = "此次将删除（" + deletes.length + "）条数据";
+      let msg = "此次将删除（" + deleteList.length + "）条数据";
       msg += "，确认删除？";
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doDelete(deletes);
+          this.doDelete(deleteList);
         })
         .catch((e) => {});
     },
+    getInsertList() {
+      let insertList = [];
+      this.inserts.forEach((data) => {
+        insertList.push(data);
+      });
+      return insertList;
+    },
+    getUpdateList() {
+      let updateList = [];
+      this.updates.forEach((data) => {
+        let dataCache = this.getCacheData(data);
+        if (dataCache == null) {
+          return;
+        }
+        let updateData = {};
+        for (let key in dataCache) {
+          if (data[key] != dataCache[key]) {
+            updateData[key] = data[key];
+          }
+        }
+        updateList.push(updateData);
+      });
+      return updateList;
+    },
+    getUpdateWhereList() {
+      let updateWhereList = [];
+      this.updates.forEach((data) => {
+        let dataCache = this.getCacheData(data);
+        if (dataCache == null) {
+          return;
+        }
+        if (this.keys.length > 0) {
+          let whereData = {};
+          this.keys.forEach((key) => {
+            whereData[key] = dataCache[key];
+          });
+          updateWhereList.push(whereData);
+        } else {
+          updateWhereList.push(dataCache);
+        }
+      });
+      return updateWhereList;
+    },
     toSaveSelect() {
-      if (this.updates.length == 0 && this.inserts.length == 0) {
+      let insertList = this.getInsertList();
+      let updateList = this.getUpdateList();
+      let updateWhereList = this.getUpdateWhereList();
+
+      if (insertList.length == 0 && updateList.length == 0) {
         this.tool.warn("暂无需要保存的数据");
         return;
       }
-      let msg =
-        "此次将更新（" +
-        this.updates.length +
-        "）条数据，新增（" +
-        this.inserts.length +
-        "）条数据";
-      msg += "，确认保存？";
+      let msg = "此次将，";
+      if (insertList.length > 0) {
+        msg += "新增（" + insertList.length + "）条记录，";
+      }
+      if (updateList.length > 0) {
+        msg += "更新（" + updateList.length + "）条记录，";
+      }
+      msg += "确认保存？";
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doSave(this.updates, this.inserts);
+          this.doSave(insertList, updateList, updateWhereList);
         })
         .catch((e) => {});
     },
-    async doSave(updates, inserts) {
+    async doSave(insertList, updateList, updateWhereList) {
       let data = {};
       data.database = this.database;
       data.table = this.table;
       data.columnList = this.tableDetail.columnList;
-      data.updateList = updates;
-      data.insertList = inserts;
+      data.insertList = insertList;
+      data.updateList = updateList;
+      data.updateWhereList = updateWhereList;
 
       let res = await this.wrap.work("saveDataList", data);
       if (res.code != 0) {
@@ -586,12 +675,12 @@ export default {
       this.tool.success(info);
       this.doSearch();
     },
-    async doDelete(deletes) {
+    async doDelete(deleteList) {
       let data = {};
       data.database = this.database;
       data.table = this.table;
       data.columnList = this.tableDetail.columnList;
-      data.deleteList = deletes;
+      data.deleteList = deleteList;
 
       let res = await this.wrap.work("saveDataList", data);
       if (res.code != 0) {
@@ -622,6 +711,20 @@ export default {
     },
     showExportSql() {
       this.wrap.showExportSql(this.database, this.tableDetail, this.selects);
+    },
+
+    showSaveSql() {
+      let insertList = this.getInsertList();
+      let updateList = this.getUpdateList();
+      let updateWhereList = this.getUpdateWhereList();
+      let deleteList = this.getDeleteList();
+
+      this.wrap.showSaveSql(this.database, this.tableDetail, {
+        insertList,
+        updateList,
+        updateWhereList,
+        deleteList,
+      });
     },
   },
   created() {},

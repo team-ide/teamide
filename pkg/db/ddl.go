@@ -1,8 +1,12 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type GenerateParam struct {
@@ -15,6 +19,7 @@ type GenerateParam struct {
 	TablePackingCharacter    string `json:"tablePackingCharacter" column:"tablePackingCharacter"`
 	ColumnPackingCharacter   string `json:"columnPackingCharacter" column:"columnPackingCharacter"`
 	StringPackingCharacter   string `json:"stringPackingCharacter" column:"stringPackingCharacter"`
+	AppendSqlValue           bool   `json:"appendSqlValue" column:"appendSqlValue"`
 }
 
 func ToDatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {
@@ -90,21 +95,21 @@ func ToTableDDL(param *GenerateParam, database string, table *TableModel) (sqlLi
 type DatabaseDialect struct {
 }
 
-func (this_ *DatabaseDialect) packingCharacterDatabase(param *GenerateParam, value string) string {
+func (param *GenerateParam) packingCharacterDatabase(value string) string {
 	if param.DatabasePackingCharacter == "" {
 		return value
 	}
 	return param.DatabasePackingCharacter + value + param.DatabasePackingCharacter
 }
 
-func (this_ *DatabaseDialect) packingCharacterTable(param *GenerateParam, value string) string {
+func (param *GenerateParam) packingCharacterTable(value string) string {
 	if param.TablePackingCharacter == "" {
 		return value
 	}
 	return param.TablePackingCharacter + value + param.TablePackingCharacter
 }
 
-func (this_ *DatabaseDialect) packingCharacterColumn(param *GenerateParam, value string) string {
+func (param *GenerateParam) packingCharacterColumn(value string) string {
 	if param.ColumnPackingCharacter == "" {
 		return value
 	}
@@ -114,7 +119,7 @@ func (this_ *DatabaseDialect) packingCharacterColumn(param *GenerateParam, value
 	return param.ColumnPackingCharacter + value + param.ColumnPackingCharacter
 }
 
-func (this_ *DatabaseDialect) packingCharacterColumns(param *GenerateParam, columns string) string {
+func (param *GenerateParam) packingCharacterColumns(columns string) string {
 	if param.ColumnPackingCharacter == "" {
 		return columns
 	}
@@ -122,21 +127,108 @@ func (this_ *DatabaseDialect) packingCharacterColumns(param *GenerateParam, colu
 	columnList := strings.Split(columns, ",")
 
 	for _, column := range columnList {
-		res += this_.packingCharacterColumn(param, column) + ","
+		res += param.packingCharacterColumn(column) + ","
 	}
 	res = strings.TrimSuffix(res, ",")
 	return res
 }
 
-func (this_ *DatabaseDialect) packingCharacterString(param *GenerateParam, value interface{}) interface{} {
-	if value == nil || param.StringPackingCharacter == "" {
-		return value
+func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColumnModel, value interface{}) string {
+	var formatColumnValue = param.formatColumnValue(column, value)
+	if formatColumnValue == nil {
+		return "NULL"
 	}
-	valueString, ok := value.(string)
-	if !ok {
-		return value
+	var valueString string
+	switch v := formatColumnValue.(type) {
+	case int:
+		return strconv.FormatInt(int64(v), 10)
+	case int8:
+		return strconv.FormatInt(int64(v), 10)
+	case int16:
+		return strconv.FormatInt(int64(v), 10)
+	case int32:
+		return strconv.FormatInt(int64(v), 10)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', column.Decimal, 64)
+	case float64:
+		return strconv.FormatFloat(v, 'f', column.Decimal, 64)
+	case bool:
+		if v {
+			return "1"
+		}
+		return "0"
+	case time.Time:
+		if v.IsZero() {
+			return "NULL"
+		}
+		valueString = v.Format("2006-01-02 15:04:05.000")
+		break
+	case string:
+		valueString = v
+		break
+	default:
+		newValue, _ := json.Marshal(value)
+		valueString = string(newValue)
+		break
+	}
+	if param.StringPackingCharacter == "" {
+		return valueString
 	}
 	return formatStringValue(param.StringPackingCharacter, valueString)
+}
+func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value interface{}) interface{} {
+	if value == nil {
+		return value
+	}
+	columnTypeInfo := DatabaseTypeMySql.GetColumnTypeInfo(column.Type)
+	if columnTypeInfo == nil {
+		Logger.Warn("字段类型[" + column.Type + "]未引射信息")
+		return value
+	}
+	var stringValue = ""
+	if value != "" {
+		newValue, err := json.Marshal(value)
+		if err != nil {
+			Logger.Error("值转化异常", zap.Error(err))
+			return value
+		} else {
+			stringValue = string(newValue)
+		}
+	}
+	if columnTypeInfo.IsNumber {
+		if stringValue == "" {
+			return 0
+		}
+		if column.Decimal > 0 {
+			f64, err := strconv.ParseFloat(stringValue, column.Decimal)
+			if err != nil {
+				Logger.Error("值["+stringValue+"]转化float64异常", zap.Error(err))
+				return value
+			}
+			return f64
+		} else {
+			i64, err := strconv.ParseInt(stringValue, 10, 64)
+			if err != nil {
+				Logger.Error("值["+stringValue+"]转化int64异常", zap.Error(err))
+				return value
+			}
+			return i64
+		}
+	}
+	if columnTypeInfo.IsDateTime {
+		if stringValue == "" {
+			return nil
+		}
+		timeValue, err := time.Parse("2006-01-02 03:04:05.000", stringValue)
+		if err != nil {
+			Logger.Error("值["+stringValue+"]转化time异常", zap.Error(err))
+			return value
+		}
+		return timeValue
+	}
+	return value
 }
 
 func formatStringValue(packingCharacter string, valueString string) string {
