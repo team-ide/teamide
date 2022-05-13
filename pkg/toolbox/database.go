@@ -52,7 +52,8 @@ type DatabaseBaseRequest struct {
 	TaskKey         string                   `json:"taskKey"`
 	ExecuteSQL      string                   `json:"executeSQL"`
 	ColumnList      []*db.TableColumnModel   `json:"columnList"`
-	Wheres          []Where                  `json:"wheres"`
+	Wheres          []*db.Where              `json:"wheres"`
+	Orders          []*db.Order              `json:"orders"`
 	PageIndex       int                      `json:"pageIndex"`
 	PageSize        int                      `json:"pageSize"`
 	DatabaseType    string                   `json:"databaseType"`
@@ -154,12 +155,25 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 
 		res["sqlList"] = sqlList
 	case "dataList":
+
+		var generateParam = &db.GenerateParam{}
+		err = json.Unmarshal(dataBS, generateParam)
+		if err != nil {
+			return
+		}
+
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
 		var dataListRequest DataListResult
-		dataListRequest, err = service.DataList(DataListParam{
+		dataListRequest, err = service.DataList(generateParam, DataListParam{
 			Database:   request.Database,
 			Table:      request.Table,
 			ColumnList: request.ColumnList,
 			Wheres:     request.Wheres,
+			Orders:     request.Orders,
 			PageIndex:  request.PageIndex,
 			PageSize:   request.PageSize,
 		})
@@ -218,6 +232,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.DatabasePackingCharacter = "`"
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
+
 		saveDataListTask := &saveDataListTask{
 			Database:        request.Database,
 			Table:           request.Table,
@@ -236,6 +251,18 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["task"] = saveDataListTask
 
 	case "importDataForStrategy":
+
+		var generateParam = &db.GenerateParam{}
+		err = json.Unmarshal(dataBS, generateParam)
+		if err != nil {
+			return
+		}
+
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
 		taskKey := util.GenerateUUID()
 		importDataForStrategyTask := &importDataForStrategyTask{
 			Key:            taskKey,
@@ -244,6 +271,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			ColumnList:     request.ColumnList,
 			ImportDataList: request.ImportDataList,
 			service:        service,
+			generateParam:  generateParam,
 		}
 		addImportDataForStrategyTask(importDataForStrategyTask)
 
@@ -337,7 +365,7 @@ type DatabaseService interface {
 	Databases() ([]*db.DatabaseModel, error)
 	Tables(database string) ([]*db.TableModel, error)
 	TableDetails(database string, table string) ([]*db.TableModel, error)
-	DataList(dataListParam DataListParam) (DataListResult, error)
+	DataList(param *db.GenerateParam, dataListParam DataListParam) (DataListResult, error)
 	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
 }
 
@@ -345,10 +373,10 @@ type DataListParam struct {
 	Database   string                 `json:"database"`
 	Table      string                 `json:"table"`
 	ColumnList []*db.TableColumnModel `json:"columnList"`
-	Wheres     []Where                `json:"wheres"`
+	Wheres     []*db.Where            `json:"wheres"`
 	PageIndex  int                    `json:"pageIndex"`
 	PageSize   int                    `json:"pageSize"`
-	Orders     []Order                `json:"orders"`
+	Orders     []*db.Order            `json:"orders"`
 }
 
 type DataListResult struct {
@@ -356,19 +384,4 @@ type DataListResult struct {
 	Total    int                      `json:"total"`
 	Params   []interface{}            `json:"params"`
 	DataList []map[string]interface{} `json:"dataList"`
-}
-
-type Where struct {
-	Name                    string `json:"name"`
-	Value                   string `json:"value"`
-	Before                  string `json:"before"`
-	After                   string `json:"after"`
-	CustomSql               string `json:"customSql"`
-	SqlConditionalOperation string `json:"sqlConditionalOperation"`
-	AndOr                   string `json:"andOr"`
-}
-
-type Order struct {
-	Name    string `json:"name"`
-	DescAsc string `json:"descAsc"`
 }

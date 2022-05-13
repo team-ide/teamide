@@ -58,7 +58,7 @@ func (this_ *executeSQLTask) Start() {
 		if this_.Database != "" {
 			finder := zorm.NewFinder()
 			finder.InjectionCheck = false
-			finder.Append(`use ` + this_.Database)
+			finder.Append("use `" + this_.Database + "`")
 			_, err = zorm.UpdateFinder(ctx, finder)
 			if err != nil {
 				return

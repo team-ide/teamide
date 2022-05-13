@@ -169,3 +169,108 @@ func DataListDeleteSql(param *GenerateParam, database string, table string, colu
 	}
 	return
 }
+
+type Where struct {
+	Name                    string `json:"name"`
+	Value                   string `json:"value"`
+	Before                  string `json:"before"`
+	After                   string `json:"after"`
+	CustomSql               string `json:"customSql"`
+	SqlConditionalOperation string `json:"sqlConditionalOperation"`
+	AndOr                   string `json:"andOr"`
+}
+
+type Order struct {
+	Name    string `json:"name"`
+	DescAsc string `json:"descAsc"`
+}
+
+func DataListSelectSql(param *GenerateParam, database string, table string, columnList []*TableColumnModel, whereList []*Where, orderList []*Order) (sql string, values []interface{}, err error) {
+	selectColumns := ""
+	for _, column := range columnList {
+		selectColumns += param.packingCharacterColumn(column.Name) + ","
+	}
+	selectColumns = strings.TrimSuffix(selectColumns, ",")
+	if selectColumns == "" {
+		selectColumns = "*"
+	}
+	sql = "SELECT " + selectColumns + " FROM "
+
+	if param.AppendDatabase && database != "" {
+		sql += param.packingCharacterDatabase(database) + "."
+	}
+	sql += param.packingCharacterTable(table)
+
+	//构造查询用的finder
+	if len(whereList) > 0 {
+		sql += " WHERE"
+		for index, where := range whereList {
+			sql += " " + param.packingCharacterColumn(where.Name)
+			value := where.Value
+			switch where.SqlConditionalOperation {
+			case "like":
+				sql += " LIKE ?"
+				values = append(values, "%"+value+"%")
+			case "not like":
+				sql += " NOT LIKE ?"
+				values = append(values, "%"+value+"%")
+			case "like start":
+				sql += " LIKE ?"
+				values = append(values, ""+value+"%")
+			case "not like start":
+				sql += " NOT LIKE ?"
+				values = append(values, ""+value+"%")
+			case "like end":
+				sql += " LIKE ?"
+				values = append(values, "%"+value+"")
+			case "not like end":
+				sql += " NOT LIKE ?"
+				values = append(values, "%"+value+"")
+			case "is null":
+				sql += " IS NULL"
+			case "is not null":
+				sql += " IS NOT NULL"
+			case "is empty":
+				sql += " = ?"
+				values = append(values, "")
+			case "is not empty":
+				sql += " <> ?"
+				values = append(values, "")
+			case "between":
+				sql += " BETWEEN ? AND ?"
+				values = append(values, where.Before, where.After)
+			case "not between":
+				sql += " NOT BETWEEN ? AND ?"
+				values = append(values, where.Before, where.After)
+			case "in":
+				sql += " IN (?)"
+				values = append(values, value)
+			case "not in":
+				sql += " NOT IN (?)"
+				values = append(values, value)
+			default:
+				sql += " " + where.SqlConditionalOperation + " ?"
+				values = append(values, value)
+			}
+			// params_ = append(params_, where.Value)
+			if index < len(whereList)-1 {
+				sql += " " + where.AndOr + " "
+			}
+		}
+	}
+	if len(orderList) > 0 {
+		sql += " ORDER BY"
+		for index, order := range orderList {
+			sql += " " + param.packingCharacterColumn(order.Name)
+			if order.DescAsc != "" {
+				sql += " " + order.DescAsc
+			}
+			// params_ = append(params_, where.Value)
+			if index < len(orderList)-1 {
+				sql += ","
+			}
+		}
+
+	}
+	return
+}
