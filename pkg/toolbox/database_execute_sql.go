@@ -2,12 +2,11 @@ package toolbox
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"gitee.com/chunanyong/zorm"
 	"go.uber.org/zap"
 	"io"
-	"teamide/pkg/application/base"
+	"strconv"
 	"teamide/pkg/util"
 	"teamide/pkg/vitess/sqlparser"
 	"time"
@@ -34,11 +33,16 @@ func (this_ *executeSQLTask) Stop() {
 	this_.IsStop = true
 }
 
-func (this_ *executeSQLTask) Start() (err error) {
+func (this_ *executeSQLTask) Start() {
 	this_.StartTime = time.Now()
+	var err error
 	defer func() {
+		if err != nil {
+			util.Logger.Error("SQL执行异常", zap.Any("error", err))
+			this_.Error = fmt.Sprint(err)
+		}
 		if err := recover(); err != nil {
-			Logger.Error("根据保存数据异常", zap.Any("error", err))
+			util.Logger.Error("SQL执行异常", zap.Any("error", err))
 			this_.Error = fmt.Sprint(err)
 		}
 		this_.EndTime = time.Now()
@@ -63,38 +67,51 @@ func (this_ *executeSQLTask) Start() (err error) {
 		for {
 			var stmt sqlparser.Statement
 			stmt, err = sqlparser.ParseNext(tokens)
+
+			if err == io.EOF {
+				err = nil
+				break
+			}
+
 			if err != nil {
-				if err == io.EOF {
-					err = nil
-					break
-				}
 				return
 			}
 			buf := sqlparser.NewTrackedBuffer(nil)
 			stmt.Format(buf)
 			sql := buf.String()
 
-			var executeData map[string]interface{}
+			var executeData = map[string]interface{}{}
+			this_.ExecuteList = append(this_.ExecuteList, executeData)
+
+			var startTime = util.Now()
+			executeData["sql"] = sql
+			executeData["startTime"] = util.Format(startTime)
 
 			switch stmt.(type) {
 			case *sqlparser.Select:
-				executeData, err = this_.doSelect(ctx, sql)
+				err = this_.doSelect(ctx, sql, executeData)
 			case *sqlparser.Insert:
-				executeData, err = this_.doInsert(ctx, sql)
+				err = this_.doInsert(ctx, sql, executeData)
 			case *sqlparser.Update:
-				executeData, err = this_.doUpdate(ctx, sql)
+				err = this_.doUpdate(ctx, sql, executeData)
 			case *sqlparser.Delete:
-				executeData, err = this_.doDelete(ctx, sql)
+				err = this_.doDelete(ctx, sql, executeData)
 			case *sqlparser.Use:
-				executeData, err = this_.doUse(ctx, sql)
+				err = this_.doUse(ctx, sql, executeData)
+			case *sqlparser.Show:
+				err = this_.doSelect(ctx, sql, executeData)
 			default:
-				err = errors.New("未解析SQL类型[" + base.GetRefType(stmt).Name() + "]，SQL[" + sql + "]")
+				err = this_.doExec(ctx, sql, executeData)
 			}
+
+			var endTime = time.Now()
+			executeData["endTime"] = util.Format(endTime)
+			executeData["isEnd"] = true
+			executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 			if err != nil {
+				executeData["error"] = err.Error()
 				return
 			}
-			this_.ExecuteList = append(this_.ExecuteList, executeData)
-
 		}
 
 		return
@@ -102,28 +119,44 @@ func (this_ *executeSQLTask) Start() (err error) {
 	return
 }
 
-func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string) (executeData map[string]interface{}, err error) {
-	executeData = map[string]interface{}{}
+func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
-	executeData["sql"] = sql
 	executeData["isSelect"] = true
-	dataList, err := zorm.QueryMap(ctx, finder, nil)
+	columnTypes, dataList, err := zorm.QueryMapAndColumnTypes(ctx, finder, nil)
 
 	if err != nil {
-		Logger.Error("doSelect异常", zap.Error(err))
+		util.Logger.Error("doSelect异常", zap.Error(err))
 		return
 	}
+	var columnList []map[string]interface{}
+	if len(columnTypes) > 0 {
+		for _, columnType := range columnTypes {
+			column := map[string]interface{}{}
+			column["name"] = columnType.Name()
+			column["type"] = columnType.DatabaseTypeName()
+			columnList = append(columnList, column)
+		}
+	}
+	executeData["columnList"] = columnList
 	for _, one := range dataList {
 		for k, v := range one {
-			t, tOk := v.(time.Time)
-			if tOk {
-				if t.IsZero() {
+			switch tV := v.(type) {
+			case int64:
+				one[k] = strconv.FormatInt(tV, 10)
+			case uint64:
+				one[k] = strconv.FormatInt(int64(tV), 10)
+			case float64:
+				one[k] = strconv.FormatFloat(tV, 'f', -1, 64)
+			case time.Time:
+				if tV.IsZero() {
 					one[k] = nil
 				} else {
-					one[k] = util.GetTimeTime(t)
+					one[k] = util.GetTimeTime(tV)
 				}
+			default:
+				one[k] = tV
 			}
 		}
 	}
@@ -131,68 +164,74 @@ func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string) (executeD
 	return
 }
 
-func (this_ *executeSQLTask) doInsert(ctx context.Context, sql string) (executeData map[string]interface{}, err error) {
-	executeData = map[string]interface{}{}
+func (this_ *executeSQLTask) doInsert(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
-	executeData["sql"] = sql
 	executeData["isInsert"] = true
 	rowsAffected, err := zorm.UpdateFinder(ctx, finder)
 
 	if err != nil {
-		Logger.Error("doInsert异常", zap.Error(err))
+		util.Logger.Error("doInsert异常", zap.Error(err))
 		return
 	}
 	executeData["rowsAffected"] = rowsAffected
 	return
 }
 
-func (this_ *executeSQLTask) doUpdate(ctx context.Context, sql string) (executeData map[string]interface{}, err error) {
-	executeData = map[string]interface{}{}
+func (this_ *executeSQLTask) doUpdate(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
-	executeData["sql"] = sql
 	executeData["isUpdate"] = true
 	rowsAffected, err := zorm.UpdateFinder(ctx, finder)
 
 	if err != nil {
-		Logger.Error("doUpdate异常", zap.Error(err))
+		util.Logger.Error("doUpdate异常", zap.Error(err))
 		return
 	}
 	executeData["rowsAffected"] = rowsAffected
 	return
 }
 
-func (this_ *executeSQLTask) doDelete(ctx context.Context, sql string) (executeData map[string]interface{}, err error) {
-	executeData = map[string]interface{}{}
+func (this_ *executeSQLTask) doDelete(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
-	executeData["sql"] = sql
 	executeData["isDelete"] = true
 	rowsAffected, err := zorm.UpdateFinder(ctx, finder)
 
 	if err != nil {
-		Logger.Error("doDelete异常", zap.Error(err))
+		util.Logger.Error("doDelete异常", zap.Error(err))
 		return
 	}
 	executeData["rowsAffected"] = rowsAffected
 	return
 }
 
-func (this_ *executeSQLTask) doUse(ctx context.Context, sql string) (executeData map[string]interface{}, err error) {
-	executeData = map[string]interface{}{}
+func (this_ *executeSQLTask) doUse(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
-	executeData["sql"] = sql
 	executeData["isUse"] = true
 	_, err = zorm.UpdateFinder(ctx, finder)
 
 	if err != nil {
-		Logger.Error("doUse异常", zap.Error(err))
+		util.Logger.Error("doUse异常", zap.Error(err))
+		return
+	}
+	return
+}
+
+func (this_ *executeSQLTask) doExec(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+	finder := zorm.NewFinder()
+	finder.InjectionCheck = false
+	finder.Append(sql)
+	executeData["isExec"] = true
+	_, err = zorm.UpdateFinder(ctx, finder)
+
+	if err != nil {
+		util.Logger.Error("doExec异常", zap.Error(err))
 		return
 	}
 	return

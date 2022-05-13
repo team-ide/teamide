@@ -177,10 +177,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			ExecuteSQL: request.ExecuteSQL,
 			service:    service,
 		}
-		err = executeSQLTask.Start()
-		if err != nil {
-			return
-		}
+		executeSQLTask.Start()
 		res["task"] = executeSQLTask
 
 	case "dataListSql":

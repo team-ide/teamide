@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"sync"
 	"teamide/pkg/form"
+	"teamide/pkg/util"
 	"time"
 )
 
@@ -51,7 +52,7 @@ func GetService(key string, create func() (Service, error)) (Service, error) {
 	if ok {
 		return res, nil
 	}
-	Logger.Info("缓存暂无该服务，创建服务", zap.Any("Key", key))
+	util.Logger.Info("缓存暂无该服务，创建服务", zap.Any("Key", key))
 	res, err := create()
 	if err != nil {
 		return nil, err
@@ -78,7 +79,7 @@ func startServiceTimer() {
 			if t >= one.GetWaitTime() {
 				delete(serviceCache, key)
 				one.Stop()
-				Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.GetWaitTime()), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.GetLastUseTime()))
+				util.Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.GetWaitTime()), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.GetLastUseTime()))
 			}
 		}
 	}

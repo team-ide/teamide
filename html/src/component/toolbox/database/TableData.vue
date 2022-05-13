@@ -250,7 +250,7 @@
         <tm-layout height="50px" class="scrollbar">
           <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
             <div style="line-height: 20px">
-              <span style="word-break: break-all">{{ executeSql }}</span>
+              <span style="word-break: break-all;user-select: text;" >{{ executeSql }}</span>
             </div>
           </div>
         </tm-layout>

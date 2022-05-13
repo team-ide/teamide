@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
+	"teamide/pkg/util"
 	"time"
 )
 
@@ -196,7 +197,7 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 	}
 	columnTypeInfo := DatabaseTypeMySql.GetColumnTypeInfo(column.Type)
 	if columnTypeInfo == nil {
-		Logger.Warn("字段类型[" + column.Type + "]未引射信息")
+		util.Logger.Warn("字段类型[" + column.Type + "]未引射信息")
 		return value
 	}
 	var stringValue = GetStringValue(value)
@@ -207,14 +208,14 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 		if column.Decimal > 0 {
 			f64, err := strconv.ParseFloat(stringValue, 64)
 			if err != nil {
-				Logger.Error("值["+stringValue+"]转化float64异常", zap.Error(err))
+				util.Logger.Error("值["+stringValue+"]转化float64异常", zap.Error(err))
 				return value
 			}
 			return f64
 		} else {
 			i64, err := strconv.ParseInt(stringValue, 10, 64)
 			if err != nil {
-				Logger.Error("值["+stringValue+"]转化int64异常", zap.Error(err))
+				util.Logger.Error("值["+stringValue+"]转化int64异常", zap.Error(err))
 				return value
 			}
 			return i64
@@ -245,7 +246,7 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 		}
 		timeValue, err := time.ParseInLocation(format, stringValue, time.Local)
 		if err != nil {
-			Logger.Error("值["+stringValue+"]转化time异常", zap.Error(err))
+			util.Logger.Error("值["+stringValue+"]转化time异常", zap.Error(err))
 			return value
 		}
 		return timeValue

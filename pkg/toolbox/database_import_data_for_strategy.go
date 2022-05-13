@@ -47,7 +47,7 @@ func (this_ *importDataForStrategyTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("根据策略导入数据异常", zap.Any("error", err))
+			util.Logger.Error("根据策略导入数据异常", zap.Any("error", err))
 			this_.Error = fmt.Sprint(err)
 		}
 		this_.EndTime = time.Now()
@@ -124,7 +124,7 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 				var scriptValue goja.Value
 				scriptValue, err = vm.RunString(valueString)
 				if err != nil {
-					Logger.Error("表达式执行异常", zap.Any("script", valueString), zap.Error(err))
+					util.Logger.Error("表达式执行异常", zap.Any("script", valueString), zap.Error(err))
 					return
 				}
 				value = scriptValue.Export()

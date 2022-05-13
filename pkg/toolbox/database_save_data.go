@@ -40,7 +40,7 @@ func (this_ *saveDataListTask) Start() (err error) {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("根据保存数据异常", zap.Any("error", err))
+			util.Logger.Error("根据保存数据异常", zap.Any("error", err))
 			this_.Error = fmt.Sprint(err)
 		}
 		this_.EndTime = time.Now()

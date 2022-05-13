@@ -24,6 +24,7 @@
               :wrap="wrap"
               :extend="tab.extend"
               :databases="databases"
+              :tab="tab"
             >
             </ToolboxDatabaseSql>
           </template>
