@@ -20,16 +20,16 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 	createTableSql := `CREATE TABLE `
 
 	if param.AppendDatabase {
-		createTableSql += this_.packingCharacterDatabase(param, database) + "."
+		createTableSql += param.packingCharacterDatabase(database) + "."
 	}
-	createTableSql += this_.packingCharacterTable(param, table.Name)
+	createTableSql += param.packingCharacterTable(table.Name)
 
 	createTableSql += `(`
 	createTableSql += "\n"
 	primaryKeys := ""
 	if len(table.ColumnList) > 0 {
 		for _, one := range table.ColumnList {
-			var columnSql = this_.packingCharacterColumn(param, one.Name)
+			var columnSql = param.packingCharacterColumn(one.Name)
 			var c = DatabaseTypeSqlite.GetColumnTypeInfo(one.Type)
 			if c == nil {
 				err = errors.New("Sqlite字段类型[" + one.Type + "]未映射!")
@@ -58,7 +58,7 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 	}
 	if primaryKeys != "" {
 		primaryKeys = strings.TrimSuffix(primaryKeys, ",")
-		createTableSql += "\tPRIMARY KEY (" + this_.packingCharacterColumns(param, primaryKeys) + ")"
+		createTableSql += "\tPRIMARY KEY (" + param.packingCharacterColumns(primaryKeys) + ")"
 	}
 
 	createTableSql = strings.TrimSuffix(createTableSql, ",\n")
@@ -100,11 +100,11 @@ func (this_ *DatabaseSqliteDialect) Index(param *GenerateParam, database string,
 	}
 	sql += " ON "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
+	sql += "" + param.packingCharacterTable(table)
 
-	sql += "(" + this_.packingCharacterColumns(param, columns) + ")"
+	sql += "(" + param.packingCharacterColumns(columns) + ")"
 
 	sqlList = append(sqlList, sql)
 	return

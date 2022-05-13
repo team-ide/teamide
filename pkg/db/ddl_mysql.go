@@ -12,7 +12,7 @@ type DatabaseMySqlDialect struct {
 func (this_ *DatabaseMySqlDialect) DatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {
 
 	var sql string
-	sql = `CREATE DATABASE ` + this_.packingCharacterDatabase(param, database.Name)
+	sql = `CREATE DATABASE ` + param.packingCharacterDatabase(database.Name)
 	if param.CharacterSet != "" {
 		sql += ` CHARACTER SET ` + param.CharacterSet
 	}
@@ -31,16 +31,16 @@ func (this_ *DatabaseMySqlDialect) TableDDL(param *GenerateParam, database strin
 	createTableSql := `CREATE TABLE `
 
 	if param.AppendDatabase {
-		createTableSql += this_.packingCharacterDatabase(param, database) + "."
+		createTableSql += param.packingCharacterDatabase(database) + "."
 	}
-	createTableSql += this_.packingCharacterTable(param, table.Name)
+	createTableSql += param.packingCharacterTable(table.Name)
 
 	createTableSql += `(`
 	createTableSql += "\n"
 	primaryKeys := ""
 	if len(table.ColumnList) > 0 {
 		for _, one := range table.ColumnList {
-			var columnSql = this_.packingCharacterColumn(param, one.Name)
+			var columnSql = param.packingCharacterColumn(one.Name)
 			var c = DatabaseTypeMySql.GetColumnTypeInfo(one.Type)
 			if c == nil {
 				err = errors.New("MySql字段类型[" + one.Type + "]未映射!")
@@ -70,7 +70,7 @@ func (this_ *DatabaseMySqlDialect) TableDDL(param *GenerateParam, database strin
 	}
 	if primaryKeys != "" {
 		primaryKeys = strings.TrimSuffix(primaryKeys, ",")
-		createTableSql += "\tPRIMARY KEY (" + this_.packingCharacterColumns(param, primaryKeys) + ")"
+		createTableSql += "\tPRIMARY KEY (" + param.packingCharacterColumns(primaryKeys) + ")"
 	}
 
 	createTableSql = strings.TrimSuffix(createTableSql, ",\n")
@@ -122,9 +122,9 @@ func (this_ *DatabaseMySqlDialect) TableDDL(param *GenerateParam, database strin
 func (this_ *DatabaseMySqlDialect) TableComment(param *GenerateParam, database string, table string, comment string) (sqlList []string) {
 	sql := "ALTER TABLE "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
+	sql += "" + param.packingCharacterTable(table)
 	sql += " COMMENT " + formatStringValue("'", comment)
 	sqlList = append(sqlList, sql)
 	return
@@ -133,10 +133,10 @@ func (this_ *DatabaseMySqlDialect) TableComment(param *GenerateParam, database s
 func (this_ *DatabaseMySqlDialect) ColumnComment(param *GenerateParam, database string, table string, column string, columnType string, comment string) (sqlList []string) {
 	sql := "ALTER TABLE "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
-	sql += " MODIFY COLUMN " + this_.packingCharacterColumn(param, column)
+	sql += "" + param.packingCharacterTable(table)
+	sql += " MODIFY COLUMN " + param.packingCharacterColumn(column)
 	sql += " " + columnType
 	sql += " COMMENT " + formatStringValue("'", comment)
 	sqlList = append(sqlList, sql)
@@ -146,9 +146,9 @@ func (this_ *DatabaseMySqlDialect) ColumnComment(param *GenerateParam, database 
 func (this_ *DatabaseMySqlDialect) Index(param *GenerateParam, database string, table string, indexName string, indexType string, columns string, indexComment string) (sqlList []string) {
 	sql := "ALTER TABLE "
 	if param.AppendDatabase && database != "" {
-		sql += this_.packingCharacterDatabase(param, database) + "."
+		sql += param.packingCharacterDatabase(database) + "."
 	}
-	sql += "" + this_.packingCharacterTable(param, table)
+	sql += "" + param.packingCharacterTable(table)
 
 	switch strings.ToUpper(indexType) {
 	case "PRIMARY":
@@ -163,7 +163,7 @@ func (this_ *DatabaseMySqlDialect) Index(param *GenerateParam, database string, 
 	if indexName != "" {
 		sql += "" + indexName + " "
 	}
-	sql += "(" + this_.packingCharacterColumns(param, columns) + ")"
+	sql += "(" + param.packingCharacterColumns(columns) + ")"
 
 	if indexComment != "" {
 		sql += " COMMENT " + formatStringValue("'", indexComment)

@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
+	"teamide/pkg/util"
 )
 
 type DatabaseType struct {
@@ -74,16 +75,6 @@ func GetDatabaseType(databaseType string) *DatabaseType {
 	return nil
 }
 
-var (
-	Logger *zap.Logger
-)
-
-func init() {
-	loggerConfig := zap.NewDevelopmentConfig()
-	loggerConfig.Development = false
-	Logger, _ = loggerConfig.Build()
-}
-
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
 	Type     string `json:"type,omitempty"`
@@ -135,7 +126,7 @@ func (this_ *DatabaseWorker) init() (err error) {
 
 	// 记录panic日志,默认使用defaultLogError实现
 	zorm.FuncLogPanic = func(err error) {
-		Logger.Error("zorm panic error", zap.Error(err))
+		util.Logger.Error("zorm panic error", zap.Error(err))
 	}
 	// 打印sql的函数
 	zorm.FuncPrintSQL = func(sqlstr string, args []interface{}) {
@@ -224,11 +215,36 @@ func (this_ *DatabaseWorker) Execs(sqlList []string, paramsList [][]interface{})
 			var updated int
 			updated, err = zorm.UpdateFinder(ctx, finder)
 			if err != nil {
-				Logger.Error("Exec Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+				util.Logger.Error("Exec Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 				return nil, err
 			}
 			rowsAffected += int64(updated)
 		}
+
+		//如果返回的err不是nil,事务就会回滚
+		return nil, err
+	})
+
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *DatabaseWorker) FinderExec(finder *zorm.Finder) (rowsAffected int64, err error) {
+
+	_, err = zorm.Transaction(this_.GetContext(), func(ctx context.Context) (interface{}, error) {
+
+		var err error
+
+		var updated int
+		updated, err = zorm.UpdateFinder(ctx, finder)
+		if err != nil {
+			sql_, _ := finder.GetSQL()
+			util.Logger.Error("FinderExec Error", zap.Any("sql", sql_), zap.Error(err))
+			return nil, err
+		}
+		rowsAffected += int64(updated)
 
 		//如果返回的err不是nil,事务就会回滚
 		return nil, err
@@ -248,7 +264,7 @@ func (this_ *DatabaseWorker) Count(sql string, params []interface{}) (count int6
 	count, err = this_.FinderCount(finder)
 
 	if err != nil {
-		Logger.Error("Count Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("Count Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 	return
@@ -272,7 +288,7 @@ func (this_ *DatabaseWorker) QueryOne(sql string, params []interface{}, one inte
 	find, err = this_.FinderQueryOne(finder, one)
 
 	if err != nil {
-		Logger.Error("Query Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("Query Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 
@@ -298,7 +314,7 @@ func (this_ *DatabaseWorker) Query(sql string, params []interface{}, list interf
 	err = this_.FinderQuery(finder, list)
 
 	if err != nil {
-		Logger.Error("Query Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("Query Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 
@@ -324,7 +340,7 @@ func (this_ *DatabaseWorker) QueryMap(sql string, params []interface{}) (list []
 	list, err = this_.FinderQueryMap(finder)
 
 	if err != nil {
-		Logger.Error("QueryMap Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("QueryMap Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 
@@ -350,7 +366,7 @@ func (this_ *DatabaseWorker) QueryPage(sql string, params []interface{}, list in
 	err = this_.FinderQueryPage(finder, list, page)
 
 	if err != nil {
-		Logger.Error("QueryPage Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("QueryPage Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 
@@ -376,7 +392,7 @@ func (this_ *DatabaseWorker) QueryMapPage(sql string, params []interface{}, page
 	list, err = this_.FinderQueryMapPage(finder, page)
 
 	if err != nil {
-		Logger.Error("QueryMap Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
+		util.Logger.Error("QueryMap Error", zap.Any("sql", sql), zap.Any("params", params), zap.Error(err))
 		return
 	}
 

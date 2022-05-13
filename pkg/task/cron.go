@@ -4,27 +4,18 @@ import (
 	"errors"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
+	"teamide/pkg/util"
 )
-
-var (
-	Logger *zap.Logger
-)
-
-func init() {
-	loggerConfig := zap.NewDevelopmentConfig()
-	loggerConfig.Development = false
-	Logger, _ = loggerConfig.Build()
-}
 
 type cronLogger struct {
 }
 
 func (this_ *cronLogger) Info(msg string, keysAndValues ...interface{}) {
-	Logger.Info(msg, zap.Any("keysAndValues", keysAndValues))
+	util.Logger.Info(msg, zap.Any("keysAndValues", keysAndValues))
 
 }
 func (this_ *cronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	Logger.Error(msg, zap.Any("keysAndValues", keysAndValues), zap.Error(err))
+	util.Logger.Error(msg, zap.Any("keysAndValues", keysAndValues), zap.Error(err))
 }
 
 var (

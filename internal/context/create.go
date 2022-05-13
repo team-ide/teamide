@@ -9,8 +9,6 @@ import (
 	"strings"
 	"teamide/internal/config"
 	"teamide/pkg/db"
-	"teamide/pkg/task"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/util"
 )
 
@@ -159,9 +157,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	} else {
 		this_.Logger = newZapLogger(serverConfig)
 	}
-	toolbox.Logger = this_.Logger
-	db.Logger = this_.Logger
-	task.Logger = this_.Logger
+	util.Logger = this_.Logger
 
 	err = db.CheckColumnType()
 	if err != nil {

@@ -158,6 +158,29 @@ export default {
     updateComment(comment) {
       this.updateOpenComment(this.openId, comment);
     },
+    async updateOpenTabExtend(tabId, keys, value) {
+      let tab = this.wrap.getTab("" + tabId);
+      if (tab == null) {
+        return;
+      }
+      let obj = tab.extend;
+      keys.forEach((key, index) => {
+        if (index < keys.length - 1) {
+          obj[key] = obj[key] || {};
+          obj = obj[key];
+        } else {
+          obj[key] = value;
+        }
+      });
+      let param = {
+        tabId: tabId,
+        extend: JSON.stringify(tab.extend),
+      };
+      let res = await this.server.toolbox.updateOpenTabExtend(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+    },
     async openTabByExtend(extend, fromTab) {
       let data = {
         openId: this.openId,

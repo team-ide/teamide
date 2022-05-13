@@ -221,6 +221,13 @@ func GetRefValue(bean interface{}) reflect.Value {
 	return reflect.ValueOf(bean)
 }
 
+func GetRefType(bean interface{}) reflect.Type {
+	if IsPtr(bean) {
+		return reflect.TypeOf(bean).Elem()
+	}
+	return reflect.TypeOf(bean)
+}
+
 func IsPtr(v interface{}) bool {
 	return reflect.ValueOf(v).Kind() == reflect.Ptr
 }

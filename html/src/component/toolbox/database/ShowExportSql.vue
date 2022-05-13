@@ -20,7 +20,11 @@
         :inline="true"
       >
         <el-form-item label="SQL类型">
-          <el-select v-model="form.sqlType" @change="toLoad">
+          <el-select
+            v-model="form.sqlType"
+            @change="toLoad"
+            style="width: 100px"
+          >
             <el-option
               v-for="(one, index) in sqlTypes"
               :key="index"
@@ -40,7 +44,7 @@
               placeholder="不包装"
               v-model="form.databasePackingCharacter"
               @change="toLoad"
-              style="width: 100px"
+              style="width: 90px"
             >
               <el-option
                 v-for="(one, index) in packingCharacters"
@@ -57,7 +61,7 @@
             placeholder="不包装"
             v-model="form.tablePackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -73,7 +77,7 @@
             placeholder="不包装"
             v-model="form.columnPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 90px"
           >
             <el-option
               v-for="(one, index) in packingCharacters"
@@ -86,10 +90,9 @@
         </el-form-item>
         <el-form-item label="字符值包装">
           <el-select
-            placeholder="不包装"
             v-model="form.stringPackingCharacter"
             @change="toLoad"
-            style="width: 100px"
+            style="width: 60px"
           >
             <el-option
               v-for="(one, index) in stringPackingCharacters"
@@ -159,94 +162,19 @@ export default {
     },
     async toLoad() {
       this.showSQL = "";
-      let sqls = await this.initSqls();
-      sqls.forEach((sql) => {
+      let res = await this.loadSqls();
+      let sqlList = res.sqlList || [];
+      let valuesList = res.valuesList || [];
+      sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n";
       });
     },
-    packingCharacterDatabase(value) {
-      if (
-        this.tool.isEmpty(this.form.databasePackingCharacter) ||
-        this.tool.isEmpty(value)
-      ) {
-        return value;
-      }
-      return (
-        this.form.databasePackingCharacter +
-        value +
-        this.form.databasePackingCharacter
-      );
-    },
-    packingCharacterTable(value) {
-      if (
-        this.tool.isEmpty(this.form.tablePackingCharacter) ||
-        this.tool.isEmpty(value)
-      ) {
-        return value;
-      }
-      return (
-        this.form.tablePackingCharacter +
-        value +
-        this.form.tablePackingCharacter
-      );
-    },
-    packingCharacterColumn(value) {
-      if (
-        this.tool.isEmpty(this.form.columnPackingCharacter) ||
-        this.tool.isEmpty(value)
-      ) {
-        return value;
-      }
-      return (
-        this.form.columnPackingCharacter +
-        value +
-        this.form.columnPackingCharacter
-      );
-    },
-    packingCharacterString(value) {
-      if (
-        this.tool.isEmpty(this.form.stringPackingCharacter) ||
-        this.tool.isEmpty(value)
-      ) {
-        return value;
-      }
-      if (typeof value != "string") {
-        return value;
-      }
-      if (value.indexOf(this.form.stringPackingCharacter) < 0) {
-        return (
-          this.form.stringPackingCharacter +
-          value +
-          this.form.stringPackingCharacter
-        );
-      }
-      return (
-        this.form.stringPackingCharacter +
-        this.packingCharacterEscape(this.form.stringPackingCharacter, value) +
-        this.form.stringPackingCharacter
-      );
-    },
-    packingCharacterEscape(packing, value) {
-      let res = "";
-      var arr = value.split("");
-      for (var i = 0; i < arr.length; i++) {
-        let c = arr[i];
-        if (packing == c) {
-          res += "\\" + c;
-        } else if (c == "\\") {
-          res += "\\" + c;
-        } else {
-          res += c;
-        }
-      }
-
-      return res;
-    },
-    async initSqls() {
-      let sqls = [];
-      if (this.tableDetail == null) {
-        return sqls;
-      }
+    async loadSqls() {
+      let data = Object.assign({}, this.form);
+      let insertList = [];
+      let updateList = [];
+      let updateWhereList = [];
+      let deleteList = [];
 
       let keys = [];
       this.tableDetail.columnList.forEach((column) => {
@@ -254,108 +182,64 @@ export default {
           keys.push(column.name);
         }
       });
-      this.dataList.forEach((one) => {
-        let insertSql = "INSERT INTO ";
 
-        if (this.form.appendDatabase) {
-          insertSql += this.packingCharacterDatabase(this.database) + ".";
-        }
-        insertSql += this.packingCharacterTable(this.tableDetail.name);
-
-        let updateSql = "UPDATE ";
-
-        if (this.form.appendDatabase) {
-          updateSql += this.packingCharacterDatabase(this.database) + ".";
-        }
-        updateSql +=
-          this.packingCharacterTable(this.tableDetail.name) + " SET ";
-
-        let deleteSql = "DELETE FROM ";
-
-        if (this.form.appendDatabase) {
-          deleteSql += this.packingCharacterDatabase(this.database) + ".";
-        }
-        deleteSql += this.packingCharacterTable(this.tableDetail.name);
-
-        insertSql += " (";
-        this.tableDetail.columnList.forEach((column) => {
-          insertSql += "" + this.packingCharacterColumn(column.name) + ", ";
-        });
-        if (insertSql.endsWith(", ")) {
-          insertSql = insertSql.substring(0, insertSql.length - 2);
-        }
-        insertSql += ")";
-
-        insertSql += " VALUES (";
-
-        let whereSql = "WHERE ";
-
-        this.tableDetail.columnList.forEach((column) => {
-          let value = one[column.name];
-          let valueSql = value;
-          if (value == null) {
-            valueSql = "NULL";
-          } else {
-            if (this.wrap.columnIsNumber(column)) {
-              valueSql = value;
-            } else {
-              value = this.wrap.formatDateColumn(column, value);
-              valueSql = this.packingCharacterString(value);
-            }
-          }
-
-          insertSql += valueSql + ", ";
-
-          if (keys.length > 0) {
-            if (keys.indexOf(column.name) >= 0) {
-              whereSql +=
-                this.packingCharacterColumn(column.name) +
-                "=" +
-                valueSql +
-                " AND ";
-            } else {
-              updateSql +=
-                this.packingCharacterColumn(column.name) +
-                "=" +
-                valueSql +
-                ", ";
-            }
-          } else {
-            updateSql +=
-              this.packingCharacterColumn(column.name) + "=" + valueSql + ", ";
-            whereSql +=
-              this.packingCharacterColumn(column.name) +
-              "=" +
-              valueSql +
-              " AND ";
-          }
-        });
-        if (insertSql.endsWith(", ")) {
-          insertSql = insertSql.substring(0, insertSql.length - 2);
-        }
-        insertSql += ")";
-
-        if (updateSql.endsWith(", ")) {
-          updateSql = updateSql.substring(0, updateSql.length - 2);
-        }
-        if (whereSql.endsWith("AND ")) {
-          whereSql = whereSql.substring(0, whereSql.length - "AND ".length);
-        }
-        updateSql += " " + whereSql;
-        deleteSql += " " + whereSql;
+      this.dataList.forEach((data) => {
         switch (this.form.sqlType) {
           case "insert":
-            sqls.push(insertSql);
+            insertList.push(data);
             break;
           case "update":
-            sqls.push(updateSql);
+            if (keys.length > 0) {
+              let whereData = {};
+              keys.forEach((key) => {
+                whereData[key] = data[key];
+              });
+              updateWhereList.push(whereData);
+            } else {
+              updateWhereList.push(data);
+            }
+
+            if (keys.length > 0) {
+              let updateData = {};
+              for (let name in data) {
+                if (keys.indexOf(name) < 0) {
+                  updateData[name] = data[name];
+                }
+              }
+              updateList.push(updateData);
+            } else {
+              updateList.push(data);
+            }
             break;
           case "delete":
-            sqls.push(deleteSql);
+            if (keys.length > 0) {
+              let whereData = {};
+              keys.forEach((key) => {
+                whereData[key] = data[key];
+              });
+              deleteList.push(whereData);
+            } else {
+              deleteList.push(data);
+            }
             break;
         }
       });
-      return sqls;
+
+      data.appendSqlValue = true;
+      data.database = this.database;
+      data.table = this.tableDetail.name;
+      data.columnList = this.tableDetail.columnList;
+
+      data.insertList = insertList;
+      data.updateList = updateList;
+      data.updateWhereList = updateWhereList;
+      data.deleteList = deleteList;
+
+      let res = await this.wrap.work("dataListSql", data);
+      if (res.code != 0) {
+        return;
+      }
+      return res.data || {};
     },
     init() {},
   },
@@ -381,5 +265,6 @@ export default {
   padding: 0px 5px;
   outline: none;
   user-select: none;
+  resize: none;
 }
 </style>

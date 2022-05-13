@@ -38,6 +38,10 @@ func (this_ *MysqlService) init() (err error) {
 	return
 }
 
+func (this_ *MysqlService) GetDatabaseWorker() *db.DatabaseWorker {
+	return this_.DatabaseWorker
+}
+
 func (this_ *MysqlService) GetWaitTime() int64 {
 	return 10 * 60 * 1000
 }
@@ -312,7 +316,7 @@ func (this_ *MysqlService) DataList(dataListParam DataListParam) (dataListResult
 			t, tOk := v.(time.Time)
 			if tOk {
 				if t.IsZero() {
-					one[k] = 0
+					one[k] = nil
 				} else {
 					one[k] = util.GetTimeTime(t)
 				}

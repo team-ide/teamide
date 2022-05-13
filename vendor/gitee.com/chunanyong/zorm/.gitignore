@@ -1,0 +1,34 @@
+# idea ignore
+.idea/
+*.ipr
+*.iml
+*.iws
+
+.vscode/
+
+*.swp
+
+# temp ignore
+*.log
+*.cache
+*.diff
+*.exe
+*.exe~
+*.patch
+*.tmp
+*debug.test
+debug.test
+go.sum
+
+# system ignore
+.DS_Store
+Thumbs.db
+
+# project
+*.cert
+*.key
+.test
+iprepo.txt
+
+
+_output

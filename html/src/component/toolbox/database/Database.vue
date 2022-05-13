@@ -80,7 +80,14 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: [
+    "source",
+    "toolboxType",
+    "toolbox",
+    "option",
+    "wrap",
+    "databasesChange",
+  ],
   data() {
     return {
       ready: false,
@@ -216,7 +223,7 @@ export default {
 
           list.push(database);
         });
-
+        this.databasesChange(list);
         resolve(list);
         this.initTreeWidth();
         return;
