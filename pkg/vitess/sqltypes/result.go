@@ -31,10 +31,9 @@ type Result struct {
 	Fields              []*querypb.Field `json:"fields"`
 	RowsAffected        uint64           `json:"rows_affected"`
 	InsertID            uint64           `json:"insert_id"`
-	Rows                []Row            `json:"rows"`
+	Rows                [][]Value        `json:"rows"`
 	SessionStateChanges string           `json:"session_state_changes"`
 	StatusFlags         uint16           `json:"status_flags"`
-	Info                string           `json:"info"`
 }
 
 //goland:noinspection GoUnusedConst

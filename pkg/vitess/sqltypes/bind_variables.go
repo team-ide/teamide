@@ -50,8 +50,8 @@ func ProtoToValue(v *querypb.Value) Value {
 	return MakeTrusted(v.Type, v.Value)
 }
 
-// BuildBindVariables builds a map[string]*querypb.BindVariable from a map[string]any
-func BuildBindVariables(in map[string]any) (map[string]*querypb.BindVariable, error) {
+// BuildBindVariables builds a map[string]*querypb.BindVariable from a map[string]interface{}.
+func BuildBindVariables(in map[string]interface{}) (map[string]*querypb.BindVariable, error) {
 	if len(in) == 0 {
 		return nil, nil
 	}
@@ -85,11 +85,6 @@ func Int8BindVariable(v int8) *querypb.BindVariable {
 // Int32BindVariable converts an int32 to a bind var.
 func Int32BindVariable(v int32) *querypb.BindVariable {
 	return ValueBindVariable(NewInt32(v))
-}
-
-// Uint32BindVariable converts a uint32 to a bind var.
-func Uint32BindVariable(v uint32) *querypb.BindVariable {
-	return ValueBindVariable(NewUint32(v))
 }
 
 // BoolBindVariable converts an bool to a int64 bind var.
@@ -136,7 +131,7 @@ func ValueBindVariable(v Value) *querypb.BindVariable {
 }
 
 // BuildBindVariable builds a *querypb.BindVariable from a valid input type.
-func BuildBindVariable(v any) (*querypb.BindVariable, error) {
+func BuildBindVariable(v interface{}) (*querypb.BindVariable, error) {
 	switch v := v.(type) {
 	case string:
 		return StringBindVariable(v), nil
@@ -166,7 +161,7 @@ func BuildBindVariable(v any) (*querypb.BindVariable, error) {
 		return ValueBindVariable(v), nil
 	case *querypb.BindVariable:
 		return v, nil
-	case []any:
+	case []interface{}:
 		bv := &querypb.BindVariable{
 			Type:   querypb.Type_TUPLE,
 			Values: make([]*querypb.Value, len(v)),

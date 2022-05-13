@@ -33,7 +33,7 @@ var versionFlagSync sync.Once
 
 // parserPool is a pool for parser objects.
 var parserPool = sync.Pool{
-	New: func() any {
+	New: func() interface{} {
 		return &yyParserImpl{}
 	},
 }
@@ -111,7 +111,7 @@ func checkParserVersionFlag() {
 			if MySQLServerVersion != "" {
 				convVersion, err := convertMySQLVersionToCommentVersion(MySQLServerVersion)
 				if err != nil {
-					//log.Error(err)
+					fmt.Println(err)
 				} else {
 					MySQLVersion = convVersion
 				}
@@ -156,16 +156,6 @@ func convertMySQLVersionToCommentVersion(version string) (string, error) {
 	}
 
 	return fmt.Sprintf("%01d%02d%02d", res[0], res[1], res[2]), nil
-}
-
-// ParseExpr parses an expression and transforms it to an AST
-func ParseExpr(sql string) (Expr, error) {
-	stmt, err := Parse("select " + sql)
-	if err != nil {
-		return nil, err
-	}
-	aliasedExpr := stmt.(*Select).SelectExprs[0].(*AliasedExpr)
-	return aliasedExpr.Expr, err
 }
 
 // Parse behaves like Parse2 but does not return a set of bind variables
@@ -305,6 +295,13 @@ loop:
 	return
 }
 
-func IsMySQL80AndAbove() bool {
-	return MySQLVersion >= "80000"
+// String returns a string representation of an SQLNode.
+func String(node SQLNode) string {
+	if node == nil {
+		return "<nil>"
+	}
+
+	buf := NewTrackedBuffer(nil)
+	node.formatFast(buf)
+	return buf.String()
 }

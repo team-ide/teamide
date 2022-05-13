@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -379,6 +380,7 @@ func ReplaceExpr(root, from, to Expr) Expr {
 
 	expr, success := tmp.(Expr)
 	if !success {
+		fmt.Printf("Failed to rewrite expression. Rewriter returned a non-expression:  %s", String(tmp))
 		return from
 	}
 
