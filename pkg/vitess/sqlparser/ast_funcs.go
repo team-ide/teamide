@@ -20,13 +20,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"go.uber.org/zap"
 	"regexp"
 	"strings"
+	"teamide/pkg/util"
 
 	"teamide/pkg/vitess/hack"
 	"teamide/pkg/vitess/vterrors"
 	vtrpcpb "teamide/pkg/vitess/vtrpc"
+
+	//"teamide/pkg/vitess/log"
 
 	querypb "teamide/pkg/vitess/query"
 	"teamide/pkg/vitess/sqltypes"
@@ -380,7 +383,7 @@ func ReplaceExpr(root, from, to Expr) Expr {
 
 	expr, success := tmp.(Expr)
 	if !success {
-		fmt.Printf("Failed to rewrite expression. Rewriter returned a non-expression:  %s", String(tmp))
+		util.Logger.Error("Failed to rewrite expression. Rewriter returned a non-expression:  %s", zap.Any("tmp", String(tmp)))
 		return from
 	}
 

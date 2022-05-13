@@ -19,10 +19,12 @@ package sqlparser
 import (
 	"flag"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
+	"teamide/pkg/util"
 
 	"teamide/pkg/vitess/vterrors"
 
@@ -84,6 +86,7 @@ func Parse2(sql string) (Statement, BindVars, error) {
 			if typ, val := tokenizer.Scan(); typ != 0 {
 				return nil, nil, fmt.Errorf("extra characters encountered after end of DDL: '%s'", string(val))
 			}
+			util.Logger.Warn("ignoring error parsing DDL '%s': %v", zap.Any("sql", sql), zap.Error(tokenizer.LastError))
 			switch x := tokenizer.partialDDL.(type) {
 			case DBDDLStatement:
 				x.SetFullyParsed(false)
@@ -101,17 +104,15 @@ func Parse2(sql string) (Statement, BindVars, error) {
 	return tokenizer.ParseTree, tokenizer.BindVars, nil
 }
 
-var (
-	MySQLServerVersion = ""
-)
+var MySQLServerVersion = flag.String("mysql_server_version", "", "MySQL server version to advertise.")
 
 func checkParserVersionFlag() {
 	if flag.Parsed() {
 		versionFlagSync.Do(func() {
-			if MySQLServerVersion != "" {
-				convVersion, err := convertMySQLVersionToCommentVersion(MySQLServerVersion)
+			if *MySQLServerVersion != "" {
+				convVersion, err := convertMySQLVersionToCommentVersion(*MySQLServerVersion)
 				if err != nil {
-					fmt.Println(err)
+					util.Logger.Error("convertMySQLVersionToCommentVersion error", zap.Error(err))
 				} else {
 					MySQLVersion = convVersion
 				}

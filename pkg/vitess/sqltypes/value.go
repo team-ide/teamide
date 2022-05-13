@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"vitess.io/vitess/go/bytes2"
-	"vitess.io/vitess/go/hack"
+	"teamide/pkg/vitess/bytes2"
+	"teamide/pkg/vitess/hack"
 
 	querypb "teamide/pkg/vitess/query"
 	"teamide/pkg/vitess/vterrors"
