@@ -103,6 +103,10 @@ type DatabaseWorker struct {
 	baseContext  context.Context
 }
 
+func (this_ *DatabaseWorker) GetDBType() string {
+	return this_.databaseType.DBType
+}
+
 func (this_ *DatabaseWorker) init() (err error) {
 	this_.databaseType = GetDatabaseType(this_.config.Type)
 	if this_.databaseType == nil {

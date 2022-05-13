@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"strconv"
+	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"teamide/pkg/vitess/sqlparser"
 	"time"
@@ -16,17 +17,18 @@ func init() {
 }
 
 type executeSQLTask struct {
-	Key         string    `json:"key,omitempty"`
-	Database    string    `json:"database,omitempty"`
-	ExecuteSQL  string    `json:"executeSQL,omitempty"`
-	IsEnd       bool      `json:"isEnd,omitempty"`
-	StartTime   time.Time `json:"startTime,omitempty"`
-	EndTime     time.Time `json:"endTime,omitempty"`
-	Error       string    `json:"error,omitempty"`
-	UseTime     int64     `json:"useTime"`
-	IsStop      bool      `json:"isStop"`
-	service     DatabaseService
-	ExecuteList []map[string]interface{} `json:"executeList,omitempty"`
+	Key           string    `json:"key,omitempty"`
+	Database      string    `json:"database,omitempty"`
+	ExecuteSQL    string    `json:"executeSQL,omitempty"`
+	IsEnd         bool      `json:"isEnd,omitempty"`
+	StartTime     time.Time `json:"startTime,omitempty"`
+	EndTime       time.Time `json:"endTime,omitempty"`
+	Error         string    `json:"error,omitempty"`
+	UseTime       int64     `json:"useTime"`
+	IsStop        bool      `json:"isStop"`
+	service       DatabaseService
+	ExecuteList   []map[string]interface{} `json:"executeList,omitempty"`
+	generateParam *db.GenerateParam
 }
 
 func (this_ *executeSQLTask) Stop() {
@@ -53,72 +55,80 @@ func (this_ *executeSQLTask) Start() {
 
 	ctx := this_.service.GetDatabaseWorker().GetContext()
 
-	_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
-
-		if this_.Database != "" {
-			finder := zorm.NewFinder()
-			finder.InjectionCheck = false
-			finder.Append("use `" + this_.Database + "`")
-			_, err = zorm.UpdateFinder(ctx, finder)
-			if err != nil {
-				return
-			}
-		}
-		for {
-			var stmt sqlparser.Statement
-			stmt, err = sqlparser.ParseNext(tokens)
-
-			if err == io.EOF {
-				err = nil
-				break
-			}
-
-			if err != nil {
-				return
-			}
-			buf := sqlparser.NewTrackedBuffer(nil)
-			stmt.Format(buf)
-			sql := buf.String()
-
-			var executeData = map[string]interface{}{}
-			this_.ExecuteList = append(this_.ExecuteList, executeData)
-
-			var startTime = util.Now()
-			executeData["sql"] = sql
-			executeData["startTime"] = util.Format(startTime)
-
-			switch stmt.(type) {
-			case *sqlparser.Select:
-				err = this_.doSelect(ctx, sql, executeData)
-			case *sqlparser.Insert:
-				err = this_.doInsert(ctx, sql, executeData)
-			case *sqlparser.Update:
-				err = this_.doUpdate(ctx, sql, executeData)
-			case *sqlparser.Delete:
-				err = this_.doDelete(ctx, sql, executeData)
-			case *sqlparser.Use:
-				err = this_.doUse(ctx, sql, executeData)
-			case *sqlparser.Show:
-				err = this_.doSelect(ctx, sql, executeData)
-			default:
-				err = this_.doExec(ctx, sql, executeData)
-			}
-
-			var endTime = time.Now()
-			executeData["endTime"] = util.Format(endTime)
-			executeData["isEnd"] = true
-			executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
-			if err != nil {
-				executeData["error"] = err.Error()
-				return
-			}
-		}
-
-		return
-	})
+	if this_.generateParam.OpenTransaction {
+		_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
+			err = this_.do(ctx, tokens)
+			return
+		})
+	} else {
+		err = this_.do(ctx, tokens)
+	}
 	return
 }
 
+func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer) (err error) {
+
+	if this_.Database != "" {
+		finder := zorm.NewFinder()
+		finder.InjectionCheck = false
+		finder.Append("use `" + this_.Database + "`")
+		_, err = zorm.UpdateFinder(ctx, finder)
+		if err != nil {
+			return
+		}
+	}
+	for {
+		var stmt sqlparser.Statement
+		stmt, err = sqlparser.ParseNext(tokens)
+
+		if err == io.EOF {
+			err = nil
+			break
+		}
+
+		if err != nil {
+			return
+		}
+		buf := sqlparser.NewTrackedBuffer(nil)
+		stmt.Format(buf)
+		sql := buf.String()
+
+		var executeData = map[string]interface{}{}
+		this_.ExecuteList = append(this_.ExecuteList, executeData)
+
+		var startTime = util.Now()
+		executeData["sql"] = sql
+		executeData["startTime"] = util.Format(startTime)
+
+		switch stmt.(type) {
+		case *sqlparser.Select:
+			err = this_.doSelect(ctx, sql, executeData)
+		case *sqlparser.Insert:
+			err = this_.doInsert(ctx, sql, executeData)
+		case *sqlparser.Update:
+			err = this_.doUpdate(ctx, sql, executeData)
+		case *sqlparser.Delete:
+			err = this_.doDelete(ctx, sql, executeData)
+		case *sqlparser.Use:
+			err = this_.doUse(ctx, sql, executeData)
+		case *sqlparser.Show:
+			err = this_.doSelect(ctx, sql, executeData)
+		default:
+			err = this_.doExec(ctx, sql, executeData)
+		}
+
+		var endTime = time.Now()
+		executeData["endTime"] = util.Format(endTime)
+		executeData["isEnd"] = true
+		executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+		if err != nil {
+			executeData["error"] = err.Error()
+			return
+		}
+	}
+
+	return
+}
 func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false

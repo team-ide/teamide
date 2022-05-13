@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+func WrapPageSQL(dbType string, sqlstr string, page *Page) (string, error) {
+	return wrapPageSQL(dbType, sqlstr, page)
+}
+
 //wrapPageSQL 包装分页的SQL语句
 //wrapPageSQL SQL statement for wrapping paging
 func wrapPageSQL(dbType string, sqlstr string, page *Page) (string, error) {

@@ -117,7 +117,43 @@
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout width="400px">
             <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
-              <li></li>
+              <template v-for="(one, index) in form.orders">
+                <li :key="index">
+                  <input v-model="one.checked" type="checkbox" />
+                  <select
+                    v-model="one.name"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option :value="null" text="请选择">请选择</option>
+                    <template v-for="(one, index) in tableDetail.columnList">
+                      <option
+                        :key="index"
+                        :value="one.name"
+                        :text="one.name + '&nbsp;'"
+                      >
+                        {{ one.name }}
+                        <template v-if="tool.isNotEmpty(one.comment)">
+                          （{{ one.comment }}）
+                        </template>
+                      </option>
+                    </template>
+                  </select>
+                  <select
+                    v-model="one.ascDesc"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option value="DESC">DESC</option>
+                    <option value="ASC">ASC</option>
+                  </select>
+                </li>
+              </template>
+              <li class="pdl-5">
+                <div @click="addOrder" class="color-green tm-link mgr-10">
+                  添加排序
+                </div>
+              </li>
             </ul>
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
@@ -195,7 +231,7 @@
               style="width: 100%"
               size="mini"
             >
-              <el-table-column width="70" label="序号">
+              <el-table-column width="70" label="序号" fixed>
                 <template slot-scope="scope">
                   <!-- :checked="selects.indexOf(scope.row) >= 0" -->
                   <input
@@ -250,7 +286,9 @@
         <tm-layout height="50px" class="scrollbar">
           <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
             <div style="line-height: 20px">
-              <span style="word-break: break-all;user-select: text;" >{{ executeSql }}</span>
+              <span style="word-break: break-all; user-select: text">{{
+                executeSql
+              }}</span>
             </div>
           </div>
         </tm-layout>
@@ -295,6 +333,8 @@ export default {
     "database",
     "table",
     "wrap",
+    "extend",
+    "tab",
   ],
   data() {
     return {
@@ -309,7 +349,7 @@ export default {
       updates: [],
       selects: [],
       keys: [],
-      pageSize: 10,
+      pageSize: 50,
       pageIndex: 1,
       total: 0,
       form: {
@@ -332,6 +372,23 @@ export default {
       this.form.wheres = [];
       this.form.orders = [];
       this.form.columnList = [];
+
+      if (this.extend.wheres) {
+        this.extend.wheres.forEach((one) => {
+          this.form.wheres.push(one);
+        });
+      }
+      if (this.extend.orders) {
+        this.extend.orders.forEach((one) => {
+          this.form.orders.push(one);
+        });
+      }
+      if (this.extend.pageSize) {
+        this.pageSize = this.extend.pageSize;
+      }
+      if (this.extend.pageIndex) {
+        this.pageIndex = this.extend.pageIndex;
+      }
       if (this.tableDetail && this.tableDetail.columnList) {
         this.tableDetail.columnList.forEach((one, index) => {
           if (one.primaryKey) {
@@ -343,17 +400,20 @@ export default {
         });
       }
       this.ready = true;
-      this.doSearch();
       this.$nextTick(() => {
         if (this.tableDetail && this.tableDetail.columnList) {
-          this.tableDetail.columnList.forEach((one, index) => {
-            if (index < 3) {
-              let where = this.addWhere();
-              where.checked = false;
-            }
-          });
+          if (this.form.wheres.length == 0) {
+            this.tableDetail.columnList.forEach((one, index) => {
+              if (index < 3) {
+                let where = this.addWhere();
+                where.checked = false;
+              }
+            });
+          }
         }
       });
+      this.initInputWidth();
+      this.doSearch();
     },
     async initTable() {
       this.tableDetail = await this.wrap.getTableDetail(
@@ -370,6 +430,10 @@ export default {
       this.doSearch();
     },
     initInputWidth() {
+      if (this.initInputWidthIng) {
+        return;
+      }
+      this.initInputWidthIng = true;
       this.$nextTick(() => {
         let es = this.$el.getElementsByClassName("part-form-input");
         if (es) {
@@ -377,6 +441,7 @@ export default {
             this.initWidth(one);
           });
         }
+        this.initInputWidthIng = false;
       });
     },
     initWidth(event) {
@@ -386,6 +451,40 @@ export default {
       }
       let value = target.value;
       this.tool.initInputWidth(event);
+    },
+    addOrder() {
+      let order = {
+        checked: true,
+        name: null,
+        ascDesc: "ASC",
+      };
+      let column = null;
+      if (this.tableDetail && this.tableDetail.columnList) {
+        if (this.tableDetail.columnList.length > 0) {
+          this.tableDetail.columnList.forEach((one) => {
+            if (column != null) {
+              return;
+            }
+            let find = false;
+            this.form.orders.forEach((w) => {
+              if (w.name == one.name) {
+                find = true;
+              }
+            });
+            if (find) {
+              return;
+            }
+            column = one;
+          });
+        }
+      }
+      if (column != null) {
+        order.name = column.name;
+      }
+
+      this.form.orders.push(order);
+      this.initInputWidth();
+      return order;
     },
     addWhere() {
       let where = {
@@ -425,7 +524,39 @@ export default {
       this.initInputWidth();
       return where;
     },
+    async saveExtendOrders() {
+      await this.wrap.updateOpenTabExtend(
+        this.tab.tabId,
+        ["orders"],
+        this.form.orders
+      );
+    },
+    async saveExtendWheres() {
+      await this.wrap.updateOpenTabExtend(
+        this.tab.tabId,
+        ["wheres"],
+        this.form.wheres
+      );
+    },
+    async saveExtendPageSize() {
+      await this.wrap.updateOpenTabExtend(
+        this.tab.tabId,
+        ["pageSize"],
+        this.pageSize
+      );
+    },
+    async saveExtendPageIndex() {
+      await this.wrap.updateOpenTabExtend(
+        this.tab.tabId,
+        ["pageIndex"],
+        this.pageIndex
+      );
+    },
     async doSearch() {
+      await this.saveExtendOrders();
+      await this.saveExtendWheres();
+      await this.saveExtendPageSize();
+      await this.saveExtendPageIndex();
       let wheres = [];
       let orders = [];
       let columnList = [];
@@ -755,19 +886,21 @@ export default {
 .toolbox-database-table-data .el-table__expanded-cell {
   background: transparent;
 }
-.toolbox-database-table-data .el-table th.el-table__cell {
-  background: transparent;
-}
-.toolbox-database-table-data .el-table td.el-table__cell,
-.toolbox-database-table-data .el-table th.el-table__cell.is-leaf {
-  background: transparent;
-}
 .toolbox-database-table-data .el-table th,
-.toolbox-database-table-data .el-table tr {
-  background: transparent;
+.toolbox-database-table-data .el-table td {
+  background: #172029;
 }
-.toolbox-database-table-data .el-table .el-table__row:hover td.el-table__cell {
+.toolbox-database-table-data .el-table .el-table__row:hover td.el-table__cell,
+.toolbox-database-table-data .el-table .el-table__row:hover td.el-table__cell,
+.toolbox-database-table-data
+  .el-table
+  .el-table__row.hover-row
+  td.el-table__cell {
   background-color: #473939;
+}
+.toolbox-database-table-data .el-table__fixed-right::before,
+.el-table__fixed::before {
+  background-color: transparent;
 }
 .toolbox-database-table-data .el-table {
   color: unset;
@@ -813,10 +946,6 @@ export default {
 }
 .toolbox-database-table-data .el-table .cell {
   white-space: nowrap;
-}
-.toolbox-database-table-data .el-table tr,
-.toolbox-database-table-data .el-table th.el-table__cell {
-  background-color: transparent;
 }
 .toolbox-database-table-data .el-table tbody .cell {
   padding-left: 0px !important;

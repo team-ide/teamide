@@ -74,11 +74,11 @@
         </template>
       </div>
     </div>
-    <div class="tab-editor-footer">
+    <!-- <div class="tab-editor-footer">
       <template v-if="activeTab != null">
         <span class="ft-12 pdlr-10">{{ activeTab.title }}</span>
       </template>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -411,14 +411,14 @@ export default {
 }
 .tab-editor-body {
   width: 100%;
-  height: calc(100% - 25px - 20px);
+  height: calc(100% - 25px);
   border-bottom: 1px solid #4e4e4e;
   position: relative;
 }
 .tab-editor-footer {
   width: 100%;
-  height: 20px;
-  line-height: 20px;
+  height: 0px;
+  line-height: 0px;
   position: relative;
   display: flex;
 }

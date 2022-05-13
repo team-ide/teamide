@@ -15,6 +15,8 @@
               :wrap="wrap"
               :database="tab.extend.database"
               :table="tab.extend.table"
+              :extend="tab.extend"
+              :tab="tab"
             >
             </ToolboxDatabaseTableData>
           </template>

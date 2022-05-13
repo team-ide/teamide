@@ -21,6 +21,7 @@ type GenerateParam struct {
 	ColumnPackingCharacter   string `json:"columnPackingCharacter" column:"columnPackingCharacter"`
 	StringPackingCharacter   string `json:"stringPackingCharacter" column:"stringPackingCharacter"`
 	AppendSqlValue           bool   `json:"appendSqlValue" column:"appendSqlValue"`
+	OpenTransaction          bool   `json:"openTransaction"`
 }
 
 func ToDatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {

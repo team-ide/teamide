@@ -185,11 +185,17 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["total"] = dataListRequest.Total
 		res["dataList"] = dataListRequest.DataList
 	case "executeSQL":
+		var generateParam = &db.GenerateParam{}
+		err = json.Unmarshal(dataBS, generateParam)
+		if err != nil {
+			return
+		}
 
 		executeSQLTask := &executeSQLTask{
-			Database:   request.Database,
-			ExecuteSQL: request.ExecuteSQL,
-			service:    service,
+			Database:      request.Database,
+			ExecuteSQL:    request.ExecuteSQL,
+			service:       service,
+			generateParam: generateParam,
 		}
 		executeSQLTask.Start()
 		res["task"] = executeSQLTask
@@ -228,6 +234,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 
+		generateParam.OpenTransaction = true
 		generateParam.AppendDatabase = true
 		generateParam.DatabasePackingCharacter = "`"
 		generateParam.TablePackingCharacter = "`"

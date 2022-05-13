@@ -256,7 +256,7 @@ func (this_ *MysqlService) DataList(param *db.GenerateParam, dataListParam DataL
 			}
 		}
 	}
-	dataListResult.Sql = sql
+	dataListResult.Sql, err = zorm.WrapPageSQL(this_.DatabaseWorker.GetDBType(), sql, page)
 	dataListResult.Params = values
 	dataListResult.Total = page.TotalCount
 	dataListResult.DataList = listMap
