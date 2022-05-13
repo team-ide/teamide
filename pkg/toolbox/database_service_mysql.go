@@ -225,85 +225,18 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 	return
 }
 
-func (this_ *MysqlService) DataList(dataListParam DataListParam) (dataListResult DataListResult, err error) {
+func (this_ *MysqlService) DataList(param *db.GenerateParam, dataListParam DataListParam) (dataListResult DataListResult, err error) {
 
-	var params []interface{}
-	selectColumns := ""
-	for _, column := range dataListParam.ColumnList {
-		selectColumns += "`" + column.Name + "`,"
+	sql, values, err := db.DataListSelectSql(param, dataListParam.Database, dataListParam.Table, dataListParam.ColumnList, dataListParam.Wheres, dataListParam.Orders)
+	if err != nil {
+		return
 	}
-	selectColumns = selectColumns[0 : len(selectColumns)-1]
-	//构造查询用的finder
-	finder := zorm.NewSelectFinder(dataListParam.Database+"."+dataListParam.Table, selectColumns)
-	if len(dataListParam.Wheres) > 0 {
-		finder.Append(" WHERE")
-		for index, where := range dataListParam.Wheres {
-			value := where.Value
-			switch where.SqlConditionalOperation {
-			case "like":
-				finder.Append(" "+where.Name+" LIKE ?", "%"+value+"%")
-				params = append(params, "%"+value+"%")
-			case "not like":
-				finder.Append(" "+where.Name+" NOT LIKE ?", "%"+value+"%")
-				params = append(params, "%"+value+"%")
-			case "like start":
-				finder.Append(" "+where.Name+" LIKE ?", ""+value+"%")
-				params = append(params, ""+value+"%")
-			case "not like start":
-				finder.Append(" "+where.Name+" NOT LIKE ?", ""+value+"%")
-				params = append(params, ""+value+"%")
-			case "like end":
-				finder.Append(" "+where.Name+" LIKE ?", "%"+value+"")
-				params = append(params, "%"+value+"")
-			case "not like end":
-				finder.Append(" "+where.Name+" NOT LIKE ?", "%"+value+"")
-				params = append(params, "%"+value+"")
-			case "is null":
-				finder.Append(" " + where.Name + " IS NULL")
-			case "is not null":
-				finder.Append(" " + where.Name + " IS NOT NULL")
-			case "is empty":
-				finder.Append(" "+where.Name+" = ?", "")
-				params = append(params, "")
-			case "is not empty":
-				finder.Append(" "+where.Name+" <> ?", "")
-				params = append(params, "")
-			case "between":
-				finder.Append(" "+where.Name+" BETWEEN ? AND ?", where.Before, where.After)
-				params = append(params, where.Before, where.After)
-			case "not between":
-				finder.Append(" "+where.Name+" NOT BETWEEN ? AND ?", where.Before, where.After)
-				params = append(params, where.Before, where.After)
-			case "in":
-				finder.Append(" "+where.Name+" IN (?)", value)
-				params = append(params, value)
-			case "not in":
-				finder.Append(" "+where.Name+" NOT IN (?)", value)
-				params = append(params, value)
-			default:
-				finder.Append(" "+where.Name+" "+where.SqlConditionalOperation+" ?", value)
-				params = append(params, value)
-			}
-			// params_ = append(params_, where.Value)
-			if index < len(dataListParam.Wheres)-1 {
-				finder.Append(" " + where.AndOr + " ")
-			}
-		}
-	}
-	if len(dataListParam.Orders) > 0 {
-		finder.Append(" ORDER BY")
-		for index, order := range dataListParam.Orders {
-			finder.Append(" " + order.Name)
-			if order.DescAsc != "" {
-				finder.Append(" " + order.DescAsc)
-			}
-			// params_ = append(params_, where.Value)
-			if index < len(dataListParam.Orders)-1 {
-				finder.Append(",")
-			}
-		}
 
-	}
+	finder := zorm.NewFinder()
+	finder.InjectionCheck = false
+
+	finder.Append(sql, values...)
+
 	page := zorm.NewPage()
 	page.PageSize = dataListParam.PageSize
 	page.PageNo = dataListParam.PageIndex
@@ -323,8 +256,8 @@ func (this_ *MysqlService) DataList(dataListParam DataListParam) (dataListResult
 			}
 		}
 	}
-	dataListResult.Sql, err = finder.GetSQL()
-	dataListResult.Params = params
+	dataListResult.Sql = sql
+	dataListResult.Params = values
 	dataListResult.Total = page.TotalCount
 	dataListResult.DataList = listMap
 	return

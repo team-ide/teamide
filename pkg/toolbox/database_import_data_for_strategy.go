@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/dop251/goja"
 	"go.uber.org/zap"
-	"strings"
 	"teamide/pkg/db"
 	"teamide/pkg/javascript"
 	"teamide/pkg/util"
@@ -38,6 +37,7 @@ type importDataForStrategyTask struct {
 	UseTime           int64                    `json:"useTime"`
 	IsStop            bool                     `json:"isStop"`
 	service           DatabaseService
+	generateParam     *db.GenerateParam
 }
 
 func (this_ *importDataForStrategyTask) Stop() {
@@ -170,47 +170,15 @@ func (this_ *importDataForStrategyTask) doImportData(database, table string, col
 	}
 	var sqlList []string
 	var paramsList [][]interface{}
-	for _, data := range dataList {
-		var sqlParam *SqlParam
-		sqlParam, err = this_.getImportDataFinder(database, table, columnList, data)
-		if err != nil {
-			return
-		}
-		sqlList = append(sqlList, sqlParam.Sql)
-		paramsList = append(paramsList, sqlParam.Params)
+
+	sqlList, paramsList, err = db.DataListInsertSql(this_.generateParam, database, table, columnList, dataList)
+	if err != nil {
+		return
 	}
 
 	_, err = this_.service.Execs(sqlList, paramsList)
 	if err != nil {
 		return
-	}
-	return
-}
-
-func (this_ *importDataForStrategyTask) getImportDataFinder(database, table string, columnList []*db.TableColumnModel, data map[string]interface{}) (sqlParam *SqlParam, err error) {
-
-	insertColumns := ""
-	insertValues := ""
-	var values []interface{}
-	for _, column := range columnList {
-		value, valueOk := data[column.Name]
-		if !valueOk {
-			continue
-		}
-		insertColumns += column.Name + ","
-		insertValues += "?,"
-		values = append(values, value)
-	}
-	insertColumns = strings.TrimSuffix(insertColumns, ",")
-	insertValues = strings.TrimSuffix(insertValues, ",")
-	sql := "INSERT INTO " + database + "." + table + ""
-	sql += "(" + insertColumns + ")"
-	sql += " VALUES "
-	sql += "(" + insertValues + ")"
-
-	sqlParam = &SqlParam{
-		Sql:    sql,
-		Params: values,
 	}
 	return
 }
