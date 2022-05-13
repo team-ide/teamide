@@ -182,7 +182,7 @@ type Where struct {
 
 type Order struct {
 	Name    string `json:"name"`
-	DescAsc string `json:"descAsc"`
+	AscDesc string `json:"ascDesc"`
 }
 
 func DataListSelectSql(param *GenerateParam, database string, table string, columnList []*TableColumnModel, whereList []*Where, orderList []*Order) (sql string, values []interface{}, err error) {
@@ -262,8 +262,8 @@ func DataListSelectSql(param *GenerateParam, database string, table string, colu
 		sql += " ORDER BY"
 		for index, order := range orderList {
 			sql += " " + param.packingCharacterColumn(order.Name)
-			if order.DescAsc != "" {
-				sql += " " + order.DescAsc
+			if order.AscDesc != "" {
+				sql += " " + order.AscDesc
 			}
 			// params_ = append(params_, where.Value)
 			if index < len(orderList)-1 {

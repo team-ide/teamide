@@ -6,7 +6,7 @@
           class="mgt-10"
           ref="form"
           :model="form"
-          label-width="60px"
+          label-width="80px"
           size="mini"
           :inline="true"
         >
@@ -20,15 +20,25 @@
                 {{ one.name }}
               </el-option>
             </el-select>
+            <el-form-item label="开启事务">
+              <el-switch v-model="form.openTransaction"> </el-switch>
+            </el-form-item>
           </el-form-item>
 
           <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toExecuteSql">
             执行
           </div>
+          <div
+            class="tm-btn tm-btn-sm bg-green ft-13"
+            @click="toExecuteSelectSql"
+            @mousedown="toSelectSql"
+          >
+            执行选中
+          </div>
         </el-form>
       </tm-layout>
       <tm-layout height="300px" class="" style="overflow: hidden">
-        <textarea v-model="executeSQL"> </textarea>
+        <textarea ref="sqlTextarea" v-model="executeSQL"> </textarea>
       </tm-layout>
       <tm-layout-bar bottom></tm-layout-bar>
       <tm-layout height="auto">
@@ -44,14 +54,17 @@
               <div class="sql-execute-list">
                 <template v-for="(one, index) in executeList">
                   <div :key="index" class="sql-execute-one mgb-10">
+                    <div class="color-grey">
+                      <span class="pdr-5">{{ one.startTime }}</span>
+                      执行
+                    </div>
                     <div>
-                      SQL:
-                      <span class="pdlr-5">{{ one.sql }}</span>
+                      <span class="">{{ one.sql }}</span>
                     </div>
                     <template v-if="one.error">
-                      <div class="">
-                        执行异常:
-                        <span class="color-red pdlr-5">{{ one.error }}</span>
+                      <div class="color-orange">
+                        执行异常
+                        <span class="color-orange pdlr-5">{{ one.error }}</span>
                       </div>
                     </template>
                     <template v-else>
@@ -60,29 +73,21 @@
                         <template
                           v-if="one.rowsAffected == 0 || one.rowsAffected > 0"
                         >
-                          <span class=""
-                            >受影响行数:
+                          <span class="">
+                            受影响行数:
                             <span class="color-green pdlr-5">
                               {{ one.rowsAffected }}
                             </span>
                           </span>
                         </template>
                         <template v-if="one.dataList != null">
-                          <span class=""
-                            >查询行数:
+                          <span class="">
+                            查询行数:
                             <span class="color-green pdlr-5">
                               {{ one.dataList.length }}
                             </span>
                           </span>
                         </template>
-                        <span>
-                          开始时间:
-                          <span class="pdlr-5">{{ one.startTime }} </span>
-                        </span>
-                        <span>
-                          结束时间:
-                          <span class="pdlr-5">{{ one.endTime }}</span>
-                        </span>
                         <span>
                           耗时:
                           <span class="pdlr-5">{{ one.useTime }}毫秒</span>
@@ -95,46 +100,8 @@
             </template>
             <template v-else-if="tab.isSelect">
               <div class="sql-execute-select">
-                <div
-                  class="
-                    toolbox-database-table-data
-                    toolbox-database-table-data-table
-                  "
-                >
-                  <el-table
-                    :data="tab.dataList"
-                    :border="true"
-                    height="100%"
-                    style="width: 100%"
-                    size="mini"
-                  >
-                    <el-table-column width="70" label="序号">
-                      <template slot-scope="scope">
-                        <span class="mgl-5">{{ scope.$index + 1 }}</span>
-                      </template>
-                    </el-table-column>
-                    <template v-for="(column, index) in tab.columnList">
-                      <el-table-column
-                        :key="index"
-                        :prop="column.name"
-                        :label="column.name"
-                        width="120"
-                      >
-                        <template slot-scope="scope">
-                          <div class="">
-                            <input
-                              v-model="scope.row[column.name]"
-                              :placeholder="
-                                scope.row[column.name] == null ? 'null' : ''
-                              "
-                              type="text"
-                            />
-                          </div>
-                        </template>
-                      </el-table-column>
-                    </template>
-                  </el-table>
-                </div>
+                <SqlSelectDataList :source="source" :wrap="wrap" :tab="tab">
+                </SqlSelectDataList>
               </div>
             </template>
           </template>
@@ -146,8 +113,10 @@
 
 
 <script>
+import SqlSelectDataList from "./SqlSelectDataList.vue";
+
 export default {
-  components: {},
+  components: { SqlSelectDataList },
   props: ["source", "wrap", "extend", "databases", "tab"],
   data() {
     return {
@@ -155,6 +124,7 @@ export default {
       executeSQL: null,
       form: {
         database: null,
+        openTransaction: true,
       },
       executeList: [],
     };
@@ -163,47 +133,71 @@ export default {
   watch: {},
   methods: {
     async autoSaveSql() {
-      if (this.lastSavedExecuteSQL == this.executeSQL) {
-        setTimeout(this.autoSaveSql, 300);
-        return;
+      if (this.lastSavedExecuteSQL != this.executeSQL) {
+        this.lastSavedExecuteSQL = this.executeSQL;
+        await this.wrap.updateOpenTabExtend(
+          this.tab.tabId,
+          ["executeSQL"],
+          this.executeSQL
+        );
       }
-      this.lastSavedExecuteSQL = this.executeSQL;
-      await this.toSaveSql();
+      if (this.lastSavedDatabase != this.form.database) {
+        this.lastSavedDatabase = this.form.database;
+        await this.wrap.updateOpenTabExtend(
+          this.tab.tabId,
+          ["database"],
+          this.form.database
+        );
+      }
       setTimeout(this.autoSaveSql, 300);
     },
     init() {
       if (this.extend) {
         this.executeSQL = this.extend.executeSQL;
+        this.form.database = this.extend.database;
       }
       this.autoSaveSql();
       this.ready = true;
     },
-    async toSaveSql() {
-      await this.wrap.updateOpenTabExtend(
-        this.tab.tabId,
-        ["executeSQL"],
-        this.executeSQL
-      );
+    toSelectSql() {
+      this.tool.stopEvent(window.event);
+      let startIndex = this.$refs.sqlTextarea.selectionStart || 0;
+      let endIndex = this.$refs.sqlTextarea.selectionEnd || 0;
+      if (endIndex <= startIndex) {
+        return;
+      }
+      this.$refs.sqlTextarea.setSelectionRange(startIndex, endIndex); //将光标定位在textarea的开头，需要定位到其他位置的请自行修改
+      this.$refs.sqlTextarea.focus();
+    },
+    async toExecuteSelectSql() {
+      let startIndex = this.$refs.sqlTextarea.selectionStart || 0;
+      let endIndex = this.$refs.sqlTextarea.selectionEnd || 0;
+      if (endIndex <= startIndex) {
+        this.tool.warn("没有SQL被选中");
+        return;
+      }
+      let sql = this.executeSQL.substring(startIndex, endIndex);
+
+      await this.doExecuteSql(sql);
     },
     async toExecuteSql() {
-      this.toSaveSql();
-      let task = await this.doExecuteSql();
-      if (task.error) {
-        this.tool.error(task.error);
-      }
-      this.executeList = task.executeList || [];
-      this.initExecuteList();
+      await this.doExecuteSql(this.executeSQL);
     },
-    async doExecuteSql() {
+    async doExecuteSql(executeSQL) {
       let data = Object.assign({}, this.form);
 
-      data.executeSQL = this.executeSQL;
+      data.executeSQL = executeSQL;
       let res = await this.wrap.work("executeSQL", data);
       if (res.code != 0) {
         return;
       }
       res.data = res.data || {};
-      return res.data.task;
+      let task = res.data.task;
+      if (task.error) {
+        this.tool.error(task.error);
+      }
+      this.executeList = task.executeList || [];
+      this.initExecuteList();
     },
     initExecuteList() {
       this.cleanTab();
@@ -232,8 +226,9 @@ export default {
       tab.title = "查询结果" + executeData.selectIndex;
       tab.name = "查询结果" + executeData.selectIndex;
       tab.isSelect = true;
-      tab.dataList = executeData.dataList || [];
       tab.columnList = executeData.columnList || [];
+      executeData.dataList = executeData.dataList || [];
+      tab.dataList = executeData.dataList;
       this.addTab(tab);
       // this.doActiveTab(tab);
     },
@@ -263,10 +258,7 @@ export default {
 .toolbox-database-sql {
   width: 100%;
   height: 100%;
-}
-.toolbox-database-sql {
-  width: 100%;
-  height: 100%;
+  user-select: none;
 }
 .toolbox-database-sql textarea {
   width: 100%;
@@ -283,8 +275,16 @@ export default {
   border-right-color: transparent;
   border-bottom-color: transparent;
 }
+.toolbox-database-sql textarea::selection {
+  color: #494949;
+  background: lightblue;
+}
 .sql-execute-list {
   font-size: 12px;
+  user-select: text;
+}
+.sql-execute-one {
+  padding: 0px 5px;
 }
 .sql-execute-select {
   width: 100%;
