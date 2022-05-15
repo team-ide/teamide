@@ -58,15 +58,15 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td>哈希值编辑</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td>列表值编辑</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td>集合值编辑</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td rowspan="2">Toolbox Elasticsearch</td>
@@ -75,7 +75,7 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td>选择索引，增删改查数据等</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td rowspan="4">Toolbox Database</td>
@@ -84,11 +84,11 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td>MySql表数据增删改查、批量新增、修改、删除等操作</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td>自定义SQL执行面板，结果查看器</td>
-        <td>进行中</td>
+        <td>完成</td>
     </tr>
     <tr>
         <td>适配Oracle等主流数据库</td>
