@@ -3,7 +3,7 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="300px" class="">
-          <ToolboxDatabaseDatabase
+          <Database
             ref="ToolboxDatabaseDatabase"
             :source="source"
             :toolbox="toolbox"
@@ -11,45 +11,54 @@
             :wrap="wrap"
             :databasesChange="databasesChange"
           >
-          </ToolboxDatabaseDatabase>
+          </Database>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <ToolboxDatabaseTabs
+          <Tabs
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
             :databases="databases"
           >
-          </ToolboxDatabaseTabs>
+          </Tabs>
         </tm-layout>
       </tm-layout>
-      <ShowDatabaseCreate :source="source" :wrap="wrap"> </ShowDatabaseCreate>
-      <ShowTableCreate :source="source" :wrap="wrap"> </ShowTableCreate>
-      <ShowExportSql :source="source" :wrap="wrap"> </ShowExportSql>
-      <ShowSaveSql :source="source" :wrap="wrap"> </ShowSaveSql>
-      <ShowImportDataForStrategy :source="source" :wrap="wrap">
+      <ShowExportSql :source="source" :toolbox="toolbox" :wrap="wrap">
+      </ShowExportSql>
+      <ShowSaveSql :source="source" :toolbox="toolbox" :wrap="wrap">
+      </ShowSaveSql>
+      <ShowImportDataForStrategy
+        :source="source"
+        :toolbox="toolbox"
+        :wrap="wrap"
+      >
       </ShowImportDataForStrategy>
+      <CreateDatabase :source="source" :toolbox="toolbox" :wrap="wrap">
+      </CreateDatabase>
+      <Table :source="source" :toolbox="toolbox" :wrap="wrap"> </Table>
     </template>
   </div>
 </template>
 
 
 <script>
-import ShowDatabaseCreate from "./ShowDatabaseCreate";
-import ShowTableCreate from "./ShowTableCreate";
+import Database from "./Database";
+import Tabs from "./Tabs";
 import ShowExportSql from "./ShowExportSql";
 import ShowSaveSql from "./ShowSaveSql";
 import ShowImportDataForStrategy from "./ShowImportDataForStrategy";
+import CreateDatabase from "./CreateDatabase";
 
 export default {
   components: {
-    ShowDatabaseCreate,
-    ShowTableCreate,
+    Database,
+    Tabs,
     ShowExportSql,
     ShowSaveSql,
     ShowImportDataForStrategy,
+    CreateDatabase,
   },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {

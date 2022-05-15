@@ -161,4 +161,9 @@ toolbox.formatSSHExtend = (toolboxType, data, extend) => {
     extend.remote.dir = extend.remote.dir || "";
 };
 
+toolbox.databaseTypes = null;
+toolbox.sqlConditionalOperations = null;
+toolbox.types = null;
+toolbox.mysqlColumnTypeInfos = null;
+
 export default toolbox;

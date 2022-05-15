@@ -3,7 +3,7 @@
     <tm-layout height="100%">
       <tm-layout height="auto">
         <tm-layout width="50%">
-          <ToolboxFTPFiles
+          <Files
             ref="localToolboxFTPFiles"
             :source="source"
             place="local"
@@ -18,11 +18,11 @@
             @rename="doRenameFile"
             @refresh="toRefresh"
             @copy="toCopy"
-          ></ToolboxFTPFiles>
+          ></Files>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <ToolboxFTPFiles
+          <Files
             ref="remoteToolboxFTPFiles"
             :source="source"
             place="remote"
@@ -37,7 +37,7 @@
             @rename="doRenameFile"
             @refresh="toRefresh"
             @copy="toCopy"
-          ></ToolboxFTPFiles>
+          ></Files>
         </tm-layout>
       </tm-layout>
       <tm-layout-bar top></tm-layout-bar>
@@ -142,8 +142,9 @@
 </template>
 
 <script>
+import Files from "./Files";
 export default {
-  components: {},
+  components: { Files },
   props: [
     "source",
     "toolboxType",
@@ -417,13 +418,17 @@ export default {
       if (response.work == "files") {
         if (response.place == "local") {
           if (this.extend.local.dir != response.dir) {
-            this.wrap.updateExtend(["local", "dir"], response.dir);
+            let keyValueMap = {};
+            keyValueMap["local.dir"] = response.dir;
+            this.wrap.updateExtend(keyValueMap);
           }
           this.localFiles = response.files || [];
           this.$refs.localToolboxFTPFiles.setScrollTop(response.scrollTop);
         } else if (response.place == "remote") {
           if (this.extend.remote.dir != response.dir) {
-            this.wrap.updateExtend(["remote", "dir"], response.dir);
+            let keyValueMap = {};
+            keyValueMap["remote.dir"] = response.dir;
+            this.wrap.updateExtend(keyValueMap);
           }
           if (response.dir.split("/").length > 3) {
             let ss = response.dir.split("/");
@@ -533,6 +538,7 @@ export default {
 .works-box {
   width: 100%;
   height: 100%;
+  user-select: text;
 }
 .work-box {
   display: flex;

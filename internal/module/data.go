@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strings"
 	"teamide/internal/base"
-	"teamide/pkg/application/model"
-	"teamide/pkg/toolbox"
 )
 
 type DataRequest struct {
@@ -15,13 +13,10 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url                      string                             `json:"url,omitempty"`
-	Api                      string                             `json:"api,omitempty"`
-	FilesUrl                 string                             `json:"filesUrl,omitempty"`
-	IsServer                 bool                               `json:"isServer,omitempty"`
-	DatabaseTypes            []*model.DatabaseType              `json:"databaseTypes,omitempty"`
-	ToolboxTypes             []*toolbox.Worker                  `json:"toolboxTypes,omitempty"`
-	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
+	Url      string `json:"url,omitempty"`
+	Api      string `json:"api,omitempty"`
+	FilesUrl string `json:"filesUrl,omitempty"`
+	IsServer bool   `json:"isServer,omitempty"`
 }
 
 func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -48,9 +43,6 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.Api = response.Url + "api/"
 	response.FilesUrl = response.Api + "files/"
 	response.IsServer = this_.IsServer
-	response.DatabaseTypes = model.DATABASE_TYPES
-	response.ToolboxTypes = toolbox.GetWorkers()
-	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
 
 	res = response
 	return

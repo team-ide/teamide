@@ -25,76 +25,147 @@ type GenerateParam struct {
 }
 
 func ToDatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {
-
-	switch GetDatabaseType(param.DatabaseType) {
-	case DatabaseTypeMySql:
-		DatabaseMySqlDialect := &DatabaseMySqlDialect{}
-		sqlList, err = DatabaseMySqlDialect.DatabaseDDL(param, database)
-		break
-	case DatabaseTypeSqlite:
-		DatabaseSqliteDialect := &DatabaseSqliteDialect{}
-		sqlList, err = DatabaseSqliteDialect.DatabaseDDL(param, database)
-		break
-	case DatabaseTypeOracle:
-		DatabaseOracleDialect := &DatabaseOracleDialect{}
-		sqlList, err = DatabaseOracleDialect.DatabaseDDL(param, database)
-		break
-	case DatabaseTypeShenTong:
-		DatabaseShenTongDialect := &DatabaseShenTongDialect{}
-		sqlList, err = DatabaseShenTongDialect.DatabaseDDL(param, database)
-		break
-	case DatabaseTypeDM:
-		DatabaseDMDialect := &DatabaseDMDialect{}
-		sqlList, err = DatabaseDMDialect.DatabaseDDL(param, database)
-		break
-	case DatabaseTypeKingBase:
-		DatabaseKingBaseDialect := &DatabaseKingBaseDialect{}
-		sqlList, err = DatabaseKingBaseDialect.DatabaseDDL(param, database)
-		break
-	case nil:
+	databaseType := GetDatabaseType(param.DatabaseType)
+	if databaseType == nil {
 		err = errors.New("数据库类型[" + param.DatabaseType + "]暂不支持")
-		break
-
+		return
 	}
+	dialect, err := GetDialect(databaseType)
+	if err != nil {
+		return
+	}
+	sqlList, err = dialect.DatabaseDDL(param, database)
 
 	return
 }
 
 func ToTableDDL(param *GenerateParam, database string, table *TableModel) (sqlList []string, err error) {
-
-	switch GetDatabaseType(param.DatabaseType) {
-	case DatabaseTypeMySql:
-		DatabaseMySqlDialect := &DatabaseMySqlDialect{}
-		sqlList, err = DatabaseMySqlDialect.TableDDL(param, database, table)
-		break
-	case DatabaseTypeSqlite:
-		DatabaseSqliteDialect := &DatabaseSqliteDialect{}
-		sqlList, err = DatabaseSqliteDialect.TableDDL(param, database, table)
-		break
-	case DatabaseTypeOracle:
-		DatabaseOracleDialect := &DatabaseOracleDialect{}
-		sqlList, err = DatabaseOracleDialect.TableDDL(param, database, table)
-		break
-	case DatabaseTypeShenTong:
-		DatabaseShenTongDialect := &DatabaseShenTongDialect{}
-		sqlList, err = DatabaseShenTongDialect.TableDDL(param, database, table)
-		break
-	case DatabaseTypeDM:
-		DatabaseDMDialect := &DatabaseDMDialect{}
-		sqlList, err = DatabaseDMDialect.TableDDL(param, database, table)
-		break
-	case DatabaseTypeKingBase:
-		DatabaseKingBaseDialect := &DatabaseKingBaseDialect{}
-		sqlList, err = DatabaseKingBaseDialect.TableDDL(param, database, table)
-		break
-	case nil:
+	databaseType := GetDatabaseType(param.DatabaseType)
+	if databaseType == nil {
 		err = errors.New("数据库类型[" + param.DatabaseType + "]暂不支持")
-		break
+		return
 	}
+	dialect, err := GetDialect(databaseType)
+	if err != nil {
+		return
+	}
+	sqlList, err = dialect.TableDDL(param, database, table)
+
 	return
 }
 
-type DatabaseDialect struct {
+func ToTableUpdateDDL(param *GenerateParam, database string, table *TableModel) (sqlList []string, err error) {
+	databaseType := GetDatabaseType(param.DatabaseType)
+	if databaseType == nil {
+		err = errors.New("数据库类型[" + param.DatabaseType + "]暂不支持")
+		return
+	}
+	dialect, err := GetDialect(databaseType)
+	if err != nil {
+		return
+	}
+
+	if table == nil {
+		err = errors.New("请传入表信息")
+		return
+	}
+	var sqlList_ []string
+	if table.Comment != table.OldComment {
+		sqlList_, err = dialect.TableCommentDDL(param, database, table.Name, table.Comment)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
+	if len(table.ColumnList) > 0 {
+		for _, column := range table.ColumnList {
+			if column.Deleted {
+				sqlList_, err = dialect.TableColumnDeleteDDL(param, database, table.Name, column.Name)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+				continue
+			}
+			if column.OldName == "" {
+				sqlList_, err = dialect.TableColumnAddDDL(param, database, table.Name, column)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+				continue
+			}
+			if column.Name != column.OldName || column.Type != column.OldType || column.Length != column.OldLength || column.Decimal != column.OldDecimal || column.Default != column.OldDefault || column.Comment != column.OldComment || column.BeforeColumn != "" {
+				sqlList_, err = dialect.TableColumnUpdateDDL(param, database, table.Name, column)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+			}
+		}
+	}
+	if len(table.IndexList) > 0 {
+		for _, index := range table.IndexList {
+			if index.Deleted {
+				sqlList_, err = dialect.TableIndexDeleteDDL(param, database, table.Name, index.Name)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+				continue
+			}
+			if index.OldName == "" {
+				sqlList_, err = dialect.TableIndexAddDDL(param, database, table.Name, index)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+				continue
+			}
+			if index.Name != index.OldName ||
+				index.Type != index.OldType ||
+				index.Comment != index.OldComment ||
+				strings.Join(index.Columns, ",") != strings.Join(index.OldColumns, ",") {
+				sqlList_, err = dialect.TableIndexUpdateDDL(param, database, table.Name, index)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+			}
+		}
+	}
+
+	return
+}
+
+func ToDatabaseDeleteDDL(param *GenerateParam, database string) (sqlList []string, err error) {
+	databaseType := GetDatabaseType(param.DatabaseType)
+	if databaseType == nil {
+		err = errors.New("数据库类型[" + param.DatabaseType + "]暂不支持")
+		return
+	}
+	dialect, err := GetDialect(databaseType)
+	if err != nil {
+		return
+	}
+	sqlList, err = dialect.DatabaseDeleteDDL(param, database)
+
+	return
+}
+
+func ToTableDeleteDDL(param *GenerateParam, database string, table string) (sqlList []string, err error) {
+	databaseType := GetDatabaseType(param.DatabaseType)
+	if databaseType == nil {
+		err = errors.New("数据库类型[" + param.DatabaseType + "]暂不支持")
+		return
+	}
+	dialect, err := GetDialect(databaseType)
+	if err != nil {
+		return
+	}
+	sqlList, err = dialect.TableDeleteDDL(param, database, table)
+
+	return
 }
 
 func (param *GenerateParam) packingCharacterDatabase(value string) string {

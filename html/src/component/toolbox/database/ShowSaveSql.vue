@@ -12,7 +12,6 @@
   >
     <div class="mgt--20 toolbox-database-save-sql">
       <el-form
-        class="mgt-10"
         ref="form"
         :model="form"
         label-width="90px"
@@ -35,8 +34,8 @@
                 v-for="(one, index) in packingCharacters"
                 :key="index"
                 :value="one.value"
+                :label="one.text"
               >
-                {{ one.text }}
               </el-option>
             </el-select>
           </el-form-item>
@@ -52,8 +51,8 @@
               v-for="(one, index) in packingCharacters"
               :key="index"
               :value="one.value"
+              :label="one.text"
             >
-              {{ one.text }}
             </el-option>
           </el-select>
         </el-form-item>
@@ -68,8 +67,8 @@
               v-for="(one, index) in packingCharacters"
               :key="index"
               :value="one.value"
+              :label="one.text"
             >
-              {{ one.text }}
             </el-option>
           </el-select>
         </el-form-item>
@@ -83,8 +82,8 @@
               v-for="(one, index) in stringPackingCharacters"
               :key="index"
               :value="one.value"
+              :label="one.text"
             >
-              {{ one.text }}
             </el-option>
           </el-select>
         </el-form-item>
@@ -116,10 +115,10 @@ export default {
         { value: '"', text: '"' },
       ],
       form: {
-        appendDatabase: false,
-        databasePackingCharacter: null,
-        tablePackingCharacter: null,
-        columnPackingCharacter: null,
+        appendDatabase: true,
+        databasePackingCharacter: "`",
+        tablePackingCharacter: "`",
+        columnPackingCharacter: "`",
         stringPackingCharacter: "'",
       },
     };
@@ -148,7 +147,7 @@ export default {
       let sqlList = res.sqlList || [];
       let valuesList = res.valuesList || [];
       sqlList.forEach((sql) => {
-        this.showSQL += sql + ";\n";
+        this.showSQL += sql + ";\n\n";
       });
     },
     async loadSqls() {

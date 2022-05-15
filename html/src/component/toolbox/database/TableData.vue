@@ -17,7 +17,7 @@
                       class="part-form-input"
                     >
                       <option :value="null" text="请选择">请选择</option>
-                      <template v-for="(one, index) in tableDetail.columnList">
+                      <template v-for="(one, index) in columnList">
                         <option
                           :key="index"
                           :value="one.name"
@@ -37,7 +37,7 @@
                     class="part-form-input"
                   >
                     <template
-                      v-for="(one, index) in source.sqlConditionalOperations"
+                      v-for="(one, index) in toolbox.sqlConditionalOperations"
                     >
                       <option :key="index" :value="one.value" :text="one.text">
                         {{ one.text }}
@@ -105,6 +105,12 @@
                     <option value="AND">AND</option>
                     <option value="OR">OR</option>
                   </select>
+                  <div
+                    @click="removeWhere(one)"
+                    class="color-grey tm-link mgl-10"
+                  >
+                    删除
+                  </div>
                 </li>
               </template>
               <li class="pdl-5">
@@ -116,7 +122,7 @@
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout width="400px">
-            <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
+            <ul class="part-box scrollbar mg-0">
               <template v-for="(one, index) in form.orders">
                 <li :key="index">
                   <input v-model="one.checked" type="checkbox" />
@@ -126,7 +132,7 @@
                     class="part-form-input"
                   >
                     <option :value="null" text="请选择">请选择</option>
-                    <template v-for="(one, index) in tableDetail.columnList">
+                    <template v-for="(one, index) in columnList">
                       <option
                         :key="index"
                         :value="one.name"
@@ -147,6 +153,12 @@
                     <option value="DESC">DESC</option>
                     <option value="ASC">ASC</option>
                   </select>
+                  <div
+                    @click="removeOrder(one)"
+                    class="color-grey tm-link mgl-10"
+                  >
+                    删除
+                  </div>
                 </li>
               </template>
               <li class="pdl-5">
@@ -220,16 +232,14 @@
           </div>
         </tm-layout>
         <tm-layout height="auto" v-loading="dataList_loading">
-          <div
-            class="toolbox-database-table-data-table"
-            v-if="tableDetail != null"
-          >
+          <div class="toolbox-database-table-data-table" @keyup="tableKeyUp">
             <el-table
               :data="dataList"
               :border="true"
               height="100%"
               style="width: 100%"
               size="mini"
+              @row-contextmenu="rowContextmenu"
             >
               <el-table-column width="70" label="序号" fixed>
                 <template slot-scope="scope">
@@ -268,9 +278,11 @@
                       <div class="">
                         <input
                           v-model="scope.row[column.name]"
+                          :name="column.name"
                           @change="inputValueChange(scope.row, column, $event)"
+                          @input="inputValueChange(scope.row, column, $event)"
                           :placeholder="
-                            scope.row[column.name] == null ? 'null' : ''
+                            scope.row[column.name] == null ? 'NULL' : ''
                           "
                           type="text"
                         />
@@ -349,6 +361,7 @@ export default {
       updates: [],
       selects: [],
       keys: [],
+      columnList: [],
       pageSize: 50,
       pageIndex: 1,
       total: 0,
@@ -373,6 +386,18 @@ export default {
       this.form.orders = [];
       this.form.columnList = [];
 
+      if (this.tableDetail && this.tableDetail.columnList) {
+        this.tableDetail.columnList.forEach((one, index) => {
+          if (one.primaryKey) {
+            this.keys.push(one.name);
+          }
+          this.columnList.push(one);
+          let column = Object.assign({}, one);
+          column.checked = true;
+          this.form.columnList.push(column);
+        });
+      }
+
       if (this.extend.wheres) {
         this.extend.wheres.forEach((one) => {
           this.form.wheres.push(one);
@@ -389,16 +414,6 @@ export default {
       if (this.extend.pageIndex) {
         this.pageIndex = this.extend.pageIndex;
       }
-      if (this.tableDetail && this.tableDetail.columnList) {
-        this.tableDetail.columnList.forEach((one, index) => {
-          if (one.primaryKey) {
-            this.keys.push(one.name);
-          }
-          let column = Object.assign({}, one);
-          column.checked = true;
-          this.form.columnList.push(column);
-        });
-      }
       this.ready = true;
       this.$nextTick(() => {
         if (this.tableDetail && this.tableDetail.columnList) {
@@ -413,7 +428,9 @@ export default {
         }
       });
       this.initInputWidth();
-      this.doSearch();
+      this.isInitSearch = true;
+      await this.doSearch();
+      this.isInitSearch = false;
     },
     async initTable() {
       this.tableDetail = await this.wrap.getTableDetail(
@@ -430,11 +447,11 @@ export default {
       this.doSearch();
     },
     initInputWidth() {
-      if (this.initInputWidthIng) {
-        return;
-      }
-      this.initInputWidthIng = true;
       this.$nextTick(() => {
+        if (this.initInputWidthIng) {
+          return;
+        }
+        this.initInputWidthIng = true;
         let es = this.$el.getElementsByClassName("part-form-input");
         if (es) {
           Array.prototype.forEach.call(es, (one) => {
@@ -486,6 +503,18 @@ export default {
       this.initInputWidth();
       return order;
     },
+    removeOrder(order) {
+      let orders = this.form.orders;
+      if (orders.indexOf(order) >= 0) {
+        orders.splice(orders.indexOf(order), 1);
+      }
+    },
+    removeWhere(where) {
+      let wheres = this.form.wheres;
+      if (wheres.indexOf(where) >= 0) {
+        wheres.splice(wheres.indexOf(where), 1);
+      }
+    },
     addWhere() {
       let where = {
         checked: true,
@@ -524,39 +553,18 @@ export default {
       this.initInputWidth();
       return where;
     },
-    async saveExtendOrders() {
-      await this.wrap.updateOpenTabExtend(
-        this.tab.tabId,
-        ["orders"],
-        this.form.orders
-      );
-    },
-    async saveExtendWheres() {
-      await this.wrap.updateOpenTabExtend(
-        this.tab.tabId,
-        ["wheres"],
-        this.form.wheres
-      );
-    },
-    async saveExtendPageSize() {
-      await this.wrap.updateOpenTabExtend(
-        this.tab.tabId,
-        ["pageSize"],
-        this.pageSize
-      );
-    },
-    async saveExtendPageIndex() {
-      await this.wrap.updateOpenTabExtend(
-        this.tab.tabId,
-        ["pageIndex"],
-        this.pageIndex
-      );
+    async saveExtend() {
+      let keyValueMap = {};
+      keyValueMap.orders = this.form.orders;
+      keyValueMap.wheres = this.form.wheres;
+      keyValueMap.pageSize = this.pageSize;
+      keyValueMap.pageIndex = this.pageIndex;
+      await this.wrap.updateOpenTabExtend(this.tab.tabId, keyValueMap);
     },
     async doSearch() {
-      await this.saveExtendOrders();
-      await this.saveExtendWheres();
-      await this.saveExtendPageSize();
-      await this.saveExtendPageIndex();
+      if (!this.isInitSearch) {
+        await this.saveExtend();
+      }
       let wheres = [];
       let orders = [];
       let columnList = [];
@@ -605,6 +613,7 @@ export default {
 
       let dataList = res.data.dataList || [];
       this.dataListCache = [];
+      this.dataListCacheForIndex = [];
       dataList.forEach((data) => {
         this.tableDetail.columnList.forEach((column) => {
           if (data[column.name] != null) {
@@ -612,9 +621,12 @@ export default {
               column,
               data[column.name]
             );
+          } else {
+            data[column.name] = null;
           }
         });
         this.dataListCache.push(Object.assign({}, data));
+        this.dataListCacheForIndex.push(data);
       });
       this.dataList = dataList;
       this.sql = res.data.sql;
@@ -643,21 +655,25 @@ export default {
         });
       }
     },
-    inputValueChange(data, column, $input) {
+    inputValueChange(data) {
       if (this.inserts.indexOf(data) >= 0) {
         return;
       }
-      // let value = $input.target.value;
-      // data[column.name] = value;
       let dataUpdated = false;
-      let dataIndex = this.dataList.indexOf(data);
-      let dataCache = this.dataListCache[dataIndex];
-      for (let key in dataCache) {
-        if (data[key] != dataCache[key]) {
-          dataUpdated = true;
-          break;
+      let dataCache = this.getCacheData(data);
+      this.columnList.forEach((column) => {
+        let name = column.name;
+        if (data[name] !== dataCache[name]) {
+          if (typeof dataCache[name] == "number") {
+            if (this.tool.isNotEmpty(data[name])) {
+              data[name] = Number(data[name]);
+            }
+          }
+          if (data[name] !== dataCache[name]) {
+            dataUpdated = true;
+          }
         }
-      }
+      });
       let dataUpdateIndex = this.updates.indexOf(data);
       if (dataUpdated) {
         if (dataUpdateIndex < 0) {
@@ -672,17 +688,224 @@ export default {
     toUnselectAll() {
       this.selects.splice(0, this.selects.length);
     },
+    rowContextmenu(row, column, event) {
+      let menus = [];
+      if (event.target.tagName == "INPUT") {
+        let input = this.tool.jQuery(event.target);
+        let name = input.attr("name");
+        let startIndex = event.target.selectionStart || 0;
+        let endIndex = event.target.selectionEnd || 0;
+        if (endIndex > startIndex) {
+          let selectText = event.target.value.substring(startIndex, endIndex);
+          menus.push({
+            text: "复制选中文案",
+            onClick: () => {
+              this.tool.copyText(selectText);
+            },
+          });
+        }
+        // let readText = await this.tool.readClipboardText();
+        // menus.push({
+        //   text: "追加粘贴",
+        //   disabled: this.tool.isEmpty(readText),
+        //   onClick: () => {
+        //     input.val(input.val() + readText);
+        //     input.change();
+        //   },
+        // });
+        // menus.push({
+        //   text: "覆盖粘贴",
+        //   disabled: this.tool.isEmpty(readText),
+        //   onClick: () => {
+        //     input.val(readText);
+        //     input.change();
+        //   },
+        // });
+        menus.push({
+          text: "设置为空字符串",
+          onClick: () => {
+            row[name] = "";
+            this.inputValueChange(row);
+          },
+        });
+        menus.push({
+          text: "设置为NULL",
+          onClick: () => {
+            row[name] = null;
+            this.inputValueChange(row);
+          },
+        });
+      }
+      let dataCache = this.getCacheData(row);
+      let insertData = Object.assign({}, row);
+      let updateData = {};
+      let updateWhereData = {};
+      let deleteData = {};
+      if (this.keys.length > 0) {
+        for (let key in row) {
+          if (this.keys.indexOf(key) < 0) {
+            updateData[key] = row[key];
+          }
+        }
+        this.keys.forEach((key) => {
+          if (dataCache != null) {
+            deleteData[key] = dataCache[key];
+            updateWhereData[key] = dataCache[key];
+          } else {
+            deleteData[key] = row[key];
+            updateWhereData[key] = row[key];
+          }
+        });
+      } else {
+        updateData = Object.assign({}, row);
+        if (dataCache != null) {
+          updateWhereData = Object.assign({}, dataCache);
+          deleteData = Object.assign({}, dataCache);
+        } else {
+          updateWhereData = Object.assign({}, row);
+          deleteData = Object.assign({}, row);
+        }
+      }
+
+      let insertList = [insertData];
+      let updateList = [updateData];
+      let updateWhereList = [updateWhereData];
+      let deleteList = [deleteData];
+
+      menus.push({
+        text: "查看新增、修改、删除记录SQL",
+        onClick: () => {
+          this.wrap.showSaveSql(this.database, this.tableDetail, {
+            insertList,
+            updateList,
+            updateWhereList,
+            deleteList,
+          });
+        },
+      });
+      if (this.updates.indexOf(row) >= 0) {
+        menus.push({
+          text: "保存该记录",
+          onClick: () => {
+            this.doSave(null, updateList, updateWhereList);
+          },
+        });
+      }
+      if (this.inserts.indexOf(row) >= 0) {
+        menus.push({
+          text: "保存该记录",
+          onClick: () => {
+            this.doSave(insertList, null, null);
+          },
+        });
+      }
+      menus.push({
+        text: "追加记录",
+        onClick: () => {
+          this.toInsert({}, row);
+        },
+      });
+      menus.push({
+        text: "复制追加记录",
+        onClick: () => {
+          this.toInsert(Object.assign({}, row), row);
+        },
+      });
+      menus.push({
+        text: "删除记录",
+        onClick: () => {
+          if (this.inserts.indexOf(row) >= 0) {
+            this.removeInsert(row);
+          } else {
+            if (dataCache != null) {
+              let msg = "删除该记录将无法恢复，确认删除？";
+              this.tool
+                .confirm(msg)
+                .then(async () => {
+                  await this.doDelete([dataCache]);
+                  this.removeDatas([row]);
+                })
+                .catch((e) => {});
+            }
+          }
+        },
+      });
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
+    },
+    tableKeyUp(event) {
+      event = event || window.event;
+      if (this.tool.keyIsCtrlS(event)) {
+        this.tool.stopEvent(event);
+        this.toSaveSelect();
+      }
+    },
     getCacheData(data) {
-      let dataIndex = this.dataList.indexOf(data);
-      if (dataIndex < 0 || dataIndex >= this.dataListCache.length) {
+      let index = this.dataListCacheForIndex.indexOf(data);
+      if (index < 0) {
         return null;
       }
-      let dataCache = this.dataListCache[dataIndex];
+      let dataCache = this.dataListCache[index];
       return dataCache;
     },
+    toDeleteSelect() {
+      let deleteList = this.getDeleteList();
+      if (deleteList.length == 0) {
+        this.tool.warn("暂无需要删除的数据");
+        return;
+      }
+      let msg = "此次将删除（" + deleteList.length + "）条数据";
+      msg += "，确认删除？";
+      this.tool
+        .confirm(msg)
+        .then(async () => {
+          await this.doDelete(deleteList);
+        })
+        .catch((e) => {});
+    },
+    removeDatas(datas) {
+      datas = datas || [];
+      let list = [];
+      datas.forEach((data) => {
+        list.push(data);
+      });
+      list.forEach((data) => {
+        if (this.inserts.indexOf(data) >= 0) {
+          this.inserts.splice(this.inserts.indexOf(data), 1);
+        }
+        if (this.updates.indexOf(data) >= 0) {
+          this.updates.splice(this.updates.indexOf(data), 1);
+        }
+        let dataCache = this.getCacheData(data);
+        if (dataCache != null) {
+          if (this.dataListCache.indexOf(dataCache) >= 0) {
+            this.dataListCache.splice(this.dataListCache.indexOf(dataCache), 1);
+          }
+        }
+        if (this.dataListCacheForIndex.indexOf(data) >= 0) {
+          this.dataListCacheForIndex.splice(
+            this.dataListCacheForIndex.indexOf(data),
+            1
+          );
+        }
+        if (this.dataList.indexOf(data) >= 0) {
+          this.dataList.splice(this.dataList.indexOf(data), 1);
+        }
+        if (this.selects.indexOf(data) >= 0) {
+          this.selects.splice(this.selects.indexOf(data), 1);
+        }
+      });
+    },
     getDeleteList() {
+      let deleteList = this.getDeleteListByDatas(this.selects);
+      return deleteList;
+    },
+    getDeleteListByDatas(datas) {
+      datas = datas || [];
       let deleteList = [];
-      this.selects.forEach((data) => {
+      datas.forEach((data) => {
         let dataCache = this.getCacheData(data);
         if (dataCache == null) {
           return;
@@ -699,31 +922,26 @@ export default {
       });
       return deleteList;
     },
-    toDeleteSelect() {
-      let deleteList = this.getDeleteList();
-      if (deleteList.length == 0) {
-        this.tool.warn("暂无需要删除的数据");
-        return;
-      }
-      let msg = "此次将删除（" + deleteList.length + "）条数据";
-      msg += "，确认删除？";
-      this.tool
-        .confirm(msg)
-        .then(async () => {
-          this.doDelete(deleteList);
-        })
-        .catch((e) => {});
-    },
     getInsertList() {
+      let insertList = this.getInsertListByDatas(this.inserts);
+      return insertList;
+    },
+    getInsertListByDatas(datas) {
+      datas = datas || [];
       let insertList = [];
-      this.inserts.forEach((data) => {
+      datas.forEach((data) => {
         insertList.push(data);
       });
       return insertList;
     },
     getUpdateList() {
+      let updateList = this.getUpdateListByDatas(this.updates);
+      return updateList;
+    },
+    getUpdateListByDatas(datas) {
+      datas = datas || [];
       let updateList = [];
-      this.updates.forEach((data) => {
+      datas.forEach((data) => {
         let dataCache = this.getCacheData(data);
         if (dataCache == null) {
           return;
@@ -739,8 +957,13 @@ export default {
       return updateList;
     },
     getUpdateWhereList() {
+      let updateWhereList = this.getUpdateWhereListByDatas(this.updates);
+      return updateWhereList;
+    },
+    getUpdateWhereListByDatas(datas) {
+      datas = datas || [];
       let updateWhereList = [];
-      this.updates.forEach((data) => {
+      datas.forEach((data) => {
         let dataCache = this.getCacheData(data);
         if (dataCache == null) {
           return;
@@ -777,7 +1000,9 @@ export default {
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doSave(insertList, updateList, updateWhereList);
+          await this.doSave(insertList, updateList, updateWhereList);
+          this.savedInserts(this.inserts);
+          this.savedUpdates(this.updates);
         })
         .catch((e) => {});
     },
@@ -829,13 +1054,27 @@ export default {
       this.tool.success(info);
       this.doSearch();
     },
-    toInsert() {
-      let data = {};
+    removeInsert(data) {
+      if (this.inserts.indexOf(data) >= 0) {
+        this.inserts.splice(this.inserts.indexOf(data), 1);
+      }
+      if (this.dataList.indexOf(data) >= 0) {
+        this.dataList.splice(this.dataList.indexOf(data), 1);
+      }
+    },
+    toInsert(data, row) {
+      data = data || {};
       this.tableDetail.columnList.forEach((column) => {
-        data[column.name] = null;
+        if (data[column.name] == null) {
+          data[column.name] = null;
+        }
       });
       this.inserts.push(data);
-      this.dataList.push(data);
+      if (row && this.dataList.indexOf(row) >= 0) {
+        this.dataList.splice(this.dataList.indexOf(row) + 1, 0, data);
+      } else {
+        this.dataList.push(data);
+      }
     },
     importDataForStrategy() {
       this.wrap.showImportDataForStrategy(this.database, this.tableDetail);

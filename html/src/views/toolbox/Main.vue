@@ -75,7 +75,7 @@
                 :startTop="10"
                 ref="WaterfallLayout"
               >
-                <template v-for="toolboxType in source.toolboxTypes">
+                <template v-for="toolboxType in toolbox.types">
                   <div
                     :key="toolboxType.name"
                     class="toolbox-type-one waterfall-layout-item"
@@ -270,20 +270,30 @@ export default {
       }
       tab.comment = comment;
     },
-    async updateOpenExtend(openId, keys, value) {
+    async updateOpenExtend(openId, keyValueMap) {
       let tab = this.getTab("" + openId);
       if (tab == null) {
         return;
       }
+      if (keyValueMap == null) {
+        return;
+      }
+      if (Object.keys(keyValueMap) == 0) {
+        return;
+      }
       let obj = tab.extend;
-      keys.forEach((key, index) => {
-        if (index < keys.length - 1) {
-          obj[key] = obj[key] || {};
-          obj = obj[key];
-        } else {
-          obj[key] = value;
-        }
-      });
+      for (let key in keyValueMap) {
+        let value = keyValueMap[key];
+        let names = key.split(".");
+        names.forEach((name, index) => {
+          if (index < names.length - 1) {
+            obj[name] = obj[name] || {};
+            obj = obj[name];
+          } else {
+            obj[name] = value;
+          }
+        });
+      }
       let param = {
         openId: openId,
         extend: JSON.stringify(tab.extend),
@@ -352,7 +362,7 @@ export default {
     },
     getToolboxType(type) {
       let res = null;
-      this.source.toolboxTypes.forEach((one) => {
+      this.toolbox.types.forEach((one) => {
         if (one == type || one.name == type || one.name == type.name) {
           res = one;
         }

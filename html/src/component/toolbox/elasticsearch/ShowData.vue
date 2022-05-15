@@ -1,25 +1,24 @@
 <template>
-  <b-modal
+  <el-dialog
     ref="modal"
     title="数据查看"
-    :hide-header-close="false"
-    :no-close-on-backdrop="true"
-    :no-close-on-esc="true"
-    :hide-backdrop="true"
-    hide-footer
-    size="lg"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :show-close="true"
+    :append-to-body="true"
+    :visible="showDialog"
+    :before-close="hide"
+    width="700px"
   >
     <div class="ft-15">
-      <b-form-textarea
-        size="sm"
-        rows="10"
-        max-rows="30"
+      <el-input
+        type="textarea"
         v-model="showData"
-        readonly
+        :autosize="{ minRows: 5, maxRows: 10 }"
       >
-      </b-form-textarea>
+      </el-input>
     </div>
-  </b-modal>
+  </el-dialog>
 </template>
 
 <script>
@@ -28,6 +27,7 @@ export default {
   props: ["source", "toolbox", "wrap"],
   data() {
     return {
+      showDialog: false,
       showData: null,
     };
   },
@@ -40,10 +40,10 @@ export default {
       data = data || {};
       this.showData = JSON.stringify(data, null, "    ");
 
-      this.$refs["modal"].show();
+      this.showDialog = true;
     },
     hide() {
-      this.$refs["modal"].hide();
+      this.showDialog = false;
     },
     init() {},
   },

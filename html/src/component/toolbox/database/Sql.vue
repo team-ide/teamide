@@ -16,8 +16,8 @@
                 v-for="(one, index) in databases"
                 :key="index"
                 :value="one.name"
+                :label="one.name"
               >
-                {{ one.name }}
               </el-option>
             </el-select>
             <el-form-item label="开启事务">
@@ -133,22 +133,16 @@ export default {
   watch: {},
   methods: {
     async autoSaveSql() {
+      let keyValueMap = {};
       if (this.lastSavedExecuteSQL != this.executeSQL) {
         this.lastSavedExecuteSQL = this.executeSQL;
-        await this.wrap.updateOpenTabExtend(
-          this.tab.tabId,
-          ["executeSQL"],
-          this.executeSQL
-        );
+        keyValueMap.executeSQL = this.executeSQL;
       }
       if (this.lastSavedDatabase != this.form.database) {
         this.lastSavedDatabase = this.form.database;
-        await this.wrap.updateOpenTabExtend(
-          this.tab.tabId,
-          ["database"],
-          this.form.database
-        );
+        keyValueMap.database = this.form.database;
       }
+      await this.wrap.updateOpenTabExtend(this.tab.tabId, keyValueMap);
       setTimeout(this.autoSaveSql, 300);
     },
     init() {

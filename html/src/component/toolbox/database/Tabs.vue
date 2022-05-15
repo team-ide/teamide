@@ -9,7 +9,7 @@
       >
         <template v-slot:body="{ tab }">
           <template v-if="tab.extend.type == 'data'">
-            <ToolboxDatabaseTableData
+            <TableData
               :source="source"
               :toolbox="toolbox"
               :wrap="wrap"
@@ -18,17 +18,17 @@
               :extend="tab.extend"
               :tab="tab"
             >
-            </ToolboxDatabaseTableData>
+            </TableData>
           </template>
           <template v-else-if="tab.extend.type == 'sql'">
-            <ToolboxDatabaseSql
+            <Sql
               :source="source"
               :wrap="wrap"
               :extend="tab.extend"
               :databases="databases"
               :tab="tab"
             >
-            </ToolboxDatabaseSql>
+            </Sql>
           </template>
           <template v-else-if="tab.extend.type == 'ddl'">
             <DDL
@@ -39,6 +39,17 @@
             >
             </DDL>
           </template>
+          <template v-if="tab.extend.type == 'table'">
+            <Table
+              :source="source"
+              :toolbox="toolbox"
+              :wrap="wrap"
+              :database="tab.extend.database"
+              :table="tab.extend.table"
+              :extend="tab.extend"
+            >
+            </Table>
+          </template>
         </template>
       </TabEditor>
     </template>
@@ -48,9 +59,12 @@
 
 <script>
 import DDL from "./DDL";
+import Sql from "./Sql";
+import Table from "./Table";
+import TableData from "./TableData";
 
 export default {
-  components: { DDL },
+  components: { DDL, Sql, Table, TableData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap", "databases"],
   data() {
     return {

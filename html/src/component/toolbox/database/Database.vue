@@ -7,7 +7,10 @@
             <div class="tm-btn tm-btn-sm bg-grey-6 ft-13" @click="refresh">
               刷新
             </div>
-            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+            <div
+              class="tm-btn tm-btn-sm bg-teal-8 ft-13"
+              @click="toCreateDatabase"
+            >
               新建库
             </div>
             <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toOpenSql">
@@ -26,6 +29,7 @@
               node-key="key"
               :expand-on-click-node="false"
               @node-click="nodeClick"
+              @node-contextmenu="nodeContextmenu"
             >
               <span
                 class="toolbox-editor-tree-span"
@@ -117,6 +121,18 @@ export default {
       this.tool.stopEvent();
       let node = this.$refs.tree.getNode(key);
       if (node) {
+        if (
+          node.data &&
+          node.data.isDatabase &&
+          node.loaded &&
+          node.childNodes
+        ) {
+          node.childNodes.forEach((one) => {
+            one.loaded = false;
+            one.expand();
+          });
+          return;
+        }
         node.loaded = false;
         node.expand();
       }
@@ -170,7 +186,94 @@ export default {
         this.toOpenTable(data);
       }
     },
-    toInsert() {},
+    nodeContextmenu(event, data, node, nodeView) {
+      let menus = [];
+      if (data.isDatabase || data.isDatabaseTables) {
+        menus.push({
+          text: "刷新",
+          onClick: () => {
+            this.toReloadChildren(data);
+          },
+        });
+        menus.push({
+          text: "新增表",
+          onClick: () => {
+            this.toCreateTable(data);
+          },
+        });
+        menus.push({
+          text: "新建SQL查询",
+          onClick: () => {
+            let extend = {
+              name: "查询[" + data.name + "]库SQL",
+              title: "查询[" + data.name + "]库SQL",
+              type: "sql",
+              database: data.name,
+              executeSQL: "SHOW TABLES;",
+            };
+            this.wrap.openTabByExtend(extend);
+          },
+        });
+      }
+      if (data.isTable) {
+        menus.push({
+          text: "查看数据",
+          onClick: () => {
+            this.toOpenTable(data);
+          },
+        });
+        menus.push({
+          text: "新建SQL查询",
+          onClick: () => {
+            let extend = {
+              name:
+                "查询[" + data.database.name + "]库[" + data.name + "]表SQL",
+              title:
+                "查询[" + data.database.name + "]库[" + data.name + "]表SQL",
+              type: "sql",
+              database: data.database.name,
+              executeSQL:
+                "SELECT * FROM `" +
+                data.database.name +
+                "`.`" +
+                data.name +
+                "`;",
+            };
+            this.wrap.openTabByExtend(extend);
+          },
+        });
+        menus.push({
+          text: "编辑表",
+          onClick: () => {
+            this.toUpdateTable(data);
+          },
+        });
+      }
+      if (data.isDatabase || data.isTable) {
+        menus.push({
+          text: "查看DDL",
+          onClick: () => {
+            this.toShowDDL(data);
+          },
+        });
+        menus.push({
+          text: "复制名称",
+          onClick: () => {
+            this.tool.copyText(data.name);
+          },
+        });
+        menus.push({
+          text: "删除",
+          onClick: () => {
+            this.toDelete(data);
+          },
+        });
+      }
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
+    },
     toOpenSql() {
       let extend = {
         name: "新建SQL",
@@ -202,9 +305,11 @@ export default {
         .confirm(msg)
         .then(async () => {
           if (data.isDatabase) {
-            this.doDeleteDatabase(data.name);
+            await this.doDeleteDatabase(data.name);
+            this.refresh();
           } else if (data.isTable) {
-            this.doDeleteTable(data.database.name, data.name);
+            await this.doDeleteTable(data.database.name, data.name);
+            this.reloadChildren(data.database);
           }
         })
         .catch((e) => {});
@@ -267,6 +372,31 @@ export default {
       //   });
       // }, 100);
     },
+    toCreateDatabase() {
+      this.wrap.showCreateDatabase(() => {
+        this.refresh();
+      });
+    },
+    toCreateTable(database) {
+      let extend = {
+        name: "新建[" + database.name + "]库表",
+        title: "新建[" + database.name + "]库表",
+        type: "table",
+        database: database.name,
+      };
+      this.wrap.openTabByExtend(extend);
+    },
+    async toUpdateTable(table) {
+      let database = table.database.name;
+      let extend = {
+        name: "编辑[" + database + "]库表[" + table.name + "]",
+        title: "编辑[" + database + "]库表[" + table.name + "]",
+        type: "table",
+        database: database,
+        table: table.name,
+      };
+      this.wrap.openTabByExtend(extend);
+    },
     async loadDatabases() {
       let param = {};
       let res = await this.wrap.work("databases", param);
@@ -282,16 +412,31 @@ export default {
       return res.data.tables || [];
     },
     async getTableDetail(database, table) {
-      let key = database + "-" + table;
-      this.tableCache = this.tableCache || {};
-      let res = this.tableCache[key];
-      if (res == null) {
-        res = await this.loadTableDetail(database, table);
-        if (res != null) {
-          this.tableCache[key] = res;
-        }
-      }
+      let res = await this.loadTableDetail(database, table);
       return res;
+    },
+    async doDeleteDatabase(database) {
+      let param = {
+        database: database,
+      };
+      let res = await this.wrap.work("deleteDatabase", param);
+      if (res.code != 0) {
+        return false;
+      }
+      this.tool.success("删除成功");
+      return true;
+    },
+    async doDeleteTable(database, table) {
+      let param = {
+        database: database,
+        table: table,
+      };
+      let res = await this.wrap.work("deleteTable", param);
+      if (res.code != 0) {
+        return false;
+      }
+      this.tool.success("删除成功");
+      return true;
     },
     async loadTableDetail(database, table) {
       let param = {
@@ -300,11 +445,15 @@ export default {
       };
       let res = await this.wrap.work("tableDetail", param);
       if (res.code != 0) {
-        this.tool.error(res.msg);
         return null;
       }
       res.data = res.data || {};
-      return res.data.table;
+      let tableDetail = res.data.table;
+      if (tableDetail) {
+        tableDetail.columnList = tableDetail.columnList || [];
+        tableDetail.indexList = tableDetail.indexList || [];
+      }
+      return tableDetail;
     },
   },
   created() {},

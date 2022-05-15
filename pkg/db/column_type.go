@@ -37,6 +37,7 @@ func (this_ *ColumnTypeInfo) FormatColumnType(length int, decimal int) (columnTy
 	columnType = strings.ReplaceAll(columnType, "$l", lStr)
 	columnType = strings.ReplaceAll(columnType, "$d", dStr)
 	columnType = strings.ReplaceAll(columnType, " ", "")
+	columnType = strings.ReplaceAll(columnType, ",)", ")")
 	columnType = strings.TrimSuffix(columnType, "(,)")
 	columnType = strings.TrimSuffix(columnType, "()")
 	return

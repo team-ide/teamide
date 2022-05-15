@@ -7,6 +7,7 @@ import tm from 'teamide-ui'
 import md5 from 'js-md5';
 import cryptoJS from 'crypto-js';
 import keyCode from '@/tool/keyCode.js';
+
 let tool = {};
 Object.assign(tool, tm);
 Object.assign(tool, keyCode.keyEvent);
@@ -169,7 +170,20 @@ tool.getCookie = function (cname) {
     }
     return "";
 }
-
+tool.copyText = async function (text) {
+    let result = await navigator.clipboard.writeText(text)
+    return result;
+};
+tool.readClipboardText = async function () {
+    let result = await navigator.permissions.query({ name: 'clipboard-read' })
+    if (result.state == 'granted' || result.state == 'prompt') { //读取剪贴板 
+        let text = await navigator.clipboard.readText()
+        return text;
+    } else {
+        tool.warn('请允许读取剪贴板！')
+        return null;
+    }
+};
 tool.byteToString = function (arr) {
     if (typeof arr === 'string') {
         return arr;

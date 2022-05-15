@@ -32,6 +32,14 @@ func (this_ *DatabaseType) GetColumnTypeInfo(name string) (c *ColumnTypeInfo) {
 	return
 }
 
+func (this_ *DatabaseType) GetColumnTypeInfos() (c []*ColumnTypeInfo) {
+
+	for _, one := range this_.ColumnTypeInfoMap {
+		c = append(c, one)
+	}
+	return
+}
+
 var (
 	DatabaseTypeMySql    = addDatabaseType(&DatabaseType{DSNFormat: "$username:$password@tcp($host:$port)/$database?charset=utf8mb4&parseTime=true", DriverName: "mysql", DBType: "mysql"})
 	DatabaseTypeSqlite   = addDatabaseType(&DatabaseType{DSNFormat: "$database", DriverName: "sqlite3", DBType: "sqlite"})
@@ -214,6 +222,7 @@ func (this_ *DatabaseWorker) Execs(sqlList []string, paramsList [][]interface{})
 			sql := sqlList[index]
 			params := paramsList[index]
 			finder := zorm.NewFinder()
+			finder.InjectionCheck = false
 			finder.Append(sql, params...)
 
 			var updated int

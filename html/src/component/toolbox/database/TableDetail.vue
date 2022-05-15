@@ -1,0 +1,465 @@
+<template>
+  <div class="database-table-detail">
+    <div class="" v-if="tableDetail != null">
+      <el-form
+        ref="form"
+        :model="form"
+        label-width="90px"
+        size="mini"
+        label-position="top"
+      >
+        <el-form-item label="表名">
+          <el-input v-model="tableDetail.name" @change="change"> </el-input>
+        </el-form-item>
+        <el-form-item label="注释">
+          <el-input v-model="tableDetail.comment" @change="change"> </el-input>
+        </el-form-item>
+        <el-form-item label="">
+          <div
+            class="
+              toolbox-database-table-data toolbox-database-table-data-table
+            "
+          >
+            <div class="">
+              <span>字段列表</span>
+              <div class="tm-link color-green mgl-10" @click="addColumn({})">
+                新增
+              </div>
+            </div>
+            <el-table
+              :data="columnList"
+              :border="true"
+              style="width: 100%"
+              size="mini"
+            >
+              <el-table-column label="字段名">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.name"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="类型" width="120">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-select
+                      placeholder="选中类型"
+                      v-model="scope.row.type"
+                      @change="change"
+                      filterable
+                    >
+                      <el-option
+                        v-for="(one, index) in toolbox.mysqlColumnTypeInfos"
+                        :key="index"
+                        :value="one.name"
+                        :label="one.name"
+                      >
+                      </el-option>
+                    </el-select>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="长度" width="70">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.length"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="小数点" width="70">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.decimal"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="必填" width="60">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-switch v-model="scope.row.notNull" @change="change" />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="主键" width="60">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-switch
+                      v-model="scope.row.primaryKey"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="默认值">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.default"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="注释">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.comment"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="200px">
+                <template slot-scope="scope">
+                  <div
+                    class="tm-link color-grey mglr-5"
+                    @click="upColumn(scope.row)"
+                  >
+                    上移
+                  </div>
+                  <div
+                    class="tm-link color-grey mglr-5"
+                    @click="downColumn(scope.row)"
+                  >
+                    下移
+                  </div>
+                  <div
+                    class="tm-link color-grey mglr-5"
+                    @click="addColumn({}, scope.row)"
+                  >
+                    插入字段
+                  </div>
+                  <div
+                    class="tm-link color-red mglr-5"
+                    @click="removeColumn(scope.row)"
+                  >
+                    删除
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-form-item>
+        <el-form-item label="">
+          <div
+            class="
+              toolbox-database-table-data toolbox-database-table-data-table
+            "
+          >
+            <div class="">
+              <span>索引列表</span>
+              <div class="tm-link color-green mgl-10" @click="addIndex({})">
+                新增
+              </div>
+            </div>
+            <el-table
+              :data="indexList"
+              :border="true"
+              style="width: 100%"
+              size="mini"
+            >
+              <el-table-column label="索引名称" width="200">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.name"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="类型" width="120">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-select
+                      placeholder="普通索引"
+                      v-model="scope.row.type"
+                      @change="change"
+                    >
+                      <el-option value="" label="普通索引"></el-option>
+                      <el-option value="unique" label="唯一索引"></el-option>
+                    </el-select>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="字段">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-select
+                      placeholder="选中字段"
+                      v-model="scope.row.columns"
+                      @change="change"
+                      filterable
+                      multiple
+                      style="width: 100%"
+                    >
+                      <el-option
+                        v-for="(one, index) in tableDetail.columnList"
+                        :key="index"
+                        :value="one.name"
+                        :label="one.name"
+                      >
+                      </el-option>
+                    </el-select>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="注释" width="200">
+                <template slot-scope="scope">
+                  <div class="">
+                    <el-input
+                      v-model="scope.row.comment"
+                      type="text"
+                      @change="change"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="80">
+                <template slot-scope="scope">
+                  <div
+                    class="tm-link color-red mglr-5"
+                    @click="removeIndex(scope.row)"
+                  >
+                    删除
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-form-item>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  components: {},
+  props: ["source", "toolbox", "wrap", "onChange"],
+  data() {
+    return {
+      tableDetail: null,
+      columnList: [],
+      indexList: [],
+    };
+  },
+  computed: {},
+  watch: {},
+  methods: {
+    init(tableDetail) {
+      this.tableDetail = tableDetail;
+      this.columnList = [];
+      this.indexList = [];
+      this.initData();
+    },
+    initData() {
+      let tableDetail = this.tableDetail;
+      tableDetail.columnList.forEach((column, i) => {
+        column.length = Number(column.length);
+        column.decimal = Number(column.decimal);
+        if (column.default == "") {
+          column.default = null;
+        }
+        if (column.deleted) {
+          if (this.columnList.indexOf(column) >= 0) {
+            this.columnList.splice(this.columnList.indexOf(column), 1);
+          }
+        } else {
+          if (this.columnList.indexOf(column) < 0) {
+            this.columnList.push(column);
+          }
+        }
+      });
+      this.columnList.forEach((column, i) => {
+        delete column.beforeColumn;
+        if (
+          column.beforeColumn_ != null &&
+          column.beforeColumn_ != column.oldBeforeColumn &&
+          this.columnList.indexOf(column.beforeColumn_) >= 0
+        ) {
+          column.beforeColumn = column.beforeColumn_.name;
+        } else {
+          delete column.beforeColumn_;
+        }
+      });
+      tableDetail.indexList.forEach((index) => {
+        if (index.deleted) {
+          if (this.indexList.indexOf(index) >= 0) {
+            this.indexList.splice(this.indexList.indexOf(index), 1);
+          }
+        } else {
+          if (this.indexList.indexOf(index) < 0) {
+            this.indexList.push(index);
+          }
+        }
+      });
+    },
+    change() {
+      this.onChange(this.tableDetail);
+    },
+    upColumn(column) {
+      this.up(this, "columnList", column);
+      this.up(this.tableDetail, "columnList", column);
+
+      let findIndex = this.columnList.indexOf(column);
+      if (findIndex == 0) {
+        column.beforeColumn_ = null;
+        if (this.columnList.length > 1) {
+          this.columnList[1].beforeColumn_ = column;
+        }
+      } else {
+        column.beforeColumn_ = this.columnList[findIndex - 1];
+      }
+
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+    downColumn(column) {
+      this.down(this, "columnList", column);
+      this.down(this.tableDetail, "columnList", column);
+
+      let findIndex = this.columnList.indexOf(column);
+      if (findIndex == 0) {
+        column.beforeColumn_ = null;
+        if (this.columnList.length > 1) {
+          this.columnList[1].beforeColumn_ = column;
+        }
+      } else {
+        column.beforeColumn_ = this.columnList[findIndex - 1];
+      }
+
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+    up(bean, name, value) {
+      if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index > 0) {
+          bean[name].splice(index, 1);
+          bean[name].splice(index - 1, 0, value);
+        }
+      }
+    },
+    down(bean, name, value) {
+      if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index >= 0 && index < bean[name].length - 1) {
+          bean[name].splice(index, 1);
+          bean[name].splice(index + 1, 0, value);
+        }
+      }
+    },
+    addColumn(column, after) {
+      column = column || {};
+      column.name = column.name || "";
+      column.type = column.type || "varchar";
+      column.length = column.length || 250;
+      column.decimal = column.decimal || 0;
+      column.primaryKey = column.primaryKey || false;
+      column.notNull = column.notNull || false;
+      column.default = column.default || "";
+      column.comment = column.comment || "";
+
+      let appendIndex = this.tableDetail.columnList.indexOf(after);
+      if (appendIndex < 0) {
+        appendIndex = this.tableDetail.columnList.length;
+      } else {
+        appendIndex++;
+      }
+      this.tableDetail.columnList.splice(appendIndex, 0, column);
+      column.beforeColumn_ = this.tableDetail.columnList[appendIndex - 1];
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+    removeColumn(column) {
+      if (this.tool.isEmpty(column.oldName)) {
+        let findIndex = this.tableDetail.columnList.indexOf(column);
+        if (findIndex >= 0) {
+          this.tableDetail.columnList.splice(findIndex, 1);
+        }
+      } else {
+        column.deleted = true;
+      }
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+    addIndex(index, after) {
+      index = index || {};
+      index.name = index.name || "";
+      index.type = index.type || "";
+      index.comment = index.comment || "";
+      index.columns = index.columns || [];
+
+      let appendIndex = this.tableDetail.indexList.indexOf(after);
+      if (appendIndex < 0) {
+        appendIndex = this.tableDetail.indexList.length;
+      } else {
+        appendIndex++;
+      }
+      this.tableDetail.indexList.splice(appendIndex, 0, index);
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+    removeIndex(index) {
+      if (this.tool.isEmpty(index.oldName)) {
+        let findIndex = this.tableDetail.indexList.indexOf(index);
+        if (findIndex >= 0) {
+          this.tableDetail.indexList.splice(findIndex, 1);
+        }
+      } else {
+        index.deleted = true;
+      }
+      this.initData();
+      this.onChange(this.tableDetail);
+    },
+  },
+  created() {},
+  mounted() {},
+};
+</script>
+
+<style>
+.database-table-detail {
+}
+.database-table-detail .el-form-item__label {
+  line-height: 28px;
+  padding: 0px;
+}
+.database-table-detail .el-table th .cell {
+  padding: 0px 0px !important;
+  line-height: 30px;
+  text-align: center;
+}
+.database-table-detail .el-table .el-table__cell,
+.database-table-detail .el-table .cell {
+  padding: 0px 0px !important;
+  line-height: 25px;
+  text-align: center;
+  white-space: nowrap;
+}
+.database-table-detail .el-table .el-input__inner {
+  height: 25px;
+  line-height: 25px;
+  padding: 0 5px;
+  border: 0px;
+  outline: none;
+  text-align: left;
+}
+</style>
