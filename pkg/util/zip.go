@@ -2,26 +2,36 @@ package util
 
 import (
 	"bytes"
-	"compress/zlib"
+	"compress/gzip"
 	"io"
 )
 
-//ZipBytes 压缩
-func ZipBytes(data []byte) []byte {
-	var in bytes.Buffer
-	z := zlib.NewWriter(&in)
-	z.Write(data)
-	defer z.Close()
-	return in.Bytes()
+//GZipBytes 压缩
+func GZipBytes(data []byte) ([]byte, error) {
+
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	if _, err := gz.Write(data); err != nil {
+		return nil, err
+	}
+	if err := gz.Flush(); err != nil {
+		return nil, err
+	}
+	if err := gz.Close(); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
-//UZipBytes 解压
-func UZipBytes(data []byte) []byte {
-	var out bytes.Buffer
+//UGZipBytes 解压
+func UGZipBytes(data []byte) ([]byte, error) {
 	var in bytes.Buffer
 	in.Write(data)
-	r, _ := zlib.NewReader(&in)
+	r, err := gzip.NewReader(&in)
+	if err != nil {
+		return nil, err
+	}
 	defer r.Close()
-	io.Copy(&out, r)
-	return out.Bytes()
+	bs, err := io.ReadAll(r)
+	return bs, err
 }
