@@ -14,7 +14,8 @@ func Asset(name string) []byte {
 	var content string = staticCache[name]
 	if content != "" {
 		bs, _ := base64.StdEncoding.DecodeString(content)
-		return bs
+		unzipBS := util.UZipBytes(bs)
+		return unzipBS
 	}
 	return nil
 }
@@ -48,8 +49,11 @@ func SetAsset(dir string, saveFile string) (err error) {
 	f.WriteString("\n")
 	f.WriteString("func init() {" + "\n")
 	for filename, bs := range fileMap {
+
+		zipBS := util.ZipBytes(bs)
+
 		f.WriteString(`	staticCache["` + filename + `"] = ` + "`")
-		f.WriteString(base64.StdEncoding.EncodeToString(bs))
+		f.WriteString(base64.StdEncoding.EncodeToString(zipBS))
 		f.WriteString("`")
 		f.WriteString("\n")
 		f.WriteString("\n")
