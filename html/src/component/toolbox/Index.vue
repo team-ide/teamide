@@ -152,26 +152,37 @@ export default {
     doActiveTab(tab) {
       this.wrap.doActiveTab(tab);
     },
-    updateExtend(keys, value) {
-      this.updateOpenExtend(this.openId, keys, value);
+    updateExtend(keyValueMap) {
+      this.updateOpenExtend(this.openId, keyValueMap);
     },
     updateComment(comment) {
       this.updateOpenComment(this.openId, comment);
     },
-    async updateOpenTabExtend(tabId, keys, value) {
+    async updateOpenTabExtend(tabId, keyValueMap) {
       let tab = this.wrap.getTab("" + tabId);
       if (tab == null) {
         return;
       }
+      if (keyValueMap == null) {
+        return;
+      }
+      if (Object.keys(keyValueMap) == 0) {
+        return;
+      }
       let obj = tab.extend;
-      keys.forEach((key, index) => {
-        if (index < keys.length - 1) {
-          obj[key] = obj[key] || {};
-          obj = obj[key];
-        } else {
-          obj[key] = value;
-        }
-      });
+      for (let key in keyValueMap) {
+        let value = keyValueMap[key];
+        let names = key.split(".");
+        names.forEach((name, index) => {
+          if (index < names.length - 1) {
+            obj[name] = obj[name] || {};
+            obj = obj[name];
+          } else {
+            obj[name] = value;
+          }
+        });
+      }
+
       let param = {
         tabId: tabId,
         extend: JSON.stringify(tab.extend),

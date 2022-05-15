@@ -3,87 +3,35 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="140px">
-          <b-form inline class="pdt-20 mglr-10">
-            <b-form-group label="Topic" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="searchForm.indexName">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="PageIndex" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="searchForm.pageIndex">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="PageSize" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="searchForm.pageSize">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="">
-              <div class="pdt-25">
-                <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
-                  搜索
-                </div>
-                <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toIndex">
-                  新增
-                </div>
+          <el-form
+            class="pdt-20 mglr-10"
+            ref="form"
+            :model="form"
+            label-width="90px"
+            size="mini"
+            :inline="true"
+          >
+            <el-form-item label="IndexName">
+              <el-input v-model="searchForm.indexName" />
+            </el-form-item>
+            <el-form-item label="PageIndex">
+              <el-input v-model="searchForm.pageIndex" />
+            </el-form-item>
+            <el-form-item label="PageSize">
+              <el-input v-model="searchForm.pageSize" />
+            </el-form-item>
+            <div class="pdt-25">
+              <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
+                搜索
               </div>
-            </b-form-group>
-          </b-form>
+              <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toInsert">
+                新增
+              </div>
+            </div>
+          </el-form>
         </tm-layout>
         <tm-layout height="auto" class="scrollbar">
-          <div class="pd-10" style="o">
-            <table>
-              <thead>
-                <tr>
-                  <th width="100">Partition</th>
-                  <th width="80">Offset</th>
-                  <th>Key</th>
-                  <th>Value</th>
-                  <th width="150"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="msgs == null">
-                  <tr>
-                    <td colspan="5">
-                      <div class="text-center ft-13 pdtb-10">拉取中...</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="msgs.length == 0">
-                  <tr>
-                    <td colspan="5">
-                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <template v-for="(one, index) in msgs">
-                    <tr :key="index" @click="rowClick(one)">
-                      <td>{{ one.partition }}</td>
-                      <td>{{ one.offset }}</td>
-                      <td>{{ one.key }}</td>
-                      <td>{{ one.value }}</td>
-                      <td>
-                        <div style="width: 140px">
-                          <div
-                            class="tm-btn color-grey tm-btn-xs"
-                            @click="wrap.showData(one)"
-                          >
-                            查看
-                          </div>
-                          <div
-                            class="tm-btn color-orange tm-btn-xs"
-                            @click="toDelete(one)"
-                          >
-                            删除
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
-                </template>
-              </tbody>
-            </table>
-          </div>
+          <div class="pd-10" style="o"></div>
         </tm-layout>
       </tm-layout>
     </template>
@@ -109,9 +57,9 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    init() {
+    async init() {
       this.ready = true;
-      this.toSearch();
+      // await this.toSearch();
     },
     async toSearch() {
       await this.doSearch();
@@ -146,6 +94,9 @@ export default {
         })
         .catch((e) => {});
     },
+    toInsert() {
+      this.tool.warn("暂不支持ES数据新增，敬请期待！");
+    },
     async doDelete(data) {
       let param = {};
       Object.assign(param, data);
@@ -158,13 +109,7 @@ export default {
       }
     },
     async doSearch() {
-      this.msgs = null;
-      let param = {};
-      Object.assign(param, this.searchForm);
-      let res = await this.wrap.work("search", param);
-      res.data = res.data || {};
-      let result = res.data.result || {};
-      this.result = result;
+      this.tool.warn("暂不支持ES查询，敬请期待！");
     },
   },
   created() {},

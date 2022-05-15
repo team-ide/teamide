@@ -1,29 +1,18 @@
 <template>
-  <b-modal
+  <el-dialog
     ref="modal"
     :title="toolboxType == null ? '' : toolboxType.text"
-    :hide-header-close="false"
-    :no-close-on-backdrop="true"
-    :no-close-on-esc="true"
-    :hide-backdrop="true"
-    hide-footer
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :show-close="true"
+    :append-to-body="true"
+    :visible="showDialog"
+    :before-close="hide"
+    width="800px"
   >
-    <Form
-      v-if="formBuild != null"
-      :form="formBuild"
-      :formData="formData"
-      class=""
-    >
-    </Form>
+    <Form :source="source" ref="formBuild" class=""> </Form>
     <div class="pdb-10 ft-16 color-grey">配置</div>
-    <Form
-      v-if="formOptionBuild != null"
-      :form="formOptionBuild"
-      :source="source"
-      :formData="formOptionData"
-      class=""
-    >
-    </Form>
+    <Form :source="source" ref="formOptionBuild" class=""> </Form>
     <div class="">
       <div
         class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
@@ -33,7 +22,7 @@
         保存
       </div>
     </div>
-  </b-modal>
+  </el-dialog>
 </template>
 
 <script>
@@ -42,6 +31,7 @@ export default {
   props: ["source", "toolbox"],
   data() {
     return {
+      showDialog: false,
       formBuild: null,
       formData: null,
       formOptionBuild: null,
@@ -82,10 +72,19 @@ export default {
 
       this.toolboxType = toolboxType;
       this.callback = callback;
-      this.$refs["modal"].show();
+
+      this.showDialog = true;
+
+      this.$nextTick(() => {
+        this.$refs.formBuild.build(this.formBuild, this.formData);
+        this.$refs.formOptionBuild.build(
+          this.formOptionBuild,
+          this.formOptionData
+        );
+      });
     },
     hide() {
-      this.$refs["modal"].hide();
+      this.showDialog = false;
     },
     doSave() {
       this.saveBtnDisabled = true;
@@ -101,7 +100,7 @@ export default {
                 let flag = await this.callback(this.toolboxType, param);
                 this.saveBtnDisabled = false;
                 if (flag) {
-                  this.$refs["modal"].hide();
+                  this.hide();
                 }
               } else {
                 this.saveBtnDisabled = false;

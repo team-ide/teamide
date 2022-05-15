@@ -1,17 +1,9 @@
 package db
 
-import (
-	"errors"
-	"strings"
-)
+import "strings"
 
 type DatabaseSqliteDialect struct {
-	DatabaseDialect
-}
-
-func (this_ *DatabaseSqliteDialect) DatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {
-
-	return
+	*BaseDialect
 }
 
 func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database string, table *TableModel) (sqlList []string, err error) {
@@ -19,7 +11,7 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 
 	createTableSql := `CREATE TABLE `
 
-	if param.AppendDatabase {
+	if param.AppendDatabase && database != "" {
 		createTableSql += param.packingCharacterDatabase(database) + "."
 	}
 	createTableSql += param.packingCharacterTable(table.Name)
@@ -28,32 +20,27 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 	createTableSql += "\n"
 	primaryKeys := ""
 	if len(table.ColumnList) > 0 {
-		for _, one := range table.ColumnList {
-			var columnSql = param.packingCharacterColumn(one.Name)
-			var c = DatabaseTypeSqlite.GetColumnTypeInfo(one.Type)
-			if c == nil {
-				err = errors.New("Sqlite字段类型[" + one.Type + "]未映射!")
+		for _, column := range table.ColumnList {
+			var columnSql = param.packingCharacterColumn(column.Name)
+
+			var columnType string
+			columnType, err = this_.GetColumnType(column.Type, column.Length, column.Decimal)
+			if err != nil {
 				return
 			}
-			columnType := c.FormatColumnType(one.Length, one.Decimal)
-
 			columnSql += " " + columnType
 
-			if param.CharacterSet != "" {
-				columnSql += ` CHARACTER SET ` + param.CharacterSet
-			}
-			if one.Default != "" {
-				columnSql += ` DEFAULT ` + formatStringValue("'", one.Default)
-			}
-			if one.NotNull {
+			if column.NotNull {
 				columnSql += ` NOT NULL`
 			}
-
-			if one.PrimaryKey {
-				primaryKeys += "" + one.Name + ","
+			if column.Default != nil {
+				columnSql += ` DEFAULT ` + formatStringValue("'", GetStringValue(column.Default))
 			}
-			createTableSql += "\t" + columnSql
-			createTableSql += ",\n"
+
+			if column.PrimaryKey {
+				primaryKeys += "" + column.Name + ","
+			}
+			createTableSql += "\t" + columnSql + ",\n"
 		}
 	}
 	if primaryKeys != "" {
@@ -68,9 +55,18 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 
 	sqlList = append(sqlList, createTableSql)
 
+	// 添加注释
+	if table.Comment != "" {
+		var sqlList_ []string
+		sqlList_, err = this_.TableCommentDDL(param, database, table.Name, table.Comment)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
 	if len(table.IndexList) > 0 {
 		for _, one := range table.IndexList {
-			if one.Name == "" || one.Columns == "" {
+			if one.Name == "" || len(one.Columns) == 0 {
 				continue
 			}
 			//name := table.Name + "_" + one.Name
@@ -78,34 +74,14 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 			if !strings.HasPrefix(name, table.Name+"_INDEX_") {
 				name = table.Name + "_INDEX_" + one.Name
 			}
-			sqlList_ := this_.Index(param, database, table.Name, name, one.Type, one.Columns)
+			one.Name = name
+			var sqlList_ []string
+			sqlList_, err = this_.TableIndexAddDDL(param, database, table.Name, one)
+			if err != nil {
+				return
+			}
 			sqlList = append(sqlList, sqlList_...)
-
 		}
 	}
-	return
-}
-
-func (this_ *DatabaseSqliteDialect) Index(param *GenerateParam, database string, table string, indexName string, indexType string, columns string) (sqlList []string) {
-
-	sql := ""
-	switch strings.ToUpper(indexType) {
-	case "UNIQUE":
-		sql += "CREATE UNIQUE INDEX "
-	default:
-		sql += "CREATE INDEX "
-	}
-	if indexName != "" {
-		sql += "" + indexName + " "
-	}
-	sql += " ON "
-	if param.AppendDatabase && database != "" {
-		sql += param.packingCharacterDatabase(database) + "."
-	}
-	sql += "" + param.packingCharacterTable(table)
-
-	sql += "(" + param.packingCharacterColumns(columns) + ")"
-
-	sqlList = append(sqlList, sql)
 	return
 }

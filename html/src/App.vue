@@ -24,29 +24,25 @@
       </Register>
     </template>
     <template v-else>
-      <div v-if="source.status == 'connecting'">
-        <!-- <b-alert show>
-          <h1>服务器连接中，请稍后！</h1>
-        </b-alert> -->
-      </div>
-      <div v-if="source.status == 'connected'">
-        <!-- <b-alert show variant="success">
-          <h1>服务器连接成功，请使用！</h1>
-        </b-alert> -->
-      </div>
+      <div v-if="source.status == 'connecting'"></div>
+      <div v-if="source.status == 'connected'"></div>
       <div
         v-if="source.status == 'error'"
-        class="alert alert-danger"
-        style="position: fixed; width: 100%; height: 100%; top: 0px"
+        style="
+          position: fixed;
+          width: 100%;
+          height: 100%;
+          top: 0px;
+          background: #454a4e;
+          color: #e61d1d;
+        "
       >
-        <b-alert show variant="danger">
-          <h4 class="alert-heading">服务器连接异常！</h4>
-          <hr />
-          <p class="mb-0">我们很遗憾的通知您：</p>
-          <p class="mb-0" style="text-indent: 33px; margin-top: 10px">
-            服务器暂时无法正常访问，请您不要着急，我们正在紧急修复中！！！
-          </p>
-        </b-alert>
+        <h4 style="padding: 20px 20px; font-size: 25px">服务器连接异常！</h4>
+        <hr />
+        <p style="padding: 20px 20px; font-size: 20px">我们很遗憾的通知您：</p>
+        <p style="text-indent: 60px; margin-top: 10px; font-size: 20px">
+          服务器暂时无法正常访问，请您不要着急，我们正在紧急修复中！！！
+        </p>
       </div>
     </template>
     <Contextmenu :contextmenu="contextmenu" ref="Contextmenu"></Contextmenu>
@@ -77,6 +73,15 @@ export default {
     },
     onKeyDown(event) {
       event = event || window.event;
+      if (this.tool.keyIsCtrlS(event)) {
+        this.tool.stopEvent(event);
+      }
+    },
+    onKeyUp(event) {
+      event = event || window.event;
+      if (this.tool.keyIsCtrlS(event)) {
+        this.tool.stopEvent(event);
+      }
     },
     bindEvent() {
       if (this.bindEvented) {
@@ -85,6 +90,16 @@ export default {
       this.bindEvented = true;
       window.addEventListener("keydown", (e) => {
         this.onKeyDown(e);
+      });
+      window.addEventListener("keyup", (e) => {
+        this.onKeyUp(e);
+      });
+      window.document.body.addEventListener("contextmenu", (e) => {
+        let tags = ["input", "textarea"];
+        if (tags.indexOf(("" + e.target.tagName).toLowerCase()) >= 0) {
+          return;
+        }
+        this.tool.stopEvent(e);
       });
     },
   },
@@ -104,10 +119,16 @@ html,
 body {
   height: 100%;
   width: 100%;
+  user-select: none;
+  padding: 0px;
+  margin: 0px;
 }
 #app {
+  user-select: none;
   height: 100%;
   width: 100%;
+  padding: 0px;
+  margin: 0px;
 }
 *,
 :after,

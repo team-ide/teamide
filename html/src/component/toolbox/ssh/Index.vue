@@ -2,7 +2,7 @@
   <div class="toolbox-ssh-editor-box">
     <template v-if="ready">
       <template v-if="extend && extend.isFTP">
-        <ToolboxFTP
+        <FTP
           ref="ftp"
           :source="source"
           :toolbox="toolbox"
@@ -12,10 +12,10 @@
           :token="token"
           :socket="socket"
         >
-        </ToolboxFTP>
+        </FTP>
       </template>
       <template v-else>
-        <ToolboxSSH
+        <SSH
           ref="ssh"
           :source="source"
           :toolbox="toolbox"
@@ -25,7 +25,7 @@
           :token="token"
           :socket="socket"
         >
-        </ToolboxSSH>
+        </SSH>
       </template>
     </template>
   </div>
@@ -33,8 +33,10 @@
 
 
 <script>
+import FTP from "./FTP";
+import SSH from "./SSH";
 export default {
-  components: {},
+  components: { FTP, SSH },
   props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
   data() {
     return {

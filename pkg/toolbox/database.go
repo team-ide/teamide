@@ -93,6 +93,16 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		return
 	}
 
+	var generateParam = &db.GenerateParam{}
+	err = json.Unmarshal(dataBS, generateParam)
+	if err != nil {
+		return
+	}
+
+	if generateParam.DatabaseType == "" {
+		generateParam.DatabaseType = databaseConfig.Type
+	}
+
 	res = map[string]interface{}{}
 	switch work {
 	case "databases":
@@ -118,16 +128,166 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		if len(tables) > 0 {
 			res["table"] = tables[0]
 		}
-	case "ddl":
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
+	case "createDatabase":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		var database = &db.DatabaseModel{}
+		err = json.Unmarshal(dataBS, database)
 		if err != nil {
 			return
 		}
 
-		if generateParam.DatabaseType == "" {
-			generateParam.DatabaseType = databaseConfig.Type
+		var sqlList []string
+		sqlList, err = db.ToDatabaseDDL(generateParam, database)
+		if err != nil {
+			return
 		}
+		if len(sqlList) > 0 {
+			for _, sql := range sqlList {
+				_, err = service.GetDatabaseWorker().Exec(sql, nil)
+				if err != nil {
+					return
+				}
+			}
+		}
+	case "createDatabaseSql":
+		var database = &db.DatabaseModel{}
+		err = json.Unmarshal(dataBS, database)
+		if err != nil {
+			return
+		}
+
+		var sqlList []string
+		sqlList, err = db.ToDatabaseDDL(generateParam, database)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
+	case "createTable":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		var table = &db.TableModel{}
+		err = json.Unmarshal(dataBS, table)
+		if err != nil {
+			return
+		}
+		var sqlList []string
+		sqlList, err = db.ToTableDDL(generateParam, request.Database, table)
+		if err != nil {
+			return
+		}
+		if len(sqlList) > 0 {
+			for _, sql := range sqlList {
+				_, err = service.GetDatabaseWorker().Exec(sql, nil)
+				if err != nil {
+					// 建表出现异常，删除SQL
+					sqlList, _ = db.ToTableDeleteDDL(generateParam, request.Database, table.Name)
+					if err != nil {
+						return
+					}
+					if len(sqlList) > 0 {
+						for _, sql = range sqlList {
+							_, _ = service.GetDatabaseWorker().Exec(sql, nil)
+						}
+					}
+					return
+				}
+			}
+		}
+	case "createTableSql":
+		var table = &db.TableModel{}
+		err = json.Unmarshal(dataBS, table)
+		if err != nil {
+			return
+		}
+		var sqlList []string
+		sqlList, err = db.ToTableDDL(generateParam, request.Database, table)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
+
+	case "updateTable":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		var table = &db.TableModel{}
+		err = json.Unmarshal(dataBS, table)
+		if err != nil {
+			return
+		}
+		var sqlList []string
+		sqlList, err = db.ToTableUpdateDDL(generateParam, request.Database, table)
+		if err != nil {
+			return
+		}
+		if len(sqlList) > 0 {
+			for _, sql := range sqlList {
+				_, err = service.GetDatabaseWorker().Exec(sql, nil)
+				if err != nil {
+					return
+				}
+			}
+		}
+	case "updateTableSql":
+		var table = &db.TableModel{}
+		err = json.Unmarshal(dataBS, table)
+		if err != nil {
+			return
+		}
+		var sqlList []string
+		sqlList, err = db.ToTableUpdateDDL(generateParam, request.Database, table)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
+	case "deleteDatabase":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		var sqlList []string
+		sqlList, err = db.ToDatabaseDeleteDDL(generateParam, request.Database)
+		if err != nil {
+			return
+		}
+		if len(sqlList) > 0 {
+			for _, sql := range sqlList {
+				_, err = service.GetDatabaseWorker().Exec(sql, nil)
+				if err != nil {
+					return
+				}
+			}
+		}
+	case "deleteTable":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		var sqlList []string
+		sqlList, err = db.ToTableDeleteDDL(generateParam, request.Database, request.Table)
+		if err != nil {
+			return
+		}
+		if len(sqlList) > 0 {
+			for _, sql := range sqlList {
+				_, err = service.GetDatabaseWorker().Exec(sql, nil)
+				if err != nil {
+					return
+				}
+			}
+		}
+	case "ddl":
 
 		var sqlList []string
 		if generateParam.GenerateDatabase {
@@ -156,12 +316,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["sqlList"] = sqlList
 	case "dataList":
 
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
-		if err != nil {
-			return
-		}
-
 		generateParam.AppendDatabase = true
 		generateParam.DatabasePackingCharacter = "`"
 		generateParam.TablePackingCharacter = "`"
@@ -185,11 +339,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["total"] = dataListRequest.Total
 		res["dataList"] = dataListRequest.DataList
 	case "executeSQL":
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
-		if err != nil {
-			return
-		}
 
 		executeSQLTask := &executeSQLTask{
 			Database:      request.Database,
@@ -201,11 +350,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["task"] = executeSQLTask
 
 	case "dataListSql":
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
-		if err != nil {
-			return
-		}
 		saveDataListTask := &saveDataListTask{
 			Database:        request.Database,
 			Table:           request.Table,
@@ -228,11 +372,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["sqlList"] = sqlList
 		res["valuesList"] = valuesList
 	case "saveDataList":
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
-		if err != nil {
-			return
-		}
 
 		generateParam.OpenTransaction = true
 		generateParam.AppendDatabase = true
@@ -258,12 +397,6 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["task"] = saveDataListTask
 
 	case "importDataForStrategy":
-
-		var generateParam = &db.GenerateParam{}
-		err = json.Unmarshal(dataBS, generateParam)
-		if err != nil {
-			return
-		}
 
 		generateParam.AppendDatabase = true
 		generateParam.DatabasePackingCharacter = "`"

@@ -13,30 +13,38 @@ export default {
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
-  methods: {
-    toast(title, info, variant) {
-      let config = {
-        title: title,
-        toaster: "b-toaster-top-right",
-        variant: variant,
-        autoHideDelay: 3000,
-        appendToast: true,
-      };
-      this.$bvToast.toast(info, config);
-    },
-  },
+  methods: {},
   // 在实例创建完成后被立即调用
   created() {
     this.tool.systemInfo = (info) => {
-      this.toast("系统提示", info, "info");
+      this.$notify({
+        title: "系统提示",
+        message: info,
+        type: "info",
+      });
+    };
+    this.tool.systemSuccess = (success) => {
+      this.$notify({
+        title: "系统提示",
+        message: success,
+        type: "success",
+      });
     };
 
     this.tool.systemWarn = (warn) => {
-      this.toast("系统警告", warn, "warning");
+      this.$notify({
+        title: "系统警告",
+        message: warn,
+        type: "warning",
+      });
     };
 
     this.tool.systemError = (error) => {
-      this.toast("系统错误", error, "danger");
+      this.$notify({
+        title: "系统错误",
+        message: error,
+        type: "error",
+      });
     };
   },
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用

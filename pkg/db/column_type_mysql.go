@@ -93,7 +93,12 @@ var (
 	MySqlSET = addMySqlColumnType(&ColumnTypeInfo{Name: "SET", TypeFormat: "SET($l)", HasLength: true, IsString: true})
 )
 
+var (
+	MySqlColumnTypeInfos []*ColumnTypeInfo
+)
+
 func addMySqlColumnType(columnTypeInfo *ColumnTypeInfo) *ColumnTypeInfo {
+	MySqlColumnTypeInfos = append(MySqlColumnTypeInfos, columnTypeInfo)
 	AppendColumnTypeInfo(DatabaseTypeMySql, columnTypeInfo)
 	return columnTypeInfo
 }

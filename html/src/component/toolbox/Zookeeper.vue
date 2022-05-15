@@ -51,34 +51,34 @@
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <b-form class="pd-10">
-            <b-form-group label="Path" label-size="sm">
-              <b-form-input size="sm" v-model="form.path"> </b-form-input>
-            </b-form-group>
-            <b-form-group label="Value" label-size="sm">
-              <b-form-textarea
-                size="sm"
-                rows="5"
-                max-rows="10"
-                v-model="form.value"
-              >
-              </b-form-textarea>
-            </b-form-group>
-            <template v-if="form.valueJson != null">
-              <b-form-group label="值JSON预览" label-size="sm">
-                <b-form-textarea
-                  size="sm"
-                  rows="5"
-                  max-rows="10"
-                  v-model="form.valueJson"
+          <div class="pd-10">
+            <el-form ref="form" size="mini">
+              <el-form-item label="Path">
+                <el-input v-model="form.path"> </el-input>
+              </el-form-item>
+              <el-form-item label="Value">
+                <el-input
+                  type="textarea"
+                  v-model="form.value"
+                  :autosize="{ minRows: 5, maxRows: 10 }"
                 >
-                </b-form-textarea>
-              </b-form-group>
-            </template>
+                </el-input>
+              </el-form-item>
+              <template v-if="form.valueJson != null">
+                <el-form-item label="值JSON预览">
+                  <el-input
+                    type="textarea"
+                    v-model="form.valueJson"
+                    :autosize="{ minRows: 5, maxRows: 10 }"
+                  >
+                  </el-input>
+                </el-form-item>
+              </template>
+            </el-form>
             <div class="pdtb-20">
               <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
             </div>
-          </b-form>
+          </div>
         </tm-layout>
       </tm-layout>
     </template>
@@ -301,7 +301,7 @@ export default {
 
       let res = await this.wrap.work("save", param);
       if (res.code == 0) {
-        this.tool.info("保存成功!");
+        this.tool.success("保存成功!");
 
         let path = param.path;
         if (path.lastIndexOf("/") < path.length - 1) {
@@ -319,7 +319,7 @@ export default {
       };
       let res = await this.wrap.work("delete", param);
       if (res.code == 0) {
-        this.tool.info("删除成功!");
+        this.tool.success("删除成功!");
 
         if (path.lastIndexOf("/") < path.length - 1) {
           let key = path.substring(0, path.lastIndexOf("/"));
@@ -342,6 +342,7 @@ export default {
 .toolbox-zookeeper-editor {
   width: 100%;
   height: 100%;
+  user-select: text;
 }
 .toolbox-zookeeper-editor .el-tree {
   /* border: 1px solid #f3f3f3; */

@@ -28,23 +28,24 @@ export default {
   // 在实例创建完成后被立即调用
   created() {
     this.tool.info = (info) => {
-      this.toast("提示", info, "info");
+      this.$message({ message: info, type: "info", showClose: true });
     };
 
-    this.tool.success = (warn) => {
-      this.toast("提示", warn, "success");
+    this.tool.success = (success) => {
+      this.$message({ message: success, type: "success", showClose: true });
     };
 
     this.tool.warn = (warn) => {
-      this.toast("警告", warn, "warning");
+      this.$message({ message: warn, type: "warning", showClose: true });
     };
 
     this.tool.error = (error) => {
-      this.toast("错误", error, "danger");
+      this.$message({ message: error, type: "error", showClose: true });
     };
   },
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {},
+  mounted() {
+  },
 };
 </script>
 

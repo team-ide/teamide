@@ -74,6 +74,22 @@ export default {
       this.ready = true;
     },
     async initContext() {
+      let res = await this.server.toolbox.data();
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      } else {
+        let data = res.data || {};
+
+        data.mysqlColumnTypeInfos.forEach((one) => {
+          one.name = one.name.toLowerCase();
+        });
+        this.source.toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
+        this.source.toolbox.databaseTypes = data.databaseTypes;
+        this.source.toolbox.types = data.types;
+        this.source.toolbox.sqlConditionalOperations =
+          data.sqlConditionalOperations;
+      }
+
       await this.loadContext();
     },
     async loadContext() {
@@ -81,9 +97,10 @@ export default {
       let res = await this.server.toolbox.context(param);
       if (res.code != 0) {
         this.tool.error(res.msg);
+      } else {
+        let context = res.data.context || {};
+        this.source.toolbox.context = context;
       }
-      let context = res.data.context || {};
-      this.source.toolbox.context = context;
     },
   },
   // 在实例创建完成后被立即调用

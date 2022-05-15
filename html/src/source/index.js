@@ -9,10 +9,6 @@ source.ready = false;
 source.url = null;
 source.api = null;
 source.filesUrl = null;
-source.databaseTypes = null;
-source.sqlConditionalOperations = null;
-
-source.toolboxTypes = null;
 
 source.header = {
     title: "Team · IDE",
@@ -285,9 +281,6 @@ source.init = (data) => {
         source.url = data.url;
         source.api = data.api;
         source.filesUrl = data.filesUrl;
-        source.databaseTypes = data.databaseTypes;
-        source.toolboxTypes = data.toolboxTypes;
-        source.sqlConditionalOperations = data.sqlConditionalOperations;
     } else {
         source.status = "error";
         source.ready = false;

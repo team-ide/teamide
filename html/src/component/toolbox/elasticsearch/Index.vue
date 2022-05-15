@@ -3,24 +3,24 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="400px" class="scrollbar">
-          <ToolboxElasticsearchIndexNames
+          <IndexNames
             ref="ToolboxElasticsearchIndexNames"
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
           >
-          </ToolboxElasticsearchIndexNames>
+          </IndexNames>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <ToolboxElasticsearchTabs
+          <Tabs
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
           >
-          </ToolboxElasticsearchTabs>
+          </Tabs>
         </tm-layout>
       </tm-layout>
       <IndexForm :source="source" :toolbox="toolbox" :wrap="wrap"> </IndexForm>
@@ -32,11 +32,13 @@
 
 
 <script>
+import IndexNames from "./IndexNames";
+import Tabs from "./Tabs";
 import IndexForm from "./IndexForm";
 import DataForm from "./DataForm";
 import ShowData from "./ShowData";
 export default {
-  components: { IndexForm, DataForm, ShowData },
+  components: { IndexNames, Tabs, IndexForm, DataForm, ShowData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
@@ -64,5 +66,6 @@ export default {
 .toolbox-elasticsearch-editor {
   width: 100%;
   height: 100%;
+  user-select: text;
 }
 </style>

@@ -3,24 +3,24 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="400px" class="scrollbar">
-          <ToolboxKafkaTopic
+          <Topic
             ref="ToolboxKafkaTopic"
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
           >
-          </ToolboxKafkaTopic>
+          </Topic>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <ToolboxKafkaTabs
+          <Tabs
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
           >
-          </ToolboxKafkaTabs>
+          </Tabs>
         </tm-layout>
       </tm-layout>
       <TopicForm :source="source" :toolbox="toolbox" :wrap="wrap"> </TopicForm>
@@ -32,11 +32,13 @@
 
 
 <script>
+import Topic from "./Topic";
+import Tabs from "./Tabs";
 import TopicForm from "./TopicForm";
 import PushForm from "./PushForm";
 import ShowData from "./ShowData";
 export default {
-  components: { TopicForm, PushForm, ShowData },
+  components: { Topic, Tabs, TopicForm, PushForm, ShowData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
@@ -64,5 +66,6 @@ export default {
 .toolbox-kafka-editor {
   width: 100%;
   height: 100%;
+  user-select: text;
 }
 </style>

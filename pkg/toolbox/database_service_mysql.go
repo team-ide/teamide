@@ -190,7 +190,7 @@ func (this_ *MysqlService) TablePrimaryKeys(database string, table string) (keys
 func (this_ *MysqlService) TableIndexList(database string, table string) (indexList []*db.TableIndexModel, err error) {
 
 	//构造查询用的finder
-	finder := zorm.NewSelectFinder("information_schema.statistics", "INDEX_NAME name,NON_UNIQUE,INDEX_COMMENT comment,COLUMN_NAME columns")
+	finder := zorm.NewSelectFinder("information_schema.statistics", "INDEX_NAME name,NON_UNIQUE,INDEX_COMMENT comment,COLUMN_NAME")
 
 	finder.Append("WHERE TABLE_SCHEMA=?", database)
 	finder.Append(" AND TABLE_NAME=?", table)
@@ -204,21 +204,22 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 
 	for _, one := range indexList_ {
 
-		var info *db.TableIndexModel
 		if one.NONUnique == "0" {
-			one.Type = "UNIQUE"
+			one.Type = "unique"
 		}
+		one.Columns = append(one.Columns, one.COLUMNName)
 
+		var find *db.TableIndexModel
 		for _, in := range indexList {
 			if in.Name == one.Name {
-				info = in
+				find = in
 				break
 			}
 		}
-		if info == nil {
+		if find == nil {
 			indexList = append(indexList, one)
 		} else {
-			info.Columns += "," + one.Columns
+			find.Columns = append(find.Columns, one.Columns...)
 		}
 
 	}

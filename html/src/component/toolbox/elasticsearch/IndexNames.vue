@@ -149,7 +149,7 @@ export default {
       };
       let res = await this.wrap.work("deleteIndex", param);
       if (res.code == 0) {
-        this.tool.info("删除成功!");
+        this.tool.success("删除成功!");
         this.loadIndexNames();
       }
     },

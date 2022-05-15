@@ -8,14 +8,14 @@
         :onActiveTab="onActiveTab"
       >
         <template v-slot:body="{ tab }">
-          <ToolboxKafkaTopicData
+          <TopicData
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
             :topic="tab.extend.topic"
           >
-          </ToolboxKafkaTopicData>
+          </TopicData>
         </template>
       </TabEditor>
     </template>
@@ -24,8 +24,9 @@
 
 
 <script>
+import TopicData from "./TopicData";
 export default {
-  components: {},
+  components: { TopicData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {

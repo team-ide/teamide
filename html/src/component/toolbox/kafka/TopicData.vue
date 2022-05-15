@@ -3,24 +3,21 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="140px">
-          <b-form inline class="pdt-20 mglr-10">
-            <b-form-group label="Topic" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.topic"> </b-form-input>
-            </b-form-group>
-            <b-form-group label="GroupId" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.groupId">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="KeyType" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.keyType">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="ValueType" label-size="sm" class="pdr-10">
-              <b-form-input size="sm" v-model="pullForm.valueType">
-              </b-form-input>
-            </b-form-group>
-            <b-form-group label="">
-              <div class="pdt-25">
+          <el-form class="pdt-10" label-width="90px" size="mini" :inline="true">
+            <el-form-item label="Topic">
+              <el-input v-model="pullForm.topic" />
+            </el-form-item>
+            <el-form-item label="GroupId">
+              <el-input v-model="pullForm.groupId" />
+            </el-form-item>
+            <el-form-item label="KeyType">
+              <el-input v-model="pullForm.keyType" />
+            </el-form-item>
+            <el-form-item label="ValueType">
+              <el-input v-model="pullForm.valueType" />
+            </el-form-item>
+            <el-form-item label="">
+              <div class="pd">
                 <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toPull">
                   拉取
                 </div>
@@ -28,8 +25,8 @@
                   新增
                 </div>
               </div>
-            </b-form-group>
-          </b-form>
+            </el-form-item>
+          </el-form>
         </tm-layout>
         <tm-layout height="auto" class="scrollbar">
           <div class="pd-10" style="o">

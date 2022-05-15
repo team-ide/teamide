@@ -152,7 +152,7 @@ export default {
       let ddl = "";
       sqls.forEach((sql, index) => {
         if (index > 0) {
-          ddl += "\n";
+          ddl += "\n\n";
         }
         ddl += sql + ";";
       });

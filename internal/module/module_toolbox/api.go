@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/db"
 	"teamide/pkg/toolbox"
 )
 
@@ -73,24 +74,21 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	return
 }
 
-type IndexRequest struct {
-}
-
 type IndexResponse struct {
 	Types                    []*toolbox.Worker                  `json:"types,omitempty"`
 	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
+	MysqlColumnTypeInfos     []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
+	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
 }
 
 func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &IndexRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
 	response := &IndexResponse{}
 
 	response.Types = toolbox.GetWorkers()
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
+	response.MysqlColumnTypeInfos = db.MySqlColumnTypeInfos
+	response.DatabaseTypes = db.DatabaseTypes
 
 	res = response
 	return

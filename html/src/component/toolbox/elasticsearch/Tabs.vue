@@ -8,14 +8,14 @@
         :onActiveTab="onActiveTab"
       >
         <template v-slot:body="{ tab }">
-          <ToolboxElasticsearchIndexData
+          <IndexData
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
             :indexName="tab.extend.indexName"
           >
-          </ToolboxElasticsearchIndexData>
+          </IndexData>
         </template>
       </TabEditor>
     </template>
@@ -24,8 +24,9 @@
 
 
 <script>
+import IndexData from "./IndexData";
 export default {
-  components: {},
+  components: { IndexData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
