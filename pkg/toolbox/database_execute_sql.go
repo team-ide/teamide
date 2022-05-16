@@ -55,6 +55,16 @@ func (this_ *executeSQLTask) Start() {
 
 	ctx := this_.service.GetDatabaseWorker().GetContext()
 
+	if this_.Database != "" {
+		finder := zorm.NewFinder()
+		finder.InjectionCheck = false
+		finder.Append("use `" + this_.Database + "`")
+		_, err = zorm.QueryMap(ctx, finder, nil)
+		if err != nil {
+			return
+		}
+	}
+
 	if this_.generateParam.OpenTransaction {
 		_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
 			err = this_.do(ctx, tokens)
@@ -67,16 +77,6 @@ func (this_ *executeSQLTask) Start() {
 }
 
 func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer) (err error) {
-
-	if this_.Database != "" {
-		finder := zorm.NewFinder()
-		finder.InjectionCheck = false
-		finder.Append("use `" + this_.Database + "`")
-		_, err = zorm.UpdateFinder(ctx, finder)
-		if err != nil {
-			return
-		}
-	}
 	for {
 		var stmt sqlparser.Statement
 		stmt, err = sqlparser.ParseNext(tokens)
@@ -89,42 +89,64 @@ func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer
 		if err != nil {
 			return
 		}
-		buf := sqlparser.NewTrackedBuffer(nil)
-		stmt.Format(buf)
-		sql := buf.String()
-
-		var executeData = map[string]interface{}{}
-		this_.ExecuteList = append(this_.ExecuteList, executeData)
-
-		var startTime = util.Now()
-		executeData["sql"] = sql
-		executeData["startTime"] = util.Format(startTime)
-
-		switch stmt.(type) {
-		case *sqlparser.Select:
-			err = this_.doSelect(ctx, sql, executeData)
-		case *sqlparser.Insert:
-			err = this_.doInsert(ctx, sql, executeData)
-		case *sqlparser.Update:
-			err = this_.doUpdate(ctx, sql, executeData)
-		case *sqlparser.Delete:
-			err = this_.doDelete(ctx, sql, executeData)
-		case *sqlparser.Use:
-			err = this_.doUse(ctx, sql, executeData)
-		case *sqlparser.Show:
-			err = this_.doSelect(ctx, sql, executeData)
-		default:
-			err = this_.doExec(ctx, sql, executeData)
+		// 如果已经开启过事务，则不用再次开启
+		if this_.generateParam.OpenTransaction {
+			err = this_.doExecute(ctx, stmt)
+		} else {
+			_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
+				err = this_.doExecute(ctx, stmt)
+				return
+			})
 		}
 
-		var endTime = time.Now()
-		executeData["endTime"] = util.Format(endTime)
-		executeData["isEnd"] = true
-		executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 		if err != nil {
-			executeData["error"] = err.Error()
+			err = nil
+			if this_.generateParam.ErrorContinue {
+				continue
+			}
 			return
 		}
+	}
+
+	return
+}
+
+func (this_ *executeSQLTask) doExecute(ctx context.Context, stmt sqlparser.Statement) (err error) {
+	buf := sqlparser.NewTrackedBuffer(nil)
+	stmt.Format(buf)
+	sql := buf.String()
+
+	var executeData = map[string]interface{}{}
+	this_.ExecuteList = append(this_.ExecuteList, executeData)
+
+	var startTime = util.Now()
+	executeData["sql"] = sql
+	executeData["startTime"] = util.Format(startTime)
+
+	switch stmt.(type) {
+	case *sqlparser.Select:
+		err = this_.doSelect(ctx, sql, executeData)
+	case *sqlparser.Insert:
+		err = this_.doInsert(ctx, sql, executeData)
+	case *sqlparser.Update:
+		err = this_.doUpdate(ctx, sql, executeData)
+	case *sqlparser.Delete:
+		err = this_.doDelete(ctx, sql, executeData)
+	case *sqlparser.Use:
+		err = this_.doUse(ctx, sql, executeData)
+	case *sqlparser.Show:
+		err = this_.doSelect(ctx, sql, executeData)
+	default:
+		err = this_.doExec(ctx, sql, executeData)
+	}
+
+	var endTime = time.Now()
+	executeData["endTime"] = util.Format(endTime)
+	executeData["isEnd"] = true
+	executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+	if err != nil {
+		executeData["error"] = err.Error()
+		return
 	}
 
 	return
@@ -224,7 +246,7 @@ func (this_ *executeSQLTask) doUse(ctx context.Context, sql string, executeData 
 	finder.InjectionCheck = false
 	finder.Append(sql)
 	executeData["isUse"] = true
-	_, err = zorm.UpdateFinder(ctx, finder)
+	_, err = zorm.QueryMap(ctx, finder, nil)
 
 	if err != nil {
 		util.Logger.Error("doUse异常", zap.Error(err))

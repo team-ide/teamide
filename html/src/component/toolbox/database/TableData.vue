@@ -1199,6 +1199,30 @@ export default {
   outline: none;
   font-size: 12px;
 }
+.toolbox-database-table-data .el-table .el-switch {
+  font-size: 12px;
+  line-height: 16px;
+  height: 16px;
+}
+.toolbox-database-table-data .el-table .el-switch .el-switch__core {
+  height: 16px;
+  background-color: transparent;
+}
+.toolbox-database-table-data .el-table .el-switch.is-checked .el-switch__core{
+  border-color: #409EFF;
+  background-color: #409EFF;
+}
+.toolbox-database-table-data .el-table .el-switch .el-switch__core:after{
+    width: 12px;
+    height: 12px;
+}
+.toolbox-database-table-data .el-table  .el-tag.el-tag--info{
+  background-color: transparent;
+  color: inherit;
+}
+.toolbox-database-table-data .el-table .el-select__tags-text{
+  font-size: 12px;
+}
 .toolbox-database-table-data-pagination .el-pagination {
   color: #929292;
 }

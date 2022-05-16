@@ -311,3 +311,31 @@ func (this_ *DatabaseMySqlDialect) TableIndexDeleteDDL(param *GenerateParam, dat
 	sqlList = append(sqlList, sql)
 	return
 }
+
+func (this_ *DatabaseMySqlDialect) TablePrimaryKeyDeleteDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error) {
+	sql := "ALTER TABLE "
+	if param.AppendDatabase && database != "" {
+		sql += param.packingCharacterDatabase(database) + "."
+	}
+	sql += "" + param.packingCharacterTable(table)
+
+	sql += ` DROP PRIMARY KEY `
+
+	sqlList = append(sqlList, sql)
+	return
+}
+
+func (this_ *DatabaseMySqlDialect) TablePrimaryKeyAddDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error) {
+	sql := "ALTER TABLE "
+	if param.AppendDatabase && database != "" {
+		sql += param.packingCharacterDatabase(database) + "."
+	}
+	sql += "" + param.packingCharacterTable(table)
+
+	sql += ` ADD PRIMARY KEY `
+
+	sql += "(" + param.packingCharacterColumns(strings.Join(primaryKeys, ",")) + ")"
+
+	sqlList = append(sqlList, sql)
+	return
+}

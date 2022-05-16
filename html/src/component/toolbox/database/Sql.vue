@@ -23,6 +23,9 @@
             <el-form-item label="开启事务">
               <el-switch v-model="form.openTransaction"> </el-switch>
             </el-form-item>
+            <el-form-item label="忽略异常继续" label-width="100px">
+              <el-switch v-model="form.errorContinue"> </el-switch>
+            </el-form-item>
           </el-form-item>
 
           <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toExecuteSql">
@@ -125,6 +128,7 @@ export default {
       form: {
         database: null,
         openTransaction: true,
+        errorContinue: false,
       },
       executeList: [],
     };
@@ -207,7 +211,7 @@ export default {
     },
     addExecuteListTab() {
       let tab = {};
-      tab.key = "执行结果";
+      tab.key = "执行结果-" + this.tool.getNumber();
       tab.title = "执行结果";
       tab.name = "执行结果";
       tab.isExecuteList = true;
@@ -216,7 +220,7 @@ export default {
     },
     addExecuteSelectTab(executeData) {
       let tab = {};
-      tab.key = "查询结果" + executeData.selectIndex;
+      tab.key = "查询结果-" + this.tool.getNumber();
       tab.title = "查询结果" + executeData.selectIndex;
       tab.name = "查询结果" + executeData.selectIndex;
       tab.isSelect = true;
