@@ -22,6 +22,7 @@ type GenerateParam struct {
 	StringPackingCharacter   string `json:"stringPackingCharacter" column:"stringPackingCharacter"`
 	AppendSqlValue           bool   `json:"appendSqlValue" column:"appendSqlValue"`
 	OpenTransaction          bool   `json:"openTransaction"`
+	ErrorContinue            bool   `json:"errorContinue"`
 }
 
 func ToDatabaseDDL(param *GenerateParam, database *DatabaseModel) (sqlList []string, err error) {
@@ -77,8 +78,13 @@ func ToTableUpdateDDL(param *GenerateParam, database string, table *TableModel) 
 		}
 		sqlList = append(sqlList, sqlList_...)
 	}
+	var primaryKeys []string
+	var oldPrimaryKeys []string
 	if len(table.ColumnList) > 0 {
 		for _, column := range table.ColumnList {
+			if column.OldPrimaryKey {
+				oldPrimaryKeys = append(oldPrimaryKeys, column.OldName)
+			}
 			if column.Deleted {
 				sqlList_, err = dialect.TableColumnDeleteDDL(param, database, table.Name, column.Name)
 				if err != nil {
@@ -86,6 +92,9 @@ func ToTableUpdateDDL(param *GenerateParam, database string, table *TableModel) 
 				}
 				sqlList = append(sqlList, sqlList_...)
 				continue
+			}
+			if column.PrimaryKey {
+				primaryKeys = append(primaryKeys, column.Name)
 			}
 			if column.OldName == "" {
 				sqlList_, err = dialect.TableColumnAddDDL(param, database, table.Name, column)
@@ -95,13 +104,36 @@ func ToTableUpdateDDL(param *GenerateParam, database string, table *TableModel) 
 				sqlList = append(sqlList, sqlList_...)
 				continue
 			}
-			if column.Name != column.OldName || column.Type != column.OldType || column.Length != column.OldLength || column.Decimal != column.OldDecimal || column.Default != column.OldDefault || column.Comment != column.OldComment || column.BeforeColumn != "" {
+			if column.Name != column.OldName ||
+				column.Type != column.OldType ||
+				column.Length != column.OldLength ||
+				column.Decimal != column.OldDecimal ||
+				column.NotNull != column.OldNotNull ||
+				column.Default != column.OldDefault ||
+				column.Comment != column.OldComment ||
+				column.BeforeColumn != "" {
 				sqlList_, err = dialect.TableColumnUpdateDDL(param, database, table.Name, column)
 				if err != nil {
 					return
 				}
 				sqlList = append(sqlList, sqlList_...)
 			}
+		}
+	}
+	if strings.Join(primaryKeys, ",") != strings.Join(oldPrimaryKeys, ",") {
+		if len(oldPrimaryKeys) > 0 {
+			sqlList_, err = dialect.TablePrimaryKeyDeleteDDL(param, database, table.Name, oldPrimaryKeys)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		}
+		if len(primaryKeys) > 0 {
+			sqlList_, err = dialect.TablePrimaryKeyAddDDL(param, database, table.Name, primaryKeys)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
 		}
 	}
 	if len(table.IndexList) > 0 {

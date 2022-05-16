@@ -22,6 +22,8 @@ type Dialect interface {
 	TableIndexUpdateDDL(param *GenerateParam, database string, table string, index *TableIndexModel) (sqlList []string, err error)
 	TableIndexDeleteDDL(param *GenerateParam, database string, table string, index string) (sqlList []string, err error)
 	TableIndexRenameDDL(param *GenerateParam, database string, table string, index string, rename string) (sqlList []string, err error)
+	TablePrimaryKeyDeleteDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error)
+	TablePrimaryKeyAddDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error)
 }
 
 func GetDialect(databaseType *DatabaseType) (dialect Dialect, err error) {
@@ -439,6 +441,34 @@ func (this_ *BaseDialect) TableIndexDeleteDDL(param *GenerateParam, database str
 
 	sql += ` DROP INDEX `
 	sql += "" + param.packingCharacterColumn(index)
+
+	sqlList = append(sqlList, sql)
+	return
+}
+
+func (this_ *BaseDialect) TablePrimaryKeyDeleteDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error) {
+	sql := "ALTER TABLE "
+	if param.AppendDatabase && database != "" {
+		sql += param.packingCharacterDatabase(database) + "."
+	}
+	sql += "" + param.packingCharacterTable(table)
+
+	sql += ` DROP PRIMARY KEY `
+
+	sqlList = append(sqlList, sql)
+	return
+}
+
+func (this_ *BaseDialect) TablePrimaryKeyAddDDL(param *GenerateParam, database string, table string, primaryKeys []string) (sqlList []string, err error) {
+	sql := "ALTER TABLE "
+	if param.AppendDatabase && database != "" {
+		sql += param.packingCharacterDatabase(database) + "."
+	}
+	sql += "" + param.packingCharacterTable(table)
+
+	sql += ` ADD PRIMARY KEY `
+
+	sql += "(" + param.packingCharacterColumns(strings.Join(primaryKeys, ",")) + ")"
 
 	sqlList = append(sqlList, sql)
 	return
