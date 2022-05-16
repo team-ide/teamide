@@ -1,34 +1,31 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="`索引[${indexName}]数据`"
+    :title="`索引[${indexName}]结构`"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
     :append-to-body="true"
     :visible="showDialog"
     :before-close="hide"
-    width="900px"
+    width="700px"
   >
     <div class="">
       <el-form ref="form" size="mini">
-        <el-form-item label="ID">
-          <el-input type="input" v-model="id"> </el-input>
-        </el-form-item>
-        <el-form-item label="数据">
+        <el-form-item label="结构">
           <el-input
             type="textarea"
-            v-model="docValue"
-            :autosize="{ minRows: 5, maxRows: 20 }"
+            v-model="mappingValue"
+            :autosize="{ minRows: 5, maxRows: 10 }"
           >
           </el-input>
         </el-form-item>
-        <template v-if="docJSON != null">
-          <el-form-item label="数据JSON预览">
+        <template v-if="mappingJSON != null">
+          <el-form-item label="结构JSON预览">
             <el-input
               type="textarea"
-              v-model="docJSON"
-              :autosize="{ minRows: 5, maxRows: 20 }"
+              v-model="mappingJSON"
+              :autosize="{ minRows: 5, maxRows: 10 }"
             >
             </el-input>
           </el-form-item>
@@ -55,9 +52,8 @@ export default {
     return {
       showDialog: false,
       indexName: null,
-      id: null,
-      docValue: null,
-      docJSON: null,
+      mappingValue: null,
+      mappingJSON: null,
       saveBtnDisabled: false,
     };
   },
@@ -65,8 +61,8 @@ export default {
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {
-    docValue(value) {
-      this.docJSON = null;
+    mappingValue(value) {
+      this.mappingJSON = null;
       if (this.tool.isNotEmpty(value)) {
         try {
           let data = null;
@@ -79,9 +75,9 @@ export default {
               throw error;
             }
           }
-          this.docJSON = JSON.stringify(data, null, "  ");
+          this.mappingJSON = JSON.stringify(data, null, "    ");
         } catch (e) {
-          this.docJSON = e;
+          this.mappingJSON = e;
         }
       }
     },
@@ -91,9 +87,8 @@ export default {
       data = data || {};
 
       this.indexName = data.indexName;
-      this.id = data.id;
-      let doc = data.doc || {};
-      this.docValue = JSON.stringify(doc, null, "  ");
+      this.mapping = data.mapping || {};
+      this.mappingValue = JSON.stringify(this.mapping, null, "    ");
 
       this.callback = callback;
       this.showDialog = true;
@@ -102,29 +97,23 @@ export default {
       this.showDialog = false;
     },
     async doSave() {
-      let doc = null;
+      let mapping = null;
       try {
-        doc = JSON.parse(this.docValue);
+        mapping = JSON.parse(this.mappingValue);
       } catch (e) {
         try {
-          doc = eval("(" + this.docValue + ")");
+          mapping = eval("(" + this.mappingValue + ")");
         } catch (error2) {
           this.tool.error("请输入有效JSON:" + e);
           return;
         }
-      }
-      let id = this.id;
-      if (this.tool.isEmpty(id)) {
-        this.tool.error("请输入ID");
-        return;
       }
 
       this.saveBtnDisabled = true;
 
       let param = {
         indexName: this.indexName,
-        doc: doc,
-        id: id,
+        mapping: mapping,
       };
       let flag = await this.callback(param);
       this.saveBtnDisabled = false;
@@ -138,8 +127,8 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.wrap.showDataForm = this.show;
-    this.wrap.hideDataForm = this.hide;
+    this.wrap.showMappingForm = this.show;
+    this.wrap.hideMappingForm = this.hide;
     this.init();
   },
 };

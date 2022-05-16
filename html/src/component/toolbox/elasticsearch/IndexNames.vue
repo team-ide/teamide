@@ -6,8 +6,8 @@
           <thead>
             <tr>
               <th>IndexName</th>
-              <th width="100px">
-                <div style="width: 100px">
+              <th width="150px">
+                <div style="width: 150px">
                   <div
                     class="tm-link color-grey-3 ft-14 mglr-2"
                     @click="loadIndexNames()"
@@ -49,6 +49,12 @@
                       @click="toOpenIndexName(one)"
                     >
                       数据
+                    </div>
+                    <div
+                      class="tm-btn color-grey tm-btn-xs"
+                      @click="toUpdateMapping(one)"
+                    >
+                      结构
                     </div>
                     <div
                       class="tm-btn color-orange tm-btn-xs"
@@ -115,14 +121,15 @@ export default {
     },
     toInsert() {
       let data = {};
-      this.wrap.showIndexForm(data, (m) => {
-        let flag = this.doInsert(m);
+      this.wrap.showIndexForm(data, async (m) => {
+        let flag = await this.doInsert(m);
         return flag;
       });
     },
     async doInsert(data) {
       let param = {
         indexName: data.indexName,
+        mapping: data.mapping,
       };
       let res = await this.wrap.work("createIndex", param);
       if (res.code == 0) {
@@ -142,6 +149,20 @@ export default {
           this.doDelete(data.name);
         })
         .catch((e) => {});
+    },
+    async toUpdateMapping(data) {
+      let indexName = data.name;
+      let mapping = await this.getMapping(indexName);
+      this.wrap.showMappingForm(
+        {
+          indexName: indexName,
+          mapping: mapping,
+        },
+        async (m) => {
+          let flag = await this.putMapping(m.indexName, m.mapping);
+          return flag;
+        }
+      );
     },
     async doDelete(indexName) {
       let param = {
@@ -167,6 +188,26 @@ export default {
         indexNames.push(indexName);
       });
       this.indexNames = indexNames;
+    },
+    async getMapping(indexName) {
+      let param = {
+        indexName: indexName,
+      };
+      let res = await this.wrap.work("getMapping", param);
+      res.data = res.data || {};
+      res.data.mapping = res.data.mapping || {};
+      return res.data.mapping;
+    },
+    async putMapping(indexName, mapping) {
+      let param = {
+        indexName: indexName,
+        mapping: mapping,
+      };
+      let res = await this.wrap.work("putMapping", param);
+      if (res.code != 0) {
+        return false;
+      }
+      return true;
     },
   },
   created() {},

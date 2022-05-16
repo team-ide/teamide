@@ -26,6 +26,8 @@
       <IndexForm :source="source" :toolbox="toolbox" :wrap="wrap"> </IndexForm>
       <DataForm :source="source" :toolbox="toolbox" :wrap="wrap"> </DataForm>
       <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
+      <MappingForm :source="source" :toolbox="toolbox" :wrap="wrap">
+      </MappingForm>
     </template>
   </div>
 </template>
@@ -35,10 +37,11 @@
 import IndexNames from "./IndexNames";
 import Tabs from "./Tabs";
 import IndexForm from "./IndexForm";
+import MappingForm from "./MappingForm";
 import DataForm from "./DataForm";
 import ShowData from "./ShowData";
 export default {
-  components: { IndexNames, Tabs, IndexForm, DataForm, ShowData },
+  components: { IndexNames, Tabs, IndexForm, MappingForm, DataForm, ShowData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {

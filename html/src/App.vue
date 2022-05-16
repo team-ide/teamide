@@ -135,6 +135,10 @@ body {
 :before {
   box-sizing: border-box;
 }
+.el-message,
+.el-dialog__title {
+  user-select: text;
+}
 
 /* 滚动条样式*/
 .scrollbar {

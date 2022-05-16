@@ -29,7 +29,7 @@ export default {
     this.tool.confirm = (msg, okTitle, cancelTitle) => {
       return this.$confirm(msg, "提示", {
         confirmButtonText: okTitle || "确定",
-        cancelButtonText: cancelTitle || "确定",
+        cancelButtonText: cancelTitle || "取消",
       });
     };
   },

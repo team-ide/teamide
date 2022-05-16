@@ -205,6 +205,12 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 
 ![avatar](doc/toolbox-redis.png)
 
+![avatar](doc/toolbox-redis-set.png)
+
+![avatar](doc/toolbox-redis-list.png)
+
+![avatar](doc/toolbox-redis-hash.png)
+
 #### Toolbox Zookeeper（完成）
 
 连接Zookeeper，支持单机、集群，增删改查等操作，批量删除等
@@ -227,11 +233,17 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 
 ![avatar](doc/toolbox-ftp.png)
 
-#### Toolbox Database（开发中）
+#### Toolbox Database（完成）
 
 连接Database，在线编辑库表，编辑库表记录，查看表结构等
 
 ![avatar](doc/toolbox-database.png)
+
+![avatar](doc/toolbox-database-data.png)
+
+![avatar](doc/toolbox-database-table.png)
+
+![avatar](doc/toolbox-database-sql.png)
 
 ![avatar](doc/toolbox-database-ddl.png)
 
@@ -239,7 +251,7 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 
 ![avatar](doc/toolbox-database-import-1.png)
 
-#### Toolbox Elasticsearch（开发中）
+#### Toolbox Elasticsearch（完成）
 
 连接Elasticsearch，编辑索引，增删改查索引数据等
 

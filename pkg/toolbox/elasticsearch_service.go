@@ -83,13 +83,13 @@ func (this_ *ESService) DeleteIndex(indexName string) (err error) {
 	return
 }
 
-func (this_ *ESService) CreateIndex(indexName string) (err error) {
+func (this_ *ESService) CreateIndex(indexName string, bodyJSON map[string]interface{}) (err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
 	}
 	defer client.Stop()
-	_, err = client.CreateIndex(indexName).Do(context.Background())
+	_, err = client.CreateIndex(indexName).BodyJson(bodyJSON).Do(context.Background())
 	if err != nil {
 		return
 	}
@@ -109,15 +109,20 @@ func (this_ *ESService) IndexNames() (res []string, err error) {
 	return
 }
 
-func (this_ *ESService) GetMapping(indexName string) (res map[string]interface{}, err error) {
+func (this_ *ESService) GetMapping(indexName string) (res interface{}, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
 	}
 	defer client.Stop()
-	res, err = client.GetMapping().Index(indexName).Do(context.Background())
+	mappingMap, err := client.GetMapping().Index(indexName).Do(context.Background())
 	if err != nil {
-		panic(err)
+		return
+	}
+	for key, value := range mappingMap {
+		if key == indexName {
+			res = value
+		}
 	}
 	return
 }
@@ -130,7 +135,7 @@ func (this_ *ESService) PutMapping(indexName string, bodyJSON map[string]interfa
 	defer client.Stop()
 	_, err = client.PutMapping().Index(indexName).BodyJson(bodyJSON).Do(context.Background())
 	if err != nil {
-		panic(err)
+		return
 	}
 	return
 }
@@ -149,7 +154,7 @@ func (this_ *ESService) SetFieldType(indexName string, fieldName string, fieldTy
 	return
 }
 
-func (this_ *ESService) Search(indexName string, pageIndex int, pageSize int) (res *ESQueryResult, err error) {
+func (this_ *ESService) Search(indexName string, pageIndex int, pageSize int) (res *elastic.SearchResult, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
@@ -162,9 +167,57 @@ func (this_ *ESService) Search(indexName string, pageIndex int, pageSize int) (r
 	if err != nil {
 		return
 	}
-	res = &ESQueryResult{}
+	res = searchResult
 
-	res.Count = searchResult.TotalHits()
+	return
+}
+
+func (this_ *ESService) Insert(indexName string, id string, doc interface{}) (res *elastic.IndexResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	defer client.Stop()
+	insert := client.Index()
+	insertResult, err := insert.Index(indexName).Id(id).BodyJson(doc).Refresh("wait_for").Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = insertResult
+
+	return
+}
+
+func (this_ *ESService) Update(indexName string, id string, doc interface{}) (res *elastic.UpdateResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	defer client.Stop()
+
+	update := client.Update()
+	updateResult, err := update.Index(indexName).Id(id).Doc(doc).Refresh("wait_for").Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = updateResult
+
+	return
+}
+
+func (this_ *ESService) Delete(indexName string, id string) (res *elastic.DeleteResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	defer client.Stop()
+
+	delete := client.Delete()
+	deleteResult, err := delete.Index(indexName).Id(id).Refresh("wait_for").Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = deleteResult
 
 	return
 }

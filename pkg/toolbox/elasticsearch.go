@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"encoding/json"
+	"github.com/olivere/elastic/v7"
 	"teamide/pkg/form"
 )
 
@@ -27,10 +28,12 @@ func init() {
 
 type ElasticsearchBaseRequest struct {
 	IndexName string                 `json:"indexName"`
+	Id        string                 `json:"id"`
 	Mapping   map[string]interface{} `json:"mapping"`
 	PageIndex int                    `json:"pageIndex"`
 	PageSize  int                    `json:"pageSize"`
 	ScrollId  string                 `json:"scrollId"`
+	Doc       interface{}            `json:"doc"`
 }
 
 type ESConfig struct {
@@ -76,7 +79,7 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 		}
 		res["indexNames"] = indexNames
 	case "createIndex":
-		err = service.CreateIndex(request.IndexName)
+		err = service.CreateIndex(request.IndexName, request.Mapping)
 		if err != nil {
 			return
 		}
@@ -86,7 +89,7 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 	case "getMapping":
-		var mapping map[string]interface{}
+		var mapping interface{}
 		mapping, err = service.GetMapping(request.IndexName)
 		if err != nil {
 			return
@@ -98,7 +101,7 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 	case "search":
-		var queryResult *ESQueryResult
+		var queryResult *elastic.SearchResult
 		queryResult, err = service.Search(request.IndexName, request.PageIndex, request.PageSize)
 		if err != nil {
 			return
@@ -111,10 +114,35 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 		res["result"] = queryResult
+	case "insertData":
+		var result *elastic.IndexResponse
+		result, err = service.Insert(request.IndexName, request.Id, request.Doc)
+		if err != nil {
+			return
+		}
+		res["result"] = result
+	case "updateData":
+		var result *elastic.UpdateResponse
+		result, err = service.Update(request.IndexName, request.Id, request.Doc)
+		if err != nil {
+			return
+		}
+		res["result"] = result
+	case "deleteData":
+		var result *elastic.DeleteResponse
+		result, err = service.Delete(request.IndexName, request.Id)
+		if err != nil {
+			return
+		}
+		res["result"] = result
 	}
 	return
 }
 
 type ESQueryResult struct {
+	Count int64 `json:"count"`
+}
+
+type ESUpdateResult struct {
 	Count int64 `json:"count"`
 }

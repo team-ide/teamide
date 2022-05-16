@@ -31,7 +31,63 @@
           </el-form>
         </tm-layout>
         <tm-layout height="auto" class="scrollbar">
-          <div class="pd-10" style="o"></div>
+          <div class="pd-10" style="o">
+            <table>
+              <thead>
+                <tr>
+                  <th width="100">_id</th>
+                  <th width="">_source</th>
+                  <th width="150">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="dataList == null">
+                  <tr>
+                    <td colspan="3">
+                      <div class="text-center ft-13 pdtb-10">查询中...</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else-if="dataList.length == 0">
+                  <tr>
+                    <td colspan="3">
+                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <template v-for="(one, index) in dataList">
+                    <tr :key="index" @click="rowClick(one)">
+                      <td>{{ one._id }}</td>
+                      <td>{{ one._source }}</td>
+                      <td>
+                        <div style="width: 140px">
+                          <div
+                            class="tm-btn color-grey tm-btn-xs"
+                            @click="wrap.showData(one)"
+                          >
+                            查看
+                          </div>
+                          <div
+                            class="tm-btn color-blue tm-btn-xs"
+                            @click="toUpdate(one)"
+                          >
+                            修改
+                          </div>
+                          <div
+                            class="tm-btn color-orange tm-btn-xs"
+                            @click="toDelete(one)"
+                          >
+                            删除
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </template>
+              </tbody>
+            </table>
+          </div>
         </tm-layout>
       </tm-layout>
     </template>
@@ -51,7 +107,7 @@ export default {
         pageIndex: 1,
         pageSize: 10,
       },
-      msgs: null,
+      dataList: null,
     };
   },
   computed: {},
@@ -59,7 +115,7 @@ export default {
   methods: {
     async init() {
       this.ready = true;
-      // await this.toSearch();
+      await this.toSearch();
     },
     async toSearch() {
       await this.doSearch();
@@ -95,11 +151,61 @@ export default {
         .catch((e) => {});
     },
     toInsert() {
-      this.tool.warn("暂不支持ES数据新增，敬请期待！");
+      let indexName = this.indexName;
+      let data = {
+        indexName: indexName,
+      };
+      this.wrap.showDataForm(data, async (m) => {
+        let flag = await this.doInsert(m);
+        return flag;
+      });
+    },
+    async doInsert(data) {
+      let param = {
+        indexName: data.indexName,
+        doc: data.doc,
+        id: data.id,
+      };
+      let res = await this.wrap.work("insertData", param);
+      if (res.code == 0) {
+        await this.toSearch();
+        return true;
+      } else {
+        return false;
+      }
+    },
+    toUpdate(data) {
+      let indexName = this.indexName;
+      let param = {
+        indexName: indexName,
+        doc: data._source,
+        id: data._id,
+      };
+      this.wrap.showDataForm(param, async (m) => {
+        let flag = await this.doUpdate(m);
+        return flag;
+      });
+    },
+    async doUpdate(data) {
+      let param = {
+        indexName: data.indexName,
+        doc: data.doc,
+        id: data.id,
+      };
+      let res = await this.wrap.work("updateData", param);
+      if (res.code == 0) {
+        await this.toSearch();
+        return true;
+      } else {
+        return false;
+      }
     },
     async doDelete(data) {
-      let param = {};
-      Object.assign(param, data);
+      let indexName = this.indexName;
+      let param = {
+        indexName: indexName,
+        id: data._id,
+      };
       let res = await this.wrap.work("deleteData", param);
       if (res.code == 0) {
         this.doSearch();
@@ -109,7 +215,14 @@ export default {
       }
     },
     async doSearch() {
-      this.tool.warn("暂不支持ES查询，敬请期待！");
+      let param = {};
+      Object.assign(param, this.searchForm);
+      let res = await this.wrap.work("search", param);
+      res.data = res.data || {};
+      let result = res.data.result || {};
+      let hits = result.hits || {};
+      this.dataList = hits.hits || [];
+      console.log(result);
     },
   },
   created() {},
