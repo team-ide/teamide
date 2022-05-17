@@ -1,7 +1,14 @@
 <template>
   <el-form v-if="ready" size="mini">
-    <template v-if="key != null && formData != null && fileObjectMap != null">
-      <template v-for="field in form.fields">
+    <template
+      v-if="
+        key != null &&
+        formBuild != null &&
+        formData != null &&
+        fileObjectMap != null
+      "
+    >
+      <template v-for="field in formBuild.fields">
         <el-form-item :key="`key-${key}-${field.name}`" :label="field.label">
           <template v-if="field.type == 'select'">
             <el-select
@@ -48,6 +55,24 @@
               <div class="tm-link color-teal-8">点击上传</div>
             </el-upload>
           </template>
+          <template v-else-if="field.type == 'textarea'">
+            <el-input
+              type="textarea"
+              v-model="formData[field.name]"
+              :autosize="{ minRows: 5, maxRows: 10 }"
+            >
+            </el-input>
+          </template>
+          <template v-else-if="field.type == 'json'">
+            <el-input
+              type="textarea"
+              v-model="jsonStringMap[field.name].value"
+              :autosize="{ minRows: 5, maxRows: 20 }"
+              @input="jsonStringChange(jsonStringMap[field.name])"
+              @change="jsonStringChange(jsonStringMap[field.name])"
+            >
+            </el-input>
+          </template>
           <template v-else>
             <el-input
               v-model="formData[field.name]"
@@ -71,14 +96,13 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "formBuild", "formData"],
   data() {
     return {
       key: null,
-      form: null,
-      formData: null,
       ready: false,
       fileObjectMap: null,
+      jsonStringMap: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -86,33 +110,57 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    build(form, formData) {
-      this.form = form;
-      this.formData = formData;
+    init() {
+      this.build();
+    },
+    build() {
       this.key = this.tool.getNumber();
       let fileObjectMap = {};
-      this.form.fields.forEach((one) => {
-        if (one.type == "file") {
-          fileObjectMap[one.name] = {
+      let jsonStringMap = {};
+      this.formBuild.fields.forEach((one) => {
+        let name = one.name;
+        let type = one.type;
+        if (type == "json") {
+          let json = this.formData[name];
+          let jsonString = null;
+          if (json != null) {
+            if (typeof json == "object") {
+              jsonString = JSON.stringify(json, null, "  ");
+            }
+          }
+          jsonStringMap[name] = {
+            value: jsonString,
+            onChange: () => {
+              console.log(jsonStringMap[name]);
+            },
+          };
+        } else if (type == "file") {
+          fileObjectMap[name] = {
             success: (response, file, fileList) => {
               if (response.code != 0) {
                 this.tool.error(response.msg);
                 return false;
               }
-              this.formData[one.name] = response.data.files[0].path;
+              this.formData[name] = response.data.files[0].path;
             },
           };
         }
       });
+      this.jsonStringMap = jsonStringMap;
       this.fileObjectMap = fileObjectMap;
       this.ready = true;
     },
+    async validate(data) {
+      let validateResult = await this.form.validate(data || this.formData);
+      return validateResult;
+    },
+    jsonStringChange(bean) {
+      console.log(bean.value);
+    },
   },
-  // 在实例创建完成后被立即调用
   created() {},
-  // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    // this.init();
+    this.init();
   },
 };
 </script>

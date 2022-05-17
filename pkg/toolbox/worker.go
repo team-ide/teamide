@@ -15,6 +15,7 @@ type Worker struct {
 	Comment    string                                                                                                                `json:"comment,omitempty"`
 	Work       func(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) `json:"-"`
 	ConfigForm *form.Form                                                                                                            `json:"configForm,omitempty"`
+	OtherForm  map[string]*form.Form                                                                                                 `json:"otherForm,omitempty"`
 }
 
 var (

@@ -13,16 +13,14 @@
         </Main>
       </tm-layout>
     </template>
-    <ToolboxForm :source="source" :toolbox="source.toolbox"></ToolboxForm>
   </div>
 </template>
 
 <script>
 import Main from "./Main";
-import ToolboxForm from "./ToolboxForm";
 
 export default {
-  components: { Main, ToolboxForm },
+  components: { Main },
   props: ["source"],
   data() {
     return {
@@ -86,6 +84,14 @@ export default {
         this.source.toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
         this.source.toolbox.databaseTypes = data.databaseTypes;
         this.source.toolbox.types = data.types;
+        data.types.forEach((one) => {
+          this.form.toolbox[one.name] = one.configForm;
+          if (one.otherForm) {
+            for (let formName in one.otherForm) {
+              this.form.toolbox[one.name][formName] = one.otherForm[formName];
+            }
+          }
+        });
         this.source.toolbox.sqlConditionalOperations =
           data.sqlConditionalOperations;
       }

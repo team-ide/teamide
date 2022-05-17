@@ -2,13 +2,13 @@ import Vue from 'vue'
 
 import './iconfont/iconfont.css'
 
-import InfoBox from './InfoBox.vue'
+import InfoBox from './message/InfoBox.vue'
 Vue.component('InfoBox', InfoBox);
 
-import SystemInfoBox from './SystemInfoBox.vue'
+import SystemInfoBox from './message/SystemInfoBox.vue'
 Vue.component('SystemInfoBox', SystemInfoBox);
 
-import AlertBox from './AlertBox.vue'
+import AlertBox from './message/AlertBox.vue'
 Vue.component('AlertBox', AlertBox);
 
 import Login from './Login.vue'
@@ -20,9 +20,9 @@ Vue.component('Register', Register);
 import WaterfallLayout from './WaterfallLayout.vue'
 Vue.component('WaterfallLayout', WaterfallLayout);
 
-import IconFont from './IconFont.vue'
+import IconFont from './icon/IconFont.vue'
 Vue.component('IconFont', IconFont);
-import Icon from './Icon.vue'
+import Icon from './icon/Icon.vue'
 Vue.component('Icon', Icon);
 
 import Contextmenu from './contextmenu/Contextmenu.vue'
@@ -30,13 +30,17 @@ Vue.component('Contextmenu', Contextmenu);
 import ContextmenuMenus from './contextmenu/ContextmenuMenus.vue'
 Vue.component('ContextmenuMenus', ContextmenuMenus);
 
-import Form from './Form.vue'
+import Form from './form/Form.vue'
 Vue.component('Form', Form);
+import FormBox from './form/FormBox.vue'
+Vue.component('FormBox', FormBox);
+import FormDialog from './form/FormDialog.vue'
+Vue.component('FormDialog', FormDialog);
 
-import ShouldLogin from './ShouldLogin.vue'
+import ShouldLogin from './error/ShouldLogin.vue'
 Vue.component('ShouldLogin', ShouldLogin);
 
-import NoPower from './NoPower.vue'
+import NoPower from './error/NoPower.vue'
 Vue.component('NoPower', NoPower);
 
 import TabEditor from './tab-editor/Index.vue'

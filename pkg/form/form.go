@@ -5,14 +5,14 @@ type Form struct {
 }
 
 type Field struct {
-	Label        string    `json:"label,omitempty"`
-	Name         string    `json:"name,omitempty"`
-	Placeholder  string    `json:"placeholder,omitempty"`
-	Type         string    `json:"type,omitempty"`
-	DefaultValue string    `json:"defaultValue,omitempty"`
-	IsNumber     bool      `json:"isNumber,omitempty"`
-	Rules        []*Rule   `json:"rules,omitempty"`
-	Options      []*Option `json:"options,omitempty"`
+	Label        string      `json:"label,omitempty"`
+	Name         string      `json:"name,omitempty"`
+	Placeholder  string      `json:"placeholder,omitempty"`
+	Type         string      `json:"type,omitempty"`
+	DefaultValue interface{} `json:"defaultValue,omitempty"`
+	IsNumber     bool        `json:"isNumber,omitempty"`
+	Rules        []*Rule     `json:"rules,omitempty"`
+	Options      []*Option   `json:"options,omitempty"`
 }
 
 type Rule struct {

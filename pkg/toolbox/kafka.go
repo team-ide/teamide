@@ -24,6 +24,72 @@ func init() {
 				},
 			},
 		},
+		OtherForm: map[string]*form.Form{
+			"topic": {
+				Fields: []*form.Field{
+					{
+						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
+						Rules: []*form.Rule{
+							{Required: true, Message: "主题不能为空"},
+						},
+					},
+					{
+						Label: "Partitions（分区）", Name: "numPartitions", DefaultValue: 1, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "分区不能为空"},
+						},
+					},
+					{
+						Label: "ReplicationFactor（分区副本）", Name: "replicationFactor", DefaultValue: 1, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "分区副本不能为空"},
+						},
+					},
+				},
+			},
+			"push": {
+				Fields: []*form.Field{
+					{
+						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
+						Rules: []*form.Rule{
+							{Required: true, Message: "主题不能为空"},
+						},
+					},
+					{
+						Label: "KeyType", Name: "keyType", DefaultValue: "string", Type: "select",
+						Options: []*form.Option{
+							{Text: "String", Value: "string"},
+							{Text: "Long（int64）", Value: "long"},
+						},
+						Rules: []*form.Rule{
+							{Required: true, Message: "KeyType不能为空"},
+						},
+					},
+					{
+						Label: "Key", Name: "key",
+					},
+					{
+						Label: "ValueType", Name: "valueType", DefaultValue: "string", Type: "select",
+						Options: []*form.Option{
+							{Text: "String", Value: "string"},
+							{Text: "Long（int64）", Value: "long"},
+						},
+						Rules: []*form.Rule{
+							{Required: true, Message: "ValueType不能为空"},
+						},
+					},
+					{
+						Label: "Value", Name: "value", Type: "textarea",
+						Rules: []*form.Rule{
+							{Required: true, Message: "Value不能为空"},
+						},
+					},
+					{
+						Label: "ValueJSON预览", Name: "value", Type: "jsonView",
+					},
+				},
+			},
+		},
 	}
 
 	AddWorker(worker_)

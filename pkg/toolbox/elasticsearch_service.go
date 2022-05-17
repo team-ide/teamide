@@ -161,13 +161,12 @@ func (this_ *ESService) Search(indexName string, pageIndex int, pageSize int) (r
 	}
 	defer client.Stop()
 
-	search := client.Search(indexName)
+	doer := client.Search(indexName)
 	query := elastic.NewBoolQuery()
-	searchResult, err := search.Query(query).Size(pageSize).From((pageIndex - 1) * pageSize).Do(context.Background())
+	res, err = doer.Query(query).Size(pageSize).From((pageIndex - 1) * pageSize).Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = searchResult
 
 	return
 }
@@ -178,12 +177,11 @@ func (this_ *ESService) Insert(indexName string, id string, doc interface{}) (re
 		return
 	}
 	defer client.Stop()
-	insert := client.Index()
-	insertResult, err := insert.Index(indexName).Id(id).BodyJson(doc).Refresh("wait_for").Do(context.Background())
+	doer := client.Index()
+	res, err = doer.Index(indexName).Id(id).BodyJson(doc).Refresh("wait_for").Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = insertResult
 
 	return
 }
@@ -195,12 +193,11 @@ func (this_ *ESService) Update(indexName string, id string, doc interface{}) (re
 	}
 	defer client.Stop()
 
-	update := client.Update()
-	updateResult, err := update.Index(indexName).Id(id).Doc(doc).Refresh("wait_for").Do(context.Background())
+	doer := client.Update()
+	res, err = doer.Index(indexName).Id(id).Doc(doc).Refresh("wait_for").Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = updateResult
 
 	return
 }
@@ -212,31 +209,44 @@ func (this_ *ESService) Delete(indexName string, id string) (res *elastic.Delete
 	}
 	defer client.Stop()
 
-	delete := client.Delete()
-	deleteResult, err := delete.Index(indexName).Id(id).Refresh("wait_for").Do(context.Background())
+	doer := client.Delete()
+	res, err = doer.Index(indexName).Id(id).Refresh("wait_for").Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = deleteResult
 
 	return
 }
 
-func (this_ *ESService) Scroll(indexName string, scrollId string, pageSize int) (res *ESQueryResult, err error) {
+func (this_ *ESService) Reindex(sourceIndexName string, toIndexName string) (res *elastic.BulkIndexByScrollResponse, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
 	}
 	defer client.Stop()
 
-	search := client.Scroll(indexName)
-	query := elastic.NewBoolQuery()
-	searchResult, err := search.Query(query).Size(pageSize).ScrollId(scrollId).Do(context.Background())
+	doer := client.Reindex()
+	res, err = doer.Source(elastic.NewReindexSource().Index(sourceIndexName)).DestinationIndex(toIndexName).Refresh("wait_for").Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = &ESQueryResult{}
 
-	res.Count = searchResult.TotalHits()
+	return
+}
+
+func (this_ *ESService) Scroll(indexName string, scrollId string, pageSize int) (res *elastic.SearchResult, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	defer client.Stop()
+
+	doer := client.Scroll(indexName)
+	query := elastic.NewBoolQuery()
+	res, err = doer.Query(query).Size(pageSize).ScrollId(scrollId).Do(context.Background())
+	if err != nil {
+		return
+	}
+
 	return
 }

@@ -70,6 +70,12 @@
         </table>
       </div>
     </template>
+    <FormDialog
+      ref="InsertIndexName"
+      :source="source"
+      title="新增索引"
+      :onSave="doInsert"
+    ></FormDialog>
   </div>
 </template>
 
@@ -121,12 +127,15 @@ export default {
     },
     toInsert() {
       let data = {};
-      this.wrap.showIndexForm(data, async (m) => {
-        let flag = await this.doInsert(m);
-        return flag;
+
+      this.$refs.InsertIndexName.show({
+        title: `新增索引`,
+        form: [this.form.toolbox.elasticsearch.index],
+        data: [data],
       });
     },
-    async doInsert(data) {
+    async doInsert(dataList) {
+      let data = dataList[0];
       let param = {
         indexName: data.indexName,
         mapping: data.mapping,

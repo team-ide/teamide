@@ -187,6 +187,18 @@
         </el-dropdown>
       </div>
     </TabEditor>
+    <FormDialog
+      ref="InsertToolbox"
+      :source="source"
+      title="新增Toolbox"
+      :onSave="doInsert"
+    ></FormDialog>
+    <FormDialog
+      ref="UpdateToolbox"
+      :source="source"
+      title="编辑Toolbox"
+      :onSave="doUpdate"
+    ></FormDialog>
   </div>
 </template>
 
@@ -391,11 +403,16 @@ export default {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
       let toolboxData = {};
-      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
-        let flag = this.doInsert(g, m);
-        return flag;
+      let optionsJSON = {};
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
       });
     },
+    onInsertSuccess() {},
     toCopy(toolboxType, copy) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
@@ -403,19 +420,36 @@ export default {
       Object.assign(toolboxData, copy);
       delete toolboxData.toolboxId;
       toolboxData.name = toolboxData.name + " Copy";
-      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
-        let flag = this.doInsert(g, m);
-        return flag;
+
+      let optionsJSON = this.getOptionJSON(toolboxData.option);
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
       });
     },
     toUpdate(toolboxType, toolboxData) {
       this.tool.stopEvent();
       this.$refs.dropdown.hide();
       this.updateData = toolboxData;
-      this.toolbox.showToolboxForm(toolboxType, toolboxData, (g, m) => {
-        let flag = this.doUpdate(g, m);
-        return flag;
+
+      let optionsJSON = this.getOptionJSON(toolboxData.option);
+
+      this.$refs.UpdateToolbox.show({
+        title: `编辑[${toolboxType.text}][${toolboxData.name}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
       });
+    },
+    getOptionJSON(option) {
+      let json = {};
+      if (this.tool.isNotEmpty(option)) {
+        json = JSON.parse(option);
+      }
+      return json;
     },
     toDelete(toolboxType, toolboxData) {
       this.tool.stopEvent();
@@ -437,15 +471,20 @@ export default {
       let res = await this.server.toolbox.delete(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
+        this.tool.success("删除成功");
         return true;
       } else {
         this.tool.error(res.msg);
         return false;
       }
     },
-    async doUpdate(toolboxType, toolboxData) {
+    async doUpdate(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
       toolboxData.toolboxType = toolboxType.name;
       toolboxData.toolboxId = this.updateData.toolboxId;
+      toolboxData.option = JSON.stringify(optionJSON);
       let res = await this.server.toolbox.update(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
@@ -453,17 +492,23 @@ export default {
         if (tab != null) {
           Object.assign(tab.toolboxData, toolboxData);
         }
+        this.tool.success("修改成功");
         return true;
       } else {
         this.tool.error(res.msg);
         return false;
       }
     },
-    async doInsert(toolboxType, toolboxData) {
+    async doInsert(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
       toolboxData.toolboxType = toolboxType.name;
+      toolboxData.option = JSON.stringify(optionJSON);
       let res = await this.server.toolbox.insert(toolboxData);
       if (res.code == 0) {
         this.toolbox.initContext();
+        this.tool.success("新增成功");
         return true;
       } else {
         this.tool.error(res.msg);
