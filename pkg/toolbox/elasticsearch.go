@@ -21,19 +21,51 @@ func init() {
 				},
 			},
 		},
+		OtherForm: map[string]*form.Form{
+			"index": {
+				Fields: []*form.Field{
+					{
+						Label: "IndexName（索引）", Name: "indexName", DefaultValue: "index_xxx",
+						Rules: []*form.Rule{
+							{Required: true, Message: "索引不能为空"},
+						},
+					},
+					{
+						Label: "结构", Name: "mapping", Type: "json", DefaultValue: map[string]interface{}{
+							"settings": map[string]interface{}{
+								"number_of_shards":   1,
+								"number_of_replicas": 0,
+							},
+							"mappings": map[string]interface{}{
+								"properties": map[string]interface{}{
+									"title": map[string]interface{}{
+										"type": "text",
+									},
+								},
+							},
+						},
+						Rules: []*form.Rule{
+							{Required: true, Message: "结构不能为空"},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	AddWorker(worker_)
 }
 
 type ElasticsearchBaseRequest struct {
-	IndexName string                 `json:"indexName"`
-	Id        string                 `json:"id"`
-	Mapping   map[string]interface{} `json:"mapping"`
-	PageIndex int                    `json:"pageIndex"`
-	PageSize  int                    `json:"pageSize"`
-	ScrollId  string                 `json:"scrollId"`
-	Doc       interface{}            `json:"doc"`
+	IndexName       string                 `json:"indexName"`
+	Id              string                 `json:"id"`
+	Mapping         map[string]interface{} `json:"mapping"`
+	PageIndex       int                    `json:"pageIndex"`
+	PageSize        int                    `json:"pageSize"`
+	ScrollId        string                 `json:"scrollId"`
+	Doc             interface{}            `json:"doc"`
+	SourceIndexName string                 `json:"sourceIndexName"`
+	DestIndexName   string                 `json:"destIndexName"`
 }
 
 type ESConfig struct {
@@ -108,12 +140,12 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 		}
 		res["result"] = queryResult
 	case "scroll":
-		var queryResult *ESQueryResult
-		queryResult, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize)
+		var result *elastic.SearchResult
+		result, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize)
 		if err != nil {
 			return
 		}
-		res["result"] = queryResult
+		res["result"] = result
 	case "insertData":
 		var result *elastic.IndexResponse
 		result, err = service.Insert(request.IndexName, request.Id, request.Doc)
@@ -135,14 +167,13 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 		res["result"] = result
+	case "reindex":
+		var result *elastic.BulkIndexByScrollResponse
+		result, err = service.Reindex(request.SourceIndexName, request.DestIndexName)
+		if err != nil {
+			return
+		}
+		res["result"] = result
 	}
 	return
-}
-
-type ESQueryResult struct {
-	Count int64 `json:"count"`
-}
-
-type ESUpdateResult struct {
-	Count int64 `json:"count"`
 }

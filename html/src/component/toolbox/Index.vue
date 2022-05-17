@@ -320,21 +320,16 @@ export default {
 .toolbox-editor table {
   padding: 0px 0px;
   width: 100%;
-}
-.toolbox-editor table thead {
-  border: 1px solid #4e4e4e;
+  border-collapse: collapse;
 }
 .toolbox-editor table th {
+  border: 1px solid #4e4e4e;
   text-align: center;
   line-height: 30px;
 }
-.toolbox-editor table td {
-  border-right: 1px solid #4e4e4e;
-  border-bottom: 1px solid #4e4e4e;
+.toolbox-editor table tr td {
+  border: 1px solid #4e4e4e;
   padding: 3px 5px;
-}
-.toolbox-editor table tbody {
-  border-left: 1px solid #4e4e4e;
 }
 .toolbox-editor table td .input {
   padding: 0px 0px;

@@ -25,7 +25,6 @@ func (this_ *DatabaseMySqlDialect) DatabaseDDL(param *GenerateParam, database *D
 }
 
 func (this_ *DatabaseMySqlDialect) DatabaseDeleteDDL(param *GenerateParam, database string) (sqlList []string, err error) {
-
 	var sql string
 	sql = `DROP DATABASE ` + param.packingCharacterDatabase(database)
 

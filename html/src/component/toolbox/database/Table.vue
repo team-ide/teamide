@@ -1,62 +1,84 @@
 <template>
-  <div class="toolbox-database-table scrollbar">
-    <TableDetail
-      class="pd-10"
-      ref="TableDetail"
-      :source="source"
-      :wrap="wrap"
-      :toolbox="toolbox"
-      :onChange="onTableDetailChange"
-    ></TableDetail>
-    <el-form
-      class="database-table-detail-form pd-10"
-      ref="form"
-      :model="form"
-      size="mini"
-      :inline="true"
-      label-position="top"
-    >
-      <el-form-item label="库名">
-        <el-input v-model="form.database" @change="toLoad" style="width: 120px">
-        </el-input>
-      </el-form-item>
-      <el-form-item label="新建表">
-        <el-switch
-          v-model="isInsert"
-          @change="toLoad"
-          style="width: 120px"
-          :readonly="tableDetail == null"
-        >
-        </el-switch>
-      </el-form-item>
-      <el-form-item label="数据库类型">
-        <el-select
-          placeholder="当前库类型"
-          v-model="form.databaseType"
-          @change="toLoad"
-          style="width: 120px"
-        >
-          <el-option label="MySql" value="mysql"> </el-option>
-          <el-option label="Sqlite" value="sqlite"> </el-option>
-          <el-option label="Oracle" value="oracle"> </el-option>
-          <el-option label="达梦" value="dameng"> </el-option>
-          <el-option label="神通" value="shentong"> </el-option>
-          <el-option label="金仓" value="kingbase"> </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="追加库名">
-        <el-switch
-          v-model="form.appendDatabase"
-          @change="toLoad"
-          style="width: 120px"
-        >
-        </el-switch>
-      </el-form-item>
-      <template v-if="form.appendDatabase">
-        <el-form-item label="库名包装">
+  <div class="toolbox-database-table">
+    <div class="scrollbar" style="height: calc(100% - 90px)">
+      <TableDetail
+        class="pd-10"
+        ref="TableDetail"
+        :source="source"
+        :wrap="wrap"
+        :toolbox="toolbox"
+        :onChange="onTableDetailChange"
+      ></TableDetail>
+      <el-form
+        class="database-table-detail-form pdlr-10"
+        ref="form"
+        :model="form"
+        size="mini"
+        :inline="true"
+        label-position="top"
+      >
+        <el-form-item label="库名">
+          <el-input
+            v-model="form.database"
+            @change="toLoad"
+            style="width: 120px"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label="新建表">
+          <el-switch
+            v-model="isInsert"
+            @change="toLoad"
+            style="width: 120px"
+            :readonly="tableDetail == null"
+          >
+          </el-switch>
+        </el-form-item>
+        <el-form-item label="数据库类型">
+          <el-select
+            placeholder="当前库类型"
+            v-model="form.databaseType"
+            @change="toLoad"
+            style="width: 120px"
+          >
+            <el-option label="MySql" value="mysql"> </el-option>
+            <el-option label="Sqlite" value="sqlite"> </el-option>
+            <el-option label="Oracle" value="oracle"> </el-option>
+            <el-option label="达梦" value="dameng"> </el-option>
+            <el-option label="神通" value="shentong"> </el-option>
+            <el-option label="金仓" value="kingbase"> </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="追加库名">
+          <el-switch
+            v-model="form.appendDatabase"
+            @change="toLoad"
+            style="width: 120px"
+          >
+          </el-switch>
+        </el-form-item>
+        <template v-if="form.appendDatabase">
+          <el-form-item label="库名包装">
+            <el-select
+              placeholder="不包装"
+              v-model="form.databasePackingCharacter"
+              @change="toLoad"
+              style="width: 120px"
+            >
+              <el-option
+                v-for="(one, index) in packingCharacters"
+                :key="index"
+                :value="one.value"
+                :label="one.text"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </template>
+        <el-form-item label="表名包装">
           <el-select
             placeholder="不包装"
-            v-model="form.databasePackingCharacter"
+            v-model="form.tablePackingCharacter"
             @change="toLoad"
             style="width: 120px"
           >
@@ -69,61 +91,45 @@
             </el-option>
           </el-select>
         </el-form-item>
-      </template>
-      <el-form-item label="表名包装">
-        <el-select
-          placeholder="不包装"
-          v-model="form.tablePackingCharacter"
-          @change="toLoad"
-          style="width: 120px"
-        >
-          <el-option
-            v-for="(one, index) in packingCharacters"
-            :key="index"
-            :value="one.value"
-            :label="one.text"
+        <el-form-item label="字段包装">
+          <el-select
+            placeholder="不包装"
+            v-model="form.columnPackingCharacter"
+            @change="toLoad"
+            style="width: 120px"
           >
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="字段包装">
-        <el-select
-          placeholder="不包装"
-          v-model="form.columnPackingCharacter"
-          @change="toLoad"
-          style="width: 120px"
-        >
-          <el-option
-            v-for="(one, index) in packingCharacters"
-            :key="index"
-            :value="one.value"
-            :label="one.text"
+            <el-option
+              v-for="(one, index) in packingCharacters"
+              :key="index"
+              :value="one.value"
+              :label="one.text"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="字符值包装">
+          <el-select
+            v-model="form.stringPackingCharacter"
+            @change="toLoad"
+            style="width: 120px"
           >
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="字符值包装">
-        <el-select
-          v-model="form.stringPackingCharacter"
-          @change="toLoad"
-          style="width: 120px"
-        >
-          <el-option
-            v-for="(one, index) in stringPackingCharacters"
-            :key="index"
-            :value="one.value"
-            :label="one.text"
-          >
-          </el-option>
-        </el-select>
-      </el-form-item>
-    </el-form>
-    <div class="pdlr-10">
-      <div class="pdb-5">SQL预览</div>
-      <textarea v-model="showSQL" class="database-show-sql"> </textarea>
+            <el-option
+              v-for="(one, index) in stringPackingCharacters"
+              :key="index"
+              :value="one.value"
+              :label="one.text"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div class="pdlr-10">
+        <div class="pdb-5">SQL预览</div>
+        <textarea v-model="showSQL" class="database-show-sql"> </textarea>
+      </div>
     </div>
-    <div class="pd-10" v-if="error != null">
-      <div class="bg-red ft-12">{{ error }}</div>
+    <div class="" v-if="error != null">
+      <div class="bg-red ft-12 pd-5">{{ error }}</div>
     </div>
     <div class="pd-10">
       <div

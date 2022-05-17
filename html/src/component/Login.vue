@@ -31,12 +31,12 @@
       <div class="login-right">
         <Form
           v-if="loginForm != null"
-          :form="loginForm"
+          :formBuild="loginForm"
           :formData="loginData"
           :saveShow="false"
           class="pd-10"
         >
-          <b-form-group>
+          <!-- <b-form-group>
             <b-form-checkbox
               v-model="rememberPassword"
               :value="true"
@@ -70,7 +70,7 @@
             <div class="tm-link color-orange mgt--1" @click="tool.toRegister()">
               立即注册
             </div>
-          </div>
+          </div> -->
         </Form>
       </div>
     </div>

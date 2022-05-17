@@ -8,36 +8,40 @@
     :append-to-body="true"
     :visible="showDialog"
     :before-close="hide"
-    width="900px"
+    width="1200px"
   >
     <div class="">
       <el-form ref="form" size="mini">
         <el-form-item label="ID">
           <el-input type="input" v-model="id"> </el-input>
         </el-form-item>
-        <el-form-item label="数据">
-          <el-input
-            type="textarea"
-            v-model="docValue"
-            :autosize="{ minRows: 5, maxRows: 20 }"
-          >
-          </el-input>
-        </el-form-item>
-        <template v-if="docJSON != null">
-          <el-form-item label="数据JSON预览">
-            <el-input
-              type="textarea"
-              v-model="docJSON"
-              :autosize="{ minRows: 5, maxRows: 20 }"
-            >
-            </el-input>
-          </el-form-item>
-        </template>
+        <div class="tm-row">
+          <div class="col-6 pdr-5">
+            <el-form-item label="数据">
+              <el-input
+                type="textarea"
+                v-model="docValue"
+                :autosize="{ minRows: 10, maxRows: 30 }"
+              >
+              </el-input>
+            </el-form-item>
+          </div>
+          <div class="col-6 pdl-5">
+            <el-form-item label="数据JSON预览">
+              <el-input
+                type="textarea"
+                v-model="docJSON"
+                :autosize="{ minRows: 10, maxRows: 30 }"
+              >
+              </el-input>
+            </el-form-item>
+          </div>
+        </div>
       </el-form>
     </div>
     <div class="">
       <div
-        class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
+        class="tm-btn bg-teal-8 ft-18 pdtb-5"
         :class="{ 'tm-disabled': saveBtnDisabled }"
         @click="doSave"
       >
@@ -87,12 +91,26 @@ export default {
     },
   },
   methods: {
-    show(data, callback) {
+    show(data, mapping, callback) {
       data = data || {};
 
       this.indexName = data.indexName;
       this.id = data.id;
       let doc = data.doc || {};
+
+      if (mapping && mapping.mappings && mapping.mappings.properties) {
+        for (let name in mapping.mappings.properties) {
+          if (doc[name] != null) {
+            continue;
+          }
+          let property = mapping.mappings.properties[name];
+          doc[name] = null;
+          if (property.type == "text") {
+            doc[name] = null;
+          }
+        }
+      }
+
       this.docValue = JSON.stringify(doc, null, "  ");
 
       this.callback = callback;

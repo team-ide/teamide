@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.0.0-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.0.3-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -78,7 +78,11 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="4">Toolbox Database</td>
+        <td>添加索引，设置字段，索引迁移等</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td rowspan="7">Toolbox Database</td>
         <td>MySql库列表、库表数据加载</td>
         <td>完成</td>
     </tr>
@@ -87,12 +91,24 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
+        <td>表格选择数据导出SQL（新增、修改、删除数据SQL）等操作</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>根据策略批量导入数据</td>
+        <td>完成</td>
+    </tr>
+    <tr>
         <td>自定义SQL执行面板，结果查看器</td>
         <td>完成</td>
     </tr>
     <tr>
-        <td>适配Oracle等主流数据库</td>
-        <td>进行中</td>
+        <td>新建库，在线设计表，查看建表、更新表SQL语句</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>导出建表语句，支持MySql、Oracle、达梦、金仓、神通等数据库</td>
+        <td>完成</td>
     </tr>
 </table>
 

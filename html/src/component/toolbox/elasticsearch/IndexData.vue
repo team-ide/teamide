@@ -61,12 +61,13 @@
                       <td>{{ one._id }}</td>
                       <td>{{ one._source }}</td>
                       <td>
-                        <div style="width: 140px">
+                        <div style="width: 150px">
                           <div
                             class="tm-btn color-grey tm-btn-xs"
                             @click="wrap.showData(one)"
+                            title="查看"
                           >
-                            查看
+                            <i class="mdi mdi-eye-outline"></i>
                           </div>
                           <div
                             class="tm-btn color-blue tm-btn-xs"
@@ -75,10 +76,17 @@
                             修改
                           </div>
                           <div
+                            class="tm-btn color-grey tm-btn-xs"
+                            @click="toCopy(one)"
+                          >
+                            复制
+                          </div>
+                          <div
                             class="tm-btn color-orange tm-btn-xs"
                             @click="toDelete(one)"
+                            title="删除"
                           >
-                            删除
+                            <i class="mdi mdi-delete-outline"></i>
                           </div>
                         </div>
                       </td>
@@ -150,12 +158,13 @@ export default {
         })
         .catch((e) => {});
     },
-    toInsert() {
+    async toInsert() {
       let indexName = this.indexName;
       let data = {
         indexName: indexName,
       };
-      this.wrap.showDataForm(data, async (m) => {
+      let mapping = await this.wrap.getMapping(indexName);
+      this.wrap.showDataForm(data, mapping, async (m) => {
         let flag = await this.doInsert(m);
         return flag;
       });
@@ -174,14 +183,28 @@ export default {
         return false;
       }
     },
-    toUpdate(data) {
+    async toCopy(data) {
+      let indexName = this.indexName;
+      let param = {
+        indexName: indexName,
+        doc: data._source,
+        id: data._id + "xxx",
+      };
+      let mapping = await this.wrap.getMapping(indexName);
+      this.wrap.showDataForm(param, mapping, async (m) => {
+        let flag = await this.doUpdate(m);
+        return flag;
+      });
+    },
+    async toUpdate(data) {
       let indexName = this.indexName;
       let param = {
         indexName: indexName,
         doc: data._source,
         id: data._id,
       };
-      this.wrap.showDataForm(param, async (m) => {
+      let mapping = await this.wrap.getMapping(indexName);
+      this.wrap.showDataForm(param, mapping, async (m) => {
         let flag = await this.doUpdate(m);
         return flag;
       });
@@ -222,7 +245,6 @@ export default {
       let result = res.data.result || {};
       let hits = result.hits || {};
       this.dataList = hits.hits || [];
-      console.log(result);
     },
   },
   created() {},

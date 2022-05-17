@@ -170,6 +170,21 @@ tool.getCookie = function (cname) {
     }
     return "";
 }
+tool.stringToJSON = function (value) {
+    let data = null;
+    if (tool.isNotEmpty(value)) {
+        try {
+            data = JSON.parse(value);
+        } catch (error) {
+            try {
+                data = eval("(" + value + ")");
+            } catch (error2) {
+                throw error;
+            }
+        }
+    }
+    return data;
+};
 tool.copyText = async function (text) {
     let result = await navigator.clipboard.writeText(text)
     return result;
