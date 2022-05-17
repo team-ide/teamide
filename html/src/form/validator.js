@@ -105,10 +105,28 @@ let validateFields = function (data, fields, all) {
 // })
 let validateField = function (data, field) {
     return new Promise((resolve, reject) => {
-
-        if (data[field.name] != null) {
+        let value = data[field.name];
+        if (value != null) {
             if (field.isNumber) {
-                data[field.name] = Number(data[field.name]);
+                data[field.name] = Number(value);
+            }
+            if (field.type == 'json') {
+                let jsonValue = null;
+                if (field.jsonStringValue != "") {
+                    try {
+                        jsonValue = JSON.parse(field.jsonStringValue);
+                    } catch (error) {
+                        try {
+                            jsonValue = eval("(" + field.jsonStringValue + ")");
+                        } catch (error2) {
+                            field.valid = false;//无效的 验证失败
+                            field.validMessage = error;
+                            resolve(false)
+                            return;
+                        }
+                    }
+                }
+                data[field.name] = jsonValue;
             }
         }
         let rules = field.rules || [];

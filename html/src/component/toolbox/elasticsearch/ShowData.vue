@@ -14,7 +14,7 @@
       <el-input
         type="textarea"
         v-model="showData"
-        :autosize="{ minRows: 5, maxRows: 10 }"
+        :autosize="{ minRows: 10, maxRows: 20 }"
       >
       </el-input>
     </div>

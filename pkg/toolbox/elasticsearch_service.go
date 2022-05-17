@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"context"
+	"sort"
 
 	elastic "github.com/olivere/elastic/v7"
 )
@@ -106,6 +107,8 @@ func (this_ *ESService) IndexNames() (res []string, err error) {
 	if err != nil {
 		return
 	}
+
+	sort.Strings(res)
 	return
 }
 
@@ -226,7 +229,7 @@ func (this_ *ESService) Reindex(sourceIndexName string, toIndexName string) (res
 	defer client.Stop()
 
 	doer := client.Reindex()
-	res, err = doer.Source(elastic.NewReindexSource().Index(sourceIndexName)).DestinationIndex(toIndexName).Refresh("wait_for").Do(context.Background())
+	res, err = doer.Source(elastic.NewReindexSource().Index(sourceIndexName)).DestinationIndex(toIndexName).Refresh("true").Do(context.Background())
 	if err != nil {
 		return
 	}

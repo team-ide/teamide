@@ -129,6 +129,7 @@ export default {
             }
           }
           jsonStringMap[name] = {
+            field: one,
             value: jsonString,
             onChange: () => {
               console.log(jsonStringMap[name]);
@@ -155,7 +156,14 @@ export default {
       return validateResult;
     },
     jsonStringChange(bean) {
-      console.log(bean.value);
+      let field = bean.field;
+      try {
+        field.jsonStringValue = bean.value;
+        this.tool.stringToJSON(bean.value);
+        field.validMessage = null;
+      } catch (error) {
+        field.validMessage = error;
+      }
     },
   },
   created() {},

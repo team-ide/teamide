@@ -24,6 +24,8 @@
         </tm-layout>
       </tm-layout>
       <IndexForm :source="source" :toolbox="toolbox" :wrap="wrap"> </IndexForm>
+      <ReindexForm :source="source" :toolbox="toolbox" :wrap="wrap">
+      </ReindexForm>
       <DataForm :source="source" :toolbox="toolbox" :wrap="wrap"> </DataForm>
       <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
       <MappingForm :source="source" :toolbox="toolbox" :wrap="wrap">
@@ -37,11 +39,20 @@
 import IndexNames from "./IndexNames";
 import Tabs from "./Tabs";
 import IndexForm from "./IndexForm";
+import ReindexForm from "./ReindexForm";
 import MappingForm from "./MappingForm";
 import DataForm from "./DataForm";
 import ShowData from "./ShowData";
 export default {
-  components: { IndexNames, Tabs, IndexForm, MappingForm, DataForm, ShowData },
+  components: {
+    IndexNames,
+    Tabs,
+    IndexForm,
+    ReindexForm,
+    MappingForm,
+    DataForm,
+    ShowData,
+  },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {

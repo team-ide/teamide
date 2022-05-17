@@ -6,8 +6,8 @@
           <thead>
             <tr>
               <th>IndexName</th>
-              <th width="150px">
-                <div style="width: 150px">
+              <th width="175px">
+                <div style="width: 175px">
                   <div
                     class="tm-link color-grey-3 ft-14 mglr-2"
                     @click="loadIndexNames()"
@@ -57,10 +57,16 @@
                       结构
                     </div>
                     <div
+                      class="tm-btn color-green tm-btn-xs"
+                      @click="toReindex(one)"
+                    >
+                      迁移
+                    </div>
+                    <div
                       class="tm-btn color-orange tm-btn-xs"
                       @click="toDelete(one)"
                     >
-                      删除
+                      <i class="mdi mdi-delete-outline"></i>
                     </div>
                   </td>
                 </tr>
@@ -94,6 +100,7 @@ export default {
   watch: {},
   methods: {
     init() {
+      this.wrap.getMapping = this.getMapping;
       this.ready = true;
       this.loadIndexNames();
     },
@@ -141,6 +148,30 @@ export default {
         mapping: data.mapping,
       };
       let res = await this.wrap.work("createIndex", param);
+      if (res.code == 0) {
+        await this.loadIndexNames();
+        return true;
+      } else {
+        return false;
+      }
+    },
+    toReindex(data) {
+      this.wrap.showReindexForm(
+        {
+          indexName: data.name,
+        },
+        async (m) => {
+          let flag = await this.doReindex(m);
+          return flag;
+        }
+      );
+    },
+    async doReindex(data) {
+      let param = {
+        sourceIndexName: data.sourceIndexName,
+        destIndexName: data.destIndexName,
+      };
+      let res = await this.wrap.work("reindex", param);
       if (res.code == 0) {
         await this.loadIndexNames();
         return true;
