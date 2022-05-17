@@ -69,7 +69,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="2">Toolbox Elasticsearch</td>
+        <td rowspan="3">Toolbox Elasticsearch</td>
         <td>索引增删改查等操作</td>
         <td>完成</td>
     </tr>
