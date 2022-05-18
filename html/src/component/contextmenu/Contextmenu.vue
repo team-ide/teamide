@@ -64,7 +64,7 @@ export default {
       if (this.$el.contains(e.target)) {
         return;
       }
-      if (this.showing || e.button != 2) {
+      if (!this.showing || e.button != 2) {
         this.hide();
       }
     });

@@ -11,6 +11,26 @@
           :style="mainStyleObject"
         >
         </Main>
+        <FormDialog
+          ref="InsertToolbox"
+          :source="source"
+          title="新增Toolbox"
+          :onSave="doInsert"
+        ></FormDialog>
+        <FormDialog
+          ref="UpdateToolbox"
+          :source="source"
+          title="编辑Toolbox"
+          :onSave="doUpdate"
+        ></FormDialog>
+        <ToolboxType
+          ref="ToolboxType"
+          v-if="source.toolbox.context != null"
+          :source="source"
+          :toolbox="source.toolbox"
+          :context="source.toolbox.context"
+        >
+        </ToolboxType>
       </tm-layout>
     </template>
   </div>
@@ -18,9 +38,10 @@
 
 <script>
 import Main from "./Main";
+import ToolboxType from "./ToolboxType";
 
 export default {
-  components: { Main },
+  components: { Main, ToolboxType },
   props: ["source"],
   data() {
     return {
@@ -59,6 +80,19 @@ export default {
   },
   methods: {
     async init() {
+      this.source.toolbox.toInsert = this.toInsert;
+      this.source.toolbox.toUpdate = this.toUpdate;
+      this.source.toolbox.toCopy = this.toCopy;
+      this.source.toolbox.toDelete = this.toDelete;
+      this.source.toolbox.showSwitchToolboxType = () => {
+        this.$refs.ToolboxType.showSwitch();
+      };
+      this.source.toolbox.showToolboxType = () => {
+        this.$refs.ToolboxType.show();
+      };
+      this.source.toolbox.hideToolboxType = () => {
+        this.$refs.ToolboxType.hide();
+      };
       if (this.ready) {
         return;
       }
@@ -106,6 +140,121 @@ export default {
       } else {
         let context = res.data.context || {};
         this.source.toolbox.context = context;
+      }
+    },
+    toInsert(toolboxType) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let toolboxData = {};
+      let optionsJSON = {};
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+      });
+    },
+    toCopy(toolboxType, copy) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let toolboxData = {};
+      Object.assign(toolboxData, copy);
+      delete toolboxData.toolboxId;
+      toolboxData.name = toolboxData.name + " Copy";
+
+      let optionsJSON = this.getOptionJSON(toolboxData.option);
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+      });
+    },
+    toUpdate(toolboxType, toolboxData) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.updateData = toolboxData;
+
+      let optionsJSON = this.getOptionJSON(toolboxData.option);
+
+      this.$refs.UpdateToolbox.show({
+        title: `编辑[${toolboxType.text}][${toolboxData.name}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+      });
+    },
+    getOptionJSON(option) {
+      let json = {};
+      if (this.tool.isNotEmpty(option)) {
+        json = JSON.parse(option);
+      }
+      return json;
+    },
+    toDelete(toolboxType, toolboxData) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.tool
+        .confirm(
+          "删除[" +
+            toolboxType.text +
+            "]工具[" +
+            toolboxData.name +
+            "]将无法回复，确定删除？"
+        )
+        .then(async () => {
+          return this.doDelete(toolboxType, toolboxData);
+        })
+        .catch((e) => {});
+    },
+    async doDelete(toolboxType, toolboxData) {
+      let res = await this.server.toolbox.delete(toolboxData);
+      if (res.code == 0) {
+        this.source.toolbox.initContext();
+        this.tool.success("删除成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doUpdate(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
+      toolboxData.toolboxType = toolboxType.name;
+      toolboxData.toolboxId = this.updateData.toolboxId;
+      toolboxData.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.update(toolboxData);
+      if (res.code == 0) {
+        this.source.toolbox.initContext();
+        this.tool.success("修改成功");
+        let tab = this.source.toolbox.getTabByData(toolboxData);
+        if (tab != null) {
+          Object.assign(tab.toolboxData, toolboxData);
+        }
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doInsert(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
+      toolboxData.toolboxType = toolboxType.name;
+      toolboxData.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.insert(toolboxData);
+      if (res.code == 0) {
+        this.source.toolbox.initContext();
+        this.tool.success("新增成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
       }
     },
   },

@@ -150,6 +150,9 @@ export default {
         tabBodySlot.onFocus && tabBodySlot.onFocus();
       }
     },
+    getTabs() {
+      return this.tabs;
+    },
     getTabByTarget(target) {
       let res = null;
       if (target) {
