@@ -67,7 +67,7 @@ export default {
   methods: {
     showContextmenu(menus) {
       let e = window.event;
-      e.preventDefault();
+      this.tool.stopEvent(e || window.event);
       this.contextmenu.menus = menus;
       this.$refs.Contextmenu.show(e);
     },
@@ -99,7 +99,8 @@ export default {
         if (tags.indexOf(("" + e.target.tagName).toLowerCase()) >= 0) {
           return;
         }
-        this.tool.stopEvent(e);
+        this.tool.stopEvent(e || window.event);
+        // this.showContextmenu([{text:"测试菜单"}])
       });
     },
   },

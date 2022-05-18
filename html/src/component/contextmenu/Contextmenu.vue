@@ -34,6 +34,7 @@ export default {
       this.showContextmenu = false;
     },
     show(event) {
+      this.showing = true;
       event = event || window.event;
       let clientX = event.clientX;
       let clientY = event.clientY;
@@ -49,6 +50,8 @@ export default {
           this.showbottom = true;
           this.contextmenu.top = clientY - menuHeight + "px";
         }
+
+        delete this.showing;
       });
     },
   },
@@ -61,7 +64,9 @@ export default {
       if (this.$el.contains(e.target)) {
         return;
       }
-      this.hide();
+      if (this.showing || e.button != 2) {
+        this.hide();
+      }
     });
   },
 };
