@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.0.3-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.0.5-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -214,6 +214,8 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 工具箱，用于连接Redis、Zookeeper、Database、SSH、SFTP、Kafka、Elasticsearch等
 
 ### Toolbox 功能
+
+![avatar](doc/toolbox-type.png)
 
 #### Toolbox Redis（完成）
 
