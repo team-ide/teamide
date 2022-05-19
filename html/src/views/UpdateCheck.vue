@@ -36,7 +36,7 @@ export default {
   data() {
     return {
       showDialog: false,
-      currentVersion: `1.0.3`, //`检测中...`,
+      currentVersion: `检测中...`,
       githubReleasesURL: `https://github.com/team-ide/teamide/releases`,
       releaseHistory: ``,
     };
