@@ -22,6 +22,7 @@
         v-show="source.register.show"
       >
       </Register>
+      <UpdateCheck :source="source"></UpdateCheck>
     </template>
     <template v-else>
       <div v-if="source.status == 'connecting'"></div>
@@ -53,9 +54,10 @@
 import source from "@/source";
 
 import Frame from "@/views/frame/Index.vue";
+import UpdateCheck from "@/views/UpdateCheck.vue";
 
 export default {
-  components: { Frame },
+  components: { Frame, UpdateCheck },
   props: [],
   data() {
     return { source, contextmenu: { menus: [] } };

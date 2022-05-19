@@ -9,6 +9,7 @@ source.ready = false;
 source.url = null;
 source.api = null;
 source.filesUrl = null;
+source.hasNewVersion = false;
 
 source.header = {
     title: "Team · IDE",
