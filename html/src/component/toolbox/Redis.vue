@@ -10,11 +10,14 @@
               size="mini"
               :inline="true"
             >
+              <el-form-item label="Database" label-width="70px">
+                <el-input v-model="searchForm.database" style="width: 50px" />
+              </el-form-item>
               <el-form-item label="Key(支持*模糊搜索)">
                 <el-input v-model="searchForm.pattern" style="width: 120px" />
               </el-form-item>
-              <el-form-item label="数量">
-                <el-input v-model="searchForm.size" style="width: 120px" />
+              <el-form-item label="数量" label-width="50px">
+                <el-input v-model="searchForm.size" style="width: 50px" />
               </el-form-item>
               <div class="pdlr-10">
                 <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
@@ -25,7 +28,9 @@
                 </div>
                 <div
                   class="tm-btn tm-btn-sm bg-orange ft-13"
-                  @click="toDeletePattern(searchForm.pattern)"
+                  @click="
+                    toDeletePattern(searchForm.database, searchForm.pattern)
+                  "
                 >
                   删除
                 </div>
@@ -34,48 +39,67 @@
           </tm-layout>
           <tm-layout height="auto" class="scrollbar">
             <div class="pd-10" style="o">
-              <template v-if="searchResult != null">
-                <table>
-                  <thead>
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      Key
+                      <template v-if="searchResult != null">
+                        （共
+                        {{ searchResult.count }}
+                        个）
+                      </template>
+                    </th>
+                    <th width="120">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-if="searchResult == null">
                     <tr>
-                      <th>Key （共 {{ searchResult.count }} 个）</th>
-                      <th width="120">操作</th>
+                      <td colspan="2">
+                        <div class="text-center ft-13 pdtb-10">
+                          数据加载中，请稍后!
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <template v-if="searchResult.keys.length == 0">
-                      <tr>
-                        <td colspan="2">
-                          <div class="text-center ft-13 pdtb-10">
-                            暂无匹配数据!
+                  </template>
+                  <template
+                    v-else-if="
+                      searchResult.dataList == null ||
+                      searchResult.dataList.length == 0
+                    "
+                  >
+                    <tr>
+                      <td colspan="2">
+                        <div class="text-center ft-13 pdtb-10">
+                          暂无匹配数据!
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                  <template v-else>
+                    <template v-for="(one, index) in searchResult.dataList">
+                      <tr :key="index" @click="rowClick(one)">
+                        <td>{{ one.key }}</td>
+                        <td>
+                          <div
+                            class="tm-btn color-blue tm-btn-xs"
+                            @click="toUpdate(one)"
+                          >
+                            修改
+                          </div>
+                          <div
+                            class="tm-btn color-orange tm-btn-xs"
+                            @click="toDelete(one)"
+                          >
+                            删除
                           </div>
                         </td>
                       </tr>
                     </template>
-                    <template v-else>
-                      <template v-for="(one, index) in searchResult.keys">
-                        <tr :key="index" @click="rowClick(one)">
-                          <td>{{ one }}</td>
-                          <td>
-                            <div
-                              class="tm-btn color-blue tm-btn-xs"
-                              @click="toUpdate(one)"
-                            >
-                              修改
-                            </div>
-                            <div
-                              class="tm-btn color-orange tm-btn-xs"
-                              @click="toDelete(one)"
-                            >
-                              删除
-                            </div>
-                          </td>
-                        </tr>
-                      </template>
-                    </template>
-                  </tbody>
-                </table>
-              </template>
+                  </template>
+                </tbody>
+              </table>
             </div>
           </tm-layout>
         </tm-layout>
@@ -83,6 +107,9 @@
         <tm-layout width="auto">
           <div class="pd-10">
             <el-form ref="form" size="mini">
+              <el-form-item label="Database">
+                <el-input v-model="form.database"> </el-input>
+              </el-form-item>
               <el-form-item label="值类型">
                 <el-select
                   placeholder="请选择类型"
@@ -323,10 +350,12 @@ export default {
         main: {},
       },
       searchForm: {
+        database: "",
         pattern: "*",
         size: 50,
       },
       form: {
+        database: "",
         type: "string",
         key: null,
         value: null,
@@ -376,6 +405,7 @@ export default {
       this.doSave();
     },
     toInsert() {
+      this.form.database = this.searchForm.database;
       this.form.type = "string";
       this.form.key = null;
       this.form.value = null;
@@ -385,6 +415,7 @@ export default {
     },
     async toDo(type, data) {
       data = data || {};
+      data.database = this.form.database;
       data.key = this.form.key;
       data.type = type;
       if (this.tool.isEmpty(type)) {
@@ -421,11 +452,12 @@ export default {
       this.toUpdate(data);
     },
     async toUpdate(one) {
-      let data = await this.get(one);
+      let data = await this.get(one.database, one.key);
       if (data == null) {
         data = {};
       }
-      this.form.key = one;
+      this.form.database = data.database;
+      this.form.key = data.key;
       this.form.type = data.type || "string";
 
       this.form.value = null;
@@ -470,23 +502,24 @@ export default {
         this.form.value = data.value;
       }
     },
-    toDelete(key) {
+    toDelete(data) {
       this.tool
-        .confirm("确认删除[" + key + "]？")
+        .confirm("确认删除[" + data.key + "]？")
         .then(async () => {
-          this.doDelete(key);
+          this.doDelete(data.database, data.key);
         })
         .catch((e) => {});
     },
-    toDeletePattern(pattern) {
+    toDeletePattern(database, pattern) {
       this.tool
         .confirm("将删除所有匹配[" + pattern + "]的Key，确定删除？")
         .then(async () => {
-          this.doDeletePattern(pattern);
+          this.doDeletePattern(database, pattern);
         })
         .catch((e) => {});
     },
     async loadKeys() {
+      this.searchResult = null;
       let param = {};
       Object.assign(param, this.searchForm);
       if (this.tool.isEmpty(param.size)) {
@@ -496,8 +529,9 @@ export default {
       let res = await this.wrap.work("keys", param);
       this.searchResult = res.data;
     },
-    async get(key) {
+    async get(database, key) {
       let param = {
+        database: database,
         key: key,
       };
       let res = await this.wrap.work("get", param);
@@ -513,8 +547,9 @@ export default {
         this.toSearch();
       }
     },
-    async doDelete(key) {
+    async doDelete(database, key) {
       let param = {
+        database: database,
         key: key,
       };
       let res = await this.wrap.work("delete", param);
@@ -523,8 +558,9 @@ export default {
         this.toSearch();
       }
     },
-    async doDeletePattern(pattern) {
+    async doDeletePattern(database, pattern) {
       let param = {
+        database: database,
         pattern: pattern,
       };
       let res = await this.wrap.work("deletePattern", param);
