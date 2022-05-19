@@ -27,6 +27,9 @@ let server = {
     download(param) {
         return http.post('api/download', param, { responseType: "blob" });
     },
+    updateCheck(param) {
+        return http.post('api/updateCheck', param,);
+    },
 };
 
 export default server;

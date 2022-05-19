@@ -21,6 +21,7 @@ var (
 
 	// buildFlags go build -ldflags '-X main.buildFlags=--isServer' .
 	buildFlags  = ""
+	version     = ""
 	isServer    = false
 	isHtmlDev   = false
 	isServerDev = false
@@ -103,6 +104,7 @@ func main() {
 	waitGroupForStop.Add(1)
 
 	serverConf := &context.ServerConf{
+		Version:     version,
 		IsServer:    isServer,
 		IsHtmlDev:   isHtmlDev,
 		IsServerDev: isServerDev,

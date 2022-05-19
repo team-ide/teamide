@@ -13,6 +13,7 @@ import (
 )
 
 type ServerConf struct {
+	Version     string
 	Server      string
 	PublicKey   string
 	PrivateKey  string
@@ -30,6 +31,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 		IsServerDev: serverConf.IsServerDev,
 		RootDir:     serverConf.RootDir,
 		UserHomeDir: serverConf.UserHomeDir,
+		Version:     serverConf.Version,
 	}
 	context.HttpAesKey = "Q56hFAauWk18Gy2i"
 	var serverConfig *config.ServerConfig

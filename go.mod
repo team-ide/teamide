@@ -5,6 +5,7 @@ go 1.18
 require (
 	gitee.com/chunanyong/zorm v1.5.5
 	github.com/Chain-Zhang/pinyin v0.1.3
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Shopify/sarama v1.33.0
 	github.com/dop251/goja v0.0.0-20220501172647-e1eca0b61fa9
 	github.com/gin-gonic/gin v1.7.7
@@ -24,7 +25,7 @@ require (
 	github.com/wxnacy/wgo v1.0.4
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4
+	golang.org/x/net v0.0.0-20220517181318-183a9ca12b87
 	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -32,6 +33,7 @@ require (
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

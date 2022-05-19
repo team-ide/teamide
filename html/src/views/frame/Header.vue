@@ -38,6 +38,10 @@
           {{ source.login.user.name }}
         </div>
       </template>
+      <div class="tm-link mgr-10 ft-12" @click="tool.showUpdateCheck()">
+        <template v-if="source.hasNewVersion"> 有新版本 </template>
+        <template v-else> 检测新版本 </template>
+      </div>
     </div>
   </div>
 </template>

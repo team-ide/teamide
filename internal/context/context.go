@@ -7,6 +7,7 @@ import (
 )
 
 type ServerContext struct {
+	Version        string
 	ServerContext  string
 	ServerHost     string
 	ServerPort     int
