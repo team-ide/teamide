@@ -36,6 +36,7 @@ type SFTPRequest struct {
 	IsOk      bool      `json:"isOk,omitempty"`
 	IsCancel  bool      `json:"isCancel,omitempty"`
 	ScrollTop int       `json:"scrollTop,omitempty"`
+	Text      string    `json:"text,omitempty"`
 }
 type SFTPResponse struct {
 	Work      string      `json:"work,omitempty"`
@@ -47,14 +48,16 @@ type SFTPResponse struct {
 	Path      string      `json:"path,omitempty"`
 	Name      string      `json:"name,omitempty"`
 	ScrollTop int         `json:"scrollTop,omitempty"`
+	Text      string      `json:"text,omitempty"`
 }
 type SFTPFile struct {
-	Name    string     `json:"name,omitempty"`
-	IsDir   bool       `json:"isDir,omitempty"`
-	Size    int64      `json:"size,omitempty"`
-	Place   string     `json:"place,omitempty"`
-	Path    string     `json:"path,omitempty"`
-	ModTime *time.Time `json:"modTime,omitempty"`
+	Name     string     `json:"name,omitempty"`
+	IsDir    bool       `json:"isDir,omitempty"`
+	Size     int64      `json:"size,omitempty"`
+	Place    string     `json:"place,omitempty"`
+	Path     string     `json:"path,omitempty"`
+	ModTime  *time.Time `json:"modTime,omitempty"`
+	FileMode int64      `json:"fileMode,omitempty"`
 }
 
 type RemoveProgress struct {
@@ -214,7 +217,7 @@ func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 	}
 	client := SSHSftpCache[token]
 	if client == nil {
-		err = errors.New("SSH会话丢失")
+		err = errors.New("FTP会话丢失")
 		return
 	}
 	file, err := c.FormFile("file")
@@ -351,7 +354,7 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 }
 
 func CopyBytes(dst io.Writer, src io.Reader, call func(readSize int64, writeSize int64)) (err error) {
-	var buf []byte = make([]byte, 32*1024)
+	var buf = make([]byte, 32*1024)
 	var errInvalidWrite = errors.New("invalid write result")
 	var ErrShortWrite = errors.New("short write")
 	for {
@@ -1082,7 +1085,7 @@ func (this_ *SSHSftpClient) remoteRename(request *SFTPRequest) (response *SFTPRe
 func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Files: []*SFTPFile{
-			&SFTPFile{
+			{
 				Name:  "..",
 				IsDir: true,
 				Place: "local",
@@ -1147,10 +1150,11 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 		}
 		ModTime := fi.ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:    one,
-			IsDir:   true,
-			Place:   "local",
-			ModTime: &ModTime,
+			Name:     one,
+			IsDir:    true,
+			Place:    "local",
+			ModTime:  &ModTime,
+			FileMode: int64(fi.Mode()),
 		})
 	}
 	for _, one := range fileNames {
@@ -1162,10 +1166,11 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 		}
 		ModTime := fi.ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:    one,
-			Size:    fi.Size(),
-			Place:   "local",
-			ModTime: &ModTime,
+			Name:     one,
+			Size:     fi.Size(),
+			Place:    "local",
+			ModTime:  &ModTime,
+			FileMode: int64(fi.Mode()),
 		})
 	}
 
@@ -1175,7 +1180,7 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Files: []*SFTPFile{
-			&SFTPFile{
+			{
 				Name:  "..",
 				IsDir: true,
 				Place: "remote",
@@ -1237,21 +1242,159 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 	for _, one := range dirNames {
 		ModTime := fMap[one].ModTime()
 		response.Files = append(response.Files, &SFTPFile{
-			Name:    one,
-			IsDir:   true,
-			Place:   "remote",
-			ModTime: &ModTime,
+			Name:     one,
+			IsDir:    true,
+			Place:    "remote",
+			ModTime:  &ModTime,
+			FileMode: int64(fMap[one].Mode()),
 		})
 	}
 	for _, one := range fileNames {
 		ModTime := fMap[one].ModTime()
+
 		response.Files = append(response.Files, &SFTPFile{
-			Name:    one,
-			Size:    fMap[one].Size(),
-			Place:   "remote",
-			ModTime: &ModTime,
+			Name:     one,
+			Size:     fMap[one].Size(),
+			Place:    "remote",
+			ModTime:  &ModTime,
+			FileMode: int64(fMap[one].Mode()),
 		})
 	}
 
+	return
+}
+
+func (this_ *SSHSftpClient) localReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{
+		Path: request.Path,
+	}
+	fileInfo, err := os.Lstat(request.Path)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.IsDir() {
+		err = errors.New("路径[" + request.Path + "]是目录")
+		return
+	}
+	if fileInfo.Size() > 1024*1024*10 {
+		err = errors.New("只支持打开10M以内的文件在线查看")
+		return
+	}
+	f, err := os.Open(request.Path)
+	if err != nil {
+		return
+	}
+	defer closeFile(f)
+	bs, err := io.ReadAll(f)
+	if err != nil {
+		return
+	}
+	if len(bs) > 0 {
+		response.Text = string(bs)
+	}
+
+	return
+}
+
+func (this_ *SSHSftpClient) remoteReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{
+		Path: request.Path,
+	}
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
+	fileInfo, err := sftpClient.Lstat(request.Path)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.IsDir() {
+		err = errors.New("路径[" + request.Path + "]是目录")
+		return
+	}
+	if fileInfo.Size() > 1024*1024*10 {
+		err = errors.New("只支持打开10M以内的文件在线查看")
+		return
+	}
+	f, err := sftpClient.Open(request.Path)
+	if err != nil {
+		return
+	}
+	defer closeIfCloser(f)
+	bs, err := io.ReadAll(f)
+	if err != nil {
+		return
+	}
+	if len(bs) > 0 {
+		response.Text = string(bs)
+	}
+	return
+}
+
+func (this_ *SSHSftpClient) localSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{
+		Path: request.Path,
+	}
+	fileInfo, err := os.Lstat(request.Path)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.IsDir() {
+		err = errors.New("路径[" + request.Path + "]是目录")
+		return
+	}
+
+	f, err := os.Create(request.Path)
+	if err != nil {
+		return
+	}
+	defer closeFile(f)
+
+	_, err = f.Write([]byte(request.Text))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (this_ *SSHSftpClient) remoteSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{
+		Path: request.Path,
+	}
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.newSftp()
+	if err != nil {
+		return
+	}
+	defer this_.closeSftClient(sftpClient)
+
+	fileInfo, err := sftpClient.Lstat(request.Path)
+	if err != nil {
+		return
+	}
+
+	if fileInfo.IsDir() {
+		err = errors.New("路径[" + request.Path + "]是目录")
+		return
+	}
+
+	f, err := sftpClient.Create(request.Path)
+	if err != nil {
+		return
+	}
+	defer closeIfCloser(f)
+
+	_, err = f.Write([]byte(request.Text))
+	if err != nil {
+		fmt.Println("文件:"+request.Path+",写入异常", err)
+		return
+	}
 	return
 }

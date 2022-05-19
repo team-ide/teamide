@@ -298,7 +298,13 @@ export default {
     openFile(place, dir, file) {
       if (file.isDir) {
         this.openDir(place, file.path);
+      } else {
+        this.toEditFile(place, file);
       }
+    },
+    toEditFile(place, file) {
+      this.wrap.showFileEdit(place, file);
+      // this.tool.info("编辑文件:" + file.path);
     },
     openDir(place, dir) {
       this.loadFiles(place, dir);

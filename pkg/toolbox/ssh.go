@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"encoding/json"
+	"errors"
 	"teamide/pkg/application/base"
 	"teamide/pkg/form"
 )
@@ -48,6 +49,7 @@ type SSHConfig struct {
 
 type SSHBaseRequest struct {
 	Token string `json:"token"`
+	*SFTPRequest
 }
 
 var (
@@ -80,9 +82,43 @@ func sshWork(work string, config map[string]interface{}, data map[string]interfa
 	res = map[string]interface{}{}
 	switch work {
 	case "createToken":
-		var token string = base.GenerateUUID()
+		var token = base.GenerateUUID()
 		sshTokenCache[token] = sshConfig
 		res["token"] = token
+	case "readText":
+		var token = request.Token
+		client := SSHSftpCache[token]
+		if client == nil {
+			err = errors.New("FTP会话丢失")
+			return
+		}
+		var response *SFTPResponse
+		if request.Place == "local" {
+			response, err = client.localReadText(request.SFTPRequest)
+		} else if request.Place == "remote" {
+			response, err = client.remoteReadText(request.SFTPRequest)
+		}
+		if err != nil {
+			return
+		}
+		res["response"] = response
+	case "saveText":
+		var token = request.Token
+		client := SSHSftpCache[token]
+		if client == nil {
+			err = errors.New("FTP会话丢失")
+			return
+		}
+		var response *SFTPResponse
+		if request.Place == "local" {
+			response, err = client.localSaveText(request.SFTPRequest)
+		} else if request.Place == "remote" {
+			response, err = client.remoteSaveText(request.SFTPRequest)
+		}
+		if err != nil {
+			return
+		}
+		res["response"] = response
 	}
 	return
 }

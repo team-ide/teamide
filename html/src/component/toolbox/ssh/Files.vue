@@ -290,6 +290,13 @@ export default {
           //     this.toSaveFile(files[0]);
           //   },
           // });
+
+          menus.push({
+            text: "在线编辑",
+            onClick: () => {
+              this.openFile(files[0]);
+            },
+          });
           menus.push({
             text: "下载",
             onClick: () => {
