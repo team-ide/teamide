@@ -28,14 +28,15 @@ func init() {
 }
 
 type RedisBaseRequest struct {
-	Key     string `json:"key"`
-	Value   string `json:"value"`
-	Pattern string `json:"pattern"`
-	Size    int    `json:"size"`
-	Type    string `json:"type"`
-	Index   int64  `json:"index"`
-	Count   int64  `json:"count"`
-	Field   string `json:"field"`
+	Key      string `json:"key"`
+	Value    string `json:"value"`
+	Pattern  string `json:"pattern"`
+	Database string `json:"database"`
+	Size     int    `json:"size"`
+	Type     string `json:"type"`
+	Index    int64  `json:"index"`
+	Count    int64  `json:"count"`
+	Field    string `json:"field"`
 }
 
 type RedisConfig struct {
@@ -76,48 +77,58 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 	switch work {
 	case "get":
 		var valueInfo RedisValueInfo
-		valueInfo, err = service.Get(request.Key)
+		valueInfo, err = service.Get(request.Database, request.Key)
+		res["database"] = request.Database
+		res["key"] = request.Key
 		res["type"] = valueInfo.Type
 		res["value"] = valueInfo.Value
 	case "keys":
 		var count int
 		var keys []string
-		count, keys, err = service.Keys(request.Pattern, request.Size)
+		count, keys, err = service.Keys(request.Database, request.Pattern, request.Size)
 		if err != nil {
 			return
 		}
+
+		var dataList []map[string]interface{}
+		for _, key := range keys {
+			var one = map[string]interface{}{}
+			one["key"] = key
+			one["database"] = request.Database
+			dataList = append(dataList, one)
+		}
 		res["count"] = count
-		res["keys"] = keys
+		res["dataList"] = dataList
 	case "do":
 		if request.Type == "set" {
-			err = service.Set(request.Key, request.Value)
+			err = service.Set(request.Database, request.Key, request.Value)
 		} else if request.Type == "sadd" {
-			err = service.Sadd(request.Key, request.Value)
+			err = service.Sadd(request.Database, request.Key, request.Value)
 		} else if request.Type == "srem" {
-			err = service.Srem(request.Key, request.Value)
+			err = service.Srem(request.Database, request.Key, request.Value)
 		} else if request.Type == "lpush" {
-			err = service.Lpush(request.Key, request.Value)
+			err = service.Lpush(request.Database, request.Key, request.Value)
 		} else if request.Type == "rpush" {
-			err = service.Rpush(request.Key, request.Value)
+			err = service.Rpush(request.Database, request.Key, request.Value)
 		} else if request.Type == "lset" {
-			err = service.Lset(request.Key, request.Index, request.Value)
+			err = service.Lset(request.Database, request.Key, request.Index, request.Value)
 		} else if request.Type == "lrem" {
-			err = service.Lrem(request.Key, request.Count, request.Value)
+			err = service.Lrem(request.Database, request.Key, request.Count, request.Value)
 		} else if request.Type == "hset" {
-			err = service.Hset(request.Key, request.Field, request.Value)
+			err = service.Hset(request.Database, request.Key, request.Field, request.Value)
 		} else if request.Type == "hdel" {
-			err = service.Hdel(request.Key, request.Field)
+			err = service.Hdel(request.Database, request.Key, request.Field)
 		}
 		if err != nil {
 			return
 		}
 	case "delete":
 		var count int
-		count, err = service.Del(request.Key)
+		count, err = service.Del(request.Database, request.Key)
 		res["count"] = count
 	case "deletePattern":
 		var count int
-		count, err = service.DelPattern(request.Pattern)
+		count, err = service.DelPattern(request.Database, request.Pattern)
 		res["count"] = count
 	}
 	return
@@ -135,7 +146,7 @@ func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
 		if err != nil {
 			return
 		}
-		_, err = s.Get("_")
+		_, err = s.Get("", "_")
 		if err != nil {
 			return
 		}
@@ -175,17 +186,17 @@ type RedisService interface {
 	GetWaitTime() int64
 	GetLastUseTime() int64
 	Stop()
-	Keys(pattern string, size int) (count int, keys []string, err error)
-	Get(key string) (valueInfo RedisValueInfo, err error)
-	Set(key string, value string) (err error)
-	Sadd(key string, value string) (err error)
-	Srem(key string, value string) (err error)
-	Lpush(key string, value string) (err error)
-	Rpush(key string, value string) (err error)
-	Lset(key string, index int64, value string) (err error)
-	Lrem(key string, count int64, value string) (err error)
-	Hset(key string, field string, value string) (err error)
-	Hdel(key string, field string) (err error)
-	Del(key string) (count int, err error)
-	DelPattern(key string) (count int, err error)
+	Keys(database string, pattern string, size int) (count int, keys []string, err error)
+	Get(database string, key string) (valueInfo RedisValueInfo, err error)
+	Set(database string, key string, value string) (err error)
+	Sadd(database string, key string, value string) (err error)
+	Srem(database string, key string, value string) (err error)
+	Lpush(database string, key string, value string) (err error)
+	Rpush(database string, key string, value string) (err error)
+	Lset(database string, key string, index int64, value string) (err error)
+	Lrem(database string, key string, count int64, value string) (err error)
+	Hset(database string, key string, field string, value string) (err error)
+	Hdel(database string, key string, field string) (err error)
+	Del(database string, key string) (count int, err error)
+	DelPattern(database string, key string) (count int, err error)
 }

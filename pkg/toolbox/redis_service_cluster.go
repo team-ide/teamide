@@ -55,7 +55,7 @@ func (this_ *RedisClusterService) GetClient() {
 
 }
 
-func (this_ *RedisClusterService) Keys(pattern string, size int) (count int, keys []string, err error) {
+func (this_ *RedisClusterService) Keys(database string, pattern string, size int) (count int, keys []string, err error) {
 	this_.GetClient()
 	var list []string
 	this_.redisCluster.ForEachMaster(context.TODO(), func(ctx context.Context, client *redis.Client) (err error) {
@@ -85,17 +85,17 @@ func (this_ *RedisClusterService) Keys(pattern string, size int) (count int, key
 	return
 }
 
-func (this_ *RedisClusterService) KeyType(key string) (keyType string, err error) {
+func (this_ *RedisClusterService) KeyType(database string, key string) (keyType string, err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.Type(context.TODO(), key)
 	keyType, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Get(key string) (valueInfo RedisValueInfo, err error) {
+func (this_ *RedisClusterService) Get(database string, key string) (valueInfo RedisValueInfo, err error) {
 	this_.GetClient()
 	var keyType string
-	keyType, err = this_.KeyType(key)
+	keyType, err = this_.KeyType(database, key)
 	if err != nil {
 		return
 	}
@@ -131,70 +131,70 @@ func (this_ *RedisClusterService) Get(key string) (valueInfo RedisValueInfo, err
 	return
 }
 
-func (this_ *RedisClusterService) Set(key string, value string) (err error) {
+func (this_ *RedisClusterService) Set(database string, key string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.Set(context.TODO(), key, value, time.Duration(0))
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Sadd(key string, value string) (err error) {
+func (this_ *RedisClusterService) Sadd(database string, key string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.SAdd(context.TODO(), key, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Srem(key string, value string) (err error) {
+func (this_ *RedisClusterService) Srem(database string, key string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.SRem(context.TODO(), key, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Lpush(key string, value string) (err error) {
+func (this_ *RedisClusterService) Lpush(database string, key string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.LPush(context.TODO(), key, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Rpush(key string, value string) (err error) {
+func (this_ *RedisClusterService) Rpush(database string, key string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.RPush(context.TODO(), key, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Lset(key string, index int64, value string) (err error) {
+func (this_ *RedisClusterService) Lset(database string, key string, index int64, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.LSet(context.TODO(), key, index, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Lrem(key string, count int64, value string) (err error) {
+func (this_ *RedisClusterService) Lrem(database string, key string, count int64, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.LRem(context.TODO(), key, count, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Hset(key string, field string, value string) (err error) {
+func (this_ *RedisClusterService) Hset(database string, key string, field string, value string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.HSet(context.TODO(), key, field, value)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Hdel(key string, field string) (err error) {
+func (this_ *RedisClusterService) Hdel(database string, key string, field string) (err error) {
 	this_.GetClient()
 	cmd := this_.redisCluster.HDel(context.TODO(), key, field)
 	_, err = cmd.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Del(key string) (count int, err error) {
+func (this_ *RedisClusterService) Del(database string, key string) (count int, err error) {
 	this_.GetClient()
 	count = 0
 	cmd := this_.redisCluster.Del(context.TODO(), key)
@@ -205,7 +205,7 @@ func (this_ *RedisClusterService) Del(key string) (count int, err error) {
 	return
 }
 
-func (this_ *RedisClusterService) DelPattern(pattern string) (count int, err error) {
+func (this_ *RedisClusterService) DelPattern(database string, pattern string) (count int, err error) {
 	this_.GetClient()
 	count = 0
 	cmd := this_.redisCluster.Keys(context.TODO(), pattern)
@@ -216,7 +216,7 @@ func (this_ *RedisClusterService) DelPattern(pattern string) (count int, err err
 	}
 	for _, key := range list {
 		var num int
-		num, err = this_.Del(key)
+		num, err = this_.Del(database, key)
 		if err != nil {
 			return
 		}

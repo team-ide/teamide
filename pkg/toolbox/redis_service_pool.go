@@ -69,10 +69,23 @@ func (this_ *RedisPoolService) GetClient() redis.Conn {
 	return this_.pool.Get()
 }
 
-func (this_ *RedisPoolService) Keys(pattern string, size int) (count int, keys []string, err error) {
+func (this_ *RedisPoolService) SelectDatabase(client redis.Conn, database string) (err error) {
+	if database != "" {
+		_, err = client.Do("select", database)
+	}
+	return
+}
+
+func (this_ *RedisPoolService) Keys(database string, pattern string, size int) (count int, keys []string, err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	var reply interface{}
 	reply, err = client.Do("keys", pattern)
 	if err != nil {
@@ -101,10 +114,16 @@ func (this_ *RedisPoolService) Keys(pattern string, size int) (count int, keys [
 	return
 }
 
-func (this_ *RedisPoolService) KeyType(key string) (keyType string, err error) {
+func (this_ *RedisPoolService) KeyType(database string, key string) (keyType string, err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	var reply interface{}
 	reply, err = client.Do("type", key)
 	if err != nil {
@@ -116,15 +135,21 @@ func (this_ *RedisPoolService) KeyType(key string) (keyType string, err error) {
 	return
 }
 
-func (this_ *RedisPoolService) Get(key string) (valueInfo RedisValueInfo, err error) {
+func (this_ *RedisPoolService) Get(database string, key string) (valueInfo RedisValueInfo, err error) {
 	var keyType string
-	keyType, err = this_.KeyType(key)
+	keyType, err = this_.KeyType(database, key)
 	if err != nil {
 		return
 	}
 	var value interface{}
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	if keyType == "none" {
 
 	} else if keyType == "string" {
@@ -175,82 +200,142 @@ func (this_ *RedisPoolService) Get(key string) (valueInfo RedisValueInfo, err er
 	return
 }
 
-func (this_ *RedisPoolService) Set(key string, value string) (err error) {
+func (this_ *RedisPoolService) Set(database string, key string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("set", key, value)
 	return
 }
 
-func (this_ *RedisPoolService) Sadd(key string, value string) (err error) {
+func (this_ *RedisPoolService) Sadd(database string, key string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("sadd", key, value)
 	return
 }
 
-func (this_ *RedisPoolService) Srem(key string, value string) (err error) {
+func (this_ *RedisPoolService) Srem(database string, key string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("srem", key, value)
 	return
 }
 
-func (this_ *RedisPoolService) Lpush(key string, value string) (err error) {
+func (this_ *RedisPoolService) Lpush(database string, key string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("lpush", key, value)
 	return
 }
 
-func (this_ *RedisPoolService) Rpush(key string, value string) (err error) {
+func (this_ *RedisPoolService) Rpush(database string, key string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("rpush", key, value)
 	return
 }
 
-func (this_ *RedisPoolService) Lset(key string, index int64, value string) (err error) {
+func (this_ *RedisPoolService) Lset(database string, key string, index int64, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("lset", key, index, value)
 	return
 }
 
-func (this_ *RedisPoolService) Lrem(key string, count int64, value string) (err error) {
+func (this_ *RedisPoolService) Lrem(database string, key string, count int64, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("lrem", key, count, value)
 	return
 }
 
-func (this_ *RedisPoolService) Hset(key string, field string, value string) (err error) {
+func (this_ *RedisPoolService) Hset(database string, key string, field string, value string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("hset", key, field, value)
 	return
 }
 
-func (this_ *RedisPoolService) Hdel(key string, field string) (err error) {
+func (this_ *RedisPoolService) Hdel(database string, key string, field string) (err error) {
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("hdel", key, field)
 	return
 }
 
-func (this_ *RedisPoolService) Del(key string) (count int, err error) {
+func (this_ *RedisPoolService) Del(database string, key string) (count int, err error) {
 	count = 0
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
+
 	_, err = client.Do("del", key)
 	if err == nil {
 		count++
@@ -258,13 +343,18 @@ func (this_ *RedisPoolService) Del(key string) (count int, err error) {
 	return
 }
 
-func (this_ *RedisPoolService) DelPattern(pattern string) (count int, err error) {
+func (this_ *RedisPoolService) DelPattern(database string, pattern string) (count int, err error) {
 	count = 0
 	var list []string
-	_, list, err = this_.Keys(pattern, 0)
+	_, list, err = this_.Keys(database, pattern, 0)
 
 	client := this_.GetClient()
 	defer client.Close()
+
+	err = this_.SelectDatabase(client, database)
+	if err != nil {
+		return
+	}
 
 	for _, key := range list {
 		_, err = client.Do("del", key)
