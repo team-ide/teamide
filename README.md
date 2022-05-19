@@ -4,33 +4,38 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.0.5-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.0.7-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
 
 ## 注意
 
-> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
-
 > #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/TeamIDE`下，本地`需要安装谷歌浏览器`
 
+**服务端模式目前存在问题，请大家先单机运行，后续将完善服务端模式**
+
+> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
 
 ## Team · IDE 功能模块
 
 <table>
     <tr>
-        <th width="180px">模块</th>
+        <th>模块</th>
         <th>功能说明</th>
-        <th width="80px">状态</th>
+        <th>状态</th>
     </tr>
     <tr>
-        <td rowspan="2">Toolbox SSH</td>
+        <td rowspan="3">Toolbox SSH</td>
         <td>配置SSH连接，连接远程服务器，执行命令</td>
         <td>完成</td>
     </tr>
     <tr>
-        <td>点击FTP连接方式，上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
+        <td>点击FTP连接方式查看本地目录、服务端目录</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>在线编辑、上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -150,13 +155,9 @@ go mod tidy
 
 # 运行
 # --isDev dev模式，自动打开到 前端调试页面，日志输出控制台
-# --isServer 作为服务运行，读取配置文件
 
 # 单机版调试运行，需要谷歌浏览器
 go run . --isDev
-
-# 服务端调试运行，需要配置conf
-go run . --isDev --isServer
 ```
 
 ### 打包
@@ -251,6 +252,8 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 
 ![avatar](doc/toolbox-ftp.png)
 
+![avatar](doc/toolbox-ftp-edit-file.png)
+
 #### Toolbox Database（完成）
 
 连接Database，在线编辑库表，编辑库表记录，查看表结构等
@@ -265,9 +268,9 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 
 ![avatar](doc/toolbox-database-ddl.png)
 
-![avatar](doc/toolbox-database-export-1.png)
+![avatar](doc/toolbox-database-export-data-sql.png)
 
-![avatar](doc/toolbox-database-import-1.png)
+![avatar](doc/toolbox-database-import-strategy.png)
 
 #### Toolbox Elasticsearch（完成）
 
