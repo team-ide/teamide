@@ -28,6 +28,7 @@
         </SSH>
       </template>
     </template>
+    <FileEdit :source="source" :toolbox="toolbox" :wrap="wrap"> </FileEdit>
   </div>
 </template>
 
@@ -35,8 +36,10 @@
 <script>
 import FTP from "./FTP";
 import SSH from "./SSH";
+import FileEdit from "./FileEdit";
+
 export default {
-  components: { FTP, SSH },
+  components: { FTP, SSH, FileEdit },
   props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
   data() {
     return {
@@ -56,6 +59,8 @@ export default {
       this.wrap.writeMessage = this.writeMessage;
       this.wrap.writeEvent = this.writeEvent;
       this.wrap.writeError = this.writeError;
+      this.wrap.tokenWork = this.tokenWork;
+
       await this.initToken();
       this.initSocket();
       this.ready = true;
@@ -77,6 +82,12 @@ export default {
         res.data = res.data || {};
         this.token = res.data.token;
       }
+    },
+    async tokenWork(work, param) {
+      param = param || {};
+      param.token = this.token;
+      let res = await this.wrap.work(work, param);
+      return res;
     },
     onEvent(arg) {
       this.$refs.ftp && this.$refs.ftp.onEvent && this.$refs.ftp.onEvent(arg);
