@@ -136,21 +136,24 @@ export default {
       url += "?token=" + encodeURIComponent(this.token);
       url += "&jwt=" + encodeURIComponent(this.tool.getJWT());
       this.socket = new WebSocket(url);
-
+      this.socket.binaryType = "arraybuffer";
       this.socket.onopen = () => {
         this.onEvent("socket open");
       };
       this.socket.onmessage = (event) => {
-        // 接收推送的消息
-        let data = event.data.toString();
-        if (data.indexOf(this.TeamIDEEvent) == 0) {
-          this.onEvent(data.substring(this.TeamIDEEvent.length));
-        } else if (data.indexOf(this.TeamIDEError) == 0) {
-          this.onError(data.substring(this.TeamIDEError.length));
-        } else if (data.indexOf(this.TeamIDEMessage) == 0) {
-          this.onMessage(data.substring(this.TeamIDEMessage.length));
+        if (typeof event.data == "string") {
+          let data = event.data;
+          if (data.indexOf(this.TeamIDEEvent) == 0) {
+            this.onEvent(data.substring(this.TeamIDEEvent.length));
+          } else if (data.indexOf(this.TeamIDEError) == 0) {
+            this.onError(data.substring(this.TeamIDEError.length));
+          } else if (data.indexOf(this.TeamIDEMessage) == 0) {
+            this.onMessage(data.substring(this.TeamIDEMessage.length));
+          } else {
+            this.onData(data);
+          }
         } else {
-          this.onData(data);
+          this.onData(event.data);
         }
       };
       this.socket.onclose = () => {

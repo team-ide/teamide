@@ -509,6 +509,30 @@ func (this_ *ToolboxApi) sshFtp(requestBean *base.RequestBean, c *gin.Context) (
 	return
 }
 
+func (this_ *ToolboxApi) sshUpload(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	res, err = toolbox.SFTPUpload(c)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *ToolboxApi) sshDownload(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	data := map[string]string{}
+	err = c.Bind(&data)
+	if err != nil {
+		return
+	}
+	err = toolbox.SFTPDownload(data, c)
+	if err != nil {
+		return
+	}
+	res = base.HttpNotResponse
+	return
+}
+
 func (this_ *ToolboxApi) sshFtpUpload(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	res, err = toolbox.SFTPUpload(c)

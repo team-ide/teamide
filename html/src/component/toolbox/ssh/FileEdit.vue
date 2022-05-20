@@ -41,6 +41,7 @@ export default {
       text: null,
       place: null,
       error: null,
+      saveIng: false,
     };
   },
   computed: {},
@@ -73,6 +74,7 @@ export default {
       this.text = response.text;
     },
     async toSave() {
+      this.saveIng = true;
       let param = {
         place: this.place,
         path: this.path,
@@ -82,6 +84,7 @@ export default {
       if (res.code == 0) {
         this.tool.success("保存成功!");
       }
+      this.saveIng = false;
     },
     init() {},
   },

@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/wxnacy/wgo/file"
 	"go.uber.org/zap"
@@ -178,6 +179,7 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 				continue
 			}
 		}
+		fmt.Println("WS Read Message:", string(bs))
 		onMessage(bs)
 	}
 }
@@ -207,6 +209,32 @@ func (this_ *SSHClient) WSWrite(bs []byte) {
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
 	err := this_.ws.WriteMessage(websocket.TextMessage, bs)
+
+	if err != nil {
+		if WSIsCloseError(err) {
+			this_.CloseWS()
+			return
+		}
+		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
+	}
+	return
+}
+
+func (this_ *SSHClient) WSWriteBinary(bs []byte) {
+	defer func() {
+		if x := recover(); x != nil {
+			this_.Logger.Error("WebSocket信息写入异常", zap.Any("err", x))
+			this_.CloseWS()
+			return
+		}
+	}()
+	if this_.isClosedWS {
+		return
+	}
+
+	this_.wsWriteLock.Lock()
+	defer this_.wsWriteLock.Unlock()
+	err := this_.ws.WriteMessage(websocket.BinaryMessage, bs)
 
 	if err != nil {
 		if WSIsCloseError(err) {
