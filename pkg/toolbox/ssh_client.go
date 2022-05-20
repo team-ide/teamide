@@ -162,7 +162,7 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 		if this_.isClosedWS {
 			return
 		}
-		_, bs, err := this_.ws.ReadMessage()
+		messageType, bs, err := this_.ws.ReadMessage()
 		if err != nil {
 			if WSIsCloseError(err) {
 				this_.CloseWS()
@@ -171,11 +171,13 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 			this_.Logger.Error("WebSocket信息读取异常", zap.Error(err))
 			continue
 		}
-		if len(bs) > TeamIDEEventByteLength {
-			msg := string(bs[0:TeamIDEEventByteLength])
-			if strings.EqualFold(msg, TeamIDEEvent) {
-				onEvent(string(bs[TeamIDEEventByteLength:]))
-				continue
+		if messageType == websocket.TextMessage {
+			if len(bs) > TeamIDEEventByteLength {
+				msg := string(bs[0:TeamIDEEventByteLength])
+				if strings.EqualFold(msg, TeamIDEEvent) {
+					onEvent(string(bs[TeamIDEEventByteLength:]))
+					continue
+				}
 			}
 		}
 		onMessage(bs)
@@ -207,6 +209,32 @@ func (this_ *SSHClient) WSWrite(bs []byte) {
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
 	err := this_.ws.WriteMessage(websocket.TextMessage, bs)
+
+	if err != nil {
+		if WSIsCloseError(err) {
+			this_.CloseWS()
+			return
+		}
+		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
+	}
+	return
+}
+
+func (this_ *SSHClient) WSWriteBinary(bs []byte) {
+	defer func() {
+		if x := recover(); x != nil {
+			this_.Logger.Error("WebSocket信息写入异常", zap.Any("err", x))
+			this_.CloseWS()
+			return
+		}
+	}()
+	if this_.isClosedWS {
+		return
+	}
+
+	this_.wsWriteLock.Lock()
+	defer this_.wsWriteLock.Unlock()
+	err := this_.ws.WriteMessage(websocket.BinaryMessage, bs)
 
 	if err != nil {
 		if WSIsCloseError(err) {

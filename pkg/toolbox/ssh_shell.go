@@ -12,9 +12,12 @@ import (
 
 type SSHShellClient struct {
 	SSHClient
-	shellSession     *ssh.Session
-	startReadChannel bool
-	shellOK          bool
+	shellSession                     *ssh.Session
+	startReadChannel                 bool
+	shellOK                          bool
+	UploadFile                       chan *UploadFile
+	DisableZModemSZ, DisableZModemRZ bool
+	ZModemSZ, ZModemRZ, ZModemSZOO   bool
 }
 
 type ptyRequestMsg struct {
@@ -112,6 +115,7 @@ func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error)
 	return
 }
 func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
+	this_.listenUpload()
 	this_.shellOK = false
 	this_.startReadChannel = false
 	defer func() {
@@ -150,17 +154,30 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 		return
 	}
 
+	var errReader io.Reader
+	errReader, err = this_.shellSession.StderrPipe()
+	go func() {
+		err = this_.startRead(errReader, true)
+	}()
+	var reader io.Reader
+	reader, err = this_.shellSession.StdoutPipe()
+	err = this_.startRead(reader, false)
+	return
+}
+
+func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err error) {
+
 	for {
 		if !this_.startReadChannel {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		var bs = make([]byte, 1024)
+		var buffSize = 8192
+		var bs = make([]byte, buffSize)
 		var n int
-		var reader io.Reader
-		reader, err = this_.shellSession.StdoutPipe()
 		if err != nil {
 			this_.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
+			continue
 		}
 		n, err = reader.Read(bs)
 		if err != nil {
@@ -171,14 +188,20 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 			//this_.WSWriteError("SSH Shell 消息读取失败:" + err.Error())
 			continue
 		}
-		bs = bs[0:n]
-		this_.WSWrite(bs)
+
+		var isZModem bool
+		isZModem, _ = this_.processZModem(bs, n, buffSize)
+		if !isZModem {
+			bs = bs[0:n]
+			this_.WSWrite(bs)
+		}
+
 	}
 }
 
 func (this_ *SSHShellClient) start() {
 	SSHShellCache[this_.Token] = this_
-	go this_.ListenWS(this_.onEvent, this_.onMessage, this_.CloseClient)
+	go this_.ListenWS(this_.onEvent, this_.ONSSHMessage, this_.CloseClient)
 	this_.WSWriteEvent("shell ready")
 }
 
@@ -219,12 +242,22 @@ func (this_ *SSHShellClient) onEvent(event string) {
 			return
 		}
 		err = this_.changeSize(*terminalSize)
+
+	} else if strings.HasPrefix(event, "shell cancel upload file") {
+		// 取消上传
+		this_.SSHWrite(ZModemCancel)
+		//this_.WSWrite([]byte("取消上传"))
 	}
+
 	switch strings.ToLower(event) {
 	}
 }
 
-func (this_ *SSHShellClient) onMessage(bs []byte) {
+func (this_ *SSHShellClient) ONSSHMessage(bs []byte) {
+	this_.SSHWrite(bs)
+}
+
+func (this_ *SSHShellClient) SSHWrite(bs []byte) {
 	defer func() {
 		if x := recover(); x != nil {
 			this_.Logger.Error("SSH Shell Write Error", zap.Any("err", x))

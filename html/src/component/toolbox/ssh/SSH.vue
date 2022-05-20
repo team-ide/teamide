@@ -11,6 +11,8 @@
       "
     />
     <div class="terminal-box-back" ref="terminal_back" />
+    <SSHUpload :source="source" :wrap="wrap" :token="token"></SSHUpload>
+    <SSHDownload :source="source" :wrap="wrap" :token="token"></SSHDownload>
   </div>
 </template>
 
@@ -21,8 +23,11 @@ import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { AttachAddon } from "xterm-addon-attach";
 
+import Zmodem from "zmodem.js";
+import SSHUpload from "./SSHUpload.vue";
+import SSHDownload from "./SSHDownload.vue";
 export default {
-  components: {},
+  components: { SSHUpload, SSHDownload },
   props: [
     "source",
     "toolboxType",
@@ -60,6 +65,14 @@ export default {
         this.$nextTick(() => {
           this.initAttachAddon();
         });
+      } else if (event == "shell to upload file") {
+      }
+    },
+    onData(data) {
+      if (typeof data === "object") {
+        this.zsentry.consume(data);
+      } else {
+        this.term.write(typeof data === "string" ? data : new Uint8Array(data));
       }
     },
     onError(error) {
@@ -85,8 +98,34 @@ export default {
       this.wrap.writeEvent("change size" + JSON.stringify(data));
     },
     initAttachAddon() {
-      this.attachAddon = new AttachAddon(this.socket);
-      this.term.loadAddon(this.attachAddon);
+      this.term.onData((data) => {
+        this.wrap.writeData(data);
+      });
+      this.term.onBinary((data) => {
+        this.wrap.writeData(data);
+      });
+
+      this.zsentry = new Zmodem.Sentry({
+        to_terminal: (octets) => {}, //i.e. send to the terminal
+        on_detect: (detection) => {
+          let zsession = detection.confirm();
+          if (zsession.type === "receive") {
+            this.wrap.showSSHDownload(zsession, this.term, () => {
+              this.onFocus();
+            });
+          } else {
+            this.wrap.showSSHUpload(zsession, this.term, () => {
+              this.onFocus();
+            });
+          }
+        },
+        on_retract: () => {},
+        sender: (octets) => {
+          this.socket.send(new Uint8Array(octets));
+        },
+      });
+      // this.attachAddon = new AttachAddon(this.socket);
+      // this.term.loadAddon(this.attachAddon);
     },
     initTerminal() {
       if (this.term != null) {
