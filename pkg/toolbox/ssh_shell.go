@@ -3,7 +3,6 @@ package toolbox
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -155,18 +154,30 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 		return
 	}
 
+	var errReader io.Reader
+	errReader, err = this_.shellSession.StderrPipe()
+	go func() {
+		err = this_.startRead(errReader, true)
+	}()
+	var reader io.Reader
+	reader, err = this_.shellSession.StdoutPipe()
+	err = this_.startRead(reader, false)
+	return
+}
+
+func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err error) {
+
 	for {
 		if !this_.startReadChannel {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		var buffSize = 2048
+		var buffSize = 8192
 		var bs = make([]byte, buffSize)
 		var n int
-		var reader io.Reader
-		reader, err = this_.shellSession.StdoutPipe()
 		if err != nil {
 			this_.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
+			continue
 		}
 		n, err = reader.Read(bs)
 		if err != nil {
@@ -182,7 +193,6 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 		isZModem, _ = this_.processZModem(bs, n, buffSize)
 		if !isZModem {
 			bs = bs[0:n]
-			fmt.Println("SSH Read Message:", string(bs))
 			this_.WSWrite(bs)
 		}
 
@@ -191,7 +201,7 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 
 func (this_ *SSHShellClient) start() {
 	SSHShellCache[this_.Token] = this_
-	go this_.ListenWS(this_.onEvent, this_.SSHWrite, this_.CloseClient)
+	go this_.ListenWS(this_.onEvent, this_.ONSSHMessage, this_.CloseClient)
 	this_.WSWriteEvent("shell ready")
 }
 
@@ -241,6 +251,10 @@ func (this_ *SSHShellClient) onEvent(event string) {
 
 	switch strings.ToLower(event) {
 	}
+}
+
+func (this_ *SSHShellClient) ONSSHMessage(bs []byte) {
+	this_.SSHWrite(bs)
 }
 
 func (this_ *SSHShellClient) SSHWrite(bs []byte) {

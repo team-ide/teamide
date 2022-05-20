@@ -3,7 +3,6 @@ package toolbox
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/wxnacy/wgo/file"
 	"go.uber.org/zap"
@@ -163,7 +162,7 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 		if this_.isClosedWS {
 			return
 		}
-		_, bs, err := this_.ws.ReadMessage()
+		messageType, bs, err := this_.ws.ReadMessage()
 		if err != nil {
 			if WSIsCloseError(err) {
 				this_.CloseWS()
@@ -172,14 +171,15 @@ func (this_ *SSHClient) ListenWS(onEvent func(event string), onMessage func(bs [
 			this_.Logger.Error("WebSocket信息读取异常", zap.Error(err))
 			continue
 		}
-		if len(bs) > TeamIDEEventByteLength {
-			msg := string(bs[0:TeamIDEEventByteLength])
-			if strings.EqualFold(msg, TeamIDEEvent) {
-				onEvent(string(bs[TeamIDEEventByteLength:]))
-				continue
+		if messageType == websocket.TextMessage {
+			if len(bs) > TeamIDEEventByteLength {
+				msg := string(bs[0:TeamIDEEventByteLength])
+				if strings.EqualFold(msg, TeamIDEEvent) {
+					onEvent(string(bs[TeamIDEEventByteLength:]))
+					continue
+				}
 			}
 		}
-		fmt.Println("WS Read Message:", string(bs))
 		onMessage(bs)
 	}
 }

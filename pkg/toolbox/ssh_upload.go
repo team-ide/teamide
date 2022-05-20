@@ -156,7 +156,6 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 				}
 			} else if x, ok := ByteContains(buff[:n], ZModemRZESStart); ok {
 				if this_.DisableZModemRZ {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeAlert, Data: []byte("rz upload is disabled")})
 					this_.ZModemWriteSSH(ZModemCancel)
 				} else {
 					this_.ZModemRZ = true
@@ -167,7 +166,6 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 				}
 			} else {
 				isZModem = false
-				//this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: buff[:n]})
 			}
 		}
 	}
@@ -189,14 +187,6 @@ func ByteContains(x, y []byte) (n []byte, contain bool) {
 	n = append(x[:index], x[lastIndex:]...)
 	return n, true
 }
-
-var (
-
-	// RZStart rz
-	RZStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 50, 51, 98, 101, 53, 48, 13, 138, 17}
-	// RZEStart rz -e
-	RZEStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 54, 51, 102, 54, 57, 52, 13, 138, 17}
-)
 
 func (this_ *SSHShellClient) listenUpload() {
 	if this_.UploadFile == nil {

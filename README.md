@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.0.8-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.0.9-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -26,8 +26,12 @@ Team IDE 团队在线开发工具
         <th>状态</th>
     </tr>
     <tr>
-        <td rowspan="3">Toolbox SSH</td>
+        <td rowspan="4">Toolbox SSH</td>
         <td>配置SSH连接，连接远程服务器，执行命令</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td>SSH支持rz、sz命令，rz支持批量上传</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -35,7 +39,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td>在线编辑、上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
+        <td>FTP在线编辑、上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -247,6 +251,10 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 配置Linux服务器SSH连接，在线连接服务执行命令
 
 ![avatar](doc/toolbox-ssh.png)
+
+![avatar](doc/toolbox-ssh-upload.png)
+
+![avatar](doc/toolbox-ssh-download.png)
 
 SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下载、移动、本地远程相互移动、重命名、删除、批量上传和下载等功能
 

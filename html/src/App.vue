@@ -97,7 +97,7 @@ export default {
         this.onKeyUp(e);
       });
       window.document.body.addEventListener("contextmenu", (e) => {
-        let tags = ["input", "textarea"];
+        let tags = ["input", "textarea", "canvas"];
         if (tags.indexOf(("" + e.target.tagName).toLowerCase()) >= 0) {
           return;
         }
