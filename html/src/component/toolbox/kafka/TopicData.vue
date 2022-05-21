@@ -3,7 +3,13 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="140px">
-          <el-form class="pdt-10" label-width="90px" size="mini" :inline="true">
+          <el-form
+            class="pdt-10"
+            label-width="90px"
+            size="mini"
+            :inline="true"
+            @submit.native.prevent
+          >
             <el-form-item label="Topic">
               <el-input v-model="pullForm.topic" />
             </el-form-item>

@@ -306,16 +306,16 @@ export default {
       this.wrap.showFileEdit(place, file);
       // this.tool.info("编辑文件:" + file.path);
     },
-    openDir(place, dir) {
-      this.loadFiles(place, dir);
+    openDir(place, dir, pattern) {
+      this.loadFiles(place, dir, pattern);
     },
-    toRefresh(place, dir) {
-      this.openDir(place, dir);
+    toRefresh(place, dir, pattern) {
+      this.openDir(place, dir, pattern);
     },
-    loadFiles(place, dir) {
-      this.doLoadFiles(place, dir);
+    loadFiles(place, dir, pattern) {
+      this.doLoadFiles(place, dir, pattern);
     },
-    doLoadFiles(place, dir) {
+    doLoadFiles(place, dir, pattern) {
       let scrollTop = 0;
       if (place == "local") {
         this.localFiles = null;
@@ -328,18 +328,21 @@ export default {
         place: place,
         dir: dir,
         work: "files",
+        pattern: pattern,
         scrollTop: Number(scrollTop),
       };
 
       this.send(request);
     },
-    doRenameFile(place, dir, oldPath, newPath) {
+    doRenameFile(place, dir, oldPath, newPath, isDir, isNew) {
       let request = {
         place: place,
         dir: dir,
         newPath: newPath,
         oldPath: oldPath,
         work: "rename",
+        isDir: isDir,
+        isNew: isNew,
       };
       this.addWork(request);
       this.send(request);

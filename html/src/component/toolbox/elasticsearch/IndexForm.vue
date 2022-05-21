@@ -11,7 +11,7 @@
     width="900px"
   >
     <Form :source="source" ref="formBuild"> </Form>
-    <el-form ref="form" size="mini">
+    <el-form ref="form" size="mini" @submit.native.prevent>
       <el-form-item label="结构">
         <el-input
           type="textarea"

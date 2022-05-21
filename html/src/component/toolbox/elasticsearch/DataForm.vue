@@ -11,7 +11,7 @@
     width="1200px"
   >
     <div class="">
-      <el-form ref="form" size="mini">
+      <el-form ref="form" size="mini" @submit.native.prevent>
         <el-form-item label="ID">
           <el-input type="input" v-model="id"> </el-input>
         </el-form-item>

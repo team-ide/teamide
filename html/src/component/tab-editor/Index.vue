@@ -44,7 +44,7 @@
               @click="toDeleteTab(one)"
               title="关闭"
             >
-              <Icon class="mdi-delete"></Icon>
+              <Icon class="mdi-close"></Icon>
             </span>
           </div>
         </template>

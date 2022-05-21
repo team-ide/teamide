@@ -52,7 +52,7 @@
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
           <div class="pd-10">
-            <el-form ref="form" size="mini">
+            <el-form ref="form" size="mini" @submit.native.prevent>
               <el-form-item label="Path">
                 <el-input v-model="form.path"> </el-input>
               </el-form-item>

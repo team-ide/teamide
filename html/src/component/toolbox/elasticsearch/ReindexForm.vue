@@ -11,7 +11,7 @@
     width="700px"
   >
     <div class="">
-      <el-form ref="form" size="mini">
+      <el-form ref="form" size="mini" @submit.native.prevent>
         <el-form-item label="源索引">
           <el-input v-model="sourceIndexName"> </el-input>
         </el-form-item>

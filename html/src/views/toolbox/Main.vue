@@ -98,6 +98,7 @@ export default {
     },
     onActiveTab(tab) {
       this.toolbox.activeOpen(tab.openId);
+      this.toolbox.hideToolboxType();
     },
     addTab(tab, fromTab) {
       return this.$refs.TabEditor.addTab(tab, fromTab);

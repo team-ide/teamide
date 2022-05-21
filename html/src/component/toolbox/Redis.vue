@@ -106,7 +106,7 @@
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
           <div class="pd-10">
-            <el-form ref="form" size="mini">
+            <el-form ref="form" size="mini" @submit.native.prevent>
               <el-form-item label="Database">
                 <el-input v-model="form.database"> </el-input>
               </el-form-item>
