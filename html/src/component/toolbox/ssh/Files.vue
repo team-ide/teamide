@@ -2,13 +2,50 @@
   <div class="toolbox-ftp-files" tabindex="-1">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="50px">
-          <div class="file-dir-input-box">
-            <input
-              class="file-dir-input"
-              v-model="form.dir"
-              @keyup.enter="inputOnEnter"
-            />
+        <tm-layout height="70px">
+          <div class="pdtb-5 pdlr-10">
+            <template v-if="isInputDir">
+              <input
+                ref="file-dir-input"
+                class="file-dir-input"
+                v-model="form.dir"
+                title="回车确认"
+                @keyup.enter="inputOnEnter"
+                @blur="setIsInputDir(false)"
+              />
+            </template>
+            <template v-else>
+              <div
+                class="toolbox-dir-names-breadcrumb"
+                @click="setIsInputDir(true)"
+              >
+                <el-breadcrumb separator="/">
+                  <template v-for="(one, index) in dirNames">
+                    <el-breadcrumb-item :key="index">
+                      <span @click="toDirName(index)">{{ one }}</span>
+                    </el-breadcrumb-item>
+                  </template>
+                </el-breadcrumb>
+              </div>
+            </template>
+          </div>
+          <div class="pdlr-10">
+            <el-form size="mini" inline @submit.native.prevent>
+              <el-form-item label="搜索(展示前20个)" class="mgb-0">
+                <el-input
+                  v-model="form.pattern"
+                  style="width: 150px"
+                  title="回车确认"
+                  @keyup.enter="searchOnEnter"
+                >
+                </el-input>
+              </el-form-item>
+              <el-form-item label="" class="mgb-0">
+                <div class="tm-btn tm-btn-sm color-grey" @click="toSearch">
+                  搜索
+                </div>
+              </el-form-item>
+            </el-form>
           </div>
         </tm-layout>
         <tm-layout height="auto">
@@ -49,6 +86,9 @@
                 </div>
                 <div class="file-date">
                   {{ one.dateTime }}
+                </div>
+                <div class="file-mode">
+                  {{ one.fileMode }}
                 </div>
                 <div class="file-size">
                   <template v-if="!one.isDir">
@@ -95,14 +135,18 @@ export default {
       list: [],
       form: {
         dir: null,
+        pattern: null,
       },
       selectPaths: [],
+      dirNames: [],
+      isInputDir: false,
     };
   },
   computed: {},
   watch: {
     dir() {
       this.form.dir = this.dir;
+      this.dirNames = ("" + this.dir).split("/");
     },
     files() {
       this.formatFiles();
@@ -124,6 +168,7 @@ export default {
     },
     async init(e) {
       this.form.dir = this.dir;
+      this.dirNames = ("" + this.dir).split("/");
       this.formatFiles();
       this.ready = true;
       this.$nextTick(() => {
@@ -135,6 +180,32 @@ export default {
     },
     refresh() {
       this.toRefresh();
+    },
+    setIsInputDir(isInputDir) {
+      this.isInputDir = isInputDir;
+      if (isInputDir) {
+        this.$nextTick(() => {
+          this.$refs["file-dir-input"].focus();
+        });
+      }
+    },
+    toDirName(dirNameIndex) {
+      this.tool.stopEvent();
+      let dir = "";
+      if (this.dirNames.length > 0) {
+        this.dirNames.forEach((name, i) => {
+          if (i <= dirNameIndex) {
+            dir += "/" + name;
+          }
+        });
+        if (this.dirNames[0] != "") {
+          dir = dir.substring(1);
+        }
+      }
+      this.openDir(dir);
+    },
+    toSearch() {
+      this.openDir(this.form.dir, this.form.pattern);
     },
     inputOnEnter(e) {
       e = e || window.event;
@@ -305,6 +376,18 @@ export default {
           });
         }
       }
+      menus.push({
+        text: "新建文件夹",
+        onClick: () => {
+          this.toInsertFile(true, files[0]);
+        },
+      });
+      menus.push({
+        text: "新建文件",
+        onClick: () => {
+          this.toInsertFile(false, files[0]);
+        },
+      });
       if (files.length > 0) {
         menus.push({
           text: "删除",
@@ -462,14 +545,35 @@ export default {
     openFile(file) {
       this.$emit("open", this.place, this.dir, file);
     },
-    openDir(dir) {
-      this.$emit("openDir", this.place, dir);
+    openDir(dir, pattern) {
+      this.$emit("openDir", this.place, dir, pattern);
     },
     toRemove(files) {
       this.$emit("remove", this.place, this.dir, files);
     },
     toDownload(file) {
       this.$emit("download", this.place, this.dir, file);
+    },
+    toInsertFile(isDir, afterFile) {
+      let index = this.list.indexOf(afterFile);
+      if (index < 0) {
+        index = this.list.length - 1;
+      }
+      let newFile = {};
+      newFile.name = "新建文件";
+      if (isDir) {
+        newFile.name = "新建文件夹";
+      }
+      newFile.isDir = isDir;
+      newFile.dir = this.dir;
+      newFile.path = newFile.dir + "/" + newFile.name;
+      newFile.rename = false;
+      newFile.size = newFile.size || 0;
+      newFile.isNew = true;
+      this.list.splice(index + 1, 0, newFile);
+      this.$nextTick(() => {
+        this.toRename(newFile);
+      });
     },
     toRename(file) {
       file.newname = file.name;
@@ -503,9 +607,16 @@ export default {
       }
     },
     doRename(file) {
-      if (this.tool.isEmpty(file.newname) || file.name == file.newname) {
-        file.rename = false;
+      if (this.tool.isEmpty(file.newname) && file.isNew) {
+        let index = this.list.indexOf(file);
+        this.list.splice(index, 1);
         return;
+      }
+      if (this.tool.isEmpty(file.newname) || file.name == file.newname) {
+        if (!file.isNew) {
+          file.rename = false;
+          return;
+        }
       }
       if (file.newname.indexOf("/") >= 0 || file.newname.indexOf("\\") >= 0) {
         this.tool.error("文件名输入有误，请重新输入！");
@@ -518,7 +629,9 @@ export default {
         this.place,
         this.dir,
         file.path,
-        this.dir + "/" + file.newname
+        this.dir + "/" + file.newname,
+        file.isDir,
+        file.isNew
       );
     },
     formatFiles() {
@@ -532,6 +645,7 @@ export default {
           one.path = one.dir + "/" + one.name;
           one.rename = false;
           one.size = one.size || 0;
+          one.isNew = false;
           if (!one.isDir) {
             this.wrap.formatSize(one, "size", "unitSize", "unit");
           }
@@ -631,11 +745,19 @@ export default {
 .file-box .file-name {
   padding: 0px 5px;
   flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .file-box .file-date {
   padding: 0px 5px;
   font-size: 12px;
   width: 150px;
+}
+.file-box .file-mode {
+  padding: 0px 5px;
+  font-size: 12px;
+  width: 100px;
 }
 .file-box .file-size {
   padding: 0px 5px;
@@ -657,17 +779,14 @@ export default {
   padding: 0px 5px;
   font-size: 15px;
 }
-.file-dir-input-box {
-  padding: 5px 10px;
-}
 .file-dir-input {
   color: #ffffff;
   width: 100%;
   border: 0px dashed #ddd;
   border-bottom: 1px solid #ddd;
   background-color: transparent;
-  height: 30px;
-  line-height: 30px;
+  height: 25px;
+  line-height: 25px;
   padding-left: 0px;
   padding-right: 0px;
   box-sizing: border-box;
@@ -682,5 +801,33 @@ export default {
   line-height: 16px;
   box-sizing: border-box;
   outline: none;
+}
+.toolbox-dir-names-breadcrumb {
+  border: 0px dashed #ddd;
+  border-bottom: 1px solid #ddd;
+  height: 25px;
+  line-height: 25px;
+  font-size: 15px;
+  cursor: text;
+}
+.toolbox-dir-names-breadcrumb .el-breadcrumb {
+  height: 25px;
+  line-height: 25px;
+}
+.toolbox-dir-names-breadcrumb .el-breadcrumb .el-breadcrumb__separator {
+  margin: 0px;
+  color: #ffffff;
+}
+.toolbox-dir-names-breadcrumb .el-breadcrumb .el-breadcrumb__inner {
+  margin: 0px;
+  color: #ffffff;
+}
+.toolbox-dir-names-breadcrumb .el-breadcrumb .el-breadcrumb__inner > span {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.toolbox-dir-names-breadcrumb .el-breadcrumb .el-breadcrumb__inner:hover {
+  color: #ddd;
 }
 </style>

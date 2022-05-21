@@ -1,5 +1,5 @@
 <template>
-  <el-form v-if="ready" size="mini">
+  <el-form v-if="ready" size="mini" @submit.native.prevent>
     <template
       v-if="
         key != null &&
