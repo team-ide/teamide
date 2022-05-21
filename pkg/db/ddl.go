@@ -21,6 +21,7 @@ type GenerateParam struct {
 	ColumnPackingCharacter   string `json:"columnPackingCharacter" column:"columnPackingCharacter"`
 	StringPackingCharacter   string `json:"stringPackingCharacter" column:"stringPackingCharacter"`
 	AppendSqlValue           bool   `json:"appendSqlValue" column:"appendSqlValue"`
+	DateFunction             string `json:"dateFunction" column:"dateFunction"`
 	OpenTransaction          bool   `json:"openTransaction"`
 	ErrorContinue            bool   `json:"errorContinue"`
 }
@@ -279,6 +280,9 @@ func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColum
 			return "NULL"
 		}
 		valueString = v.Format("2006-01-02 15:04:05")
+		if param.DateFunction != "" {
+			return strings.ReplaceAll(param.DateFunction, "$value", valueString)
+		}
 		break
 	case string:
 		valueString = v

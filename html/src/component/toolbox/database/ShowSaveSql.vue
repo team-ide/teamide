@@ -11,13 +11,7 @@
     width="1200px"
   >
     <div class="mgt--20 toolbox-database-save-sql">
-      <el-form
-        ref="form"
-        :model="form"
-        label-width="90px"
-        size="mini"
-        :inline="true"
-      >
+      <el-form ref="form" :model="form" size="mini" :inline="true">
         <el-form-item label="追加库名">
           <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>

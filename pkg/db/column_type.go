@@ -25,6 +25,11 @@ type ColumnTypeInfo struct {
 }
 
 func (this_ *ColumnTypeInfo) FormatColumnType(length int, decimal int) (columnType string) {
+	if this_.TypeFormat == "VARCHAR2($l)" {
+		if length <= 0 {
+			length = 4000
+		}
+	}
 	columnType = this_.TypeFormat
 	lStr := ""
 	dStr := ""

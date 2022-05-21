@@ -69,12 +69,6 @@ func (this_ *DatabaseSqliteDialect) TableDDL(param *GenerateParam, database stri
 			if one.Name == "" || len(one.Columns) == 0 {
 				continue
 			}
-			//name := table.Name + "_" + one.Name
-			name := one.Name
-			if !strings.HasPrefix(name, table.Name+"_INDEX_") {
-				name = table.Name + "_INDEX_" + one.Name
-			}
-			one.Name = name
 			var sqlList_ []string
 			sqlList_, err = this_.TableIndexAddDDL(param, database, table.Name, one)
 			if err != nil {

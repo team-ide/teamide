@@ -22,25 +22,25 @@ var (
 
 	/** 日期/时间类型 **/
 
-	OracleYEAR      = addOracleColumnType(&ColumnTypeInfo{Name: "YEAR", TypeFormat: "YEAR", IsDateTime: true})
-	OracleTIME      = addOracleColumnType(&ColumnTypeInfo{Name: "TIME", TypeFormat: "TIME", IsDateTime: true})
+	OracleYEAR      = addOracleColumnType(&ColumnTypeInfo{Name: "YEAR", TypeFormat: "DATE", IsDateTime: true})
+	OracleTIME      = addOracleColumnType(&ColumnTypeInfo{Name: "TIME", TypeFormat: "DATE", IsDateTime: true})
 	OracleDATE      = addOracleColumnType(&ColumnTypeInfo{Name: "DATE", TypeFormat: "DATE", IsDateTime: true})
-	OracleDATETIME  = addOracleColumnType(&ColumnTypeInfo{Name: "DATETIME", TypeFormat: "DATETIME", IsDateTime: true})
+	OracleDATETIME  = addOracleColumnType(&ColumnTypeInfo{Name: "DATETIME", TypeFormat: "DATE", IsDateTime: true})
 	OracleTIMESTAMP = addOracleColumnType(&ColumnTypeInfo{Name: "TIMESTAMP", TypeFormat: "TIMESTAMP", IsDateTime: true})
 
 	/** 字符串类型 **/
 
 	OracleCHAR       = addOracleColumnType(&ColumnTypeInfo{Name: "CHAR", TypeFormat: "CHAR($l)", HasLength: true, IsString: true})
-	OracleVARCHAR    = addOracleColumnType(&ColumnTypeInfo{Name: "VARCHAR", TypeFormat: "VARCHAR($l)", HasLength: true, IsString: true})
-	OracleTINYTEXT   = addOracleColumnType(&ColumnTypeInfo{Name: "TINYTEXT", TypeFormat: "TINYTEXT($l)", HasLength: true, IsString: true})
-	OracleTEXT       = addOracleColumnType(&ColumnTypeInfo{Name: "TEXT", TypeFormat: "TEXT($l)", HasLength: true, IsString: true})
-	OracleMEDIUMTEXT = addOracleColumnType(&ColumnTypeInfo{Name: "MEDIUMTEXT", TypeFormat: "MEDIUMTEXT($l)", HasLength: true, IsString: true})
-	OracleLONGTEXT   = addOracleColumnType(&ColumnTypeInfo{Name: "LONGTEXT", TypeFormat: "LONGTEXT($l)", HasLength: true, IsString: true})
-	OracleENUM       = addOracleColumnType(&ColumnTypeInfo{Name: "ENUM", TypeFormat: "ENUM($l)", HasLength: true, IsString: true})
-	OracleTINYBLOB   = addOracleColumnType(&ColumnTypeInfo{Name: "TINYBLOB", TypeFormat: "TINYBLOB($l)", HasLength: true, IsString: true})
+	OracleVARCHAR    = addOracleColumnType(&ColumnTypeInfo{Name: "VARCHAR", TypeFormat: "VARCHAR2($l)", HasLength: true, IsString: true})
+	OracleTINYTEXT   = addOracleColumnType(&ColumnTypeInfo{Name: "TINYTEXT", TypeFormat: "VARCHAR2($l)", HasLength: true, IsString: true})
+	OracleTEXT       = addOracleColumnType(&ColumnTypeInfo{Name: "TEXT", TypeFormat: "VARCHAR2($l)", HasLength: true, IsString: true})
+	OracleMEDIUMTEXT = addOracleColumnType(&ColumnTypeInfo{Name: "MEDIUMTEXT", TypeFormat: "CLOB($l)", HasLength: true, IsString: true})
+	OracleLONGTEXT   = addOracleColumnType(&ColumnTypeInfo{Name: "LONGTEXT", TypeFormat: "CLOB($l)", HasLength: true, IsString: true})
+	OracleENUM       = addOracleColumnType(&ColumnTypeInfo{Name: "ENUM", TypeFormat: "CHAR($l)", HasLength: true, IsString: true})
+	OracleTINYBLOB   = addOracleColumnType(&ColumnTypeInfo{Name: "TINYBLOB", TypeFormat: "BLOB($l)", HasLength: true, IsString: true})
 	OracleBLOB       = addOracleColumnType(&ColumnTypeInfo{Name: "BLOB", TypeFormat: "BLOB($l)", HasLength: true, IsString: true})
-	OracleMEDIUMBLOB = addOracleColumnType(&ColumnTypeInfo{Name: "MEDIUMBLOB", TypeFormat: "MEDIUMBLOB($l)", HasLength: true, IsString: true})
-	OracleLONGBLOB   = addOracleColumnType(&ColumnTypeInfo{Name: "LONGBLOB", TypeFormat: "LONGBLOB($l)", HasLength: true, IsString: true})
+	OracleMEDIUMBLOB = addOracleColumnType(&ColumnTypeInfo{Name: "MEDIUMBLOB", TypeFormat: "BLOB($l)", HasLength: true, IsString: true})
+	OracleLONGBLOB   = addOracleColumnType(&ColumnTypeInfo{Name: "LONGBLOB", TypeFormat: "BLOB($l)", HasLength: true, IsString: true})
 
 	OracleSET = addOracleColumnType(&ColumnTypeInfo{Name: "SET", TypeFormat: "SET($l)", HasLength: true, IsString: true})
 )

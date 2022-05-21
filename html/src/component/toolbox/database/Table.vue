@@ -29,7 +29,6 @@
           <el-switch
             v-model="isInsert"
             @change="toLoad"
-            style="width: 120px"
             :readonly="tableDetail == null"
           >
           </el-switch>
@@ -38,7 +37,6 @@
           <el-select
             placeholder="当前库类型"
             v-model="form.databaseType"
-            @change="toLoad"
             style="width: 120px"
           >
             <el-option label="MySql" value="mysql"> </el-option>
@@ -50,11 +48,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="追加库名">
-          <el-switch
-            v-model="form.appendDatabase"
-            @change="toLoad"
-            style="width: 120px"
-          >
+          <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>
         </el-form-item>
         <template v-if="form.appendDatabase">
@@ -171,7 +165,7 @@ export default {
         databaseType: null,
         name: "TB_XXX",
         comment: "",
-        appendDatabase: true,
+        appendDatabase: false,
         databasePackingCharacter: "`",
         tablePackingCharacter: "`",
         columnPackingCharacter: "`",
@@ -188,7 +182,23 @@ export default {
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "form.databaseType"() {
+      if (
+        this.tool.isEmpty(this.form.databaseType) ||
+        this.form.databaseType == "mysql"
+      ) {
+        this.form.databasePackingCharacter = "`";
+        this.form.tablePackingCharacter = "`";
+        this.form.columnPackingCharacter = "`";
+      } else {
+        this.form.databasePackingCharacter = `"`;
+        this.form.tablePackingCharacter = `"`;
+        this.form.columnPackingCharacter = `"`;
+      }
+      this.toLoad();
+    },
+  },
   methods: {
     async init() {
       let tableDetail = null;
@@ -283,6 +293,7 @@ export default {
         return;
       }
       this.tool.success("执行成功");
+      this.init();
       return res.data || {};
     },
     async onTableDetailChange() {
