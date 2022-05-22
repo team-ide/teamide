@@ -11,43 +11,44 @@ import (
 )
 
 var (
-	importDataForStrategyTaskCache = map[string]*importDataForStrategyTask{}
+	databaseImportTaskCache = map[string]*databaseImportTask{}
 )
 
-func addImportDataForStrategyTask(task *importDataForStrategyTask) {
-	importDataForStrategyTaskCache[task.Key] = task
+func addDatabaseImportTask(task *databaseImportTask) {
+	databaseImportTaskCache[task.Key] = task
 	go task.Start()
 }
 
-type importDataForStrategyTask struct {
-	Key               string                   `json:"key,omitempty"`
-	Database          string                   `json:"database,omitempty"`
-	Table             string                   `json:"table,omitempty"`
-	ColumnList        []*db.TableColumnModel   `json:"columnList,omitempty"`
-	ImportDataList    []map[string]interface{} `json:"importDataList,omitempty"`
-	ImportBatchNumber int                      `json:"importBatchNumber,omitempty"`
-	DataCount         int                      `json:"dataCount"`
-	ReadyDataCount    int                      `json:"readyDataCount"`
-	ImportSuccess     int                      `json:"importSuccess"`
-	ImportError       int                      `json:"importError"`
-	IsEnd             bool                     `json:"isEnd,omitempty"`
-	StartTime         time.Time                `json:"startTime,omitempty"`
-	EndTime           time.Time                `json:"endTime,omitempty"`
-	Error             string                   `json:"error,omitempty"`
-	UseTime           int64                    `json:"useTime"`
-	IsStop            bool                     `json:"isStop"`
-	service           DatabaseService
-	generateParam     *db.GenerateParam
+type databaseImportTask struct {
+	Key              string                   `json:"key,omitempty"`
+	Database         string                   `json:"database,omitempty"`
+	Table            string                   `json:"table,omitempty"`
+	ImportType       string                   `json:"importType,omitempty"`
+	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
+	StrategyDataList []map[string]interface{} `json:"strategyDataList,omitempty"`
+	BatchNumber      int                      `json:"batchNumber,omitempty"`
+	DataCount        int                      `json:"dataCount"`
+	ReadyDataCount   int                      `json:"readyDataCount"`
+	SuccessCount     int                      `json:"successCount"`
+	ErrorCount       int                      `json:"errorCount"`
+	IsEnd            bool                     `json:"isEnd,omitempty"`
+	StartTime        time.Time                `json:"startTime,omitempty"`
+	EndTime          time.Time                `json:"endTime,omitempty"`
+	Error            string                   `json:"error,omitempty"`
+	UseTime          int64                    `json:"useTime"`
+	IsStop           bool                     `json:"isStop"`
+	service          DatabaseService
+	generateParam    *db.GenerateParam
 }
 
-func (this_ *importDataForStrategyTask) Stop() {
+func (this_ *databaseImportTask) Stop() {
 	this_.IsStop = true
 }
-func (this_ *importDataForStrategyTask) Start() {
+func (this_ *databaseImportTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
-			util.Logger.Error("根据策略导入数据异常", zap.Any("error", err))
+			util.Logger.Error("导入数据异常", zap.Any("error", err))
 			this_.Error = fmt.Sprint(err)
 		}
 		this_.EndTime = time.Now()
@@ -55,7 +56,17 @@ func (this_ *importDataForStrategyTask) Start() {
 		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
 
-	for _, importData := range this_.ImportDataList {
+	if this_.ImportType == "strategy" {
+		err := this_.doStrategy()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+}
+
+func (this_ *databaseImportTask) doStrategy() (err error) {
+	for _, importData := range this_.StrategyDataList {
 		importCount := 0
 		if importData["_$importCount"] != nil {
 			importCount = int(importData["_$importCount"].(float64))
@@ -67,17 +78,19 @@ func (this_ *importDataForStrategyTask) Start() {
 		this_.DataCount += importCount
 	}
 
-	for _, importData := range this_.ImportDataList {
+	for _, importData := range this_.StrategyDataList {
 		if this_.IsStop {
 			break
 		}
-		err := this_.importData(this_.Database, this_.Table, this_.ColumnList, importData)
+		err = this_.doStrategyData(this_.Database, this_.Table, this_.ColumnList, importData)
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
+	return
 }
-func (this_ *importDataForStrategyTask) importData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
+
+func (this_ *databaseImportTask) doStrategyData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
 	importCount := importData["_$importCount"].(int)
 	if importCount <= 0 {
 		return
@@ -87,9 +100,9 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 	}
 
 	var dataList []map[string]interface{}
-	importBatchNumber := this_.ImportBatchNumber
-	if importBatchNumber <= 0 {
-		importBatchNumber = 10
+	batchNumber := this_.BatchNumber
+	if batchNumber <= 0 {
+		batchNumber = 10
 	}
 	scriptContext := javascript.GetContext()
 
@@ -138,32 +151,32 @@ func (this_ *importDataForStrategyTask) importData(database, table string, colum
 		}
 		this_.ReadyDataCount++
 		dataList = append(dataList, data)
-		if len(dataList) >= importBatchNumber {
+		if len(dataList) >= batchNumber {
 
 			if this_.IsStop {
 				return
 			}
 			err = this_.doImportData(database, table, columnList, dataList)
 			if err != nil {
-				this_.ImportError += len(dataList)
+				this_.ErrorCount += len(dataList)
 				return
 			} else {
-				this_.ImportSuccess += len(dataList)
+				this_.SuccessCount += len(dataList)
 			}
 			dataList = []map[string]interface{}{}
 		}
 	}
 	err = this_.doImportData(database, table, columnList, dataList)
 	if err != nil {
-		this_.ImportError += len(dataList)
+		this_.ErrorCount += len(dataList)
 		return
 	} else {
-		this_.ImportSuccess += len(dataList)
+		this_.SuccessCount += len(dataList)
 	}
 	return
 }
 
-func (this_ *importDataForStrategyTask) doImportData(database, table string, columnList []*db.TableColumnModel, dataList []map[string]interface{}) (err error) {
+func (this_ *databaseImportTask) doImportData(database, table string, columnList []*db.TableColumnModel, dataList []map[string]interface{}) (err error) {
 
 	if len(dataList) == 0 {
 		return

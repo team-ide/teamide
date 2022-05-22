@@ -2,12 +2,11 @@
   <div class="toolbox-database-ddl" v-loading="loading">
     <template v-if="ready">
       <el-form
-        class="pdt-10"
+        class="pdt-10 pdlr-10"
         ref="form"
         :model="form"
-        label-width="90px"
         size="mini"
-        :inline="true"
+        inline
       >
         <el-form-item label="数据库类型">
           <el-select

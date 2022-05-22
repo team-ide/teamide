@@ -12,10 +12,8 @@
       <el-form
         class="database-table-detail-form pdlr-10"
         ref="form"
-        :model="form"
         size="mini"
-        :inline="true"
-        label-position="top"
+        inline
       >
         <el-form-item label="库名">
           <el-input
@@ -349,9 +347,5 @@ export default {
   outline: none;
   user-select: none;
   resize: none;
-}
-.database-table-detail-form .el-form-item__label {
-  line-height: 28px;
-  padding: 0px;
 }
 </style>

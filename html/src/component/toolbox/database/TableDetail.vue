@@ -1,250 +1,233 @@
 <template>
   <div class="database-table-detail">
     <div class="" v-if="tableDetail != null">
-      <el-form
-        ref="form"
-        :model="form"
-        label-width="90px"
-        size="mini"
-        label-position="top"
-      >
-        <el-form-item label="表名">
+      <el-form ref="form" inline size="mini">
+        <el-form-item label="表名" class="mgb-0">
           <el-input v-model="tableDetail.name" @change="change"> </el-input>
         </el-form-item>
-        <el-form-item label="注释">
+        <el-form-item label="注释" class="mgb-0">
           <el-input v-model="tableDetail.comment" @change="change"> </el-input>
         </el-form-item>
-        <el-form-item label="">
-          <div
-            class="
-              toolbox-database-table-data toolbox-database-table-data-table
-            "
-          >
-            <div class="">
-              <span>字段列表</span>
-              <div class="tm-link color-green mgl-10" @click="addColumn({})">
-                新增
-              </div>
-            </div>
-            <el-table
-              :data="columnList"
-              :border="true"
-              style="width: 100%"
-              size="mini"
-            >
-              <el-table-column label="字段名">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.name"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="类型" width="120">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-select
-                      placeholder="选中类型"
-                      v-model="scope.row.type"
-                      @change="change"
-                      filterable
-                    >
-                      <el-option
-                        v-for="(one, index) in toolbox.mysqlColumnTypeInfos"
-                        :key="index"
-                        :value="one.name"
-                        :label="one.name"
-                      >
-                      </el-option>
-                    </el-select>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="长度" width="70">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.length"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="小数点" width="70">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.decimal"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="必填" width="60">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-switch v-model="scope.row.notNull" @change="change" />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="主键" width="60">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-switch
-                      v-model="scope.row.primaryKey"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="默认值">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.default"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="注释">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.comment"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="200px">
-                <template slot-scope="scope">
-                  <div
-                    class="tm-link color-grey mglr-5"
-                    @click="upColumn(scope.row)"
-                  >
-                    上移
-                  </div>
-                  <div
-                    class="tm-link color-grey mglr-5"
-                    @click="downColumn(scope.row)"
-                  >
-                    下移
-                  </div>
-                  <div
-                    class="tm-link color-grey mglr-5"
-                    @click="addColumn({}, scope.row)"
-                  >
-                    插入字段
-                  </div>
-                  <div
-                    class="tm-link color-red mglr-5"
-                    @click="removeColumn(scope.row)"
-                  >
-                    删除
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </el-form-item>
-        <el-form-item label="">
-          <div
-            class="
-              toolbox-database-table-data toolbox-database-table-data-table
-            "
-          >
-            <div class="">
-              <span>索引列表</span>
-              <div class="tm-link color-green mgl-10" @click="addIndex({})">
-                新增
-              </div>
-            </div>
-            <el-table
-              :data="indexList"
-              :border="true"
-              style="width: 100%"
-              size="mini"
-            >
-              <el-table-column label="索引名称" width="200">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.name"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="类型" width="120">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-select
-                      placeholder="普通索引"
-                      v-model="scope.row.type"
-                      @change="change"
-                    >
-                      <el-option value="" label="普通索引"></el-option>
-                      <el-option value="unique" label="唯一索引"></el-option>
-                    </el-select>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="字段">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-select
-                      placeholder="选中字段"
-                      v-model="scope.row.columns"
-                      @change="change"
-                      filterable
-                      multiple
-                      style="width: 100%"
-                    >
-                      <el-option
-                        v-for="(one, index) in tableDetail.columnList"
-                        :key="index"
-                        :value="one.name"
-                        :label="one.name"
-                      >
-                      </el-option>
-                    </el-select>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="注释" width="200">
-                <template slot-scope="scope">
-                  <div class="">
-                    <el-input
-                      v-model="scope.row.comment"
-                      type="text"
-                      @change="change"
-                    />
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="80">
-                <template slot-scope="scope">
-                  <div
-                    class="tm-link color-red mglr-5"
-                    @click="removeIndex(scope.row)"
-                  >
-                    删除
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-          </div>
-        </el-form-item>
       </el-form>
+      <div
+        class="toolbox-database-table-data toolbox-database-table-data-table"
+      >
+        <div class="pdtb-5 ft-13">
+          <span class="color-grey">字段列表</span>
+          <div class="tm-link color-green mgl-10" @click="addColumn({})">
+            新增
+          </div>
+        </div>
+        <el-table
+          :data="columnList"
+          :border="true"
+          style="width: 100%"
+          size="mini"
+        >
+          <el-table-column label="字段名">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.name"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="类型" width="120">
+            <template slot-scope="scope">
+              <div class="">
+                <el-select
+                  placeholder="选中类型"
+                  v-model="scope.row.type"
+                  @change="change"
+                  filterable
+                >
+                  <el-option
+                    v-for="(one, index) in toolbox.mysqlColumnTypeInfos"
+                    :key="index"
+                    :value="one.name"
+                    :label="one.name"
+                  >
+                  </el-option>
+                </el-select>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="长度" width="70">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.length"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="小数点" width="70">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.decimal"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="必填" width="60">
+            <template slot-scope="scope">
+              <div class="">
+                <el-switch v-model="scope.row.notNull" @change="change" />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="主键" width="60">
+            <template slot-scope="scope">
+              <div class="">
+                <el-switch v-model="scope.row.primaryKey" @change="change" />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="默认值">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.default"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="注释">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.comment"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="200px">
+            <template slot-scope="scope">
+              <div
+                class="tm-link color-grey mglr-5"
+                @click="upColumn(scope.row)"
+              >
+                上移
+              </div>
+              <div
+                class="tm-link color-grey mglr-5"
+                @click="downColumn(scope.row)"
+              >
+                下移
+              </div>
+              <div
+                class="tm-link color-grey mglr-5"
+                @click="addColumn({}, scope.row)"
+              >
+                插入字段
+              </div>
+              <div
+                class="tm-link color-red mglr-5"
+                @click="removeColumn(scope.row)"
+              >
+                删除
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div
+        class="toolbox-database-table-data toolbox-database-table-data-table"
+      >
+        <div class="pdtb-5 ft-13">
+          <span class="color-grey">索引列表</span>
+          <div class="tm-link color-green mgl-10" @click="addIndex({})">
+            新增
+          </div>
+        </div>
+        <el-table
+          :data="indexList"
+          :border="true"
+          style="width: 100%"
+          size="mini"
+        >
+          <el-table-column label="索引名称" width="200">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.name"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="类型" width="120">
+            <template slot-scope="scope">
+              <div class="">
+                <el-select
+                  placeholder="普通索引"
+                  v-model="scope.row.type"
+                  @change="change"
+                >
+                  <el-option value="" label="普通索引"></el-option>
+                  <el-option value="unique" label="唯一索引"></el-option>
+                </el-select>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="字段">
+            <template slot-scope="scope">
+              <div class="">
+                <el-select
+                  placeholder="选中字段"
+                  v-model="scope.row.columns"
+                  @change="change"
+                  filterable
+                  multiple
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="(one, index) in tableDetail.columnList"
+                    :key="index"
+                    :value="one.name"
+                    :label="one.name"
+                  >
+                  </el-option>
+                </el-select>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="注释" width="200">
+            <template slot-scope="scope">
+              <div class="">
+                <el-input
+                  v-model="scope.row.comment"
+                  type="text"
+                  @change="change"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="80">
+            <template slot-scope="scope">
+              <div
+                class="tm-link color-red mglr-5"
+                @click="removeIndex(scope.row)"
+              >
+                删除
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
   </div>
 </template>
@@ -436,12 +419,6 @@ export default {
 </script>
 
 <style>
-.database-table-detail {
-}
-.database-table-detail .el-form-item__label {
-  line-height: 28px;
-  padding: 0px;
-}
 .database-table-detail .el-table th .cell {
   padding: 0px 0px !important;
   line-height: 30px;

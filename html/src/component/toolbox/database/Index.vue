@@ -29,12 +29,6 @@
       </ShowExportSql>
       <ShowSaveSql :source="source" :toolbox="toolbox" :wrap="wrap">
       </ShowSaveSql>
-      <ShowImportDataForStrategy
-        :source="source"
-        :toolbox="toolbox"
-        :wrap="wrap"
-      >
-      </ShowImportDataForStrategy>
       <CreateDatabase :source="source" :toolbox="toolbox" :wrap="wrap">
       </CreateDatabase>
       <Table :source="source" :toolbox="toolbox" :wrap="wrap"> </Table>
@@ -48,7 +42,6 @@ import Database from "./Database";
 import Tabs from "./Tabs";
 import ShowExportSql from "./ShowExportSql";
 import ShowSaveSql from "./ShowSaveSql";
-import ShowImportDataForStrategy from "./ShowImportDataForStrategy";
 import CreateDatabase from "./CreateDatabase";
 
 export default {
@@ -57,7 +50,6 @@ export default {
     Tabs,
     ShowExportSql,
     ShowSaveSql,
-    ShowImportDataForStrategy,
     CreateDatabase,
   },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],

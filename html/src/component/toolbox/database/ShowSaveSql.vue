@@ -1,7 +1,13 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="'导出：' + (tableDetail == null ? '' : tableDetail.name)"
+    :title="
+      '导出：[' +
+      database +
+      '].[' +
+      (tableDetail == null ? '' : tableDetail.name) +
+      '] 数据为SQL'
+    "
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
@@ -97,6 +103,7 @@ export default {
     return {
       showDialog: false,
       showSQL: null,
+      database: null,
       tableDetail: null,
       packingCharacters: [
         { value: "", text: "不包装" },

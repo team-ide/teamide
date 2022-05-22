@@ -23,7 +23,7 @@
             <div class="">
               <input
                 v-model="scope.row[column.name]"
-                :placeholder="scope.row[column.name] == null ? 'null' : ''"
+                :placeholder="scope.row[column.name] == null ? 'NULL' : ''"
                 type="text"
               />
             </div>

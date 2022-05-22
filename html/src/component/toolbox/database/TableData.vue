@@ -216,12 +216,6 @@
               }}/删除:{{ selects.length }})
             </div>
             <div
-              @click="importDataForStrategy"
-              class="color-grey tm-link mgr-10"
-            >
-              导入(策略)
-            </div>
-            <div
               @click="showExportSql"
               class="color-grey tm-link mgr-10"
               :class="{ 'tm-disabled': selects.length == 0 }"
@@ -1075,9 +1069,6 @@ export default {
       } else {
         this.dataList.push(data);
       }
-    },
-    importDataForStrategy() {
-      this.wrap.showImportDataForStrategy(this.database, this.tableDetail);
     },
     showExportSql() {
       this.wrap.showExportSql(this.database, this.tableDetail, this.selects);
