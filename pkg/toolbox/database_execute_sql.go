@@ -3,7 +3,7 @@ package toolbox
 import (
 	"context"
 	"fmt"
-	"gitee.com/chunanyong/zorm"
+	"gitee.com/teamide/zorm"
 	"go.uber.org/zap"
 	"io"
 	"strconv"

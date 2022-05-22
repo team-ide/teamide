@@ -1,7 +1,7 @@
 package toolbox
 
 import (
-	"gitee.com/chunanyong/zorm"
+	"gitee.com/teamide/zorm"
 	"github.com/wxnacy/wgo/arrays"
 	"strconv"
 	"strings"

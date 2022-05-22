@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"errors"
-	"gitee.com/chunanyong/zorm"
+	"gitee.com/teamide/zorm"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"

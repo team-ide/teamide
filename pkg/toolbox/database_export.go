@@ -2,7 +2,8 @@ package toolbox
 
 import (
 	"fmt"
-	"gitee.com/chunanyong/zorm"
+	"gitee.com/teamide/zorm"
+	"github.com/tealeg/xlsx"
 	"go.uber.org/zap"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
@@ -83,12 +84,45 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 			return
 		}
 		excelPath += "/" + util.GenerateUUID() + ".xlsx"
-		//f := excelize.NewFile()
+
+		xlsxF := xlsx.NewFile()
+		_, err = xlsxF.AddSheet("Sheet")
+		if err != nil {
+			return
+		}
+		err = xlsxF.Save(excelPath)
+		if err != nil {
+			return
+		}
 	}
 
-	//for _, exportColumn := range this_.ExportColumnList {
-	//
-	//}
+	xlsxF, err := xlsx.OpenFile(excelPath)
+	if err != nil {
+		return
+	}
+	sheet := xlsxF.Sheets[0]
+
+	for _, data := range dataList {
+
+		row := sheet.AddRow()
+
+		for _, exportColumn := range this_.ExportColumnList {
+			var columnName string
+			columnName = exportColumn["column"].(string)
+
+			cell := row.AddCell()
+			value := data[columnName]
+			if value != nil {
+				stringValue := db.GetStringValue(value)
+				cell.Value = stringValue
+			}
+
+		}
+	}
+	err = xlsxF.Save(excelPath)
+	if err != nil {
+		return
+	}
 	return
 
 }

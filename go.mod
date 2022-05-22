@@ -3,7 +3,7 @@ module teamide
 go 1.18
 
 require (
-	gitee.com/chunanyong/zorm v1.5.5
+	gitee.com/teamide/zorm v1.5.7
 	github.com/Chain-Zhang/pinyin v0.1.3
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Shopify/sarama v1.33.0
@@ -22,6 +22,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.7.1
+	github.com/tealeg/xlsx v1.0.5
 	github.com/wxnacy/wgo v1.0.4
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88
