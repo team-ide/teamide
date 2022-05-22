@@ -9,9 +9,7 @@
           <el-input v-model="tableDetail.comment" @change="change"> </el-input>
         </el-form-item>
       </el-form>
-      <div
-        class="toolbox-database-table-data toolbox-database-table-data-table"
-      >
+      <div class="toolbox-database-table-data-table">
         <div class="pdtb-5 ft-13">
           <span class="color-grey">字段列表</span>
           <div class="tm-link color-green mgl-10" @click="addColumn({})">
@@ -143,9 +141,7 @@
           </el-table-column>
         </el-table>
       </div>
-      <div
-        class="toolbox-database-table-data toolbox-database-table-data-table"
-      >
+      <div class="toolbox-database-table-data-table">
         <div class="pdtb-5 ft-13">
           <span class="color-grey">索引列表</span>
           <div class="tm-link color-green mgl-10" @click="addIndex({})">

@@ -226,7 +226,11 @@
           </div>
         </tm-layout>
         <tm-layout height="auto" v-loading="dataList_loading">
-          <div class="toolbox-database-table-data-table" @keyup="tableKeyUp">
+          <div
+            class="toolbox-database-table-data-table"
+            @keyup="tableKeyUp"
+            style="height: 100%"
+          >
             <el-table
               :data="dataList"
               :border="true"
@@ -1101,69 +1105,6 @@ export default {
   height: 100%;
   user-select: none;
 }
-.toolbox-database-table-data .el-table__header-wrapper th.el-table__cell {
-  user-select: text;
-}
-.toolbox-database-table-data-table {
-  width: 100%;
-  height: 100%;
-}
-.toolbox-database-table-data .el-table input[type="checkbox"] {
-  vertical-align: -2px;
-}
-
-.toolbox-database-table-data .el-table,
-.toolbox-database-table-data .el-table__expanded-cell {
-  background: transparent;
-}
-.toolbox-database-table-data .el-table th,
-.toolbox-database-table-data .el-table td {
-  background: #172029;
-}
-.toolbox-database-table-data .el-table .el-table__row:hover td.el-table__cell,
-.toolbox-database-table-data .el-table .el-table__row:hover td.el-table__cell,
-.toolbox-database-table-data
-  .el-table
-  .el-table__row.hover-row
-  td.el-table__cell {
-  background-color: #473939;
-}
-.toolbox-database-table-data .el-table__fixed-right::before,
-.el-table__fixed::before {
-  background-color: transparent;
-}
-.toolbox-database-table-data .el-table {
-  color: unset;
-}
-.toolbox-database-table-data .el-table--mini td,
-.toolbox-database-table-data .el-table--mini th {
-  padding: 3px 0;
-}
-.toolbox-database-table-data .el-table--border::after,
-.toolbox-database-table-data .el-table--group::after,
-.toolbox-database-table-data .el-table::before {
-  background-color: transparent;
-}
-.toolbox-database-table-data .el-table--border,
-.toolbox-database-table-data .el-table--group {
-  border: 1px solid #404040;
-}
-.toolbox-database-table-data .el-table td,
-.toolbox-database-table-data .el-table th.is-leaf {
-  border-bottom: 1px solid #404040;
-}
-.toolbox-database-table-data .el-table--border .el-table__cell,
-.toolbox-database-table-data
-  .el-table__body-wrapper
-  .el-table--border.is-scrolling-left
-  ~ .el-table__fixed {
-  border-right: 1px solid #404040;
-}
-.toolbox-database-table-data
-  .el-table--border
-  th.el-table__cell.gutter:last-of-type {
-  border-bottom: 1px solid #404040;
-}
 .toolbox-database-table-data .el-divider {
   background-color: #404040;
 }
@@ -1171,52 +1112,6 @@ export default {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.toolbox-database-table-data .el-table .el-table__cell {
-  padding: 0px;
-}
-.toolbox-database-table-data .el-table .cell {
-  white-space: nowrap;
-}
-.toolbox-database-table-data .el-table tbody .cell {
-  padding-left: 0px !important;
-}
-.toolbox-database-table-data .el-table input {
-  color: #ddd;
-  border: 0px dashed transparent;
-  background-color: transparent;
-  width: 100%;
-  padding: 0px 5px;
-  box-sizing: border-box;
-  outline: none;
-  font-size: 12px;
-}
-.toolbox-database-table-data .el-table .el-switch {
-  font-size: 12px;
-  line-height: 14px;
-  height: 14px;
-}
-.toolbox-database-table-data .el-table .el-switch .el-switch__core {
-  height: 14px;
-  background-color: #4f4f4f;
-  border: 0px;
-}
-.toolbox-database-table-data .el-table .el-switch.is-checked .el-switch__core {
-  border-color: #04acb5;
-  background-color: #04acb5;
-  border: 0px;
-}
-.toolbox-database-table-data .el-table .el-switch .el-switch__core:after {
-  width: 12px;
-  height: 12px;
-  background-color: #727272;
-}
-.toolbox-database-table-data .el-table .el-tag.el-tag--info {
-  background-color: transparent;
-  color: inherit;
-}
-.toolbox-database-table-data .el-table .el-select__tags-text {
-  font-size: 12px;
-}
 .toolbox-database-table-data-pagination .el-pagination {
   color: #929292;
 }
@@ -1249,6 +1144,121 @@ export default {
 }
 .toolbox-database-table-data-pagination .el-pager li {
   background: transparent;
+}
+
+.toolbox-database-table-data-table .el-table__header-wrapper th.el-table__cell {
+  user-select: text;
+}
+.toolbox-database-table-data-table .el-table input[type="checkbox"] {
+  vertical-align: -2px;
+}
+
+.toolbox-database-table-data-table .el-table,
+.toolbox-database-table-data-table .el-table__expanded-cell {
+  background: transparent;
+}
+.toolbox-database-table-data-table .el-table th,
+.toolbox-database-table-data-table .el-table td {
+  background: #172029;
+}
+.toolbox-database-table-data-table
+  .el-table
+  .el-table__row:hover
+  td.el-table__cell,
+.toolbox-database-table-data-table
+  .el-table
+  .el-table__row:hover
+  td.el-table__cell,
+.toolbox-database-table-data-table
+  .el-table
+  .el-table__row.hover-row
+  td.el-table__cell {
+  background-color: #473939;
+}
+.toolbox-database-table-data-table .el-table__fixed-right::before,
+.el-table__fixed::before {
+  background-color: transparent;
+}
+.toolbox-database-table-data-table .el-table {
+  color: unset;
+}
+.toolbox-database-table-data-table .el-table--mini td,
+.toolbox-database-table-data-table .el-table--mini th {
+  padding: 3px 0;
+}
+.toolbox-database-table-data-table .el-table--border::after,
+.toolbox-database-table-data-table .el-table--group::after,
+.toolbox-database-table-data-table .el-table::before {
+  background-color: transparent;
+}
+.toolbox-database-table-data-table .el-table--border,
+.toolbox-database-table-data-table .el-table--group {
+  border: 1px solid #404040;
+}
+.toolbox-database-table-data-table .el-table td,
+.toolbox-database-table-data-table .el-table th.is-leaf {
+  border-bottom: 1px solid #404040;
+}
+.toolbox-database-table-data-table .el-table--border .el-table__cell,
+.toolbox-database-table-data-table
+  .el-table__body-wrapper
+  .el-table--border.is-scrolling-left
+  ~ .el-table__fixed {
+  border-right: 1px solid #404040;
+}
+.toolbox-database-table-data-table
+  .el-table--border
+  th.el-table__cell.gutter:last-of-type {
+  border-bottom: 1px solid #404040;
+}
+.toolbox-database-table-data-table .el-table .el-table__cell {
+  padding: 0px;
+}
+.toolbox-database-table-data-table .el-table .cell {
+  white-space: nowrap;
+}
+.toolbox-database-table-data-table .el-table tbody .cell {
+  padding-left: 0px !important;
+}
+.toolbox-database-table-data-table .el-table input {
+  color: #ddd;
+  border: 0px dashed transparent;
+  background-color: transparent;
+  width: 100%;
+  padding: 0px 5px;
+  box-sizing: border-box;
+  outline: none;
+  font-size: 12px;
+}
+.toolbox-database-table-data-table .el-table .el-switch {
+  font-size: 12px;
+  line-height: 14px;
+  height: 14px;
+}
+.toolbox-database-table-data-table .el-table .el-switch .el-switch__core {
+  height: 14px;
+  background-color: #4f4f4f;
+  border: 0px;
+}
+.toolbox-database-table-data-table
+  .el-table
+  .el-switch.is-checked
+  .el-switch__core {
+  border-color: #04acb5;
+  background-color: #04acb5;
+  border: 0px;
+}
+.toolbox-database-table-data-table .el-table .el-switch .el-switch__core:after {
+  width: 12px;
+  height: 12px;
+  background-color: #727272;
+}
+.toolbox-database-table-data-table .el-table .el-tag.el-tag--info {
+  background-color: transparent;
+  color: inherit;
+}
+.toolbox-database-table-data-table .el-table .el-select__tags-text {
+  font-size: 12px;
 }
 
 .toolbox-database-table-data-table

@@ -59,20 +59,19 @@
             <span>转为拼音</span>
           </div>
         </div>
+        <div class="mgt-10">
+          <div class="tm-link color-grey" @click="addStrategyData">添加</div>
+        </div>
         <div
           v-if="tableDetail != null"
-          class="
-            mgt-20
-            toolbox-database-table-data toolbox-database-table-data-table
-          "
+          class="mgt-10 toolbox-database-table-data-table"
+          style="height: 300px"
         >
-          <div class="mgb-10">
-            <div class="tm-link color-grey" @click="addStrategyData">添加</div>
-          </div>
           <el-table
             :data="strategyDataList"
             borde
             style="width: 100%"
+            height="100%"
             size="mini"
           >
             <el-table-column width="110" label="导入数量">

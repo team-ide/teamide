@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-database-table-data toolbox-database-table-data-table">
+  <div class="toolbox-database-table-data-table">
     <el-table
       :data="dataList"
       :border="true"

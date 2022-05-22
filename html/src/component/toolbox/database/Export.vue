@@ -1,6 +1,6 @@
 <template>
   <div class="toolbox-database-export">
-    <div class="pd-10">
+    <div class="scrollbar pd-10" style="height: calc(100% - 120px)">
       <el-form ref="form" :model="form" size="mini" inline>
         <el-form-item label="导出类型">
           <el-select v-model="form.exportType" style="width: 100px">
@@ -19,6 +19,10 @@
             <el-switch v-model="form.appendDatabase"> </el-switch>
           </el-form-item>
           <template v-if="form.appendDatabase">
+            <el-form-item label="导出库名（导出SQL文件拼接的库名）">
+              <el-input v-model="form.exportDatabase" style="width: 120px">
+              </el-input>
+            </el-form-item>
             <el-form-item label="库名包装">
               <el-select
                 placeholder="不包装"
@@ -35,6 +39,10 @@
               </el-select>
             </el-form-item>
           </template>
+          <el-form-item label="导出表名（导出SQL文件拼接的表名）">
+            <el-input v-model="form.exportTable" style="width: 120px">
+            </el-input>
+          </el-form-item>
           <el-form-item label="表名包装">
             <el-select
               placeholder="不包装"
@@ -92,13 +100,10 @@
           </el-form-item>
         </template>
       </el-form>
-      <template v-if="form.exportType == 'excel'">
+      <template v-if="form.exportType == 'excel' || form.exportType == 'sql'">
         <div
           v-if="tableDetail != null"
-          class="
-            mgt-20
-            toolbox-database-table-data toolbox-database-table-data-table
-          "
+          class="mgt-20 toolbox-database-table-data-table"
         >
           <div class="mgb-10">
             <div class="tm-link color-grey" @click="addExportColumn">添加</div>
@@ -128,7 +133,7 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="导出名称">
+            <el-table-column label="导出名称（列名，字段名）">
               <template slot-scope="scope">
                 <div class="">
                   <el-input v-model="scope.row.exportName" type="text" />
@@ -173,84 +178,78 @@
           </el-table>
         </div>
       </template>
-      <div class="mgt-10" style="user-select: text">
-        <div class="ft-12">
-          <span class="color-grey">任务状态：</span>
-          <template v-if="task == null">
-            <span class="color-orange pdr-10">暂未开始</span>
+    </div>
+    <div class="pdlr-10 mgt-10" style="user-select: text">
+      <div class="ft-12">
+        <span class="color-grey">任务状态：</span>
+        <template v-if="task == null">
+          <span class="color-orange pdr-10">暂未开始</span>
+        </template>
+        <template v-else>
+          <template v-if="!task.isEnd">
+            <span class="color-orange pdr-10"> 处理中 </span>
+          </template>
+          <template v-if="task.isStop">
+            <span class="color-red pdr-10"> 已停止 </span>
           </template>
           <template v-else>
-            <template v-if="!task.isEnd">
-              <span class="color-orange pdr-10"> 处理中 </span>
-            </template>
-            <template v-if="task.isStop">
-              <span class="color-red pdr-10"> 已停止 </span>
-            </template>
-            <template v-else>
-              <span class="color-green pdr-10"> 执行完成 </span>
-            </template>
+            <span class="color-green pdr-10"> 执行完成 </span>
+          </template>
+          <span class="color-grey pdr-10">
+            开始：
+            <span>
+              {{
+                tool.formatDate(new Date(task.startTime), "yyyy-MM-dd hh:mm:ss")
+              }}
+            </span>
+          </span>
+          <template v-if="task.isEnd">
             <span class="color-grey pdr-10">
-              开始：
+              结束：
               <span>
                 {{
-                  tool.formatDate(
-                    new Date(task.startTime),
-                    "yyyy-MM-dd hh:mm:ss"
-                  )
+                  tool.formatDate(new Date(task.endTime), "yyyy-MM-dd hh:mm:ss")
                 }}
               </span>
             </span>
-            <template v-if="task.isEnd">
-              <span class="color-grey pdr-10">
-                结束：
-                <span>
-                  {{
-                    tool.formatDate(
-                      new Date(task.endTime),
-                      "yyyy-MM-dd hh:mm:ss"
-                    )
-                  }}
-                </span>
-              </span>
-              <span class="color-grey pdr-10">
-                耗时： <span>{{ task.useTime }} 毫秒</span>
-              </span>
-            </template>
-            <template v-if="!task.isEnd">
-              <div @click="stopTask" class="color-red tm-link mgr-10">
-                停止执行
-              </div>
-            </template>
-            <div class="mgt-5">
-              <span class="color-grey pdr-10">
-                预计导出： <span>{{ task.dataCount }}</span>
-              </span>
-              <span class="color-grey pdr-10">
-                已准备数据： <span>{{ task.readyDataCount }}</span>
-              </span>
-              <span class="color-success pdr-10">
-                成功： <span>{{ task.successCount }}</span>
-              </span>
-              <span class="color-error pdr-10">
-                异常： <span>{{ task.errorCount }}</span>
-              </span>
-              <template v-if="task.isEnd">
-                <div class="tm-link color-green mgl-50" @click="toDownload">
-                  下载
-                </div>
-              </template>
-            </div>
-            <template v-if="task.error != null">
-              <div class="mgt-5 color-error pdr-10">
-                异常： <span>{{ task.error }}</span>
-              </div>
-            </template>
+            <span class="color-grey pdr-10">
+              耗时： <span>{{ task.useTime }} 毫秒</span>
+            </span>
           </template>
-        </div>
+          <template v-if="!task.isEnd">
+            <div @click="stopTask" class="color-red tm-link mgr-10">
+              停止执行
+            </div>
+          </template>
+          <div class="mgt-5">
+            <span class="color-grey pdr-10">
+              预计导出： <span>{{ task.dataCount }}</span>
+            </span>
+            <span class="color-grey pdr-10">
+              已准备数据： <span>{{ task.readyDataCount }}</span>
+            </span>
+            <span class="color-success pdr-10">
+              成功： <span>{{ task.successCount }}</span>
+            </span>
+            <span class="color-error pdr-10">
+              异常： <span>{{ task.errorCount }}</span>
+            </span>
+            <template v-if="task.isEnd">
+              <div class="tm-link color-green mgl-50" @click="toDownload">
+                下载
+              </div>
+            </template>
+          </div>
+          <template v-if="task.error != null">
+            <div class="mgt-5 color-error pdr-10">
+              异常： <span>{{ task.error }}</span>
+            </div>
+          </template>
+        </template>
       </div>
-      <div class="mgt-20" v-if="taskKey == null">
-        <div class="tm-btn bg-green" @click="toExport">导出</div>
-      </div>
+    </div>
+    <div class="pdlr-10 mgt-10" v-if="taskKey == null">
+      <div class="tm-btn bg-green" @click="toExport">导出</div>
     </div>
   </div>
 </template>
@@ -264,7 +263,7 @@ export default {
     return {
       ready: false,
       exportTypes: [
-        { text: "SQL", value: "sql", disabled: true },
+        { text: "SQL", value: "sql" },
         { text: "Excel", value: "excel" },
       ],
       packingCharacters: [
@@ -294,7 +293,9 @@ export default {
       form: {
         exportType: "excel",
         appendDatabase: true,
+        exportDatabase: "",
         databasePackingCharacter: "`",
+        exportTable: "",
         tablePackingCharacter: "`",
         columnPackingCharacter: "`",
         stringPackingCharacter: "'",
@@ -316,6 +317,8 @@ export default {
           this.table
         );
       }
+      this.form.exportDatabase = this.database;
+      this.form.exportTable = this.table;
       this.exportColumnList = [];
 
       this.tableDetail.columnList.forEach((column) => {

@@ -1,6 +1,7 @@
 package toolbox
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"gitee.com/teamide/zorm"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"teamide/pkg/db"
 	"teamide/pkg/javascript"
 	"teamide/pkg/util"
@@ -31,6 +33,8 @@ type databaseExportTask struct {
 	generateParam    *db.GenerateParam
 	Key              string                   `json:"key,omitempty"`
 	ExportType       string                   `json:"exportType,omitempty"`
+	ExportDatabase   string                   `json:"exportDatabase,omitempty"`
+	ExportTable      string                   `json:"exportTable,omitempty"`
 	ExportColumnList []map[string]interface{} `json:"exportColumnList,omitempty"`
 	BatchNumber      int                      `json:"batchNumber,omitempty"`
 	DataCount        int                      `json:"dataCount"`
@@ -123,7 +127,12 @@ func (this_ *databaseExportTask) Start() {
 
 func (this_ *databaseExportTask) doExport(dataList []map[string]interface{}) (err error) {
 	if this_.ExportType == "excel" {
-		err = this_.doExcel(dataList)
+		err = this_.doExportExcel(dataList)
+		if err != nil {
+			return
+		}
+	} else if this_.ExportType == "sql" {
+		err = this_.doExportSql(dataList)
 		if err != nil {
 			return
 		}
@@ -131,7 +140,8 @@ func (this_ *databaseExportTask) doExport(dataList []map[string]interface{}) (er
 	return
 
 }
-func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err error) {
+
+func (this_ *databaseExportTask) doExportExcel(dataList []map[string]interface{}) (err error) {
 	var excelPath = this_.excelPath
 	if excelPath == "" {
 		excelPath, err = GetTempDir()
@@ -145,7 +155,7 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 			return
 		}
 		if !isExists {
-			err = os.MkdirAll(excelPath, 777)
+			err = os.MkdirAll(excelPath, 0777)
 			if err != nil {
 				return
 			}
@@ -195,12 +205,12 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 	}
 
 	for _, data := range dataList {
-
-		row := sheet.AddRow()
 		err = vm.Set("_$index", this_.exportDataIndex)
 		if err != nil {
 			return
 		}
+
+		row := sheet.AddRow()
 
 		for _, exportColumn := range this_.ExportColumnList {
 			var exportName string
@@ -242,6 +252,148 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 	if err != nil {
 		return
 	}
+	return
+
+}
+func GetColumnFromList(columnList []*db.TableColumnModel, name string) *db.TableColumnModel {
+	if len(columnList) == 0 {
+		return nil
+	}
+
+	for _, column := range columnList {
+		if column.Name == name {
+			return column
+		}
+	}
+	return nil
+
+}
+func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) (err error) {
+
+	var sqlF *os.File
+	var excelPath = this_.excelPath
+	if excelPath == "" {
+		excelPath, err = GetTempDir()
+		if err != nil {
+			return
+		}
+
+		var isExists bool
+		isExists, err = util.PathExists(excelPath)
+		if err != nil {
+			return
+		}
+		if !isExists {
+			err = os.MkdirAll(excelPath, 0777)
+			if err != nil {
+				return
+			}
+		}
+
+		excelPath += "/" + "导出库" + this_.request.Database + "-表" + this_.request.Table + "数据-" + time.Now().Format("20060102150405000") + ".sql"
+
+		sqlF, err = os.Create(excelPath)
+		if err != nil {
+			return
+		}
+
+		this_.excelPath = excelPath
+	} else {
+		sqlF, err = os.OpenFile(excelPath, os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			return
+		}
+	}
+
+	defer func() {
+		_ = sqlF.Close()
+	}()
+
+	//写入文件时，使用带缓存的 *Writer
+	write := bufio.NewWriter(sqlF)
+	scriptContext := javascript.GetContext()
+
+	vm := goja.New()
+
+	for key, value := range scriptContext {
+		err = vm.Set(key, value)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, data := range dataList {
+		err = vm.Set("_$index", this_.exportDataIndex)
+		if err != nil {
+			return
+		}
+
+		insertColumns := ""
+		insertValues := ""
+		for _, exportColumn := range this_.ExportColumnList {
+			var exportName string
+			if exportColumn["exportName"] != nil {
+				exportName = exportColumn["exportName"].(string)
+			}
+			var value = exportColumn["value"]
+			var column *db.TableColumnModel
+			if exportColumn["column"] != nil {
+				columnName := exportColumn["column"].(string)
+				column = GetColumnFromList(this_.request.ColumnList, columnName)
+			}
+			if column == nil {
+				column = &db.TableColumnModel{
+					Type: "VARCHAR",
+				}
+			}
+			if value == nil || value == "" {
+				if column != nil {
+					value = data[column.Name]
+				}
+			} else {
+				valueScript := value.(string)
+				var scriptValue goja.Value
+				scriptValue, err = vm.RunString(valueScript)
+				if err != nil {
+					util.Logger.Error("表达式执行异常", zap.Any("script", valueScript), zap.Error(err))
+					return
+				}
+				value = scriptValue.Export()
+			}
+
+			insertColumns += this_.generateParam.PackingCharacterColumn(exportName) + ", "
+			insertValues += this_.generateParam.PackingCharacterColumnStringValue(column, value) + ", "
+
+			err = vm.Set(exportName, value)
+			if err != nil {
+				return
+			}
+		}
+
+		insertColumns = strings.TrimSuffix(insertColumns, ", ")
+		insertValues = strings.TrimSuffix(insertValues, ", ")
+
+		sql := "INSERT INTO "
+
+		if this_.generateParam.AppendDatabase && this_.ExportDatabase != "" {
+			sql += this_.generateParam.PackingCharacterDatabase(this_.ExportDatabase) + "."
+		}
+		sql += this_.generateParam.PackingCharacterTable(this_.ExportTable)
+		if insertColumns != "" {
+			sql += "(" + insertColumns + ")"
+		}
+		if insertValues != "" {
+			sql += " VALUES (" + insertValues + ")"
+		}
+
+		_, err = write.WriteString(sql + ";\n")
+		if err != nil {
+			return
+		}
+		this_.exportDataIndex++
+		this_.SuccessCount++
+	}
+	err = write.Flush()
 	return
 
 }

@@ -1072,7 +1072,7 @@ func (this_ *SSHSftpClient) localRename(request *SFTPRequest) (response *SFTPRes
 
 	if request.IsNew {
 		if request.IsDir {
-			err = os.MkdirAll(request.NewPath, 777)
+			err = os.MkdirAll(request.NewPath, 0777)
 		} else {
 			var f *os.File
 			f, err = os.Create(request.NewPath)

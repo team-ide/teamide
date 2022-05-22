@@ -201,6 +201,10 @@ func ToTableDeleteDDL(param *GenerateParam, database string, table string) (sqlL
 	return
 }
 
+func (param *GenerateParam) PackingCharacterDatabase(value string) string {
+	return param.packingCharacterDatabase(value)
+}
+
 func (param *GenerateParam) packingCharacterDatabase(value string) string {
 	if param.DatabasePackingCharacter == "" {
 		return value
@@ -208,11 +212,19 @@ func (param *GenerateParam) packingCharacterDatabase(value string) string {
 	return param.DatabasePackingCharacter + value + param.DatabasePackingCharacter
 }
 
+func (param *GenerateParam) PackingCharacterTable(value string) string {
+	return param.packingCharacterTable(value)
+}
+
 func (param *GenerateParam) packingCharacterTable(value string) string {
 	if param.TablePackingCharacter == "" {
 		return value
 	}
 	return param.TablePackingCharacter + value + param.TablePackingCharacter
+}
+
+func (param *GenerateParam) PackingCharacterColumn(value string) string {
+	return param.packingCharacterColumn(value)
 }
 
 func (param *GenerateParam) packingCharacterColumn(value string) string {
@@ -223,6 +235,10 @@ func (param *GenerateParam) packingCharacterColumn(value string) string {
 	value = strings.ReplaceAll(value, `'`, "")
 	value = strings.ReplaceAll(value, "`", "")
 	return param.ColumnPackingCharacter + value + param.ColumnPackingCharacter
+}
+
+func (param *GenerateParam) PackingCharacterColumns(value string) string {
+	return param.packingCharacterColumns(value)
 }
 
 func (param *GenerateParam) packingCharacterColumns(columns string) string {
@@ -239,8 +255,12 @@ func (param *GenerateParam) packingCharacterColumns(columns string) string {
 	return res
 }
 
-func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColumnModel, value interface{}) string {
-	var formatColumnValue = param.formatColumnValue(column, value)
+func (param *GenerateParam) PackingCharacterColumnStringValue(tableColumn *TableColumnModel, value interface{}) string {
+	return param.packingCharacterColumnStringValue(tableColumn, value)
+}
+
+func (param *GenerateParam) packingCharacterColumnStringValue(tableColumn *TableColumnModel, value interface{}) string {
+	var formatColumnValue = param.formatColumnValue(tableColumn, value)
 	if formatColumnValue == nil {
 		return "NULL"
 	}
@@ -299,21 +319,32 @@ func (param *GenerateParam) packingCharacterColumnStringValue(column *TableColum
 	}
 	return formatStringValue(param.StringPackingCharacter, valueString)
 }
-func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value interface{}) interface{} {
+func (param *GenerateParam) formatColumnValue(tableColumn *TableColumnModel, value interface{}) interface{} {
+
+	var IsDateTime bool
+	var IsNumber bool
+	var Decimal int
+	if tableColumn != nil {
+
+		columnTypeInfo := DatabaseTypeMySql.GetColumnTypeInfo(tableColumn.Type)
+		if columnTypeInfo == nil {
+			util.Logger.Warn("字段类型[" + tableColumn.Type + "]未引射信息")
+			return value
+		}
+		IsDateTime = columnTypeInfo.IsDateTime
+		IsNumber = columnTypeInfo.IsNumber
+		Decimal = tableColumn.Decimal
+	}
+
 	if value == nil {
 		return value
 	}
-	columnTypeInfo := DatabaseTypeMySql.GetColumnTypeInfo(column.Type)
-	if columnTypeInfo == nil {
-		util.Logger.Warn("字段类型[" + column.Type + "]未引射信息")
-		return value
-	}
 	var stringValue = GetStringValue(value)
-	if columnTypeInfo.IsNumber {
+	if IsNumber {
 		if stringValue == "" {
 			return nil
 		}
-		if column.Decimal > 0 {
+		if Decimal > 0 {
 			f64, err := strconv.ParseFloat(stringValue, 64)
 			if err != nil {
 				util.Logger.Error("值["+stringValue+"]转化float64异常", zap.Error(err))
@@ -329,7 +360,7 @@ func (param *GenerateParam) formatColumnValue(column *TableColumnModel, value in
 			return i64
 		}
 	}
-	if columnTypeInfo.IsDateTime {
+	if IsDateTime {
 		if stringValue == "" {
 			return nil
 		}
