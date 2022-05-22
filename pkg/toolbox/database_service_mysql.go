@@ -226,9 +226,9 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 	return
 }
 
-func (this_ *MysqlService) DataList(param *db.GenerateParam, dataListParam DataListParam) (dataListResult DataListResult, err error) {
+func (this_ *MysqlService) DataList(param *db.GenerateParam, request *DatabaseBaseRequest) (dataListResult DataListResult, err error) {
 
-	sql, values, err := db.DataListSelectSql(param, dataListParam.Database, dataListParam.Table, dataListParam.ColumnList, dataListParam.Wheres, dataListParam.Orders)
+	sql, values, err := db.DataListSelectSql(param, request.Database, request.Table, request.ColumnList, request.Wheres, request.Orders)
 	if err != nil {
 		return
 	}
@@ -239,8 +239,8 @@ func (this_ *MysqlService) DataList(param *db.GenerateParam, dataListParam DataL
 	finder.Append(sql, values...)
 
 	page := zorm.NewPage()
-	page.PageSize = dataListParam.PageSize
-	page.PageNo = dataListParam.PageIndex
+	page.PageSize = request.PageSize
+	page.PageNo = request.PageIndex
 	listMap, err := this_.DatabaseWorker.FinderQueryMapPage(finder, page)
 	if err != nil {
 		return

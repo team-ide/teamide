@@ -20,11 +20,10 @@ func addDatabaseImportTask(task *databaseImportTask) {
 }
 
 type databaseImportTask struct {
+	request          *DatabaseBaseRequest
+	generateParam    *db.GenerateParam
 	Key              string                   `json:"key,omitempty"`
-	Database         string                   `json:"database,omitempty"`
-	Table            string                   `json:"table,omitempty"`
 	ImportType       string                   `json:"importType,omitempty"`
-	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
 	StrategyDataList []map[string]interface{} `json:"strategyDataList,omitempty"`
 	BatchNumber      int                      `json:"batchNumber,omitempty"`
 	DataCount        int                      `json:"dataCount"`
@@ -38,7 +37,6 @@ type databaseImportTask struct {
 	UseTime          int64                    `json:"useTime"`
 	IsStop           bool                     `json:"isStop"`
 	service          DatabaseService
-	generateParam    *db.GenerateParam
 }
 
 func (this_ *databaseImportTask) Stop() {
@@ -82,7 +80,7 @@ func (this_ *databaseImportTask) doStrategy() (err error) {
 		if this_.IsStop {
 			break
 		}
-		err = this_.doStrategyData(this_.Database, this_.Table, this_.ColumnList, importData)
+		err = this_.doStrategyData(this_.request.Database, this_.request.Table, this_.request.ColumnList, importData)
 		if err != nil {
 			return
 		}
@@ -143,8 +141,8 @@ func (this_ *databaseImportTask) doStrategyData(database, table string, columnLi
 				value = scriptValue.Export()
 			}
 			data[column.Name] = value
-			err = vm.Set(column.Name, value)
 
+			err = vm.Set(column.Name, value)
 			if err != nil {
 				return
 			}

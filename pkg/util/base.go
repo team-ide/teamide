@@ -36,3 +36,7 @@ func GetMd5String(str string) string {
 	arr := m.Sum(nil)
 	return fmt.Sprintf("%x", arr)
 }
+
+var (
+	TempDir = ""
+)

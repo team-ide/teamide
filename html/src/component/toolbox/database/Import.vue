@@ -9,6 +9,7 @@
               :key="index"
               :value="one.value"
               :label="one.text"
+              :disabled="one.disabled"
             >
             </el-option>
           </el-select>
@@ -103,7 +104,7 @@
           </el-table>
         </div>
       </template>
-      <div class="mgt-10">
+      <div class="mgt-10" style="user-select: text">
         <div class="ft-12">
           <span class="color-grey">任务状态：</span>
           <template v-if="task == null">
@@ -190,8 +191,8 @@ export default {
       ready: false,
       importTypes: [
         { text: "策略函数", value: "strategy" },
-        { text: "SQL", value: "sql" },
-        { text: "Excel", value: "excel" },
+        { text: "SQL", value: "sql", disabled: true },
+        { text: "Excel", value: "excel", disabled: true },
       ],
       form: {
         importType: "strategy",
@@ -271,6 +272,10 @@ export default {
       this.loadStatus();
     },
     async doImport() {
+      this.strategyDataList.forEach((one) => {
+        one._$importCount = Number(one._$importCount);
+      });
+
       let param = Object.assign({}, this.form);
       param.database = this.database;
       param.table = this.table;

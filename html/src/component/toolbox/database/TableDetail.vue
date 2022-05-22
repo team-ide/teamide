@@ -298,8 +298,8 @@ export default {
       this.onChange(this.tableDetail);
     },
     upColumn(column) {
-      this.up(this, "columnList", column);
-      this.up(this.tableDetail, "columnList", column);
+      this.tool.up(this, "columnList", column);
+      this.tool.up(this.tableDetail, "columnList", column);
 
       let findIndex = this.columnList.indexOf(column);
       if (findIndex == 0) {
@@ -315,8 +315,8 @@ export default {
       this.onChange(this.tableDetail);
     },
     downColumn(column) {
-      this.down(this, "columnList", column);
-      this.down(this.tableDetail, "columnList", column);
+      this.tool.down(this, "columnList", column);
+      this.tool.down(this.tableDetail, "columnList", column);
 
       let findIndex = this.columnList.indexOf(column);
       if (findIndex == 0) {
@@ -331,24 +331,7 @@ export default {
       this.initData();
       this.onChange(this.tableDetail);
     },
-    up(bean, name, value) {
-      if (bean != null && bean[name] != null) {
-        let index = bean[name].indexOf(value);
-        if (index > 0) {
-          bean[name].splice(index, 1);
-          bean[name].splice(index - 1, 0, value);
-        }
-      }
-    },
-    down(bean, name, value) {
-      if (bean != null && bean[name] != null) {
-        let index = bean[name].indexOf(value);
-        if (index >= 0 && index < bean[name].length - 1) {
-          bean[name].splice(index, 1);
-          bean[name].splice(index + 1, 0, value);
-        }
-      }
-    },
+
     addColumn(column, after) {
       column = column || {};
       column.name = column.name || "";

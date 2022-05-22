@@ -321,14 +321,8 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		var dataListParam = DataListParam{}
-		err = json.Unmarshal(dataBS, &dataListParam)
-		if err != nil {
-			return
-		}
-
 		var dataListRequest DataListResult
-		dataListRequest, err = service.DataList(generateParam, dataListParam)
+		dataListRequest, err = service.DataList(generateParam, request)
 		if err != nil {
 			return
 		}
@@ -355,6 +349,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 
+		saveDataListTask.request = request
 		saveDataListTask.service = service
 		saveDataListTask.generateParam = generateParam
 
@@ -381,6 +376,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 
+		saveDataListTask.request = request
 		saveDataListTask.service = service
 		saveDataListTask.generateParam = generateParam
 
@@ -404,6 +400,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 
+		databaseImportTask.request = request
 		databaseImportTask.Key = taskKey
 		databaseImportTask.service = service
 		databaseImportTask.generateParam = generateParam
@@ -436,6 +433,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 			return
 		}
 
+		databaseExportTask.request = request
 		databaseExportTask.Key = taskKey
 		databaseExportTask.service = service
 		databaseExportTask.generateParam = generateParam
@@ -532,18 +530,8 @@ type DatabaseService interface {
 	Databases() ([]*db.DatabaseModel, error)
 	Tables(database string) ([]*db.TableModel, error)
 	TableDetails(database string, table string) ([]*db.TableModel, error)
-	DataList(param *db.GenerateParam, dataListParam DataListParam) (DataListResult, error)
+	DataList(param *db.GenerateParam, request *DatabaseBaseRequest) (DataListResult, error)
 	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
-}
-
-type DataListParam struct {
-	Database   string                 `json:"database"`
-	Table      string                 `json:"table"`
-	ColumnList []*db.TableColumnModel `json:"columnList"`
-	Wheres     []*db.Where            `json:"wheres"`
-	PageIndex  int                    `json:"pageIndex"`
-	PageSize   int                    `json:"pageSize"`
-	Orders     []*db.Order            `json:"orders"`
 }
 
 type DataListResult struct {

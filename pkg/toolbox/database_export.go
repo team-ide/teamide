@@ -1,11 +1,18 @@
 package toolbox
 
 import (
+	"errors"
 	"fmt"
 	"gitee.com/teamide/zorm"
+	"github.com/dop251/goja"
+	"github.com/gin-gonic/gin"
 	"github.com/tealeg/xlsx"
 	"go.uber.org/zap"
+	"net/http"
+	"net/url"
+	"os"
 	"teamide/pkg/db"
+	"teamide/pkg/javascript"
 	"teamide/pkg/util"
 	"time"
 )
@@ -20,13 +27,10 @@ func addDatabaseExportTask(task *databaseExportTask) {
 }
 
 type databaseExportTask struct {
+	request          *DatabaseBaseRequest
+	generateParam    *db.GenerateParam
 	Key              string                   `json:"key,omitempty"`
-	Database         string                   `json:"database,omitempty"`
-	Table            string                   `json:"table,omitempty"`
 	ExportType       string                   `json:"exportType,omitempty"`
-	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
-	Wheres           []*db.Where              `json:"wheres"`
-	Orders           []*db.Order              `json:"orders"`
 	ExportColumnList []map[string]interface{} `json:"exportColumnList,omitempty"`
 	BatchNumber      int                      `json:"batchNumber,omitempty"`
 	DataCount        int                      `json:"dataCount"`
@@ -38,10 +42,61 @@ type databaseExportTask struct {
 	EndTime          time.Time                `json:"endTime,omitempty"`
 	Error            string                   `json:"error,omitempty"`
 	excelPath        string
+	exportDataIndex  int
 	UseTime          int64 `json:"useTime"`
 	IsStop           bool  `json:"isStop"`
 	service          DatabaseService
-	generateParam    *db.GenerateParam
+}
+
+func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) {
+
+	taskKey := data["taskKey"]
+	if taskKey == "" {
+		err = errors.New("taskKey获取失败")
+		return
+	}
+
+	databaseExportTask := databaseExportTaskCache[taskKey]
+	if databaseExportTask == nil {
+		err = errors.New("任务不存在")
+		return
+	}
+	path := databaseExportTask.excelPath
+	if path == "" {
+		err = errors.New("任务导出文件丢失")
+		return
+	}
+
+	var fileName string
+	var fileSize int64
+	ff, err := os.Lstat(path)
+	if err != nil {
+		return
+	}
+	fileName = ff.Name()
+	fileSize = ff.Size()
+
+	var fileInfo *os.File
+	fileInfo, err = os.Open(path)
+	if err != nil {
+		return
+	}
+	defer closeFile(fileInfo)
+
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fileName))
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Length", fmt.Sprint(fileSize))
+	c.Header("download-file-name", fileName)
+
+	err = CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+	})
+	if err != nil {
+		return
+	}
+
+	c.Status(http.StatusOK)
+	return
 }
 
 func (this_ *databaseExportTask) Stop() {
@@ -83,17 +138,43 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 		if err != nil {
 			return
 		}
-		excelPath += "/" + util.GenerateUUID() + ".xlsx"
 
-		xlsxF := xlsx.NewFile()
-		_, err = xlsxF.AddSheet("Sheet")
+		var isExists bool
+		isExists, err = util.PathExists(excelPath)
 		if err != nil {
 			return
+		}
+		if !isExists {
+			err = os.MkdirAll(excelPath, 777)
+			if err != nil {
+				return
+			}
+		}
+
+		excelPath += "/" + "导出库" + this_.request.Database + "-表" + this_.request.Table + "数据-" + time.Now().Format("20060102150405000") + ".xlsx"
+
+		xlsxF := xlsx.NewFile()
+		var sheet *xlsx.Sheet
+		sheet, err = xlsxF.AddSheet("Sheet")
+		if err != nil {
+			return
+		}
+
+		row := sheet.AddRow()
+		for _, exportColumn := range this_.ExportColumnList {
+
+			cell := row.AddCell()
+			var exportName = exportColumn["exportName"]
+			if exportColumn != nil {
+				cell.Value = exportName.(string)
+			}
 		}
 		err = xlsxF.Save(excelPath)
 		if err != nil {
 			return
 		}
+
+		this_.excelPath = excelPath
 	}
 
 	xlsxF, err := xlsx.OpenFile(excelPath)
@@ -102,22 +183,60 @@ func (this_ *databaseExportTask) doExcel(dataList []map[string]interface{}) (err
 	}
 	sheet := xlsxF.Sheets[0]
 
+	scriptContext := javascript.GetContext()
+
+	vm := goja.New()
+
+	for key, value := range scriptContext {
+		err = vm.Set(key, value)
+		if err != nil {
+			return
+		}
+	}
+
 	for _, data := range dataList {
 
 		row := sheet.AddRow()
+		err = vm.Set("_$index", this_.exportDataIndex)
+		if err != nil {
+			return
+		}
 
 		for _, exportColumn := range this_.ExportColumnList {
-			var columnName string
-			columnName = exportColumn["column"].(string)
+			var exportName string
+			if exportColumn["exportName"] != nil {
+				exportName = exportColumn["exportName"].(string)
+			}
+			var value = exportColumn["value"]
+			if value == nil || value == "" {
+				if exportColumn["column"] != nil {
+					columnName := exportColumn["column"].(string)
+					value = data[columnName]
+				}
+			} else {
+				valueScript := value.(string)
+				var scriptValue goja.Value
+				scriptValue, err = vm.RunString(valueScript)
+				if err != nil {
+					util.Logger.Error("表达式执行异常", zap.Any("script", valueScript), zap.Error(err))
+					return
+				}
+				value = scriptValue.Export()
+			}
 
 			cell := row.AddCell()
-			value := data[columnName]
 			if value != nil {
 				stringValue := db.GetStringValue(value)
 				cell.Value = stringValue
 			}
 
+			err = vm.Set(exportName, value)
+			if err != nil {
+				return
+			}
 		}
+		this_.exportDataIndex++
+		this_.SuccessCount++
 	}
 	err = xlsxF.Save(excelPath)
 	if err != nil {
@@ -134,7 +253,7 @@ func (this_ *databaseExportTask) toSelectDataList() (err error) {
 		pageSize = 100
 	}
 
-	sql, values, err := db.DataListSelectSql(this_.generateParam, this_.Database, this_.Table, this_.ColumnList, this_.Wheres, this_.Orders)
+	sql, values, err := db.DataListSelectSql(this_.generateParam, this_.request.Database, this_.request.Table, this_.request.ColumnList, this_.request.Wheres, this_.request.Orders)
 	if err != nil {
 		return
 	}

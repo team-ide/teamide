@@ -62,6 +62,16 @@ let toolbox = {
             },
         },
     },
+    database: {
+        upload(param) {
+            return http.post('api/toolbox/ssh/ftp/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
+        },
+        export: {
+            download(param) {
+                return http.post('api/toolbox/database/export/download', param, { responseType: "blob" });
+            },
+        },
+    }
 };
 
 

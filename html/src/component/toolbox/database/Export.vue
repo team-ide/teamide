@@ -9,6 +9,7 @@
               :key="index"
               :value="one.value"
               :label="one.text"
+              :disabled="one.disabled"
             >
             </el-option>
           </el-select>
@@ -91,7 +92,88 @@
           </el-form-item>
         </template>
       </el-form>
-      <div class="mgt-10">
+      <template v-if="form.exportType == 'excel'">
+        <div
+          v-if="tableDetail != null"
+          class="
+            mgt-20
+            toolbox-database-table-data toolbox-database-table-data-table
+          "
+        >
+          <div class="mgb-10">
+            <div class="tm-link color-grey" @click="addExportColumn">添加</div>
+          </div>
+          <el-table
+            :data="exportColumnList"
+            border
+            style="width: 100%"
+            size="mini"
+          >
+            <el-table-column label="字段">
+              <template slot-scope="scope">
+                <div class="">
+                  <el-select
+                    v-model="scope.row.column"
+                    style="width: 100%"
+                    size="mini"
+                  >
+                    <el-option
+                      v-for="(one, index) in tableDetail.columnList"
+                      :key="index"
+                      :value="one.name"
+                      :label="one.name"
+                    >
+                    </el-option>
+                  </el-select>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="导出名称">
+              <template slot-scope="scope">
+                <div class="">
+                  <el-input v-model="scope.row.exportName" type="text" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="导出固定值（函数脚本，默认为查询出的值）">
+              <template slot-scope="scope">
+                <div class="">
+                  <el-input v-model="scope.row.value" type="text" />
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200px">
+              <template slot-scope="scope">
+                <div
+                  class="tm-link color-grey mglr-5"
+                  @click="upExportColumn(scope.row)"
+                >
+                  上移
+                </div>
+                <div
+                  class="tm-link color-grey mglr-5"
+                  @click="downExportColumn(scope.row)"
+                >
+                  下移
+                </div>
+                <div
+                  class="tm-link color-grey mglr-5"
+                  @click="addExportColumn({}, scope.row)"
+                >
+                  插入
+                </div>
+                <div
+                  class="tm-link color-red mglr-5"
+                  @click="removeExportColumn(scope.row)"
+                >
+                  删除
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </template>
+      <div class="mgt-10" style="user-select: text">
         <div class="ft-12">
           <span class="color-grey">任务状态：</span>
           <template v-if="task == null">
@@ -152,6 +234,11 @@
               <span class="color-error pdr-10">
                 异常： <span>{{ task.errorCount }}</span>
               </span>
+              <template v-if="task.isEnd">
+                <div class="tm-link color-green mgl-50" @click="toDownload">
+                  下载
+                </div>
+              </template>
             </div>
             <template v-if="task.error != null">
               <div class="mgt-5 color-error pdr-10">
@@ -177,7 +264,7 @@ export default {
     return {
       ready: false,
       exportTypes: [
-        { text: "SQL", value: "sql" },
+        { text: "SQL", value: "sql", disabled: true },
         { text: "Excel", value: "excel" },
       ],
       packingCharacters: [
@@ -205,7 +292,7 @@ export default {
         },
       ],
       form: {
-        exportType: "sql",
+        exportType: "excel",
         appendDatabase: true,
         databasePackingCharacter: "`",
         tablePackingCharacter: "`",
@@ -213,6 +300,7 @@ export default {
         stringPackingCharacter: "'",
         dateFunction: "",
       },
+      exportColumnList: null,
       tableDetail: null,
       taskKey: null,
       task: null,
@@ -228,9 +316,48 @@ export default {
           this.table
         );
       }
+      this.exportColumnList = [];
+
+      this.tableDetail.columnList.forEach((column) => {
+        let exportColumn = {};
+        exportColumn.column = column.name;
+        exportColumn.exportName = column.name;
+        exportColumn.value = null;
+        this.exportColumnList.push(exportColumn);
+      });
       this.ready = true;
     },
+
+    upExportColumn(exportColumn) {
+      this.tool.up(this, "exportColumnList", exportColumn);
+    },
+    downExportColumn(exportColumn) {
+      this.tool.down(this, "exportColumnList", exportColumn);
+    },
+    addExportColumn(exportColumn, after) {
+      exportColumn = exportColumn || {};
+      exportColumn.column = exportColumn.column || "";
+      exportColumn.exportName = exportColumn.exportName || "";
+      exportColumn.value = exportColumn.value || "";
+
+      let appendIndex = this.exportColumnList.indexOf(after);
+      if (appendIndex < 0) {
+        appendIndex = this.exportColumnList.length;
+      } else {
+        appendIndex++;
+      }
+      this.exportColumnList.splice(appendIndex, 0, exportColumn);
+    },
+    removeExportColumn(exportColumn) {
+      let findIndex = this.exportColumnList.indexOf(exportColumn);
+      if (findIndex >= 0) {
+        this.exportColumnList.splice(findIndex, 1);
+      }
+    },
     async toExport() {
+      if (this.task != null) {
+        this.cleanTask(this.task.key);
+      }
       this.task = null;
       this.taskKey = null;
       let res = await this.doExport();
@@ -241,6 +368,8 @@ export default {
       let param = Object.assign({}, this.form);
       param.database = this.database;
       param.table = this.table;
+      param.columnList = this.tableDetail.columnList;
+      param.exportColumnList = this.exportColumnList;
 
       let res = await this.wrap.work("export", param);
       res.data = res.data || {};
@@ -272,14 +401,24 @@ export default {
       };
       await this.wrap.work("exportStop", param);
     },
-    async cleanTask() {
-      if (this.taskKey == null) {
-        return;
-      }
+    async cleanTask(taskKey) {
       let param = {
-        taskKey: this.taskKey,
+        taskKey: taskKey,
       };
       await this.wrap.work("exportClean", param);
+    },
+    toDownload() {
+      if (this.task == null) {
+        this.tool.error("任务数据丢失");
+        return;
+      }
+      let url =
+        this.source.api +
+        "api/toolbox/database/export/download?taskKey=" +
+        encodeURIComponent(this.task.key) +
+        "&jwt=" +
+        encodeURIComponent(this.tool.getJWT());
+      window.location.href = url;
     },
   },
   created() {},
