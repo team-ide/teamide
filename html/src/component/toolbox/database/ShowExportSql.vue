@@ -1,7 +1,13 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="'导出：' + (tableDetail == null ? '' : tableDetail.name)"
+    :title="
+      '导出：[' +
+      database +
+      '].[' +
+      (tableDetail == null ? '' : tableDetail.name) +
+      '] 数据为SQL'
+    "
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
@@ -11,13 +17,7 @@
     width="1200px"
   >
     <div class="mgt--20 toolbox-database-export-sql">
-      <el-form
-        ref="form"
-        :model="form"
-        label-width="90px"
-        size="mini"
-        :inline="true"
-      >
+      <el-form ref="form" :model="form" size="mini" inline>
         <el-form-item label="SQL类型">
           <el-select
             v-model="form.sqlType"
@@ -102,6 +102,21 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="日期函数">
+          <el-select
+            v-model="form.dateFunction"
+            @change="toLoad"
+            style="width: 120px"
+          >
+            <el-option
+              v-for="(one, index) in dateFunctions"
+              :key="index"
+              :value="one.value"
+              :label="one.text"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <div>
         <textarea v-model="showSQL"> </textarea>
@@ -118,6 +133,7 @@ export default {
     return {
       showDialog: false,
       showSQL: null,
+      database: null,
       tableDetail: null,
       sqlTypes: [
         { value: "insert", text: "Insert" },
@@ -134,6 +150,20 @@ export default {
         { value: "'", text: "'" },
         { value: '"', text: '"' },
       ],
+      dateFunctions: [
+        {
+          value: "",
+          text: "无函数",
+        },
+        {
+          value: "to_date('$value','yyyy-mm-dd hh24:mi:ss')",
+          text: "to_date('$value','yyyy-mm-dd hh24:mi:ss')",
+        },
+        {
+          value: "to_timestamp('$value','yyyy-mm-dd hh24:mi:ss')",
+          text: "to_timestamp('$value','yyyy-mm-dd hh24:mi:ss')",
+        },
+      ],
       form: {
         sqlType: "insert",
         appendDatabase: true,
@@ -141,6 +171,7 @@ export default {
         tablePackingCharacter: "`",
         columnPackingCharacter: "`",
         stringPackingCharacter: "'",
+        dateFunction: "",
       },
     };
   },

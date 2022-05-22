@@ -160,6 +160,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger = newZapLogger(serverConfig)
 	}
 	util.Logger = this_.Logger
+	util.TempDir = serverConfig.Server.Data + "temp/"
 
 	err = db.CheckColumnType()
 	if err != nil {

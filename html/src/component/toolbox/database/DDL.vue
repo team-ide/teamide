@@ -2,18 +2,16 @@
   <div class="toolbox-database-ddl" v-loading="loading">
     <template v-if="ready">
       <el-form
-        class="pdt-10"
+        class="pdt-10 pdlr-10"
         ref="form"
         :model="form"
-        label-width="90px"
         size="mini"
-        :inline="true"
+        inline
       >
         <el-form-item label="数据库类型">
           <el-select
             placeholder="当前库类型"
             v-model="form.databaseType"
-            @change="toLoad"
             style="width: 120px"
           >
             <el-option label="MySql" value="mysql"> </el-option>
@@ -128,15 +126,31 @@ export default {
         databaseType: "",
         generateDatabase: false,
         appendDatabase: false,
-        databasePackingCharacter: null,
-        tablePackingCharacter: null,
-        columnPackingCharacter: null,
+        databasePackingCharacter: "`",
+        tablePackingCharacter: "`",
+        columnPackingCharacter: "`",
         stringPackingCharacter: "'",
       },
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    "form.databaseType"() {
+      if (
+        this.tool.isEmpty(this.form.databaseType) ||
+        this.form.databaseType == "mysql"
+      ) {
+        this.form.databasePackingCharacter = "`";
+        this.form.tablePackingCharacter = "`";
+        this.form.columnPackingCharacter = "`";
+      } else {
+        this.form.databasePackingCharacter = `"`;
+        this.form.tablePackingCharacter = `"`;
+        this.form.columnPackingCharacter = `"`;
+      }
+      this.toLoad();
+    },
+  },
   methods: {
     init() {
       this.ready = true;

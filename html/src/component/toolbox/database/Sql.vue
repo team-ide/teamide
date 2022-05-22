@@ -3,15 +3,14 @@
     <tm-layout height="100%">
       <tm-layout height="50px" class="" style="overflow: hidden">
         <el-form
-          class="mgt-10"
+          class="pdt-10 pdl-10"
           ref="form"
           :model="form"
-          label-width="80px"
           size="mini"
-          :inline="true"
+          inline
         >
           <el-form-item label="数据库">
-            <el-select v-model="form.database">
+            <el-select v-model="form.database" style="width: 150px">
               <el-option
                 v-for="(one, index) in databases"
                 :key="index"
@@ -20,12 +19,12 @@
               >
               </el-option>
             </el-select>
-            <el-form-item label="开启事务">
-              <el-switch v-model="form.openTransaction"> </el-switch>
-            </el-form-item>
-            <el-form-item label="忽略异常继续" label-width="100px">
-              <el-switch v-model="form.errorContinue"> </el-switch>
-            </el-form-item>
+          </el-form-item>
+          <el-form-item label="开启事务">
+            <el-switch v-model="form.openTransaction"> </el-switch>
+          </el-form-item>
+          <el-form-item label="忽略异常继续">
+            <el-switch v-model="form.errorContinue"> </el-switch>
           </el-form-item>
 
           <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toExecuteSql">
@@ -219,13 +218,16 @@ export default {
       this.doActiveTab(tab);
     },
     addExecuteSelectTab(executeData) {
+      executeData.dataList = executeData.dataList || [];
+      let title = `第${executeData.selectIndex + 1}条查询结果（${
+        executeData.dataList.length
+      }条记录）`;
       let tab = {};
       tab.key = "查询结果-" + this.tool.getNumber();
-      tab.title = "查询结果" + executeData.selectIndex;
-      tab.name = "查询结果" + executeData.selectIndex;
+      tab.title = title;
+      tab.name = title;
       tab.isSelect = true;
       tab.columnList = executeData.columnList || [];
-      executeData.dataList = executeData.dataList || [];
       tab.dataList = executeData.dataList;
       this.addTab(tab);
       // this.doActiveTab(tab);
@@ -256,7 +258,6 @@ export default {
 .toolbox-database-sql {
   width: 100%;
   height: 100%;
-  user-select: none;
 }
 .toolbox-database-sql textarea {
   width: 100%;

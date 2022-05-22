@@ -200,12 +200,6 @@ func (this_ *BaseDialect) TableDDL(param *GenerateParam, database string, table 
 			if one.Name == "" || len(one.Columns) == 0 {
 				continue
 			}
-			//name := table.Name + "_" + one.Name
-			name := one.Name
-			if !strings.HasPrefix(name, table.Name+"_INDEX_") {
-				name = table.Name + "_INDEX_" + one.Name
-			}
-			one.Name = name
 			var sqlList_ []string
 			sqlList_, err = this_.TableIndexAddDDL(param, database, table.Name, one)
 			if err != nil {
@@ -295,26 +289,51 @@ func (this_ *BaseDialect) TableColumnUpdateDDL(param *GenerateParam, database st
 	if err != nil {
 		return
 	}
-	var sql string
-	sql = `ALTER TABLE `
 
-	if param.AppendDatabase {
-		sql += param.packingCharacterDatabase(database) + "."
-	}
-	sql += param.packingCharacterTable(table)
+	var sqlList_ []string
 
-	sql += ` MODIFY (`
-	sql += param.packingCharacterColumn(column.Name)
-	sql += ` ` + columnType + ``
-	if column.NotNull {
-		sql += ` NOT NULL`
+	if column.OldName != column.Name {
+		sqlList_, err = this_.TableColumnRenameDDL(param, database, table, column.OldName, column.Name)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
 	}
-	if column.Default != "" {
-		sql += ` DEFAULT ` + formatStringValue("'", GetStringValue(column.Default))
-	}
-	sql += `)`
 
-	sqlList = append(sqlList, sql)
+	if column.Type != column.OldType ||
+		column.Length != column.OldLength ||
+		column.Decimal != column.OldDecimal ||
+		column.NotNull != column.OldNotNull ||
+		column.Default != column.OldDefault ||
+		column.BeforeColumn != "" {
+		var sql string
+		sql = `ALTER TABLE `
+
+		if param.AppendDatabase {
+			sql += param.packingCharacterDatabase(database) + "."
+		}
+		sql += param.packingCharacterTable(table)
+
+		sql += ` MODIFY (`
+		sql += param.packingCharacterColumn(column.Name)
+		sql += ` ` + columnType + ``
+		if column.NotNull {
+			sql += ` NOT NULL`
+		}
+		if column.Default != nil {
+			sql += ` DEFAULT ` + formatStringValue("'", GetStringValue(column.Default))
+		}
+		sql += `)`
+
+		sqlList = append(sqlList, sql)
+	}
+	if column.Comment != column.OldComment {
+		sqlList_, err = this_.TableColumnCommentDDL(param, database, table, column.Name, column.Comment)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
 	return
 }
 func (this_ *BaseDialect) TableColumnAddDDL(param *GenerateParam, database string, table string, column *TableColumnModel) (sqlList []string, err error) {
@@ -338,7 +357,7 @@ func (this_ *BaseDialect) TableColumnAddDDL(param *GenerateParam, database strin
 	if column.NotNull {
 		sql += ` NOT NULL`
 	}
-	if column.Default != "" {
+	if column.Default != nil {
 		sql += ` DEFAULT ` + formatStringValue("'", GetStringValue(column.Default))
 	}
 	sql += `)`
@@ -370,6 +389,7 @@ func (this_ *BaseDialect) TableColumnCommentDDL(param *GenerateParam, database s
 }
 
 func (this_ *BaseDialect) TableIndexAddDDL(param *GenerateParam, database string, table string, index *TableIndexModel) (sqlList []string, err error) {
+
 	sql := "CREATE "
 	switch strings.ToUpper(index.Type) {
 	case "UNIQUE":
@@ -377,9 +397,9 @@ func (this_ *BaseDialect) TableIndexAddDDL(param *GenerateParam, database string
 	default:
 		sql += "INDEX"
 	}
-	if index.Name != "" {
-		sql += " " + param.packingCharacterColumn(index.Name) + ""
-	}
+
+	sql += " " + param.packingCharacterColumn(index.Name) + ""
+
 	sql += " ON "
 	if param.AppendDatabase && database != "" {
 		sql += param.packingCharacterDatabase(database) + "."
@@ -393,26 +413,16 @@ func (this_ *BaseDialect) TableIndexAddDDL(param *GenerateParam, database string
 }
 
 func (this_ *BaseDialect) TableIndexUpdateDDL(param *GenerateParam, database string, table string, index *TableIndexModel) (sqlList []string, err error) {
-
-	sql := "ALTER TABLE "
-	if param.AppendDatabase && database != "" {
-		sql += param.packingCharacterDatabase(database) + "."
-	}
-	sql += "" + param.packingCharacterTable(table)
-
-	sql += " DROP INDEX " + param.packingCharacterColumn(index.Name) + ","
-	switch strings.ToUpper(index.Type) {
-	case "UNIQUE":
-		sql += " ADD UNIQUE INDEX "
-	default:
-		sql += "ADD INDEX"
-	}
-	sql += " " + param.packingCharacterColumn(index.Name) + "(" + param.packingCharacterColumns(strings.Join(index.Columns, ",")) + ")"
-
-	if index.Comment != "" {
-		sql += " COMMENT " + formatStringValue("'", index.Comment)
-	}
+	var sqlList_ []string
+	var sql = " DROP INDEX " + param.packingCharacterColumn(index.OldName) + ""
 	sqlList = append(sqlList, sql)
+
+	sqlList_, err = this_.TableIndexAddDDL(param, database, table, index)
+	if err != nil {
+		return
+	}
+	sqlList = append(sqlList, sqlList_...)
+
 	return
 }
 
@@ -433,13 +443,7 @@ func (this_ *BaseDialect) TableIndexRenameDDL(param *GenerateParam, database str
 }
 
 func (this_ *BaseDialect) TableIndexDeleteDDL(param *GenerateParam, database string, table string, index string) (sqlList []string, err error) {
-	sql := "ALTER TABLE "
-	if param.AppendDatabase && database != "" {
-		sql += param.packingCharacterDatabase(database) + "."
-	}
-	sql += "" + param.packingCharacterTable(table)
-
-	sql += ` DROP INDEX `
+	sql := "DROP INDEX "
 	sql += "" + param.packingCharacterColumn(index)
 
 	sqlList = append(sqlList, sql)

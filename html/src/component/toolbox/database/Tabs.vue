@@ -50,6 +50,28 @@
             >
             </Table>
           </template>
+          <template v-if="tab.extend.type == 'export'">
+            <Export
+              :source="source"
+              :toolbox="toolbox"
+              :wrap="wrap"
+              :database="tab.extend.database"
+              :table="tab.extend.table"
+              :extend="tab.extend"
+            >
+            </Export>
+          </template>
+          <template v-if="tab.extend.type == 'import'">
+            <Import
+              :source="source"
+              :toolbox="toolbox"
+              :wrap="wrap"
+              :database="tab.extend.database"
+              :table="tab.extend.table"
+              :extend="tab.extend"
+            >
+            </Import>
+          </template>
         </template>
       </TabEditor>
     </template>
@@ -62,9 +84,11 @@ import DDL from "./DDL";
 import Sql from "./Sql";
 import Table from "./Table";
 import TableData from "./TableData";
+import Export from "./Export";
+import Import from "./Import";
 
 export default {
-  components: { DDL, Sql, Table, TableData },
+  components: { DDL, Sql, Table, TableData, Export, Import },
   props: ["source", "toolboxType", "toolbox", "option", "wrap", "databases"],
   data() {
     return {

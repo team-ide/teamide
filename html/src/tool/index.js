@@ -185,6 +185,24 @@ tool.stringToJSON = function (value) {
     }
     return data;
 };
+tool.up = function (bean, name, value) {
+    if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index > 0) {
+            bean[name].splice(index, 1);
+            bean[name].splice(index - 1, 0, value);
+        }
+    }
+};
+tool.down = function (bean, name, value) {
+    if (bean != null && bean[name] != null) {
+        let index = bean[name].indexOf(value);
+        if (index >= 0 && index < bean[name].length - 1) {
+            bean[name].splice(index, 1);
+            bean[name].splice(index + 1, 0, value);
+        }
+    }
+};
 tool.copyText = async function (text) {
     let result = await navigator.clipboard.writeText(text)
     return result;

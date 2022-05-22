@@ -9,26 +9,20 @@ import (
 )
 
 type saveDataListTask struct {
-	Key             string                 `json:"key,omitempty"`
-	Database        string                 `json:"database,omitempty"`
-	Table           string                 `json:"table,omitempty"`
-	ColumnList      []*db.TableColumnModel `json:"columnList,omitempty"`
+	request         *DatabaseBaseRequest
 	generateParam   *db.GenerateParam
-	UpdateList      []map[string]interface{} `json:"-"`
-	UpdateWhereList []map[string]interface{} `json:"-"`
-	InsertList      []map[string]interface{} `json:"-"`
-	DeleteList      []map[string]interface{} `json:"-"`
-	SaveBatchNumber int                      `json:"saveBatchNumber,omitempty"`
-	DataCount       int                      `json:"dataCount"`
-	ReadyDataCount  int                      `json:"readyDataCount"`
-	SaveSuccess     int                      `json:"saveSuccess"`
-	SaveError       int                      `json:"saveError"`
-	IsEnd           bool                     `json:"isEnd,omitempty"`
-	StartTime       time.Time                `json:"startTime,omitempty"`
-	EndTime         time.Time                `json:"endTime,omitempty"`
-	Error           string                   `json:"error,omitempty"`
-	UseTime         int64                    `json:"useTime"`
-	IsStop          bool                     `json:"isStop"`
+	Key             string    `json:"key,omitempty"`
+	SaveBatchNumber int       `json:"saveBatchNumber,omitempty"`
+	DataCount       int       `json:"dataCount"`
+	ReadyDataCount  int       `json:"readyDataCount"`
+	SaveSuccess     int       `json:"saveSuccess"`
+	SaveError       int       `json:"saveError"`
+	IsEnd           bool      `json:"isEnd,omitempty"`
+	StartTime       time.Time `json:"startTime,omitempty"`
+	EndTime         time.Time `json:"endTime,omitempty"`
+	Error           string    `json:"error,omitempty"`
+	UseTime         int64     `json:"useTime"`
+	IsStop          bool      `json:"isStop"`
 	service         DatabaseService
 }
 
@@ -47,9 +41,9 @@ func (this_ *saveDataListTask) Start() (err error) {
 		this_.IsEnd = true
 		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
-	this_.DataCount += len(this_.InsertList)
-	this_.DataCount += len(this_.UpdateList)
-	this_.DataCount += len(this_.DeleteList)
+	this_.DataCount += len(this_.request.InsertList)
+	this_.DataCount += len(this_.request.UpdateList)
+	this_.DataCount += len(this_.request.DeleteList)
 
 	saveBatchNumber := this_.SaveBatchNumber
 	if saveBatchNumber <= 0 {
@@ -76,24 +70,24 @@ func (this_ *saveDataListTask) SaveDataListSql() (sqlList []string, valuesList [
 
 	var sqlList_ []string
 	var valuesList_ [][]interface{}
-	if len(this_.InsertList) > 0 {
-		sqlList_, valuesList_, err = db.DataListInsertSql(this_.generateParam, this_.Database, this_.Table, this_.ColumnList, this_.InsertList)
+	if len(this_.request.InsertList) > 0 {
+		sqlList_, valuesList_, err = db.DataListInsertSql(this_.generateParam, this_.request.Database, this_.request.Table, this_.request.ColumnList, this_.request.InsertList)
 		if err != nil {
 			return
 		}
 		sqlList = append(sqlList, sqlList_...)
 		valuesList = append(valuesList, valuesList_...)
 	}
-	if len(this_.UpdateList) > 0 {
-		sqlList_, valuesList_, err = db.DataListUpdateSql(this_.generateParam, this_.Database, this_.Table, this_.ColumnList, this_.UpdateList, this_.UpdateWhereList)
+	if len(this_.request.UpdateList) > 0 {
+		sqlList_, valuesList_, err = db.DataListUpdateSql(this_.generateParam, this_.request.Database, this_.request.Table, this_.request.ColumnList, this_.request.UpdateList, this_.request.UpdateWhereList)
 		if err != nil {
 			return
 		}
 		sqlList = append(sqlList, sqlList_...)
 		valuesList = append(valuesList, valuesList_...)
 	}
-	if len(this_.DeleteList) > 0 {
-		sqlList_, valuesList_, err = db.DataListDeleteSql(this_.generateParam, this_.Database, this_.Table, this_.ColumnList, this_.DeleteList)
+	if len(this_.request.DeleteList) > 0 {
+		sqlList_, valuesList_, err = db.DataListDeleteSql(this_.generateParam, this_.request.Database, this_.request.Table, this_.request.ColumnList, this_.request.DeleteList)
 		if err != nil {
 			return
 		}

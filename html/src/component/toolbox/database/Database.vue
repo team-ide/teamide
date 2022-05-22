@@ -248,6 +248,18 @@ export default {
             this.toUpdateTable(data);
           },
         });
+        menus.push({
+          text: "导出数据（SQL、Excel等）",
+          onClick: () => {
+            this.toExport(data);
+          },
+        });
+        menus.push({
+          text: "导入数据（策略、SQL、Excel等）",
+          onClick: () => {
+            this.toImport(data);
+          },
+        });
       }
       if (data.isDatabase || data.isTable) {
         menus.push({
@@ -392,6 +404,28 @@ export default {
         name: "编辑[" + database + "]库表[" + table.name + "]",
         title: "编辑[" + database + "]库表[" + table.name + "]",
         type: "table",
+        database: database,
+        table: table.name,
+      };
+      this.wrap.openTabByExtend(extend);
+    },
+    async toExport(table) {
+      let database = table.database.name;
+      let extend = {
+        name: "导出[" + database + "]库表[" + table.name + "]数据",
+        title: "导出[" + database + "]库表[" + table.name + "]数据",
+        type: "export",
+        database: database,
+        table: table.name,
+      };
+      this.wrap.openTabByExtend(extend);
+    },
+    async toImport(table) {
+      let database = table.database.name;
+      let extend = {
+        name: "导入[" + database + "]库表[" + table.name + "]数据",
+        title: "导入[" + database + "]库表[" + table.name + "]数据",
+        type: "import",
         database: database,
         table: table.name,
       };

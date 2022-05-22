@@ -338,6 +338,64 @@ export default {
   min-width: 80px;
 }
 
+.toolbox-editor .el-tree-node__content {
+  border-bottom: 1px dotted #696969;
+}
+
+.toolbox-editor .el-tree {
+  background-color: transparent;
+  color: unset;
+  width: auto;
+  font-size: 12px;
+  user-select: none;
+  border: 1px dotted #696969;
+  border-bottom: 0px;
+}
+.toolbox-editor .el-tree .mdi {
+  vertical-align: middle;
+}
+.toolbox-editor .el-tree-node__content {
+  position: relative;
+}
+
+.toolbox-editor .el-tree-node__content .toolbox-editor-tree-btn-group {
+  display: none;
+}
+.toolbox-editor .el-tree-node__content:hover .toolbox-editor-tree-btn-group {
+  display: block;
+}
+.toolbox-editor .toolbox-editor-tree-span .toolbox-editor-tree-btn-group {
+  position: absolute;
+  right: 5px;
+  top: -1px;
+}
+.toolbox-editor .toolbox-editor-tree-span {
+  /* flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; */
+  font-size: 13px;
+}
+.toolbox-editor .el-tree__empty-block {
+  display: none;
+}
+.toolbox-editor .el-tree-node__children {
+  overflow: visible !important;
+}
+.toolbox-editor .el-tree-node__children.v-enter-active,
+.toolbox-editor .el-tree-node__children.v-leave-active {
+  overflow: hidden !important;
+}
+.toolbox-editor .el-tree .el-tree-node.is-current > .el-tree-node__content {
+  background-color: #636363 !important;
+}
+.toolbox-editor .el-tree .el-tree-node:focus > .el-tree-node__content {
+  background-color: #545454;
+}
+.toolbox-editor .el-tree .el-tree-node > .el-tree-node__content:hover {
+  background-color: #545454;
+}
+
 .part-box {
   line-height: 20px;
   font-size: 12px;

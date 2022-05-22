@@ -1,7 +1,13 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="'导出：' + (tableDetail == null ? '' : tableDetail.name)"
+    :title="
+      '导出：[' +
+      database +
+      '].[' +
+      (tableDetail == null ? '' : tableDetail.name) +
+      '] 数据为SQL'
+    "
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
@@ -11,13 +17,7 @@
     width="1200px"
   >
     <div class="mgt--20 toolbox-database-save-sql">
-      <el-form
-        ref="form"
-        :model="form"
-        label-width="90px"
-        size="mini"
-        :inline="true"
-      >
+      <el-form ref="form" :model="form" size="mini" :inline="true">
         <el-form-item label="追加库名">
           <el-switch v-model="form.appendDatabase" @change="toLoad">
           </el-switch>
@@ -103,6 +103,7 @@ export default {
     return {
       showDialog: false,
       showSQL: null,
+      database: null,
       tableDetail: null,
       packingCharacters: [
         { value: "", text: "不包装" },

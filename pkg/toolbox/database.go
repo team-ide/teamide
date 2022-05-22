@@ -47,21 +47,21 @@ func init() {
 }
 
 type DatabaseBaseRequest struct {
-	Database        string                   `json:"database"`
-	Table           string                   `json:"table"`
-	TaskKey         string                   `json:"taskKey"`
-	ExecuteSQL      string                   `json:"executeSQL"`
-	ColumnList      []*db.TableColumnModel   `json:"columnList"`
-	Wheres          []*db.Where              `json:"wheres"`
-	Orders          []*db.Order              `json:"orders"`
-	PageIndex       int                      `json:"pageIndex"`
-	PageSize        int                      `json:"pageSize"`
-	DatabaseType    string                   `json:"databaseType"`
-	ImportDataList  []map[string]interface{} `json:"importDataList"`
-	InsertList      []map[string]interface{} `json:"insertList"`
-	UpdateList      []map[string]interface{} `json:"updateList"`
-	UpdateWhereList []map[string]interface{} `json:"updateWhereList"`
-	DeleteList      []map[string]interface{} `json:"deleteList"`
+	Database         string                   `json:"database"`
+	Table            string                   `json:"table"`
+	TaskKey          string                   `json:"taskKey"`
+	ExecuteSQL       string                   `json:"executeSQL"`
+	ColumnList       []*db.TableColumnModel   `json:"columnList"`
+	Wheres           []*db.Where              `json:"wheres"`
+	Orders           []*db.Order              `json:"orders"`
+	PageIndex        int                      `json:"pageIndex"`
+	PageSize         int                      `json:"pageSize"`
+	DatabaseType     string                   `json:"databaseType"`
+	StrategyDataList []map[string]interface{} `json:"strategyDataList"`
+	InsertList       []map[string]interface{} `json:"insertList"`
+	UpdateList       []map[string]interface{} `json:"updateList"`
+	UpdateWhereList  []map[string]interface{} `json:"updateWhereList"`
+	DeleteList       []map[string]interface{} `json:"deleteList"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -322,15 +322,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.ColumnPackingCharacter = "`"
 
 		var dataListRequest DataListResult
-		dataListRequest, err = service.DataList(generateParam, DataListParam{
-			Database:   request.Database,
-			Table:      request.Table,
-			ColumnList: request.ColumnList,
-			Wheres:     request.Wheres,
-			Orders:     request.Orders,
-			PageIndex:  request.PageIndex,
-			PageSize:   request.PageSize,
-		})
+		dataListRequest, err = service.DataList(generateParam, request)
 		if err != nil {
 			return
 		}
@@ -350,17 +342,16 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["task"] = executeSQLTask
 
 	case "dataListSql":
-		saveDataListTask := &saveDataListTask{
-			Database:        request.Database,
-			Table:           request.Table,
-			ColumnList:      request.ColumnList,
-			InsertList:      request.InsertList,
-			UpdateList:      request.UpdateList,
-			UpdateWhereList: request.UpdateWhereList,
-			DeleteList:      request.DeleteList,
-			service:         service,
-			generateParam:   generateParam,
+
+		var saveDataListTask = &saveDataListTask{}
+		err = json.Unmarshal(dataBS, saveDataListTask)
+		if err != nil {
+			return
 		}
+
+		saveDataListTask.request = request
+		saveDataListTask.service = service
+		saveDataListTask.generateParam = generateParam
 
 		var sqlList []string
 		var valuesList [][]interface{}
@@ -379,53 +370,87 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		saveDataListTask := &saveDataListTask{
-			Database:        request.Database,
-			Table:           request.Table,
-			ColumnList:      request.ColumnList,
-			InsertList:      request.InsertList,
-			UpdateList:      request.UpdateList,
-			UpdateWhereList: request.UpdateWhereList,
-			DeleteList:      request.DeleteList,
-			service:         service,
-			generateParam:   generateParam,
+		var saveDataListTask = &saveDataListTask{}
+		err = json.Unmarshal(dataBS, saveDataListTask)
+		if err != nil {
+			return
 		}
+
+		saveDataListTask.request = request
+		saveDataListTask.service = service
+		saveDataListTask.generateParam = generateParam
+
 		err = saveDataListTask.Start()
 		if err != nil {
 			return
 		}
 		res["task"] = saveDataListTask
 
-	case "importDataForStrategy":
-
+	case "import":
 		generateParam.AppendDatabase = true
 		generateParam.DatabasePackingCharacter = "`"
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
 		taskKey := util.GenerateUUID()
-		importDataForStrategyTask := &importDataForStrategyTask{
-			Key:            taskKey,
-			Database:       request.Database,
-			Table:          request.Table,
-			ColumnList:     request.ColumnList,
-			ImportDataList: request.ImportDataList,
-			service:        service,
-			generateParam:  generateParam,
+
+		var databaseImportTask = &databaseImportTask{}
+		err = json.Unmarshal(dataBS, databaseImportTask)
+		if err != nil {
+			return
 		}
-		addImportDataForStrategyTask(importDataForStrategyTask)
+
+		databaseImportTask.request = request
+		databaseImportTask.Key = taskKey
+		databaseImportTask.service = service
+		databaseImportTask.generateParam = generateParam
+
+		addDatabaseImportTask(databaseImportTask)
 
 		res["taskKey"] = taskKey
-	case "importDataForStrategyStatus":
-		importDataForStrategyTask := importDataForStrategyTaskCache[request.TaskKey]
-		res["task"] = importDataForStrategyTask
-	case "importDataForStrategyStop":
-		importDataForStrategyTask := importDataForStrategyTaskCache[request.TaskKey]
-		if importDataForStrategyTask != nil {
-			importDataForStrategyTask.Stop()
+	case "importStatus":
+		databaseImportTask := databaseImportTaskCache[request.TaskKey]
+		res["task"] = databaseImportTask
+	case "importStop":
+		databaseImportTask := databaseImportTaskCache[request.TaskKey]
+		if databaseImportTask != nil {
+			databaseImportTask.Stop()
 		}
-	case "importDataForStrategyClean":
-		delete(importDataForStrategyTaskCache, request.TaskKey)
+	case "importClean":
+		delete(databaseImportTaskCache, request.TaskKey)
+
+	case "export":
+		generateParam.AppendDatabase = true
+		generateParam.DatabasePackingCharacter = "`"
+		generateParam.TablePackingCharacter = "`"
+		generateParam.ColumnPackingCharacter = "`"
+
+		taskKey := util.GenerateUUID()
+
+		var databaseExportTask = &databaseExportTask{}
+		err = json.Unmarshal(dataBS, databaseExportTask)
+		if err != nil {
+			return
+		}
+
+		databaseExportTask.request = request
+		databaseExportTask.Key = taskKey
+		databaseExportTask.service = service
+		databaseExportTask.generateParam = generateParam
+
+		addDatabaseExportTask(databaseExportTask)
+
+		res["taskKey"] = taskKey
+	case "exportStatus":
+		databaseExportTask := databaseExportTaskCache[request.TaskKey]
+		res["task"] = databaseExportTask
+	case "exportStop":
+		databaseExportTask := databaseExportTaskCache[request.TaskKey]
+		if databaseExportTask != nil {
+			databaseExportTask.Stop()
+		}
+	case "exportClean":
+		delete(databaseExportTaskCache, request.TaskKey)
 	}
 	return
 }
@@ -505,18 +530,8 @@ type DatabaseService interface {
 	Databases() ([]*db.DatabaseModel, error)
 	Tables(database string) ([]*db.TableModel, error)
 	TableDetails(database string, table string) ([]*db.TableModel, error)
-	DataList(param *db.GenerateParam, dataListParam DataListParam) (DataListResult, error)
+	DataList(param *db.GenerateParam, request *DatabaseBaseRequest) (DataListResult, error)
 	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
-}
-
-type DataListParam struct {
-	Database   string                 `json:"database"`
-	Table      string                 `json:"table"`
-	ColumnList []*db.TableColumnModel `json:"columnList"`
-	Wheres     []*db.Where            `json:"wheres"`
-	PageIndex  int                    `json:"pageIndex"`
-	PageSize   int                    `json:"pageSize"`
-	Orders     []*db.Order            `json:"orders"`
 }
 
 type DataListResult struct {
