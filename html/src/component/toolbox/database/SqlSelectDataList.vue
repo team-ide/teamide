@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div class="toolbox-database-sql-data-list">
     <el-table
       :data="dataList"
       :border="true"
@@ -103,4 +103,8 @@ export default {
 </script>
 
 <style>
+.toolbox-database-sql-data-list {
+  width: 100%;
+  height: 100%;
+}
 </style>

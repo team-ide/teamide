@@ -186,41 +186,44 @@ export default {
   transform: scale(1);
 }
 
-.toolbox-type-box {
+.toolbox-dropdown-box .toolbox-type-box {
   width: 100%;
   font-size: 12px;
 }
-.toolbox-type-box:after {
+.toolbox-dropdown-box .toolbox-type-box:after {
   content: "";
   display: table;
   clear: both;
 }
-.toolbox-type-one {
+.toolbox-dropdown-box .toolbox-type-one {
   /* width: calc(25% - 12.5px); */
   width: 270px;
   float: left;
   margin: 0px 0px 10px 10px;
 }
-.toolbox-type-title {
+.toolbox-dropdown-box .toolbox-type-title {
   padding: 0px 10px;
   background: #2b3f51;
   color: #ffffff;
   line-height: 23px;
   display: flex;
 }
-.toolbox-type-title-text {
+.toolbox-dropdown-box .toolbox-type-title-text {
   flex: 1;
 }
-.toolbox-type-title .icon {
+.toolbox-dropdown-box .toolbox-type-title .icon {
   margin-right: 5px;
 }
-.toolbox-type-title .tm-link {
+.toolbox-dropdown-box .toolbox-type-title .tm-link {
   padding: 0px;
 }
-.toolbox-type-title .toolbox-type-data-search-box {
+.toolbox-dropdown-box .toolbox-type-title .toolbox-type-data-search-box {
   width: 100px;
 }
-.toolbox-type-title .toolbox-type-data-search-box .toolbox-type-data-search {
+.toolbox-dropdown-box
+  .toolbox-type-title
+  .toolbox-type-data-search-box
+  .toolbox-type-data-search {
   width: 100%;
   height: 20px;
   line-height: 20px;
@@ -228,33 +231,33 @@ export default {
   border: 1px solid #767676;
   font-size: 12px;
 }
-.toolbox-type-data-box {
+.toolbox-dropdown-box .toolbox-type-data-box {
   background: #1b2a38;
   padding: 5px 10px;
   padding-right: 0px;
   height: 250px;
 }
-.toolbox-type-data {
+.toolbox-dropdown-box .toolbox-type-data {
   display: flex;
   overflow: hidden;
   padding: 2px 0px;
 }
-.toolbox-type-data-text {
+.toolbox-dropdown-box .toolbox-type-data-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
   flex: 1;
 }
-.toolbox-type-data .tm-link {
+.toolbox-dropdown-box .toolbox-type-data .tm-link {
   padding: 0px;
 }
-.toolbox-type-data-btn-box {
+.toolbox-dropdown-box .toolbox-type-data-btn-box {
   display: inline-block;
   text-align: right;
   width: 85px;
 }
-.toolbox-type-data-btn-box .tm-link {
+.toolbox-dropdown-box .toolbox-type-data-btn-box .tm-link {
   margin-right: 5px;
 }
 </style>
