@@ -35,12 +35,11 @@ type RedisBaseRequest struct {
 	ValueStart int64  `json:"valueStart"`
 	Pattern    string `json:"pattern"`
 	Database   int    `json:"database"`
-	Size       int    `json:"size"`
+	Size       int64  `json:"size"`
 	Type       string `json:"type"`
 	Index      int64  `json:"index"`
 	Count      int64  `json:"count"`
 	Field      string `json:"field"`
-	Cursor     uint64 `json:"cursor"`
 }
 
 type RedisConfig struct {
@@ -82,7 +81,7 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 	switch work {
 	case "get":
 		var valueInfo RedisValueInfo
-		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize, request.Cursor)
+		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)
 		res["database"] = request.Database
 		res["key"] = request.Key
 		res["type"] = valueInfo.Type
@@ -108,21 +107,21 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		if request.Type == "set" {
 			err = service.Set(ctx, request.Database, request.Key, request.Value)
 		} else if request.Type == "sadd" {
-			err = service.Sadd(ctx, request.Database, request.Key, request.Value)
+			err = service.SAdd(ctx, request.Database, request.Key, request.Value)
 		} else if request.Type == "srem" {
-			err = service.Srem(ctx, request.Database, request.Key, request.Value)
+			err = service.SRem(ctx, request.Database, request.Key, request.Value)
 		} else if request.Type == "lpush" {
-			err = service.Lpush(ctx, request.Database, request.Key, request.Value)
+			err = service.LPush(ctx, request.Database, request.Key, request.Value)
 		} else if request.Type == "rpush" {
-			err = service.Rpush(ctx, request.Database, request.Key, request.Value)
+			err = service.RPush(ctx, request.Database, request.Key, request.Value)
 		} else if request.Type == "lset" {
-			err = service.Lset(ctx, request.Database, request.Key, request.Index, request.Value)
+			err = service.LSet(ctx, request.Database, request.Key, request.Index, request.Value)
 		} else if request.Type == "lrem" {
-			err = service.Lrem(ctx, request.Database, request.Key, request.Count, request.Value)
+			err = service.LRem(ctx, request.Database, request.Key, request.Count, request.Value)
 		} else if request.Type == "hset" {
-			err = service.Hset(ctx, request.Database, request.Key, request.Field, request.Value)
+			err = service.HSet(ctx, request.Database, request.Key, request.Field, request.Value)
 		} else if request.Type == "hdel" {
-			err = service.Hdel(ctx, request.Database, request.Key, request.Field)
+			err = service.HDel(ctx, request.Database, request.Key, request.Field)
 		}
 		if err != nil {
 			return
@@ -151,7 +150,7 @@ func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
 		if err != nil {
 			return
 		}
-		_, err = s.Get(context.TODO(), 0, "_", 0, 0, 0)
+		_, err = s.Get(context.TODO(), 0, "_", 0, 0)
 		if err != nil {
 			return
 		}
@@ -195,17 +194,17 @@ type RedisService interface {
 	GetWaitTime() int64
 	GetLastUseTime() int64
 	Stop()
-	Keys(ctx context.Context, database int, pattern string, size int) (count int, keys []string, err error)
-	Get(ctx context.Context, database int, key string, valueStart, valueSize int64, cursor uint64) (valueInfo RedisValueInfo, err error)
+	Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error)
+	Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo RedisValueInfo, err error)
 	Set(ctx context.Context, database int, key string, value string) (err error)
-	Sadd(ctx context.Context, database int, key string, value string) (err error)
-	Srem(ctx context.Context, database int, key string, value string) (err error)
-	Lpush(ctx context.Context, database int, key string, value string) (err error)
-	Rpush(ctx context.Context, database int, key string, value string) (err error)
-	Lset(ctx context.Context, database int, key string, index int64, value string) (err error)
-	Lrem(ctx context.Context, database int, key string, count int64, value string) (err error)
-	Hset(ctx context.Context, database int, key string, field string, value string) (err error)
-	Hdel(ctx context.Context, database int, key string, field string) (err error)
+	SAdd(ctx context.Context, database int, key string, value string) (err error)
+	SRem(ctx context.Context, database int, key string, value string) (err error)
+	LPush(ctx context.Context, database int, key string, value string) (err error)
+	RPush(ctx context.Context, database int, key string, value string) (err error)
+	LSet(ctx context.Context, database int, key string, index int64, value string) (err error)
+	LRem(ctx context.Context, database int, key string, count int64, value string) (err error)
+	HSet(ctx context.Context, database int, key string, field string, value string) (err error)
+	HDel(ctx context.Context, database int, key string, field string) (err error)
 	Del(ctx context.Context, database int, key string) (count int, err error)
 	DelPattern(ctx context.Context, database int, key string) (count int, err error)
 }
