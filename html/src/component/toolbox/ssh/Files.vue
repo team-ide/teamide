@@ -31,19 +31,9 @@
           </div>
           <div class="pdlr-10">
             <el-form size="mini" inline @submit.native.prevent>
-              <el-form-item label="搜索(展示前20个)" class="mgb-0">
-                <el-input
-                  v-model="form.pattern"
-                  style="width: 150px"
-                  title="回车确认"
-                  @keyup.enter="searchOnEnter"
-                >
+              <el-form-item label="Filter" class="mgb-0">
+                <el-input v-model="form.filter" style="width: 150px">
                 </el-input>
-              </el-form-item>
-              <el-form-item label="" class="mgb-0">
-                <div class="tm-btn tm-btn-sm color-grey" @click="toSearch">
-                  搜索
-                </div>
               </el-form-item>
             </el-form>
           </div>
@@ -61,6 +51,7 @@
             <template v-for="(one, index) in list">
               <div
                 :key="'file-' + index"
+                v-if="one.show"
                 class="file-box"
                 :class="{ 'file-select': one.select }"
                 draggable="true"
@@ -136,6 +127,7 @@ export default {
       form: {
         dir: null,
         pattern: null,
+        filter: null,
       },
       selectPaths: [],
       dirNames: [],
@@ -151,8 +143,28 @@ export default {
     files() {
       this.formatFiles();
     },
+    "form.filter"() {
+      this.filterFile();
+    },
   },
   methods: {
+    filterFile() {
+      this.selectPaths = this.selectPaths || [];
+      this.list.forEach((one) => {
+        if (
+          this.tool.isEmpty(this.form.filter) ||
+          one.name.toLowerCase().indexOf(this.form.filter.toLowerCase()) >= 0
+        ) {
+          one.show = true;
+          if (this.selectPaths.indexOf(one.path) >= 0) {
+            one.select = true;
+          }
+        } else {
+          one.show = false;
+          one.select = false;
+        }
+      });
+    },
     setScrollTop(scrollTop) {
       if (scrollTop >= 0) {
         this.$nextTick(() => {
@@ -570,6 +582,7 @@ export default {
       newFile.rename = false;
       newFile.size = newFile.size || 0;
       newFile.isNew = true;
+      newFile.show = true;
       this.list.splice(index + 1, 0, newFile);
       this.$nextTick(() => {
         this.toRename(newFile);
@@ -646,6 +659,7 @@ export default {
           one.rename = false;
           one.size = one.size || 0;
           one.isNew = false;
+          one.show = true;
           if (!one.isDir) {
             this.wrap.formatSize(one, "size", "unitSize", "unit");
           }
@@ -661,6 +675,7 @@ export default {
           }
           this.list.push(one);
         });
+        this.filterFile();
         this.selectPaths = [];
       }
     },
