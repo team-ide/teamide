@@ -105,8 +105,14 @@
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <div class="pd-10">
-            <el-form ref="form" size="mini" @submit.native.prevent>
+          <div>
+            <el-form
+              ref="form"
+              size="mini"
+              class="pd-10"
+              @submit.native.prevent
+              v-loading="get_loading"
+            >
               <el-form-item label="Database">
                 <el-input v-model="form.database"> </el-input>
               </el-form-item>
@@ -125,6 +131,18 @@
               <el-form-item label="Key">
                 <el-input v-model="form.key"> </el-input>
               </el-form-item>
+              <template
+                v-if="
+                  form.type == 'list' ||
+                  form.type == 'set' ||
+                  form.type == 'hash'
+                "
+              >
+                <el-form-item label="ValueSize（加载值数量）">
+                  <el-input v-model="form.valueSize" @change="valueSizeChange">
+                  </el-input>
+                </el-form-item>
+              </template>
               <template v-if="form.type == 'string'">
                 <el-form-item label="Value">
                   <el-input
@@ -349,14 +367,16 @@ export default {
         },
         main: {},
       },
+      get_loading: false,
       searchForm: {
-        database: "",
+        database: 0,
         pattern: "*",
         size: 50,
       },
       form: {
-        database: "",
+        database: 0,
         type: "string",
+        valueSize: 10,
         key: null,
         value: null,
         valueJson: null,
@@ -388,6 +408,11 @@ export default {
     },
   },
   methods: {
+    valueSizeChange() {
+      if (this.tool.isNotEmpty(this.form.key)) {
+        this.get(this.form.database, this.form.key);
+      }
+    },
     addOne(type, one) {
       this.form[type].push(one);
     },
@@ -405,7 +430,7 @@ export default {
       this.doSave();
     },
     toInsert() {
-      this.form.database = this.searchForm.database;
+      this.form.database = Number(this.searchForm.database);
       this.form.type = "string";
       this.form.key = null;
       this.form.value = null;
@@ -415,7 +440,7 @@ export default {
     },
     async toDo(type, data) {
       data = data || {};
-      data.database = this.form.database;
+      data.database = Number(this.form.database);
       data.key = this.form.key;
       data.type = type;
       if (this.tool.isEmpty(type)) {
@@ -432,7 +457,20 @@ export default {
         this.tool.error(res.msg);
       } else {
         this.tool.success("操作成功");
-        this.toSearch();
+        let find = false;
+
+        if (this.searchResult && this.searchResult.dataList) {
+          this.searchResult.dataList.forEach((one) => {
+            if (one.key == data.key) {
+              find = true;
+            }
+          });
+        }
+        if (!find) {
+          this.toSearch();
+        }
+
+        this.get(data.database, data.key);
       }
     },
     rowClick(data) {
@@ -456,7 +494,9 @@ export default {
       if (data == null) {
         data = {};
       }
-      this.form.database = data.database;
+    },
+    initFormData(data) {
+      this.form.database = Number(data.database);
       this.form.key = data.key;
       this.form.type = data.type || "string";
 
@@ -521,6 +561,7 @@ export default {
     async loadKeys() {
       this.searchResult = null;
       let param = {};
+      this.searchForm.database = Number(this.searchForm.database);
       Object.assign(param, this.searchForm);
       if (this.tool.isEmpty(param.size)) {
         param.size = 50;
@@ -530,26 +571,46 @@ export default {
       this.searchResult = res.data;
     },
     async get(database, key) {
+      this.get_loading = true;
       let param = {
-        database: database,
+        database: Number(database),
         key: key,
+        valueSize: Number(this.form.valueSize),
       };
       let res = await this.wrap.work("get", param);
-      return res.data;
+      this.get_loading = false;
+      let data = res.data || {};
+      this.initFormData(data);
+      return data;
     },
     async doSave() {
       let param = {};
+      this.form.valueSize = Number(this.form.valueSize);
       Object.assign(param, this.form);
       param.type = "set";
       let res = await this.wrap.work("do", param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
-        this.toSearch();
+
+        let find = false;
+
+        if (this.searchResult && this.searchResult.dataList) {
+          this.searchResult.dataList.forEach((one) => {
+            if (one.key == param.key) {
+              find = true;
+            }
+          });
+        }
+        if (!find) {
+          this.toSearch();
+        }
+
+        this.get(param.database, param.key);
       }
     },
     async doDelete(database, key) {
       let param = {
-        database: database,
+        database: Number(database),
         key: key,
       };
       let res = await this.wrap.work("delete", param);
@@ -560,7 +621,7 @@ export default {
     },
     async doDeletePattern(database, pattern) {
       let param = {
-        database: database,
+        database: Number(database),
         pattern: pattern,
       };
       let res = await this.wrap.work("deletePattern", param);

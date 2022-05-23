@@ -275,28 +275,4 @@ export default {
   padding: 0px;
   position: relative;
 }
-.toolbox-box .tm-layout > .tm-layout-bar {
-  background-color: #4e4e4e;
-}
-.toolbox-box .tm-layout-bar > .tm-layout-bar-part {
-  background-color: #4e4e4e;
-}
-.toolbox-box .toolbox-layout-header {
-  border-bottom: 1px solid #4e4e4e;
-}
-.toolbox-box input,
-.toolbox-box input:focus,
-.toolbox-box select,
-.toolbox-box select:focus,
-.toolbox-box textarea,
-.toolbox-box textarea:focus {
-  background-color: transparent;
-  color: #d9d9d9;
-  outline: none;
-  border: 1px solid #4e4e4e;
-}
-.toolbox-box select option {
-  background-color: #ffffff;
-  color: #3e3e3e;
-}
 </style>

@@ -67,6 +67,8 @@
 
 
 <script>
+import "./toolbox.css";
+
 export default {
   components: {},
   props: [

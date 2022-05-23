@@ -62,11 +62,7 @@
         <div class="mgt-10">
           <div class="tm-link color-grey" @click="addStrategyData">添加</div>
         </div>
-        <div
-          v-if="tableDetail != null"
-          class="mgt-10 toolbox-database-table-data-table"
-          style="height: 300px"
-        >
+        <div v-if="tableDetail != null" class="mgt-10" style="height: 300px">
           <el-table
             :data="strategyDataList"
             borde

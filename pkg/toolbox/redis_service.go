@@ -10,65 +10,62 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func CreateRedisClusterService(servers []string, auth string) (service *RedisClusterService, err error) {
-	service = &RedisClusterService{
-		servers: servers,
+func CreateRedisPoolService(address string, auth string) (service *RedisPoolService, err error) {
+	service = &RedisPoolService{
+		address: address,
 		auth:    auth,
 	}
 	err = service.init()
 	return
 }
 
-type RedisClusterService struct {
-	servers      []string
-	auth         string
-	redisCluster *redis.ClusterClient
-	lastUseTime  int64
+type RedisPoolService struct {
+	address     string
+	auth        string
+	client      *redis.Client
+	lastUseTime int64
 }
 
-func (this_ *RedisClusterService) init() (err error) {
-	redisCluster := redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:        this_.servers,
+func (this_ *RedisPoolService) init() (err error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:         this_.address,
 		DialTimeout:  100 * time.Second,
 		ReadTimeout:  100 * time.Second,
 		WriteTimeout: 100 * time.Second,
 		Password:     this_.auth,
 	})
-	this_.redisCluster = redisCluster
+	this_.client = client
 	return
 }
 
-func (this_ *RedisClusterService) GetWaitTime() int64 {
+func (this_ *RedisPoolService) GetWaitTime() int64 {
 	return 10 * 60 * 1000
 }
 
-func (this_ *RedisClusterService) GetLastUseTime() int64 {
+func (this_ *RedisPoolService) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
 
-func (this_ *RedisClusterService) Stop() {
-	_ = this_.redisCluster.Close()
+func (this_ *RedisPoolService) Stop() {
+	_ = this_.client.Close()
 }
 
-func (this_ *RedisClusterService) GetClient(ctx context.Context, database int) (redisCluster *redis.ClusterClient, err error) {
+func (this_ *RedisPoolService) GetClient(ctx context.Context, database int) (cmdable redis.Cmdable, err error) {
 	defer func() {
 		this_.lastUseTime = GetNowTime()
 	}()
-	redisCluster = this_.redisCluster
-	if ctx != nil && database >= 0 {
+
+	conn := this_.client.Conn(ctx)
+	cmdSelect := conn.Select(ctx, database)
+	_, err = cmdSelect.Result()
+	if err != nil {
 		return
 	}
+	cmdable = conn
 	return
 }
 
-func (this_ *RedisClusterService) SelectDatabase(ctx context.Context, database int) (err error) {
-	if ctx != nil && database >= 0 {
-		return
-	}
-	return
-}
-
-func (this_ *RedisClusterService) Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error) {
+func (this_ *RedisPoolService) Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -76,22 +73,17 @@ func (this_ *RedisClusterService) Keys(ctx context.Context, database int, patter
 	}
 
 	var list []string
-	err = client.ForEachMaster(ctx, func(ctx context.Context, client *redis.Client) (err error) {
-
-		var ls []string
-		cmd := client.Keys(ctx, pattern)
-		ls, err = cmd.Result()
-		if err != nil {
-			return
-		}
-		count += len(ls)
-		list = append(list, ls...)
+	cmdKeys := client.Keys(ctx, pattern)
+	list, err = cmdKeys.Result()
+	if err != nil {
 		return
-	})
+	}
+	count = len(list)
+
 	sor := sort.StringSlice(list)
 	sor.Sort()
-	listCount := len(list)
-	if int64(listCount) <= size || size < 0 {
+
+	if int64(count) <= size || size < 0 {
 		keys = list
 	} else {
 		keys = list[0:size]
@@ -99,31 +91,30 @@ func (this_ *RedisClusterService) Keys(ctx context.Context, database int, patter
 	return
 }
 
-func (this_ *RedisClusterService) KeyType(ctx context.Context, database int, key string) (keyType string, err error) {
+func (this_ *RedisPoolService) KeyType(ctx context.Context, database int, key string) (keyType string, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
 		return
 	}
 
-	cmd := client.Type(ctx, key)
-	keyType, err = cmd.Result()
+	cmdType := client.Type(ctx, key)
+	keyType, err = cmdType.Result()
 	return
 }
 
-func (this_ *RedisClusterService) Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo RedisValueInfo, err error) {
-
-	client, err := this_.GetClient(ctx, database)
-	if err != nil {
-		return
-	}
-
+func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo RedisValueInfo, err error) {
 	var keyType string
 	keyType, err = this_.KeyType(ctx, database, key)
 	if err != nil {
 		return
 	}
 	var value interface{}
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
 
 	if keyType == "none" {
 
@@ -229,10 +220,11 @@ func (this_ *RedisClusterService) Get(ctx context.Context, database int, key str
 	}
 	valueInfo.Type = keyType
 	valueInfo.Value = value
+
 	return
 }
 
-func (this_ *RedisClusterService) Set(ctx context.Context, database int, key string, value string) (err error) {
+func (this_ *RedisPoolService) Set(ctx context.Context, database int, key string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -244,7 +236,7 @@ func (this_ *RedisClusterService) Set(ctx context.Context, database int, key str
 	return
 }
 
-func (this_ *RedisClusterService) SAdd(ctx context.Context, database int, key string, value string) (err error) {
+func (this_ *RedisPoolService) SAdd(ctx context.Context, database int, key string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -256,7 +248,7 @@ func (this_ *RedisClusterService) SAdd(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) SRem(ctx context.Context, database int, key string, value string) (err error) {
+func (this_ *RedisPoolService) SRem(ctx context.Context, database int, key string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -268,7 +260,7 @@ func (this_ *RedisClusterService) SRem(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) LPush(ctx context.Context, database int, key string, value string) (err error) {
+func (this_ *RedisPoolService) LPush(ctx context.Context, database int, key string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -280,7 +272,7 @@ func (this_ *RedisClusterService) LPush(ctx context.Context, database int, key s
 	return
 }
 
-func (this_ *RedisClusterService) RPush(ctx context.Context, database int, key string, value string) (err error) {
+func (this_ *RedisPoolService) RPush(ctx context.Context, database int, key string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -292,7 +284,7 @@ func (this_ *RedisClusterService) RPush(ctx context.Context, database int, key s
 	return
 }
 
-func (this_ *RedisClusterService) LSet(ctx context.Context, database int, key string, index int64, value string) (err error) {
+func (this_ *RedisPoolService) LSet(ctx context.Context, database int, key string, index int64, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -304,7 +296,7 @@ func (this_ *RedisClusterService) LSet(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) LRem(ctx context.Context, database int, key string, count int64, value string) (err error) {
+func (this_ *RedisPoolService) LRem(ctx context.Context, database int, key string, count int64, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -316,7 +308,7 @@ func (this_ *RedisClusterService) LRem(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) HSet(ctx context.Context, database int, key string, field string, value string) (err error) {
+func (this_ *RedisPoolService) HSet(ctx context.Context, database int, key string, field string, value string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -328,7 +320,7 @@ func (this_ *RedisClusterService) HSet(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) HDel(ctx context.Context, database int, key string, field string) (err error) {
+func (this_ *RedisPoolService) HDel(ctx context.Context, database int, key string, field string) (err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -340,14 +332,13 @@ func (this_ *RedisClusterService) HDel(ctx context.Context, database int, key st
 	return
 }
 
-func (this_ *RedisClusterService) Del(ctx context.Context, database int, key string) (count int, err error) {
+func (this_ *RedisPoolService) Del(ctx context.Context, database int, key string) (count int, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
 		return
 	}
 
-	count = 0
 	cmd := client.Del(ctx, key)
 	_, err = cmd.Result()
 	if err == nil {
@@ -356,25 +347,23 @@ func (this_ *RedisClusterService) Del(ctx context.Context, database int, key str
 	return
 }
 
-func (this_ *RedisClusterService) DelPattern(ctx context.Context, database int, pattern string) (count int, err error) {
+func (this_ *RedisPoolService) DelPattern(ctx context.Context, database int, pattern string) (count int, err error) {
+	count = 0
+	var keys []string
+	_, keys, err = this_.Keys(ctx, database, pattern, -1)
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
 		return
 	}
 
-	var keys []string
-	_, keys, err = this_.Keys(ctx, database, pattern, -1)
-	if err != nil {
-		return
-	}
-
-	count = 0
 	for _, key := range keys {
 		cmd := client.Del(ctx, key)
 		_, err = cmd.Result()
 		if err == nil {
 			count++
+		} else {
+			return
 		}
 	}
 	return
