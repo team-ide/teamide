@@ -145,9 +145,6 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 			return
 		}
 
-		sor := sort.StringSlice(list)
-		sor.Sort()
-
 		if int64(len(list)) <= valueSize || valueSize < 0 {
 			value = list
 		} else {
@@ -172,8 +169,6 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 			util.Logger.Error("SScan Error", zap.Any("key", key), zap.Error(err))
 			return
 		}
-		sor := sort.StringSlice(list)
-		sor.Sort()
 
 		if int64(len(list)) <= valueSize || valueSize < 0 {
 			value = list
