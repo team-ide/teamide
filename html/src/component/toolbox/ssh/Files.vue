@@ -153,6 +153,7 @@ export default {
       this.list.forEach((one) => {
         if (
           this.tool.isEmpty(this.form.filter) ||
+          one.name == ".." ||
           one.name.toLowerCase().indexOf(this.form.filter.toLowerCase()) >= 0
         ) {
           one.show = true;
