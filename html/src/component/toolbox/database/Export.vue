@@ -101,10 +101,7 @@
         </template>
       </el-form>
       <template v-if="form.exportType == 'excel' || form.exportType == 'sql'">
-        <div
-          v-if="tableDetail != null"
-          class="mgt-20 toolbox-database-table-data-table"
-        >
+        <div v-if="tableDetail != null" class="mgt-20">
           <div class="mgb-10">
             <div class="tm-link color-grey" @click="addExportColumn">添加</div>
           </div>
@@ -117,11 +114,7 @@
             <el-table-column label="字段">
               <template slot-scope="scope">
                 <div class="">
-                  <el-select
-                    v-model="scope.row.column"
-                    style="width: 100%"
-                    size="mini"
-                  >
+                  <el-select v-model="scope.row.column" style="width: 100%">
                     <el-option
                       v-for="(one, index) in tableDetail.columnList"
                       :key="index"

@@ -1,0 +1,263 @@
+.toolbox-box .tm-layout>.tm-layout-bar {
+    background-color: #4e4e4e;
+}
+
+.toolbox-box .tm-layout-bar>.tm-layout-bar-part {
+    background-color: #4e4e4e;
+}
+
+.toolbox-box .toolbox-layout-header {
+    border-bottom: 1px solid #4e4e4e;
+}
+
+.toolbox-box input,
+.toolbox-box input:focus,
+.toolbox-box select,
+.toolbox-box select:focus,
+.toolbox-box textarea,
+.toolbox-box textarea:focus {
+    background-color: transparent;
+    color: #d9d9d9;
+    outline: none;
+    border: 1px solid #4e4e4e;
+}
+
+.toolbox-box select option {
+    background-color: #ffffff;
+    color: #3e3e3e;
+}
+
+
+.toolbox-box .el-divider {
+    background-color: #404040;
+}
+
+.toolbox-box .el-loading-mask {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.toolbox-box .el-pagination {
+    color: #929292;
+}
+
+.toolbox-box .el-pagination .el-input__inner {
+    height: 22px !important;
+    line-height: 22px !important;
+    background-color: transparent;
+    border: 0px solid #dcdfe6;
+}
+
+.toolbox-box .el-pagination .el-input__icon {
+    line-height: 22px !important;
+}
+
+.toolbox-box .el-pagination button:disabled {
+    background-color: transparent;
+}
+
+.toolbox-box .el-input.is-disabled .el-input__inner {
+    background-color: transparent;
+}
+
+.toolbox-box .el-pagination .btn-next,
+.toolbox-box .el-pagination .btn-prev {
+    background-color: transparent;
+}
+
+.toolbox-box .el-pagination .btn-next,
+.toolbox-box .el-pagination .btn-prev {
+    color: #929292;
+}
+
+.toolbox-box .el-pager li.btn-quicknext,
+.toolbox-box .el-pager li.btn-quickprev {
+    color: #929292;
+}
+
+.toolbox-box .el-pager li {
+    background: transparent;
+}
+
+.toolbox-box .el-table__header-wrapper th.el-table__cell {
+    user-select: text;
+}
+
+.toolbox-box .el-table input[type="checkbox"] {
+    vertical-align: -2px;
+}
+
+.toolbox-box .el-table,
+.toolbox-box .el-table__expanded-cell {
+    background: transparent;
+}
+
+.toolbox-box .el-table th,
+.toolbox-box .el-table td {
+    background: #172029;
+}
+
+.toolbox-box .el-table .el-table__row:hover td.el-table__cell,
+.toolbox-box .el-table .el-table__row:hover td.el-table__cell,
+.toolbox-box .el-table .el-table__row.hover-row td.el-table__cell {
+    background-color: #473939;
+}
+
+.toolbox-box .el-table__fixed-right::before,
+.el-table__fixed::before {
+    background-color: transparent;
+}
+
+.toolbox-box .el-table {
+    color: unset;
+}
+
+.toolbox-box .el-table--mini td,
+.toolbox-box .el-table--mini th {
+    padding: 3px 0;
+}
+
+.toolbox-box .el-table--border::after,
+.toolbox-box .el-table--group::after,
+.toolbox-box .el-table::before {
+    background-color: transparent;
+}
+
+.toolbox-box .el-table--border,
+.toolbox-box .el-table--group {
+    border: 1px solid #404040;
+}
+
+.toolbox-box .el-table td,
+.toolbox-box .el-table th.is-leaf {
+    border-bottom: 1px solid #404040;
+}
+
+.toolbox-box .el-table--border .el-table__cell,
+.toolbox-box .el-table__body-wrapper .el-table--border.is-scrolling-left~.el-table__fixed {
+    border-right: 1px solid #404040;
+}
+
+.toolbox-box .el-table--border th.el-table__cell.gutter:last-of-type {
+    border-bottom: 1px solid #404040;
+}
+
+.toolbox-box .el-table .el-table__cell {
+    padding: 0px;
+}
+
+.toolbox-box .el-table .cell {
+    white-space: nowrap;
+}
+
+.toolbox-box .el-table tbody .cell {
+    padding-left: 0px !important;
+}
+
+.toolbox-box .el-table input {
+    color: #ddd;
+    border: 0px dashed transparent;
+    background-color: transparent;
+    width: 100%;
+    padding: 0px 5px;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 12px;
+}
+
+.toolbox-box .el-table .el-switch {
+    font-size: 12px;
+    line-height: 14px;
+    height: 14px;
+}
+
+.toolbox-box .el-table .el-switch .el-switch__core {
+    height: 14px;
+    background-color: #4f4f4f;
+    border: 0px;
+}
+
+.toolbox-box .el-table .el-switch.is-checked .el-switch__core {
+    border-color: #04acb5;
+    background-color: #04acb5;
+    border: 0px;
+}
+
+.toolbox-box .el-table .el-switch .el-switch__core:after {
+    width: 12px;
+    height: 12px;
+    background-color: #727272;
+}
+
+.toolbox-box .el-table .el-tag.el-tag--info {
+    background-color: transparent;
+    color: inherit;
+}
+
+.toolbox-box .el-table .el-select__tags-text {
+    font-size: 12px;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-thumb {
+    box-shadow: inset 0 0 10px #333333;
+    background: #333333;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 10px #262626;
+    background: #262626;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar-corner {
+    background: #262626;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 0px;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-track {
+    border-radius: 0;
+}
+
+.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+
+.toolbox-box .el-table th .cell {
+    padding: 0px 0px !important;
+    line-height: 30px;
+    text-align: center;
+}
+
+.toolbox-box .el-table .el-table__cell,
+.toolbox-box .el-table .cell {
+    padding: 0px 0px !important;
+    line-height: 25px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.toolbox-box .el-table .el-input__inner {
+    height: 25px;
+    line-height: 25px;
+    padding: 0 5px;
+    border: 0px;
+    outline: none;
+    text-align: left;
+}
+
+.toolbox-box .el-table .el-input__icon {
+    line-height: 28px;
+
+}

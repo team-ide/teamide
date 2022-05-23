@@ -9,7 +9,7 @@
           <el-input v-model="tableDetail.comment" @change="change"> </el-input>
         </el-form-item>
       </el-form>
-      <div class="toolbox-database-table-data-table">
+      <div class="">
         <div class="pdtb-5 ft-13">
           <span class="color-grey">字段列表</span>
           <div class="tm-link color-green mgl-10" @click="addColumn({})">
@@ -141,7 +141,7 @@
           </el-table-column>
         </el-table>
       </div>
-      <div class="toolbox-database-table-data-table">
+      <div class="">
         <div class="pdtb-5 ft-13">
           <span class="color-grey">索引列表</span>
           <div class="tm-link color-green mgl-10" @click="addIndex({})">
@@ -398,24 +398,4 @@ export default {
 </script>
 
 <style>
-.database-table-detail .el-table th .cell {
-  padding: 0px 0px !important;
-  line-height: 30px;
-  text-align: center;
-}
-.database-table-detail .el-table .el-table__cell,
-.database-table-detail .el-table .cell {
-  padding: 0px 0px !important;
-  line-height: 25px;
-  text-align: center;
-  white-space: nowrap;
-}
-.database-table-detail .el-table .el-input__inner {
-  height: 25px;
-  line-height: 25px;
-  padding: 0 5px;
-  border: 0px;
-  outline: none;
-  text-align: left;
-}
 </style>
