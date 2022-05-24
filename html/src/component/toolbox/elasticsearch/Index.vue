@@ -2,7 +2,7 @@
   <div class="toolbox-elasticsearch-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="400px" class="scrollbar">
+        <tm-layout width="400px" class="">
           <IndexNames
             ref="ToolboxElasticsearchIndexNames"
             :source="source"

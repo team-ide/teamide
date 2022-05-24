@@ -7,6 +7,7 @@ type Form struct {
 type Field struct {
 	Label        string      `json:"label,omitempty"`
 	Name         string      `json:"name,omitempty"`
+	BindName     string      `json:"bindName,omitempty"`
 	Placeholder  string      `json:"placeholder,omitempty"`
 	Type         string      `json:"type,omitempty"`
 	DefaultValue interface{} `json:"defaultValue,omitempty"`

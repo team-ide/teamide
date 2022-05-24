@@ -60,6 +60,8 @@
               type="textarea"
               v-model="formData[field.name]"
               :autosize="{ minRows: 5, maxRows: 10 }"
+              @input="valueChange(field)"
+              @change="valueChange(field)"
             >
             </el-input>
           </template>
@@ -68,8 +70,22 @@
               type="textarea"
               v-model="jsonStringMap[field.name].value"
               :autosize="{ minRows: 5, maxRows: 20 }"
-              @input="jsonStringChange(jsonStringMap[field.name])"
-              @change="jsonStringChange(jsonStringMap[field.name])"
+              @input="
+                valueChange(field) &&
+                  jsonStringChange(jsonStringMap[field.name])
+              "
+              @change="
+                valueChange(field) &&
+                  jsonStringChange(jsonStringMap[field.name])
+              "
+            >
+            </el-input>
+          </template>
+          <template v-else-if="field.type == 'jsonView'">
+            <el-input
+              type="textarea"
+              v-model="jsonViewMap[field.bindName].value"
+              :autosize="{ minRows: 5, maxRows: 20 }"
             >
             </el-input>
           </template>
@@ -79,6 +95,8 @@
               :type="field.type"
               :placeholder="field.placeholder"
               :required="field.required"
+              @input="valueChange(field)"
+              @change="valueChange(field)"
             >
             </el-input>
           </template>
@@ -103,6 +121,7 @@ export default {
       ready: false,
       fileObjectMap: null,
       jsonStringMap: null,
+      jsonViewMap: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -117,6 +136,7 @@ export default {
       this.key = this.tool.getNumber();
       let fileObjectMap = {};
       let jsonStringMap = {};
+      let jsonViewMap = {};
       this.formBuild.fields.forEach((one) => {
         let name = one.name;
         let type = one.type;
@@ -131,9 +151,20 @@ export default {
           jsonStringMap[name] = {
             field: one,
             value: jsonString,
-            onChange: () => {
-              console.log(jsonStringMap[name]);
-            },
+            onChange: () => {},
+          };
+        } else if (type == "jsonView") {
+          let json = this.formData[one.bindName];
+          let jsonString = null;
+          if (json != null) {
+            if (typeof json == "object") {
+              jsonString = JSON.stringify(json, null, "  ");
+            }
+          }
+          jsonViewMap[one.bindName] = {
+            field: one,
+            value: jsonString,
+            onChange: () => {},
           };
         } else if (type == "file") {
           fileObjectMap[name] = {
@@ -147,6 +178,7 @@ export default {
           };
         }
       });
+      this.jsonViewMap = jsonViewMap;
       this.jsonStringMap = jsonStringMap;
       this.fileObjectMap = fileObjectMap;
       this.ready = true;
@@ -163,6 +195,34 @@ export default {
         field.validMessage = null;
       } catch (error) {
         field.validMessage = error;
+      }
+    },
+    valueChange(field) {
+      let value = this.formData[field.name];
+      let jsonView = this.jsonViewMap[field.name];
+      if (jsonView != null) {
+        let jsonString = null;
+        if (
+          this.tool.isNotEmpty(value) &&
+          (("" + value).startsWith("{") || ("" + value).startsWith("["))
+        ) {
+          try {
+            let json = null;
+            try {
+              json = JSON.parse(value);
+            } catch (error) {
+              try {
+                json = eval("(" + value + ")");
+              } catch (error2) {
+                throw error;
+              }
+            }
+            jsonString = JSON.stringify(json, null, "  ");
+          } catch (e) {
+            jsonString = e;
+          }
+        }
+        jsonView.value = jsonString;
       }
     },
   },

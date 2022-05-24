@@ -105,6 +105,10 @@ let validateFields = function (data, fields, all) {
 // })
 let validateField = function (data, field) {
     return new Promise((resolve, reject) => {
+        if (field.type == 'jsonView') {
+            resolve(true)
+            return;
+        }
         let value = data[field.name];
         if (value != null) {
             if (field.isNumber) {

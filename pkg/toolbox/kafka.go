@@ -85,7 +85,7 @@ func init() {
 						},
 					},
 					{
-						Label: "ValueJSON预览", Name: "value", Type: "jsonView",
+						Label: "ValueJSON预览", Name: "valueView", BindName: "value", Type: "jsonView",
 					},
 				},
 			},

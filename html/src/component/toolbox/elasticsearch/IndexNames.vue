@@ -1,80 +1,97 @@
 <template>
   <div class="toolbox-elasticsearch-indexName">
     <template v-if="ready">
-      <div class="pd-10">
-        <table>
-          <thead>
-            <tr>
-              <th>IndexName</th>
-              <th width="175px">
-                <div style="width: 175px">
-                  <div
-                    class="tm-link color-grey-3 ft-14 mglr-2"
-                    @click="loadIndexNames()"
-                  >
-                    <i class="mdi mdi-reload"></i>
-                  </div>
-                  <div
-                    class="tm-link color-green-3 ft-14 mglr-2"
-                    @click="toInsert()"
-                  >
-                    <i class="mdi mdi-plus"></i>
-                  </div>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-if="indexNames == null">
-              <tr>
-                <td colspan="2">
-                  <div class="text-center ft-13 pdtb-10">加载中...</div>
-                </td>
-              </tr>
-            </template>
-            <template v-else-if="indexNames.length == 0">
-              <tr>
-                <td colspan="2">
-                  <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                </td>
-              </tr>
-            </template>
-            <template v-else>
-              <template v-for="(one, index) in indexNames">
-                <tr :key="index" @click="rowClick(one)">
-                  <td>{{ one.name }}</td>
-                  <td>
-                    <div
-                      class="tm-btn color-blue tm-btn-xs"
-                      @click="toOpenIndexName(one)"
-                    >
-                      数据
+      <tm-layout height="100%">
+        <tm-layout height="50px">
+          <div class="pdlr-10 pdt-10">
+            <div
+              class="tm-btn tm-btn-sm bg-grey-6 ft-13"
+              @click="loadIndexNames"
+            >
+              刷新
+            </div>
+            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+              新建索引
+            </div>
+          </div>
+        </tm-layout>
+        <tm-layout height="auto" class="scrollbar">
+          <div class="">
+            <table>
+              <thead>
+                <tr>
+                  <th>IndexName</th>
+                  <th width="175px">
+                    <div style="width: 175px">
+                      <div
+                        class="tm-link color-grey-3 ft-14 mglr-2"
+                        @click="loadIndexNames()"
+                      >
+                        <i class="mdi mdi-reload"></i>
+                      </div>
+                      <div
+                        class="tm-link color-green-3 ft-14 mglr-2"
+                        @click="toInsert()"
+                      >
+                        <i class="mdi mdi-plus"></i>
+                      </div>
                     </div>
-                    <div
-                      class="tm-btn color-grey tm-btn-xs"
-                      @click="toUpdateMapping(one)"
-                    >
-                      结构
-                    </div>
-                    <div
-                      class="tm-btn color-green tm-btn-xs"
-                      @click="toReindex(one)"
-                    >
-                      迁移
-                    </div>
-                    <div
-                      class="tm-btn color-orange tm-btn-xs"
-                      @click="toDelete(one)"
-                    >
-                      <i class="mdi mdi-delete-outline"></i>
-                    </div>
-                  </td>
+                  </th>
                 </tr>
-              </template>
-            </template>
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                <template v-if="indexNames == null">
+                  <tr>
+                    <td colspan="2">
+                      <div class="text-center ft-13 pdtb-10">加载中...</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else-if="indexNames.length == 0">
+                  <tr>
+                    <td colspan="2">
+                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <template v-for="(one, index) in indexNames">
+                    <tr :key="index" @click="rowClick(one)">
+                      <td>{{ one.name }}</td>
+                      <td>
+                        <div
+                          class="tm-btn color-blue tm-btn-xs"
+                          @click="toOpenIndexName(one)"
+                        >
+                          数据
+                        </div>
+                        <div
+                          class="tm-btn color-grey tm-btn-xs"
+                          @click="toUpdateMapping(one)"
+                        >
+                          结构
+                        </div>
+                        <div
+                          class="tm-btn color-green tm-btn-xs"
+                          @click="toReindex(one)"
+                        >
+                          迁移
+                        </div>
+                        <div
+                          class="tm-btn color-orange tm-btn-xs"
+                          @click="toDelete(one)"
+                        >
+                          <i class="mdi mdi-delete-outline"></i>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </tm-layout>
+      </tm-layout>
     </template>
     <FormDialog
       ref="InsertIndexName"

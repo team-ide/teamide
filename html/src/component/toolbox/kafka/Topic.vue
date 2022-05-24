@@ -1,69 +1,89 @@
 <template>
   <div class="toolbox-kafka-topic">
     <template v-if="ready">
-      <div class="pd-10">
-        <table>
-          <thead>
-            <tr>
-              <th>Topic</th>
-              <th width="100px">
-                <div style="width: 100px">
-                  <div
-                    class="tm-link color-grey-3 ft-14 mglr-2"
-                    @click="loadTopics()"
-                  >
-                    <i class="mdi mdi-reload"></i>
-                  </div>
-                  <div
-                    class="tm-link color-green-3 ft-14 mglr-2"
-                    @click="toInsert()"
-                  >
-                    <i class="mdi mdi-plus"></i>
-                  </div>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-if="topics == null">
-              <tr>
-                <td colspan="2">
-                  <div class="text-center ft-13 pdtb-10">加载中...</div>
-                </td>
-              </tr>
-            </template>
-            <template v-else-if="topics.length == 0">
-              <tr>
-                <td colspan="2">
-                  <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                </td>
-              </tr>
-            </template>
-            <template v-else>
-              <template v-for="(one, index) in topics">
-                <tr :key="index" @click="rowClick(one)">
-                  <td>{{ one.name }}</td>
-                  <td>
-                    <div
-                      class="tm-btn color-blue tm-btn-xs"
-                      @click="toOpenTopic(one)"
-                    >
-                      数据
+      <tm-layout height="100%">
+        <tm-layout height="50px">
+          <div class="pdlr-10 pdt-10">
+            <div class="tm-btn tm-btn-sm bg-grey-6 ft-13" @click="loadTopics">
+              刷新
+            </div>
+            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+              新建主题
+            </div>
+          </div>
+        </tm-layout>
+        <tm-layout height="auto" class="scrollbar">
+          <div class="">
+            <table>
+              <thead>
+                <tr>
+                  <th>Topic</th>
+                  <th width="100px">
+                    <div style="width: 100px">
+                      <div
+                        class="tm-link color-grey-3 ft-14 mglr-2"
+                        @click="loadTopics()"
+                      >
+                        <i class="mdi mdi-reload"></i>
+                      </div>
+                      <div
+                        class="tm-link color-green-3 ft-14 mglr-2"
+                        @click="toInsert()"
+                      >
+                        <i class="mdi mdi-plus"></i>
+                      </div>
                     </div>
-                    <div
-                      class="tm-btn color-orange tm-btn-xs"
-                      @click="toDelete(one)"
-                    >
-                      删除
-                    </div>
-                  </td>
+                  </th>
                 </tr>
-              </template>
-            </template>
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                <template v-if="topics == null">
+                  <tr>
+                    <td colspan="2">
+                      <div class="text-center ft-13 pdtb-10">加载中...</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else-if="topics.length == 0">
+                  <tr>
+                    <td colspan="2">
+                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
+                    </td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <template v-for="(one, index) in topics">
+                    <tr :key="index" @click="rowClick(one)">
+                      <td>{{ one.name }}</td>
+                      <td>
+                        <div
+                          class="tm-btn color-blue tm-btn-xs"
+                          @click="toOpenTopic(one)"
+                        >
+                          数据
+                        </div>
+                        <div
+                          class="tm-btn color-orange tm-btn-xs"
+                          @click="toDelete(one)"
+                        >
+                          删除
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </tm-layout>
+      </tm-layout>
     </template>
+    <FormDialog
+      ref="TopicForm"
+      :source="source"
+      title="主题"
+      :onSave="doInsert"
+    ></FormDialog>
   </div>
 </template>
 
@@ -115,12 +135,15 @@ export default {
     },
     toInsert() {
       let data = {};
-      this.wrap.showTopicForm(data, (m) => {
-        let flag = this.doInsert(m);
-        return flag;
+
+      this.$refs.TopicForm.show({
+        title: `创建主题`,
+        form: [this.form.toolbox.kafka.topic],
+        data: [data],
       });
     },
-    async doInsert(data) {
+    async doInsert(dataList) {
+      let data = dataList[0];
       let param = {
         topic: data.topic,
         numPartitions: Number(data.numPartitions),

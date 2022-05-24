@@ -2,7 +2,7 @@
   <div class="toolbox-kafka-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="400px" class="scrollbar">
+        <tm-layout width="400px" class="">
           <Topic
             ref="ToolboxKafkaTopic"
             :source="source"
@@ -24,7 +24,6 @@
         </tm-layout>
       </tm-layout>
       <TopicForm :source="source" :toolbox="toolbox" :wrap="wrap"> </TopicForm>
-      <PushForm :source="source" :toolbox="toolbox" :wrap="wrap"> </PushForm>
       <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
     </template>
   </div>
@@ -35,10 +34,9 @@
 import Topic from "./Topic";
 import Tabs from "./Tabs";
 import TopicForm from "./TopicForm";
-import PushForm from "./PushForm";
 import ShowData from "./ShowData";
 export default {
-  components: { Topic, Tabs, TopicForm, PushForm, ShowData },
+  components: { Topic, Tabs, TopicForm, ShowData },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
