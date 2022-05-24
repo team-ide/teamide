@@ -129,6 +129,66 @@ CREATE TABLE ` + TableToolboxOpenTab + ` (
 				},
 			},
 		},
+
+		/** 给工具箱添加分组 开始 **/
+
+		// 创建工具箱分组表
+		&install.StageModel{
+			Version: "1.0.1",
+			Module:  ModuleToolbox,
+			Stage:   `创建表[` + TableToolboxGroup + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableToolboxGroup + ` (
+	groupId bigint(20) NOT NULL COMMENT '分组ID',
+	name varchar(50) NOT NULL COMMENT '名称',
+	comment varchar(200) DEFAULT NULL COMMENT '说明',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	option varchar(2000) DEFAULT NULL COMMENT '配置',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (groupId),
+	KEY index_userId (userId),
+	KEY index_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱分组';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableToolboxGroup + ` (
+	groupId bigint(20) NOT NULL,
+	name varchar(50) NOT NULL,
+	comment varchar(200) DEFAULT NULL,
+	userId bigint(20) NOT NULL,
+	option varchar(2000) DEFAULT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	PRIMARY KEY (groupId)
+);
+`,
+					`CREATE INDEX ` + TableToolboxGroup + `_index_userId on ` + TableToolboxGroup + ` (userId);`,
+					`CREATE INDEX ` + TableToolboxGroup + `_index_name on ` + TableToolboxGroup + ` (name);`,
+				},
+			},
+		},
+		// 工具表添加分组ID
+		&install.StageModel{
+			Version: "1.0.1",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolbox + `]添加分组ID[groupId]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN comment varchar(200) DEFAULT NULL COMMENT '说明' AFTER name;`,
+					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN groupId bigint(20) DEFAULT NULL COMMENT '分组ID' AFTER toolboxType;`,
+					`ALTER TABLE ` + TableToolbox + ` ADD INDEX ` + TableToolbox + `_index_groupId (groupId);`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD comment varchar(200);`,
+					`ALTER TABLE ` + TableToolbox + ` ADD groupId bigint(20);`,
+					`CREATE INDEX ` + TableToolbox + `_index_groupId on ` + TableToolbox + ` (groupId);`,
+				},
+			},
+		},
+
+		/** 给工具箱添加分组 结束 **/
 	}
 
 }

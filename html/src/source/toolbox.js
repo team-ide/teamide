@@ -148,6 +148,7 @@ toolbox.toolboxTypeOpens = [];
 toolbox.tabs = [];
 toolbox.activeTab = null;
 toolbox.context = null;
+toolbox.groups = null;
 
 toolbox.formatExtend = (toolboxType, data, extend) => {
     if (toolboxType.name == "ssh") {

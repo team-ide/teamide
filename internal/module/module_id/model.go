@@ -43,4 +43,6 @@ const (
 	IDTypeToolboxOpen = 5002
 	// IDTypeToolboxOpenTab 工具箱开启标签页ID类型
 	IDTypeToolboxOpenTab = 5003
+	// IDTypeToolboxGroup 工具箱分组ID类型
+	IDTypeToolboxGroup = 5004
 )

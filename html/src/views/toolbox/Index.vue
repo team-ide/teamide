@@ -23,12 +23,25 @@
           title="编辑Toolbox"
           :onSave="doUpdate"
         ></FormDialog>
+        <FormDialog
+          ref="InsertToolboxGroup"
+          :source="source"
+          title="新增工具分组"
+          :onSave="doInsertGroup"
+        ></FormDialog>
+        <FormDialog
+          ref="UpdateToolboxGroup"
+          :source="source"
+          title="编辑工具分组"
+          :onSave="doUpdateGroup"
+        ></FormDialog>
         <ToolboxType
           ref="ToolboxType"
           v-if="source.toolbox.context != null"
           :source="source"
           :toolbox="source.toolbox"
           :context="source.toolbox.context"
+          :groups="source.toolbox.groups"
         >
         </ToolboxType>
       </tm-layout>
@@ -84,6 +97,9 @@ export default {
       this.source.toolbox.toUpdate = this.toUpdate;
       this.source.toolbox.toCopy = this.toCopy;
       this.source.toolbox.toDelete = this.toDelete;
+      this.source.toolbox.toInsertGroup = this.toInsertGroup;
+      this.source.toolbox.toUpdateGroup = this.toUpdateGroup;
+      this.source.toolbox.toDeleteGroup = this.toDeleteGroup;
       this.source.toolbox.showSwitchToolboxType = () => {
         this.$refs.ToolboxType.showSwitch();
       };
@@ -139,6 +155,8 @@ export default {
         this.tool.error(res.msg);
       } else {
         let context = res.data.context || {};
+        let groups = res.data.groups || [];
+        this.source.toolbox.groups = groups;
         this.source.toolbox.context = context;
       }
     },
@@ -251,6 +269,84 @@ export default {
       if (res.code == 0) {
         this.source.toolbox.initContext();
         this.tool.success("新增成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+
+    toInsertGroup() {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let data = {};
+      let optionsJSON = {};
+
+      this.$refs.InsertToolboxGroup.show({
+        title: `新增工具分组`,
+        form: [this.form.toolbox.group, this.form.toolbox.group.option],
+        data: [data, optionsJSON],
+      });
+    },
+    toUpdateGroup(data) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.updateGroupData = data;
+
+      let optionsJSON = this.getOptionJSON(data.option);
+
+      this.$refs.UpdateToolboxGroup.show({
+        title: `编辑[${data.name}]工具分组`,
+        form: [this.form.toolbox.group, this.form.toolbox.group.option],
+        data: [data, optionsJSON],
+      });
+    },
+    toDeleteGroup(data) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.tool
+        .confirm(
+          "删除工具分组[" + data.name + "]并将该分组下工具移出该组，确定删除？"
+        )
+        .then(async () => {
+          return this.doDeleteGroup(data);
+        })
+        .catch((e) => {});
+    },
+    async doDeleteGroup(data) {
+      let res = await this.server.toolbox.group.delete(data);
+      if (res.code == 0) {
+        this.tool.success("删除分组成功");
+        this.source.toolbox.initContext();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doUpdateGroup(dataList, config) {
+      let data = dataList[0];
+      let optionJSON = dataList[1];
+      data.groupId = this.updateGroupData.groupId;
+      data.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.group.update(data);
+      if (res.code == 0) {
+        this.tool.success("修改分组成功");
+        this.source.toolbox.initContext();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doInsertGroup(dataList, config) {
+      let data = dataList[0];
+      let optionJSON = dataList[1];
+      data.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.group.insert(data);
+      if (res.code == 0) {
+        this.tool.success("新增分组成功");
+        this.source.toolbox.initContext();
         return true;
       } else {
         this.tool.error(res.msg);

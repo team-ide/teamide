@@ -27,13 +27,18 @@ var (
 	// 工具 权限
 
 	// PowerToolbox 工具基本 权限
-	PowerToolbox                       = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerToolboxPage                   = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
-	PowerToolboxContext                = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxInsert                 = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxUpdate                 = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxRename                 = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxDelete                 = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolbox        = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerToolboxPage    = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
+	PowerToolboxContext = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxInsert  = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdate  = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxRename  = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxDelete  = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+
+	PowerToolboxGroupInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_group_insert", Text: "工具分组新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxGroupUpdate = base.AppendPower(&base.PowerAction{Action: "toolbox_group_update", Text: "工具分组修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxGroupDelete = base.AppendPower(&base.PowerAction{Action: "toolbox_group_delete", Text: "工具分组删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+
 	PowerToolboxOpen                   = base.AppendPower(&base.PowerAction{Action: "toolbox_open", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxUpdateOpenExtend       = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_extend", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxQueryOpens             = base.AppendPower(&base.PowerAction{Action: "toolbox_query_opens", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -58,6 +63,11 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/update"}, Power: PowerToolboxUpdate, Do: this_.update})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: PowerToolboxRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: PowerToolboxDelete, Do: this_.delete})
+
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/insert"}, Power: PowerToolboxGroupInsert, Do: this_.insertGroup})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/update"}, Power: PowerToolboxGroupUpdate, Do: this_.updateGroup})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/delete"}, Power: PowerToolboxGroupDelete, Do: this_.deleteGroup})
+
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: PowerToolboxWork, Do: this_.work})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/open"}, Power: PowerToolboxOpen, Do: this_.open})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpens"}, Power: PowerToolboxQueryOpens, Do: this_.queryOpens})
@@ -105,6 +115,7 @@ type ContextRequest struct {
 
 type ContextResponse struct {
 	Context map[string][]*ToolboxModel `json:"context,omitempty"`
+	Groups  []*ToolboxGroupModel       `json:"groups,omitempty"`
 }
 
 func (this_ *ToolboxApi) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -114,6 +125,13 @@ func (this_ *ToolboxApi) context(requestBean *base.RequestBean, c *gin.Context) 
 		return
 	}
 	response := &ContextResponse{}
+
+	response.Groups, err = this_.ToolboxService.QueryGroup(&ToolboxGroupModel{
+		UserId: requestBean.JWT.UserId,
+	})
+	if err != nil {
+		return
+	}
 
 	list, err := this_.ToolboxService.Query(&ToolboxModel{
 		UserId: requestBean.JWT.UserId,
@@ -149,6 +167,157 @@ func (this_ *ToolboxApi) insert(requestBean *base.RequestBean, c *gin.Context) (
 	toolbox.UserId = requestBean.JWT.UserId
 
 	_, err = this_.ToolboxService.Insert(toolbox)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type InsertGroupRequest struct {
+	*ToolboxGroupModel
+}
+
+type InsertGroupResponse struct {
+}
+
+func (this_ *ToolboxApi) insertGroup(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &InsertGroupRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &InsertGroupResponse{}
+
+	bean := request.ToolboxGroupModel
+	bean.UserId = requestBean.JWT.UserId
+
+	_, err = this_.ToolboxService.InsertGroup(bean)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type UpdateRequest struct {
+	*ToolboxModel
+}
+
+type UpdateResponse struct {
+}
+
+func (this_ *ToolboxApi) update(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateResponse{}
+
+	toolbox := request.ToolboxModel
+
+	_, err = this_.ToolboxService.Update(toolbox)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type UpdateGroupRequest struct {
+	*ToolboxGroupModel
+}
+
+type UpdateGroupResponse struct {
+}
+
+func (this_ *ToolboxApi) updateGroup(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateGroupRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateGroupResponse{}
+
+	_, err = this_.ToolboxService.UpdateGroup(request.ToolboxGroupModel)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type RenameRequest struct {
+	*ToolboxModel
+}
+
+type RenameResponse struct {
+}
+
+func (this_ *ToolboxApi) rename(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &RenameRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &RenameResponse{}
+
+	toolbox := request.ToolboxModel
+
+	_, err = this_.ToolboxService.Rename(toolbox.ToolboxId, toolbox.Name)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type DeleteRequest struct {
+	*ToolboxModel
+}
+
+type DeleteResponse struct {
+}
+
+func (this_ *ToolboxApi) delete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &DeleteRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &DeleteResponse{}
+
+	_, err = this_.ToolboxService.Delete(request.ToolboxModel.ToolboxId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type DeleteGroupRequest struct {
+	*ToolboxGroupModel
+}
+
+type DeleteGroupResponse struct {
+}
+
+func (this_ *ToolboxApi) deleteGroup(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &DeleteGroupRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &DeleteGroupResponse{}
+
+	_, err = this_.ToolboxService.DeleteGroup(request.ToolboxGroupModel.GroupId)
 	if err != nil {
 		return
 	}
@@ -354,84 +523,6 @@ func (this_ *ToolboxApi) updateOpenExtend(requestBean *base.RequestBean, c *gin.
 	response := &UpdateOpenExtendResponse{}
 
 	_, err = this_.ToolboxService.UpdateOpenExtend(request.ToolboxOpenModel)
-	if err != nil {
-		return
-	}
-
-	res = response
-	return
-}
-
-type UpdateRequest struct {
-	*ToolboxModel
-}
-
-type UpdateResponse struct {
-}
-
-func (this_ *ToolboxApi) update(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	request := &UpdateRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	response := &UpdateResponse{}
-
-	toolbox := request.ToolboxModel
-
-	_, err = this_.ToolboxService.Update(toolbox)
-	if err != nil {
-		return
-	}
-
-	res = response
-	return
-}
-
-type RenameRequest struct {
-	*ToolboxModel
-}
-
-type RenameResponse struct {
-}
-
-func (this_ *ToolboxApi) rename(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	request := &RenameRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	response := &RenameResponse{}
-
-	toolbox := request.ToolboxModel
-
-	_, err = this_.ToolboxService.Rename(toolbox.ToolboxId, toolbox.Name)
-	if err != nil {
-		return
-	}
-
-	res = response
-	return
-}
-
-type DeleteRequest struct {
-	*ToolboxModel
-}
-
-type DeleteResponse struct {
-}
-
-func (this_ *ToolboxApi) delete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	request := &RenameRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	response := &RenameResponse{}
-
-	toolbox := request.ToolboxModel
-
-	_, err = this_.ToolboxService.Delete(toolbox.ToolboxId)
 	if err != nil {
 		return
 	}
