@@ -1,10 +1,14 @@
 <template>
   <div
     class="contextmenu-box"
-    :class="{ show: showContextmenu, showbottom: showbottom }"
+    :class="{
+      show: showContextmenu,
+      showbottom: showbottom,
+      showleft: showleft,
+    }"
     :style="{
-      top: contextmenu.top,
-      left: contextmenu.left,
+      top: top,
+      left: left,
       'z-index': contextmenu.zIndex,
     }"
   >
@@ -24,7 +28,10 @@ export default {
   data() {
     return {
       showbottom: false,
+      showleft: false,
       showContextmenu: false,
+      top: null,
+      left: null,
     };
   },
   beforeMount() {},
@@ -38,19 +45,43 @@ export default {
       event = event || window.event;
       let clientX = event.clientX;
       let clientY = event.clientY;
-      this.contextmenu.left = clientX + "px";
-      this.contextmenu.top = clientY + "px";
-      this.showContextmenu = true;
-      this.showbottom = false;
 
       this.$nextTick(() => {
+        let left = clientX + "px";
+        let top = clientY + "px";
         let bottomHeight = window.innerHeight - clientY;
         let menuHeight = this.$el.offsetHeight;
+        let showbottom = false;
+        let showleft = false;
+        let hasSub = false;
+        if (this.contextmenu.menus) {
+          this.contextmenu.menus.forEach((one) => {
+            if (one.menus && one.menus.length > 0) {
+              hasSub = true;
+            }
+          });
+        }
         if (bottomHeight < menuHeight + 30) {
-          this.showbottom = true;
-          this.contextmenu.top = clientY - menuHeight + "px";
+          showbottom = true;
+          top = clientY - menuHeight + "px";
         }
 
+        let rightWidth = window.innerWidth - clientX;
+        let menuWidth = this.$el.offsetWidth;
+        let offsetLeft = 30;
+        if (hasSub) {
+          offsetLeft = 200;
+        }
+        if (rightWidth < menuWidth + offsetLeft) {
+          showleft = true;
+          left = clientX - menuWidth + "px";
+        }
+
+        this.left = left;
+        this.top = top;
+        this.showbottom = showbottom;
+        this.showleft = showleft;
+        this.showContextmenu = true;
         delete this.showing;
       });
     },
@@ -89,7 +120,6 @@ export default {
   top: 0px;
   left: 0;
   z-index: 1000;
-  display: none;
   float: left;
   min-width: 160px;
   padding: 5px 0;
@@ -97,23 +127,12 @@ export default {
   list-style: none;
   background-color: #fff;
   border: 1px solid #ccc;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  font-family: helvetica neue, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  *border-right-width: 2px;
-  *border-bottom-width: 2px;
-  -webkit-border-radius: 6px;
-  -moz-border-radius: 6px;
-  border-radius: 6px;
-  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-  -webkit-background-clip: padding-box;
-  -moz-background-clip: padding;
-  background-clip: padding-box;
+  font-size: 13px;
+  border-radius: 1px;
   text-align: left;
+  transform: scale(0);
 }
 .contextmenu-box.show {
-  display: block;
+  transform: scale(1);
 }
 </style>

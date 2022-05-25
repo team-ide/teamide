@@ -105,7 +105,7 @@ export default {
       this.ready = true;
     },
     getTab(tab) {
-      return this.$refs.TabEditor.getTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
     },
     onRemoveTab(tab) {
       this.wrap.onRemoveTab(tab);
@@ -114,10 +114,10 @@ export default {
       this.wrap.onActiveTab(tab);
     },
     addTab(tab) {
-      return this.$refs.TabEditor.addTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.addTab(tab);
     },
     doActiveTab(tab) {
-      return this.$refs.TabEditor.doActiveTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.doActiveTab(tab);
     },
   },
   created() {},

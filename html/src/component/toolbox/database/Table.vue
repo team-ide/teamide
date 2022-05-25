@@ -204,9 +204,9 @@ export default {
         tableDetail = await this.wrap.getTableDetail(this.database, this.table);
       }
 
-      this.show(this.database, tableDetail);
+      this.initForm(this.database, tableDetail);
     },
-    async show(database, tableDetail) {
+    async initForm(database, tableDetail) {
       this.form.database = database;
       this.tableDetail = tableDetail;
       this.isInsert = tableDetail == null;
@@ -291,7 +291,13 @@ export default {
         return;
       }
       this.tool.success("执行成功");
-      this.init();
+      let tableDetail = await this.wrap.getTableDetail(
+        data.database,
+        data.name
+      );
+
+      this.initForm(data.database, tableDetail);
+
       return res.data || {};
     },
     async onTableDetailChange() {

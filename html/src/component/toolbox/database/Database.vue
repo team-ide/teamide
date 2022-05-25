@@ -390,6 +390,9 @@ export default {
       });
     },
     toCreateTable(database) {
+      if (database.isDatabaseTables) {
+        database = database.database;
+      }
       let extend = {
         name: "新建[" + database.name + "]库表",
         title: "新建[" + database.name + "]库表",

@@ -85,10 +85,10 @@ export default {
   },
   methods: {
     getTabs() {
-      return this.$refs.TabEditor.getTabs();
+      return this.$refs.TabEditor && this.$refs.TabEditor.getTabs();
     },
     getTab(tab) {
-      return this.$refs.TabEditor.getTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
     },
     onRemoveTab(tab) {
       this.toolbox.closeOpen(tab.openId);

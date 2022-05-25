@@ -161,7 +161,7 @@ export default {
         this.source.toolbox.context = context;
       }
     },
-    toInsert(toolboxType) {
+    toInsert(toolboxType, selectGroup) {
       this.tool.stopEvent();
       // this.source.toolbox.hideToolboxType();
       let toolboxData = {};
@@ -172,6 +172,7 @@ export default {
         form: [this.form.toolbox, toolboxType.configForm],
         data: [toolboxData, optionsJSON],
         toolboxType,
+        selectGroup,
       });
     },
     toCopy(toolboxType, copy) {
@@ -279,6 +280,9 @@ export default {
       let optionJSON = dataList[1];
       let toolboxType = config.toolboxType;
       toolboxData.toolboxType = toolboxType.name;
+      if (config.selectGroup) {
+        toolboxData.groupId = config.selectGroup.groupId;
+      }
       toolboxData.option = JSON.stringify(optionJSON);
       let res = await this.server.toolbox.insert(toolboxData);
       if (res.code == 0) {

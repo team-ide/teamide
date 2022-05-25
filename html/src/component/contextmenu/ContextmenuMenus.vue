@@ -74,10 +74,8 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style  scoped>
 .divider {
-  *width: 100%;
-  height: 2px;
+  height: 0px;
   margin: 9px 1px;
-  *margin: -5px 0 5px;
   overflow: hidden;
   background-color: #e5e5e5;
   border-bottom: 1px solid #fff;
@@ -85,8 +83,8 @@ export default {
 
 .header {
   display: block;
-  padding: 3px 30px 3px 15px;
-  font-size: 12px;
+  padding: 3px 30px 3px 10px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 24px;
   color: #999;
@@ -100,10 +98,9 @@ li {
 
 li a {
   display: block;
-  padding: 3px 20px;
+  padding: 4px 15px;
   clear: both;
   font-weight: 400;
-  line-height: 24px;
   color: #333;
   white-space: nowrap;
   text-decoration: none;
@@ -116,20 +113,6 @@ li > a:focus,
   color: #fff !important;
   text-decoration: none;
   background-color: #009688;
-  background-image: -moz-linear-gradient(top, #00897b, #00796b);
-  background-image: -webkit-gradient(
-    linear,
-    0 0,
-    0 100%,
-    from(#00897b),
-    to(#00796b)
-  );
-  background-image: -webkit-linear-gradient(top, #00897b, #00796b);
-  background-image: -o-linear-gradient(top, #00897b, #00796b);
-  background-image: linear-gradient(to bottom, #00897b, #00796b);
-  background-repeat: repeat-x;
-  filter: progid:dximagetransform.microsoft.gradient(startColorstr='#ff0088cc',
-		endColorstr='#ff0077b3', GradientType=0);
 }
 .disabled {
   cursor: no-drop;
@@ -153,18 +136,16 @@ li > a:focus,
   left: 100%;
   margin-top: -5px;
   margin-left: 0px;
-  -webkit-border-radius: 0 6px 6px 6px;
-  -moz-border-radius: 0 6px 6px 6px;
-  border-radius: 0px 6px 6px 0px;
-  display: none;
+  border-radius: 1px;
   position: absolute;
   background-color: #fff;
   padding: 5px 0px;
   border-left: 1px solid #ddd;
+  transform: scale(0);
 }
 
 li:hover > .contextmenu-submenu {
-  display: block;
+  transform: scale(1);
 }
 
 .has-sub > a {
@@ -189,5 +170,9 @@ li:hover > .contextmenu-submenu {
 }
 .contextmenu .header {
   cursor: default;
+}
+.contextmenu-box.showleft .contextmenu-submenu {
+  right: 100%;
+  left: auto;
 }
 </style>
