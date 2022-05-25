@@ -97,6 +97,7 @@ export default {
       this.source.toolbox.toUpdate = this.toUpdate;
       this.source.toolbox.toCopy = this.toCopy;
       this.source.toolbox.toDelete = this.toDelete;
+      this.source.toolbox.moveGroup = this.moveGroup;
       this.source.toolbox.toInsertGroup = this.toInsertGroup;
       this.source.toolbox.toUpdateGroup = this.toUpdateGroup;
       this.source.toolbox.toDeleteGroup = this.toDeleteGroup;
@@ -232,6 +233,20 @@ export default {
       if (res.code == 0) {
         this.source.toolbox.initContext();
         this.tool.success("删除成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async moveGroup(toolboxId, groupId) {
+      let res = await this.server.toolbox.moveGroup({
+        toolboxId: toolboxId,
+        groupId: groupId,
+      });
+      if (res.code == 0) {
+        this.source.toolbox.initContext();
+        this.tool.success("移动成功");
         return true;
       } else {
         this.tool.error(res.msg);

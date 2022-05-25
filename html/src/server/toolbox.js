@@ -19,6 +19,9 @@ let toolbox = {
     rename(param) {
         return http.post('api/toolbox/rename', param);
     },
+    moveGroup(param) {
+        return http.post('api/toolbox/moveGroup', param);
+    },
     delete(param) {
         return http.post('api/toolbox/delete', param);
     },

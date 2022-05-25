@@ -434,17 +434,6 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 	sql += "updateTime=?,"
 	values = append(values, time.Now())
 
-	sql += "updateTime=?,"
-	values = append(values, time.Now())
-
-	if toolbox.GroupId >= 0 {
-		if toolbox.GroupId == 0 {
-			sql += "groupId=NULL,"
-		} else {
-			sql += "groupId=?,"
-			values = append(values, toolbox.GroupId)
-		}
-	}
 	if toolbox.Name != "" {
 		sql += "name=?,"
 		values = append(values, toolbox.Name)
@@ -456,6 +445,37 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 	if toolbox.Option != "" {
 		sql += "option=?,"
 		values = append(values, toolbox.Option)
+	}
+
+	sql = strings.TrimSuffix(sql, ",")
+
+	sql += " WHERE toolboxId=? "
+	values = append(values, toolbox.ToolboxId)
+
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
+	if err != nil {
+		this_.Logger.Error("Update Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// MoveGroup 更新
+func (this_ *ToolboxService) MoveGroup(toolbox *ToolboxModel) (rowsAffected int64, err error) {
+
+	var values []interface{}
+
+	sql := `UPDATE ` + TableToolbox + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
+
+	if toolbox.GroupId <= 0 {
+		sql += "groupId=NULL,"
+	} else {
+		sql += "groupId=?,"
+		values = append(values, toolbox.GroupId)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")
@@ -500,6 +520,9 @@ func (this_ *ToolboxService) UpdateGroup(toolboxGroup *ToolboxGroupModel) (rowsA
 	var values []interface{}
 
 	sql := `UPDATE ` + TableToolboxGroup + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
 
 	if toolboxGroup.Name != "" {
 		sql += "name=?,"

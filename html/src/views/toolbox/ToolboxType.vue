@@ -6,7 +6,7 @@
     <div class="toolbox-context-box-header">
       <div style="text-align: right">
         <span title="关闭" class="tm-link color-write mgr-10" @click="hide">
-          <i class="mdi mdi-close ft-22"></i>
+          <i class="mdi mdi-close ft-21"></i>
         </span>
       </div>
     </div>
@@ -18,6 +18,7 @@
             class="toolbox-group-one"
             :class="{ active: group.groupId == selectGroup.groupId }"
             @click="toSelectGroup(group)"
+            @contextmenu="groupContextmenu(group)"
           >
             <div class="toolbox-group-title">
               <div class="toolbox-group-title-text">
@@ -108,6 +109,7 @@
                         .indexOf(searchMap[toolboxType.name].toLowerCase()) >= 0
                     "
                     class="toolbox-type-data"
+                    @contextmenu="dataContextmenu(toolboxType, toolboxData)"
                   >
                     <span
                       class="toolbox-type-data-text tm-link color-grey"
@@ -116,41 +118,7 @@
                     >
                       {{ toolboxData.name }}
                     </span>
-                    <div class="toolbox-type-data-btn-box">
-                      <span
-                        title="打开FTP"
-                        v-if="toolboxType.name == 'ssh'"
-                        class="tm-link color-green"
-                        @click="toolbox.toolboxDataOpenSfpt(toolboxData)"
-                      >
-                        <IconFont
-                          class="teamide-ftp ft-12"
-                          style="vertical-align: -2px"
-                        >
-                        </IconFont>
-                      </span>
-                      <span
-                        title="编辑"
-                        class="tm-link color-grey"
-                        @click="toolbox.toUpdate(toolboxType, toolboxData)"
-                      >
-                        <i class="mdi mdi-square-edit-outline ft-13"></i>
-                      </span>
-                      <span
-                        title="复制"
-                        class="tm-link color-grey"
-                        @click="toolbox.toCopy(toolboxType, toolboxData)"
-                      >
-                        <i class="mdi mdi-content-copy ft-12"></i>
-                      </span>
-                      <span
-                        title="删除"
-                        class="tm-link color-orange-8"
-                        @click="toolbox.toDelete(toolboxType, toolboxData)"
-                      >
-                        <i class="mdi mdi-delete-outline ft-14"></i>
-                      </span>
-                    </div>
+                    <div class="toolbox-type-data-btn-box"></div>
                   </div>
                 </template>
               </template>
@@ -254,6 +222,85 @@ export default {
     hide() {
       this.showBox = false;
     },
+    groupContextmenu(group) {
+      let menus = [];
+      menus.push({
+        header: group.name,
+      });
+      menus.push({
+        text: "修改",
+        onClick: () => {
+          this.toolbox.toUpdateGroup(group);
+        },
+      });
+      menus.push({
+        text: "删除",
+        onClick: () => {
+          this.toolbox.toDeleteGroup(group);
+        },
+      });
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
+    },
+    dataContextmenu(toolboxType, toolboxData) {
+      let menus = [];
+      menus.push({
+        header: toolboxType.text + ":" + toolboxData.name,
+      });
+      menus.push({
+        text: "打开",
+        onClick: () => {
+          this.toolbox.toolboxDataOpen(toolboxData);
+        },
+      });
+      if (toolboxType.name == "ssh") {
+        menus.push({
+          text: "打开FTP",
+          onClick: () => {
+            this.toolbox.toolboxDataOpenSfpt(toolboxData);
+          },
+        });
+      }
+      if (this.groupList.length > 0) {
+        let moveGroupMenu = {
+          text: "移动分组",
+          menus: [],
+        };
+        menus.push(moveGroupMenu);
+        this.groupList.forEach((one) => {
+          moveGroupMenu.menus.push({
+            text: one.name,
+            onClick: () => {
+              this.toolbox.moveGroup(toolboxData.toolboxId, one.groupId);
+            },
+          });
+        });
+      }
+      menus.push({
+        text: "修改",
+        onClick: () => {
+          this.toolbox.toUpdate(toolboxType, toolboxData);
+        },
+      });
+      menus.push({
+        text: "复制",
+        onClick: () => {
+          this.toolbox.toCopy(toolboxType, toolboxData);
+        },
+      });
+      menus.push({
+        text: "删除",
+        onClick: () => {
+          this.toolbox.toDelete(toolboxType, toolboxData);
+        },
+      });
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
+    },
   },
   created() {},
   updated() {},
@@ -276,9 +323,12 @@ export default {
 .toolbox-context-box.toolbox-context-box-show {
   transform: scale(1);
 }
+.toolbox-context-box-header {
+  height: 30px;
+}
 .toolbox-context-body {
   width: 100%;
-  height: calc(100% - 50px);
+  height: calc(100% - 30px);
   display: flex;
 }
 .toolbox-context-box .toolbox-group-box {
@@ -328,7 +378,7 @@ export default {
 }
 .toolbox-context-box .toolbox-type-one {
   /* width: calc(25% - 12.5px); */
-  width: 270px;
+  width: 290px;
   float: left;
   margin: 0px 0px 10px 10px;
 }

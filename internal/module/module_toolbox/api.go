@@ -27,13 +27,14 @@ var (
 	// 工具 权限
 
 	// PowerToolbox 工具基本 权限
-	PowerToolbox        = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerToolboxPage    = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
-	PowerToolboxContext = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxInsert  = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxUpdate  = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxRename  = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxDelete  = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolbox          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerToolboxPage      = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
+	PowerToolboxContext   = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxInsert    = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxUpdate    = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxRename    = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxDelete    = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxMoveGroup = base.AppendPower(&base.PowerAction{Action: "toolbox_move_group", Text: "工具分组", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 
 	PowerToolboxGroupInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_group_insert", Text: "工具分组新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxGroupUpdate = base.AppendPower(&base.PowerAction{Action: "toolbox_group_update", Text: "工具分组修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -63,6 +64,7 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/update"}, Power: PowerToolboxUpdate, Do: this_.update})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: PowerToolboxRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: PowerToolboxDelete, Do: this_.delete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/moveGroup"}, Power: PowerToolboxDelete, Do: this_.moveGroup})
 
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/insert"}, Power: PowerToolboxGroupInsert, Do: this_.insertGroup})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/update"}, Power: PowerToolboxGroupUpdate, Do: this_.updateGroup})
@@ -220,6 +222,32 @@ func (this_ *ToolboxApi) update(requestBean *base.RequestBean, c *gin.Context) (
 	toolbox := request.ToolboxModel
 
 	_, err = this_.ToolboxService.Update(toolbox)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type MoveGroupRequest struct {
+	*ToolboxModel
+}
+
+type MoveGroupResponse struct {
+}
+
+func (this_ *ToolboxApi) moveGroup(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &MoveGroupRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &MoveGroupResponse{}
+
+	toolbox := request.ToolboxModel
+
+	_, err = this_.ToolboxService.MoveGroup(toolbox)
 	if err != nil {
 		return
 	}
