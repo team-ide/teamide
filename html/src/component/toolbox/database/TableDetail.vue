@@ -244,11 +244,11 @@ export default {
   methods: {
     init(tableDetail) {
       this.tableDetail = tableDetail;
-      this.columnList = [];
-      this.indexList = [];
       this.initData();
     },
     initData() {
+      this.columnList = [];
+      this.indexList = [];
       let tableDetail = this.tableDetail;
       tableDetail.columnList.forEach((column, i) => {
         column.length = Number(column.length);

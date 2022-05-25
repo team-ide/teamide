@@ -13,13 +13,36 @@ const (
 	TableToolboxOpen = "TM_TOOLBOX_OPEN"
 	// TableToolboxOpenTab 工具箱打开标签页信息表
 	TableToolboxOpenTab = "TM_TOOLBOX_OPEN_TAB"
+	// TableToolboxGroup 工具箱分组
+	TableToolboxGroup = "TM_TOOLBOX_GROUP"
 )
+
+// ToolboxGroupModel 工具箱分组模型，和工具箱分组表对应
+type ToolboxGroupModel struct {
+	GroupId    int64     `json:"groupId,omitempty"`
+	Name       string    `json:"name,omitempty"`
+	Comment    string    `json:"comment,omitempty"`
+	Option     string    `json:"option,omitempty"`
+	UserId     int64     `json:"userId,omitempty"`
+	CreateTime time.Time `json:"createTime,omitempty"`
+	UpdateTime time.Time `json:"updateTime,omitempty"`
+}
+
+func (entity *ToolboxGroupModel) GetTableName() string {
+	return TableToolbox
+}
+
+func (entity *ToolboxGroupModel) GetPKColumnName() string {
+	return ""
+}
 
 // ToolboxModel 工具箱模型，和工具箱表对应
 type ToolboxModel struct {
 	ToolboxId    int64     `json:"toolboxId,omitempty"`
 	ToolboxType  string    `json:"toolboxType,omitempty"`
+	GroupId      int64     `json:"groupId,omitempty"`
 	Name         string    `json:"name,omitempty"`
+	Comment      string    `json:"comment,omitempty"`
 	Option       string    `json:"option,omitempty"`
 	UserId       int64     `json:"userId,omitempty"`
 	DeleteUserId int64     `json:"deleteUserId,omitempty"`

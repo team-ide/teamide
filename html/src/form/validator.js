@@ -70,6 +70,12 @@ let buildFormValidator = function (form) {
 let validateFields = function (data, fields, all) {
     validateReset(fields);
     return new Promise((resolve, reject) => {
+        if (fields == null || fields.length == 0) {
+            resolve({
+                valid: true,
+            })
+            return
+        }
         let errors = [];
         let process = function (index) {
             if (index >= fields.length) {

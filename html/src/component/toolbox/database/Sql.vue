@@ -233,18 +233,18 @@ export default {
       // this.doActiveTab(tab);
     },
     getTab(tab) {
-      return this.$refs.TabEditor.getTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
     },
     onRemoveTab(tab) {},
     onActiveTab(tab) {},
     addTab(tab) {
-      return this.$refs.TabEditor.addTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.addTab(tab);
     },
     cleanTab() {
-      return this.$refs.TabEditor.toDeleteAll();
+      return this.$refs.TabEditor && this.$refs.TabEditor.toDeleteAll();
     },
     doActiveTab(tab) {
-      return this.$refs.TabEditor.doActiveTab(tab);
+      return this.$refs.TabEditor && this.$refs.TabEditor.doActiveTab(tab);
     },
   },
   created() {},

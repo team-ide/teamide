@@ -116,6 +116,31 @@ let toolbox = {
             ],
         },
     ],
+    group: {
+        fields: [
+            {
+                label: "名称",
+                name: "name",
+                rules: [
+                    {
+                        required: true,
+                        message: `工具名称不能为空!`
+                    },
+
+                ],
+            },
+            {
+                label: "说明",
+                name: "comment",
+                rules: [
+                ],
+            },
+        ],
+        option: {
+            fields: [
+            ],
+        },
+    },
 };
 
 export default {

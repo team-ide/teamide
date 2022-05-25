@@ -18,10 +18,12 @@ type ServerConfig struct {
 }
 
 type server struct {
-	Host    string `json:"host,omitempty" yaml:"host,omitempty"`
-	Port    int    `json:"port,omitempty" yaml:"port,omitempty"`
-	Context string `json:"context,omitempty" yaml:"context,omitempty"`
-	Data    string `json:"data,omitempty" yaml:"data,omitempty"`
+	Host       string `json:"host,omitempty" yaml:"host,omitempty"`
+	Port       int    `json:"port,omitempty" yaml:"port,omitempty"`
+	Context    string `json:"context,omitempty" yaml:"context,omitempty"`
+	Data       string `json:"data,omitempty" yaml:"data,omitempty"`
+	BackupsDir string `json:"-" yaml:"-"`
+	TempDir    string `json:"-" yaml:"-"`
 }
 
 type mysql struct {

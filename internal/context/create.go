@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -133,22 +134,39 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		}
 	}
 
-	var databaseConfig *db.DatabaseConfig
-	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
-		databaseConfig = &db.DatabaseConfig{
-			Type:     "sqlite",
-			Database: serverConfig.Server.Data + "database",
-		}
-	} else {
-		databaseConfig = &db.DatabaseConfig{
-			Type:     "mysql",
-			Host:     serverConfig.Mysql.Host,
-			Port:     serverConfig.Mysql.Port,
-			Database: serverConfig.Mysql.Database,
-			Username: serverConfig.Mysql.Username,
-			Password: serverConfig.Mysql.Password,
+	if serverConfig.Server.TempDir == "" {
+		serverConfig.Server.TempDir = serverConfig.Server.Data + "temp/"
+	}
+	if !strings.HasSuffix(serverConfig.Server.TempDir, "/") {
+		serverConfig.Server.TempDir += "/"
+	}
+	exist, err = util.PathExists(serverConfig.Server.TempDir)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = os.MkdirAll(serverConfig.Server.TempDir, 0777)
+		if err != nil {
+			return
 		}
 	}
+	if serverConfig.Server.BackupsDir == "" {
+		serverConfig.Server.BackupsDir = serverConfig.Server.Data + "backups/"
+	}
+	if !strings.HasSuffix(serverConfig.Server.BackupsDir, "/") {
+		serverConfig.Server.BackupsDir += "/"
+	}
+	exist, err = util.PathExists(serverConfig.Server.BackupsDir)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = os.MkdirAll(serverConfig.Server.BackupsDir, 0777)
+		if err != nil {
+			return
+		}
+	}
+
 	if this_.IsServerDev {
 		loggerConfig := zap.NewDevelopmentConfig()
 		loggerConfig.Development = false
@@ -160,7 +178,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger = newZapLogger(serverConfig)
 	}
 	util.Logger = this_.Logger
-	util.TempDir = serverConfig.Server.Data + "temp/"
+	util.TempDir = serverConfig.Server.TempDir
 
 	err = db.CheckColumnType()
 	if err != nil {
@@ -180,12 +198,74 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
 	}
 
+	var databaseConfig *db.DatabaseConfig
+	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
+		databaseConfig = &db.DatabaseConfig{
+			Type:     "sqlite",
+			Database: serverConfig.Server.Data + "database",
+		}
+		err = this_.backupSqlite(serverConfig, databaseConfig)
+		if err != nil {
+			return
+		}
+	} else {
+		databaseConfig = &db.DatabaseConfig{
+			Type:     "mysql",
+			Host:     serverConfig.Mysql.Host,
+			Port:     serverConfig.Mysql.Port,
+			Database: serverConfig.Mysql.Database,
+			Username: serverConfig.Mysql.Username,
+			Password: serverConfig.Mysql.Password,
+		}
+	}
+
 	this_.DatabaseConfig = databaseConfig
 	this_.DatabaseWorker, err = db.NewDatabaseWorker(*databaseConfig)
 	if err != nil {
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return
 	}
+
+	return
+}
+
+//backupSqlite 备份
+func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, databaseConfig *db.DatabaseConfig) (err error) {
+	databasePath := databaseConfig.Database
+	exist, err := util.PathExists(databasePath)
+	if err != nil {
+		return
+	}
+	if !exist {
+		return
+	}
+
+	backupPath := serverConfig.Server.BackupsDir + "/版本-" + this_.Version + "-升级之前备份-数据库"
+
+	exist, err = util.PathExists(backupPath)
+	if err != nil {
+		return
+	}
+	if exist {
+		return
+	}
+
+	databaseFile, err := os.Open(databasePath)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = databaseFile.Close()
+	}()
+
+	backupFile, err := os.Create(backupPath)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = backupFile.Close()
+	}()
+	_, err = io.Copy(backupFile, databaseFile)
 
 	return
 }
