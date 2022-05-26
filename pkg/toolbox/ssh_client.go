@@ -195,32 +195,16 @@ var (
 )
 
 func (this_ *SSHClient) WSWrite(bs []byte) {
-	defer func() {
-		if x := recover(); x != nil {
-			this_.Logger.Error("WebSocket信息写入异常", zap.Any("err", x))
-			this_.CloseWS()
-			return
-		}
-	}()
-	if this_.isClosedWS {
-		return
-	}
-
-	this_.wsWriteLock.Lock()
-	defer this_.wsWriteLock.Unlock()
-	err := this_.ws.WriteMessage(websocket.TextMessage, bs)
-
-	if err != nil {
-		if WSIsCloseError(err) {
-			this_.CloseWS()
-			return
-		}
-		this_.Logger.Error("WebSocket信息写入异常", zap.Error(err))
-	}
+	this_.WSWriteByType(websocket.TextMessage, bs)
 	return
 }
 
 func (this_ *SSHClient) WSWriteBinary(bs []byte) {
+	this_.WSWriteByType(websocket.BinaryMessage, bs)
+	return
+}
+
+func (this_ *SSHClient) WSWriteByType(messageType int, bs []byte) {
 	defer func() {
 		if x := recover(); x != nil {
 			this_.Logger.Error("WebSocket信息写入异常", zap.Any("err", x))
@@ -234,7 +218,7 @@ func (this_ *SSHClient) WSWriteBinary(bs []byte) {
 
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
-	err := this_.ws.WriteMessage(websocket.BinaryMessage, bs)
+	err := this_.ws.WriteMessage(messageType, bs)
 
 	if err != nil {
 		if WSIsCloseError(err) {
@@ -245,7 +229,6 @@ func (this_ *SSHClient) WSWriteBinary(bs []byte) {
 	}
 	return
 }
-
 func (this_ *SSHClient) WSWriteData(obj interface{}) {
 
 	bs, err := json.Marshal(obj)

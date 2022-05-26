@@ -63,6 +63,5 @@ export default {
 .toolbox-redis-editor {
   width: 100%;
   height: 100%;
-  user-select: text;
 }
 </style>

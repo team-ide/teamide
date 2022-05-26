@@ -54,7 +54,7 @@
             </div>
             <div
               class="data-list-box scrollbar"
-              style="height: calc(100% - 40px)"
+              style="height: calc(100% - 40px); user-select: text"
             >
               <template v-for="(one, index) in searchResult.dataList">
                 <div
@@ -187,17 +187,14 @@ export default {
       // this.wrap.openTabByExtend(extend);
     },
     async toImport(data) {
-      this.tool.warn("功能还未完善，敬请期待！");
-      return;
-      // data = data || {};
-      // let extend = {
-      //   name: "导入",
-      //   title: "导入",
-      //   type: "import",
-      //   pattern: data.key || this.searchForm.pattern,
-      //   database: data.database || this.searchForm.database,
-      // };
-      // this.wrap.openTabByExtend(extend);
+      data = data || {};
+      let extend = {
+        name: "导入",
+        title: "导入",
+        type: "import",
+        database: data.database || this.searchForm.database,
+      };
+      this.wrap.openTabByExtend(extend);
     },
     toInsert() {
       let extend = {
