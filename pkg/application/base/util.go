@@ -9,7 +9,6 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"gopkg.in/yaml.v2"
 )
 
 //生成UUID
@@ -92,17 +91,6 @@ func ToJSON(data interface{}) string {
 
 func ToBean(bytes []byte, req interface{}) (err error) {
 	err = json.Unmarshal(bytes, req)
-	return
-}
-
-func YamlToBean(bytes []byte, req interface{}) (err error) {
-	err = yaml.Unmarshal(bytes, req)
-	return
-}
-
-func YamlToMap(bytes []byte) (res yaml.MapSlice, err error) {
-	res = yaml.MapSlice{}
-	err = yaml.Unmarshal(bytes, &res)
 	return
 }
 

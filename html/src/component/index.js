@@ -59,7 +59,7 @@ Vue.component('MenuItem', MenuItem);
 import ToolboxEditor from './toolbox/Index.vue'
 Vue.component('ToolboxEditor', ToolboxEditor);
 
-import ToolboxRedisEditor from './toolbox/Redis.vue'
+import ToolboxRedisEditor from './toolbox/redis/Index.vue'
 Vue.component('ToolboxRedisEditor', ToolboxRedisEditor);
 
 import ToolboxKafkaEditor from './toolbox/kafka/Index.vue'

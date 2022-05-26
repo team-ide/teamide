@@ -253,7 +253,7 @@ func getStepByValue(valuesOneMap map[string]interface{}) (step ActionStep, err e
 }
 
 func ActionModelToText(model *ActionModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}

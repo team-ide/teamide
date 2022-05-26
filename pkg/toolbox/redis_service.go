@@ -50,18 +50,16 @@ func (this_ *RedisPoolService) Stop() {
 	_ = this_.client.Close()
 }
 
-func (this_ *RedisPoolService) GetClient(ctx context.Context, database int) (cmdable redis.Cmdable, err error) {
+func (this_ *RedisPoolService) GetClient(ctx context.Context, database int) (client *redis.Client, err error) {
 	defer func() {
 		this_.lastUseTime = GetNowTime()
 	}()
-
-	conn := this_.client.Conn(ctx)
-	cmdSelect := conn.Select(ctx, database)
-	_, err = cmdSelect.Result()
+	cmd := this_.client.Do(ctx, "select", database)
+	_, err = cmd.Result()
 	if err != nil {
 		return
 	}
-	cmdable = conn
+	client = this_.client
 	return
 }
 
@@ -91,7 +89,7 @@ func (this_ *RedisPoolService) Keys(ctx context.Context, database int, pattern s
 	return
 }
 
-func (this_ *RedisPoolService) KeyType(ctx context.Context, database int, key string) (keyType string, err error) {
+func (this_ *RedisPoolService) ValueType(ctx context.Context, database int, key string) (ValueType string, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -99,13 +97,13 @@ func (this_ *RedisPoolService) KeyType(ctx context.Context, database int, key st
 	}
 
 	cmdType := client.Type(ctx, key)
-	keyType, err = cmdType.Result()
+	ValueType, err = cmdType.Result()
 	return
 }
 
 func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo RedisValueInfo, err error) {
-	var keyType string
-	keyType, err = this_.KeyType(ctx, database, key)
+	var ValueType string
+	ValueType, err = this_.ValueType(ctx, database, key)
 	if err != nil {
 		return
 	}
@@ -116,16 +114,16 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 		return
 	}
 
-	if keyType == "none" {
+	if ValueType == "none" {
 
-	} else if keyType == "string" {
+	} else if ValueType == "string" {
 		cmd := client.Get(ctx, key)
 		value, err = cmd.Result()
 		if err != nil {
 			util.Logger.Error("Get Error", zap.Any("key", key), zap.Error(err))
 			return
 		}
-	} else if keyType == "list" {
+	} else if ValueType == "list" {
 
 		cmd := client.LLen(ctx, key)
 
@@ -151,7 +149,7 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 			value = list[0:valueSize]
 		}
 
-	} else if keyType == "set" {
+	} else if ValueType == "set" {
 
 		cmdSCard := client.SCard(ctx, key)
 		valueInfo.ValueCount, err = cmdSCard.Result()
@@ -175,7 +173,7 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 		} else {
 			value = list[0:valueSize]
 		}
-	} else if keyType == "hash" {
+	} else if ValueType == "hash" {
 
 		cmdHLen := client.HLen(ctx, key)
 		valueInfo.ValueCount, err = cmdHLen.Result()
@@ -211,9 +209,9 @@ func (this_ *RedisPoolService) Get(ctx context.Context, database int, key string
 
 		value = keyValue
 	} else {
-		println(keyType)
+		println(ValueType)
 	}
-	valueInfo.Type = keyType
+	valueInfo.ValueType = ValueType
 	valueInfo.Value = value
 
 	return

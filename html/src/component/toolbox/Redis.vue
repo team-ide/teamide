@@ -370,7 +370,7 @@ export default {
       get_loading: false,
       searchForm: {
         database: 0,
-        pattern: "*",
+        pattern: "xx*",
         size: 50,
       },
       form: {

@@ -36,7 +36,7 @@ type RedisBaseRequest struct {
 	Pattern    string `json:"pattern"`
 	Database   int    `json:"database"`
 	Size       int64  `json:"size"`
-	Type       string `json:"type"`
+	DoType     string `json:"doType"`
 	Index      int64  `json:"index"`
 	Count      int64  `json:"count"`
 	Field      string `json:"field"`
@@ -84,7 +84,7 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)
 		res["database"] = request.Database
 		res["key"] = request.Key
-		res["type"] = valueInfo.Type
+		res["valueType"] = valueInfo.ValueType
 		res["value"] = valueInfo.Value
 	case "keys":
 		var count int
@@ -104,24 +104,26 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		res["count"] = count
 		res["dataList"] = dataList
 	case "do":
-		if request.Type == "set" {
+		switch request.DoType {
+		case "set":
 			err = service.Set(ctx, request.Database, request.Key, request.Value)
-		} else if request.Type == "sadd" {
+		case "SAdd":
 			err = service.SAdd(ctx, request.Database, request.Key, request.Value)
-		} else if request.Type == "srem" {
+		case "SRem":
 			err = service.SRem(ctx, request.Database, request.Key, request.Value)
-		} else if request.Type == "lpush" {
+		case "LPush":
 			err = service.LPush(ctx, request.Database, request.Key, request.Value)
-		} else if request.Type == "rpush" {
+		case "RPush":
 			err = service.RPush(ctx, request.Database, request.Key, request.Value)
-		} else if request.Type == "lset" {
+		case "LSet":
 			err = service.LSet(ctx, request.Database, request.Key, request.Index, request.Value)
-		} else if request.Type == "lrem" {
+		case "LRem":
 			err = service.LRem(ctx, request.Database, request.Key, request.Count, request.Value)
-		} else if request.Type == "hset" {
+		case "HSet":
 			err = service.HSet(ctx, request.Database, request.Key, request.Field, request.Value)
-		} else if request.Type == "hdel" {
+		case "HDel":
 			err = service.HDel(ctx, request.Database, request.Key, request.Field)
+
 		}
 		if err != nil {
 			return
@@ -150,7 +152,9 @@ func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
 		if err != nil {
 			return
 		}
-		_, err = s.Get(context.TODO(), 0, "_", 0, 0)
+
+		ctx := context.TODO()
+		_, err = s.Get(ctx, 0, "_", 0, 0)
 		if err != nil {
 			return
 		}
@@ -182,7 +186,7 @@ func CreateRedisService(redisConfig RedisConfig) (service RedisService, err erro
 }
 
 type RedisValueInfo struct {
-	Type       string      `json:"type"`
+	ValueType  string      `json:"valueType"`
 	Value      interface{} `json:"value"`
 	ValueCount int64       `json:"valueCount"`
 	ValueStart int64       `json:"valueStart"`

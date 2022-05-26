@@ -54,10 +54,12 @@ func (this_ *RedisClusterService) GetClient(ctx context.Context, database int) (
 	defer func() {
 		this_.lastUseTime = GetNowTime()
 	}()
-	redisCluster = this_.redisCluster
-	if ctx != nil && database >= 0 {
+	cmd := redisCluster.Do(ctx, "select", database)
+	_, err = cmd.Result()
+	if err != nil {
 		return
 	}
+	redisCluster = this_.redisCluster
 	return
 }
 
@@ -99,7 +101,7 @@ func (this_ *RedisClusterService) Keys(ctx context.Context, database int, patter
 	return
 }
 
-func (this_ *RedisClusterService) KeyType(ctx context.Context, database int, key string) (keyType string, err error) {
+func (this_ *RedisClusterService) ValueType(ctx context.Context, database int, key string) (ValueType string, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
@@ -107,7 +109,7 @@ func (this_ *RedisClusterService) KeyType(ctx context.Context, database int, key
 	}
 
 	cmd := client.Type(ctx, key)
-	keyType, err = cmd.Result()
+	ValueType, err = cmd.Result()
 	return
 }
 
@@ -118,23 +120,23 @@ func (this_ *RedisClusterService) Get(ctx context.Context, database int, key str
 		return
 	}
 
-	var keyType string
-	keyType, err = this_.KeyType(ctx, database, key)
+	var ValueType string
+	ValueType, err = this_.ValueType(ctx, database, key)
 	if err != nil {
 		return
 	}
 	var value interface{}
 
-	if keyType == "none" {
+	if ValueType == "none" {
 
-	} else if keyType == "string" {
+	} else if ValueType == "string" {
 		cmd := client.Get(ctx, key)
 		value, err = cmd.Result()
 		if err != nil {
 			util.Logger.Error("Get Error", zap.Any("key", key), zap.Error(err))
 			return
 		}
-	} else if keyType == "list" {
+	} else if ValueType == "list" {
 
 		cmd := client.LLen(ctx, key)
 
@@ -160,7 +162,7 @@ func (this_ *RedisClusterService) Get(ctx context.Context, database int, key str
 			value = list[0:valueSize]
 		}
 
-	} else if keyType == "set" {
+	} else if ValueType == "set" {
 
 		cmdSCard := client.SCard(ctx, key)
 		valueInfo.ValueCount, err = cmdSCard.Result()
@@ -184,7 +186,7 @@ func (this_ *RedisClusterService) Get(ctx context.Context, database int, key str
 		} else {
 			value = list[0:valueSize]
 		}
-	} else if keyType == "hash" {
+	} else if ValueType == "hash" {
 
 		cmdHLen := client.HLen(ctx, key)
 		valueInfo.ValueCount, err = cmdHLen.Result()
@@ -220,9 +222,9 @@ func (this_ *RedisClusterService) Get(ctx context.Context, database int, key str
 
 		value = keyValue
 	} else {
-		println(keyType)
+		println(ValueType)
 	}
-	valueInfo.Type = keyType
+	valueInfo.ValueType = ValueType
 	valueInfo.Value = value
 	return
 }

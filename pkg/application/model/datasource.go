@@ -116,7 +116,7 @@ func TextToDatasourceZookeeper(namePath string, text string) (model *DatasourceZ
 }
 
 func DatasourceDatabaseToText(model *DatasourceDatabase) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}
@@ -124,7 +124,7 @@ func DatasourceDatabaseToText(model *DatasourceDatabase) (text string, err error
 }
 
 func DatasourceRedisToText(model *DatasourceRedis) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}
@@ -132,7 +132,7 @@ func DatasourceRedisToText(model *DatasourceRedis) (text string, err error) {
 }
 
 func DatasourceKafkaToText(model *DatasourceKafka) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}
@@ -140,7 +140,7 @@ func DatasourceKafkaToText(model *DatasourceKafka) (text string, err error) {
 }
 
 func DatasourceZookeeperToText(model *DatasourceZookeeper) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}

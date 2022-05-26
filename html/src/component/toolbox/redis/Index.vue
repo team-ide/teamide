@@ -1,16 +1,16 @@
 <template>
-  <div class="toolbox-kafka-editor">
+  <div class="toolbox-redis-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout width="400px" class="">
-          <Topic
-            ref="Topic"
+        <tm-layout width="500px" class="">
+          <Keys
+            ref="Keys"
             :source="source"
             :toolbox="toolbox"
             :toolboxType="toolboxType"
             :wrap="wrap"
           >
-          </Topic>
+          </Keys>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
@@ -23,20 +23,17 @@
           </Tabs>
         </tm-layout>
       </tm-layout>
-      <TopicForm :source="source" :toolbox="toolbox" :wrap="wrap"> </TopicForm>
-      <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
     </template>
   </div>
 </template>
 
 
 <script>
-import Topic from "./Topic";
+import Keys from "./Keys";
 import Tabs from "./Tabs";
-import TopicForm from "./TopicForm";
-import ShowData from "./ShowData";
+
 export default {
-  components: { Topic, Tabs, TopicForm, ShowData },
+  components: { Keys, Tabs },
   props: ["source", "toolboxType", "toolbox", "option", "wrap"],
   data() {
     return {
@@ -50,7 +47,9 @@ export default {
       this.ready = true;
     },
     refresh() {
-      this.$refs.Topic.refresh();
+      this.$nextTick(() => {
+        this.$refs.Keys && this.$refs.Keys.refresh();
+      });
     },
   },
   created() {},
@@ -61,7 +60,7 @@ export default {
 </script>
 
 <style>
-.toolbox-kafka-editor {
+.toolbox-redis-editor {
   width: 100%;
   height: 100%;
   user-select: text;

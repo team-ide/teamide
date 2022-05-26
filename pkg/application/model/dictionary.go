@@ -25,7 +25,7 @@ func TextToDictionaryModel(namePath string, text string) (model *DictionaryModel
 }
 
 func DictionaryModelToText(model *DictionaryModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}

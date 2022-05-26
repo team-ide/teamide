@@ -261,3 +261,28 @@
     line-height: 28px;
 
 }
+
+.data-list-box {
+    border: 1px solid #424242;
+    border-bottom: 0px;
+}
+
+.data-list-box .data-list-one {
+    border-bottom: 1px solid #424242;
+    display: flex;
+    padding: 2px 0px;
+    cursor: pointer;
+}
+
+.data-list-box .data-list-one:hover {
+    background: #2f3f4f;
+}
+
+.data-list-box .data-list-one .data-list-one-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+    flex: 1;
+    padding: 3px 10px;
+}

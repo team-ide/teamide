@@ -61,7 +61,7 @@ func TextToServerWebModel(namePath string, text string) (model *ServerWebModel, 
 }
 
 func ServerWebModelToText(model *ServerWebModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}
