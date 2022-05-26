@@ -57,6 +57,7 @@ type redisImportTask struct {
 func (this_ *redisImportTask) Stop() {
 	this_.IsStop = true
 }
+
 func (this_ *redisImportTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
