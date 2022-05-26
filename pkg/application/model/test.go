@@ -46,7 +46,7 @@ func MapToTestModel(modelMap map[string]interface{}) (model *TestModel, err erro
 }
 
 func TestModelToText(model *TestModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}

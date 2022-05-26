@@ -2,94 +2,59 @@
   <div class="toolbox-elasticsearch-indexName">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="50px">
-          <div class="pdlr-10 pdt-10">
-            <div
-              class="tm-btn tm-btn-sm bg-grey-6 ft-13"
-              @click="loadIndexNames"
-            >
-              刷新
-            </div>
-            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
-              新建索引
-            </div>
-          </div>
+        <tm-layout height="80px">
+          <el-form class="pdt-10 pdlr-10" size="mini" inline>
+            <el-form-item label="搜索" class="mgb-5">
+              <el-input v-model="searchForm.pattern" style="width: 300px" />
+            </el-form-item>
+            <el-form-item label="" class="mgb-5">
+              <div
+                class="tm-btn tm-btn-sm bg-grey-6 ft-13"
+                @click="loadIndexNames"
+              >
+                刷新
+              </div>
+              <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+                新建索引
+              </div>
+            </el-form-item>
+          </el-form>
         </tm-layout>
-        <tm-layout height="auto" class="scrollbar">
-          <div class="">
-            <table>
-              <thead>
-                <tr>
-                  <th>IndexName</th>
-                  <th width="175px">
-                    <div style="width: 175px">
-                      <div
-                        class="tm-link color-grey-3 ft-14 mglr-2"
-                        @click="loadIndexNames()"
-                      >
-                        <i class="mdi mdi-reload"></i>
-                      </div>
-                      <div
-                        class="tm-link color-green-3 ft-14 mglr-2"
-                        @click="toInsert()"
-                      >
-                        <i class="mdi mdi-plus"></i>
-                      </div>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="indexNames == null">
-                  <tr>
-                    <td colspan="2">
-                      <div class="text-center ft-13 pdtb-10">加载中...</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="indexNames.length == 0">
-                  <tr>
-                    <td colspan="2">
-                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <template v-for="(one, index) in indexNames">
-                    <tr :key="index" @click="rowClick(one)">
-                      <td>{{ one.name }}</td>
-                      <td>
-                        <div
-                          class="tm-btn color-blue tm-btn-xs"
-                          @click="toOpenIndexName(one)"
-                        >
-                          数据
-                        </div>
-                        <div
-                          class="tm-btn color-grey tm-btn-xs"
-                          @click="toUpdateMapping(one)"
-                        >
-                          结构
-                        </div>
-                        <div
-                          class="tm-btn color-green tm-btn-xs"
-                          @click="toReindex(one)"
-                        >
-                          迁移
-                        </div>
-                        <div
-                          class="tm-btn color-orange tm-btn-xs"
-                          @click="toDelete(one)"
-                        >
-                          <i class="mdi mdi-delete-outline"></i>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
-                </template>
-              </tbody>
-            </table>
-          </div>
+        <tm-layout height="auto">
+          <template v-if="indexNames == null">
+            <div class="text-center ft-13 pdtb-10">数据加载中，请稍后!</div>
+          </template>
+          <template v-else-if="indexNames.length == 0">
+            <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
+          </template>
+          <template v-else>
+            <div class="text-center ft-13 pdtb-10" style="height: 40px">
+              IndexNames （{{ indexNames.length }}）
+            </div>
+            <div
+              class="data-list-box scrollbar"
+              style="height: calc(100% - 40px)"
+            >
+              <template v-for="(one, index) in indexNames">
+                <div
+                  :key="index"
+                  v-if="
+                    tool.isEmpty(searchForm.pattern) ||
+                    one.name
+                      .toLowerCase()
+                      .indexOf(searchForm.pattern.toLowerCase()) >= 0
+                  "
+                  class="data-list-one"
+                  @click="rowClick(one)"
+                  @contextmenu="dataContextmenu(one)"
+                >
+                  <div class="data-list-one-text">
+                    {{ one.name }}
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
         </tm-layout>
       </tm-layout>
     </template>
@@ -110,6 +75,9 @@ export default {
   data() {
     return {
       ready: false,
+      searchForm: {
+        pattern: null,
+      },
       indexNames: null,
     };
   },
@@ -148,6 +116,45 @@ export default {
         indexName: data.name,
       };
       this.wrap.openTabByExtend(extend);
+    },
+    dataContextmenu(data) {
+      let menus = [];
+      menus.push({
+        header: data.name,
+      });
+      menus.push({
+        text: "数据",
+        onClick: () => {
+          this.toOpenIndexName(data);
+        },
+      });
+      menus.push({
+        text: "结构",
+        onClick: () => {
+          this.toUpdateMapping(data);
+        },
+      });
+      menus.push({
+        text: "新增索引",
+        onClick: () => {
+          this.toInsert();
+        },
+      });
+      menus.push({
+        text: "迁移",
+        onClick: () => {
+          this.toReindex(data);
+        },
+      });
+      menus.push({
+        text: "删除",
+        onClick: () => {
+          this.toDelete(data);
+        },
+      });
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
     },
     toInsert() {
       let data = {};

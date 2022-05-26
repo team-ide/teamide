@@ -138,8 +138,10 @@ body {
 :before {
   box-sizing: border-box;
 }
-.el-message,
-.el-dialog__title {
+.el-message {
+  user-select: text;
+}
+.el-message-box {
   user-select: text;
 }
 

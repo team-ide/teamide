@@ -214,7 +214,7 @@ export default {
         });
       }
       this.toolbox.types.forEach((type) => {
-        let list = context[type.name];
+        let list = context[type.name] || [];
         groupList.forEach((one) => {
           let groupToolboxList = [];
           list.forEach((tOne) => {

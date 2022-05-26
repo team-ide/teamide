@@ -140,7 +140,7 @@ func TextToStructModel(namePath string, text string) (model *StructModel, err er
 }
 
 func StructModelToText(model *StructModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}

@@ -19,7 +19,7 @@ func TextToErrorModel(namePath string, text string) (model *ErrorModel, err erro
 }
 
 func ErrorModelToText(model *ErrorModel) (text string, err error) {
-	text, err = ModelToText(model)
+	text, err = ToText(model)
 	if err != nil {
 		return
 	}
