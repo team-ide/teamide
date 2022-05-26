@@ -40,6 +40,7 @@ type RedisBaseRequest struct {
 	Index      int64  `json:"index"`
 	Count      int64  `json:"count"`
 	Field      string `json:"field"`
+	TaskKey    string `json:"taskKey,omitempty"`
 }
 
 type RedisConfig struct {
@@ -50,12 +51,12 @@ type RedisConfig struct {
 func redisWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var redisConfig RedisConfig
-	var bs []byte
-	bs, err = json.Marshal(config)
+	var configBS []byte
+	configBS, err = json.Marshal(config)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(bs, &redisConfig)
+	err = json.Unmarshal(configBS, &redisConfig)
 	if err != nil {
 		return
 	}
@@ -66,12 +67,13 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		return
 	}
 
-	bs, err = json.Marshal(data)
+	var dataBS []byte
+	dataBS, err = json.Marshal(data)
 	if err != nil {
 		return
 	}
 	request := &RedisBaseRequest{}
-	err = json.Unmarshal(bs, request)
+	err = json.Unmarshal(dataBS, request)
 	if err != nil {
 		return
 	}
@@ -136,6 +138,34 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		var count int
 		count, err = service.DelPattern(ctx, request.Database, request.Pattern)
 		res["count"] = count
+
+	case "import":
+
+		taskKey := util.GenerateUUID()
+
+		var redisImportTask = &redisImportTask{}
+		err = json.Unmarshal(dataBS, redisImportTask)
+		if err != nil {
+			return
+		}
+
+		redisImportTask.request = request
+		redisImportTask.Key = taskKey
+		redisImportTask.service = service
+
+		addRedisImportTask(redisImportTask)
+
+		res["taskKey"] = taskKey
+	case "importStatus":
+		redisImportTask := redisImportTaskCache[request.TaskKey]
+		res["task"] = redisImportTask
+	case "importStop":
+		redisImportTask := redisImportTaskCache[request.TaskKey]
+		if redisImportTask != nil {
+			redisImportTask.Stop()
+		}
+	case "importClean":
+		delete(redisImportTaskCache, request.TaskKey)
 	}
 	return
 }

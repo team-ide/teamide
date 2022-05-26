@@ -1,6 +1,7 @@
 package toolbox
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
@@ -21,11 +22,15 @@ func addRedisImportTask(task *redisImportTask) {
 }
 
 type RedisStrategyData struct {
-	Count     int                 `json:"count,omitempty"`
-	Key       string              `json:"key,omitempty"`
-	ValueType string              `json:"valueType,omitempty"`
-	Value     string              `json:"value,omitempty"`
-	ValueList []map[string]string `json:"valueList,omitempty"`
+	Count      int    `json:"count,omitempty"`
+	Key        string `json:"key,omitempty"`
+	ValueType  string `json:"valueType,omitempty"`
+	Value      string `json:"value,omitempty"`
+	ValueCount int    `json:"valueCount,omitempty"`
+	ListValue  string `json:"listValue,omitempty"`
+	SetValue   string `json:"setValue,omitempty"`
+	HashKey    string `json:"hashKey,omitempty"`
+	HashValue  string `json:"hashValue,omitempty"`
 }
 
 type redisImportTask struct {
@@ -46,6 +51,7 @@ type redisImportTask struct {
 	UseTime          int64                `json:"useTime"`
 	IsStop           bool                 `json:"isStop"`
 	service          RedisService
+	ctx              context.Context
 }
 
 func (this_ *redisImportTask) Stop() {
@@ -63,6 +69,7 @@ func (this_ *redisImportTask) Start() {
 		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
 
+	this_.ctx = context.TODO()
 	if this_.ImportType == "strategy" {
 		err := this_.doStrategy()
 		if err != nil {
@@ -100,11 +107,6 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 		return
 	}
 
-	//var dataList []map[string]interface{}
-	batchNumber := this_.BatchNumber
-	if batchNumber <= 0 {
-		batchNumber = 10
-	}
 	scriptContext := javascript.GetContext()
 
 	vm := goja.New()
@@ -131,9 +133,111 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 			err = errors.New("必须配置值类型")
 			return
 		}
+		var key = strategyData.Key
 
-		if strategyData.ValueType == "string" {
+		var scriptValue goja.Value
+		if scriptValue, err = vm.RunString(key); err != nil {
+			util.Logger.Error("表达式执行异常", zap.Any("script", key), zap.Error(err))
+			return
+		}
+		key = db.GetStringValue(scriptValue.Export())
 
+		switch strategyData.ValueType {
+		case "string":
+			var value = strategyData.Value
+			if value != "" {
+				if scriptValue, err = vm.RunString(value); err != nil {
+					util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
+					return
+				}
+				value = db.GetStringValue(scriptValue.Export())
+			}
+			this_.ReadyDataCount++
+			err = this_.service.Set(this_.ctx, database, key, value)
+			if err != nil {
+				this_.ErrorCount++
+				return
+			}
+			this_.SuccessCount++
+
+		case "list":
+			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
+				err = vm.Set("_$value_index", valueIndex)
+				if err != nil {
+					return
+				}
+				var value = strategyData.ListValue
+				if value != "" {
+					if scriptValue, err = vm.RunString(value); err != nil {
+						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
+						return
+					}
+					value = db.GetStringValue(scriptValue.Export())
+				}
+				this_.ReadyDataCount++
+				err = this_.service.LPush(this_.ctx, database, key, value)
+				if err != nil {
+					this_.ErrorCount++
+					return
+				}
+				this_.SuccessCount++
+			}
+
+		case "set":
+			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
+				err = vm.Set("_$value_index", valueIndex)
+				if err != nil {
+					return
+				}
+				var value = strategyData.SetValue
+				if value != "" {
+					if scriptValue, err = vm.RunString(value); err != nil {
+						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
+						return
+					}
+					value = db.GetStringValue(scriptValue.Export())
+				}
+				this_.ReadyDataCount++
+				err = this_.service.SAdd(this_.ctx, database, key, value)
+				if err != nil {
+					this_.ErrorCount++
+					return
+				}
+				this_.SuccessCount++
+			}
+
+		case "hash":
+			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
+				err = vm.Set("_$value_index", valueIndex)
+				if err != nil {
+					return
+				}
+				var hashKey = strategyData.HashKey
+				if hashKey != "" {
+					if scriptValue, err = vm.RunString(hashKey); err != nil {
+						util.Logger.Error("表达式执行异常", zap.Any("script", hashKey), zap.Error(err))
+						return
+					}
+					hashKey = db.GetStringValue(scriptValue.Export())
+				}
+				var value = strategyData.HashValue
+				if value != "" {
+					if scriptValue, err = vm.RunString(value); err != nil {
+						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
+						return
+					}
+					value = db.GetStringValue(scriptValue.Export())
+				}
+				this_.ReadyDataCount++
+				err = this_.service.HSet(this_.ctx, database, key, hashKey, value)
+				if err != nil {
+					this_.ErrorCount++
+					return
+				}
+				this_.SuccessCount++
+			}
+		default:
+			err = errors.New("不支持的值类型[" + strategyData.ValueType + "]")
 		}
 
 	}

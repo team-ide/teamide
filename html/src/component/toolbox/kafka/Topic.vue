@@ -30,7 +30,7 @@
             </div>
             <div
               class="data-list-box scrollbar"
-              style="height: calc(100% - 40px)"
+              style="height: calc(100% - 40px); user-select: text"
             >
               <template v-for="(one, index) in topics">
                 <div

@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.1.7-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.1.8-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -26,7 +26,7 @@ Team IDE 团队在线开发工具
         <th>状态</th>
     </tr>
     <tr>
-        <td rowspan="4">Toolbox SSH</td>
+        <td rowspan="4">SSH</td>
         <td>配置SSH连接，连接远程服务器，执行命令</td>
         <td>完成</td>
     </tr>
@@ -43,12 +43,12 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td >Toolbox Zookeeper</td>
+        <td >Zookeeper</td>
         <td>支持单机、集群，增删改查等操作，批量删除等</td>
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="2">Toolbox Kafka</td>
+        <td rowspan="2">Kafka</td>
         <td>对Kafka主题增删改查等操作</td>
         <td>完成</td>
     </tr>
@@ -57,7 +57,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="5">Toolbox Redis</td>
+        <td rowspan="6">Redis</td>
         <td>Redis Key搜索、模糊查询、删除、新增等</td>
         <td>完成</td>
     </tr>
@@ -78,7 +78,11 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="3">Toolbox Elasticsearch</td>
+        <td>根据策略导入功能，配置Key、Value自动导入相应格式string、list、hash、set等数据</td>
+        <td>完成</td>
+    </tr>
+    <tr>
+        <td rowspan="3">Elasticsearch</td>
         <td>索引增删改查等操作</td>
         <td>完成</td>
     </tr>
@@ -91,7 +95,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td rowspan="7">Toolbox Database</td>
+        <td rowspan="7">Database</td>
         <td>MySql库列表、库表数据加载</td>
         <td>完成</td>
     </tr>
@@ -104,7 +108,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td>根据策略批量导入数据</td>
+        <td>根据策略批量导入数据，自定义导入数量，值格式，批量导入</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -118,6 +122,25 @@ Team IDE 团队在线开发工具
     <tr>
         <td>导出建表语句，支持MySql、Oracle、达梦、金仓、神通等数据库</td>
         <td>完成</td>
+    </tr>
+    <tr>
+        <td >SSH 管道功能</td>
+        <td>配置SSH连接信息，使用127.0.0.1等连接服务器资源</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td rowspan="2">HTTP</td>
+        <td>配置HTTP的GET，POST，DELETE，PUT等REST接口</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td>配置策略，根据策略并发请求HTTP接口，汇总结果报文</td>
+        <td>进行中</td>
+    </tr>
+    <tr>
+        <td >格式转换</td>
+        <td>XML、JSON、URL、YAML、TOML等格式相互转换</td>
+        <td>进行中</td>
     </tr>
 </table>
 
@@ -233,6 +256,14 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 ![avatar](doc/toolbox-redis-list.png)
 
 ![avatar](doc/toolbox-redis-hash.png)
+
+![avatar](doc/toolbox-redis-import-1.png)
+
+![avatar](doc/toolbox-redis-import-2.png)
+
+![avatar](doc/toolbox-redis-import-3.png)
+
+![avatar](doc/toolbox-redis-import-4.png)
 
 #### Toolbox Zookeeper（完成）
 
