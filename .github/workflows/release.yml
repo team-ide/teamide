@@ -38,6 +38,18 @@ jobs:
       - run: mkdir release/teamide-server-linux-x64/conf
       - run: cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
+      # 打包构建 Server
+      - name: Build Server
+        uses: actions/setup-go@v2
+        with:
+          go-version: "^1.18"
+
+      - run: go mod tidy
+
+      # 将静态资源打包html.go
+      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+      - run: teamide/internal/static/html.go release/html.go
+
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
@@ -47,8 +59,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: go_pkg
+          path: $GOPATH/pkg
 
   buildMAC:
     needs: buildStatic
@@ -62,13 +74,19 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
           name: release
           path: release
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: go_pkg
+          path: $GOPATH/pkg
 
       # 读取发布版本
       - name: Read Release Version
@@ -78,14 +96,7 @@ jobs:
           path: release/package.json
           property: version
 
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
-
-      # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+      - run: cp -rf release/html.go teamide/internal/static/html.go
 
       - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
 
@@ -107,13 +118,19 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
           name: release
           path: release
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: go_pkg
+          path: $GOPATH/pkg
 
       # 读取发布版本
       - name: Read Release Version
@@ -123,14 +140,7 @@ jobs:
           path: release/package.json
           property: version
 
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
-
-      # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+      - run: cp -rf release/html.go teamide/internal/static/html.go
 
       - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
 
@@ -154,13 +164,19 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
           name: release
           path: release
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: go_pkg
+          path: $GOPATH/pkg
 
       # 读取发布版本
       - name: Read Release Version
@@ -170,14 +186,7 @@ jobs:
           path: release/package.json
           property: version
 
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
-
-      # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+      - run: move "release/html.go" "teamide/internal/static/html.go"
 
       - run: go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
 
