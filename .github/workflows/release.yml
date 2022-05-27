@@ -48,7 +48,7 @@ jobs:
 
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: cp -rf teamide/internal/static/html.go release/html.go
+      - run: cp -rf internal/static/html.go release/html.go
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
