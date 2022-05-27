@@ -12,10 +12,8 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-zookeeper/zk v1.0.2
-	github.com/gomodule/redigo v1.8.8
 	github.com/google/go-cmp v0.5.8
 	github.com/gorilla/websocket v1.5.0
-	github.com/huandu/go-clone v1.3.2
 	github.com/mattn/go-sqlite3 v1.14.13
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/pkg/sftp v1.13.4

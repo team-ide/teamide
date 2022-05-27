@@ -9,7 +9,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/config"
 	"teamide/internal/context"
-	"teamide/internal/module/module_application"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_toolbox"
@@ -19,13 +18,12 @@ import (
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
 	api = &Api{
-		ServerContext:      ServerContext,
-		userService:        module_user.NewUserService(ServerContext),
-		registerService:    module_register.NewRegisterService(ServerContext),
-		loginService:       module_login.NewLoginService(ServerContext),
-		installService:     NewInstallService(ServerContext),
-		applicationService: module_application.NewApplicationService(ServerContext),
-		toolboxService:     module_toolbox.NewToolboxService(ServerContext),
+		ServerContext:   ServerContext,
+		userService:     module_user.NewUserService(ServerContext),
+		registerService: module_register.NewRegisterService(ServerContext),
+		loginService:    module_login.NewLoginService(ServerContext),
+		installService:  NewInstallService(ServerContext),
+		toolboxService:  module_toolbox.NewToolboxService(ServerContext),
 
 		apiCache: make(map[string]*base.ApiWorker),
 	}
@@ -76,13 +74,12 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 type Api struct {
 	config.ServerConfig
 	*context.ServerContext
-	applicationService *module_application.ApplicationService
-	toolboxService     *module_toolbox.ToolboxService
-	userService        *module_user.UserService
-	registerService    *module_register.RegisterService
-	loginService       *module_login.LoginService
-	installService     *InstallService
-	apiCache           map[string]*base.ApiWorker
+	toolboxService  *module_toolbox.ToolboxService
+	userService     *module_user.UserService
+	registerService *module_register.RegisterService
+	loginService    *module_login.LoginService
+	installService  *InstallService
+	apiCache        map[string]*base.ApiWorker
 }
 
 var (
@@ -108,7 +105,6 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"upload"}, Power: PowerUpload, Do: this_.apiUpload})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"updateCheck"}, Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
 
-	apis = append(apis, module_application.NewApplicationApi(this_.applicationService).GetApis()...)
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 
 	return
