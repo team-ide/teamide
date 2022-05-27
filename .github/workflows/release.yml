@@ -48,7 +48,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: go_pkg
-          path: ${{ $GOPATH }}/pkg
+          path: /home/runner/go/pkg
 
   initStatic:
     needs:
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: go_pkg
-          path: ${{ $GOPATH }}/pkg
+          path: /home/runner/go/pkg
 
       # 创建release相关目录
       - run: mkdir release
@@ -114,6 +114,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # 下载GO依赖库
+      - uses: actions/download-artifact@v2
+        with:
+          name: go_pkg
+          path: /home/runner/go/pkg
+
       # 上传发布包
       - uses: actions/upload-artifact@v2
         with:
@@ -149,6 +155,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # 下载GO依赖库
+      - uses: actions/download-artifact@v2
+        with:
+          name: go_pkg
+          path: /home/runner/go/pkg
+
       # 上传发布包
       - uses: actions/upload-artifact@v2
         with:
@@ -182,6 +194,12 @@ jobs:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v2
+
+      # 下载GO依赖库
+      - uses: actions/download-artifact@v2
+        with:
+          name: go_pkg
+          path: /home/runner/go/pkg
 
       # 上传发布包
       - uses: actions/upload-artifact@v2
