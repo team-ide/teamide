@@ -8,6 +8,7 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/db"
+	"teamide/pkg/db/task"
 	"teamide/pkg/toolbox"
 )
 
@@ -685,7 +686,7 @@ func (this_ *ToolboxApi) databaseExportDownload(requestBean *base.RequestBean, c
 	if err != nil {
 		return
 	}
-	err = toolbox.DatabaseExportDownload(data, c)
+	err = task.DatabaseExportDownload(data, c)
 	if err != nil {
 		return
 	}

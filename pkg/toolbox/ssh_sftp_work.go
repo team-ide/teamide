@@ -283,41 +283,6 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 	return
 }
 
-func CopyBytes(dst io.Writer, src io.Reader, call func(readSize int64, writeSize int64)) (err error) {
-	var buf = make([]byte, 32*1024)
-	var errInvalidWrite = errors.New("invalid write result")
-	var ErrShortWrite = errors.New("short write")
-	for {
-		nr, er := src.Read(buf)
-		if nr > 0 {
-			call(int64(nr), 0)
-			nw, ew := dst.Write(buf[0:nr])
-			if nw < 0 || nr < nw {
-				nw = 0
-				if ew == nil {
-					ew = errInvalidWrite
-				}
-			}
-			call(0, int64(nw))
-			if ew != nil {
-				err = ew
-				break
-			}
-			if nr != nw {
-				err = ErrShortWrite
-				break
-			}
-		}
-		if er != nil {
-			if er != io.EOF {
-				err = er
-			}
-			break
-		}
-	}
-	return
-}
-
 func (this_ *SSHSftpClient) localUpdate(request *SFTPRequest, progress *UploadProgress) (response *SFTPResponse, err error) {
 
 	progress.StartTime = util.GetNowTime()
@@ -387,7 +352,7 @@ func (this_ *SSHSftpClient) localUpdate(request *SFTPRequest, progress *UploadPr
 	}
 	defer closeUploadFile(uploadF)
 
-	err = CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
+	err = util.CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
 		progress.SuccessSize += writeSize
 	})
 	if err != nil {
@@ -473,7 +438,7 @@ func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadP
 	}
 	defer closeUploadFile(uploadF)
 
-	err = CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
+	err = util.CopyBytes(fileInfo, uploadF, func(readSize int64, writeSize int64) {
 		progress.SuccessSize += writeSize
 	})
 	if err != nil {
@@ -509,7 +474,7 @@ func (this_ *SSHSftpClient) localDownload(c *gin.Context, path string) (err erro
 	c.Header("Content-Length", fmt.Sprint(fileSize))
 	c.Header("download-file-name", fileName)
 
-	err = CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
 	})
 	if err != nil {
 		return
@@ -550,7 +515,7 @@ func (this_ *SSHSftpClient) remoteDownload(c *gin.Context, path string) (err err
 	c.Header("Content-Length", fmt.Sprint(fileSize))
 	c.Header("download-file-name", fileName)
 
-	err = CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
 	})
 	if err != nil {
 		return
@@ -773,7 +738,7 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 		Copying.StartTime = util.GetNowTime()
 		Copying.Size = fileSize
 		progress.Copying = Copying
-		err = CopyBytes(toWriter, fromReader, func(readSize int64, writeSize int64) {
+		err = util.CopyBytes(toWriter, fromReader, func(readSize int64, writeSize int64) {
 			progress.SuccessSize += writeSize
 			Copying.SuccessSize += writeSize
 		})

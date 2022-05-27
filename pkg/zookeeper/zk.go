@@ -1,52 +1,30 @@
-package toolbox
+package zookeeper
 
 import (
 	"errors"
+	"github.com/go-zookeeper/zk"
+	"go.uber.org/zap"
 	"sort"
 	"strings"
+	"teamide/pkg/util"
 	"time"
-
-	"github.com/go-zookeeper/zk"
 )
 
-type ZKConfig struct {
+type Config struct {
 	Address string `json:"address"`
 }
 
-func getZKService(zkConfig ZKConfig) (res *ZKService, err error) {
-	key := "zookeeper-" + zkConfig.Address
-	var service Service
-	service, err = GetService(key, func() (res Service, err error) {
-		var s *ZKService
-		s, err = CreateZKService(zkConfig)
-		if err != nil {
-			return
-		}
-		_, err = s.Exists("/")
-		if err != nil {
-			return
-		}
-		res = s
-		return
-	})
-	if err != nil {
-		return
-	}
-	res = service.(*ZKService)
-	return
-}
-
-func CreateZKService(zkConfig ZKConfig) (*ZKService, error) {
+func CreateZKService(config Config) (*ZKService, error) {
 	service := &ZKService{
-		address: zkConfig.Address,
+		Address: config.Address,
 	}
 	err := service.init()
 	return service, err
 }
 
-//注册处理器在线信息等
+//ZKService 注册处理器在线信息等
 type ZKService struct {
-	address     string
+	Address     string
 	zkConn      *zk.Conn        //zk连接
 	zkConnEvent <-chan zk.Event // zk事件通知管道
 	lastUseTime int64
@@ -62,23 +40,24 @@ func (this_ *ZKService) init() error {
 
 type defaultLogger struct{}
 
-func (defaultLogger) Printf(format string, a ...interface{}) {
-
+func (defaultLogger) Printf(format string, args ...interface{}) {
+	util.Logger.Info(format, zap.Any("args", args))
 }
+
 func (this_ *ZKService) GetServers() []string {
 	var servers []string
-	if strings.Contains(this_.address, ",") {
-		servers = strings.Split(this_.address, ",")
-	} else if strings.Contains(this_.address, ";") {
-		servers = strings.Split(this_.address, ";")
+	if strings.Contains(this_.Address, ",") {
+		servers = strings.Split(this_.Address, ",")
+	} else if strings.Contains(this_.Address, ";") {
+		servers = strings.Split(this_.Address, ";")
 	} else {
-		servers = []string{this_.address}
+		servers = []string{this_.Address}
 	}
 	return servers
 }
 func (this_ *ZKService) GetConn() *zk.Conn {
 	defer func() {
-		this_.lastUseTime = GetNowTime()
+		this_.lastUseTime = util.GetNowTime()
 	}()
 	return this_.zkConn
 }
@@ -95,7 +74,7 @@ func (this_ *ZKService) Stop() {
 	this_.GetConn().Close()
 }
 
-//创建节点
+//Create 创建节点
 func (this_ *ZKService) Create(path string, data []byte, mode int32) (err error) {
 	isExist, err := this_.Exists(path)
 	if err != nil {
@@ -135,7 +114,7 @@ func (this_ *ZKService) SetData(path string, data []byte) (err error) {
 	return nil
 }
 
-//一层层检查，如果不存在则创建父节点
+//CreateIfNotExists 一层层检查，如果不存在则创建父节点
 func (this_ *ZKService) CreateIfNotExists(path string, data []byte) (err error) {
 	isExist, err := this_.Exists(path)
 	if err != nil {
@@ -159,26 +138,26 @@ func (this_ *ZKService) CreateIfNotExists(path string, data []byte) (err error) 
 	return nil
 }
 
-//判断节点是否存在
+//Exists 判断节点是否存在
 func (this_ *ZKService) Exists(path string) (isExist bool, err error) {
 	isExist, _, err = this_.GetConn().Exists(path)
 	return
 }
 
-//判断节点是否存在
+//Get 判断节点是否存在
 func (this_ *ZKService) Get(path string) (data []byte, err error) {
 	data, _, err = this_.GetConn().Get(path)
 	return
 }
 
-//判断节点是否存在
+//GetChildren 判断节点是否存在
 func (this_ *ZKService) GetChildren(path string) (children []string, err error) {
 	children, _, err = this_.GetConn().Children(path)
 	sort.Strings(children)
 	return
 }
 
-//判断节点是否存在
+//Delete 判断节点是否存在
 func (this_ *ZKService) Delete(path string) (err error) {
 	var isExist bool
 	var stat *zk.Stat

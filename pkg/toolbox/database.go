@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"teamide/pkg/db"
+	"teamide/pkg/db/task"
 	"teamide/pkg/form"
 	"teamide/pkg/util"
 )
@@ -47,25 +48,20 @@ func init() {
 }
 
 type DatabaseBaseRequest struct {
-	Database         string                   `json:"database"`
-	Table            string                   `json:"table"`
-	TaskKey          string                   `json:"taskKey"`
-	ExecuteSQL       string                   `json:"executeSQL"`
-	ColumnList       []*db.TableColumnModel   `json:"columnList"`
-	Wheres           []*db.Where              `json:"wheres"`
-	Orders           []*db.Order              `json:"orders"`
-	PageIndex        int                      `json:"pageIndex"`
-	PageSize         int                      `json:"pageSize"`
-	DatabaseType     string                   `json:"databaseType"`
-	StrategyDataList []map[string]interface{} `json:"strategyDataList"`
-	InsertList       []map[string]interface{} `json:"insertList"`
-	UpdateList       []map[string]interface{} `json:"updateList"`
-	UpdateWhereList  []map[string]interface{} `json:"updateWhereList"`
-	DeleteList       []map[string]interface{} `json:"deleteList"`
+	Database     string                 `json:"database"`
+	Table        string                 `json:"table"`
+	TaskKey      string                 `json:"taskKey"`
+	ExecuteSQL   string                 `json:"executeSQL"`
+	ColumnList   []*db.TableColumnModel `json:"columnList"`
+	Wheres       []*db.Where            `json:"wheres"`
+	Orders       []*db.Order            `json:"orders"`
+	PageIndex    int                    `json:"pageIndex"`
+	PageSize     int                    `json:"pageSize"`
+	DatabaseType string                 `json:"databaseType"`
 }
 
 func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-	var service DatabaseService
+	var service *db.Service
 
 	var databaseConfig db.DatabaseConfig
 	var bs []byte
@@ -321,8 +317,8 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		var dataListRequest DataListResult
-		dataListRequest, err = service.DataList(generateParam, request)
+		var dataListRequest db.DataListResult
+		dataListRequest, err = service.DataList(generateParam, request.Database, request.Table, request.ColumnList, request.Wheres, request.Orders, request.PageSize, request.PageIndex)
 		if err != nil {
 			return
 		}
@@ -332,31 +328,30 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		res["dataList"] = dataListRequest.DataList
 	case "executeSQL":
 
-		executeSQLTask := &executeSQLTask{
+		executeSQLTask := &task.ExecuteSQLTask{
 			Database:      request.Database,
 			ExecuteSQL:    request.ExecuteSQL,
-			service:       service,
-			generateParam: generateParam,
+			Service:       service,
+			GenerateParam: generateParam,
 		}
 		executeSQLTask.Start()
 		res["task"] = executeSQLTask
 
 	case "dataListSql":
 
-		var saveDataListTask = &saveDataListTask{}
-		err = json.Unmarshal(dataBS, saveDataListTask)
+		var saveDataTask = &task.SaveDataTask{}
+		err = json.Unmarshal(dataBS, saveDataTask)
 		if err != nil {
 			return
 		}
 
-		saveDataListTask.request = request
-		saveDataListTask.service = service
-		saveDataListTask.generateParam = generateParam
+		saveDataTask.Service = service
+		saveDataTask.GenerateParam = generateParam
 
 		var sqlList []string
 		var valuesList [][]interface{}
 
-		sqlList, valuesList, err = saveDataListTask.SaveDataListSql()
+		sqlList, valuesList, err = saveDataTask.SaveDataListSql()
 		if err != nil {
 			return
 		}
@@ -370,21 +365,20 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		var saveDataListTask = &saveDataListTask{}
-		err = json.Unmarshal(dataBS, saveDataListTask)
+		var saveDataTask = &task.SaveDataTask{}
+		err = json.Unmarshal(dataBS, saveDataTask)
 		if err != nil {
 			return
 		}
 
-		saveDataListTask.request = request
-		saveDataListTask.service = service
-		saveDataListTask.generateParam = generateParam
+		saveDataTask.Service = service
+		saveDataTask.GenerateParam = generateParam
 
-		err = saveDataListTask.Start()
+		err = saveDataTask.Start()
 		if err != nil {
 			return
 		}
-		res["task"] = saveDataListTask
+		res["task"] = saveDataTask
 
 	case "import":
 		generateParam.AppendDatabase = true
@@ -394,30 +388,26 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 
 		taskKey := util.GenerateUUID()
 
-		var databaseImportTask = &databaseImportTask{}
-		err = json.Unmarshal(dataBS, databaseImportTask)
+		var importTask = &task.ImportTask{}
+		err = json.Unmarshal(dataBS, importTask)
 		if err != nil {
 			return
 		}
 
-		databaseImportTask.request = request
-		databaseImportTask.Key = taskKey
-		databaseImportTask.service = service
-		databaseImportTask.generateParam = generateParam
+		importTask.Key = taskKey
+		importTask.Service = service
+		importTask.GenerateParam = generateParam
 
-		addDatabaseImportTask(databaseImportTask)
+		task.StartImportTask(importTask)
 
 		res["taskKey"] = taskKey
 	case "importStatus":
-		databaseImportTask := databaseImportTaskCache[request.TaskKey]
-		res["task"] = databaseImportTask
+		importTask := task.GetImportTask(request.TaskKey)
+		res["task"] = importTask
 	case "importStop":
-		databaseImportTask := databaseImportTaskCache[request.TaskKey]
-		if databaseImportTask != nil {
-			databaseImportTask.Stop()
-		}
+		task.StopImportTask(request.TaskKey)
 	case "importClean":
-		delete(databaseImportTaskCache, request.TaskKey)
+		task.CleanImportTask(request.TaskKey)
 
 	case "export":
 		generateParam.AppendDatabase = true
@@ -427,30 +417,26 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 
 		taskKey := util.GenerateUUID()
 
-		var databaseExportTask = &databaseExportTask{}
-		err = json.Unmarshal(dataBS, databaseExportTask)
+		var exportTask = &task.ExportTask{}
+		err = json.Unmarshal(dataBS, exportTask)
 		if err != nil {
 			return
 		}
 
-		databaseExportTask.request = request
-		databaseExportTask.Key = taskKey
-		databaseExportTask.service = service
-		databaseExportTask.generateParam = generateParam
+		exportTask.Key = taskKey
+		exportTask.Service = service
+		exportTask.GenerateParam = generateParam
 
-		addDatabaseExportTask(databaseExportTask)
+		task.StartExportTask(exportTask)
 
 		res["taskKey"] = taskKey
 	case "exportStatus":
-		databaseExportTask := databaseExportTaskCache[request.TaskKey]
-		res["task"] = databaseExportTask
+		exportTask := task.GetExportTask(request.TaskKey)
+		res["task"] = exportTask
 	case "exportStop":
-		databaseExportTask := databaseExportTaskCache[request.TaskKey]
-		if databaseExportTask != nil {
-			databaseExportTask.Stop()
-		}
+		task.StopExportTask(request.TaskKey)
 	case "exportClean":
-		delete(databaseExportTaskCache, request.TaskKey)
+		task.CleanExportTask(request.TaskKey)
 	}
 	return
 }
@@ -490,7 +476,7 @@ func init() {
 	}
 }
 
-func getDatabaseService(config db.DatabaseConfig) (res DatabaseService, err error) {
+func getDatabaseService(config db.DatabaseConfig) (res *db.Service, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
 	if config.Username != "" {
 		key += "-" + util.GetMd5String(key+config.Username)
@@ -500,8 +486,8 @@ func getDatabaseService(config db.DatabaseConfig) (res DatabaseService, err erro
 	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
-		var s DatabaseService
-		s, err = CreateDatabaseService(config)
+		var s *db.Service
+		s, err = db.CreateService(config)
 		if err != nil {
 			return
 		}
@@ -511,32 +497,7 @@ func getDatabaseService(config db.DatabaseConfig) (res DatabaseService, err erro
 	if err != nil {
 		return
 	}
-	res = service.(DatabaseService)
+	res = service.(*db.Service)
 	res.SetLastUseTime()
 	return
-}
-
-func CreateDatabaseService(config db.DatabaseConfig) (service DatabaseService, err error) {
-	service, err = CreateMysqlService(config)
-	return
-}
-
-type DatabaseService interface {
-	GetWaitTime() int64
-	GetLastUseTime() int64
-	SetLastUseTime()
-	Stop()
-	GetDatabaseWorker() *db.DatabaseWorker
-	Databases() ([]*db.DatabaseModel, error)
-	Tables(database string) ([]*db.TableModel, error)
-	TableDetails(database string, table string) ([]*db.TableModel, error)
-	DataList(param *db.GenerateParam, request *DatabaseBaseRequest) (DataListResult, error)
-	Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error)
-}
-
-type DataListResult struct {
-	Sql      string                   `json:"sql"`
-	Total    int                      `json:"total"`
-	Params   []interface{}            `json:"params"`
-	DataList []map[string]interface{} `json:"dataList"`
 }

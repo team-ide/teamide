@@ -2,7 +2,7 @@ package toolbox
 
 import (
 	"encoding/json"
-	"github.com/olivere/elastic/v7"
+	"teamide/pkg/elasticsearch"
 	"teamide/pkg/form"
 )
 
@@ -56,6 +56,29 @@ func init() {
 	AddWorker(worker_)
 }
 
+func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
+	key := "elasticsearch-" + esConfig.Url
+	var service Service
+	service, err = GetService(key, func() (res Service, err error) {
+		var s *elasticsearch.V7Service
+		s, err = elasticsearch.CreateESService(esConfig)
+		if err != nil {
+			return
+		}
+		_, err = s.GetClient()
+		if err != nil {
+			return
+		}
+		res = s
+		return
+	})
+	if err != nil {
+		return
+	}
+	res = service.(*elasticsearch.V7Service)
+	return
+}
+
 type ElasticsearchBaseRequest struct {
 	IndexName       string                 `json:"indexName"`
 	Id              string                 `json:"id"`
@@ -68,35 +91,31 @@ type ElasticsearchBaseRequest struct {
 	DestIndexName   string                 `json:"destIndexName"`
 }
 
-type ESConfig struct {
-	Url string `json:"url"`
-}
-
 func esWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
-	var esConfig ESConfig
-	var bs []byte
-	bs, err = json.Marshal(config)
+	var esConfig elasticsearch.Config
+	var configBS []byte
+	configBS, err = json.Marshal(config)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(bs, &esConfig)
+	err = json.Unmarshal(configBS, &esConfig)
 	if err != nil {
 		return
 	}
 
-	var service *ESService
+	var service *elasticsearch.V7Service
 	service, err = getESService(esConfig)
 	if err != nil {
 		return
 	}
 
-	bs, err = json.Marshal(data)
+	dataBS, err := json.Marshal(data)
 	if err != nil {
 		return
 	}
 	request := &ElasticsearchBaseRequest{}
-	err = json.Unmarshal(bs, request)
+	err = json.Unmarshal(dataBS, request)
 	if err != nil {
 		return
 	}
@@ -133,42 +152,42 @@ func esWork(work string, config map[string]interface{}, data map[string]interfac
 			return
 		}
 	case "search":
-		var queryResult *elastic.SearchResult
+		var queryResult *elasticsearch.SearchResult
 		queryResult, err = service.Search(request.IndexName, request.PageIndex, request.PageSize)
 		if err != nil {
 			return
 		}
 		res["result"] = queryResult
 	case "scroll":
-		var result *elastic.SearchResult
+		var result *elasticsearch.SearchResult
 		result, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize)
 		if err != nil {
 			return
 		}
 		res["result"] = result
 	case "insertData":
-		var result *elastic.IndexResponse
+		var result *elasticsearch.IndexResponse
 		result, err = service.Insert(request.IndexName, request.Id, request.Doc)
 		if err != nil {
 			return
 		}
 		res["result"] = result
 	case "updateData":
-		var result *elastic.UpdateResponse
+		var result *elasticsearch.UpdateResponse
 		result, err = service.Update(request.IndexName, request.Id, request.Doc)
 		if err != nil {
 			return
 		}
 		res["result"] = result
 	case "deleteData":
-		var result *elastic.DeleteResponse
+		var result *elasticsearch.DeleteResponse
 		result, err = service.Delete(request.IndexName, request.Id)
 		if err != nil {
 			return
 		}
 		res["result"] = result
 	case "reindex":
-		var result *elastic.BulkIndexByScrollResponse
+		var result *elasticsearch.BulkIndexByScrollResponse
 		result, err = service.Reindex(request.SourceIndexName, request.DestIndexName)
 		if err != nil {
 			return

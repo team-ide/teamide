@@ -1,4 +1,4 @@
-package toolbox
+package task
 
 import (
 	"context"
@@ -13,10 +13,7 @@ import (
 	"time"
 )
 
-func init() {
-}
-
-type executeSQLTask struct {
+type ExecuteSQLTask struct {
 	Key           string    `json:"key,omitempty"`
 	Database      string    `json:"database,omitempty"`
 	ExecuteSQL    string    `json:"executeSQL,omitempty"`
@@ -26,16 +23,16 @@ type executeSQLTask struct {
 	Error         string    `json:"error,omitempty"`
 	UseTime       int64     `json:"useTime"`
 	IsStop        bool      `json:"isStop"`
-	service       DatabaseService
+	Service       *db.Service
 	ExecuteList   []map[string]interface{} `json:"executeList,omitempty"`
-	generateParam *db.GenerateParam
+	GenerateParam *db.GenerateParam
 }
 
-func (this_ *executeSQLTask) Stop() {
+func (this_ *ExecuteSQLTask) Stop() {
 	this_.IsStop = true
 }
 
-func (this_ *executeSQLTask) Start() {
+func (this_ *ExecuteSQLTask) Start() {
 	this_.StartTime = time.Now()
 	var err error
 	defer func() {
@@ -53,7 +50,7 @@ func (this_ *executeSQLTask) Start() {
 	}()
 	tokens := sqlparser.NewStringTokenizer(this_.ExecuteSQL)
 
-	ctx := this_.service.GetDatabaseWorker().GetContext()
+	ctx := this_.Service.GetDatabaseWorker().GetContext()
 
 	if this_.Database != "" {
 		finder := zorm.NewFinder()
@@ -65,7 +62,7 @@ func (this_ *executeSQLTask) Start() {
 		}
 	}
 
-	if this_.generateParam.OpenTransaction {
+	if this_.GenerateParam.OpenTransaction {
 		_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
 			err = this_.do(ctx, tokens)
 			return
@@ -76,7 +73,7 @@ func (this_ *executeSQLTask) Start() {
 	return
 }
 
-func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer) (err error) {
+func (this_ *ExecuteSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer) (err error) {
 	for {
 		var stmt sqlparser.Statement
 		stmt, err = sqlparser.ParseNext(tokens)
@@ -90,7 +87,7 @@ func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer
 			return
 		}
 		// 如果已经开启过事务，则不用再次开启
-		if this_.generateParam.OpenTransaction {
+		if this_.GenerateParam.OpenTransaction {
 			err = this_.doExecute(ctx, stmt)
 		} else {
 			_, err = zorm.Transaction(ctx, func(ctx context.Context) (res interface{}, err error) {
@@ -101,7 +98,7 @@ func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer
 
 		if err != nil {
 			err = nil
-			if this_.generateParam.ErrorContinue {
+			if this_.GenerateParam.ErrorContinue {
 				continue
 			}
 			return
@@ -111,7 +108,7 @@ func (this_ *executeSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer
 	return
 }
 
-func (this_ *executeSQLTask) doExecute(ctx context.Context, stmt sqlparser.Statement) (err error) {
+func (this_ *ExecuteSQLTask) doExecute(ctx context.Context, stmt sqlparser.Statement) (err error) {
 	buf := sqlparser.NewTrackedBuffer(nil)
 	stmt.Format(buf)
 	sql := buf.String()
@@ -151,7 +148,7 @@ func (this_ *executeSQLTask) doExecute(ctx context.Context, stmt sqlparser.State
 
 	return
 }
-func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doSelect(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
@@ -196,7 +193,7 @@ func (this_ *executeSQLTask) doSelect(ctx context.Context, sql string, executeDa
 	return
 }
 
-func (this_ *executeSQLTask) doInsert(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doInsert(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
@@ -211,7 +208,7 @@ func (this_ *executeSQLTask) doInsert(ctx context.Context, sql string, executeDa
 	return
 }
 
-func (this_ *executeSQLTask) doUpdate(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doUpdate(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
@@ -226,7 +223,7 @@ func (this_ *executeSQLTask) doUpdate(ctx context.Context, sql string, executeDa
 	return
 }
 
-func (this_ *executeSQLTask) doDelete(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doDelete(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
@@ -241,7 +238,7 @@ func (this_ *executeSQLTask) doDelete(ctx context.Context, sql string, executeDa
 	return
 }
 
-func (this_ *executeSQLTask) doUse(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doUse(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)
@@ -255,7 +252,7 @@ func (this_ *executeSQLTask) doUse(ctx context.Context, sql string, executeData 
 	return
 }
 
-func (this_ *executeSQLTask) doExec(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
+func (this_ *ExecuteSQLTask) doExec(ctx context.Context, sql string, executeData map[string]interface{}) (err error) {
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
 	finder.Append(sql)

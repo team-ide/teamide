@@ -1,4 +1,4 @@
-package toolbox
+package task
 
 import (
 	"bufio"
@@ -20,17 +20,41 @@ import (
 )
 
 var (
-	databaseExportTaskCache = map[string]*databaseExportTask{}
+	ExportTaskCache = map[string]*ExportTask{}
 )
 
-func addDatabaseExportTask(task *databaseExportTask) {
-	databaseExportTaskCache[task.Key] = task
+func StartExportTask(task *ExportTask) {
+	ExportTaskCache[task.Key] = task
 	go task.Start()
 }
 
-type databaseExportTask struct {
-	request          *DatabaseBaseRequest
-	generateParam    *db.GenerateParam
+func GetExportTask(taskKey string) *ExportTask {
+	task := ExportTaskCache[taskKey]
+	return task
+}
+
+func StopExportTask(taskKey string) *ExportTask {
+	task := ExportTaskCache[taskKey]
+	if task != nil {
+		task.Start()
+	}
+	return task
+}
+
+func CleanExportTask(taskKey string) *ExportTask {
+	task := ExportTaskCache[taskKey]
+	if task != nil {
+		delete(ExportTaskCache, taskKey)
+	}
+	return task
+}
+
+type ExportTask struct {
+	Database         string                   `json:"database,omitempty"`
+	Table            string                   `json:"table,omitempty"`
+	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
+	Wheres           []*db.Where              `json:"wheres,omitempty"`
+	Orders           []*db.Order              `json:"orders,omitempty"`
 	Key              string                   `json:"key,omitempty"`
 	ExportType       string                   `json:"exportType,omitempty"`
 	ExportDatabase   string                   `json:"exportDatabase,omitempty"`
@@ -47,9 +71,10 @@ type databaseExportTask struct {
 	Error            string                   `json:"error,omitempty"`
 	excelPath        string
 	exportDataIndex  int
-	UseTime          int64 `json:"useTime"`
-	IsStop           bool  `json:"isStop"`
-	service          DatabaseService
+	UseTime          int64             `json:"useTime"`
+	IsStop           bool              `json:"isStop"`
+	GenerateParam    *db.GenerateParam `json:"-"`
+	Service          *db.Service       `json:"-"`
 }
 
 func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) {
@@ -60,12 +85,12 @@ func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) 
 		return
 	}
 
-	databaseExportTask := databaseExportTaskCache[taskKey]
-	if databaseExportTask == nil {
+	ExportTask := ExportTaskCache[taskKey]
+	if ExportTask == nil {
 		err = errors.New("任务不存在")
 		return
 	}
-	path := databaseExportTask.excelPath
+	path := ExportTask.excelPath
 	if path == "" {
 		err = errors.New("任务导出文件丢失")
 		return
@@ -85,7 +110,9 @@ func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) 
 	if err != nil {
 		return
 	}
-	defer closeFile(fileInfo)
+	defer func() {
+		_ = fileInfo.Close()
+	}()
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fileName))
@@ -93,7 +120,7 @@ func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) 
 	c.Header("Content-Length", fmt.Sprint(fileSize))
 	c.Header("download-file-name", fileName)
 
-	err = CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
 	})
 	if err != nil {
 		return
@@ -103,10 +130,10 @@ func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) 
 	return
 }
 
-func (this_ *databaseExportTask) Stop() {
+func (this_ *ExportTask) Stop() {
 	this_.IsStop = true
 }
-func (this_ *databaseExportTask) Start() {
+func (this_ *ExportTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
@@ -125,7 +152,7 @@ func (this_ *databaseExportTask) Start() {
 	}
 }
 
-func (this_ *databaseExportTask) doExport(dataList []map[string]interface{}) (err error) {
+func (this_ *ExportTask) doExport(dataList []map[string]interface{}) (err error) {
 	if this_.ExportType == "excel" {
 		err = this_.doExportExcel(dataList)
 		if err != nil {
@@ -141,10 +168,10 @@ func (this_ *databaseExportTask) doExport(dataList []map[string]interface{}) (er
 
 }
 
-func (this_ *databaseExportTask) doExportExcel(dataList []map[string]interface{}) (err error) {
+func (this_ *ExportTask) doExportExcel(dataList []map[string]interface{}) (err error) {
 	var excelPath = this_.excelPath
 	if excelPath == "" {
-		excelPath, err = GetTempDir()
+		excelPath, err = util.GetTempDir()
 		if err != nil {
 			return
 		}
@@ -161,7 +188,7 @@ func (this_ *databaseExportTask) doExportExcel(dataList []map[string]interface{}
 			}
 		}
 
-		excelPath += "/" + "导出库" + this_.request.Database + "-表" + this_.request.Table + "数据-" + time.Now().Format("20060102150405000") + ".xlsx"
+		excelPath += "/" + "导出库" + this_.Database + "-表" + this_.Table + "数据-" + time.Now().Format("20060102150405000") + ".xlsx"
 
 		xlsxF := xlsx.NewFile()
 		var sheet *xlsx.Sheet
@@ -268,12 +295,12 @@ func GetColumnFromList(columnList []*db.TableColumnModel, name string) *db.Table
 	return nil
 
 }
-func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) (err error) {
+func (this_ *ExportTask) doExportSql(dataList []map[string]interface{}) (err error) {
 
 	var sqlF *os.File
 	var excelPath = this_.excelPath
 	if excelPath == "" {
-		excelPath, err = GetTempDir()
+		excelPath, err = util.GetTempDir()
 		if err != nil {
 			return
 		}
@@ -290,7 +317,7 @@ func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) 
 			}
 		}
 
-		excelPath += "/" + "导出库" + this_.request.Database + "-表" + this_.request.Table + "数据-" + time.Now().Format("20060102150405000") + ".sql"
+		excelPath += "/" + "导出库" + this_.Database + "-表" + this_.Table + "数据-" + time.Now().Format("20060102150405000") + ".sql"
 
 		sqlF, err = os.Create(excelPath)
 		if err != nil {
@@ -339,7 +366,7 @@ func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) 
 			var column *db.TableColumnModel
 			if exportColumn["column"] != nil {
 				columnName := exportColumn["column"].(string)
-				column = GetColumnFromList(this_.request.ColumnList, columnName)
+				column = GetColumnFromList(this_.ColumnList, columnName)
 			}
 			if column == nil {
 				column = &db.TableColumnModel{
@@ -361,8 +388,8 @@ func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) 
 				value = scriptValue.Export()
 			}
 
-			insertColumns += this_.generateParam.PackingCharacterColumn(exportName) + ", "
-			insertValues += this_.generateParam.PackingCharacterColumnStringValue(column, value) + ", "
+			insertColumns += this_.GenerateParam.PackingCharacterColumn(exportName) + ", "
+			insertValues += this_.GenerateParam.PackingCharacterColumnStringValue(column, value) + ", "
 
 			err = vm.Set(exportName, value)
 			if err != nil {
@@ -375,10 +402,10 @@ func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) 
 
 		sql := "INSERT INTO "
 
-		if this_.generateParam.AppendDatabase && this_.ExportDatabase != "" {
-			sql += this_.generateParam.PackingCharacterDatabase(this_.ExportDatabase) + "."
+		if this_.GenerateParam.AppendDatabase && this_.ExportDatabase != "" {
+			sql += this_.GenerateParam.PackingCharacterDatabase(this_.ExportDatabase) + "."
 		}
-		sql += this_.generateParam.PackingCharacterTable(this_.ExportTable)
+		sql += this_.GenerateParam.PackingCharacterTable(this_.ExportTable)
 		if insertColumns != "" {
 			sql += "(" + insertColumns + ")"
 		}
@@ -398,14 +425,14 @@ func (this_ *databaseExportTask) doExportSql(dataList []map[string]interface{}) 
 
 }
 
-func (this_ *databaseExportTask) toSelectDataList() (err error) {
+func (this_ *ExportTask) toSelectDataList() (err error) {
 
 	var pageSize = this_.BatchNumber
 	if pageSize <= 0 {
 		pageSize = 100
 	}
 
-	sql, values, err := db.DataListSelectSql(this_.generateParam, this_.request.Database, this_.request.Table, this_.request.ColumnList, this_.request.Wheres, this_.request.Orders)
+	sql, values, err := db.DataListSelectSql(this_.GenerateParam, this_.Database, this_.Table, this_.ColumnList, this_.Wheres, this_.Orders)
 	if err != nil {
 		return
 	}
@@ -435,7 +462,7 @@ func (this_ *databaseExportTask) toSelectDataList() (err error) {
 
 }
 
-func (this_ *databaseExportTask) selectDataList(sql string, values []interface{}, pageSize int, pageIndex int) (dataList []map[string]interface{}, err error) {
+func (this_ *ExportTask) selectDataList(sql string, values []interface{}, pageSize int, pageIndex int) (dataList []map[string]interface{}, err error) {
 
 	finder := zorm.NewFinder()
 	finder.InjectionCheck = false
@@ -445,7 +472,7 @@ func (this_ *databaseExportTask) selectDataList(sql string, values []interface{}
 	page := zorm.NewPage()
 	page.PageSize = pageSize
 	page.PageNo = pageIndex
-	dataList, err = this_.service.GetDatabaseWorker().FinderQueryMapPage(finder, page)
+	dataList, err = this_.Service.GetDatabaseWorker().FinderQueryMapPage(finder, page)
 	if err != nil {
 		return
 	}

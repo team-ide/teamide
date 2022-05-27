@@ -54,14 +54,14 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-if="msgs == null">
+                <template v-if="msgList == null">
                   <tr>
                     <td colspan="5">
                       <div class="text-center ft-13 pdtb-10">拉取中...</div>
                     </td>
                   </tr>
                 </template>
-                <template v-else-if="msgs.length == 0">
+                <template v-else-if="msgList.length == 0">
                   <tr>
                     <td colspan="5">
                       <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
@@ -69,7 +69,7 @@
                   </tr>
                 </template>
                 <template v-else>
-                  <template v-for="(one, index) in msgs">
+                  <template v-for="(one, index) in msgList">
                     <tr :key="index" @click="rowClick(one)">
                       <td>{{ one.partition }}</td>
                       <td>{{ one.offset }}</td>
@@ -131,7 +131,7 @@ export default {
         pullSize: 10,
         pullTimeout: 1000,
       },
-      msgs: null,
+      msgList: null,
     };
   },
   computed: {},
@@ -253,13 +253,13 @@ export default {
       }
     },
     async doPull() {
-      this.msgs = null;
+      this.msgList = null;
       let param = {};
       Object.assign(param, this.pullForm);
       let res = await this.wrap.work("pull", param);
       res.data = res.data || {};
-      let msgs = res.data.msgs;
-      msgs.forEach((one) => {
+      let msgList = res.data.msgList;
+      msgList.forEach((one) => {
         if (this.tool.isNotEmpty(one.value)) {
           try {
             if (
@@ -274,7 +274,7 @@ export default {
           }
         }
       });
-      this.msgs = res.data.msgs || [];
+      this.msgList = res.data.msgList || [];
     },
   },
   created() {},

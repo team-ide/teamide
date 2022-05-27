@@ -1,20 +1,19 @@
-package toolbox
+package db
 
 import (
 	"gitee.com/teamide/zorm"
 	"github.com/wxnacy/wgo/arrays"
 	"strconv"
 	"strings"
-	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
 )
 
-func CreateMysqlService(config db.DatabaseConfig) (service *MysqlService, err error) {
-	service = &MysqlService{
+func CreateService(config DatabaseConfig) (service *Service, err error) {
+	service = &Service{
 		config: config,
 	}
-	service.lastUseTime = GetNowTime()
+	service.lastUseTime = util.GetNowTime()
 	err = service.init()
 	return
 }
@@ -24,41 +23,41 @@ type SqlParam struct {
 	Params []interface{} `json:"params,omitempty"`
 }
 
-type MysqlService struct {
-	config         db.DatabaseConfig
+type Service struct {
+	config         DatabaseConfig
 	lastUseTime    int64
-	DatabaseWorker *db.DatabaseWorker
+	DatabaseWorker *DatabaseWorker
 }
 
-func (this_ *MysqlService) init() (err error) {
-	this_.DatabaseWorker, err = db.NewDatabaseWorker(this_.config)
+func (this_ *Service) init() (err error) {
+	this_.DatabaseWorker, err = NewDatabaseWorker(this_.config)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *MysqlService) GetDatabaseWorker() *db.DatabaseWorker {
+func (this_ *Service) GetDatabaseWorker() *DatabaseWorker {
 	return this_.DatabaseWorker
 }
 
-func (this_ *MysqlService) GetWaitTime() int64 {
+func (this_ *Service) GetWaitTime() int64 {
 	return 10 * 60 * 1000
 }
 
-func (this_ *MysqlService) GetLastUseTime() int64 {
+func (this_ *Service) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
 
-func (this_ *MysqlService) SetLastUseTime() {
-	this_.lastUseTime = GetNowTime()
+func (this_ *Service) SetLastUseTime() {
+	this_.lastUseTime = util.GetNowTime()
 }
 
-func (this_ *MysqlService) Stop() {
+func (this_ *Service) Stop() {
 	_ = this_.DatabaseWorker.Close()
 }
 
-func (this_ *MysqlService) Databases() (databases []*db.DatabaseModel, err error) {
+func (this_ *Service) Databases() (databases []*DatabaseModel, err error) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.SCHEMATA", "SCHEMA_NAME name")
 
@@ -69,7 +68,7 @@ func (this_ *MysqlService) Databases() (databases []*db.DatabaseModel, err error
 		return
 	}
 	for _, one := range listMap {
-		database := &db.DatabaseModel{
+		database := &DatabaseModel{
 			Name: one["name"].(string),
 		}
 		databases = append(databases, database)
@@ -77,7 +76,7 @@ func (this_ *MysqlService) Databases() (databases []*db.DatabaseModel, err error
 	return
 }
 
-func (this_ *MysqlService) Tables(database string) (tables []*db.TableModel, err error) {
+func (this_ *Service) Tables(database string) (tables []*TableModel, err error) {
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.tables", "TABLE_NAME AS name,TABLE_COMMENT AS comment")
 
@@ -92,7 +91,7 @@ func (this_ *MysqlService) Tables(database string) (tables []*db.TableModel, err
 	return
 }
 
-func (this_ *MysqlService) TableDetails(database string, table string) (tableDetails []*db.TableModel, err error) {
+func (this_ *Service) TableDetails(database string, table string) (tableDetails []*TableModel, err error) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.tables", "TABLE_NAME AS name,TABLE_COMMENT AS comment")
@@ -124,7 +123,7 @@ func (this_ *MysqlService) TableDetails(database string, table string) (tableDet
 	return
 }
 
-func (this_ *MysqlService) TableColumnList(database string, table string) (columnList []*db.TableColumnModel, err error) {
+func (this_ *Service) TableColumnList(database string, table string) (columnList []*TableColumnModel, err error) {
 
 	keys, err := this_.TablePrimaryKeys(database, table)
 	if err != nil {
@@ -168,7 +167,7 @@ func (this_ *MysqlService) TableColumnList(database string, table string) (colum
 	return
 }
 
-func (this_ *MysqlService) TablePrimaryKeys(database string, table string) (keys []string, err error) {
+func (this_ *Service) TablePrimaryKeys(database string, table string) (keys []string, err error) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.table_constraints t", "k.COLUMN_NAME")
@@ -187,7 +186,7 @@ func (this_ *MysqlService) TablePrimaryKeys(database string, table string) (keys
 	return
 }
 
-func (this_ *MysqlService) TableIndexList(database string, table string) (indexList []*db.TableIndexModel, err error) {
+func (this_ *Service) TableIndexList(database string, table string) (indexList []*TableIndexModel, err error) {
 
 	//构造查询用的finder
 	finder := zorm.NewSelectFinder("information_schema.statistics", "INDEX_NAME name,NON_UNIQUE,INDEX_COMMENT comment,COLUMN_NAME")
@@ -195,7 +194,7 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 	finder.Append("WHERE TABLE_SCHEMA=?", database)
 	finder.Append(" AND TABLE_NAME=?", table)
 	finder.Append(" AND INDEX_NAME != ?", "PRIMARY")
-	var indexList_ []*db.TableIndexModel
+	var indexList_ []*TableIndexModel
 	//执行查询
 	err = this_.DatabaseWorker.FinderQuery(finder, &indexList_)
 	if err != nil { //标记测试失败
@@ -209,7 +208,7 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 		}
 		one.Columns = append(one.Columns, one.COLUMNName)
 
-		var find *db.TableIndexModel
+		var find *TableIndexModel
 		for _, in := range indexList {
 			if in.Name == one.Name {
 				find = in
@@ -226,9 +225,16 @@ func (this_ *MysqlService) TableIndexList(database string, table string) (indexL
 	return
 }
 
-func (this_ *MysqlService) DataList(param *db.GenerateParam, request *DatabaseBaseRequest) (dataListResult DataListResult, err error) {
+type DataListResult struct {
+	Sql      string                   `json:"sql"`
+	Total    int                      `json:"total"`
+	Params   []interface{}            `json:"params"`
+	DataList []map[string]interface{} `json:"dataList"`
+}
 
-	sql, values, err := db.DataListSelectSql(param, request.Database, request.Table, request.ColumnList, request.Wheres, request.Orders)
+func (this_ *Service) DataList(param *GenerateParam, database string, table string, columnList []*TableColumnModel, whereList []*Where, orderList []*Order, pageSize int, pageIndex int) (dataListResult DataListResult, err error) {
+
+	sql, values, err := DataListSelectSql(param, database, table, columnList, whereList, orderList)
 	if err != nil {
 		return
 	}
@@ -239,8 +245,8 @@ func (this_ *MysqlService) DataList(param *db.GenerateParam, request *DatabaseBa
 	finder.Append(sql, values...)
 
 	page := zorm.NewPage()
-	page.PageSize = request.PageSize
-	page.PageNo = request.PageIndex
+	page.PageSize = pageSize
+	page.PageNo = pageIndex
 	listMap, err := this_.DatabaseWorker.FinderQueryMapPage(finder, page)
 	if err != nil {
 		return
@@ -264,7 +270,7 @@ func (this_ *MysqlService) DataList(param *db.GenerateParam, request *DatabaseBa
 	return
 }
 
-func (this_ *MysqlService) Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error) {
+func (this_ *Service) Execs(sqlList []string, paramsList [][]interface{}) (res int64, err error) {
 	res, err = this_.DatabaseWorker.Execs(sqlList, paramsList)
 	if err != nil {
 		return

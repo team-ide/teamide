@@ -1,4 +1,4 @@
-package toolbox
+package task
 
 import (
 	"fmt"
@@ -11,17 +11,39 @@ import (
 )
 
 var (
-	databaseImportTaskCache = map[string]*databaseImportTask{}
+	ImportTaskCache = map[string]*ImportTask{}
 )
 
-func addDatabaseImportTask(task *databaseImportTask) {
-	databaseImportTaskCache[task.Key] = task
+func StartImportTask(task *ImportTask) {
+	ImportTaskCache[task.Key] = task
 	go task.Start()
 }
 
-type databaseImportTask struct {
-	request          *DatabaseBaseRequest
-	generateParam    *db.GenerateParam
+func GetImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	return task
+}
+
+func StopImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	if task != nil {
+		task.Start()
+	}
+	return task
+}
+
+func CleanImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	if task != nil {
+		delete(ImportTaskCache, taskKey)
+	}
+	return task
+}
+
+type ImportTask struct {
+	Database         string                   `json:"database,omitempty"`
+	Table            string                   `json:"table,omitempty"`
+	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
 	Key              string                   `json:"key,omitempty"`
 	ImportType       string                   `json:"importType,omitempty"`
 	StrategyDataList []map[string]interface{} `json:"strategyDataList,omitempty"`
@@ -36,13 +58,14 @@ type databaseImportTask struct {
 	Error            string                   `json:"error,omitempty"`
 	UseTime          int64                    `json:"useTime"`
 	IsStop           bool                     `json:"isStop"`
-	service          DatabaseService
+	GenerateParam    *db.GenerateParam        `json:"-"`
+	Service          *db.Service              `json:"-"`
 }
 
-func (this_ *databaseImportTask) Stop() {
+func (this_ *ImportTask) Stop() {
 	this_.IsStop = true
 }
-func (this_ *databaseImportTask) Start() {
+func (this_ *ImportTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
@@ -63,7 +86,7 @@ func (this_ *databaseImportTask) Start() {
 
 }
 
-func (this_ *databaseImportTask) doStrategy() (err error) {
+func (this_ *ImportTask) doStrategy() (err error) {
 	for _, importData := range this_.StrategyDataList {
 		importCount := 0
 		if importData["_$importCount"] != nil {
@@ -80,7 +103,7 @@ func (this_ *databaseImportTask) doStrategy() (err error) {
 		if this_.IsStop {
 			break
 		}
-		err = this_.doStrategyData(this_.request.Database, this_.request.Table, this_.request.ColumnList, importData)
+		err = this_.doStrategyData(this_.Database, this_.Table, this_.ColumnList, importData)
 		if err != nil {
 			return
 		}
@@ -88,7 +111,7 @@ func (this_ *databaseImportTask) doStrategy() (err error) {
 	return
 }
 
-func (this_ *databaseImportTask) doStrategyData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
+func (this_ *ImportTask) doStrategyData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
 	importCount := importData["_$importCount"].(int)
 	if importCount <= 0 {
 		return
@@ -174,7 +197,7 @@ func (this_ *databaseImportTask) doStrategyData(database, table string, columnLi
 	return
 }
 
-func (this_ *databaseImportTask) doImportData(database, table string, columnList []*db.TableColumnModel, dataList []map[string]interface{}) (err error) {
+func (this_ *ImportTask) doImportData(database, table string, columnList []*db.TableColumnModel, dataList []map[string]interface{}) (err error) {
 
 	if len(dataList) == 0 {
 		return
@@ -182,12 +205,12 @@ func (this_ *databaseImportTask) doImportData(database, table string, columnList
 	var sqlList []string
 	var paramsList [][]interface{}
 
-	sqlList, paramsList, err = db.DataListInsertSql(this_.generateParam, database, table, columnList, dataList)
+	sqlList, paramsList, err = db.DataListInsertSql(this_.GenerateParam, database, table, columnList, dataList)
 	if err != nil {
 		return
 	}
 
-	_, err = this_.service.Execs(sqlList, paramsList)
+	_, err = this_.Service.Execs(sqlList, paramsList)
 	if err != nil {
 		return
 	}

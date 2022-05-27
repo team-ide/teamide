@@ -1,4 +1,4 @@
-package toolbox
+package redis
 
 import (
 	"context"
@@ -13,15 +13,36 @@ import (
 )
 
 var (
-	redisImportTaskCache = map[string]*redisImportTask{}
+	ImportTaskCache = map[string]*ImportTask{}
 )
 
-func addRedisImportTask(task *redisImportTask) {
-	redisImportTaskCache[task.Key] = task
+func StartImportTask(task *ImportTask) {
+	ImportTaskCache[task.Key] = task
 	go task.Start()
 }
 
-type RedisStrategyData struct {
+func GetImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	return task
+}
+
+func StopImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	if task != nil {
+		task.Start()
+	}
+	return task
+}
+
+func CleanImportTask(taskKey string) *ImportTask {
+	task := ImportTaskCache[taskKey]
+	if task != nil {
+		delete(ImportTaskCache, taskKey)
+	}
+	return task
+}
+
+type StrategyData struct {
 	Count      int    `json:"count,omitempty"`
 	Key        string `json:"key,omitempty"`
 	ValueType  string `json:"valueType,omitempty"`
@@ -33,32 +54,30 @@ type RedisStrategyData struct {
 	HashValue  string `json:"hashValue,omitempty"`
 }
 
-type redisImportTask struct {
-	request          *RedisBaseRequest
-	generateParam    *db.GenerateParam
-	Key              string               `json:"key,omitempty"`
-	ImportType       string               `json:"importType,omitempty"`
-	StrategyDataList []*RedisStrategyData `json:"strategyDataList,omitempty"`
-	BatchNumber      int                  `json:"batchNumber,omitempty"`
-	DataCount        int                  `json:"dataCount"`
-	ReadyDataCount   int                  `json:"readyDataCount"`
-	SuccessCount     int                  `json:"successCount"`
-	ErrorCount       int                  `json:"errorCount"`
-	IsEnd            bool                 `json:"isEnd,omitempty"`
-	StartTime        time.Time            `json:"startTime,omitempty"`
-	EndTime          time.Time            `json:"endTime,omitempty"`
-	Error            string               `json:"error,omitempty"`
-	UseTime          int64                `json:"useTime"`
-	IsStop           bool                 `json:"isStop"`
-	service          RedisService
-	ctx              context.Context
+type ImportTask struct {
+	Database         int             `json:"database,omitempty"`
+	Key              string          `json:"key,omitempty"`
+	ImportType       string          `json:"importType,omitempty"`
+	StrategyDataList []*StrategyData `json:"strategyDataList,omitempty"`
+	BatchNumber      int             `json:"batchNumber,omitempty"`
+	DataCount        int             `json:"dataCount"`
+	ReadyDataCount   int             `json:"readyDataCount"`
+	SuccessCount     int             `json:"successCount"`
+	ErrorCount       int             `json:"errorCount"`
+	IsEnd            bool            `json:"isEnd,omitempty"`
+	StartTime        time.Time       `json:"startTime,omitempty"`
+	EndTime          time.Time       `json:"endTime,omitempty"`
+	Error            string          `json:"error,omitempty"`
+	UseTime          int64           `json:"useTime"`
+	IsStop           bool            `json:"isStop"`
+	Service          Service         `json:"-"`
 }
 
-func (this_ *redisImportTask) Stop() {
+func (this_ *ImportTask) Stop() {
 	this_.IsStop = true
 }
 
-func (this_ *redisImportTask) Start() {
+func (this_ *ImportTask) Start() {
 	this_.StartTime = time.Now()
 	defer func() {
 		if err := recover(); err != nil {
@@ -70,7 +89,6 @@ func (this_ *redisImportTask) Start() {
 		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
 
-	this_.ctx = context.TODO()
 	if this_.ImportType == "strategy" {
 		err := this_.doStrategy()
 		if err != nil {
@@ -80,7 +98,7 @@ func (this_ *redisImportTask) Start() {
 
 }
 
-func (this_ *redisImportTask) doStrategy() (err error) {
+func (this_ *ImportTask) doStrategy() (err error) {
 	for _, strategyData := range this_.StrategyDataList {
 		if strategyData.Count <= 0 {
 			strategyData.Count = 0
@@ -92,7 +110,7 @@ func (this_ *redisImportTask) doStrategy() (err error) {
 		if this_.IsStop {
 			break
 		}
-		err = this_.doStrategyData(this_.request.Database, strategyData)
+		err = this_.doStrategyData(this_.Database, strategyData)
 		if err != nil {
 			return
 		}
@@ -100,11 +118,17 @@ func (this_ *redisImportTask) doStrategy() (err error) {
 	return
 }
 
-func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisStrategyData) (err error) {
+func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData) (err error) {
 	if strategyData.Count <= 0 {
 		return
 	}
 	if this_.IsStop {
+		return
+	}
+
+	ctx := context.TODO()
+	client, err := this_.Service.GetClient(ctx, database)
+	if err != nil {
 		return
 	}
 
@@ -154,7 +178,7 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 				value = db.GetStringValue(scriptValue.Export())
 			}
 			this_.ReadyDataCount++
-			err = this_.service.Set(this_.ctx, database, key, value)
+			err = Set(ctx, client, key, value)
 			if err != nil {
 				this_.ErrorCount++
 				return
@@ -176,7 +200,7 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 					value = db.GetStringValue(scriptValue.Export())
 				}
 				this_.ReadyDataCount++
-				err = this_.service.LPush(this_.ctx, database, key, value)
+				err = LPush(ctx, client, key, value)
 				if err != nil {
 					this_.ErrorCount++
 					return
@@ -199,7 +223,7 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 					value = db.GetStringValue(scriptValue.Export())
 				}
 				this_.ReadyDataCount++
-				err = this_.service.SAdd(this_.ctx, database, key, value)
+				err = SAdd(ctx, client, key, value)
 				if err != nil {
 					this_.ErrorCount++
 					return
@@ -230,7 +254,7 @@ func (this_ *redisImportTask) doStrategyData(database int, strategyData *RedisSt
 					value = db.GetStringValue(scriptValue.Export())
 				}
 				this_.ReadyDataCount++
-				err = this_.service.HSet(this_.ctx, database, key, hashKey, value)
+				err = HSet(ctx, client, key, hashKey, value)
 				if err != nil {
 					this_.ErrorCount++
 					return
