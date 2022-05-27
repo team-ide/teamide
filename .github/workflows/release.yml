@@ -7,7 +7,7 @@ on:
       - main
       # - dev
 jobs:
-  buildStatic:
+  build:
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -48,45 +48,6 @@ jobs:
 
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-      - run: cp -rf internal/static/html.go release/html.go
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: go_pkg
-          path: $GOPATH/pkg
-
-  buildMAC:
-    needs: buildStatic
-    runs-on: macos-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.18"
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: go_pkg
-          path: $GOPATH/pkg
 
       # 读取发布版本
       - name: Read Release Version
@@ -96,55 +57,13 @@ jobs:
           path: release/package.json
           property: version
 
-      - run: cp -rf release/html.go internal/static/html.go
+      - run: CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
 
-      - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
+      - run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
 
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
+      - run: CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
 
-  buildLinux:
-    needs: buildStatic
-    runs-on: ubuntu-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.18"
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: go_pkg
-          path: $GOPATH/pkg
-
-      # 读取发布版本
-      - name: Read Release Version
-        id: release_version
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: release/package.json
-          property: version
-
-      - run: cp -rf release/html.go internal/static/html.go
-
-      - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
-
-      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
+      - run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -152,55 +71,10 @@ jobs:
           name: release
           path: release
 
-  buildWindow:
-    needs: buildStatic
-    runs-on: windows-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.18"
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: go_pkg
-          path: $GOPATH/pkg
-
-      # 读取发布版本
-      - name: Read Release Version
-        id: release_version
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: release/package.json
-          property: version
-
-      - run: move "release/html.go" "internal/static/html.go"
-
-      - run: go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
 
   release:
     needs:
-      - buildMAC
-      - buildLinux
-      - buildWindow
+      - build
     runs-on: ubuntu-latest
     steps:
       # 下载共享资源
