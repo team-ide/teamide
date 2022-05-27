@@ -29,31 +29,9 @@ jobs:
           name: html
           path: html/dist
 
-  initGo:
-    runs-on: ubuntu-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.18"
-
-      - run: go mod tidy
-
-      # 上传GO依赖库
-      - uses: actions/upload-artifact@v2
-        with:
-          name: go_pkg
-          path: /home/runner/go/pkg
-
   initStatic:
     needs:
       - initHtml
-      - initGo
     runs-on: ubuntu-latest
     steps:
       # 下载源码
@@ -71,12 +49,6 @@ jobs:
         with:
           name: html
           path: html/dist
-
-      # 下载GO依赖库
-      - uses: actions/download-artifact@v2
-        with:
-          name: go_pkg
-          path: /home/runner/go/pkg
 
       # 创建release相关目录
       - run: mkdir release
@@ -114,12 +86,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 下载GO依赖库
-      - uses: actions/download-artifact@v2
-        with:
-          name: go_pkg
-          path: /home/runner/go/pkg
-
       # 上传发布包
       - uses: actions/upload-artifact@v2
         with:
@@ -155,12 +121,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 下载GO依赖库
-      - uses: actions/download-artifact@v2
-        with:
-          name: go_pkg
-          path: /home/runner/go/pkg
-
       # 上传发布包
       - uses: actions/upload-artifact@v2
         with:
@@ -194,12 +154,6 @@ jobs:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v2
-
-      # 下载GO依赖库
-      - uses: actions/download-artifact@v2
-        with:
-          name: go_pkg
-          path: /home/runner/go/pkg
 
       # 上传发布包
       - uses: actions/upload-artifact@v2
