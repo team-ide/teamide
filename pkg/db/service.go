@@ -2,7 +2,6 @@ package db
 
 import (
 	"gitee.com/teamide/zorm"
-	"github.com/wxnacy/wgo/arrays"
 	"strconv"
 	"strings"
 	"teamide/pkg/util"
@@ -144,7 +143,7 @@ func (this_ *Service) TableColumnList(database string, table string) (columnList
 		if one.ISNullable == "NO" {
 			one.NotNull = true
 		}
-		if arrays.ContainsString(keys, one.Name) >= 0 {
+		if util.ContainsString(keys, one.Name) >= 0 {
 			one.PrimaryKey = true
 		}
 		columnTypeStr := one.Type

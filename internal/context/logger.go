@@ -11,7 +11,7 @@ import (
 // hook {Filename, Maxsize(megabytes), MaxBackups, MaxAge(days)}
 // level zap.Level { DebugLevel, InfoLevel, WarnLevel, ErrorLevel, }
 func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
-	var hook *lumberjack.Logger = &lumberjack.Logger{
+	var hook = &lumberjack.Logger{
 		Filename:   serverConfig.Log.Filename,
 		MaxSize:    serverConfig.Log.MaxSize,
 		MaxAge:     serverConfig.Log.MaxAge,

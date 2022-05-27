@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/websocket"
-	"github.com/wxnacy/wgo/file"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"strings"
 	"sync"
 	"teamide/pkg/util"
@@ -257,12 +257,11 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 	auth = []ssh.AuthMethod{}
 
 	if config.PublicKey != "" {
-		var publicKeyContent string
-		publicKeyContent, err = file.ReadFile(config.PublicKey)
+		var publicKeyBytes []byte
+		publicKeyBytes, err = os.ReadFile(config.PublicKey)
 		if err != nil {
 			return
 		}
-		publicKeyBytes := []byte(publicKeyContent)
 		var publicKeySigner ssh.Signer
 		if config.Password != "" {
 			publicKeySigner, err = ssh.ParsePrivateKeyWithPassphrase(publicKeyBytes, []byte(config.Password))

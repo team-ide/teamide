@@ -15,6 +15,18 @@ import (
 	"github.com/Chain-Zhang/pinyin"
 )
 
+// ContainsString Returns the index position of the string val in array
+func ContainsString(array []string, val string) (index int) {
+	index = -1
+	for i := 0; i < len(array); i++ {
+		if array[i] == val {
+			index = i
+			return
+		}
+	}
+	return
+}
+
 func GetIpFromAddr(addr net.Addr) net.IP {
 	var ip net.IP
 	switch v := addr.(type) {

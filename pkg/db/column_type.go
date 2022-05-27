@@ -2,9 +2,9 @@ package db
 
 import (
 	"errors"
-	"github.com/wxnacy/wgo/arrays"
 	"strconv"
 	"strings"
+	"teamide/pkg/util"
 )
 
 var (
@@ -70,7 +70,7 @@ func checkDatabaseColumnType(databaseType *DatabaseType) (err error) {
 }
 
 func AppendColumnTypeInfo(databaseType *DatabaseType, columnTypeInfo *ColumnTypeInfo) {
-	if arrays.ContainsString(columnTypeNames, columnTypeInfo.Name) < 0 {
+	if util.ContainsString(columnTypeNames, columnTypeInfo.Name) < 0 {
 		columnTypeNames = append(columnTypeNames, columnTypeInfo.Name)
 	}
 	databaseType.ColumnTypeInfoMap[columnTypeInfo.Name] = columnTypeInfo
