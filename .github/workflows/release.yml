@@ -96,7 +96,7 @@ jobs:
           path: release/package.json
           property: version
 
-      - run: cp -rf release/html.go teamide/internal/static/html.go
+      - run: cp -rf release/html.go internal/static/html.go
 
       - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
 
@@ -140,7 +140,7 @@ jobs:
           path: release/package.json
           property: version
 
-      - run: cp -rf release/html.go teamide/internal/static/html.go
+      - run: cp -rf release/html.go internal/static/html.go
 
       - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
 
@@ -186,7 +186,7 @@ jobs:
           path: release/package.json
           property: version
 
-      - run: move "release/html.go" "teamide/internal/static/html.go"
+      - run: move "release/html.go" "internal/static/html.go"
 
       - run: go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
 
