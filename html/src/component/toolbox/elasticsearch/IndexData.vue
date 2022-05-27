@@ -192,7 +192,7 @@ export default {
       };
       let mapping = await this.wrap.getMapping(indexName);
       this.wrap.showDataForm(param, mapping, async (m) => {
-        let flag = await this.doUpdate(m);
+        let flag = await this.doInsert(m);
         return flag;
       });
     },

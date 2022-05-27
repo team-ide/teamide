@@ -363,7 +363,7 @@ export default {
     },
     valueSizeChange() {
       if (this.tool.isNotEmpty(this.form.key)) {
-        this.get(this.form.database, this.form.key);
+        this.initForm();
       }
     },
     addOne(type, one) {

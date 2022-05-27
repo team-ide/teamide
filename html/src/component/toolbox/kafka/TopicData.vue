@@ -2,10 +2,9 @@
   <div class="toolbox-kafka-topic-data">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="140px">
+        <tm-layout height="110px">
           <el-form
-            class="pdt-10"
-            label-width="90px"
+            class="pdt-10 pdlr-10"
             size="mini"
             :inline="true"
             @submit.native.prevent
@@ -17,13 +16,27 @@
               <el-input v-model="pullForm.groupId" />
             </el-form-item>
             <el-form-item label="KeyType">
-              <el-input v-model="pullForm.keyType" />
+              <el-select
+                placeholder="请选择类型"
+                v-model="pullForm.keyType"
+                style="width: 120px"
+              >
+                <el-option label="String" value="string"> </el-option>
+                <el-option label="Long（int64）" value="long"></el-option>
+              </el-select>
             </el-form-item>
             <el-form-item label="ValueType">
-              <el-input v-model="pullForm.valueType" />
+              <el-select
+                placeholder="请选择类型"
+                v-model="pullForm.valueType"
+                style="width: 120px"
+              >
+                <el-option label="String" value="string"> </el-option>
+                <el-option label="Long（int64）" value="long"></el-option>
+              </el-select>
             </el-form-item>
             <el-form-item label="">
-              <div class="pd">
+              <div class="">
                 <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toPull">
                   拉取
                 </div>
@@ -258,7 +271,7 @@ export default {
       Object.assign(param, this.pullForm);
       let res = await this.wrap.work("pull", param);
       res.data = res.data || {};
-      let msgList = res.data.msgList;
+      let msgList = res.data.msgList || [];
       msgList.forEach((one) => {
         if (this.tool.isNotEmpty(one.value)) {
           try {
