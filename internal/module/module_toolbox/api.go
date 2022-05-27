@@ -9,6 +9,7 @@ import (
 	"teamide/internal/context"
 	"teamide/pkg/db"
 	"teamide/pkg/db/task"
+	"teamide/pkg/ssh"
 	"teamide/pkg/toolbox"
 )
 
@@ -600,9 +601,9 @@ func (this_ *ToolboxApi) sshShell(requestBean *base.RequestBean, c *gin.Context)
 	if err != nil {
 		return
 	}
-	err = toolbox.WSSSHConnection(token, ws, this_.Logger)
+	err = ssh.WSSSHConnection(token, ws)
 	if err != nil {
-		ws.Close()
+		_ = ws.Close()
 		return
 	}
 	res = base.HttpNotResponse
@@ -621,9 +622,9 @@ func (this_ *ToolboxApi) sshFtp(requestBean *base.RequestBean, c *gin.Context) (
 	if err != nil {
 		return
 	}
-	err = toolbox.WSSFPTConnection(token, ws, this_.Logger)
+	err = ssh.WSSFPTConnection(token, ws)
 	if err != nil {
-		ws.Close()
+		_ = ws.Close()
 		return
 	}
 	res = base.HttpNotResponse
@@ -633,7 +634,7 @@ func (this_ *ToolboxApi) sshFtp(requestBean *base.RequestBean, c *gin.Context) (
 
 func (this_ *ToolboxApi) sshUpload(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	res, err = toolbox.SFTPUpload(c)
+	res, err = ssh.SFTPUpload(c)
 	if err != nil {
 		return
 	}
@@ -647,7 +648,7 @@ func (this_ *ToolboxApi) sshDownload(requestBean *base.RequestBean, c *gin.Conte
 	if err != nil {
 		return
 	}
-	err = toolbox.SFTPDownload(data, c)
+	err = ssh.SFTPDownload(data, c)
 	if err != nil {
 		return
 	}
@@ -657,7 +658,7 @@ func (this_ *ToolboxApi) sshDownload(requestBean *base.RequestBean, c *gin.Conte
 
 func (this_ *ToolboxApi) sshFtpUpload(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	res, err = toolbox.SFTPUpload(c)
+	res, err = ssh.SFTPUpload(c)
 	if err != nil {
 		return
 	}
@@ -671,7 +672,7 @@ func (this_ *ToolboxApi) sshFtpDownload(requestBean *base.RequestBean, c *gin.Co
 	if err != nil {
 		return
 	}
-	err = toolbox.SFTPDownload(data, c)
+	err = ssh.SFTPDownload(data, c)
 	if err != nil {
 		return
 	}

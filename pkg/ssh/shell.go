@@ -1,4 +1,4 @@
-package toolbox
+package ssh
 
 import (
 	"encoding/json"
@@ -7,15 +7,15 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"strings"
+	"teamide/pkg/util"
 	"time"
 )
 
-type SSHShellClient struct {
-	SSHClient
+type ShellClient struct {
+	Client
 	shellSession                     *ssh.Session
 	startReadChannel                 bool
 	shellOK                          bool
-	UploadFile                       chan *UploadFile
 	DisableZModemSZ, DisableZModemRZ bool
 	ZModemSZ, ZModemRZ, ZModemSZOO   bool
 }
@@ -36,7 +36,7 @@ type TerminalSize struct {
 	Height int `json:"height"`
 }
 
-func (this_ *SSHShellClient) changeSize(terminalSize TerminalSize) (err error) {
+func (this_ *ShellClient) changeSize(terminalSize TerminalSize) (err error) {
 
 	if this_.shellSession == nil {
 		return
@@ -44,21 +44,21 @@ func (this_ *SSHShellClient) changeSize(terminalSize TerminalSize) (err error) {
 	if terminalSize.Cols > 0 && terminalSize.Rows > 0 {
 		err = this_.shellSession.WindowChange(terminalSize.Rows, terminalSize.Cols)
 		if err != nil {
-			this_.Logger.Error("SSH Shell Session Window Change error", zap.Error(err))
+			util.Logger.Error("SSH Shell Session Window Change error", zap.Error(err))
 			return
 		}
 	}
 	if terminalSize.Width > 0 && terminalSize.Height > 0 {
 		err = this_.shellSession.WindowChange(terminalSize.Height, terminalSize.Width)
 		if err != nil {
-			this_.Logger.Error("SSH Shell Session Window Change error", zap.Error(err))
+			util.Logger.Error("SSH Shell Session Window Change error", zap.Error(err))
 			return
 		}
 	}
 	return
 }
 
-func (this_ *SSHShellClient) closeSession(session *ssh.Session) {
+func (this_ *ShellClient) closeSession(session *ssh.Session) {
 	if session == nil {
 		return
 	}
@@ -67,7 +67,7 @@ func (this_ *SSHShellClient) closeSession(session *ssh.Session) {
 		if err == io.EOF {
 			return
 		}
-		this_.Logger.Error("SSH Shell Session Close Error", zap.Error(err))
+		util.Logger.Error("SSH Shell Session Close Error", zap.Error(err))
 		return
 	}
 }
@@ -114,13 +114,12 @@ func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error)
 	}
 	return
 }
-func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
-	this_.listenUpload()
+func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
 	this_.shellOK = false
 	this_.startReadChannel = false
 	defer func() {
 		if x := recover(); x != nil {
-			this_.Logger.Error("SSH Shell Start Error", zap.Any("err", x))
+			util.Logger.Error("SSH Shell Start Error", zap.Any("err", x))
 			return
 		}
 		this_.shellSession = nil
@@ -128,20 +127,20 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	if this_.shellSession != nil {
 		err = this_.shellSession.Close()
 		if err != nil {
-			this_.Logger.Error("SSH Shell Shell Session Close Error", zap.Error(err))
+			util.Logger.Error("SSH Shell Shell Session Close Error", zap.Error(err))
 		}
 		this_.shellSession = nil
 	}
 	err = this_.initClient()
 	if err != nil {
-		this_.Logger.Error("Create Shell Init Client Error", zap.Error(err))
+		util.Logger.Error("Create Shell Init Client Error", zap.Error(err))
 		this_.WSWriteError("SSH客户端创建失败:" + err.Error())
 		return
 	}
 
 	this_.shellSession, err = this_.sshClient.NewSession()
 	if err != nil {
-		this_.Logger.Error("Create Shell Open Channel Error", zap.Error(err))
+		util.Logger.Error("Create Shell Open Channel Error", zap.Error(err))
 		this_.WSWriteError("SSH会话创建失败:" + err.Error())
 		return
 	}
@@ -149,7 +148,7 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 
 	err = NewSSHShell(terminalSize, this_.shellSession)
 	if err != nil {
-		this_.Logger.Error("Create Shell Error", zap.Error(err))
+		util.Logger.Error("Create Shell Error", zap.Error(err))
 		this_.WSWriteError("SSH Shell创建失败:" + err.Error())
 		return
 	}
@@ -165,7 +164,7 @@ func (this_ *SSHShellClient) startShell(terminalSize TerminalSize) (err error) {
 	return
 }
 
-func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err error) {
+func (this_ *ShellClient) startRead(reader io.Reader, isError bool) (err error) {
 
 	for {
 		if !this_.startReadChannel {
@@ -176,7 +175,7 @@ func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err erro
 		var bs = make([]byte, buffSize)
 		var n int
 		if err != nil {
-			this_.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
+			util.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
 			continue
 		}
 		n, err = reader.Read(bs)
@@ -184,9 +183,12 @@ func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err erro
 			if err == io.EOF {
 				return nil
 			}
-			this_.Logger.Error("SSH Shell 消息读取异常", zap.Error(err))
+			util.Logger.Error("SSH Shell 消息读取异常", zap.Error(err))
 			//this_.WSWriteError("SSH Shell 消息读取失败:" + err.Error())
 			continue
+		}
+		if isError {
+
 		}
 
 		var isZModem bool
@@ -199,15 +201,15 @@ func (this_ *SSHShellClient) startRead(reader io.Reader, isError bool) (err erro
 	}
 }
 
-func (this_ *SSHShellClient) start() {
-	SSHShellCache[this_.Token] = this_
+func (this_ *ShellClient) start() {
+	ShellCache[this_.Token] = this_
 	go this_.ListenWS(this_.onEvent, this_.ONSSHMessage, this_.CloseClient)
 	this_.WSWriteEvent("shell ready")
 }
 
-func (this_ *SSHShellClient) onEvent(event string) {
+func (this_ *ShellClient) onEvent(event string) {
 	var err error
-	this_.Logger.Info("SSH Shell On Event:", zap.Any("event", event))
+	util.Logger.Info("SSH Shell On Event:", zap.Any("event", event))
 
 	if strings.HasPrefix(event, "shell start") {
 		jsonStr := event[len("shell start"):]
@@ -218,7 +220,7 @@ func (this_ *SSHShellClient) onEvent(event string) {
 		go func() {
 			err = this_.startShell(*terminalSize)
 			if err != nil {
-				this_.Logger.Error("SSH Shell Start Shell error", zap.Error(err))
+				util.Logger.Error("SSH Shell Start Shell error", zap.Error(err))
 			}
 		}()
 		for {
@@ -253,14 +255,14 @@ func (this_ *SSHShellClient) onEvent(event string) {
 	}
 }
 
-func (this_ *SSHShellClient) ONSSHMessage(bs []byte) {
+func (this_ *ShellClient) ONSSHMessage(bs []byte) {
 	this_.SSHWrite(bs)
 }
 
-func (this_ *SSHShellClient) SSHWrite(bs []byte) {
+func (this_ *ShellClient) SSHWrite(bs []byte) {
 	defer func() {
 		if x := recover(); x != nil {
-			this_.Logger.Error("SSH Shell Write Error", zap.Any("err", x))
+			util.Logger.Error("SSH Shell Write Error", zap.Any("err", x))
 			return
 		}
 	}()
@@ -271,7 +273,7 @@ func (this_ *SSHShellClient) SSHWrite(bs []byte) {
 	var writer io.Writer
 	writer, err = this_.shellSession.StdinPipe()
 	if err != nil {
-		this_.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
+		util.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
 	}
 
 	_, err = writer.Write(bs)

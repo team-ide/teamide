@@ -1,20 +1,41 @@
-package toolbox
+package ssh
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/sftp"
 	"go.uber.org/zap"
+	"mime/multipart"
 	"strings"
+	"teamide/pkg/util"
 )
 
-type SSHSftpClient struct {
-	SSHClient
+type ConfirmInfo struct {
+	ConfirmId   string `json:"confirmId,omitempty"`
+	IsConfirm   bool   `json:"isConfirm,omitempty"`
+	Confirm     string `json:"confirm,omitempty"`
+	Path        string `json:"path,omitempty"`
+	Name        string `json:"name,omitempty"`
+	IsFileExist bool   `json:"isFileExist,omitempty"`
+	IsOk        bool   `json:"isOk,omitempty"`
+	IsCancel    bool   `json:"isCancel,omitempty"`
+}
+
+type UploadFile struct {
+	Dir      string
+	Place    string
+	WorkId   string
+	FullPath string
+	File     *multipart.FileHeader
+}
+
+type SftpClient struct {
+	Client
 	UploadFile chan *UploadFile
 	confirmMap map[string]chan *ConfirmInfo
 }
 
-func (this_ *SSHSftpClient) listenUpload() {
+func (this_ *SftpClient) listenUpload() {
 	if this_.UploadFile == nil {
 		this_.UploadFile = make(chan *UploadFile, 10)
 
@@ -37,7 +58,7 @@ func (this_ *SSHSftpClient) listenUpload() {
 	}
 	return
 }
-func (this_ *SSHSftpClient) newSftp() (sftpClient *sftp.Client, err error) {
+func (this_ *SftpClient) newSftp() (sftpClient *sftp.Client, err error) {
 	err = this_.initClient()
 	if err != nil {
 		return
@@ -52,14 +73,14 @@ func (this_ *SSHSftpClient) newSftp() (sftpClient *sftp.Client, err error) {
 	return
 }
 
-func (this_ *SSHSftpClient) start() {
-	SSHSftpCache[this_.Token] = this_
+func (this_ *SftpClient) start() {
+	SftpCache[this_.Token] = this_
 	go this_.ListenWS(this_.onEvent, this_.onMessage, this_.CloseClient)
 	this_.listenUpload()
 	this_.WSWriteEvent("ftp ready")
 }
 
-func (this_ *SSHSftpClient) closeSftClient(sftpClient *sftp.Client) {
+func (this_ *SftpClient) closeSftClient(sftpClient *sftp.Client) {
 	if sftpClient == nil {
 		return
 	}
@@ -69,9 +90,9 @@ func (this_ *SSHSftpClient) closeSftClient(sftpClient *sftp.Client) {
 		return
 	}
 }
-func (this_ *SSHSftpClient) onEvent(event string) {
+func (this_ *SftpClient) onEvent(event string) {
 	var err error
-	this_.Logger.Info("SSH FTP On Event:", zap.Any("event", event))
+	util.Logger.Info("SSH FTP On Event:", zap.Any("event", event))
 	switch strings.ToLower(event) {
 	case "ftp start":
 		var sftpClient *sftp.Client
@@ -84,7 +105,7 @@ func (this_ *SSHSftpClient) onEvent(event string) {
 	}
 }
 
-func (this_ *SSHSftpClient) onMessage(bs []byte) {
+func (this_ *SftpClient) onMessage(bs []byte) {
 
 	go func() {
 		var request *SFTPRequest

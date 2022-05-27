@@ -1,14 +1,43 @@
-package toolbox
+package ssh
 
 import (
 	"bytes"
-	"errors"
-	"github.com/gin-gonic/gin"
 )
 
-func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (isZModem bool, err error) {
+var (
+	//ZModemSZStart sz fmt.Sprintf("%+q", "rz\r**\x18B00000000000000\r\x8a\x11")
+	//ZModemSZStart = []byte{13, 42, 42, 24, 66, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 13, 138, 17}
+	ZModemSZStart = []byte{42, 42, 24, 66, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 13, 138, 17}
+	//ZModemSZEnd sz 结束 fmt.Sprintf("%+q", "\r**\x18B0800000000022d\r\x8a")
+	//ZModemSZEnd = []byte{13, 42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+	ZModemSZEnd = []byte{42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+	//ZModemSZEndOO sz 结束后可能还会发送两个 OO，但是经过测试发现不一定每次都会发送 fmt.Sprintf("%+q", "OO")
+	ZModemSZEndOO = []byte{79, 79}
+
+	//ZModemRZStart rz fmt.Sprintf("%+q", "**\x18B0100000023be50\r\x8a\x11")
+	ZModemRZStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 50, 51, 98, 101, 53, 48, 13, 138, 17}
+	//ZModemRZEStart rz -e fmt.Sprintf("%+q", "**\x18B0100000063f694\r\x8a\x11")
+	ZModemRZEStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 54, 51, 102, 54, 57, 52, 13, 138, 17}
+	//ZModemRZSStart rz -S fmt.Sprintf("%+q", "**\x18B0100000223d832\r\x8a\x11")
+	ZModemRZSStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 50, 50, 51, 100, 56, 51, 50, 13, 138, 17}
+	//ZModemRZESStart rz -e -S fmt.Sprintf("%+q", "**\x18B010000026390f6\r\x8a\x11")
+	ZModemRZESStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 50, 54, 51, 57, 48, 102, 54, 13, 138, 17}
+	//ZModemRZEnd rz 结束 fmt.Sprintf("%+q", "**\x18B0800000000022d\r\x8a")
+	ZModemRZEnd = []byte{42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+
+	//ZModemRZCtrlStart **\x18B0
+	ZModemRZCtrlStart = []byte{42, 42, 24, 66, 48}
+	//ZModemRZCtrlEnd1 \r\x8a\x11
+	ZModemRZCtrlEnd1 = []byte{13, 138, 17}
+	//ZModemRZCtrlEnd2 \r\x8a
+	ZModemRZCtrlEnd2 = []byte{13, 138}
+
+	//ZModemCancel zmodem 取消 \x18\x18\x18\x18\x18\x08\x08\x08\x08\x08
+	ZModemCancel = []byte{24, 24, 24, 24, 24, 8, 8, 8, 8, 8}
+)
+
+func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZModem bool, err error) {
 	isZModem = true
-	t := ZModemMessageTypeStdout
 	if this_.ZModemSZOO {
 		this_.ZModemSZOO = false
 		// 经过测试 centos7-8 使用的 lrzsz-0.12.20 在 sz 结束时会发送 ZModemSZEndOO
@@ -19,23 +48,23 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 		if n < 2 {
 			// 手动发送 ZModemSZEndOO
 			this_.WSWriteBinary(ZModemSZEndOO)
-			this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: buff[:n]})
+			this_.WSWriteStdout(string(buff[:n]))
 		} else if n == 2 {
 			if buff[0] == ZModemSZEndOO[0] && buff[1] == ZModemSZEndOO[1] {
 				this_.WSWriteBinary(ZModemSZEndOO)
 			} else {
 				// 手动发送 ZModemSZEndOO
 				this_.WSWriteBinary(ZModemSZEndOO)
-				this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: buff[:n]})
+				this_.WSWriteStdout(string(buff[:n]))
 			}
 		} else {
 			if buff[0] == ZModemSZEndOO[0] && buff[1] == ZModemSZEndOO[1] {
 				this_.WSWriteBinary(buff[:2])
-				this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: buff[2:n]})
+				this_.WSWriteStdout(string(buff[2:n]))
 			} else {
 				// 手动发送 ZModemSZEndOO
 				this_.WSWriteBinary(ZModemSZEndOO)
-				this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: buff[:n]})
+				this_.WSWriteStdout(string(buff[:n]))
 			}
 		}
 	} else {
@@ -50,7 +79,7 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 					this_.ZModemSZOO = true
 					this_.WSWriteBinary(ZModemSZEnd)
 					if len(x) != 0 {
-						this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+						this_.WSWriteConsole(string(x))
 					}
 				} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
 					this_.ZModemSZ = false
@@ -64,7 +93,7 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 				this_.ZModemRZ = false
 				this_.WSWriteBinary(ZModemRZEnd)
 				if len(x) != 0 {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+					this_.WSWriteConsole(string(x))
 				}
 			} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
 				this_.ZModemRZ = false
@@ -83,7 +112,7 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 						this_.WSWriteBinary(ctrl)
 						info := append(buff[:startIndex], buff[endIndex+len(ZModemRZCtrlEnd1):n]...)
 						if len(info) != 0 {
-							this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: info})
+							this_.WSWriteConsole(string(info))
 						}
 					} else {
 						endIndex = bytes.Index(buff[:n], ZModemRZCtrlEnd2)
@@ -93,64 +122,64 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 							this_.WSWriteBinary(ctrl)
 							info := append(buff[:startIndex], buff[endIndex+len(ZModemRZCtrlEnd2):n]...)
 							if len(info) != 0 {
-								this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: info})
+								this_.WSWriteConsole(string(info))
 							}
 						} else {
-							this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: buff[:n]})
+							this_.WSWriteConsole(string(buff[:n]))
 						}
 					}
 				} else {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: buff[:n]})
+					this_.WSWriteConsole(string(buff[:n]))
 				}
 			}
 		} else {
 			if x, ok := ByteContains(buff[:n], ZModemSZStart); ok {
 				if this_.DisableZModemSZ {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeAlert, Data: []byte("sz download is disabled")})
+					this_.WSWriteAlert("sz download is disabled")
 					this_.ZModemWriteSSH(ZModemCancel)
 				} else {
 					if y, ok := ByteContains(x, ZModemCancel); ok {
 						// 下载不存在的文件以及文件夹(zmodem 不支持下载文件夹)时
-						this_.ZModemWriteJSON(&ZModemMessage{Type: t, Data: y})
+						this_.WSWriteStdout(string(y))
 					} else {
 						this_.ZModemSZ = true
 						if len(x) != 0 {
-							this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+							this_.WSWriteConsole(string(x))
 						}
 						this_.WSWriteBinary(ZModemSZStart)
 					}
 				}
 			} else if x, ok := ByteContains(buff[:n], ZModemRZStart); ok {
 				if this_.DisableZModemRZ {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeAlert, Data: []byte("rz upload is disabled")})
+					this_.WSWriteAlert("rz upload is disabled")
 					this_.ZModemWriteSSH(ZModemCancel)
 				} else {
 					this_.ZModemRZ = true
 					this_.WSWriteEvent("shell to upload file")
 					if len(x) != 0 {
-						this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+						this_.WSWriteConsole(string(x))
 					}
 					this_.WSWriteBinary(ZModemRZStart)
 				}
 			} else if x, ok := ByteContains(buff[:n], ZModemRZEStart); ok {
 				if this_.DisableZModemRZ {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeAlert, Data: []byte("rz upload is disabled")})
+					this_.WSWriteAlert("rz upload is disabled")
 					this_.ZModemWriteSSH(ZModemCancel)
 				} else {
 					this_.ZModemRZ = true
 					if len(x) != 0 {
-						this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+						this_.WSWriteConsole(string(x))
 					}
 					this_.WSWriteBinary(ZModemRZEStart)
 				}
 			} else if x, ok := ByteContains(buff[:n], ZModemRZSStart); ok {
 				if this_.DisableZModemRZ {
-					this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeAlert, Data: []byte("rz upload is disabled")})
+					this_.WSWriteAlert("rz upload is disabled")
 					this_.ZModemWriteSSH(ZModemCancel)
 				} else {
 					this_.ZModemRZ = true
 					if len(x) != 0 {
-						this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+						this_.WSWriteConsole(string(x))
 					}
 					this_.WSWriteBinary(ZModemRZSStart)
 				}
@@ -160,7 +189,7 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 				} else {
 					this_.ZModemRZ = true
 					if len(x) != 0 {
-						this_.ZModemWriteJSON(&ZModemMessage{Type: ZModemMessageTypeConsole, Data: x})
+						this_.WSWriteConsole(string(x))
 					}
 					this_.WSWriteBinary(ZModemRZESStart)
 				}
@@ -172,12 +201,10 @@ func (this_ *SSHShellClient) processZModem(buff []byte, n int, buffSize int) (is
 	return
 }
 
-func (this_ *SSHShellClient) ZModemWriteSSH(message []byte) {
+func (this_ *ShellClient) ZModemWriteSSH(message []byte) {
 	this_.SSHWrite(message)
 }
-func (this_ *SSHShellClient) ZModemWriteJSON(message *ZModemMessage) {
 
-}
 func ByteContains(x, y []byte) (n []byte, contain bool) {
 	index := bytes.Index(x, y)
 	if index == -1 {
@@ -186,82 +213,4 @@ func ByteContains(x, y []byte) (n []byte, contain bool) {
 	lastIndex := index + len(y)
 	n = append(x[:index], x[lastIndex:]...)
 	return n, true
-}
-
-func (this_ *SSHShellClient) listenUpload() {
-	if this_.UploadFile == nil {
-		this_.UploadFile = make(chan *UploadFile, 10)
-
-		go func() {
-			for {
-				select {
-				case uploadFile := <-this_.UploadFile:
-					this_.upload(uploadFile)
-				}
-			}
-
-		}()
-	}
-	return
-}
-
-func (this_ *SSHShellClient) upload(uploadFile *UploadFile) {
-
-	return
-}
-
-func SSHUpload(c *gin.Context) (res interface{}, err error) {
-	token := c.PostForm("token")
-	if token == "" {
-		err = errors.New("token获取失败")
-		return
-	}
-	client := SSHShellCache[token]
-	if client == nil {
-		err = errors.New("SSH会话丢失")
-		return
-	}
-	file, err := c.FormFile("file")
-	if err != nil {
-		return
-	}
-
-	uploadFile := &UploadFile{
-		File:     file,
-		FullPath: c.PostForm("fullPath"),
-	}
-	client.UploadFile <- uploadFile
-
-	return
-}
-
-func SSHDownload(data map[string]string, c *gin.Context) (err error) {
-
-	token := data["token"]
-	if token == "" {
-		err = errors.New("token获取失败")
-		return
-	}
-	place := data["place"]
-	if place == "" {
-		err = errors.New("place获取失败")
-		return
-	}
-	path := data["path"]
-	if path == "" {
-		err = errors.New("path获取失败")
-		return
-	}
-	client := SSHSftpCache[token]
-	if client == nil {
-		err = errors.New("SSH会话丢失")
-		return
-	}
-	if place == "local" {
-		err = client.localDownload(c, path)
-	} else if place == "remote" {
-		err = client.remoteDownload(c, path)
-	}
-
-	return
 }

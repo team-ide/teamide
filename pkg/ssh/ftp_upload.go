@@ -1,4 +1,4 @@
-package toolbox
+package ssh
 
 import (
 	"errors"
@@ -26,7 +26,7 @@ func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 		err = errors.New("workId获取失败")
 		return
 	}
-	client := SSHSftpCache[token]
+	client := SftpCache[token]
 	if client == nil {
 		err = errors.New("FTP会话丢失")
 		return
@@ -65,7 +65,7 @@ func SFTPDownload(data map[string]string, c *gin.Context) (err error) {
 		err = errors.New("path获取失败")
 		return
 	}
-	client := SSHSftpCache[token]
+	client := SftpCache[token]
 	if client == nil {
 		err = errors.New("SSH会话丢失")
 		return

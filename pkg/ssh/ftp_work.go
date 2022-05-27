@@ -1,4 +1,4 @@
-package toolbox
+package ssh
 
 import (
 	"encoding/json"
@@ -115,7 +115,7 @@ type Uploading struct {
 	SuccessSize int64  `json:"successSize"`
 }
 
-func (this_ *SSHSftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmInfo, err error) {
+func (this_ *SftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmInfo, err error) {
 
 	if this_.confirmMap == nil {
 		this_.confirmMap = map[string]chan *ConfirmInfo{}
@@ -127,13 +127,11 @@ func (this_ *SSHSftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmI
 	this_.confirmMap[confirmInfo.ConfirmId] = make(chan *ConfirmInfo, 1)
 	bs, err := json.Marshal(confirmInfo)
 	if err != nil {
-		fmt.Println("call confirm to json err:", err)
+		util.Logger.Error("call confirm to json err error", zap.Error(err))
 		return
 	}
 	this_.WSWrite(bs)
-	//fmt.Println("等待[", confirmInfo.ConfirmId, "]结果")
 	res = <-this_.confirmMap[confirmInfo.ConfirmId]
-	//fmt.Println("接收[", confirmInfo.ConfirmId, "]结果", res)
 
 	close(this_.confirmMap[confirmInfo.ConfirmId])
 	delete(this_.confirmMap, confirmInfo.ConfirmId)
@@ -141,7 +139,7 @@ func (this_ *SSHSftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmI
 
 }
 
-func (this_ *SSHSftpClient) callProgress(request *SFTPRequest, progress interface{}) {
+func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}) {
 	for {
 		time.Sleep(100 * time.Millisecond)
 
@@ -187,7 +185,7 @@ func (this_ *SSHSftpClient) callProgress(request *SFTPRequest, progress interfac
 
 		bs, err := json.Marshal(out)
 		if err != nil {
-			fmt.Println("sftp upload progress to json err:", err)
+			util.Logger.Error("sftp upload progress to json err", zap.Error(err))
 			continue
 		}
 		this_.WSWrite(bs)
@@ -198,16 +196,14 @@ func (this_ *SSHSftpClient) callProgress(request *SFTPRequest, progress interfac
 	}
 }
 
-func (this_ *SSHSftpClient) work(request *SFTPRequest) {
+func (this_ *SftpClient) work(request *SFTPRequest) {
 	response := &SFTPResponse{}
 	var err error
 	switch request.Work {
 	case "confirmResult":
-		//fmt.Println("WS 收到[", request.ConfirmId, "]结果", request)
 		if this_.confirmMap == nil {
 			return
 		}
-		//fmt.Println("WS 通知[", request.ConfirmId, "]携程", request)
 		this_.confirmMap[request.ConfirmId] <- &ConfirmInfo{
 			ConfirmId: request.ConfirmId,
 			IsCancel:  request.IsCancel,
@@ -227,7 +223,7 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 			break
 		}
 		progress := &UploadProgress{
-			StartTime: GetNowTime(),
+			StartTime: util.GetNowTime(),
 		}
 		go this_.callProgress(request, progress)
 		if request.Place == "local" {
@@ -245,13 +241,13 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 			break
 		}
 		progress := &CopyProgress{
-			StartTime: GetNowTime(),
+			StartTime: util.GetNowTime(),
 		}
 		go this_.callProgress(request, progress)
 		response, err = this_.copy(request, progress)
 	case "remove":
 		progress := &RemoveProgress{
-			StartTime: GetNowTime(),
+			StartTime: util.GetNowTime(),
 		}
 		go this_.callProgress(request, progress)
 		if request.Place == "local" {
@@ -270,7 +266,7 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 		response = &SFTPResponse{}
 	}
 	if err != nil {
-		this_.Logger.Error("ssh ftp work{"+request.Work+"} error", zap.Error(err))
+		util.Logger.Error("ssh ftp work{"+request.Work+"} error", zap.Error(err))
 		response.Msg = err.Error()
 	}
 	response.Work = request.Work
@@ -283,7 +279,7 @@ func (this_ *SSHSftpClient) work(request *SFTPRequest) {
 	return
 }
 
-func (this_ *SSHSftpClient) localUpdate(request *SFTPRequest, progress *UploadProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) localUpdate(request *SFTPRequest, progress *UploadProgress) (response *SFTPResponse, err error) {
 
 	progress.StartTime = util.GetNowTime()
 	progress.Count = 1
@@ -363,7 +359,7 @@ func (this_ *SSHSftpClient) localUpdate(request *SFTPRequest, progress *UploadPr
 	return
 }
 
-func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *UploadProgress) (response *SFTPResponse, err error) {
 
 	progress.StartTime = util.GetNowTime()
 	progress.Count = 1
@@ -450,7 +446,7 @@ func (this_ *SSHSftpClient) remoteUpdate(request *SFTPRequest, progress *UploadP
 	return
 }
 
-func (this_ *SSHSftpClient) localDownload(c *gin.Context, path string) (err error) {
+func (this_ *SftpClient) localDownload(c *gin.Context, path string) (err error) {
 
 	var fileName string
 	var fileSize int64
@@ -484,7 +480,7 @@ func (this_ *SSHSftpClient) localDownload(c *gin.Context, path string) (err erro
 	return
 }
 
-func (this_ *SSHSftpClient) remoteDownload(c *gin.Context, path string) (err error) {
+func (this_ *SftpClient) remoteDownload(c *gin.Context, path string) (err error) {
 
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.newSftp()
@@ -525,7 +521,7 @@ func (this_ *SSHSftpClient) remoteDownload(c *gin.Context, path string) (err err
 	return
 }
 
-func (this_ *SSHSftpClient) copy(request *SFTPRequest, progress *CopyProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) copy(request *SFTPRequest, progress *CopyProgress) (response *SFTPResponse, err error) {
 	defer func() {
 		progress.EndTime = util.GetNowTime()
 	}()
@@ -584,7 +580,7 @@ func closeIfCloser(obj interface{}) {
 	}
 }
 
-func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace string, toPath string, sftpClient *sftp.Client, progress *CopyProgress) (err error) {
+func (this_ *SftpClient) copyAll(fromPlace string, fromPath string, toPlace string, toPath string, sftpClient *sftp.Client, progress *CopyProgress) (err error) {
 
 	var isDir bool
 	var fileName string
@@ -752,7 +748,7 @@ func (this_ *SSHSftpClient) copyAll(fromPlace string, fromPath string, toPlace s
 	return
 }
 
-func (this_ *SSHSftpClient) localRemove(request *SFTPRequest, progress *RemoveProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) localRemove(request *SFTPRequest, progress *RemoveProgress) (response *SFTPResponse, err error) {
 	defer func() {
 		progress.EndTime = util.GetNowTime()
 	}()
@@ -775,7 +771,7 @@ func (this_ *SSHSftpClient) localRemove(request *SFTPRequest, progress *RemovePr
 	return
 }
 
-func (this_ *SSHSftpClient) localRemoveAll(path string, progress *RemoveProgress) (err error) {
+func (this_ *SftpClient) localRemoveAll(path string, progress *RemoveProgress) (err error) {
 	var isDir bool
 
 	var info os.FileInfo
@@ -807,7 +803,7 @@ func (this_ *SSHSftpClient) localRemoveAll(path string, progress *RemoveProgress
 	return
 }
 
-func (this_ *SSHSftpClient) fileCount(place string, path string, sftpClient *sftp.Client) (fileCount int64, fileSize int64, err error) {
+func (this_ *SftpClient) fileCount(place string, path string, sftpClient *sftp.Client) (fileCount int64, fileSize int64, err error) {
 	var isDir bool
 
 	var thisFileSize int64
@@ -875,7 +871,7 @@ func (this_ *SSHSftpClient) fileCount(place string, path string, sftpClient *sft
 	return
 }
 
-func (this_ *SSHSftpClient) fileSearch(place string, rootDir, searchPath string, pattern string, fileList *[]*SFTPFile, searchMaxCount int, sftpClient *sftp.Client) (err error) {
+func (this_ *SftpClient) fileSearch(place string, rootDir, searchPath string, pattern string, fileList *[]*SFTPFile, searchMaxCount int, sftpClient *sftp.Client) (err error) {
 	if searchMaxCount > 0 && len(*fileList) >= searchMaxCount {
 		return
 	}
@@ -968,7 +964,7 @@ func (this_ *SSHSftpClient) fileSearch(place string, rootDir, searchPath string,
 	return
 }
 
-func (this_ *SSHSftpClient) remoteRemove(request *SFTPRequest, progress *RemoveProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) remoteRemove(request *SFTPRequest, progress *RemoveProgress) (response *SFTPResponse, err error) {
 	defer func() {
 		progress.EndTime = util.GetNowTime()
 	}()
@@ -997,7 +993,7 @@ func (this_ *SSHSftpClient) remoteRemove(request *SFTPRequest, progress *RemoveP
 	return
 }
 
-func (this_ *SSHSftpClient) remoteRemoveAll(path string, sftpClient *sftp.Client, progress *RemoveProgress) (err error) {
+func (this_ *SftpClient) remoteRemoveAll(path string, sftpClient *sftp.Client, progress *RemoveProgress) (err error) {
 	var isDir bool
 
 	var info os.FileInfo
@@ -1029,7 +1025,7 @@ func (this_ *SSHSftpClient) remoteRemoveAll(path string, sftpClient *sftp.Client
 	return
 }
 
-func (this_ *SSHSftpClient) localRename(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) localRename(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.OldPath,
 		Dir:  request.Dir,
@@ -1061,7 +1057,7 @@ func (this_ *SSHSftpClient) localRename(request *SFTPRequest) (response *SFTPRes
 	return
 }
 
-func (this_ *SSHSftpClient) remoteRename(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) remoteRename(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.OldPath,
 		Dir:  request.Dir,
@@ -1101,7 +1097,7 @@ func (this_ *SSHSftpClient) remoteRename(request *SFTPRequest) (response *SFTPRe
 	return
 }
 
-func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) localFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Files: []*SFTPFile{
 			{
@@ -1210,7 +1206,7 @@ func (this_ *SSHSftpClient) localFiles(request *SFTPRequest) (response *SFTPResp
 	return
 }
 
-func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Files: []*SFTPFile{
 			{
@@ -1312,7 +1308,7 @@ func (this_ *SSHSftpClient) remoteFiles(request *SFTPRequest) (response *SFTPRes
 	return
 }
 
-func (this_ *SSHSftpClient) localReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) LocalReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.Path,
 	}
@@ -1345,7 +1341,7 @@ func (this_ *SSHSftpClient) localReadText(request *SFTPRequest) (response *SFTPR
 	return
 }
 
-func (this_ *SSHSftpClient) remoteReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) RemoteReadText(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.Path,
 	}
@@ -1384,7 +1380,7 @@ func (this_ *SSHSftpClient) remoteReadText(request *SFTPRequest) (response *SFTP
 	return
 }
 
-func (this_ *SSHSftpClient) localSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) LocalSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.Path,
 	}
@@ -1412,7 +1408,7 @@ func (this_ *SSHSftpClient) localSaveText(request *SFTPRequest) (response *SFTPR
 	return
 }
 
-func (this_ *SSHSftpClient) remoteSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) RemoteSaveText(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{
 		Path: request.Path,
 	}
@@ -1441,7 +1437,7 @@ func (this_ *SSHSftpClient) remoteSaveText(request *SFTPRequest) (response *SFTP
 
 	_, err = f.Write([]byte(request.Text))
 	if err != nil {
-		fmt.Println("文件:"+request.Path+",写入异常", err)
+		util.Logger.Error("文件:"+request.Path+",写入异常", zap.Error(err))
 		return
 	}
 	return
