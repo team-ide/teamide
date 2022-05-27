@@ -1,13 +1,9 @@
 package toolbox
 
 import (
-	"encoding/binary"
 	"encoding/json"
-	"strconv"
-	"strings"
 	"teamide/pkg/form"
-
-	"github.com/Shopify/sarama"
+	"teamide/pkg/kafka"
 )
 
 func init() {
@@ -95,6 +91,29 @@ func init() {
 	AddWorker(worker_)
 }
 
+func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {
+	key := "kafka-" + kafkaConfig.Address
+	var service Service
+	service, err = GetService(key, func() (res Service, err error) {
+		var s *kafka.SaramaService
+		s, err = kafka.CreateKafkaService(kafkaConfig)
+		if err != nil {
+			return
+		}
+		_, err = s.GetTopics()
+		if err != nil {
+			return
+		}
+		res = s
+		return
+	})
+	if err != nil {
+		return
+	}
+	res = service.(*kafka.SaramaService)
+	return
+}
+
 type KafkaBaseRequest struct {
 	GroupId           string `json:"groupId"`
 	Topic             string `json:"topic"`
@@ -108,55 +127,33 @@ type KafkaBaseRequest struct {
 	Count     int32  `json:"count"`
 	KeyType   string `json:"keyType"`
 	ValueType string `json:"valueType"`
-
-	Headers []KafkaMessageHeader `json:"headers"`
-	Key     string               `json:"key"`
-	Value   string               `json:"value"`
-}
-
-type KafkaMessageHeader struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
-type KafkaMessage struct {
-	Key       interface{}          `json:"key"`
-	Value     interface{}          `json:"value"`
-	Topic     string               `json:"topic"`
-	Partition int32                `json:"partition"`
-	Offset    int64                `json:"offset"`
-	Headers   []KafkaMessageHeader `json:"headers"`
-}
-
-type KafkaConfig struct {
-	Address string `json:"address"`
 }
 
 func kafkaWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
-	var kafkaConfig KafkaConfig
-	var bs []byte
-	bs, err = json.Marshal(config)
+	var kafkaConfig kafka.Config
+	var configBS []byte
+	configBS, err = json.Marshal(config)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(bs, &kafkaConfig)
+	err = json.Unmarshal(configBS, &kafkaConfig)
 	if err != nil {
 		return
 	}
 
-	var service *KafkaService
+	var service *kafka.SaramaService
 	service, err = getKafkaService(kafkaConfig)
 	if err != nil {
 		return
 	}
 
-	bs, err = json.Marshal(data)
+	dataBS, err := json.Marshal(data)
 	if err != nil {
 		return
 	}
 	request := &KafkaBaseRequest{}
-	err = json.Unmarshal(bs, request)
+	err = json.Unmarshal(dataBS, request)
 	if err != nil {
 		return
 	}
@@ -177,107 +174,20 @@ func kafkaWork(work string, config map[string]interface{}, data map[string]inter
 			return
 		}
 	case "pull":
-		kafkaMsgs, err := service.Pull(request.GroupId, []string{request.Topic}, request.PullSize, request.PullTimeout)
+		var msgList []*kafka.Message
+		msgList, err = service.Pull(request.GroupId, []string{request.Topic}, request.PullSize, request.PullTimeout, request.KeyType, request.ValueType)
 		if err != nil {
-			return nil, err
+			return
 		}
-		msgs := []KafkaMessage{}
-		for _, kafkaMsg := range kafkaMsgs {
-			var key interface{}
-			var value interface{}
-			if strings.ToLower(request.KeyType) == "string" {
-				key = sarama.StringEncoder(kafkaMsg.Key)
-			} else if strings.ToLower(request.KeyType) == "long" {
-				if len(kafkaMsg.Key) == 8 {
-					key = uint64(binary.BigEndian.Uint64(kafkaMsg.Key))
-				} else {
-					key = sarama.StringEncoder(kafkaMsg.Key)
-				}
-			} else {
-				key = sarama.ByteEncoder(kafkaMsg.Key)
-			}
-			if strings.ToLower(request.ValueType) == "string" {
-				value = sarama.StringEncoder(kafkaMsg.Value)
-			} else if strings.ToLower(request.ValueType) == "long" {
-				if len(kafkaMsg.Value) == 8 {
-					value = uint64(binary.BigEndian.Uint64(kafkaMsg.Value))
-				} else {
-					value = sarama.StringEncoder(kafkaMsg.Value)
-				}
-			} else {
-				value = sarama.ByteEncoder(kafkaMsg.Value)
-			}
-			msg := KafkaMessage{
-				Key:       key,
-				Value:     value,
-				Topic:     kafkaMsg.Topic,
-				Partition: kafkaMsg.Partition,
-				Offset:    kafkaMsg.Offset,
-			}
-			if kafkaMsg.Headers != nil {
-				for _, header := range kafkaMsg.Headers {
-					msg.Headers = append(msg.Headers, KafkaMessageHeader{Key: string(header.Key), Value: string(header.Value)})
-				}
-			}
-			msgs = append(msgs, msg)
-		}
-		res["msgs"] = msgs
+		res["msgList"] = msgList
 	case "push":
-		var key sarama.Encoder
-		var value sarama.Encoder
-		if request.Key != "" {
-			if strings.ToLower(request.KeyType) == "string" {
-				key = sarama.StringEncoder(request.Key)
-			} else if strings.ToLower(request.KeyType) == "long" {
-				longV, err := strconv.ParseInt(request.Key, 10, 64)
-				if err != nil {
-					return nil, err
-				}
-				uintV := uint64(longV)
-				bytes := make([]byte, 8)
-				binary.BigEndian.PutUint64(bytes, uintV)
-				key = sarama.ByteEncoder(bytes)
-			} else {
-				key = sarama.ByteEncoder(request.Key)
-			}
-		}
-		if request.Value != "" {
-			if strings.ToLower(request.ValueType) == "string" {
-				value = sarama.StringEncoder(request.Value)
-			} else if strings.ToLower(request.ValueType) == "long" {
-				longV, err := strconv.ParseInt(request.Value, 10, 64)
-				if err != nil {
-					return nil, err
-				}
-				uintV := uint64(longV)
-				bytes := make([]byte, 8)
-				binary.BigEndian.PutUint64(bytes, uintV)
-				value = sarama.ByteEncoder(bytes)
-			} else {
-				value = sarama.ByteEncoder(request.Value)
-			}
-		}
 
-		kafkaMsg := &sarama.ProducerMessage{}
-		kafkaMsg.Topic = request.Topic
-		kafkaMsg.Key = key
-		kafkaMsg.Value = value
-		if request.Partition >= 0 {
-			kafkaMsg.Partition = request.Partition
+		msg := &kafka.Message{}
+		err = json.Unmarshal(dataBS, msg)
+		if err != nil {
+			return
 		}
-		if request.Offset >= 0 {
-			kafkaMsg.Offset = request.Offset
-		}
-		if request.Headers != nil {
-			for _, one := range request.Headers {
-				kafkaMsg.Headers = append(kafkaMsg.Headers, sarama.RecordHeader{
-					Key:   []byte(one.Key),
-					Value: []byte(one.Value),
-				})
-			}
-		}
-
-		err = service.Push(kafkaMsg)
+		err = service.Push(msg)
 		if err != nil {
 			return nil, err
 		}

@@ -24,10 +24,10 @@ var (
 
 func getServerContext(configPath string) (serverContext *context.ServerContext) {
 	serverContext = &context.ServerContext{
-		IsStandAlone: true,
-		IsHtmlDev:    true,
-		RootDir:      "./",
-		UserHomeDir:  "./",
+		IsServer:    false,
+		IsHtmlDev:   true,
+		RootDir:     "./",
+		UserHomeDir: "./",
 	}
 	serverContext.HttpAesKey = "Q56hFAauWk18Gy2i"
 	var serverConfig *config.ServerConfig

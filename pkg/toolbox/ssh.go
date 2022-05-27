@@ -3,8 +3,9 @@ package toolbox
 import (
 	"encoding/json"
 	"errors"
-	"teamide/pkg/application/base"
 	"teamide/pkg/form"
+	"teamide/pkg/ssh"
+	"teamide/pkg/util"
 )
 
 func init() {
@@ -49,16 +50,12 @@ type SSHConfig struct {
 
 type SSHBaseRequest struct {
 	Token string `json:"token"`
-	*SFTPRequest
+	*ssh.SFTPRequest
 }
-
-var (
-	sshTokenCache = map[string]*SSHConfig{}
-)
 
 func sshWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
-	var sshConfig *SSHConfig
+	var sshConfig *ssh.Config
 	var bs []byte
 	bs, err = json.Marshal(config)
 	if err != nil {
@@ -82,21 +79,21 @@ func sshWork(work string, config map[string]interface{}, data map[string]interfa
 	res = map[string]interface{}{}
 	switch work {
 	case "createToken":
-		var token = base.GenerateUUID()
-		sshTokenCache[token] = sshConfig
+		var token = util.GenerateUUID()
+		ssh.TokenCache[token] = sshConfig
 		res["token"] = token
 	case "readText":
 		var token = request.Token
-		client := SSHSftpCache[token]
+		client := ssh.SftpCache[token]
 		if client == nil {
 			err = errors.New("FTP会话丢失")
 			return
 		}
-		var response *SFTPResponse
+		var response *ssh.SFTPResponse
 		if request.Place == "local" {
-			response, err = client.localReadText(request.SFTPRequest)
+			response, err = client.LocalReadText(request.SFTPRequest)
 		} else if request.Place == "remote" {
-			response, err = client.remoteReadText(request.SFTPRequest)
+			response, err = client.RemoteReadText(request.SFTPRequest)
 		}
 		if err != nil {
 			return
@@ -104,16 +101,16 @@ func sshWork(work string, config map[string]interface{}, data map[string]interfa
 		res["response"] = response
 	case "saveText":
 		var token = request.Token
-		client := SSHSftpCache[token]
+		client := ssh.SftpCache[token]
 		if client == nil {
 			err = errors.New("FTP会话丢失")
 			return
 		}
-		var response *SFTPResponse
+		var response *ssh.SFTPResponse
 		if request.Place == "local" {
-			response, err = client.localSaveText(request.SFTPRequest)
+			response, err = client.LocalSaveText(request.SFTPRequest)
 		} else if request.Place == "remote" {
-			response, err = client.remoteSaveText(request.SFTPRequest)
+			response, err = client.RemoteSaveText(request.SFTPRequest)
 		}
 		if err != nil {
 			return

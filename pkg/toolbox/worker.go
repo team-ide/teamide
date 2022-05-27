@@ -71,7 +71,7 @@ type Service interface {
 func startServiceTimer() {
 	for {
 		time.Sleep(1 * time.Second)
-		nowTime := GetNowTime()
+		nowTime := util.GetNowTime()
 		for key, one := range serviceCache {
 			if one.GetWaitTime() <= 0 {
 				continue

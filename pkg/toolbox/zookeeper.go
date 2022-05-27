@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"teamide/pkg/form"
+	"teamide/pkg/zookeeper"
 )
 
 func init() {
@@ -25,6 +26,29 @@ func init() {
 	AddWorker(worker_)
 }
 
+func getZKService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
+	key := "zookeeper-" + zkConfig.Address
+	var service Service
+	service, err = GetService(key, func() (res Service, err error) {
+		var s *zookeeper.ZKService
+		s, err = zookeeper.CreateZKService(zkConfig)
+		if err != nil {
+			return
+		}
+		_, err = s.Exists("/")
+		if err != nil {
+			return
+		}
+		res = s
+		return
+	})
+	if err != nil {
+		return
+	}
+	res = service.(*zookeeper.ZKService)
+	return
+}
+
 type ZookeeperBaseRequest struct {
 	Path string `json:"path"`
 	Data string `json:"data"`
@@ -32,29 +56,29 @@ type ZookeeperBaseRequest struct {
 
 func zkWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
-	var zkConfig ZKConfig
-	var bs []byte
-	bs, err = json.Marshal(config)
+	var zkConfig zookeeper.Config
+	var configBS []byte
+	configBS, err = json.Marshal(config)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(bs, &zkConfig)
+	err = json.Unmarshal(configBS, &zkConfig)
 	if err != nil {
 		return
 	}
 
-	var service *ZKService
+	var service *zookeeper.ZKService
 	service, err = getZKService(zkConfig)
 	if err != nil {
 		return
 	}
 
-	bs, err = json.Marshal(data)
+	dataBS, err := json.Marshal(data)
 	if err != nil {
 		return
 	}
 	request := &ZookeeperBaseRequest{}
-	err = json.Unmarshal(bs, request)
+	err = json.Unmarshal(dataBS, request)
 	if err != nil {
 		return
 	}

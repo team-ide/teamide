@@ -3,8 +3,8 @@ package toolbox
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"teamide/pkg/form"
+	"teamide/pkg/redis"
 	"teamide/pkg/util"
 )
 
@@ -43,14 +43,9 @@ type RedisBaseRequest struct {
 	TaskKey    string `json:"taskKey,omitempty"`
 }
 
-type RedisConfig struct {
-	Address string `json:"address"`
-	Auth    string `json:"auth"`
-}
-
 func redisWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
 
-	var redisConfig RedisConfig
+	var redisConfig redis.Config
 	var configBS []byte
 	configBS, err = json.Marshal(config)
 	if err != nil {
@@ -61,7 +56,7 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		return
 	}
 
-	var service RedisService
+	var service redis.Service
 	service, err = getRedisService(redisConfig)
 	if err != nil {
 		return
@@ -82,7 +77,7 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 	res = map[string]interface{}{}
 	switch work {
 	case "get":
-		var valueInfo RedisValueInfo
+		var valueInfo *redis.ValueInfo
 		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)
 		res["database"] = request.Database
 		res["key"] = request.Key
@@ -143,48 +138,44 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 
 		taskKey := util.GenerateUUID()
 
-		var redisImportTask = &redisImportTask{}
-		err = json.Unmarshal(dataBS, redisImportTask)
+		var importTask = &redis.ImportTask{}
+		err = json.Unmarshal(dataBS, importTask)
 		if err != nil {
 			return
 		}
 
-		redisImportTask.request = request
-		redisImportTask.Key = taskKey
-		redisImportTask.service = service
+		importTask.Key = taskKey
+		importTask.Service = service
 
-		addRedisImportTask(redisImportTask)
+		redis.StartImportTask(importTask)
 
 		res["taskKey"] = taskKey
 	case "importStatus":
-		redisImportTask := redisImportTaskCache[request.TaskKey]
-		res["task"] = redisImportTask
+		task := redis.GetImportTask(request.TaskKey)
+		res["task"] = task
 	case "importStop":
-		redisImportTask := redisImportTaskCache[request.TaskKey]
-		if redisImportTask != nil {
-			redisImportTask.Stop()
-		}
+		redis.StopImportTask(request.TaskKey)
 	case "importClean":
-		delete(redisImportTaskCache, request.TaskKey)
+		redis.CleanImportTask(request.TaskKey)
 	}
 	return
 }
 
-func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
+func getRedisService(redisConfig redis.Config) (res redis.Service, err error) {
 	key := "redis-" + redisConfig.Address
 	if redisConfig.Auth != "" {
 		key += "-" + util.GetMd5String(key+redisConfig.Auth)
 	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
-		var s RedisService
-		s, err = CreateRedisService(redisConfig)
+		var s redis.Service
+		s, err = redis.CreateService(redisConfig)
 		if err != nil {
 			return
 		}
 
 		ctx := context.TODO()
-		_, err = s.Get(ctx, 0, "_", 0, 0)
+		_, err = s.Exists(ctx, 0, "_")
 		if err != nil {
 			return
 		}
@@ -194,51 +185,6 @@ func getRedisService(redisConfig RedisConfig) (res RedisService, err error) {
 	if err != nil {
 		return
 	}
-	res = service.(RedisService)
+	res = service.(redis.Service)
 	return
-}
-
-func CreateRedisService(redisConfig RedisConfig) (service RedisService, err error) {
-	if !strings.Contains(redisConfig.Address, ",") && !strings.Contains(redisConfig.Address, ";") {
-		service, err = CreateRedisPoolService(redisConfig.Address, redisConfig.Auth)
-	} else {
-		var servers []string
-		if strings.Contains(redisConfig.Address, ",") {
-			servers = strings.Split(redisConfig.Address, ",")
-		} else if strings.Contains(redisConfig.Address, ";") {
-			servers = strings.Split(redisConfig.Address, ";")
-		} else {
-			servers = []string{redisConfig.Address}
-		}
-		service, err = CreateRedisClusterService(servers, redisConfig.Auth)
-	}
-	return
-}
-
-type RedisValueInfo struct {
-	ValueType  string      `json:"valueType"`
-	Value      interface{} `json:"value"`
-	ValueCount int64       `json:"valueCount"`
-	ValueStart int64       `json:"valueStart"`
-	ValueEnd   int64       `json:"valueEnd"`
-	Cursor     uint64      `json:"cursor"`
-}
-
-type RedisService interface {
-	GetWaitTime() int64
-	GetLastUseTime() int64
-	Stop()
-	Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error)
-	Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo RedisValueInfo, err error)
-	Set(ctx context.Context, database int, key string, value string) (err error)
-	SAdd(ctx context.Context, database int, key string, value string) (err error)
-	SRem(ctx context.Context, database int, key string, value string) (err error)
-	LPush(ctx context.Context, database int, key string, value string) (err error)
-	RPush(ctx context.Context, database int, key string, value string) (err error)
-	LSet(ctx context.Context, database int, key string, index int64, value string) (err error)
-	LRem(ctx context.Context, database int, key string, count int64, value string) (err error)
-	HSet(ctx context.Context, database int, key string, field string, value string) (err error)
-	HDel(ctx context.Context, database int, key string, field string) (err error)
-	Del(ctx context.Context, database int, key string) (count int, err error)
-	DelPattern(ctx context.Context, database int, key string) (count int, err error)
 }

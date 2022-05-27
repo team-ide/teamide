@@ -2,10 +2,10 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wxnacy/wgo/arrays"
 	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
+	"teamide/pkg/util"
 )
 
 func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
@@ -43,7 +43,7 @@ func (this_ *Api) getPowersByJWT(JWT *base.JWTBean) (powers []*base.PowerAction)
 		return
 	}
 	for _, power := range ps {
-		if arrays.ContainsString(psStrs, power.Action) >= 0 {
+		if util.ContainsString(psStrs, power.Action) >= 0 {
 			powers = append(powers, power)
 		}
 	}
@@ -73,7 +73,7 @@ func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
 			if !power.ShouldLogin {
 				continue
 			}
-			if arrays.ContainsString(userPowers, power.Action) >= 0 {
+			if util.ContainsString(userPowers, power.Action) >= 0 {
 				powers = append(powers, power.Action)
 			} else {
 				if strings.Index(power.Action, "user_") == 0 {
