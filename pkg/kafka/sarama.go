@@ -355,11 +355,11 @@ func MessageToProducerMessage(msg *Message) (producerMessage *sarama.ProducerMes
 			if err != nil {
 				return nil, err
 			}
-			bytes := make([]byte, 8)
+			var bytes = make([]byte, 8)
 			binary.BigEndian.PutUint64(bytes, uint64(longV))
 			key = sarama.ByteEncoder(bytes)
 		} else {
-			key = sarama.StringEncoder(msg.Key)
+			key = sarama.ByteEncoder(msg.Key)
 		}
 	}
 	if msg.Value != "" {
@@ -368,7 +368,7 @@ func MessageToProducerMessage(msg *Message) (producerMessage *sarama.ProducerMes
 			if err != nil {
 				return nil, err
 			}
-			bytes := make([]byte, 8)
+			var bytes = make([]byte, 8)
 			binary.BigEndian.PutUint64(bytes, uint64(longV))
 			value = sarama.ByteEncoder(bytes)
 		} else {
@@ -407,16 +407,26 @@ func ConsumerMessageToMessage(keyType string, valueType string, consumerMessage 
 	var value string
 
 	if consumerMessage.Key != nil && len(consumerMessage.Key) > 0 {
-		if strings.ToLower(keyType) == "long" {
-			key = strconv.FormatInt(int64(binary.BigEndian.Uint64(consumerMessage.Key)), 10)
-		} else {
+		if len(consumerMessage.Key) == 8 {
+			Uint64Key := binary.BigEndian.Uint64(consumerMessage.Key)
+			int64Key := int64(Uint64Key)
+			if int64Key >= 0 {
+				key = strconv.FormatInt(int64Key, 10)
+			}
+		}
+		if key == "" {
 			key = string(consumerMessage.Key)
 		}
 	}
 	if consumerMessage.Value != nil && len(consumerMessage.Value) > 0 {
-		if strings.ToLower(valueType) == "long" {
-			value = strconv.FormatInt(int64(binary.BigEndian.Uint64(consumerMessage.Value)), 10)
-		} else {
+		if len(consumerMessage.Value) == 8 {
+			Uint64Value := binary.BigEndian.Uint64(consumerMessage.Value)
+			int64Value := int64(Uint64Value)
+			if int64Value >= 0 {
+				value = strconv.FormatInt(int64Value, 10)
+			}
+		}
+		if value == "" {
 			value = string(consumerMessage.Value)
 		}
 	}

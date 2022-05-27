@@ -119,8 +119,7 @@ let validateField = function (data, field) {
         if (value != null) {
             if (field.isNumber) {
                 data[field.name] = Number(value);
-            }
-            if (field.type == 'json') {
+            } else if (field.type == 'json') {
                 let jsonValue = null;
                 if (field.jsonStringValue != "") {
                     try {

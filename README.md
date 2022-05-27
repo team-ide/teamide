@@ -277,6 +277,8 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 
 ![avatar](doc/toolbox-kafka.png)
 
+![avatar](doc/toolbox-kafka-data.png)
+
 #### Toolbox SSH、SFTP（完成）
 
 配置Linux服务器SSH连接，在线连接服务执行命令
@@ -320,3 +322,5 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 连接Elasticsearch，编辑索引，增删改查索引数据等
 
 ![avatar](doc/toolbox-elasticsearch.png)
+
+![avatar](doc/toolbox-elasticsearch-data.png)

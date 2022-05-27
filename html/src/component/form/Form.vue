@@ -153,6 +153,7 @@ export default {
             value: jsonString,
             onChange: () => {},
           };
+          one.jsonStringValue = jsonString;
         } else if (type == "jsonView") {
           let json = this.formData[one.bindName];
           let jsonString = null;
