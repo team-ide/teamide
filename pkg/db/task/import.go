@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"strings"
-	"teamide/pkg/data"
+	"teamide/pkg/data_engine"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"time"
@@ -68,7 +68,7 @@ type ImportTask struct {
 	IsStop           bool                   `json:"isStop"`
 	GenerateParam    *db.GenerateParam      `json:"-"`
 	Service          *db.Service            `json:"-"`
-	taskList         []*data.StrategyTask
+	taskList         []*data_engine.StrategyTask
 }
 
 func (this_ *ImportTask) Stop() {
@@ -131,15 +131,15 @@ func (this_ *ImportTask) doStrategyData(database, table string, columnList []*db
 		batchNumber = 100
 	}
 
-	task := &data.StrategyTask{}
+	task := &data_engine.StrategyTask{}
 
-	taskStrategyData := &data.StrategyData{}
+	taskStrategyData := &data_engine.StrategyData{}
 
 	task.StrategyDataList = append(task.StrategyDataList, taskStrategyData)
 
 	taskStrategyData.Count = strategyData.Count
 	for _, strategyColumn := range strategyData.ColumnList {
-		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data_engine.StrategyDataField{
 			Name:  strategyColumn.Name,
 			Value: strategyColumn.Value,
 		})

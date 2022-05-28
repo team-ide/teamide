@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
-	"teamide/pkg/data"
+	"teamide/pkg/data_engine"
 	"teamide/pkg/util"
 	"time"
 )
@@ -69,7 +69,7 @@ type ImportTask struct {
 	UseTime          int64           `json:"useTime"`
 	IsStop           bool            `json:"isStop"`
 	Service          Service         `json:"-"`
-	taskList         []*data.StrategyTask
+	taskList         []*data_engine.StrategyTask
 }
 
 func (this_ *ImportTask) Stop() {
@@ -156,60 +156,60 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 		return
 	}
 
-	task := &data.StrategyTask{}
+	task := &data_engine.StrategyTask{}
 
-	taskStrategyData := &data.StrategyData{}
+	taskStrategyData := &data_engine.StrategyData{}
 
 	task.StrategyDataList = append(task.StrategyDataList, taskStrategyData)
 
 	taskStrategyData.Count = strategyData.Count
-	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data_engine.StrategyDataField{
 		Name:  "key",
 		Value: strategyData.Key,
 	})
-	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data_engine.StrategyDataField{
 		Name:  "valueType",
 		Value: `"` + strategyData.ValueType + `"`,
 	})
 	switch strategyData.ValueType {
 	case "string":
-		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data_engine.StrategyDataField{
 			Name:  "value",
 			Value: strategyData.Value,
 		})
 	}
-	var newValueTaskStrategyData = func(key string) (valueTaskStrategyData *data.StrategyData) {
-		valueTaskStrategyData = &data.StrategyData{}
+	var newValueTaskStrategyData = func(key string) (valueTaskStrategyData *data_engine.StrategyData) {
+		valueTaskStrategyData = &data_engine.StrategyData{}
 		valueTaskStrategyData.IndexName = "_$value_index"
 		valueTaskStrategyData.Count = strategyData.ValueCount
 
-		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 			Name:  "key",
 			Value: `"` + key + `"`,
 		})
 
-		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 			Name:  "valueType",
 			Value: `"` + strategyData.ValueType + `"`,
 		})
 
 		switch strategyData.ValueType {
 		case "list":
-			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 				Name:  "value",
 				Value: strategyData.ListValue,
 			})
 		case "set":
-			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 				Name:  "value",
 				Value: strategyData.SetValue,
 			})
 		case "hash":
-			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 				Name:  "hashKey",
 				Value: strategyData.HashKey,
 			})
-			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data_engine.StrategyDataField{
 				Name:  "value",
 				Value: strategyData.HashValue,
 			})
@@ -266,7 +266,7 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 				this_.SuccessCount++
 			} else {
 
-				valueTask := &data.StrategyTask{}
+				valueTask := &data_engine.StrategyTask{}
 				this_.taskList = append(this_.taskList, valueTask)
 				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
 				valueTask.OnData = task.OnData
@@ -285,7 +285,7 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 				this_.SuccessCount++
 
 			} else {
-				valueTask := &data.StrategyTask{}
+				valueTask := &data_engine.StrategyTask{}
 				this_.taskList = append(this_.taskList, valueTask)
 				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
 				valueTask.OnData = task.OnData
@@ -308,7 +308,7 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 				}
 				this_.SuccessCount++
 			} else {
-				valueTask := &data.StrategyTask{}
+				valueTask := &data_engine.StrategyTask{}
 				this_.taskList = append(this_.taskList, valueTask)
 				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
 				valueTask.OnData = task.OnData
