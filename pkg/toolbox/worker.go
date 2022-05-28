@@ -19,17 +19,20 @@ type Worker struct {
 }
 
 var (
-	workers      *[]*Worker         = &[]*Worker{}
-	serviceCache map[string]Service = map[string]Service{}
+	workers      = &[]*Worker{}
+	serviceCache = map[string]Service{}
 	lock         sync.Mutex
 )
 
 func init() {
 	go startServiceTimer()
-}
-
-func AddWorker(worker *Worker) {
-	*workers = append(*workers, worker)
+	*workers = append(*workers, databaseWorker())
+	*workers = append(*workers, sshWorker())
+	*workers = append(*workers, redisWorker())
+	*workers = append(*workers, zookeeperWorker())
+	*workers = append(*workers, elasticsearchWorker())
+	*workers = append(*workers, kafkaWorker())
+	*workers = append(*workers, otherWorker())
 }
 
 func GetWorkers() (res []*Worker) {

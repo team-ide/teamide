@@ -90,6 +90,7 @@
                 <span
                   class="tm-link color-green mgl-10"
                   title="新增"
+                  v-if="toolboxType.name != 'other'"
                   @click="toolbox.toInsert(toolboxType, selectGroup)"
                 >
                   <i class="mdi mdi-plus ft-14"></i>
@@ -113,6 +114,7 @@
                 <span
                   class="tm-link color-green"
                   title="新增"
+                  v-if="toolboxType.name != 'other'"
                   @click="toolbox.toInsert(toolboxType, selectGroup)"
                 >
                   新增
@@ -196,13 +198,17 @@ export default {
       groupList.push({
         groupId: null,
         name: "未分组",
-        context: {},
+        context: {
+          other: context["other"] || [],
+        },
       });
       groups.forEach((one) => {
         groupList.push({
           groupId: one.groupId,
           name: one.name,
-          context: {},
+          context: {
+            other: context["other"] || [],
+          },
         });
       });
       let selectGroup = groupList[0];
@@ -214,6 +220,9 @@ export default {
         });
       }
       this.toolbox.types.forEach((type) => {
+        if (type.name == "other") {
+          return;
+        }
         let list = context[type.name] || [];
         groupList.forEach((one) => {
           let groupToolboxList = [];
@@ -265,6 +274,9 @@ export default {
       }
     },
     dataContextmenu(toolboxType, toolboxData) {
+      if (toolboxType.name == "other") {
+        return;
+      }
       let menus = [];
       menus.push({
         header: toolboxType.text + ":" + toolboxData.name,

@@ -8,7 +8,7 @@ import (
 	"teamide/pkg/util"
 )
 
-func init() {
+func redisWorker() *Worker {
 	worker_ := &Worker{
 		Name: "redis",
 		Text: "Redis",
@@ -25,7 +25,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 type RedisBaseRequest struct {

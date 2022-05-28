@@ -61,6 +61,16 @@
         >
         </ToolboxSSHEditor>
       </template>
+      <template v-else-if="toolboxType.name == 'other'">
+        <ToolboxOtherEditor
+          :source="source"
+          :toolbox="toolbox"
+          :toolboxType="toolboxType"
+          :extend="extend"
+          :wrap="wrap"
+        >
+        </ToolboxOtherEditor>
+      </template>
     </template>
   </div>
 </template>

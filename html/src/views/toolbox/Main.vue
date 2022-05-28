@@ -170,6 +170,14 @@ export default {
       this.toolbox.hideToolboxType();
 
       let extend = {};
+
+      if (toolboxData && toolboxData.toolboxType) {
+        let toolboxType = this.getToolboxType(toolboxData.toolboxType);
+        if (toolboxType && toolboxType.name == "other") {
+          extend = this.toolbox.getOptionJSON(toolboxData.option);
+        }
+      }
+
       this.openByToolboxData(toolboxData, extend, fromTab);
     },
     toCopyTab(tab) {

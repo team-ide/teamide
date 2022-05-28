@@ -6,7 +6,7 @@ import (
 	"teamide/pkg/form"
 )
 
-func init() {
+func elasticsearchWorker() *Worker {
 	worker_ := &Worker{
 		Name: "elasticsearch",
 		Text: "Elasticsearch",
@@ -53,7 +53,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {

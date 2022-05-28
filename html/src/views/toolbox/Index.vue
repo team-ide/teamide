@@ -101,6 +101,8 @@ export default {
       this.source.toolbox.toInsertGroup = this.toInsertGroup;
       this.source.toolbox.toUpdateGroup = this.toUpdateGroup;
       this.source.toolbox.toDeleteGroup = this.toDeleteGroup;
+      this.source.toolbox.getOptionJSON = this.getOptionJSON;
+
       this.source.toolbox.showSwitchToolboxType = () => {
         this.$refs.ToolboxType.showSwitch();
       };

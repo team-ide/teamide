@@ -6,7 +6,7 @@ import (
 	"teamide/pkg/kafka"
 )
 
-func init() {
+func kafkaWorker() *Worker {
 	worker_ := &Worker{
 		Name: "kafka",
 		Text: "Kafka",
@@ -88,7 +88,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {

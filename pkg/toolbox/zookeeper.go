@@ -6,7 +6,7 @@ import (
 	"teamide/pkg/zookeeper"
 )
 
-func init() {
+func zookeeperWorker() *Worker {
 	worker_ := &Worker{
 		Name: "zookeeper",
 		Text: "Zookeeper",
@@ -23,7 +23,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 func getZKService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {

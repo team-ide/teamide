@@ -45,23 +45,6 @@ func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error)
 	return
 }
 
-// GetGroup 查询单个
-func (this_ *ToolboxService) GetGroup(groupId int64) (res *ToolboxGroupModel, err error) {
-	res = &ToolboxGroupModel{}
-
-	sql := `SELECT * FROM ` + TableToolboxGroup + ` WHERE groupId=? `
-	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{groupId}, res)
-	if err != nil {
-		this_.Logger.Error("GetGroup Error", zap.Error(err))
-		return
-	}
-
-	if !find {
-		res = nil
-	}
-	return
-}
-
 // Query 查询
 func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
 
@@ -93,30 +76,6 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 	return
 }
 
-// QueryGroup 查询
-func (this_ *ToolboxService) QueryGroup(toolboxGroup *ToolboxGroupModel) (res []*ToolboxGroupModel, err error) {
-
-	var values []interface{}
-	sql := `SELECT * FROM ` + TableToolboxGroup + ` WHERE 1=1 `
-
-	if toolboxGroup.UserId != 0 {
-		sql += " AND userId = ?"
-		values = append(values, toolboxGroup.UserId)
-	}
-	if toolboxGroup.Name != "" {
-		sql += " AND name like ?"
-		values = append(values, fmt.Sprint("%", toolboxGroup.Name, "%"))
-	}
-
-	err = this_.DatabaseWorker.Query(sql, values, &res)
-	if err != nil {
-		this_.Logger.Error("QueryGroup Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
 // CheckUserToolboxExist 查询
 func (this_ *ToolboxService) CheckUserToolboxExist(toolboxType string, name string, userId int64) (res bool, err error) {
 
@@ -125,22 +84,6 @@ func (this_ *ToolboxService) CheckUserToolboxExist(toolboxType string, name stri
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{userId, toolboxType, name})
 	if err != nil {
 		this_.Logger.Error("CheckUserToolboxExist Error", zap.Error(err))
-		return
-	}
-
-	res = count > 0
-
-	return
-}
-
-// CheckUserToolboxGroupExist 查询
-func (this_ *ToolboxService) CheckUserToolboxGroupExist(name string, userId int64) (res bool, err error) {
-
-	sql := `SELECT COUNT(1) FROM ` + TableToolboxGroup + ` WHERE userId = ?  AND name = ?`
-
-	count, err := this_.DatabaseWorker.Count(sql, []interface{}{userId, name})
-	if err != nil {
-		this_.Logger.Error("CheckUserToolboxGroupExist Error", zap.Error(err))
 		return
 	}
 
@@ -199,35 +142,6 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolbox.ToolboxId, toolbox.ToolboxType, toolbox.Name, toolbox.Comment, toolbox.Option, toolbox.UserId, toolbox.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
-// InsertGroup 新增
-func (this_ *ToolboxService) InsertGroup(toolboxGroup *ToolboxGroupModel) (rowsAffected int64, err error) {
-
-	checked, err := this_.CheckUserToolboxGroupExist(toolboxGroup.Name, toolboxGroup.UserId)
-	if checked {
-		err = errors.New(fmt.Sprint("工具分组[", toolboxGroup.Name, "]已存在"))
-		return
-	}
-	if toolboxGroup.GroupId == 0 {
-		toolboxGroup.GroupId, err = this_.idService.GetNextID(module_id.IDTypeToolboxGroup)
-		if err != nil {
-			return
-		}
-	}
-	if toolboxGroup.CreateTime.IsZero() {
-		toolboxGroup.CreateTime = time.Now()
-	}
-
-	sql := `INSERT INTO ` + TableToolboxGroup + `(groupId, name, comment, option, userId, createTime) VALUES (?, ?, ?, ?, ?, ?) `
-
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxGroup.GroupId, toolboxGroup.Name, toolboxGroup.Comment, toolboxGroup.Option, toolboxGroup.UserId, toolboxGroup.CreateTime})
-	if err != nil {
-		this_.Logger.Error("InsertGroup Error", zap.Error(err))
 		return
 	}
 
@@ -298,95 +212,6 @@ func (this_ *ToolboxService) Close(openId int64) (rowsAffected int64, err error)
 		this_.Logger.Error("CloseOpenTabs Error", zap.Error(err))
 		return
 	}
-	return
-}
-
-// OpenTab 新增
-func (this_ *ToolboxService) OpenTab(toolboxOpenTab *ToolboxOpenTabModel) (rowsAffected int64, err error) {
-
-	if toolboxOpenTab.CreateTime.IsZero() {
-		toolboxOpenTab.CreateTime = time.Now()
-	}
-	if toolboxOpenTab.OpenTime.IsZero() {
-		toolboxOpenTab.OpenTime = time.Now()
-	}
-	if toolboxOpenTab.TabId != 0 {
-		if toolboxOpenTab.UpdateTime.IsZero() {
-			toolboxOpenTab.UpdateTime = time.Now()
-		}
-
-		sql := `UPDATE ` + TableToolboxOpenTab + ` SET openTime=?,updateTime=? WHERE tabId=? `
-		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.OpenTime, toolboxOpenTab.UpdateTime, toolboxOpenTab.TabId})
-		if err != nil {
-			this_.Logger.Error("OpenTab Error", zap.Error(err))
-			return
-		}
-	} else {
-		toolboxOpenTab.TabId, err = this_.idService.GetNextID(module_id.IDTypeToolboxOpenTab)
-		if err != nil {
-			return
-		}
-
-		sql := `INSERT INTO ` + TableToolboxOpenTab + `(tabId, openId, userId, toolboxId, extend, createTime, openTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
-
-		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.TabId, toolboxOpenTab.OpenId, toolboxOpenTab.UserId, toolboxOpenTab.ToolboxId, toolboxOpenTab.Extend, toolboxOpenTab.CreateTime, toolboxOpenTab.OpenTime})
-		if err != nil {
-			this_.Logger.Error("OpenTab Error", zap.Error(err))
-			return
-		}
-	}
-
-	return
-}
-
-// QueryOpenTabs 查询
-func (this_ *ToolboxService) QueryOpenTabs(openId int64) (res []*ToolboxOpenTabModel, err error) {
-
-	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE openId=? ORDER BY createTime ASC `
-	err = this_.DatabaseWorker.Query(sql, []interface{}{openId}, &res)
-	if err != nil {
-		this_.Logger.Error("QueryOpenTabs Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
-// CloseTab 更新
-func (this_ *ToolboxService) CloseTab(tabId int64) (rowsAffected int64, err error) {
-
-	sql := `DELETE FROM ` + TableToolboxOpenTab + ` WHERE tabId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{tabId})
-	if err != nil {
-		this_.Logger.Error("CloseTab Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
-// CloseOpenTabs 更新
-func (this_ *ToolboxService) CloseOpenTabs(openId int64) (rowsAffected int64, err error) {
-
-	sql := `DELETE FROM ` + TableToolboxOpenTab + ` WHERE openId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{openId})
-	if err != nil {
-		this_.Logger.Error("CloseOpenTabs Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
-// UpdateOpenTabExtend 新增
-func (this_ *ToolboxService) UpdateOpenTabExtend(toolboxOpenTab *ToolboxOpenTabModel) (rowsAffected int64, err error) {
-	sql := `UPDATE ` + TableToolboxOpenTab + ` SET extend=?,updateTime=? WHERE tabId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpenTab.Extend, toolboxOpenTab.UpdateTime, toolboxOpenTab.TabId})
-	if err != nil {
-		this_.Logger.Error("UpdateOpenTabExtend Error", zap.Error(err))
-		return
-	}
-
 	return
 }
 
@@ -492,65 +317,6 @@ func (this_ *ToolboxService) MoveGroup(toolbox *ToolboxModel) (rowsAffected int6
 	return
 }
 
-// UpdateGroup 更新
-func (this_ *ToolboxService) UpdateGroup(toolboxGroup *ToolboxGroupModel) (rowsAffected int64, err error) {
-	if toolboxGroup.Name != "" {
-		var old *ToolboxGroupModel
-		old, err = this_.GetGroup(toolboxGroup.GroupId)
-		if err != nil {
-			return
-		}
-		if old == nil {
-			err = errors.New("工具分组不存在")
-			return
-		}
-		sql := `SELECT COUNT(1) FROM ` + TableToolboxGroup + ` WHERE groupId != ? AND userId = ? AND name = ?`
-
-		var count int64
-		count, err = this_.DatabaseWorker.Count(sql, []interface{}{toolboxGroup.GroupId, old.UserId, toolboxGroup.Name})
-		if err != nil {
-			return
-		}
-		if count > 0 {
-			err = errors.New(fmt.Sprint("工具分组[", toolboxGroup.Name, "]已存在"))
-			return
-		}
-
-	}
-	var values []interface{}
-
-	sql := `UPDATE ` + TableToolboxGroup + ` SET `
-
-	sql += "updateTime=?,"
-	values = append(values, time.Now())
-
-	if toolboxGroup.Name != "" {
-		sql += "name=?,"
-		values = append(values, toolboxGroup.Name)
-	}
-	if toolboxGroup.Comment != "" {
-		sql += "comment=?,"
-		values = append(values, toolboxGroup.Comment)
-	}
-	if toolboxGroup.Option != "" {
-		sql += "option=?,"
-		values = append(values, toolboxGroup.Option)
-	}
-
-	sql = strings.TrimSuffix(sql, ",")
-
-	sql += " WHERE groupId=? "
-	values = append(values, toolboxGroup.GroupId)
-
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
-	if err != nil {
-		this_.Logger.Error("UpdateGroup Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
 // Rename 更新
 func (this_ *ToolboxService) Rename(toolboxId int64, name string) (rowsAffected int64, err error) {
 	_, err = this_.Update(&ToolboxModel{
@@ -572,25 +338,6 @@ func (this_ *ToolboxService) Delete(toolboxId int64) (rowsAffected int64, err er
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), toolboxId})
 	if err != nil {
 		this_.Logger.Error("Delete Error", zap.Error(err))
-		return
-	}
-
-	return
-}
-
-// DeleteGroup 更新
-func (this_ *ToolboxService) DeleteGroup(groupId int64) (rowsAffected int64, err error) {
-	sql := `UPDATE ` + TableToolbox + ` SET groupId=NULL,updateTime=? WHERE groupId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{time.Now(), groupId})
-	if err != nil {
-		this_.Logger.Error("DeleteGroup Trim Toolbox GroupId Error", zap.Error(err))
-		return
-	}
-
-	sql = `DELETE FROM ` + TableToolboxGroup + ` WHERE groupId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{groupId})
-	if err != nil {
-		this_.Logger.Error("DeleteGroup Error", zap.Error(err))
 		return
 	}
 

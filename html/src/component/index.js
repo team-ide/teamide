@@ -77,6 +77,9 @@ Vue.component('ToolboxDatabaseEditor', ToolboxDatabaseEditor);
 import ToolboxSSHEditor from './toolbox/ssh/Index.vue'
 Vue.component('ToolboxSSHEditor', ToolboxSSHEditor);
 
+import ToolboxOtherEditor from './toolbox/other/Index.vue'
+Vue.component('ToolboxOtherEditor', ToolboxOtherEditor);
+
 import ScriptInfo from './script/Info.vue'
 Vue.component('ScriptInfo', ScriptInfo);
 

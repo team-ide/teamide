@@ -324,3 +324,8 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 ![avatar](doc/toolbox-elasticsearch.png)
 
 ![avatar](doc/toolbox-elasticsearch-data.png)
+
+
+#### Toolbox 其它
+
+![avatar](doc/toolbox-other-format.png)

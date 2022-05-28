@@ -8,7 +8,7 @@ import (
 	"teamide/pkg/util"
 )
 
-func init() {
+func sshWorker() *Worker {
 	worker_ := &Worker{
 		Name: "ssh",
 		Text: "SSH",
@@ -37,7 +37,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 type SSHConfig struct {

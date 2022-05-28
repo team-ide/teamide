@@ -14,6 +14,12 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		return
 	}
 	if toolboxData == nil {
+		toolboxData, err = this_.GetOtherToolbox(toolboxId)
+		if err != nil {
+			return
+		}
+	}
+	if toolboxData == nil {
 		err = errors.New("工具配置丢失")
 		return
 	}
@@ -24,11 +30,6 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		if err != nil {
 			return
 		}
-	}
-
-	if len(option) == 0 {
-		err = errors.New("工具未设置配置")
-		return
 	}
 
 	toolboxWorker := toolbox.GetWorker(toolboxData.ToolboxType)

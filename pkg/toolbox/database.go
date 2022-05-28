@@ -9,7 +9,7 @@ import (
 	"teamide/pkg/util"
 )
 
-func init() {
+func databaseWorker() *Worker {
 
 	worker_ := &Worker{
 		Name: "database",
@@ -44,7 +44,7 @@ func init() {
 		},
 	}
 
-	AddWorker(worker_)
+	return worker_
 }
 
 type DatabaseBaseRequest struct {
