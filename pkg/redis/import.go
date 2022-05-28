@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dop251/goja"
 	"go.uber.org/zap"
-	"teamide/pkg/db"
-	"teamide/pkg/javascript"
+	"teamide/pkg/data"
 	"teamide/pkg/util"
 	"time"
 )
@@ -71,10 +69,14 @@ type ImportTask struct {
 	UseTime          int64           `json:"useTime"`
 	IsStop           bool            `json:"isStop"`
 	Service          Service         `json:"-"`
+	taskList         []*data.StrategyTask
 }
 
 func (this_ *ImportTask) Stop() {
 	this_.IsStop = true
+	for _, t := range this_.taskList {
+		t.Stop()
+	}
 }
 
 func (this_ *ImportTask) Start() {
@@ -99,15 +101,37 @@ func (this_ *ImportTask) Start() {
 }
 
 func (this_ *ImportTask) doStrategy() (err error) {
+
 	for _, strategyData := range this_.StrategyDataList {
 		if strategyData.Count <= 0 {
 			strategyData.Count = 0
 		}
-		this_.DataCount += strategyData.Count
+
+		if strategyData.Key == "" {
+			err = errors.New("必须配置Key")
+			return
+		}
+		if strategyData.ValueType == "" {
+			err = errors.New("必须配置值类型")
+			return
+		}
+		switch strategyData.ValueType {
+		case "string":
+			this_.DataCount += strategyData.Count
+		case "list":
+			this_.DataCount += strategyData.Count * strategyData.ValueCount
+		case "set":
+			this_.DataCount += strategyData.Count * strategyData.ValueCount
+		case "hash":
+			this_.DataCount += strategyData.Count * strategyData.ValueCount
+		default:
+			err = errors.New("不支持的值类型[" + strategyData.ValueType + "]")
+		}
+
 	}
 
 	for _, strategyData := range this_.StrategyDataList {
-		if this_.IsStop {
+		if this_.needStop() {
 			break
 		}
 		err = this_.doStrategyData(this_.Database, strategyData)
@@ -122,7 +146,7 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 	if strategyData.Count <= 0 {
 		return
 	}
-	if this_.IsStop {
+	if this_.needStop() {
 		return
 	}
 
@@ -132,53 +156,99 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 		return
 	}
 
-	scriptContext := javascript.GetContext()
+	task := &data.StrategyTask{}
 
-	vm := goja.New()
+	taskStrategyData := &data.StrategyData{}
 
-	for key, value := range scriptContext {
-		err = vm.Set(key, value)
-		if err != nil {
-			return
-		}
+	task.StrategyDataList = append(task.StrategyDataList, taskStrategyData)
+
+	taskStrategyData.Count = strategyData.Count
+	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+		Name:  "key",
+		Value: strategyData.Key,
+	})
+	taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+		Name:  "valueType",
+		Value: `"` + strategyData.ValueType + `"`,
+	})
+	switch strategyData.ValueType {
+	case "string":
+		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+			Name:  "value",
+			Value: strategyData.Value,
+		})
 	}
+	var newValueTaskStrategyData = func(key string) (valueTaskStrategyData *data.StrategyData) {
+		valueTaskStrategyData = &data.StrategyData{}
+		valueTaskStrategyData.IndexName = "_$value_index"
+		valueTaskStrategyData.Count = strategyData.ValueCount
 
-	for i := 0; i < strategyData.Count; i++ {
-		//data := map[string]interface{}{}
-		err = vm.Set("_$index", i)
-		if err != nil {
-			return
-		}
+		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			Name:  "key",
+			Value: `"` + key + `"`,
+		})
 
-		if strategyData.Key == "" {
-			err = errors.New("必须配置Key")
-			return
-		}
-		if strategyData.ValueType == "" {
-			err = errors.New("必须配置值类型")
-			return
-		}
-		var key = strategyData.Key
-
-		var scriptValue goja.Value
-		if scriptValue, err = vm.RunString(key); err != nil {
-			util.Logger.Error("表达式执行异常", zap.Any("script", key), zap.Error(err))
-			return
-		}
-		key = db.GetStringValue(scriptValue.Export())
+		valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+			Name:  "valueType",
+			Value: `"` + strategyData.ValueType + `"`,
+		})
 
 		switch strategyData.ValueType {
-		case "string":
-			var value = strategyData.Value
-			if value != "" {
-				if scriptValue, err = vm.RunString(value); err != nil {
-					util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
-					return
-				}
-				value = db.GetStringValue(scriptValue.Export())
+		case "list":
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+				Name:  "value",
+				Value: strategyData.ListValue,
+			})
+		case "set":
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+				Name:  "value",
+				Value: strategyData.SetValue,
+			})
+		case "hash":
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+				Name:  "hashKey",
+				Value: strategyData.HashKey,
+			})
+			valueTaskStrategyData.FieldList = append(valueTaskStrategyData.FieldList, &data.StrategyDataField{
+				Name:  "value",
+				Value: strategyData.HashValue,
+			})
+		}
+		return
+	}
+
+	task.OnError = func(onErr error) {
+		err = onErr
+	}
+
+	this_.taskList = append(this_.taskList, task)
+
+	task.OnData = func(onData map[string]interface{}) (err error) {
+
+		if this_.needStop() {
+			return
+		}
+
+		valueType := onData["valueType"].(string)
+		var key string
+		key, err = util.GetStringValue(onData["key"])
+		if err != nil {
+			return
+		}
+		var value interface{}
+		var valueOK bool
+		value, valueOK = onData["value"]
+		var valueString string
+		if valueOK {
+			valueString, err = util.GetStringValue(value)
+			if err != nil {
+				return
 			}
+		}
+		switch valueType {
+		case "string":
 			this_.ReadyDataCount++
-			err = Set(ctx, client, key, value)
+			err = Set(ctx, client, key, valueString)
 			if err != nil {
 				this_.ErrorCount++
 				return
@@ -186,85 +256,83 @@ func (this_ *ImportTask) doStrategyData(database int, strategyData *StrategyData
 			this_.SuccessCount++
 
 		case "list":
-			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
-				err = vm.Set("_$value_index", valueIndex)
-				if err != nil {
-					return
-				}
-				var value = strategyData.ListValue
-				if value != "" {
-					if scriptValue, err = vm.RunString(value); err != nil {
-						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
-						return
-					}
-					value = db.GetStringValue(scriptValue.Export())
-				}
+			if valueOK {
 				this_.ReadyDataCount++
-				err = LPush(ctx, client, key, value)
+				err = LPush(ctx, client, key, valueString)
 				if err != nil {
 					this_.ErrorCount++
 					return
 				}
 				this_.SuccessCount++
-			}
+			} else {
 
+				valueTask := &data.StrategyTask{}
+				this_.taskList = append(this_.taskList, valueTask)
+				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
+				valueTask.OnData = task.OnData
+				valueTask.OnError = task.OnError
+				valueTask.OnEnd = task.OnEnd
+				valueTask.Start()
+			}
 		case "set":
-			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
-				err = vm.Set("_$value_index", valueIndex)
-				if err != nil {
-					return
-				}
-				var value = strategyData.SetValue
-				if value != "" {
-					if scriptValue, err = vm.RunString(value); err != nil {
-						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
-						return
-					}
-					value = db.GetStringValue(scriptValue.Export())
-				}
+			if valueOK {
 				this_.ReadyDataCount++
-				err = SAdd(ctx, client, key, value)
+				err = SAdd(ctx, client, key, valueString)
 				if err != nil {
 					this_.ErrorCount++
 					return
 				}
 				this_.SuccessCount++
-			}
 
+			} else {
+				valueTask := &data.StrategyTask{}
+				this_.taskList = append(this_.taskList, valueTask)
+				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
+				valueTask.OnData = task.OnData
+				valueTask.OnError = task.OnError
+				valueTask.OnEnd = task.OnEnd
+				valueTask.Start()
+			}
 		case "hash":
-			for valueIndex := 0; valueIndex < strategyData.ValueCount; valueIndex++ {
-				err = vm.Set("_$value_index", valueIndex)
+			if valueOK {
+				var hashKey string
+				hashKey, err = util.GetStringValue(onData["hashKey"])
 				if err != nil {
 					return
 				}
-				var hashKey = strategyData.HashKey
-				if hashKey != "" {
-					if scriptValue, err = vm.RunString(hashKey); err != nil {
-						util.Logger.Error("表达式执行异常", zap.Any("script", hashKey), zap.Error(err))
-						return
-					}
-					hashKey = db.GetStringValue(scriptValue.Export())
-				}
-				var value = strategyData.HashValue
-				if value != "" {
-					if scriptValue, err = vm.RunString(value); err != nil {
-						util.Logger.Error("表达式执行异常", zap.Any("script", value), zap.Error(err))
-						return
-					}
-					value = db.GetStringValue(scriptValue.Export())
-				}
 				this_.ReadyDataCount++
-				err = HSet(ctx, client, key, hashKey, value)
+				err = HSet(ctx, client, key, hashKey, valueString)
 				if err != nil {
 					this_.ErrorCount++
 					return
 				}
 				this_.SuccessCount++
+			} else {
+				valueTask := &data.StrategyTask{}
+				this_.taskList = append(this_.taskList, valueTask)
+				valueTask.StrategyDataList = append(valueTask.StrategyDataList, newValueTaskStrategyData(key))
+				valueTask.OnData = task.OnData
+				valueTask.OnError = task.OnError
+				valueTask.OnEnd = task.OnEnd
+				valueTask.Start()
 			}
-		default:
-			err = errors.New("不支持的值类型[" + strategyData.ValueType + "]")
 		}
 
+		return
 	}
+
+	task.OnEnd = func() {
+
+	}
+
+	task.Start()
+
 	return
+}
+
+func (this_ *ImportTask) needStop() bool {
+	if this_.IsStop || this_.IsEnd {
+		return true
+	}
+	return false
 }

@@ -2,13 +2,16 @@ package util
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 )
 
 //GenerateUUID 生成UUID
@@ -84,6 +87,64 @@ func CopyBytes(dst io.Writer, src io.Reader, call func(readSize int64, writeSize
 			}
 			break
 		}
+	}
+	return
+}
+
+func GetStringValue(value interface{}) (valueString string, err error) {
+	if value == nil {
+		return "", nil
+	}
+
+	switch v := value.(type) {
+	case int:
+		return strconv.FormatInt(int64(v), 10), nil
+	case uint:
+		return strconv.FormatInt(int64(v), 10), nil
+	case int8:
+		return strconv.FormatInt(int64(v), 10), nil
+	case uint8:
+		return strconv.FormatInt(int64(v), 10), nil
+	case int16:
+		return strconv.FormatInt(int64(v), 10), nil
+	case uint16:
+		return strconv.FormatInt(int64(v), 10), nil
+	case int32:
+		return strconv.FormatInt(int64(v), 10), nil
+	case uint32:
+		return strconv.FormatInt(int64(v), 10), nil
+	case int64:
+		return strconv.FormatInt(v, 10), nil
+	case uint64:
+		return strconv.FormatInt(int64(v), 10), nil
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 64), nil
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	case bool:
+		if v {
+			return "1", nil
+		}
+		return "0", nil
+	case time.Time:
+		if v.IsZero() {
+			return "", nil
+		}
+		valueString = v.Format("2006-01-02 15:04:05")
+		break
+	case string:
+		valueString = v
+		break
+	case []byte:
+		valueString = string(v)
+	default:
+		var bs []byte
+		bs, err = json.Marshal(value)
+		if err != nil {
+			return
+		}
+		valueString = string(bs)
+		break
 	}
 	return
 }

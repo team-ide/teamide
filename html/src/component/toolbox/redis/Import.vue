@@ -25,52 +25,7 @@
     </el-form>
 
     <template v-if="form.importType == 'strategy'">
-      <div class="pdlr-10 color-grey ft-12" style="user-select: text">
-        <div>
-          <span class="color-orange pdr-10">表达式</span>
-          <span>表达式，如：'aa' + 'c'，返回“aac”；1 + 2，返回“3”</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$index</span>
-          <span>索引，每个策略数据从0开始，最大为当前策略数据数量-1</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$value_index</span>
-          <span>值索引，从0开始，最大为值数量-1</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$now()</span>
-          <span>当前时间对象</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$nowTime()</span>
-          <span>当前时间戳</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$uuid()</span>
-          <span>生成UUID</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">
-            _$randomString(minLength, maxLength)
-          </span>
-          <span>随机字符串</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">_$randomInt(min, max)</span>
-          <span>随机数字</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10">
-            _$randomUserName(minLength, maxLength)
-          </span>
-          <span>随机用户姓名</span>
-        </div>
-        <div>
-          <span class="color-orange pdr-10"> _$toPinYin(str) </span>
-          <span>转为拼音</span>
-        </div>
-      </div>
+      <ScriptInfo></ScriptInfo>
       <div class="mglr-10 mgt-10">
         <div class="tm-link color-grey" @click="addStrategyData">添加</div>
       </div>
@@ -80,7 +35,7 @@
             <div class="ft-12 mgb-5">数据策略[ {{ index + 1 }} ]</div>
             <div>
               <el-form size="mini" @submit.native.prevent label-width="80px">
-                <el-form-item label="导入数量">
+                <el-form-item label="导入数量" class="mgb-5">
                   <el-input v-model="strategyData.count"> </el-input>
                 </el-form-item>
                 <el-form-item label="值类型">
@@ -95,12 +50,12 @@
                     <el-option label="hash" value="hash"></el-option>
                   </el-select>
                 </el-form-item>
-                <el-form-item label="Key">
+                <el-form-item label="Key" class="mgb-5">
                   <el-input v-model="strategyData.key"> </el-input>
                 </el-form-item>
                 <template v-if="strategyData.valueType == 'string'">
                   <div class="ft-12 mgb-5">String 值</div>
-                  <el-form-item label="Value">
+                  <el-form-item label="Value" class="mgb-5">
                     <el-input
                       type="textarea"
                       v-model="strategyData.value"
@@ -111,10 +66,10 @@
                 </template>
                 <template v-else-if="strategyData.valueType == 'list'">
                   <div class="ft-12 mgb-5">List 值</div>
-                  <el-form-item label="值数量">
+                  <el-form-item label="值数量" class="mgb-5">
                     <el-input v-model="strategyData.valueCount"> </el-input>
                   </el-form-item>
-                  <el-form-item label="List Value">
+                  <el-form-item label="List Value" class="mgb-5">
                     <el-input
                       type="textarea"
                       v-model="strategyData.listValue"
@@ -125,10 +80,10 @@
                 </template>
                 <template v-else-if="strategyData.valueType == 'set'">
                   <div class="ft-12 mgb-5">Set 值</div>
-                  <el-form-item label="值数量">
+                  <el-form-item label="值数量" class="mgb-5">
                     <el-input v-model="strategyData.valueCount"> </el-input>
                   </el-form-item>
-                  <el-form-item label="Set Value">
+                  <el-form-item label="Set Value" class="mgb-5">
                     <el-input
                       type="textarea"
                       v-model="strategyData.setValue"
@@ -139,13 +94,13 @@
                 </template>
                 <template v-else-if="strategyData.valueType == 'hash'">
                   <div class="">Set 值</div>
-                  <el-form-item label="值数量">
+                  <el-form-item label="值数量" class="mgb-5">
                     <el-input v-model="strategyData.valueCount"> </el-input>
                   </el-form-item>
-                  <el-form-item label="Hash Key">
+                  <el-form-item label="Hash Key" class="mgb-5">
                     <el-input v-model="strategyData.hashKey"> </el-input>
                   </el-form-item>
-                  <el-form-item label="Hash Value">
+                  <el-form-item label="Hash Value" class="mgb-5">
                     <el-input
                       type="textarea"
                       v-model="strategyData.hashValue"
@@ -240,8 +195,8 @@ export default {
       ready: false,
       importTypes: [
         { text: "策略函数", value: "strategy" },
-        { text: "SQL", value: "sql", disabled: true },
         { text: "Excel", value: "excel", disabled: true },
+        { text: "文本", value: "text", disabled: true },
       ],
       form: {
         database: 0,

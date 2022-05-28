@@ -319,6 +319,10 @@ func (param *GenerateParam) packingCharacterColumnStringValue(tableColumn *Table
 	}
 	return formatStringValue(param.StringPackingCharacter, valueString)
 }
+
+func (param *GenerateParam) FormatColumnValue(tableColumn *TableColumnModel, value interface{}) interface{} {
+	return param.formatColumnValue(tableColumn, value)
+}
 func (param *GenerateParam) formatColumnValue(tableColumn *TableColumnModel, value interface{}) interface{} {
 
 	var IsDateTime bool

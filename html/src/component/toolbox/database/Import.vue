@@ -1,177 +1,120 @@
 <template>
   <div class="toolbox-database-import">
-    <div class="pd-10">
-      <el-form ref="form" :model="form" size="mini" inline>
-        <el-form-item label="导入类型">
-          <el-select v-model="form.importType" style="width: 100px">
-            <el-option
-              v-for="(one, index) in importTypes"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-              :disabled="one.disabled"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-
-      <template v-if="form.importType == 'strategy'">
-        <div class="color-grey ft-12" style="user-select: text">
-          <div>
-            <span class="color-orange pdr-10">表达式</span>
-            <span>表达式，如：'aa' + 'c'，返回“aac”；1 + 2，返回“3”</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">_$index</span>
-            <span>索引，每个策略数据从0开始，最大为当前策略数据数量-1</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">_$now()</span>
-            <span>当前时间对象</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">_$nowTime()</span>
-            <span>当前时间戳</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">_$uuid()</span>
-            <span>生成UUID</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">
-              _$randomString(minLength, maxLength)
-            </span>
-            <span>随机字符串</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">_$randomInt(min, max)</span>
-            <span>随机数字</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10">
-              _$randomUserName(minLength, maxLength)
-            </span>
-            <span>随机用户姓名</span>
-          </div>
-          <div>
-            <span class="color-orange pdr-10"> _$toPinYin(str) </span>
-            <span>转为拼音</span>
-          </div>
-        </div>
-        <div class="mgt-10">
-          <div class="tm-link color-grey" @click="addStrategyData">添加</div>
-        </div>
-        <div v-if="tableDetail != null" class="mgt-10" style="height: 300px">
-          <el-table
-            :data="strategyDataList"
-            borde
-            style="width: 100%"
-            height="100%"
-            size="mini"
+    <el-form
+      class="pdt-10 pdlr-10"
+      size="mini"
+      @submit.native.prevent
+      label-width="80px"
+      inline
+    >
+      <el-form-item label="导入类型">
+        <el-select v-model="form.importType" style="width: 100px">
+          <el-option
+            v-for="(one, index) in importTypes"
+            :key="index"
+            :value="one.value"
+            :label="one.text"
+            :disabled="one.disabled"
           >
-            <el-table-column width="110" label="导入数量">
-              <template slot-scope="scope">
-                <input v-model="scope.row._$importCount" style="width: 100%" />
-              </template>
-            </el-table-column>
-            <template v-for="(column, index) in tableDetail.columnList">
-              <el-table-column
-                :key="index"
-                :prop="column.name"
-                :label="column.name"
-                width="150"
-              >
-                <template slot-scope="scope">
-                  <div class="">
-                    <input
-                      v-model="scope.row[column.name]"
-                      :placeholder="
-                        scope.row[column.name] == null ? 'NULL' : ''
-                      "
-                      type="text"
-                      style="width: 100%"
-                    />
-                  </div>
+          </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+
+    <template v-if="form.importType == 'strategy'">
+      <ScriptInfo></ScriptInfo>
+      <div class="mglr-10 mgt-10">
+        <div class="tm-link color-grey" @click="addStrategyData">添加</div>
+      </div>
+      <div class="mglr-10 mgt-10 scrollbar" style="height: calc(100% - 380px)">
+        <template v-for="(strategyData, index) in strategyDataList">
+          <div :key="index" class="mgb-10">
+            <div class="ft-12 mgb-5">数据策略[ {{ index + 1 }} ]</div>
+            <div>
+              <el-form size="mini" @submit.native.prevent label-width="200px">
+                <el-form-item label="导入数量" class="mgb-5">
+                  <el-input v-model="strategyData.count"> </el-input>
+                </el-form-item>
+                <el-form-item label="批量保存数量" class="mgb-5">
+                  <el-input v-model="strategyData.batchNumber"> </el-input>
+                </el-form-item>
+                <template v-for="(column, index) in strategyData.columnList">
+                  <el-form-item :key="index" :label="column.name" class="mgb-5">
+                    <el-input v-model="column.value"> </el-input>
+                  </el-form-item>
                 </template>
-              </el-table-column>
-            </template>
-          </el-table>
-        </div>
-      </template>
-      <div class="mgt-10" style="user-select: text">
-        <div class="ft-12">
-          <span class="color-grey">任务状态：</span>
-          <template v-if="task == null">
-            <span class="color-orange pdr-10">暂未开始</span>
+              </el-form>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+    <div class="mglr-10 mgt-10" style="user-select: text">
+      <div class="ft-12">
+        <span class="color-grey">任务状态：</span>
+        <template v-if="task == null">
+          <span class="color-orange pdr-10">暂未开始</span>
+        </template>
+        <template v-else>
+          <template v-if="!task.isEnd">
+            <span class="color-orange pdr-10"> 处理中 </span>
+          </template>
+          <template v-if="task.isStop">
+            <span class="color-red pdr-10"> 已停止 </span>
           </template>
           <template v-else>
-            <template v-if="!task.isEnd">
-              <span class="color-orange pdr-10"> 处理中 </span>
-            </template>
-            <template v-if="task.isStop">
-              <span class="color-red pdr-10"> 已停止 </span>
-            </template>
-            <template v-else>
-              <span class="color-green pdr-10"> 执行完成 </span>
-            </template>
+            <span class="color-green pdr-10"> 执行完成 </span>
+          </template>
+          <span class="color-grey pdr-10">
+            开始：
+            <span>
+              {{
+                tool.formatDate(new Date(task.startTime), "yyyy-MM-dd hh:mm:ss")
+              }}
+            </span>
+          </span>
+          <template v-if="task.isEnd">
             <span class="color-grey pdr-10">
-              开始：
+              结束：
               <span>
                 {{
-                  tool.formatDate(
-                    new Date(task.startTime),
-                    "yyyy-MM-dd hh:mm:ss"
-                  )
+                  tool.formatDate(new Date(task.endTime), "yyyy-MM-dd hh:mm:ss")
                 }}
               </span>
             </span>
-            <template v-if="task.isEnd">
-              <span class="color-grey pdr-10">
-                结束：
-                <span>
-                  {{
-                    tool.formatDate(
-                      new Date(task.endTime),
-                      "yyyy-MM-dd hh:mm:ss"
-                    )
-                  }}
-                </span>
-              </span>
-              <span class="color-grey pdr-10">
-                耗时： <span>{{ task.useTime }} 毫秒</span>
-              </span>
-            </template>
-            <template v-if="!task.isEnd">
-              <div @click="stopTask" class="color-red tm-link mgr-10">
-                停止执行
-              </div>
-            </template>
-            <div class="mgt-5">
-              <span class="color-grey pdr-10">
-                预计导入： <span>{{ task.dataCount }}</span>
-              </span>
-              <span class="color-grey pdr-10">
-                已准备数据： <span>{{ task.readyDataCount }}</span>
-              </span>
-              <span class="color-success pdr-10">
-                成功： <span>{{ task.successCount }}</span>
-              </span>
-              <span class="color-error pdr-10">
-                异常： <span>{{ task.errorCount }}</span>
-              </span>
-            </div>
-            <template v-if="task.error != null">
-              <div class="mgt-5 color-error pdr-10">
-                异常： <span>{{ task.error }}</span>
-              </div>
-            </template>
+            <span class="color-grey pdr-10">
+              耗时： <span>{{ task.useTime }} 毫秒</span>
+            </span>
           </template>
-        </div>
+          <template v-if="!task.isEnd">
+            <div @click="stopTask" class="color-red tm-link mgr-10">
+              停止执行
+            </div>
+          </template>
+          <div class="mgt-5">
+            <span class="color-grey pdr-10">
+              预计导入： <span>{{ task.dataCount }}</span>
+            </span>
+            <span class="color-grey pdr-10">
+              已准备数据： <span>{{ task.readyDataCount }}</span>
+            </span>
+            <span class="color-success pdr-10">
+              成功： <span>{{ task.successCount }}</span>
+            </span>
+            <span class="color-error pdr-10">
+              异常： <span>{{ task.errorCount }}</span>
+            </span>
+          </div>
+          <template v-if="task.error != null">
+            <div class="mgt-5 color-error pdr-10">
+              异常： <span>{{ task.error }}</span>
+            </div>
+          </template>
+        </template>
       </div>
-      <div class="mgt-20" v-if="taskKey == null">
-        <div class="tm-btn bg-green" @click="toImport">导入</div>
-      </div>
+    </div>
+    <div class="mglr-10 mgt-20" v-if="taskKey == null">
+      <div class="tm-btn bg-green" @click="toImport">导入</div>
     </div>
   </div>
 </template>
@@ -188,6 +131,7 @@ export default {
         { text: "策略函数", value: "strategy" },
         { text: "SQL", value: "sql", disabled: true },
         { text: "Excel", value: "excel", disabled: true },
+        { text: "文本", value: "text", disabled: true },
       ],
       form: {
         importType: "strategy",
@@ -217,10 +161,13 @@ export default {
         return;
       }
       let data = {};
-      data._$importCount = 1;
+      data.count = 1;
+      data.batchNumber = 100;
+      data.columnList = [];
 
       let keys = [];
       this.tableDetail.columnList.forEach((column) => {
+        let value = null;
         if (column.primaryKey) {
           keys.push(column.name);
           if (
@@ -228,9 +175,9 @@ export default {
             column.type == "bigint" ||
             column.type == "number"
           ) {
-            data[column.name] = "0 + _$index";
+            value = "0 + _$index";
           } else {
-            data[column.name] = "_$uuid()";
+            value = "_$uuid()";
           }
         } else if (column.notNull) {
           if (
@@ -238,24 +185,26 @@ export default {
             column.type == "bigint" ||
             column.type == "number"
           ) {
-            data[column.name] = 0;
+            value = "0";
           } else if (
             column.type == "date" ||
             column.type == "time" ||
             column.type == "datetime"
           ) {
-            data[column.name] = "_$now()";
+            value = "_$now()";
           } else {
             if (keys.length > 0) {
-              data[column.name] =
-                "'" + column.name + "' + " + keys.join(" + ") + "";
+              value = "'" + column.name + "' + " + keys.join(" + ") + "";
             } else {
-              data[column.name] = "_$randomString(1, 5)";
+              value = "_$randomString(1, 5)";
             }
           }
-        } else {
-          data[column.name] = null;
         }
+
+        data.columnList.push({
+          name: column.name,
+          value: value,
+        });
       });
       this.strategyDataList.push(data);
     },
@@ -268,7 +217,8 @@ export default {
     },
     async doImport() {
       this.strategyDataList.forEach((one) => {
-        one._$importCount = Number(one._$importCount);
+        one.count = Number(one.count);
+        one.batchNumber = Number(one.batchNumber);
       });
 
       let param = Object.assign({}, this.form);

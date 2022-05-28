@@ -2,10 +2,10 @@ package task
 
 import (
 	"fmt"
-	"github.com/dop251/goja"
 	"go.uber.org/zap"
+	"strings"
+	"teamide/pkg/data"
 	"teamide/pkg/db"
-	"teamide/pkg/javascript"
 	"teamide/pkg/util"
 	"time"
 )
@@ -40,30 +40,42 @@ func CleanImportTask(taskKey string) *ImportTask {
 	return task
 }
 
+type StrategyData struct {
+	Count       int               `json:"count,omitempty"`
+	BatchNumber int               `json:"batchNumber,omitempty"`
+	ColumnList  []*StrategyColumn `json:"columnList,omitempty"`
+}
+type StrategyColumn struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
 type ImportTask struct {
-	Database         string                   `json:"database,omitempty"`
-	Table            string                   `json:"table,omitempty"`
-	ColumnList       []*db.TableColumnModel   `json:"columnList,omitempty"`
-	Key              string                   `json:"key,omitempty"`
-	ImportType       string                   `json:"importType,omitempty"`
-	StrategyDataList []map[string]interface{} `json:"strategyDataList,omitempty"`
-	BatchNumber      int                      `json:"batchNumber,omitempty"`
-	DataCount        int                      `json:"dataCount"`
-	ReadyDataCount   int                      `json:"readyDataCount"`
-	SuccessCount     int                      `json:"successCount"`
-	ErrorCount       int                      `json:"errorCount"`
-	IsEnd            bool                     `json:"isEnd,omitempty"`
-	StartTime        time.Time                `json:"startTime,omitempty"`
-	EndTime          time.Time                `json:"endTime,omitempty"`
-	Error            string                   `json:"error,omitempty"`
-	UseTime          int64                    `json:"useTime"`
-	IsStop           bool                     `json:"isStop"`
-	GenerateParam    *db.GenerateParam        `json:"-"`
-	Service          *db.Service              `json:"-"`
+	Database         string                 `json:"database,omitempty"`
+	Table            string                 `json:"table,omitempty"`
+	ColumnList       []*db.TableColumnModel `json:"columnList,omitempty"`
+	Key              string                 `json:"key,omitempty"`
+	ImportType       string                 `json:"importType,omitempty"`
+	StrategyDataList []*StrategyData        `json:"strategyDataList,omitempty"`
+	DataCount        int                    `json:"dataCount"`
+	ReadyDataCount   int                    `json:"readyDataCount"`
+	SuccessCount     int                    `json:"successCount"`
+	ErrorCount       int                    `json:"errorCount"`
+	IsEnd            bool                   `json:"isEnd,omitempty"`
+	StartTime        time.Time              `json:"startTime,omitempty"`
+	EndTime          time.Time              `json:"endTime,omitempty"`
+	Error            string                 `json:"error,omitempty"`
+	UseTime          int64                  `json:"useTime"`
+	IsStop           bool                   `json:"isStop"`
+	GenerateParam    *db.GenerateParam      `json:"-"`
+	Service          *db.Service            `json:"-"`
+	taskList         []*data.StrategyTask
 }
 
 func (this_ *ImportTask) Stop() {
 	this_.IsStop = true
+	for _, t := range this_.taskList {
+		t.Stop()
+	}
 }
 func (this_ *ImportTask) Start() {
 	this_.StartTime = time.Now()
@@ -87,23 +99,18 @@ func (this_ *ImportTask) Start() {
 }
 
 func (this_ *ImportTask) doStrategy() (err error) {
-	for _, importData := range this_.StrategyDataList {
-		importCount := 0
-		if importData["_$importCount"] != nil {
-			importCount = int(importData["_$importCount"].(float64))
+	for _, strategyData := range this_.StrategyDataList {
+		if strategyData.Count <= 0 {
+			strategyData.Count = 0
 		}
-		if importCount <= 0 {
-			importCount = 0
-		}
-		importData["_$importCount"] = importCount
-		this_.DataCount += importCount
+		this_.DataCount += strategyData.Count
 	}
 
-	for _, importData := range this_.StrategyDataList {
-		if this_.IsStop {
+	for _, strategyData := range this_.StrategyDataList {
+		if this_.needStop() {
 			break
 		}
-		err = this_.doStrategyData(this_.Database, this_.Table, this_.ColumnList, importData)
+		err = this_.doStrategyData(this_.Database, this_.Table, this_.ColumnList, strategyData)
 		if err != nil {
 			return
 		}
@@ -111,89 +118,72 @@ func (this_ *ImportTask) doStrategy() (err error) {
 	return
 }
 
-func (this_ *ImportTask) doStrategyData(database, table string, columnList []*db.TableColumnModel, importData map[string]interface{}) (err error) {
-	importCount := importData["_$importCount"].(int)
-	if importCount <= 0 {
+func (this_ *ImportTask) doStrategyData(database, table string, columnList []*db.TableColumnModel, strategyData *StrategyData) (err error) {
+	if strategyData.Count <= 0 {
 		return
 	}
-	if this_.IsStop {
+	if this_.needStop() {
 		return
 	}
+
+	batchNumber := strategyData.BatchNumber
+	if batchNumber <= 0 {
+		batchNumber = 100
+	}
+
+	task := &data.StrategyTask{}
+
+	taskStrategyData := &data.StrategyData{}
+
+	task.StrategyDataList = append(task.StrategyDataList, taskStrategyData)
+
+	taskStrategyData.Count = strategyData.Count
+	for _, strategyColumn := range strategyData.ColumnList {
+		taskStrategyData.FieldList = append(taskStrategyData.FieldList, &data.StrategyDataField{
+			Name:  strategyColumn.Name,
+			Value: strategyColumn.Value,
+		})
+	}
+
+	task.OnError = func(onErr error) {
+		err = onErr
+	}
+
+	this_.taskList = append(this_.taskList, task)
 
 	var dataList []map[string]interface{}
-	batchNumber := this_.BatchNumber
-	if batchNumber <= 0 {
-		batchNumber = 10
-	}
-	scriptContext := javascript.GetContext()
+	task.OnData = func(onData map[string]interface{}) (err error) {
 
-	vm := goja.New()
-
-	for key, value := range scriptContext {
-		err = vm.Set(key, value)
-		if err != nil {
+		if this_.needStop() {
 			return
-		}
-	}
-
-	for i := 0; i < importCount; i++ {
-		data := map[string]interface{}{}
-		err = vm.Set("_$index", i)
-		if err != nil {
-			return
-		}
-
-		for _, column := range columnList {
-
-			if this_.IsStop {
-				return
-			}
-
-			value, valueOk := importData[column.Name]
-			if !valueOk {
-				continue
-			}
-			valueString, valueStringOk := value.(string)
-			if valueStringOk && valueString != "" {
-				var scriptValue goja.Value
-				scriptValue, err = vm.RunString(valueString)
-				if err != nil {
-					util.Logger.Error("表达式执行异常", zap.Any("script", valueString), zap.Error(err))
-					return
-				}
-				value = scriptValue.Export()
-			}
-			data[column.Name] = value
-
-			err = vm.Set(column.Name, value)
-			if err != nil {
-				return
-			}
 		}
 		this_.ReadyDataCount++
-		dataList = append(dataList, data)
+
+		dataList = append(dataList, onData)
 		if len(dataList) >= batchNumber {
 
-			if this_.IsStop {
-				return
-			}
 			err = this_.doImportData(database, table, columnList, dataList)
 			if err != nil {
-				this_.ErrorCount += len(dataList)
 				return
-			} else {
-				this_.SuccessCount += len(dataList)
 			}
 			dataList = []map[string]interface{}{}
 		}
-	}
-	err = this_.doImportData(database, table, columnList, dataList)
-	if err != nil {
-		this_.ErrorCount += len(dataList)
 		return
-	} else {
-		this_.SuccessCount += len(dataList)
 	}
+
+	task.OnEnd = func() {
+
+	}
+
+	task.Start()
+
+	if len(dataList) > 0 {
+		err = this_.doImportData(database, table, columnList, dataList)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -202,17 +192,59 @@ func (this_ *ImportTask) doImportData(database, table string, columnList []*db.T
 	if len(dataList) == 0 {
 		return
 	}
-	var sqlList []string
-	var paramsList [][]interface{}
 
-	sqlList, paramsList, err = db.DataListInsertSql(this_.GenerateParam, database, table, columnList, dataList)
-	if err != nil {
-		return
+	insertColumns := ""
+	for _, column := range columnList {
+		insertColumns += this_.GenerateParam.PackingCharacterColumn(column.Name) + ", "
 	}
 
-	_, err = this_.Service.Execs(sqlList, paramsList)
+	insertColumns = strings.TrimSuffix(insertColumns, ", ")
+
+	sql := "INSERT INTO "
+
+	if this_.GenerateParam.AppendDatabase && database != "" {
+		sql += this_.GenerateParam.PackingCharacterDatabase(database) + "."
+	}
+	sql += this_.GenerateParam.PackingCharacterTable(table)
+	if insertColumns != "" {
+		sql += "(" + insertColumns + ")"
+	}
+
+	sql += "VALUES"
+	var values []interface{}
+
+	for _, data := range dataList {
+
+		insertValues := ""
+		for _, column := range columnList {
+			value, valueOk := data[column.Name]
+			if !valueOk {
+				insertValues += "NULL, "
+			} else {
+				insertValues += "?, "
+				values = append(values, this_.GenerateParam.FormatColumnValue(column, value))
+			}
+
+		}
+		insertValues = strings.TrimSuffix(insertValues, ", ")
+
+		sql += "(" + insertValues + "), "
+
+	}
+	sql = strings.TrimSuffix(sql, ", ")
+
+	_, err = this_.Service.Execs([]string{sql}, [][]interface{}{values})
 	if err != nil {
+		this_.ErrorCount += len(dataList)
 		return
 	}
+	this_.SuccessCount += len(dataList)
 	return
+}
+
+func (this_ *ImportTask) needStop() bool {
+	if this_.IsStop || this_.IsEnd {
+		return true
+	}
+	return false
 }
