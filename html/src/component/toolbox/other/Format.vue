@@ -91,7 +91,7 @@ export default {
     init() {
       let extend = this.extend || {};
       this.from = extend.from;
-      this.fromType = extend.fromType;
+      this.fromType = extend.fromType || "json";
       this.toTypes = extend.toTypes || [];
       this.format();
     },
@@ -110,11 +110,13 @@ export default {
     },
     format() {
       let tos = [];
+      let fromData = this.getFromData(this.fromType, this.from);
       if (this.toTypes) {
         this.toTypes.forEach((toType) => {
           let to = {};
           to.from = this.from;
           to.fromType = this.fromType;
+          to.fromData = fromData;
           to.toType = toType;
           to.value = null;
           to.error = null;
@@ -125,35 +127,30 @@ export default {
       this.tos = tos;
     },
     formatValue(data) {
-      this.error = null;
-      if (data == null || this.tool.isEmpty(data.from)) {
-        return;
-      }
-      let fromData = this.getFromData(data);
-      data.value = this.getToValue(data, fromData);
+      data.value = this.getToValue(data, data.fromData);
     },
-    getFromData(data) {
+    getFromData(type, value) {
       this.error = null;
 
       let fromData = null;
 
-      if (this.tool.isNotEmpty(data.from)) {
-        let fromType = ("" + data.fromType).toLowerCase();
+      if (this.tool.isNotEmpty(value)) {
+        let fromType = ("" + type).toLowerCase();
         try {
           if (fromType == "json") {
             let json = null;
             try {
-              json = JSON.parse(data.from);
+              json = JSON.parse(value);
             } catch (error) {
               try {
-                json = eval("(" + data.from + ")");
+                json = eval("(" + value + ")");
               } catch (error2) {
                 throw error;
               }
             }
             fromData = json;
           } else if (fromType == "yaml") {
-            fromData = jsYaml.load(data.from);
+            fromData = jsYaml.load(value);
           }
         } catch (e) {
           this.error = e;

@@ -1,6 +1,13 @@
 import Vue from 'vue'
 
+import './tm';
+
 import './iconfont/iconfont.css'
+
+import TMLayout from './tm/Layout.vue'
+Vue.component(TMLayout.name, TMLayout);
+import TMLayoutBar from './tm/LayoutBar.vue'
+Vue.component(TMLayoutBar.name, TMLayoutBar);
 
 import InfoBox from './message/InfoBox.vue'
 Vue.component('InfoBox', InfoBox);
@@ -82,5 +89,8 @@ Vue.component('ToolboxOtherEditor', ToolboxOtherEditor);
 
 import ScriptInfo from './script/Info.vue'
 Vue.component('ScriptInfo', ScriptInfo);
+
+// import Editor from './Editor.vue'
+// Vue.component('Editor', Editor);
 
 export default {};

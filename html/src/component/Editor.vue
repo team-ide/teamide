@@ -6,7 +6,6 @@
 import * as monaco from "monaco-editor";
 
 export default {
-  name: "Index",
   props: ["source", "language", "readonly", "value"],
   components: {},
   data() {
@@ -37,11 +36,31 @@ export default {
       }
     },
     init() {
+      let languageList = monaco.languages.getLanguages();
+      let yamlLanguage = null;
+      let htmlLanguage = null;
+      let jsLanguage = null;
+      let language = null;
+      languageList.forEach((one) => {
+        if (one.id == "javascript") {
+          jsLanguage = one;
+        } else if (one.id == "html") {
+          htmlLanguage = one;
+        } else if (one.id == "yaml") {
+          yamlLanguage = one;
+        }
+        if (one.id == this.language) {
+          language = one;
+        }
+      });
+      if (language == null) {
+        language = htmlLanguage;
+      }
       this.monacoInstance = monaco.editor.create(this.$refs.editor, {
         theme: "vs-dark", //官方自带三种主题vs, hc-black, or vs-dark
         // minimap: { enabled: false },
-        value: this.value, //编辑器初始显示文字
-        language: this.language.id,
+        value: this.value || "", //编辑器初始显示文字
+        language: "html,json,javascript,yaml",
         selectOnLineNumbers: true, //显示行号
         roundedSelection: false,
         readOnly: this.readonly, // 只读

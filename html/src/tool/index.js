@@ -2,7 +2,7 @@ import server from "@/server/index.js";
 import source from "@/source/index.js";
 import jQuery from 'jquery'
 
-import tm from 'teamide-ui'
+import tm from '@/component/tm'
 
 import md5 from 'js-md5';
 import cryptoJS from 'crypto-js';
@@ -185,6 +185,7 @@ tool.stringToJSON = function (value) {
     }
     return data;
 };
+
 tool.up = function (bean, name, value) {
     if (bean != null && bean[name] != null) {
         let index = bean[name].indexOf(value);

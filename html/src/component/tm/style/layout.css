@@ -1,0 +1,65 @@
+/** layout **/
+.tm-layout {
+    display : block;
+    padding : 0px;
+    margin  : 0px;
+    border  : 0px solid transparent;
+    overflow: auto;
+}
+
+.tm-layout>.tm-layout {
+    float: left;
+}
+
+.tm-layout>.tm-layout-bar {
+    float           : left;
+    background-color: #ebebeb;
+    position        : relative;
+    z-index         : 1;
+}
+
+.tm-layout-bar>.tm-layout-bar-part {
+    position        : absolute;
+    background-color: #ebebeb;
+    border-radius   : 3px;
+}
+
+.tm-layout-bar-left>.tm-layout-bar-part:hover,
+.tm-layout-bar-right>.tm-layout-bar-part:hover {
+    cursor: e-resize;
+}
+
+.tm-layout-bar-top>.tm-layout-bar-part:hover,
+.tm-layout-bar-bottom>.tm-layout-bar-part:hover {
+    cursor: n-resize;
+}
+
+.tm-layout-bar-top>.tm-layout-bar-part,
+.tm-layout-bar-bottom>.tm-layout-bar-part {
+    width : 20px;
+    height: 6px;
+    left  : calc(50% - 10px);
+}
+
+.tm-layout-bar-top>.tm-layout-bar-part {
+    top: -2px;
+}
+
+.tm-layout-bar-bottom>.tm-layout-bar-part {
+    top: -2px;
+}
+
+.tm-layout-bar-left>.tm-layout-bar-part,
+.tm-layout-bar-right>.tm-layout-bar-part {
+    width : 6px;
+    height: 20px;
+    top   : calc(50% - 10px);
+}
+
+.tm-layout-bar-left>.tm-layout-bar-part {
+    left: -2px;
+}
+
+.tm-layout-bar-right>.tm-layout-bar-part {
+    left: -2px;
+}
