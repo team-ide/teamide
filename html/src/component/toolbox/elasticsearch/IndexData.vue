@@ -239,6 +239,8 @@ export default {
     },
     async doSearch() {
       let param = {};
+      this.searchForm.pageIndex = Number(this.searchForm.pageIndex);
+      this.searchForm.pageSize = Number(this.searchForm.pageSize);
       Object.assign(param, this.searchForm);
       let res = await this.wrap.work("search", param);
       res.data = res.data || {};

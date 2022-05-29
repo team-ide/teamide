@@ -2,7 +2,7 @@
   <div class="toolbox-redis-data" v-loading="loading">
     <template v-if="ready">
       <div class="toolbox-redis-form-box">
-        <el-form ref="form" size="mini" @submit.native.prevent>
+        <el-form size="mini" @submit.native.prevent>
           <el-form-item label="Database">
             <el-input v-model="form.database"> </el-input>
           </el-form-item>
@@ -21,18 +21,6 @@
           <el-form-item label="Key">
             <el-input v-model="form.key"> </el-input>
           </el-form-item>
-          <template
-            v-if="
-              form.valueType == 'list' ||
-              form.valueType == 'set' ||
-              form.valueType == 'hash'
-            "
-          >
-            <el-form-item label="ValueSize（加载值数量）">
-              <el-input v-model="form.valueSize" @change="valueSizeChange">
-              </el-input>
-            </el-form-item>
-          </template>
           <template v-if="form.valueType == 'string'">
             <el-form-item label="Value">
               <el-input
@@ -56,7 +44,26 @@
               <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
             </div>
           </template>
-          <template v-else-if="form.valueType == 'list'">
+          <template
+            v-if="
+              form.valueType == 'list' ||
+              form.valueType == 'set' ||
+              form.valueType == 'hash'
+            "
+          >
+            <el-form-item label="ValueSize（加载值数量）">
+              <el-input v-model="form.valueSize" @change="valueSizeChange">
+              </el-input>
+            </el-form-item>
+          </template>
+        </el-form>
+        <el-form
+          v-if="form.valueType != 'string'"
+          class="toolbox-redis-value-box scrollbar"
+          size="mini"
+          @submit.native.prevent
+        >
+          <template v-if="form.valueType == 'list'">
             <div class="pdlr-10">
               List
               <a
@@ -462,9 +469,9 @@ export default {
   width: 100%;
   height: 100%;
 }
-.toolbox-redis-form-box .el-form {
+.toolbox-redis-value-box {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 300px);
 }
 .toolbox-redis-form-box .el-form .el-form-item {
   padding: 0px 10px;
