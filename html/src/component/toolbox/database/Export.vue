@@ -14,6 +14,16 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <template v-if="form.exportType == 'csv'">
+          <el-form-item label="文件后缀">
+            <el-input v-model="form.fileSuffix" style="width: 120px">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="列分割字符">
+            <el-input v-model="form.cellSeparator" style="width: 120px">
+            </el-input>
+          </el-form-item>
+        </template>
         <template v-if="form.exportType == 'sql'">
           <el-form-item label="追加库名">
             <el-switch v-model="form.appendDatabase"> </el-switch>
@@ -100,7 +110,13 @@
           </el-form-item>
         </template>
       </el-form>
-      <template v-if="form.exportType == 'excel' || form.exportType == 'sql'">
+      <template
+        v-if="
+          form.exportType == 'excel' ||
+          form.exportType == 'sql' ||
+          form.exportType == 'csv'
+        "
+      >
         <div v-if="tableDetail != null" class="mgt-20">
           <div class="mgb-10">
             <div class="tm-link color-grey" @click="addExportColumn">添加</div>
@@ -258,6 +274,7 @@ export default {
       exportTypes: [
         { text: "SQL", value: "sql" },
         { text: "Excel", value: "excel" },
+        { text: "CSV", value: "csv" },
       ],
       packingCharacters: [
         { value: "", text: "不包装" },
@@ -293,6 +310,8 @@ export default {
         columnPackingCharacter: "`",
         stringPackingCharacter: "'",
         dateFunction: "",
+        cellSeparator: ",",
+        fileSuffix: "csv",
       },
       exportColumnList: null,
       tableDetail: null,

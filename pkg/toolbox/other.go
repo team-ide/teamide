@@ -35,7 +35,7 @@ func otherWork(work string, config map[string]interface{}, data map[string]inter
 
 	res = map[string]interface{}{}
 	switch work {
-	case "format":
+	case "export":
 		res["request"] = request
 	}
 	return
