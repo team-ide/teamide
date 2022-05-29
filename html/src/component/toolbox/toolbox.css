@@ -162,6 +162,7 @@
     box-sizing: border-box;
     outline: none;
     font-size: 12px;
+    line-height: 25px;
 }
 
 .toolbox-box .el-table .el-switch {
@@ -197,39 +198,39 @@
     font-size: 12px;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-thumb {
+.toolbox-box .el-table__body-wrapper::-webkit-scrollbar-thumb {
     box-shadow: inset 0 0 10px #333333;
     background: #333333;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar-track {
+.toolbox-box .el-table__body-wrapper:hover::-webkit-scrollbar-track {
     box-shadow: inset 0 0 10px #262626;
     background: #262626;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar-corner {
+.toolbox-box .el-table__body-wrapper:hover::-webkit-scrollbar-corner {
     background: #262626;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar {
+.toolbox-box .el-table__body-wrapper::-webkit-scrollbar {
     width: 15px;
     height: 15px;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper:hover::-webkit-scrollbar {
+.toolbox-box .el-table__body-wrapper:hover::-webkit-scrollbar {
     width: 15px;
     height: 15px;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-thumb {
+.toolbox-box .el-table__body-wrapper::-webkit-scrollbar-thumb {
     border-radius: 0px;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-track {
+.toolbox-box .el-table__body-wrapper::-webkit-scrollbar-track {
     border-radius: 0;
 }
 
-.toolbox-box .el-table--scrollable-x .el-table__body-wrapper::-webkit-scrollbar-corner {
+.toolbox-box .el-table__body-wrapper::-webkit-scrollbar-corner {
     background: transparent;
 }
 
