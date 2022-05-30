@@ -149,6 +149,7 @@ export default {
         this.tool.error("未配置命令");
         return;
       }
+      this.term && this.term.focus();
       let command = option.command;
 
       // this.term.write(command);
