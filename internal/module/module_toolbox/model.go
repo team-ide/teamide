@@ -15,26 +15,9 @@ const (
 	TableToolboxOpenTab = "TM_TOOLBOX_OPEN_TAB"
 	// TableToolboxGroup 工具箱分组
 	TableToolboxGroup = "TM_TOOLBOX_GROUP"
+	// TableToolboxQuickCommand 工具箱快速命令
+	TableToolboxQuickCommand = "TM_TOOLBOX_QUICK_COMMAND"
 )
-
-// ToolboxGroupModel 工具箱分组模型，和工具箱分组表对应
-type ToolboxGroupModel struct {
-	GroupId    int64     `json:"groupId,omitempty"`
-	Name       string    `json:"name,omitempty"`
-	Comment    string    `json:"comment,omitempty"`
-	Option     string    `json:"option,omitempty"`
-	UserId     int64     `json:"userId,omitempty"`
-	CreateTime time.Time `json:"createTime,omitempty"`
-	UpdateTime time.Time `json:"updateTime,omitempty"`
-}
-
-func (entity *ToolboxGroupModel) GetTableName() string {
-	return TableToolbox
-}
-
-func (entity *ToolboxGroupModel) GetPKColumnName() string {
-	return ""
-}
 
 // ToolboxModel 工具箱模型，和工具箱表对应
 type ToolboxModel struct {
@@ -96,5 +79,44 @@ func (entity *ToolboxOpenTabModel) GetTableName() string {
 }
 
 func (entity *ToolboxOpenTabModel) GetPKColumnName() string {
+	return ""
+}
+
+// ToolboxGroupModel 工具箱分组模型，和工具箱分组表对应
+type ToolboxGroupModel struct {
+	GroupId    int64     `json:"groupId,omitempty"`
+	Name       string    `json:"name,omitempty"`
+	Comment    string    `json:"comment,omitempty"`
+	Option     string    `json:"option,omitempty"`
+	UserId     int64     `json:"userId,omitempty"`
+	CreateTime time.Time `json:"createTime,omitempty"`
+	UpdateTime time.Time `json:"updateTime,omitempty"`
+}
+
+func (entity *ToolboxGroupModel) GetTableName() string {
+	return TableToolboxGroup
+}
+
+func (entity *ToolboxGroupModel) GetPKColumnName() string {
+	return ""
+}
+
+// ToolboxQuickCommandModel 工具箱快速命令
+type ToolboxQuickCommandModel struct {
+	QuickCommandId   int64     `json:"quickCommandId,omitempty"`
+	QuickCommandType int       `json:"quickCommandType,omitempty"`
+	Name             string    `json:"name,omitempty"`
+	Comment          string    `json:"comment,omitempty"`
+	Option           string    `json:"option,omitempty"`
+	UserId           int64     `json:"userId,omitempty"`
+	CreateTime       time.Time `json:"createTime,omitempty"`
+	UpdateTime       time.Time `json:"updateTime,omitempty"`
+}
+
+func (entity *ToolboxQuickCommandModel) GetTableName() string {
+	return TableToolboxQuickCommand
+}
+
+func (entity *ToolboxQuickCommandModel) GetPKColumnName() string {
 	return ""
 }

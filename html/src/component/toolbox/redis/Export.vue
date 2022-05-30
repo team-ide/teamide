@@ -96,7 +96,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "extend"],
+  props: ["source", "toolbox", "wrap", "tab", "extend"],
   data() {
     return {
       ready: false,

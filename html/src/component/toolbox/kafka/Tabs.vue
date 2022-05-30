@@ -14,6 +14,7 @@
             :toolboxType="toolboxType"
             :wrap="wrap"
             :topic="tab.extend.topic"
+            :tab="tab"
           >
           </TopicData>
         </template>

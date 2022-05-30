@@ -140,7 +140,7 @@ import TableDetail from "./TableDetail.vue";
 
 export default {
   components: { TableDetail },
-  props: ["source", "toolbox", "wrap", "database", "table"],
+  props: ["source", "toolbox", "wrap", "tab", "database", "table"],
   data() {
     return {
       showSQL: null,

@@ -44,6 +44,18 @@
           :groups="source.toolbox.groups"
         >
         </ToolboxType>
+        <QuickCommand
+          v-if="source.toolbox.context != null"
+          :source="source"
+          :toolbox="source.toolbox"
+        >
+        </QuickCommand>
+        <QuickCommandSSHCommandForm
+          v-if="source.toolbox.context != null"
+          :source="source"
+          :toolbox="source.toolbox"
+        >
+        </QuickCommandSSHCommandForm>
       </tm-layout>
     </template>
   </div>
@@ -52,9 +64,11 @@
 <script>
 import Main from "./Main";
 import ToolboxType from "./ToolboxType";
+import QuickCommand from "./QuickCommand";
+import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
 
 export default {
-  components: { Main, ToolboxType },
+  components: { Main, ToolboxType, QuickCommand, QuickCommandSSHCommandForm },
   props: ["source"],
   data() {
     return {
@@ -102,6 +116,7 @@ export default {
       this.source.toolbox.toUpdateGroup = this.toUpdateGroup;
       this.source.toolbox.toDeleteGroup = this.toDeleteGroup;
       this.source.toolbox.getOptionJSON = this.getOptionJSON;
+      this.source.toolbox.getQuickCommandType = this.getQuickCommandType;
 
       this.source.toolbox.showSwitchToolboxType = () => {
         this.$refs.ToolboxType.showSwitch();
@@ -135,6 +150,7 @@ export default {
           one.name = one.name.toLowerCase();
         });
         this.source.toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
+        this.source.toolbox.quickCommandTypes = data.quickCommandTypes;
         this.source.toolbox.databaseTypes = data.databaseTypes;
         this.source.toolbox.types = data.types;
         data.types.forEach((one) => {
@@ -207,6 +223,18 @@ export default {
         data: [toolboxData, optionsJSON],
         toolboxType,
       });
+    },
+    getQuickCommandType(name) {
+      if (this.source.toolbox.quickCommandTypes == null) {
+        return null;
+      }
+      let res = null;
+      this.source.toolbox.quickCommandTypes.forEach((one) => {
+        if (one.name == name) {
+          res = one;
+        }
+      });
+      return res;
     },
     getOptionJSON(option) {
       let json = {};

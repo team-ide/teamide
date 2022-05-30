@@ -106,7 +106,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "wrap", "database", "table"],
+  props: ["source", "wrap", "tab", "database", "table"],
   data() {
     return {
       ready: false,

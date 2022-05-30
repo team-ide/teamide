@@ -36,6 +36,20 @@ let toolbox = {
             return http.post('api/toolbox/group/delete', param);
         },
     },
+    quickCommand: {
+        query(param) {
+            return http.post('api/toolbox/quickCommand/query', param);
+        },
+        insert(param) {
+            return http.post('api/toolbox/quickCommand/insert', param);
+        },
+        update(param) {
+            return http.post('api/toolbox/quickCommand/update', param);
+        },
+        delete(param) {
+            return http.post('api/toolbox/quickCommand/delete', param);
+        },
+    },
     context(param) {
         return http.post('api/toolbox/context', param);
     },

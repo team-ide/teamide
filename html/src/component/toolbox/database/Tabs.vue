@@ -36,6 +36,7 @@
               :wrap="wrap"
               :database="tab.extend.database"
               :table="tab.extend.table"
+              :tab="tab"
             >
             </DDL>
           </template>
@@ -47,6 +48,7 @@
               :database="tab.extend.database"
               :table="tab.extend.table"
               :extend="tab.extend"
+              :tab="tab"
             >
             </Table>
           </template>
@@ -58,6 +60,7 @@
               :database="tab.extend.database"
               :table="tab.extend.table"
               :extend="tab.extend"
+              :tab="tab"
             >
             </Export>
           </template>
@@ -69,6 +72,7 @@
               :database="tab.extend.database"
               :table="tab.extend.table"
               :extend="tab.extend"
+              :tab="tab"
             >
             </Import>
           </template>

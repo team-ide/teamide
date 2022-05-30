@@ -123,7 +123,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "extend", "database", "table"],
+  props: ["source", "toolbox", "wrap", "tab", "extend", "database", "table"],
   data() {
     return {
       ready: false,

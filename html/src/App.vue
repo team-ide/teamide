@@ -210,27 +210,6 @@ body {
   background: transparent;
 }
 
-.xterm .xterm-viewport::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.xterm .xterm-viewport:hover::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.xterm .xterm-viewport::-webkit-scrollbar-thumb {
-  border-radius: 0px;
-  box-shadow: inset 0 0 10px #333333;
-  background: #333333;
-}
-.xterm .xterm-viewport::-webkit-scrollbar-track {
-  border-radius: 0;
-  box-shadow: inset 0 0 10px #ddd;
-  background: #262626;
-}
-.xterm .xterm-viewport::-webkit-scrollbar-corner {
-  background: #262626;
-}
 .tm-link {
   text-decoration: none !important; /* 去除默认的下划线 */
 }

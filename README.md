@@ -27,7 +27,7 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td rowspan="4">SSH</td>
-        <td>配置SSH连接，连接远程服务器，执行命令</td>
+        <td>配置SSH连接，连接远程服务器，执行命令，支持自定义快速指令</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -285,6 +285,8 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 
 ![avatar](doc/toolbox-ssh.png)
 
+![avatar](doc/toolbox-ssh-command.png)
+
 ![avatar](doc/toolbox-ssh-upload.png)
 
 ![avatar](doc/toolbox-ssh-download.png)
@@ -324,7 +326,6 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 ![avatar](doc/toolbox-elasticsearch.png)
 
 ![avatar](doc/toolbox-elasticsearch-data.png)
-
 
 #### Toolbox 其它
 

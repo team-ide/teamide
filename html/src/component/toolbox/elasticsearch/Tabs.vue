@@ -14,6 +14,7 @@
             :toolboxType="toolboxType"
             :wrap="wrap"
             :indexName="tab.extend.indexName"
+            :tab="tab"
           >
           </IndexData>
         </template>

@@ -43,6 +43,7 @@
         <ToolboxEditor
           :source="source"
           :toolbox="toolbox"
+          :tab="tab"
           :toolboxType="tab.toolboxType"
           :openId="tab.openId"
           :toolboxData="tab.toolboxData"

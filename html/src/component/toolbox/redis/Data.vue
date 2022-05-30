@@ -249,7 +249,15 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
+  props: [
+    "source",
+    "toolboxType",
+    "toolbox",
+    "tab",
+    "option",
+    "extend",
+    "wrap",
+  ],
   data() {
     return {
       ready: false,

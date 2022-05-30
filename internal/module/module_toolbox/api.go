@@ -51,6 +51,11 @@ var (
 	PowerToolboxSSHFtpUpload           = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_upload", Text: "工具SSH FTP上传", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
 	PowerToolboxSSHFtpDownload         = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
 	PowerToolboxDatabaseExportDownload = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
+
+	PowerToolboxQuickCommandQuery  = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_query", Text: "工具快速指令查询", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQuickCommandInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_insert", Text: "工具快速指令新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQuickCommandUpdate = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_update", Text: "工具快速指令修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxQuickCommandDelete = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_delete", Text: "工具快速指令删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
@@ -82,7 +87,26 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp/download"}, Power: PowerToolboxSSHFtpDownload, Do: this_.sshFtpDownload, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/database/export/download"}, Power: PowerToolboxDatabaseExportDownload, Do: this_.databaseExportDownload, IsGet: true})
 
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/query"}, Power: PowerToolboxQuickCommandQuery, Do: this_.queryQuickCommand})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/insert"}, Power: PowerToolboxQuickCommandInsert, Do: this_.insertQuickCommand})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/update"}, Power: PowerToolboxQuickCommandUpdate, Do: this_.updateQuickCommand})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/delete"}, Power: PowerToolboxQuickCommandDelete, Do: this_.deleteQuickCommand})
+
 	return
+}
+
+type QuickCommandType struct {
+	Name  string `json:"name,omitempty"`
+	Text  string `json:"text,omitempty"`
+	Value int    `json:"value,omitempty"`
+}
+
+var (
+	QuickCommandTypes []*QuickCommandType
+)
+
+func init() {
+	QuickCommandTypes = append(QuickCommandTypes, &QuickCommandType{Name: "SSH Command", Text: "", Value: 1})
 }
 
 type IndexResponse struct {
@@ -90,6 +114,7 @@ type IndexResponse struct {
 	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
 	MysqlColumnTypeInfos     []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
 	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
+	QuickCommandTypes        []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
 }
 
 func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -100,6 +125,7 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
 	response.MysqlColumnTypeInfos = db.MySqlColumnTypeInfos
 	response.DatabaseTypes = db.DatabaseTypes
+	response.QuickCommandTypes = QuickCommandTypes
 
 	res = response
 	return

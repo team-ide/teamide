@@ -189,6 +189,52 @@ CREATE TABLE ` + TableToolboxGroup + ` (
 		},
 
 		/** 给工具箱添加分组 结束 **/
+
+		/** 给工具箱添加 快速命令 开始 **/
+
+		// 创建工具箱 快速命令 表
+		&install.StageModel{
+			Version: "1.0.2",
+			Module:  ModuleToolbox,
+			Stage:   `创建表[` + TableToolboxQuickCommand + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableToolboxQuickCommand + ` (
+	quickCommandId bigint(20) NOT NULL COMMENT '快速命令ID',
+	quickCommandType int(10) NOT NULL COMMENT '快速命令类型',
+	name varchar(50) NOT NULL COMMENT '名称',
+	comment varchar(200) DEFAULT NULL COMMENT '说明',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	option varchar(2000) DEFAULT NULL COMMENT '配置',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (quickCommandId),
+	KEY index_quickCommandType (quickCommandType),
+	KEY index_userId (userId),
+	KEY index_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱分组';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableToolboxQuickCommand + ` (
+	quickCommandId bigint(20) NOT NULL,
+	quickCommandType int(10) NOT NULL,
+	name varchar(50) NOT NULL,
+	comment varchar(200) DEFAULT NULL,
+	userId bigint(20) NOT NULL,
+	option varchar(2000) DEFAULT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	PRIMARY KEY (quickCommandId)
+);
+`,
+					`CREATE INDEX ` + TableToolboxQuickCommand + `_index_quickCommandType on ` + TableToolboxQuickCommand + ` (quickCommandType);`,
+					`CREATE INDEX ` + TableToolboxQuickCommand + `_index_userId on ` + TableToolboxQuickCommand + ` (userId);`,
+					`CREATE INDEX ` + TableToolboxQuickCommand + `_index_name on ` + TableToolboxQuickCommand + ` (name);`,
+				},
+			},
+		},
+
+		/** 给工具箱添加 快速命令 结束 **/
 	}
 
 }

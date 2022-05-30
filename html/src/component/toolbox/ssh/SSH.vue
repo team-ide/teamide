@@ -11,6 +11,66 @@
       "
     />
     <div class="terminal-box-back" ref="terminal_back" />
+    <div class="toolbox-ssh-quickCommand-box">
+      <el-form class="pdt-5 pdlr-10" size="mini" @submit.native.prevent inline>
+        <el-form-item label="指令" class="mgb-0">
+          <el-select
+            v-model="quickCommand"
+            style="width: 400px"
+            placeholder="请选择指令"
+            value-key="quickCommandId"
+            filterable
+          >
+            <template v-if="toolbox.quickCommandSSHCommands != null">
+              <el-option
+                v-for="(one, index) in toolbox.quickCommandSSHCommands"
+                :key="index"
+                :value="one"
+                :label="one.name"
+                :disabled="one.disabled"
+              >
+              </el-option>
+            </template>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="" class="mgb-0">
+          <div
+            v-if="quickCommand != null"
+            class="ft-12 tm-link color-grey mgl-10"
+            @click="toExecCommand(quickCommand, false)"
+          >
+            填充，不执行
+          </div>
+          <div
+            v-if="quickCommand != null"
+            class="ft-12 tm-link color-orange mgl-10"
+            @click="toExecCommand(quickCommand, true)"
+          >
+            填充，并执行
+          </div>
+          <div
+            v-if="quickCommand != null"
+            class="ft-12 tm-link color-blue mgl-10"
+            @click="toolbox.toUpdateSSHCommand(quickCommand)"
+          >
+            修改
+          </div>
+          <div
+            v-if="quickCommand != null"
+            class="ft-12 tm-link color-red mgl-10"
+            @click="toolbox.toDeleteSSHCommand(quickCommand)"
+          >
+            删除
+          </div>
+          <div
+            class="ft-12 tm-link color-green mgl-10"
+            @click="toolbox.toInsertSSHCommand"
+          >
+            添加
+          </div>
+        </el-form-item>
+      </el-form>
+    </div>
     <SSHUpload :source="source" :wrap="wrap" :token="token"></SSHUpload>
     <SSHDownload :source="source" :wrap="wrap" :token="token"></SSHDownload>
   </div>
@@ -21,7 +81,7 @@
 import "xterm/css/xterm.css";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
-import { AttachAddon } from "xterm-addon-attach";
+// import { AttachAddon } from "xterm-addon-attach";
 
 import Zmodem from "zmodem.js";
 import SSHUpload from "./SSHUpload.vue";
@@ -40,6 +100,7 @@ export default {
   ],
   data() {
     return {
+      quickCommand: null,
       rows: 40,
       cols: 100,
       style: {
@@ -77,6 +138,26 @@ export default {
     },
     onError(error) {
       this.tool.error(error);
+    },
+    toExecCommand(quickCommand, exec) {
+      if (quickCommand == null) {
+        this.tool.error("快速指令为空");
+        return;
+      }
+      let option = this.toolbox.getOptionJSON(quickCommand.option);
+      if (option == null || this.tool.isEmpty(option.command)) {
+        this.tool.error("未配置命令");
+        return;
+      }
+      let command = option.command;
+
+      // this.term.write(command);
+      this.wrap.writeData(command);
+
+      if (exec) {
+        // this.term.write(`\n`);
+        this.wrap.writeData(`\n`);
+      }
     },
     toStart() {
       let data = {};
@@ -234,20 +315,69 @@ export default {
 }
 .toolbox-ssh-editor .terminal-box {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 40px);
   position: relative;
-  overflow: hidden;
-  position: absolute;
-  top: 0px;
-  left: 0px;
 }
-.toolbox-ssh-editor .terminal-box-back {
+.terminal-box-back {
   width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
+  height: calc(100% - 40px);
   position: absolute;
-  top: 0px;
   left: 0px;
+  top: 0px;
+  z-index: -1;
+}
+.toolbox-ssh-editor .terminal-box .terminal {
+  width: 100% !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-viewport {
+  width: 100% !important;
+  background-color: transparent !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-screen {
+  width: calc(100% - 10px) !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-text-layer {
+  width: 100% !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-selection-layer {
+  width: 100% !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-link-layer {
+  width: 100% !important;
+}
+.toolbox-ssh-editor .terminal-box .xterm-cursor-layer {
+  width: 100% !important;
+}
+
+.toolbox-ssh-editor .terminal-box .xterm .xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.toolbox-ssh-editor
+  .terminal-box
+  .xterm
+  .xterm-viewport:hover::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.toolbox-ssh-editor
+  .terminal-box
+  .xterm
+  .xterm-viewport::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+  background: #6b6b6b;
+}
+.toolbox-ssh-editor
+  .terminal-box
+  .xterm
+  .xterm-viewport::-webkit-scrollbar-track {
+  border-radius: 0;
+  background: #383838;
+}
+.toolbox-ssh-editor
+  .terminal-box
+  .xterm
+  .xterm-viewport::-webkit-scrollbar-corner {
+  background: #ddd;
 }
 </style>

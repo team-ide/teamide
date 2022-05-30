@@ -91,6 +91,7 @@ export default {
     "openId",
     "updateOpenExtend",
     "updateOpenComment",
+    "tab",
   ],
   data() {
     return {

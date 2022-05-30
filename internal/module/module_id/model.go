@@ -45,4 +45,6 @@ const (
 	IDTypeToolboxOpenTab = 5003
 	// IDTypeToolboxGroup 工具箱分组ID类型
 	IDTypeToolboxGroup = 5004
+	// IDTypeToolboxQuickCommand 工具箱快速命令ID类型
+	IDTypeToolboxQuickCommand = 5005
 )

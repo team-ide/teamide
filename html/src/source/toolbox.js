@@ -149,6 +149,8 @@ toolbox.tabs = [];
 toolbox.activeTab = null;
 toolbox.context = null;
 toolbox.groups = null;
+toolbox.quickCommands = null;
+toolbox.quickCommandSSHCommands = null;
 
 toolbox.formatExtend = (toolboxType, data, extend) => {
     if (toolboxType.name == "ssh") {

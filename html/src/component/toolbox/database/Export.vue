@@ -267,7 +267,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "extend", "database", "table"],
+  props: ["source", "toolbox", "wrap", "tab", "extend", "database", "table"],
   data() {
     return {
       ready: false,
@@ -333,13 +333,16 @@ export default {
       this.form.exportTable = this.table;
       this.exportColumnList = [];
 
-      this.tableDetail.columnList.forEach((column) => {
-        let exportColumn = {};
-        exportColumn.column = column.name;
-        exportColumn.exportName = column.name;
-        exportColumn.value = null;
-        this.exportColumnList.push(exportColumn);
-      });
+      if (this.tableDetail) {
+        this.tableDetail.columnList.forEach((column) => {
+          let exportColumn = {};
+          exportColumn.column = column.name;
+          exportColumn.exportName = column.name;
+          exportColumn.value = null;
+          this.exportColumnList.push(exportColumn);
+        });
+      }
+
       this.ready = true;
     },
 
@@ -383,7 +386,10 @@ export default {
       let param = Object.assign({}, this.form);
       param.database = this.database;
       param.table = this.table;
-      param.columnList = this.tableDetail.columnList;
+
+      if (this.tableDetail) {
+        param.columnList = this.tableDetail.columnList;
+      }
       param.exportColumnList = this.exportColumnList;
 
       let res = await this.wrap.work("export", param);
