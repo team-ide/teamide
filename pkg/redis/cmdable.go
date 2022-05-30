@@ -41,6 +41,10 @@ func ValueType(ctx context.Context, client redis.Cmdable, key string) (ValueType
 
 	cmdType := client.Type(ctx, key)
 	ValueType, err = cmdType.Result()
+	if err == redis.Nil {
+		err = nil
+		return
+	}
 	return
 }
 
@@ -216,6 +220,31 @@ func HDel(ctx context.Context, client redis.Cmdable, key string, field string) (
 
 	cmd := client.HDel(ctx, key, field)
 	_, err = cmd.Result()
+	return
+}
+
+func HGet(ctx context.Context, client redis.Cmdable, key string, field string) (value string, err error) {
+
+	cmd := client.HGet(ctx, key, field)
+	value, err = cmd.Result()
+	if err == redis.Nil {
+		err = nil
+		return
+	}
+	return
+}
+
+func SetBit(ctx context.Context, client redis.Cmdable, key string, offset int64, value int) (err error) {
+
+	cmd := client.SetBit(ctx, key, offset, value)
+	err = cmd.Err()
+	return
+}
+
+func BitCount(ctx context.Context, client redis.Cmdable, key string) (count int64, err error) {
+	var bitCount = &redis.BitCount{}
+	cmd := client.BitCount(ctx, key, bitCount)
+	count, err = cmd.Result()
 	return
 }
 
