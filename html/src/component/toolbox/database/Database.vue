@@ -270,8 +270,13 @@ export default {
         });
         menus.push({
           text: "复制名称",
-          onClick: () => {
-            this.tool.copyText(data.name);
+          onClick: async () => {
+            let res = await this.tool.clipboardWrite(data.name);
+            if (res.success) {
+              this.tool.success("复制成功");
+            } else {
+              this.tool.warn("复制失败，请允许访问剪贴板！");
+            }
           },
         });
         menus.push({

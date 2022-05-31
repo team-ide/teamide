@@ -32,9 +32,28 @@ export default {
         cancelButtonText: cancelTitle || "取消",
       });
     };
+    this.tool.message = (msg, okTitle, cancelTitle) => {
+      return new Promise((resolve, reject) => {
+        this.$msgbox({
+          title: "提示",
+          message: msg,
+          showCancelButton: true,
+          confirmButtonText: okTitle || "确定",
+          cancelButtonText: cancelTitle || "取消",
+          beforeClose: (action, instance, done) => {
+            if (action === "confirm") {
+              done();
+              resolve(action);
+            } else {
+              done();
+              reject();
+            }
+          },
+        });
+      });
+    };
   },
-  mounted() {
-  },
+  mounted() {},
 };
 </script>
 

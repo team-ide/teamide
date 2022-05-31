@@ -688,28 +688,44 @@ export default {
           let selectText = event.target.value.substring(startIndex, endIndex);
           menus.push({
             text: "复制选中文案",
-            onClick: () => {
-              this.tool.copyText(selectText);
+            onClick: async () => {
+              let res = await this.tool.clipboardWrite(selectText);
+              if (res.success) {
+                this.tool.success("复制成功");
+              } else {
+                this.tool.warn("复制失败，请允许访问剪贴板！");
+              }
             },
           });
         }
-        // let readText = await this.tool.readClipboardText();
-        // menus.push({
-        //   text: "追加粘贴",
-        //   disabled: this.tool.isEmpty(readText),
-        //   onClick: () => {
-        //     input.val(input.val() + readText);
-        //     input.change();
-        //   },
-        // });
-        // menus.push({
-        //   text: "覆盖粘贴",
-        //   disabled: this.tool.isEmpty(readText),
-        //   onClick: () => {
-        //     input.val(readText);
-        //     input.change();
-        //   },
-        // });
+        let menu_w_1 = {
+          text: "追加粘贴",
+          disabled: true,
+        };
+        menus.push(menu_w_1);
+        let menu_w_2 = {
+          text: "覆盖粘贴",
+          disabled: true,
+        };
+        menus.push(menu_w_2);
+        setTimeout(async () => {
+          let readResult = await this.tool.readClipboardText();
+          if (!readResult.success) {
+            menu_w_1.text += "(请允许访问剪贴板)";
+            menu_w_2.text += "(请允许访问剪贴板)";
+          }
+          menu_w_1.disabled = this.tool.isEmpty(readResult.text);
+          menu_w_1.onClick = () => {
+            input.val(input.val() + readResult.text);
+            input.change();
+          };
+          menu_w_2.disabled = this.tool.isEmpty(readResult.text);
+          menu_w_2.onClick = () => {
+            input.val(readResult.text);
+            input.change();
+          };
+        }, 200);
+
         menus.push({
           text: "设置为空字符串",
           onClick: () => {

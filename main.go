@@ -125,7 +125,7 @@ func main() {
 		panic(err)
 	}
 	if serverContext.IsHtmlDev {
-		serverUrl = "http://127.0.0.1:21081/"
+		serverUrl = "http://localhost:21081/"
 	}
 
 	if !serverContext.IsServer {

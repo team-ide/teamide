@@ -229,6 +229,24 @@ export default {
       // this.attachAddon = new AttachAddon(this.socket);
       // this.term.loadAddon(this.attachAddon);
     },
+    onKeydown(e) {
+      console.log(this.tool.keyIsCtrlC(e));
+      if (this.tool.keyIsCtrlC(e)) {
+        this.tool.success("复制成功");
+      } else if (this.tool.keyIsCtrlV(e)) {
+        this.tool.success("粘贴成功");
+      }
+    },
+    onKeyup(e) {
+      console.log(this.tool.keyIsCtrlC(e));
+      if (this.tool.keyIsCtrlC(e)) {
+        this.tool.success("复制成功");
+      } else if (this.tool.keyIsCtrlV(e)) {
+        this.tool.success("粘贴成功");
+      }
+    },
+    onMousedown(e) {},
+    onMouseup(e) {},
     initTerminal() {
       if (this.term != null) {
         this.term.dispose();
@@ -260,6 +278,58 @@ export default {
       this.fitAddon.fit();
 
       this.term.focus();
+      this.term.onKey(async (arg) => {
+        let domEvent = arg.domEvent;
+        // let key = arg.key;
+        // console.log(key);
+        if (this.tool.keyIsCtrlC(domEvent)) {
+          let copiedText = this.term.getSelection();
+          if (this.tool.isNotEmpty(copiedText)) {
+            let res = await this.tool.clipboardWrite(copiedText);
+            if (res.success) {
+              this.tool.success("复制成功");
+            } else {
+              this.tool.warn("复制失败，请允许访问剪贴板！");
+            }
+          }
+        } else if (this.tool.keyIsCtrlV(domEvent)) {
+          let readResult = await this.tool.readClipboardText();
+          if (readResult.success) {
+            if (this.tool.isNotEmpty(readResult.text)) {
+              if (readResult.text.indexOf("\n") >= 0) {
+                let showText = readResult.text;
+
+                const h = this.$createElement;
+
+                let showDiv = h("div", { style: "" }, [
+                  h("div", { style: "" }, "确认粘贴以下内容"),
+                  h(
+                    "textarea",
+                    {
+                      style:
+                        "width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;white-space: nowrap;border: 1px solid #ddd;padding: 5px;",
+                    },
+                    showText
+                  ),
+                ]);
+
+                this.tool
+                  .message(showDiv)
+                  .then(() => {
+                    this.wrap.writeData(readResult.text);
+                    this.tool.success("粘贴成功");
+                  })
+                  .catch(() => {});
+              } else {
+                this.wrap.writeData(readResult.text);
+                this.tool.success("粘贴成功");
+              }
+            }
+          } else {
+            this.tool.warn("粘贴失败，请允许访问剪贴板！");
+          }
+        }
+      });
       this.cols = this.term.cols;
       this.rows = this.term.rows;
       this.initSize();

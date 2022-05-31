@@ -55,7 +55,7 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 	if this_.IsServer {
 		println("服务启动，访问地址:")
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
-			httpServer := fmt.Sprint("127.0.0.1", ":", this_.ServerPort)
+			httpServer := fmt.Sprint("localhost", ":", this_.ServerPort)
 			println("\t", "http://"+httpServer+this_.ServerContext.ServerContext)
 			for _, iface := range ins {
 				if iface.Flags&net.FlagUp == 0 {

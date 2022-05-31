@@ -204,19 +204,54 @@ tool.down = function (bean, name, value) {
         }
     }
 };
-tool.copyText = async function (text) {
-    let result = await navigator.clipboard.writeText(text)
-    return result;
+tool.clipboardWrite = async function (text) {
+
+    return new Promise(function (resolve, reject) {
+        let toWrite = () => {
+            navigator.clipboard.writeText(text).then(() => {
+                // tool.success('复制成功！')
+                resolve({
+                    success: true,
+                })
+            }).catch(e => {
+                // tool.warn('复制失败，请允许访问剪贴板！')
+                resolve({ success: false })
+            })
+        }
+
+        navigator.permissions.query(
+            { name: 'clipboard-write' }
+        ).then(function () {
+            toWrite();
+        });
+    });
 };
-tool.readClipboardText = async function () {
-    let result = await navigator.permissions.query({ name: 'clipboard-read' })
-    if (result.state == 'granted' || result.state == 'prompt') { //读取剪贴板 
-        let text = await navigator.clipboard.readText()
-        return text;
-    } else {
-        tool.warn('请允许读取剪贴板！')
-        return null;
-    }
+
+tool.readClipboardText = function () {
+
+    return new Promise(function (resolve, reject) {
+        let toRead = () => {
+
+            navigator.clipboard.readText().then((text) => {
+                // tool.jQuery(span).remove()
+                // tool.success('读取成功！')
+                resolve({
+                    success: true,
+                    text: text,
+                })
+            }).catch(e => {
+                // tool.jQuery(span).remove()
+                // tool.warn('读取失败，请允许访问剪贴板！')
+                resolve({ success: false })
+            })
+        }
+
+        navigator.permissions.query(
+            { name: 'clipboard-read' }
+        ).then(function () {
+            toRead();
+        });
+    });
 };
 tool.byteToString = function (arr) {
     if (typeof arr === 'string') {

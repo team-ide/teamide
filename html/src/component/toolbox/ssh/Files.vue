@@ -367,6 +367,28 @@ export default {
             this.toRename(files[0]);
           },
         });
+        menus.push({
+          text: "复制文件名",
+          onClick: async () => {
+            let res = await this.tool.clipboardWrite(files[0].name);
+            if (res.success) {
+              this.tool.success("复制成功");
+            } else {
+              this.tool.warn("复制失败，请允许访问剪贴板！");
+            }
+          },
+        });
+        menus.push({
+          text: "复制文件路径",
+          onClick: async () => {
+            let res = await this.tool.clipboardWrite(files[0].path);
+            if (res.success) {
+              this.tool.success("复制成功");
+            } else {
+              this.tool.warn("复制失败，请允许访问剪贴板！");
+            }
+          },
+        });
         if (!files[0].isDir) {
           // menus.push({
           //   text: "另存为",
