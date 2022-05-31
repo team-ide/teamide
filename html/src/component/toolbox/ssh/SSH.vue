@@ -11,65 +11,85 @@
       "
     />
     <div class="terminal-box-back" ref="terminal_back" />
-    <div class="toolbox-ssh-quickCommand-box">
-      <el-form class="pdt-5 pdlr-10" size="mini" @submit.native.prevent inline>
-        <el-form-item label="指令" class="mgb-0">
-          <el-select
-            v-model="quickCommand"
-            style="width: 400px"
-            placeholder="请选择指令"
-            value-key="quickCommandId"
-            filterable
-          >
-            <template v-if="toolbox.quickCommandSSHCommands != null">
-              <el-option
-                v-for="(one, index) in toolbox.quickCommandSSHCommands"
-                :key="index"
-                :value="one"
-                :label="one.name"
-                :disabled="one.disabled"
-              >
-              </el-option>
+    <div class="toolbox-ssh-quickCommand-box pdt-8 pdlr-10">
+      <el-dropdown size="mini" trigger="click">
+        <span class="el-dropdown-link pdlr-5 color-orange tm-pointer">
+          <span>快速指令</span>
+        </span>
+        <el-dropdown-menu slot="dropdown" class="pd-0 bd-0">
+          <div class="toolbox-ssh-quickCommand-header">
+            <div class="toolbox-ssh-quickCommand-search-box">
+              <input
+                class="toolbox-ssh-quickCommand-search"
+                v-model="quickCommandSearch"
+                placeholder="输入过滤"
+              />
+            </div>
+            <div
+              class="ft-12 tm-link color-green mgl-10 mgt-3"
+              @click="toolbox.toInsertSSHCommand()"
+            >
+              添加
+            </div>
+          </div>
+          <div class="toolbox-ssh-quickCommand-list scrollbar">
+            <template
+              v-if="
+                toolbox.quickCommandSSHCommands != null &&
+                toolbox.quickCommandSSHCommands.length > 0
+              "
+            >
+              <template v-for="(one, index) in toolbox.quickCommandSSHCommands">
+                <div
+                  :key="index"
+                  v-if="
+                    tool.isEmpty(quickCommandSearch) ||
+                    one.name
+                      .toLowerCase()
+                      .indexOf(quickCommandSearch.toLowerCase()) >= 0
+                  "
+                  class="toolbox-ssh-quickCommand-one"
+                >
+                  <div class="toolbox-ssh-quickCommand-name">
+                    {{ one.name }}
+                  </div>
+                  <div class="toolbox-ssh-quickCommand-btn-group">
+                    <div
+                      class="ft-12 tm-link color-grey mgl-10"
+                      @click="toExecCommand(one, false)"
+                    >
+                      填充，不执行
+                    </div>
+                    <div
+                      class="ft-12 tm-link color-orange mgl-10"
+                      @click="toExecCommand(one, true)"
+                    >
+                      填充，并执行
+                    </div>
+                    <div
+                      class="ft-12 tm-link color-blue mgl-10"
+                      @click="toolbox.toUpdateSSHCommand(one)"
+                    >
+                      修改
+                    </div>
+                    <div
+                      class="ft-12 tm-link color-red mgl-10"
+                      @click="toolbox.toDeleteSSHCommand(one)"
+                    >
+                      删除
+                    </div>
+                  </div>
+                </div>
+              </template>
             </template>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="" class="mgb-0">
-          <div
-            v-if="quickCommand != null"
-            class="ft-12 tm-link color-grey mgl-10"
-            @click="toExecCommand(quickCommand, false)"
-          >
-            填充，不执行
+            <template v-else>
+              <div class="pd-20 pdlr-50 ft-15 color-grey text-center">
+                暂无指令
+              </div>
+            </template>
           </div>
-          <div
-            v-if="quickCommand != null"
-            class="ft-12 tm-link color-orange mgl-10"
-            @click="toExecCommand(quickCommand, true)"
-          >
-            填充，并执行
-          </div>
-          <div
-            v-if="quickCommand != null"
-            class="ft-12 tm-link color-blue mgl-10"
-            @click="toolbox.toUpdateSSHCommand(quickCommand)"
-          >
-            修改
-          </div>
-          <div
-            v-if="quickCommand != null"
-            class="ft-12 tm-link color-red mgl-10"
-            @click="toolbox.toDeleteSSHCommand(quickCommand)"
-          >
-            删除
-          </div>
-          <div
-            class="ft-12 tm-link color-green mgl-10"
-            @click="toolbox.toInsertSSHCommand"
-          >
-            添加
-          </div>
-        </el-form-item>
-      </el-form>
+        </el-dropdown-menu>
+      </el-dropdown>
     </div>
     <SSHUpload :source="source" :wrap="wrap" :token="token"></SSHUpload>
     <SSHDownload :source="source" :wrap="wrap" :token="token"></SSHDownload>
@@ -100,7 +120,7 @@ export default {
   ],
   data() {
     return {
-      quickCommand: null,
+      quickCommandSearch: null,
       rows: 40,
       cols: 100,
       style: {
@@ -313,6 +333,37 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
+}
+
+.toolbox-ssh-quickCommand-header {
+  display: flex;
+  margin: 5px 0px;
+}
+.toolbox-ssh-quickCommand-search-box {
+  margin: 0px 10px;
+  width: 200px;
+}
+.toolbox-ssh-quickCommand-search {
+  width: 100%;
+  height: 26px;
+  line-height: 26px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+  outline: 0px;
+}
+.toolbox-ssh-quickCommand-list {
+  height: 300px;
+  width: 600px;
+}
+.toolbox-ssh-quickCommand-one {
+  display: flex;
+  padding: 2px 10px;
+}
+.toolbox-ssh-quickCommand-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .toolbox-ssh-editor .terminal-box {
   width: 100%;
