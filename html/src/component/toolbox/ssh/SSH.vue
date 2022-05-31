@@ -298,25 +298,19 @@ export default {
             if (this.tool.isNotEmpty(readResult.text)) {
               if (readResult.text.indexOf("\n") >= 0) {
                 let showText = readResult.text;
+                let div = this.tool.jQuery("<div/>");
 
-                const h = this.$createElement;
+                let textarea = this.tool.jQuery(
+                  `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
+                );
+                textarea.append(showText);
 
-                let showDiv = h("div", { style: "" }, [
-                  h("div", { style: "" }, "确认粘贴以下内容"),
-                  h(
-                    "textarea",
-                    {
-                      style:
-                        "width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;white-space: nowrap;border: 1px solid #ddd;padding: 5px;",
-                    },
-                    showText
-                  ),
-                ]);
-
+                div.append("<div>确认粘贴以下内容<div/>");
+                div.append(textarea);
                 this.tool
-                  .message(showDiv)
+                  .confirm(div.html())
                   .then(() => {
-                    this.wrap.writeData(readResult.text);
+                    this.wrap.writeData(showText);
                     this.tool.success("粘贴成功");
                   })
                   .catch(() => {});
