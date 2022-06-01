@@ -6,11 +6,10 @@
           ref="ftp"
           :source="source"
           :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
           :wrap="wrap"
-          :token="token"
-          :socket="socket"
+          :initToken="initToken"
+          :initSocket="initSocket"
         >
         </FTP>
       </template>
@@ -19,11 +18,10 @@
           ref="ssh"
           :source="source"
           :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
           :wrap="wrap"
-          :token="token"
-          :socket="socket"
+          :initToken="initToken"
+          :initSocket="initSocket"
         >
         </SSH>
       </template>
@@ -44,25 +42,12 @@ export default {
   data() {
     return {
       ready: false,
-      token: null,
-      socket: null,
-      TeamIDEEvent: "TeamIDE:event:",
-      TeamIDEMessage: "TeamIDE:message:",
-      TeamIDEError: "TeamIDE:error:",
     };
   },
   computed: {},
   watch: {},
   methods: {
     async init() {
-      this.wrap.writeData = this.writeData;
-      this.wrap.writeMessage = this.writeMessage;
-      this.wrap.writeEvent = this.writeEvent;
-      this.wrap.writeError = this.writeError;
-      this.wrap.tokenWork = this.tokenWork;
-
-      await this.initToken();
-      this.initSocket();
       this.ready = true;
     },
     onFocus() {
@@ -75,94 +60,111 @@ export default {
         one.refresh && one.refresh();
       });
     },
-    async initToken() {
-      if (this.tool.isEmpty(this.token)) {
+    async initToken(obj) {
+      if (this.tool.isEmpty(obj.token)) {
         let param = {};
         let res = await this.wrap.work("createToken", param);
         res.data = res.data || {};
-        this.token = res.data.token;
+        obj.token = res.data.token;
       }
+      obj.tokenWork = async (work, param) => {
+        param = param || {};
+        param.token = obj.token;
+        let res = await this.wrap.work(work, param);
+        return res;
+      };
+      return obj.token;
     },
-    async tokenWork(work, param) {
-      param = param || {};
-      param.token = this.token;
-      let res = await this.wrap.work(work, param);
-      return res;
-    },
-    onEvent(arg) {
-      this.$refs.ftp && this.$refs.ftp.onEvent && this.$refs.ftp.onEvent(arg);
-      this.$refs.ssh && this.$refs.ssh.onEvent && this.$refs.ssh.onEvent(arg);
-    },
-    onError(arg) {
-      this.$refs.ftp && this.$refs.ftp.onError && this.$refs.ftp.onError(arg);
-      this.$refs.ssh && this.$refs.ssh.onError && this.$refs.ssh.onError(arg);
-    },
-    onMessage(arg) {
-      this.$refs.ftp &&
-        this.$refs.ftp.onMessage &&
-        this.$refs.ftp.onMessage(arg);
-      this.$refs.ssh &&
-        this.$refs.ssh.onMessage &&
-        this.$refs.ssh.onMessage(arg);
-    },
-    onData(arg) {
-      this.$refs.ftp && this.$refs.ftp.onData && this.$refs.ftp.onData(arg);
-      this.$refs.ssh && this.$refs.ssh.onData && this.$refs.ssh.onData(arg);
-    },
-    writeData(data) {
-      this.socket.send(data);
-    },
-    writeMessage(message) {
-      this.socket.send(this.TeamIDEMessage + message);
-    },
-    writeEvent(event) {
-      this.socket.send(this.TeamIDEEvent + event);
-    },
-    writeError(error) {
-      this.socket.send(this.TeamIDEError + error);
-    },
-    initSocket() {
-      if (this.socket != null) {
-        this.socket.close();
+    initSocket(obj) {
+      if (obj.socket != null) {
+        obj.socket.close();
       }
+
+      obj.writeData = (data) => {
+        obj.socket.send(data);
+      };
+      obj.writeMessage = (message) => {
+        obj.socket.send(this.toolbox.sshTeamIDEMessage + message);
+      };
+      obj.writeEvent = (event) => {
+        obj.socket.send(this.toolbox.sshTeamIDEEvent + event);
+      };
+      obj.writeError = (error) => {
+        obj.socket.send(this.toolbox.sshTeamIDEError + error);
+      };
 
       let url = this.source.api;
       url = url.substring(url.indexOf(":"));
-      if (this.extend && this.extend.isFTP) {
+      if (obj.isFTP) {
         url = "ws" + url + "api/toolbox/ssh/ftp";
       } else {
         url = "ws" + url + "api/toolbox/ssh/shell";
       }
-      url += "?token=" + encodeURIComponent(this.token);
-      url += "&jwt=" + encodeURIComponent(this.tool.getJWT());
-      this.socket = new WebSocket(url);
-      this.socket.binaryType = "arraybuffer";
-      this.socket.onopen = () => {
-        this.onEvent("socket open");
+      url += "?token=" + encodeURIComponent(obj.token);
+      url += "&jwt=" + encodeURIComponent(obj.tool.getJWT());
+      obj.socket = new WebSocket(url);
+      obj.socket.binaryType = "arraybuffer";
+      obj.socket.onopen = () => {
+        obj.onEvent("socket open");
       };
-      this.socket.onmessage = (event) => {
-        if (typeof event.data == "string") {
-          let data = event.data;
-          if (data.indexOf(this.TeamIDEEvent) == 0) {
-            this.onEvent(data.substring(this.TeamIDEEvent.length));
-          } else if (data.indexOf(this.TeamIDEError) == 0) {
-            this.onError(data.substring(this.TeamIDEError.length));
-          } else if (data.indexOf(this.TeamIDEMessage) == 0) {
-            this.onMessage(data.substring(this.TeamIDEMessage.length));
+      obj.socket.onmessage = (event) => {
+        let message = event.data;
+        if (message instanceof ArrayBuffer) {
+          try {
+            let data = new Uint8Array(message);
+            if (this.tool.isUtf8(data)) {
+              message = this.tool.Utf8ArrayToStr(data);
+            }
+          } catch (e) {
+            message = event.data;
+          }
+        }
+        if (typeof message == "string") {
+          if (message.indexOf(this.toolbox.sshTeamIDEEvent) == 0) {
+            obj.onEvent &&
+              obj.onEvent(
+                message.substring(this.toolbox.sshTeamIDEEvent.length)
+              );
+          } else if (message.indexOf(this.toolbox.sshTeamIDEError) == 0) {
+            obj.onError &&
+              obj.onError(
+                message.substring(this.toolbox.sshTeamIDEError.length)
+              );
+          } else if (message.indexOf(this.toolbox.sshTeamIDEMessage) == 0) {
+            obj.onMessage &&
+              obj.onMessage(
+                message.substring(this.toolbox.sshTeamIDEMessage.length)
+              );
+          } else if (message.indexOf(this.toolbox.sshTeamIDEAlert) == 0) {
+            obj.onAlert &&
+              obj.onAlert(
+                message.substring(this.toolbox.sshTeamIDEAlert.length)
+              );
+          } else if (message.indexOf(this.toolbox.sshTeamIDEConsole) == 0) {
+            obj.onConsole &&
+              obj.onConsole(
+                message.substring(this.toolbox.sshTeamIDEConsole.length)
+              );
+          } else if (message.indexOf(this.toolbox.sshTeamIDEStdout) == 0) {
+            obj.onStdout &&
+              obj.onStdout(
+                message.substring(this.toolbox.sshTeamIDEStdout.length)
+              );
           } else {
-            this.onData(data);
+            obj.onData && obj.onData(message);
           }
         } else {
-          this.onData(event.data);
+          obj.onData && obj.onData(message);
         }
       };
-      this.socket.onclose = () => {
-        this.onEvent("socket close");
-        this.socket = null;
+      obj.socket.onclose = () => {
+        obj.onEvent("socket close");
+        obj.socket = null;
       };
-      this.socket.onerror = () => {
+      obj.socket.onerror = () => {
         console.log("socket error");
       };
+      return obj.socket;
     },
     destroy() {
       if (this.socket != null) {

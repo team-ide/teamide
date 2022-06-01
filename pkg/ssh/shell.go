@@ -195,7 +195,7 @@ func (this_ *ShellClient) startRead(reader io.Reader, isError bool) (err error) 
 		isZModem, _ = this_.processZModem(bs, n, buffSize)
 		if !isZModem {
 			bs = bs[0:n]
-			this_.WSWrite(bs)
+			this_.WSWriteBinary(bs)
 		}
 
 	}

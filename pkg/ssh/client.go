@@ -155,12 +155,12 @@ func (this_ *Client) ListenWS(onEvent func(event string), onMessage func(bs []by
 }
 
 const (
-	TeamIDEEvent   = "TeamIDE:event:"
-	TeamIDEMessage = "TeamIDE:message:"
-	TeamIDEError   = "TeamIDE:error:"
-	TeamIDEAlert   = "TeamIDE:alert:"
-	TeamIDEConsole = "TeamIDE:console:"
-	TeamIDEStdout  = "TeamIDE:stdout:"
+	TeamIDEEvent   = "^^^^--Team--IDE--^^^^:event:"
+	TeamIDEMessage = "^^^^--Team--IDE--^^^^:TeamIDE:message:"
+	TeamIDEError   = "^^^^--Team--IDE--^^^^:TeamIDE:error:"
+	TeamIDEAlert   = "^^^^--Team--IDE--^^^^:TeamIDE:alert:"
+	TeamIDEConsole = "^^^^--Team--IDE--^^^^:TeamIDE:console:"
+	TeamIDEStdout  = "^^^^--Team--IDE--^^^^:TeamIDE:stdout:"
 )
 
 var (

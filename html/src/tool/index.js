@@ -204,6 +204,91 @@ tool.down = function (bean, name, value) {
         }
     }
 };
+tool.preNUm = function (data) {
+    let mask = 0x80;
+    let num = 0;
+    //8bit中首个0bit前有多少个1bits
+    for (let i = 0; i < 8; i++) {
+        if ((data & mask) == mask) {
+            num++;
+            mask = mask >> 1;
+        } else {
+            break;
+        }
+    }
+    return num;
+};
+tool.isUtf8 = function (data) {
+    let i = 0;
+    let num;
+    for (; i < data.length;) {
+        if ((data[i] & 0x80) == 0x00) {
+            // 0XXX_XXXX
+            i++;
+            continue;
+        } else {
+            num = tool.preNUm(data[i]);
+            if (num > 2) {
+                // 110X_XXXX 10XX_XXXX
+                // 1110_XXXX 10XX_XXXX 10XX_XXXX
+                // 1111_0XXX 10XX_XXXX 10XX_XXXX 10XX_XXXX
+                // 1111_10XX 10XX_XXXX 10XX_XXXX 10XX_XXXX 10XX_XXXX
+                // 1111_110X 10XX_XXXX 10XX_XXXX 10XX_XXXX 10XX_XXXX 10XX_XXXX
+                // preNUm() 返回首个字节的8个bits中首个0bit前面1bit的个数，该数量也是该字符所使用的字节数
+                i++;
+                for (let j = 0; j < num - 1; j++) {
+                    //判断后面的 num - 1 个字节是不是都是10开头
+                    if ((data[i] & 0xc0) != 0x80) {
+                        return false;
+                    }
+                    i++;
+                }
+            } else {
+                //其他情况说明不是utf-8
+                return false;
+            }
+        }
+    }
+    return true;
+};
+tool.Utf8ArrayToStr = function (array) {
+    var out, i, len, c;
+    var char2, char3;
+    out = "";
+    len = array.length;
+    i = 0;
+    while (i < len) {
+        c = array[i++];
+        switch (c >> 4) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                // 0xxxxxxx
+                out += String.fromCharCode(c);
+                break;
+            case 12:
+            case 13:
+                // 110x xxxx   10xx xxxx
+                char2 = array[i++];
+                out += String.fromCharCode(((c & 0x1f) << 6) | (char2 & 0x3f));
+                break;
+            case 14:
+                // 1110 xxxx  10xx xxxx  10xx xxxx
+                char2 = array[i++];
+                char3 = array[i++];
+                out += String.fromCharCode(
+                    ((c & 0x0f) << 12) | ((char2 & 0x3f) << 6) | ((char3 & 0x3f) << 0)
+                );
+                break;
+        }
+    }
+    return out;
+};
 tool.clipboardWrite = async function (text) {
 
     return new Promise(function (resolve, reject) {

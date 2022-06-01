@@ -145,27 +145,21 @@
 import Files from "./Files";
 export default {
   components: { Files },
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "extend",
-    "wrap",
-    "token",
-    "socket",
-  ],
+  props: ["source", "toolbox", "extend", "wrap", "initToken", "initSocket"],
   data() {
     return {
       localFiles: null,
       remoteFiles: null,
       works: [],
+      isFTP: true,
     };
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
+    async init() {
+      await this.initToken(this);
+      this.initSocket(this);
       this.wrap.formatSize = this.formatSize;
     },
     onFocus() {
@@ -382,7 +376,7 @@ export default {
     },
     send(request) {
       let message = JSON.stringify(request);
-      this.wrap.writeData(message);
+      this.writeData(message);
     },
     onConfirm(response) {
       let confirm = response.confirm;
@@ -524,7 +518,7 @@ export default {
       this.onResponse(response);
     },
     toStart() {
-      this.wrap.writeEvent("ftp start");
+      this.writeEvent("ftp start");
     },
     dispose() {},
   },

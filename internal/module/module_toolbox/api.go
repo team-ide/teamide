@@ -5,6 +5,7 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/db"
+	"teamide/pkg/ssh"
 	"teamide/pkg/toolbox"
 )
 
@@ -115,6 +116,12 @@ type IndexResponse struct {
 	MysqlColumnTypeInfos     []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
 	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
 	QuickCommandTypes        []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
+	SSHTeamIDEEvent          string                             `json:"sshTeamIDEEvent,omitempty"`
+	SSHTeamIDEMessage        string                             `json:"sshTeamIDEMessage,omitempty"`
+	SSHTeamIDEError          string                             `json:"sshTeamIDEError,omitempty"`
+	SSHTeamIDEAlert          string                             `json:"sshTeamIDEAlert,omitempty"`
+	SSHTeamIDEConsole        string                             `json:"sshTeamIDEConsole,omitempty"`
+	SSHTeamIDEStdout         string                             `json:"sshTeamIDEStdout,omitempty"`
 }
 
 func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -126,6 +133,12 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 	response.MysqlColumnTypeInfos = db.MySqlColumnTypeInfos
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = QuickCommandTypes
+	response.SSHTeamIDEEvent = ssh.TeamIDEEvent
+	response.SSHTeamIDEMessage = ssh.TeamIDEMessage
+	response.SSHTeamIDEError = ssh.TeamIDEError
+	response.SSHTeamIDEAlert = ssh.TeamIDEAlert
+	response.SSHTeamIDEConsole = ssh.TeamIDEConsole
+	response.SSHTeamIDEStdout = ssh.TeamIDEStdout
 
 	res = response
 	return

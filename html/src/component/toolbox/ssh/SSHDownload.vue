@@ -6,7 +6,7 @@
 import Zmodem from "zmodem.js";
 export default {
   components: {},
-  props: ["source", "wrap", "token"],
+  props: ["source", "wrap"],
   data() {
     return {};
   },

@@ -11,9 +11,9 @@
       "
     />
     <div class="terminal-box-back" ref="terminal_back" />
-    <div class="toolbox-ssh-quickCommand-box pdt-8 pdlr-10">
-      <el-dropdown size="mini" trigger="click">
-        <span class="el-dropdown-link pdlr-5 color-orange tm-pointer">
+    <div class="toolbox-ssh-quickCommand-box pdt-2 pdlr-10">
+      <el-dropdown ref="quickCommandDropdown" size="mini" trigger="click">
+        <span class="el-dropdown-link ft-12 mglr-5 color-orange tm-pointer">
           <span>快速指令</span>
         </span>
         <el-dropdown-menu slot="dropdown" class="pd-0 bd-0">
@@ -90,14 +90,55 @@
           </div>
         </el-dropdown-menu>
       </el-dropdown>
+      <div class="ft-12 tm-link color-grey mglr-5" @click="openFtpWindow()">
+        打开FTP
+      </div>
     </div>
-    <SSHUpload :source="source" :wrap="wrap" :token="token"></SSHUpload>
-    <SSHDownload :source="source" :wrap="wrap" :token="token"></SSHDownload>
+    <SSHUpload :source="source" :wrap="wrap"></SSHUpload>
+    <SSHDownload :source="source" :wrap="wrap"></SSHDownload>
+    <template v-if="isOpenFTP">
+      <div
+        class="toolbox-ssh-editor-ftp-box"
+        :class="{ 'toolbox-ssh-editor-ftp-box-show': isShowFTP }"
+      >
+        <div class="toolbox-ssh-editor-ftp-box-header">
+          <div class=""></div>
+          <div
+            style="
+              display: inline-block;
+              position: absolute;
+              top: 0px;
+              right: 3px;
+            "
+          >
+            <span
+              title="关闭"
+              class="tm-link color-write mgr-0"
+              @click="hideFTP()"
+            >
+              <i class="mdi mdi-close ft-21"></i>
+            </span>
+          </div>
+        </div>
+        <div class="toolbox-ssh-editor-ftp-box-body">
+          <FTP
+            :source="source"
+            :toolbox="toolbox"
+            :extend="extend"
+            :wrap="wrap"
+            :initToken="initToken"
+            :initSocket="initSocket"
+          >
+          </FTP>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 
 <script>
+import FTP from "./FTP";
 import "xterm/css/xterm.css";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
@@ -107,17 +148,8 @@ import Zmodem from "zmodem.js";
 import SSHUpload from "./SSHUpload.vue";
 import SSHDownload from "./SSHDownload.vue";
 export default {
-  components: { SSHUpload, SSHDownload },
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "extend",
-    "wrap",
-    "token",
-    "socket",
-  ],
+  components: { SSHUpload, SSHDownload, FTP },
+  props: ["source", "toolbox", "extend", "wrap", "initToken", "initSocket"],
   data() {
     return {
       quickCommandSearch: null,
@@ -127,18 +159,27 @@ export default {
         width: null,
         height: null,
       },
+      isOpenFTP: false,
+      isShowFTP: true,
     };
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
-      this.initTerminal();
+    async init() {
+      await this.initTerminal();
     },
     onFocus() {
       this.term && this.term.focus();
     },
     refresh() {},
+    openFtpWindow() {
+      this.isOpenFTP = true;
+      this.isShowFTP = true;
+    },
+    hideFTP() {
+      this.isShowFTP = false;
+    },
     onEvent(event) {
       if (event == "shell ready") {
         this.toStart();
@@ -173,11 +214,17 @@ export default {
       let command = option.command;
 
       // this.term.write(command);
-      this.wrap.writeData(command);
+      this.writeData(command);
 
       if (exec) {
         // this.term.write(`\n`);
-        this.wrap.writeData(`\n`);
+        this.writeData(`\n`);
+      }
+      if (
+        this.$refs.quickCommandDropdown &&
+        this.$refs.quickCommandDropdown.hide
+      ) {
+        this.$refs.quickCommandDropdown.hide();
       }
     },
     toStart() {
@@ -186,7 +233,7 @@ export default {
       data.rows = this.rows;
       data.width = 0;
       data.height = 0;
-      this.wrap.writeEvent("shell start" + JSON.stringify(data));
+      this.writeEvent("shell start" + JSON.stringify(data));
     },
     changeSize() {
       if (this.term == null) {
@@ -197,14 +244,14 @@ export default {
       data.rows = this.rows;
       data.width = 0;
       data.height = 0;
-      this.wrap.writeEvent("change size" + JSON.stringify(data));
+      this.writeEvent("change size" + JSON.stringify(data));
     },
     initAttachAddon() {
       this.term.onData((data) => {
-        this.wrap.writeData(data);
+        this.writeData(data);
       });
       this.term.onBinary((data) => {
-        this.wrap.writeData(data);
+        this.writeData(data);
       });
 
       this.zsentry = new Zmodem.Sentry({
@@ -247,7 +294,12 @@ export default {
     },
     onMousedown(e) {},
     onMouseup(e) {},
-    initTerminal() {
+    async initTerminal() {
+      if (this.term != null) {
+        this.term.dispose();
+      }
+      await this.initToken(this);
+      this.initSocket(this);
       if (this.term != null) {
         this.term.dispose();
       }
@@ -310,12 +362,12 @@ export default {
                 this.tool
                   .confirm(div.html())
                   .then(() => {
-                    this.wrap.writeData(showText);
+                    this.writeData(showText);
                     this.tool.success("粘贴成功");
                   })
                   .catch(() => {});
               } else {
-                this.wrap.writeData(readResult.text);
+                this.writeData(readResult.text);
                 this.tool.success("粘贴成功");
               }
             }
@@ -376,6 +428,9 @@ export default {
       // }, 500);
     },
     dispose() {
+      if (this.socket != null) {
+        this.socket.close();
+      }
       if (this.term != null) {
         this.term.dispose();
       }
@@ -431,16 +486,42 @@ export default {
 }
 .toolbox-ssh-editor .terminal-box {
   width: 100%;
-  height: calc(100% - 40px);
+  height: calc(100% - 30px);
   position: relative;
+  background-color: black;
 }
 .terminal-box-back {
-  width: 100%;
-  height: calc(100% - 40px);
+  width: calc(100% - 20px) !important;
+  height: calc(100% - 30px);
   position: absolute;
   left: 0px;
   top: 0px;
   z-index: -1;
+}
+
+.toolbox-ssh-editor-ftp-box {
+  width: 1000px;
+  height: 600px;
+  position: absolute;
+  right: 20px;
+  bottom: 40px;
+  background: #172029;
+  transition: all 0s;
+  transform: scale(0);
+  z-index: -1;
+}
+
+.toolbox-ssh-editor-ftp-box.toolbox-ssh-editor-ftp-box-show {
+  transform: scale(1);
+  z-index: 10;
+}
+
+.toolbox-ssh-editor-ftp-box-header {
+  height: 29px;
+  border-bottom: 1px solid #2f2f2f;
+}
+.toolbox-ssh-editor-ftp-box-body {
+  height: calc(100% - 30px);
 }
 .toolbox-ssh-editor .terminal-box .terminal {
   width: 100% !important;
@@ -450,7 +531,8 @@ export default {
   background-color: transparent !important;
 }
 .toolbox-ssh-editor .terminal-box .xterm-screen {
-  width: calc(100% - 10px) !important;
+  width: calc(100% - 20px) !important;
+  margin: 0px 5px;
 }
 .toolbox-ssh-editor .terminal-box .xterm-text-layer {
   width: 100% !important;
