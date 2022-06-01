@@ -31,7 +31,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td>SSH支持rz、sz命令，rz支持批量上传</td>
+        <td>SSH支持rz、sz命令，rz支持批量上传，支持打开FTP</td>
         <td>完成</td>
     </tr>
     <tr>
