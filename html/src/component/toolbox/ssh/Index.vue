@@ -26,7 +26,6 @@
         </SSH>
       </template>
     </template>
-    <FileEdit :source="source" :toolbox="toolbox" :wrap="wrap"> </FileEdit>
   </div>
 </template>
 
@@ -34,10 +33,9 @@
 <script>
 import FTP from "./FTP";
 import SSH from "./SSH";
-import FileEdit from "./FileEdit";
 
 export default {
-  components: { FTP, SSH, FileEdit },
+  components: { FTP, SSH },
   props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
   data() {
     return {

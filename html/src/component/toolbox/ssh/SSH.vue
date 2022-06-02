@@ -91,7 +91,7 @@
         </el-dropdown-menu>
       </el-dropdown>
       <div class="ft-12 tm-link color-grey mglr-5" @click="openFtpWindow()">
-        打开FTP
+        FTP
       </div>
     </div>
     <SSHUpload :source="source" :wrap="wrap"></SSHUpload>
@@ -174,8 +174,12 @@ export default {
     },
     refresh() {},
     openFtpWindow() {
-      this.isOpenFTP = true;
-      this.isShowFTP = true;
+      if (this.isOpenFTP && this.isShowFTP) {
+        this.hideFTP();
+      } else {
+        this.isOpenFTP = true;
+        this.isShowFTP = true;
+      }
     },
     hideFTP() {
       this.isShowFTP = false;

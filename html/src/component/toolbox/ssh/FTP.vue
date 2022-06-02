@@ -138,13 +138,15 @@
         </div>
       </tm-layout>
     </tm-layout>
+    <FileEdit ref="FileEdit" :source="source" :toolbox="toolbox"> </FileEdit>
   </div>
 </template>
 
 <script>
 import Files from "./Files";
+import FileEdit from "./FileEdit";
 export default {
-  components: { Files },
+  components: { Files, FileEdit },
   props: ["source", "toolbox", "extend", "wrap", "initToken", "initSocket"],
   data() {
     return {
@@ -297,7 +299,7 @@ export default {
       }
     },
     toEditFile(place, file) {
-      this.wrap.showFileEdit(place, file);
+      this.$refs.FileEdit.show(place, file, this.tokenWork);
       // this.tool.info("编辑文件:" + file.path);
     },
     openDir(place, dir, pattern) {
