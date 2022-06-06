@@ -107,16 +107,16 @@ export default {
       };
       obj.socket.onmessage = (event) => {
         let message = event.data;
-        if (message instanceof ArrayBuffer) {
-          try {
-            let data = new Uint8Array(message);
-            if (this.tool.isUtf8(data)) {
-              message = this.tool.Utf8ArrayToStr(data);
-            }
-          } catch (e) {
-            message = event.data;
-          }
-        }
+        // if (message instanceof ArrayBuffer) {
+        //   try {
+        //     let data = new Uint8Array(message);
+        //     if (this.tool.isUtf8(data)) {
+        //       message = this.tool.Utf8ArrayToStr(data);
+        //     }
+        //   } catch (e) {
+        //     message = event.data;
+        //   }
+        // }
         if (typeof message == "string") {
           if (message.indexOf(this.toolbox.sshTeamIDEEvent) == 0) {
             obj.onEvent &&

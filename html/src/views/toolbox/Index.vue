@@ -149,6 +149,12 @@ export default {
         data.mysqlColumnTypeInfos.forEach((one) => {
           one.name = one.name.toLowerCase();
         });
+        data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
+        this.source.toolbox.sshTeamIDEBinaryStartBytes =
+          data.sshTeamIDEBinaryStartBytes.split(",");
+        this.source.toolbox.sshTeamIDEBinaryStartBytesLength =
+          this.source.toolbox.sshTeamIDEBinaryStartBytes.length;
+
         this.source.toolbox.sshTeamIDEEvent = data.sshTeamIDEEvent;
         this.source.toolbox.sshTeamIDEMessage = data.sshTeamIDEMessage;
         this.source.toolbox.sshTeamIDEError = data.sshTeamIDEError;

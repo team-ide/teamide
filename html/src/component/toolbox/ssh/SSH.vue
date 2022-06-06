@@ -195,10 +195,36 @@ export default {
       }
     },
     onData(data) {
-      if (typeof data === "object") {
+      if (typeof data === "string") {
+        this.term.write(data);
+        return;
+      } else if (data instanceof ArrayBuffer) {
+        try {
+          if (
+            data.byteLength >= this.toolbox.sshTeamIDEBinaryStartBytesLength
+          ) {
+            let bs = data.slice(
+              0,
+              this.toolbox.sshTeamIDEBinaryStartBytesLength
+            );
+            let eq = true;
+            bs = new Uint8Array(bs);
+            this.toolbox.sshTeamIDEBinaryStartBytes.forEach((a, i) => {
+              if (eq && a != bs[i]) {
+                eq = false;
+              }
+            });
+            if (eq) {
+              data = data.slice(
+                this.toolbox.sshTeamIDEBinaryStartBytesLength,
+                data.length
+              );
+              this.term.write(new Uint8Array(data));
+              return;
+            }
+          }
+        } catch (error) {}
         this.zsentry.consume(data);
-      } else {
-        this.term.write(typeof data === "string" ? data : new Uint8Array(data));
       }
     },
     onError(error) {
@@ -314,6 +340,8 @@ export default {
         rendererType: "canvas", //渲染类型
         width: 500,
         height: 400,
+        windowsMode: true,
+        scrollback: 100000000,
         // rows: this.rows, //行数
         // cols: this.cols, // 不指定行数，自动回车后光标从下一行开始
         // convertEol: true, //启用时，光标将设置为下一行的开头

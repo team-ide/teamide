@@ -130,7 +130,7 @@ func (this_ *SftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmInfo
 		util.Logger.Error("call confirm to json err error", zap.Error(err))
 		return
 	}
-	this_.WSWrite(bs)
+	this_.WSWriteText(bs)
 	res = <-this_.confirmMap[confirmInfo.ConfirmId]
 
 	close(this_.confirmMap[confirmInfo.ConfirmId])
@@ -188,7 +188,7 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 			util.Logger.Error("sftp upload progress to json err", zap.Error(err))
 			continue
 		}
-		this_.WSWrite(bs)
+		this_.WSWriteText(bs)
 
 		if endTime > 0 {
 			break

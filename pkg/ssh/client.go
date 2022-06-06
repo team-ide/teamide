@@ -61,13 +61,19 @@ type Config struct {
 }
 
 type Client struct {
-	Token          string
-	Config         Config
-	sshClient      *ssh.Client
-	ws             *websocket.Conn
-	isClosedClient bool
-	isClosedWS     bool
-	wsWriteLock    sync.RWMutex
+	Token              string
+	Config             Config
+	sshClient          *ssh.Client
+	ws                 *websocket.Conn
+	isClosedClient     bool
+	isClosedWS         bool
+	wsWriteLock        sync.RWMutex
+	writeWSMessageList chan *writeWSMessage
+}
+
+type writeWSMessage struct {
+	Type int
+	Data []byte
 }
 
 func (this_ *Client) CloseClient() {
@@ -155,19 +161,24 @@ func (this_ *Client) ListenWS(onEvent func(event string), onMessage func(bs []by
 }
 
 const (
-	TeamIDEEvent   = "^^^^--Team--IDE--^^^^:event:"
-	TeamIDEMessage = "^^^^--Team--IDE--^^^^:TeamIDE:message:"
-	TeamIDEError   = "^^^^--Team--IDE--^^^^:TeamIDE:error:"
-	TeamIDEAlert   = "^^^^--Team--IDE--^^^^:TeamIDE:alert:"
-	TeamIDEConsole = "^^^^--Team--IDE--^^^^:TeamIDE:console:"
-	TeamIDEStdout  = "^^^^--Team--IDE--^^^^:TeamIDE:stdout:"
+	TeamIDEEvent       = "^^^^--Team--IDE--^^^^:event:"
+	TeamIDEMessage     = "^^^^--Team--IDE--^^^^:TeamIDE:message:"
+	TeamIDEError       = "^^^^--Team--IDE--^^^^:TeamIDE:error:"
+	TeamIDEAlert       = "^^^^--Team--IDE--^^^^:TeamIDE:alert:"
+	TeamIDEConsole     = "^^^^--Team--IDE--^^^^:TeamIDE:console:"
+	TeamIDEStdout      = "^^^^--Team--IDE--^^^^:TeamIDE:stdout:"
+	TeamIDEBinaryStart = "^^^^--Team--IDE--^^^^:TeamIDE:binary:"
+)
+
+var (
+	TeamIDEBinaryStartBytes = []byte(TeamIDEBinaryStart)
 )
 
 var (
 	TeamIDEEventByteLength = len([]byte(TeamIDEEvent))
 )
 
-func (this_ *Client) WSWrite(bs []byte) {
+func (this_ *Client) WSWriteText(bs []byte) {
 	this_.WSWriteByType(websocket.TextMessage, bs)
 	return
 }
@@ -196,17 +207,38 @@ func (this_ *Client) WSWriteByType(messageType int, bs []byte) {
 
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
-	err := this_.ws.WriteMessage(messageType, bs)
 
-	if err != nil {
-		if WSIsCloseError(err) {
-			this_.CloseWS()
-			return
-		}
-		util.Logger.Error("WebSocket信息写入异常", zap.Error(err))
+	if this_.writeWSMessageList == nil {
+		this_.writeWSMessageList = make(chan *writeWSMessage, 1)
+		go func() {
+			for {
+				select {
+				case msg := <-this_.writeWSMessageList:
+
+					if this_.isClosedWS {
+						close(this_.writeWSMessageList)
+						return
+					}
+					//fmt.Println("write message:", string(msg.Data))
+					err := this_.ws.WriteMessage(msg.Type, msg.Data)
+
+					if err != nil {
+						if WSIsCloseError(err) {
+							this_.CloseWS()
+						}
+						util.Logger.Error("WebSocket信息写入异常", zap.Error(err))
+					}
+				}
+			}
+		}()
 	}
-	return
+
+	this_.writeWSMessageList <- &writeWSMessage{
+		Type: messageType,
+		Data: bs,
+	}
 }
+
 func (this_ *Client) WSWriteData(obj interface{}) {
 
 	bs, err := json.Marshal(obj)
@@ -214,37 +246,37 @@ func (this_ *Client) WSWriteData(obj interface{}) {
 		util.Logger.Error("WSWriteData转换JSON异常", zap.Error(err))
 		return
 	}
-	this_.WSWrite(bs)
+	this_.WSWriteText(bs)
 	return
 }
 
 func (this_ *Client) WSWriteError(message string) {
-	this_.WSWrite([]byte(TeamIDEError + message))
+	this_.WSWriteText([]byte(TeamIDEError + message))
 	return
 }
 
 func (this_ *Client) WSWriteMessage(message string) {
-	this_.WSWrite([]byte(TeamIDEMessage + message))
+	this_.WSWriteText([]byte(TeamIDEMessage + message))
 	return
 }
 
 func (this_ *Client) WSWriteEvent(event string) {
-	this_.WSWrite([]byte(TeamIDEEvent + event))
+	this_.WSWriteText([]byte(TeamIDEEvent + event))
 	return
 }
 
 func (this_ *Client) WSWriteAlert(alert string) {
-	this_.WSWrite([]byte(TeamIDEAlert + alert))
+	this_.WSWriteText([]byte(TeamIDEAlert + alert))
 	return
 }
 
 func (this_ *Client) WSWriteConsole(console string) {
-	this_.WSWrite([]byte(TeamIDEConsole + console))
+	this_.WSWriteText([]byte(TeamIDEConsole + console))
 	return
 }
 
 func (this_ *Client) WSWriteStdout(stdout string) {
-	this_.WSWrite([]byte(TeamIDEStdout + stdout))
+	this_.WSWriteText([]byte(TeamIDEStdout + stdout))
 	return
 }
 

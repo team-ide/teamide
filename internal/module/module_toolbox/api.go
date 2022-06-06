@@ -1,7 +1,9 @@
 package module_toolbox
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/db"
@@ -111,17 +113,18 @@ func init() {
 }
 
 type IndexResponse struct {
-	Types                    []*toolbox.Worker                  `json:"types,omitempty"`
-	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
-	MysqlColumnTypeInfos     []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
-	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
-	QuickCommandTypes        []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
-	SSHTeamIDEEvent          string                             `json:"sshTeamIDEEvent,omitempty"`
-	SSHTeamIDEMessage        string                             `json:"sshTeamIDEMessage,omitempty"`
-	SSHTeamIDEError          string                             `json:"sshTeamIDEError,omitempty"`
-	SSHTeamIDEAlert          string                             `json:"sshTeamIDEAlert,omitempty"`
-	SSHTeamIDEConsole        string                             `json:"sshTeamIDEConsole,omitempty"`
-	SSHTeamIDEStdout         string                             `json:"sshTeamIDEStdout,omitempty"`
+	Types                      []*toolbox.Worker                  `json:"types,omitempty"`
+	SqlConditionalOperations   []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
+	MysqlColumnTypeInfos       []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
+	DatabaseTypes              []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
+	QuickCommandTypes          []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
+	SSHTeamIDEEvent            string                             `json:"sshTeamIDEEvent,omitempty"`
+	SSHTeamIDEMessage          string                             `json:"sshTeamIDEMessage,omitempty"`
+	SSHTeamIDEError            string                             `json:"sshTeamIDEError,omitempty"`
+	SSHTeamIDEAlert            string                             `json:"sshTeamIDEAlert,omitempty"`
+	SSHTeamIDEConsole          string                             `json:"sshTeamIDEConsole,omitempty"`
+	SSHTeamIDEStdout           string                             `json:"sshTeamIDEStdout,omitempty"`
+	SSHTeamIDEBinaryStartBytes string                             `json:"sshTeamIDEBinaryStartBytes,omitempty"`
 }
 
 func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -139,7 +142,11 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 	response.SSHTeamIDEAlert = ssh.TeamIDEAlert
 	response.SSHTeamIDEConsole = ssh.TeamIDEConsole
 	response.SSHTeamIDEStdout = ssh.TeamIDEStdout
-
+	var bsStr []string
+	for _, b := range ssh.TeamIDEBinaryStartBytes {
+		bsStr = append(bsStr, fmt.Sprint(b))
+	}
+	response.SSHTeamIDEBinaryStartBytes = strings.Join(bsStr, ",")
 	res = response
 	return
 }

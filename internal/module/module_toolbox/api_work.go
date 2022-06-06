@@ -32,6 +32,8 @@ func (this_ *ToolboxApi) work(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 var upGrader = websocket.Upgrader{
+	ReadBufferSize:  1024 * 1024,
+	WriteBufferSize: 1024 * 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
