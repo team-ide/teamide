@@ -162,7 +162,6 @@ export default {
     async init() {
       await this.initToken(this);
       this.initSocket(this);
-      this.wrap.formatSize = this.formatSize;
     },
     onFocus() {
       this.$refs.remoteToolboxFTPFiles.onFocus();
@@ -170,26 +169,6 @@ export default {
     refresh() {
       this.$refs.localToolboxFTPFiles.refresh();
       this.$refs.remoteToolboxFTPFiles.refresh();
-    },
-    formatSize(data, name, sizeName, sizeUnitName) {
-      data[name] = data[name] || 0;
-      let sizeMap = [
-        { size: 1024 * 1024 * 1024 * 1024, unit: "TB" },
-        { size: 1024 * 1024 * 1024, unit: "GB" },
-        { size: 1024 * 1024, unit: "MB" },
-        { size: 1024, unit: "KB" },
-      ];
-
-      sizeMap.forEach((one) => {
-        if (!data[sizeUnitName] && data[name] >= one.size) {
-          data[sizeName] = Number(data[name] / one.size).toFixed(2);
-          data[sizeUnitName] = one.unit;
-        }
-      });
-      if (!data[sizeUnitName]) {
-        data[sizeName] = data[name];
-        data[sizeUnitName] = "B";
-      }
     },
     workContextmenu(e) {
       e = e || window.event;
@@ -248,10 +227,10 @@ export default {
       }
       work.progress = data.progress;
       if (work.progress.size) {
-        this.formatSize(work.progress, "size", "unitSize", "unit");
+        this.tool.formatSize(work.progress, "size", "unitSize", "unit");
 
         if (work.progress.successSize) {
-          this.formatSize(
+          this.tool.formatSize(
             work.progress,
             "successSize",
             "unitSuccessSize",
@@ -281,7 +260,7 @@ export default {
             ).toFixed(2);
             work.progress.sleepSize = sleepSize;
 
-            this.formatSize(
+            this.tool.formatSize(
               work.progress,
               "sleepSize",
               "unitSleepSize",

@@ -21,6 +21,30 @@
           <el-form-item label="Key">
             <el-input v-model="form.key"> </el-input>
           </el-form-item>
+          <div
+            class="ft-12 pdb-10"
+            v-if="form.memoryUsage > 0 || form.valueCount > 0"
+          >
+            <template v-if="form.memoryUsage > 0">
+              <span class="mgl-10">
+                内存占用
+                <span class="mgl-10 color-orange">
+                  {{ form.unitMemoryUsage }}
+                </span>
+                <span class="mgl-3 color-orange">
+                  {{ form.unit }}
+                </span>
+              </span>
+            </template>
+            <template v-if="form.valueCount > 0">
+              <span class="mgl-10">
+                值数量
+                <span class="mgl-10 color-orange">
+                  {{ form.valueCount }}
+                </span>
+              </span>
+            </template>
+          </div>
           <template v-if="form.valueType == 'string'">
             <el-form-item label="Value">
               <el-input
@@ -269,6 +293,10 @@ export default {
         key: null,
         value: null,
         valueJson: null,
+        memoryUsage: 0,
+        unitMemoryUsage: null,
+        unit: null,
+        valueCount: 0,
       },
       setList: [],
       listList: [],
@@ -308,6 +336,9 @@ export default {
     async initForm() {
       this.loading = true;
       this.form.value = null;
+      this.form.memoryUsage = 0;
+      this.form.valueCount = 0;
+
       this.setList = [];
       this.listList = [];
       this.hashList = [];
@@ -339,6 +370,11 @@ export default {
       }
 
       this.form.value = null;
+      this.form.memoryUsage = data.memoryUsage || 0;
+      this.form.unitMemoryUsage = null;
+      this.form.unit = null;
+      this.tool.formatSize(this.form, "memoryUsage", "unitMemoryUsage", "unit");
+      this.form.valueCount = data.valueCount || 0;
       this.setList = [];
       this.listList = [];
       this.hashList = [];

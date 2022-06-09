@@ -55,6 +55,8 @@ func Get(ctx context.Context, client redis.Cmdable, key string, valueStart, valu
 		return
 	}
 	valueInfo = &ValueInfo{}
+
+	valueInfo.MemoryUsage, _ = MemoryUsage(ctx, client, key)
 	var value interface{}
 
 	if valueType == "none" {
@@ -242,9 +244,20 @@ func SetBit(ctx context.Context, client redis.Cmdable, key string, offset int64,
 }
 
 func BitCount(ctx context.Context, client redis.Cmdable, key string) (count int64, err error) {
-	var bitCount = &redis.BitCount{}
-	cmd := client.BitCount(ctx, key, bitCount)
+	cmd := client.BitCount(ctx, key, nil)
 	count, err = cmd.Result()
+	return
+}
+
+func Info(ctx context.Context, client redis.Cmdable) (res string, err error) {
+	cmd := client.Info(ctx)
+	res, err = cmd.Result()
+	return
+}
+
+func MemoryUsage(ctx context.Context, client redis.Cmdable, key string) (size int64, err error) {
+	cmd := client.MemoryUsage(ctx, key)
+	size, err = cmd.Result()
 	return
 }
 

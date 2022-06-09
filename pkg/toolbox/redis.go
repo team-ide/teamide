@@ -83,6 +83,10 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 		res["key"] = request.Key
 		res["valueType"] = valueInfo.ValueType
 		res["value"] = valueInfo.Value
+		res["memoryUsage"] = valueInfo.MemoryUsage
+		res["valueStart"] = valueInfo.ValueStart
+		res["valueEnd"] = valueInfo.ValueEnd
+		res["valueCount"] = valueInfo.ValueCount
 	case "keys":
 		var count int
 		var keys []string

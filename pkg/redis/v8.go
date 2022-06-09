@@ -17,12 +17,13 @@ func CreateRedisService(address string, auth string) (service *V8Service, err er
 }
 
 type ValueInfo struct {
-	ValueType  string      `json:"valueType"`
-	Value      interface{} `json:"value"`
-	ValueCount int64       `json:"valueCount"`
-	ValueStart int64       `json:"valueStart"`
-	ValueEnd   int64       `json:"valueEnd"`
-	Cursor     uint64      `json:"cursor"`
+	ValueType   string      `json:"valueType"`
+	Value       interface{} `json:"value"`
+	ValueCount  int64       `json:"valueCount"`
+	ValueStart  int64       `json:"valueStart"`
+	ValueEnd    int64       `json:"valueEnd"`
+	Cursor      uint64      `json:"cursor"`
+	MemoryUsage int64       `json:"memoryUsage"`
 }
 
 type V8Service struct {

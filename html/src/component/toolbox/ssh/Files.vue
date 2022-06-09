@@ -684,7 +684,7 @@ export default {
           one.isNew = false;
           one.show = true;
           if (!one.isDir) {
-            this.wrap.formatSize(one, "size", "unitSize", "unit");
+            this.tool.formatSize(one, "size", "unitSize", "unit");
           }
           if (one.modTime) {
             one.dateTime = this.tool.formatDate(

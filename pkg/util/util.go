@@ -131,7 +131,7 @@ func RandomInt(min int, max int) (res int, err error) {
 		err = errors.New(fmt.Sprint("RandomInt error,min:", min, ",max:", max))
 		return
 	}
-	res = min + randForRandomInt.Intn(max-min)
+	res = min + randForRandomInt.Intn(max-min+1)
 	return
 }
 

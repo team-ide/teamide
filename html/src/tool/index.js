@@ -204,6 +204,26 @@ tool.down = function (bean, name, value) {
         }
     }
 };
+tool.formatSize = function (data, name, sizeName, sizeUnitName) {
+    data[name] = data[name] || 0;
+    let sizeMap = [
+        { size: 1024 * 1024 * 1024 * 1024, unit: "TB" },
+        { size: 1024 * 1024 * 1024, unit: "GB" },
+        { size: 1024 * 1024, unit: "MB" },
+        { size: 1024, unit: "KB" },
+    ];
+
+    sizeMap.forEach((one) => {
+        if (!data[sizeUnitName] && data[name] >= one.size) {
+            data[sizeName] = Number(data[name] / one.size).toFixed(2);
+            data[sizeUnitName] = one.unit;
+        }
+    });
+    if (!data[sizeUnitName]) {
+        data[sizeName] = data[name];
+        data[sizeUnitName] = "B";
+    }
+};
 tool.preNUm = function (data) {
     let mask = 0x80;
     let num = 0;
