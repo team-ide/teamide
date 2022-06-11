@@ -200,25 +200,6 @@
         "!./assets/teamide-windows-x64.exe"
       ]
     },
-    "dmg": {
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "extraResources": [
-        "./assets/**",
-        "!./assets/teamide-linux-x64",
-        "!./assets/teamide-windows-x64.exe"
-      ]
-    },
     "win": {
       "target": {
         "target": "nsis",
