@@ -239,7 +239,17 @@ jobs:
       - run: cp -rf release/teamide-darwin-x64/teamide electron/assets/teamide-darwin-x64
       - run: cp -rf release/teamide-linux-x64/teamide electron/assets/teamide-linux-x64
       - run: cp -rf release/teamide-windows-x64/teamide.exe electron/assets/teamide-windows-x64.exe
+      - run: mv .git electron/
       - run: cd electron && npm install
+
+      - name: Publish releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd electron
+          npm run postinstall
+          npm run build
+          npm exec electron-builder -- --publish always --win --mac --linux
 
       # 读取发布说明
       - name: Read Release Description
@@ -262,15 +272,6 @@ jobs:
           body: ${{steps.release_body.outputs.content}}
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
-
-      - name: Publish releases
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd electron
-          npm run postinstall
-          npm run build
-          npm exec electron-builder -- --publish always --win --mac --linux
 
       # 上传构建结果到 Release（把打包的zip上传到Release）
       - name: Upload TeamIDE Linux Release Asset
