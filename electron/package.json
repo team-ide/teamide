@@ -195,10 +195,15 @@
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
-      "files": [
-        "!./assets/teamide-linux-x64",
-        "!./assets/teamide-windows-x64.exe"
-      ]
+      "directories": {
+        "app": "release/app",
+        "buildResources": [
+          "./assets/**",
+          "!./assets/teamide-linux-x64",
+          "!./assets/teamide-windows-x64.exe"
+        ],
+        "output": "release/build"
+      }
     },
     "dmg": {
       "contents": [
@@ -213,34 +218,44 @@
           "path": "/Applications"
         }
       ],
-      "files": [
-        "!./assets/teamide-linux-x64",
-        "!./assets/teamide-windows-x64.exe"
-      ]
+      "directories": {
+        "app": "release/app",
+        "buildResources": [
+          "./assets/**",
+          "!./assets/teamide-linux-x64",
+          "!./assets/teamide-windows-x64.exe"
+        ],
+        "output": "release/build"
+      }
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "files": [
-        "!./assets/teamide-linux-x64",
-        "!./assets/teamide-darwin-x64"
-      ]
+      "directories": {
+        "app": "release/app",
+        "buildResources": [
+          "./assets/**",
+          "!./assets/teamide-linux-x64",
+          "!./assets/teamide-darwin-x64"
+        ],
+        "output": "release/build"
+      }
     },
     "linux": {
       "target": [
         "AppImage"
       ],
       "category": "Development",
-      "files": [
-        "!./assets/teamide-darwin-x64",
-        "!./assets/teamide-windows-x64.exe"
-      ]
-    },
-    "directories": {
-      "app": "release/app",
-      "buildResources": "assets",
-      "output": "release/build"
+      "directories": {
+        "app": "release/app",
+        "buildResources": [
+          "./assets/**",
+          "!./assets/teamide-darwin-x64",
+          "!./assets/teamide-windows-x64.exe"
+        ],
+        "output": "release/build"
+      }
     },
     "publish": {
       "provider": "github",
