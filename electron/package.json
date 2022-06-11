@@ -200,25 +200,25 @@
       ]
     },
     "win": {
-      "target": [
-        "nsis"
-      ],
-      "arch": [
-        "x64"
-      ],
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      },
       "excludedNames": [
         "./assets/teamide-linux-x64",
         "./assets/teamide-darwin-x64"
       ]
     },
     "linux": {
-      "target": [
-        "AppImage"
-      ],
+      "target": {
+        "target": "AppImage",
+        "arch": [
+          "x64"
+        ]
+      },
       "category": "Development",
-      "arch": [
-        "x64"
-      ],
       "excludedNames": [
         "./assets/teamide-darwin-x64",
         "./assets/teamide-windows-x64.exe"
