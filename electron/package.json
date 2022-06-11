@@ -195,9 +195,9 @@
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
-      "asarUnpack": [
-        "assets/teamide-linux-x64",
-        "assets/teamide-windows-x64.exe"
+      "files": [
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "dmg": {
@@ -212,15 +212,19 @@
           "type": "link",
           "path": "/Applications"
         }
+      ],
+      "files": [
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "asarUnpack": [
-        "assets/teamide-linux-x64",
-        "assets/teamide-darwin-x64"
+      "files": [
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-darwin-x64"
       ]
     },
     "linux": {
@@ -228,9 +232,9 @@
         "AppImage"
       ],
       "category": "Development",
-      "asarUnpack": [
-        "assets/teamide-darwin-x64",
-        "assets/teamide-windows-x64.exe"
+      "files": [
+        "!./assets/teamide-darwin-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "directories": {
@@ -238,9 +242,6 @@
       "buildResources": "assets",
       "output": "release/build"
     },
-    "extraResources": [
-      "./assets/**"
-    ],
     "publish": {
       "provider": "github",
       "owner": "team-ide",
