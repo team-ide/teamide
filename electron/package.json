@@ -194,9 +194,9 @@
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
-      "excludedNames": [
-        "./assets/teamide-linux-x64",
-        "./assets/teamide-windows-x64.exe"
+      "buildResources": [
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "win": {
@@ -206,9 +206,9 @@
           "x64"
         ]
       },
-      "excludedNames": [
-        "./assets/teamide-linux-x64",
-        "./assets/teamide-darwin-x64"
+      "buildResources": [
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-darwin-x64"
       ]
     },
     "linux": {
@@ -219,9 +219,9 @@
         ]
       },
       "category": "Development",
-      "excludedNames": [
-        "./assets/teamide-darwin-x64",
-        "./assets/teamide-windows-x64.exe"
+      "buildResources": [
+        "!./assets/teamide-darwin-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "directories": {
