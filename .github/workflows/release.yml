@@ -268,10 +268,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cd electron
           npm run postinstall
           npm run build
           npm exec electron-builder -- --publish always --win --mac --linux
-          
+
       # 上传构建结果到 Release（把打包的zip上传到Release）
       - name: Upload TeamIDE Linux Release Asset
         id: upload-teamide-linux-release-asset
