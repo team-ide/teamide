@@ -124,6 +124,19 @@ const createWindow = async () => {
                 exePath = "";
               }
             }
+            if (exePath != "") {
+              try {
+                child_process.spawn(
+                  "chmod",
+                  ["+x", exePath],
+                  {
+                    cwd: getAssetPath("")
+                  },
+                );
+              } catch (error) {
+
+              }
+            }
           }
           if (exePath == "") {
             log.error("Team IDE Server not found.")

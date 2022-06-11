@@ -186,7 +186,6 @@
       "target": {
         "target": "default",
         "arch": [
-          "arm64",
           "x64"
         ]
       },
@@ -195,67 +194,40 @@
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
-      "directories": {
-        "app": "release/app",
-        "buildResources": [
-          "./assets/**",
-          "!./assets/teamide-linux-x64",
-          "!./assets/teamide-windows-x64.exe"
-        ],
-        "output": "release/build"
-      }
-    },
-    "dmg": {
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "directories": {
-        "app": "release/app",
-        "buildResources": [
-          "./assets/**",
-          "!./assets/teamide-linux-x64",
-          "!./assets/teamide-windows-x64.exe"
-        ],
-        "output": "release/build"
-      }
+      "excludedNames": [
+        "./assets/teamide-linux-x64",
+        "./assets/teamide-windows-x64.exe"
+      ]
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "directories": {
-        "app": "release/app",
-        "buildResources": [
-          "./assets/**",
-          "!./assets/teamide-linux-x64",
-          "!./assets/teamide-darwin-x64"
-        ],
-        "output": "release/build"
-      }
+      "arch": [
+        "x64"
+      ],
+      "excludedNames": [
+        "./assets/teamide-linux-x64",
+        "./assets/teamide-darwin-x64"
+      ]
     },
     "linux": {
       "target": [
         "AppImage"
       ],
       "category": "Development",
-      "directories": {
-        "app": "release/app",
-        "buildResources": [
-          "./assets/**",
-          "!./assets/teamide-darwin-x64",
-          "!./assets/teamide-windows-x64.exe"
-        ],
-        "output": "release/build"
-      }
+      "arch": [
+        "x64"
+      ],
+      "excludedNames": [
+        "./assets/teamide-darwin-x64",
+        "./assets/teamide-windows-x64.exe"
+      ]
+    },
+    "directories": {
+      "app": "release/app",
+      "buildResources": "assets",
+      "output": "release/build"
     },
     "publish": {
       "provider": "github",
