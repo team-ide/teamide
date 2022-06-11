@@ -27,6 +27,7 @@ var (
 	isServerDev = false
 	rootDir     string
 	userHomeDir string
+	isElectron  = false
 )
 
 func getUserHome() string {
@@ -99,6 +100,10 @@ func main() {
 		if v == "--isDev" || v == "--isServerDev" {
 			isServerDev = true
 		}
+		if v == "--isElectron" {
+			isElectron = true
+		}
+
 	}
 
 	waitGroupForStop.Add(1)
@@ -128,12 +133,17 @@ func main() {
 		serverUrl = "http://localhost:21081/"
 	}
 
-	if !serverContext.IsServer {
-		err = window.Start(serverUrl, func() {
-			waitGroupForStop.Done()
-		})
-		if err != nil {
-			panic(err)
+	// 如果是  Electron 打开该程序，则监听控制台
+	if isElectron {
+		os.Stdout.Write([]byte("TeamIDE:event:serverUrl:" + serverUrl))
+	} else {
+		if !serverContext.IsServer {
+			err = window.Start(serverUrl, func() {
+				waitGroupForStop.Done()
+			})
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 

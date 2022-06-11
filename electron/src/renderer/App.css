@@ -1,0 +1,18 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+body {
+  position: relative;
+  color: rgb(221, 221, 221);
+  height: 100vh;
+  background: #333333;
+  overflow-y: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-system-message-info {
+  font-size: 24px;
+}

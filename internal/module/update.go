@@ -9,8 +9,8 @@ import (
 
 const (
 	GithubReleasesURL       = `https://github.com/team-ide/teamide/releases`
-	GithubReleaseHistoryURL = `https://github.com/team-ide/teamide/blob/main/RELEASE_HISTORY.md`
-	GiteeReleaseHistoryURL  = `https://gitee.com/teamide/teamide/blob/main/RELEASE_HISTORY.md`
+	GithubReleaseHistoryURL = `https://github.com/team-ide/teamide/blob/main/CHANGELOG.md`
+	GiteeReleaseHistoryURL  = `https://gitee.com/teamide/teamide/blob/main/CHANGELOG.md`
 )
 
 type UpdateCheckRequest struct {

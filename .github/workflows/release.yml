@@ -6,6 +6,8 @@ on:
     branches:
       - main
       # - dev
+    # package.json 更改后再触发发布
+#    paths: [ "package.json" ]
 jobs:
   buildStatic:
     runs-on: ubuntu-latest
@@ -28,7 +30,7 @@ jobs:
       - run: cp -rf package.json release/
       - run: cp -rf RELEASE.md release/
       - run: cp -rf README.md release/base/
-      - run: cp -rf RELEASE_HISTORY.md release/base/RELEASE.md
+      - run: cp -rf CHANGELOG.md release/base/CHANGELOG.md
 
       - run: cp -rf release/base release/teamide-linux-x64
       - run: cp -rf release/base release/teamide-server-linux-x64
@@ -134,7 +136,7 @@ jobs:
 
       - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
 
-#      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
+      #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -192,8 +194,21 @@ jobs:
       - buildMAC
       - buildLinux
       - buildWindow
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest ]
     steps:
+
+      - name: Checkout git repo
+        uses: actions/checkout@v1
+
+      - name: Install Node and NPM
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+          cache: npm
+
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
@@ -214,13 +229,18 @@ jobs:
 
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
-#      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        run: cd release && zip -q -r teamide-server-linux-x64.zip teamide-server-linux-x64
+      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      #        run: cd release && zip -q -r teamide-server-linux-x64.zip teamide-server-linux-x64
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
+      - run: cp -rf release/teamide-darwin-x64/teamide electron/assets/teamide-darwin-x64
+      - run: cp -rf release/teamide-linux-x64/teamide electron/assets/teamide-linux-x64
+      - run: cp -rf release/teamide-windows-x64/teamide.exe electron/assets/teamide-windows-x64.exe
+      - run: cp -rf CHANGELOG.md electron/CHANGELOG.md
+      - run: cd electron && npm install
 
       # 读取发布说明
       - name: Read Release Description
@@ -244,6 +264,14 @@ jobs:
           draft: false # 是否是草稿
           prerelease: false # 是否是预发布
 
+      - name: Publish releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm run postinstall
+          npm run build
+          npm exec electron-builder -- --publish always --win --mac --linux
+          
       # 上传构建结果到 Release（把打包的zip上传到Release）
       - name: Upload TeamIDE Linux Release Asset
         id: upload-teamide-linux-release-asset
@@ -257,17 +285,17 @@ jobs:
           asset_name: teamide-linux-x64.zip # 上传后的文件名
           asset_content_type: application/zip
 
-#      - name: Upload TeamIDE Server Linux Release Asset
-#        id: upload-teamide-server-linux-release-asset
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: actions/upload-release-asset@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-#          asset_path: ./release/teamide-server-linux-x64.zip # 要上传文件
-#          asset_name: teamide-server-linux-x64.zip # 上传后的文件名
-#          asset_content_type: application/zip
+      #      - name: Upload TeamIDE Server Linux Release Asset
+      #        id: upload-teamide-server-linux-release-asset
+      #        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      #        uses: actions/upload-release-asset@master
+      #        env:
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #        with:
+      #          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+      #          asset_path: ./release/teamide-server-linux-x64.zip # 要上传文件
+      #          asset_name: teamide-server-linux-x64.zip # 上传后的文件名
+      #          asset_content_type: application/zip
 
       - name: Upload TeamIDE MAC Release Asset
         id: upload-teamide-darwin-release-asset

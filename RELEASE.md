@@ -1,8 +1,7 @@
-# 发布说明
+# 1.3.0
 
-## Version v1.2.9 （2022/06/09）
+## Version v1.3.0 （2022/06/11）
 
 发布功能
 
-1. Redis点击某个Key展示Key的值占用内存大小
-2. Key的值类型为Hash、List、Set展示值数量
+1. 添加electron支持，安装electron打出的包无需浏览器直接窗口打开
