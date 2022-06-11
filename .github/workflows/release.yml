@@ -239,7 +239,6 @@ jobs:
       - run: cp -rf release/teamide-darwin-x64/teamide electron/assets/teamide-darwin-x64
       - run: cp -rf release/teamide-linux-x64/teamide electron/assets/teamide-linux-x64
       - run: cp -rf release/teamide-windows-x64/teamide.exe electron/assets/teamide-windows-x64.exe
-      - run: cp -rf CHANGELOG.md electron/CHANGELOG.md
       - run: cd electron && npm install
 
       # 读取发布说明

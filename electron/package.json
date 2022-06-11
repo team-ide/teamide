@@ -175,6 +175,10 @@
       "node_modules",
       "package.json"
     ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
       "target": {
@@ -188,7 +192,11 @@
       "hardenedRuntime": true,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "asarUnpack": [
+        "assets/teamide-linux-x64",
+        "assets/teamide-windows-x64.exe"
+      ]
     },
     "dmg": {
       "contents": [
@@ -207,13 +215,21 @@
     "win": {
       "target": [
         "nsis"
+      ],
+      "asarUnpack": [
+        "assets/teamide-linux-x64",
+        "assets/teamide-darwin-x64"
       ]
     },
     "linux": {
       "target": [
         "AppImage"
       ],
-      "category": "Development"
+      "category": "Development",
+      "asarUnpack": [
+        "assets/teamide-darwin-x64",
+        "assets/teamide-windows-x64.exe"
+      ]
     },
     "directories": {
       "app": "release/app",
