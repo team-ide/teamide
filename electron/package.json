@@ -195,7 +195,28 @@
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
       "extraResources": [
-        "assets/teamide/teamide-darwin-x64"
+        "./assets/**",
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-windows-x64.exe"
+      ]
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "extraResources": [
+        "./assets/**",
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "win": {
@@ -205,8 +226,11 @@
           "x64"
         ]
       },
+      "publisherName": "朱亮",
       "extraResources": [
-        "assets/teamide/teamide-windows-x64.exe"
+        "./assets/**",
+        "!./assets/teamide-linux-x64",
+        "!./assets/teamide-darwin-x64"
       ]
     },
     "linux": {
@@ -218,12 +242,14 @@
       },
       "category": "Development",
       "extraResources": [
-        "assets/teamide/teamide-linux-x64"
+        "./assets/**",
+        "!./assets/teamide-darwin-x64",
+        "!./assets/teamide-windows-x64.exe"
       ]
     },
     "directories": {
       "app": "release/app",
-      "buildResources": "assets/icons",
+      "buildResources": "assets",
       "output": "release/build"
     },
     "publish": {

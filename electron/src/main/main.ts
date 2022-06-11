@@ -69,7 +69,7 @@ const getAssetPath = (...paths: string[]): string => {
   return path.join(RESOURCES_PATH, ...paths);
 };
 
-let iconPath = getAssetPath('icons/icon.png');
+let iconPath = getAssetPath('icon.png');
 
 const createWindow = async () => {
   if (isDebug) {
@@ -108,17 +108,17 @@ const createWindow = async () => {
 
           // 打开 Team IDE 服务
 
-          let exePath = getAssetPath('teamide/teamide-windows-x64.exe')
+          let exePath = getAssetPath('teamide-windows-x64.exe')
           try {
             fs.statSync(exePath);
           } catch (error) {
 
             try {
-              exePath = getAssetPath('teamide/teamide-darwin-x64')
+              exePath = getAssetPath('teamide-darwin-x64')
               fs.statSync(exePath);
             } catch (error) {
               try {
-                exePath = getAssetPath('teamide/teamide-linux-x64')
+                exePath = getAssetPath('teamide-linux-x64')
                 fs.statSync(exePath);
               } catch (error) {
                 exePath = "";
