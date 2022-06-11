@@ -61,7 +61,7 @@ export default {
             one
               .text()
               .toLowerCase()
-              .indexOf(("v" + this.currentVersion).toLowerCase()) >= 0
+              .indexOf((" " + this.currentVersion).toLowerCase()) >= 0
           ) {
             find = true;
             one.addClass("color-orange");
