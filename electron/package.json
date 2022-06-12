@@ -218,7 +218,7 @@
     },
     "linux": {
       "target": {
-        "target": "AppImage",
+        "target": "deb",
         "arch": [
           "x64"
         ]
