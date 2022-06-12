@@ -208,7 +208,10 @@
     "win": {
       "artifactName": "${productName}-win-x64-${version}.${ext}",
       "target": {
-        "target": "nsis,zip",
+        "target": [
+          "nsis",
+          "zip"
+        ],
         "arch": [
           "x64"
         ]
@@ -223,7 +226,10 @@
     },
     "linux": {
       "target": {
-        "target": "zip",
+        "target": [
+          "AppImage",
+          "zip"
+        ],
         "arch": [
           "x64"
         ]
