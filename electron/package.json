@@ -168,7 +168,7 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "TeamIDE",
+    "productName": "teamide",
     "appId": "com.teamide.app",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
@@ -179,17 +179,15 @@
     ],
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
       "type": "distribution",
+      "artifactName": "${productName}-mac-${version}.${ext}",
       "hardenedRuntime": true,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
@@ -202,10 +200,11 @@
       ]
     },
     "win": {
+      "artifactName": "${productName}-win-${version}.${ext}",
       "target": {
-        "target": "zip",
+        "target": "nsis",
         "arch": [
-          "x64"
+          "ia32"
         ]
       },
       "publisherName": "朱亮",
@@ -217,12 +216,7 @@
       ]
     },
     "linux": {
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
+      "artifactName": "${productName}-linux-${version}.${ext}",
       "category": "Development",
       "extraResources": [
         "./assets/icon.ico",
