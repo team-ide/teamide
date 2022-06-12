@@ -199,31 +199,27 @@
       "entitlementsInherit": "assets/entitlements.mac.plist",
       "gatekeeperAssess": false,
       "extraResources": [
-        "./assets/icon.ico",
-        "./assets/icon.png",
-        "./assets/TeamIDE.png",
-        "./assets/teamide-darwin-x64"
+        "./assets/**",
+        "./teamide-darwin-x64"
       ]
     },
     "win": {
       "artifactName": "${productName}-win-x64-${version}.${ext}",
       "target": {
-        "target": "nsis",
+        "target": "zip",
         "arch": [
           "x64"
         ]
       },
       "publisherName": "朱亮",
       "extraResources": [
-        "./assets/icon.ico",
-        "./assets/icon.png",
-        "./assets/TeamIDE.png",
-        "./assets/teamide-windows-x64.exe"
+        "./assets/**",
+        "./teamide-windows-x64.exe"
       ]
     },
     "linux": {
       "target": {
-        "target": "AppImage",
+        "target": "zip",
         "arch": [
           "x64"
         ]
@@ -231,10 +227,8 @@
       "artifactName": "${productName}-linux-x64-${version}.${ext}",
       "category": "Development",
       "extraResources": [
-        "./assets/icon.ico",
-        "./assets/icon.png",
-        "./assets/TeamIDE.png",
-        "./assets/teamide-linux-x64"
+        "./assets/**",
+        "./teamide-linux-x64"
       ]
     },
     "directories": {

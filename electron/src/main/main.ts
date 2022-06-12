@@ -69,6 +69,14 @@ const getAssetPath = (...paths: string[]): string => {
   return path.join(RESOURCES_PATH, ...paths);
 };
 
+
+const ROOT_PATH = app.isPackaged
+  ? path.join(process.resourcesPath, '')
+  : path.join(__dirname, '../../');
+
+const getRootPath = (...paths: string[]): string => {
+  return path.join(ROOT_PATH, ...paths);
+};
 let iconPath = getAssetPath('icon.png');
 
 const createWindow = async () => {
@@ -108,17 +116,17 @@ const createWindow = async () => {
 
           // 打开 Team IDE 服务
 
-          let exePath = getAssetPath('teamide-windows-x64.exe')
+          let exePath = getRootPath('teamide-windows-x64.exe')
           try {
             fs.statSync(exePath);
           } catch (error) {
 
             try {
-              exePath = getAssetPath('teamide-darwin-x64')
+              exePath = getRootPath('teamide-darwin-x64')
               fs.statSync(exePath);
             } catch (error) {
               try {
-                exePath = getAssetPath('teamide-linux-x64')
+                exePath = getRootPath('teamide-linux-x64')
                 fs.statSync(exePath);
               } catch (error) {
                 exePath = "";
@@ -130,7 +138,7 @@ const createWindow = async () => {
                   "chmod",
                   ["+x", exePath],
                   {
-                    cwd: getAssetPath("")
+                    cwd: getRootPath("")
                   },
                 );
               } catch (error) {
