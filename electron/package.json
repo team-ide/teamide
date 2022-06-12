@@ -186,6 +186,11 @@
     },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
+      "target": {
+        "arch": [
+          "x64"
+        ]
+      },
       "type": "distribution",
       "artifactName": "${productName}-mac-${version}.${ext}",
       "hardenedRuntime": true,
@@ -200,11 +205,11 @@
       ]
     },
     "win": {
-      "artifactName": "${productName}-win-${version}.${ext}",
+      "artifactName": "${productName}-win-x64-${version}.${ext}",
       "target": {
         "target": "nsis",
         "arch": [
-          "ia32"
+          "x64"
         ]
       },
       "publisherName": "朱亮",
@@ -216,7 +221,12 @@
       ]
     },
     "linux": {
-      "artifactName": "${productName}-linux-${version}.${ext}",
+      "target": {
+        "arch": [
+          "x64"
+        ]
+      },
+      "artifactName": "${productName}-linux-x64-${version}.${ext}",
       "category": "Development",
       "extraResources": [
         "./assets/icon.ico",
