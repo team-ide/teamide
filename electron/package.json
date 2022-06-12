@@ -184,7 +184,7 @@
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
       "target": {
-        "target": "default",
+        "target": "zip",
         "arch": [
           "x64"
         ]
@@ -203,7 +203,7 @@
     },
     "win": {
       "target": {
-        "target": "nsis",
+        "target": "zip",
         "arch": [
           "x64"
         ]
@@ -218,7 +218,7 @@
     },
     "linux": {
       "target": {
-        "target": "deb",
+        "target": "zip",
         "arch": [
           "x64"
         ]
