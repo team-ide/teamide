@@ -4,14 +4,14 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.2.9-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.3.1-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
 
 ## 注意
 
-> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/TeamIDE`下，本地`需要安装谷歌浏览器`
+> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/TeamIDE`下
 
 **服务端模式目前存在问题，请大家先单机运行，后续将完善服务端模式**
 

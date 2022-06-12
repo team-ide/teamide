@@ -186,6 +186,7 @@
     },
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
+      "artifactName": "${productName}-mac-${version}.${ext}",
       "target": {
         "target": "zip",
         "arch": [
@@ -193,7 +194,6 @@
         ]
       },
       "type": "distribution",
-      "artifactName": "${productName}-mac-${version}.${ext}",
       "hardenedRuntime": true,
       "entitlements": "assets/entitlements.mac.plist",
       "entitlementsInherit": "assets/entitlements.mac.plist",
@@ -205,12 +205,20 @@
     },
     "win": {
       "artifactName": "${productName}-win-x64-${version}.${ext}",
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "publisherName": "朱亮",
       "extraResources": [
         "./assets/**",
@@ -218,13 +226,21 @@
       ]
     },
     "linux": {
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
       "artifactName": "${productName}-linux-x64-${version}.${ext}",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Development",
       "extraResources": [
         "./assets/**",
