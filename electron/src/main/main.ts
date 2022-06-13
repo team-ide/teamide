@@ -39,6 +39,7 @@ if (process.env.NODE_ENV === 'production') {
   sourceMapSupport.install();
 }
 
+const isDev = process.env.NODE_ENV === 'development';
 const isDebug =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
@@ -119,40 +120,52 @@ const createWindow = async () => {
 
           // 打开 Team IDE 服务
 
-          let exePath = getRootPath('teamide-windows-x64.exe')
-          try {
-            fs.statSync(exePath);
-          } catch (error) {
+          if (isDev) {
+            const rootPath = getRootPath("../")
+            log.info("root path:", rootPath)
+            serverProcess = child_process.spawn(
+              "go",
+              ["run", ".", "--isDev", "--isElectron"],
+              {
+                cwd: getRootPath("../"),
+              },
+            );
 
+          } else {
+            let exePath = getRootPath('teamide-windows-x64.exe')
             try {
-              exePath = getRootPath('teamide-darwin-x64')
               fs.statSync(exePath);
             } catch (error) {
+
               try {
-                exePath = getRootPath('teamide-linux-x64')
+                exePath = getRootPath('teamide-darwin-x64')
                 fs.statSync(exePath);
               } catch (error) {
-                exePath = "";
+                try {
+                  exePath = getRootPath('teamide-linux-x64')
+                  fs.statSync(exePath);
+                } catch (error) {
+                  exePath = "";
+                }
               }
             }
-          }
-          if (exePath == "") {
-            // alert("Team IDE Server not found.")
-            log.error("Team IDE Server not found.")
-            if (app != null) {
-              app.quit();
+            if (exePath == "") {
+              // alert("Team IDE Server not found.")
+              log.error("Team IDE Server not found.")
+              if (app != null) {
+                app.quit();
+              }
+              return
             }
-            return
+            log.info("exePath:" + exePath)
+            serverProcess = child_process.spawn(
+              exePath,
+              ["--isElectron"],
+              {
+                cwd: getRootPath(""),
+              },
+            );
           }
-          log.info("exePath:" + exePath)
-          const path = exePath
-          serverProcess = child_process.spawn(
-            path,
-            ["--isElectron"],
-            {
-              cwd: getAssetPath("")
-            },
-          );
           serverProcess.stdout.on('data', (data: any) => {
             if (data == null) {
               return
