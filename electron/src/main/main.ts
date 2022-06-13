@@ -136,7 +136,7 @@ const createWindow = async () => {
               try {
                 child_process.spawn(
                   "chmod",
-                  ["+x", exePath],
+                  ["777", exePath],
                   {
                     cwd: getRootPath("")
                   },
@@ -147,6 +147,7 @@ const createWindow = async () => {
             }
           }
           if (exePath == "") {
+            // alert("Team IDE Server not found.")
             log.error("Team IDE Server not found.")
             if (app != null) {
               app.quit();
@@ -221,10 +222,11 @@ app.on('window-all-closed', () => {
   // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
-  }
-  log.info(`window all closed`);
-  if (serverProcess != null) {
-    serverProcess.kill();
+
+    log.info(`window all closed`);
+    if (serverProcess != null) {
+      serverProcess.kill();
+    }
   }
 });
 
@@ -255,7 +257,11 @@ app.on('ready', async () => {
   //显示程序页面
   tray.on('click', () => {
     if (mainWindow != null) {
-      mainWindow.show();
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        mainWindow.show();
+      }
     }
   })
   tray.setContextMenu(contextMenu)

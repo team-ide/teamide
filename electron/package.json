@@ -168,7 +168,7 @@
     "webpack-merge": "^5.8.0"
   },
   "build": {
-    "productName": "teamide",
+    "productName": "TeamIDE",
     "appId": "com.teamide.app",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
