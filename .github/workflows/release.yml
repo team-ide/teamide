@@ -7,7 +7,7 @@ on:
       - main
       # - dev
     # package.json 更改后再触发发布
-    paths: [ "package.json" ]
+#    paths: [ "package.json" ]
 jobs:
   buildStatic:
     runs-on: ubuntu-latest
