@@ -187,12 +187,20 @@
     "afterSign": ".erb/scripts/notarize.js",
     "mac": {
       "artifactName": "${productName}-mac-${version}.${ext}",
-      "target": {
-        "target": "zip",
-        "arch": [
-          "x64"
-        ]
-      },
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "type": "distribution",
       "hardenedRuntime": true,
       "entitlements": "assets/entitlements.mac.plist",
