@@ -203,6 +203,24 @@
         "./teamide-darwin-x64"
       ]
     },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "extraResources": [
+        "./assets/**",
+        "./teamide-darwin-x64"
+      ]
+    },
     "win": {
       "artifactName": "${productName}-win-x64-${version}.${ext}",
       "target": [

@@ -79,6 +79,9 @@ const getRootPath = (...paths: string[]): string => {
 };
 let iconPath = getAssetPath('icon.png');
 
+
+let serverUrl = resolveHtmlPath('index.html')
+
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
@@ -99,7 +102,7 @@ const createWindow = async () => {
     },
   });
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
+  mainWindow.loadURL(serverUrl);
 
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
@@ -132,19 +135,6 @@ const createWindow = async () => {
                 exePath = "";
               }
             }
-            if (exePath != "") {
-              try {
-                child_process.spawn(
-                  "chmod",
-                  ["777", exePath],
-                  {
-                    cwd: getRootPath("")
-                  },
-                );
-              } catch (error) {
-
-              }
-            }
           }
           if (exePath == "") {
             // alert("Team IDE Server not found.")
@@ -169,7 +159,7 @@ const createWindow = async () => {
             }
             let msg = data.toString()
             if (msg.startsWith("TeamIDE:event:serverUrl:")) {
-              let serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
+              serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
               if (mainWindow != null) {
                 mainWindow.loadURL(serverUrl);
               }

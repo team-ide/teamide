@@ -240,6 +240,8 @@ jobs:
       - run: cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
       - run: cp -rf release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
       - run: mv .git electron/
+      - run: chmod +x electron/teamide-darwin-x64
+      - run: chmod +x electron/teamide-linux-x64
       - run: cd electron && npm install
 
       - name: Publish releases
