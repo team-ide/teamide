@@ -84,6 +84,25 @@ let toolbox = {
         }
         return res;
     },
+    getQuickCommandType(name) {
+        if (toolbox.quickCommandTypes == null) {
+            return null;
+        }
+        let res = null;
+        toolbox.quickCommandTypes.forEach((one) => {
+            if (one.name == name) {
+                res = one;
+            }
+        });
+        return res;
+    },
+    getOptionJSON(option) {
+        let json = {};
+        if (tool.isNotEmpty(option)) {
+            json = JSON.parse(option);
+        }
+        return json;
+    },
     async open(toolboxId, extend, createTime) {
         let extendStr = null;
         if (extend != null) {

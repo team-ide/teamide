@@ -90,7 +90,6 @@ export default {
   },
   methods: {
     init() {
-      this.initOpens();
       if (
         window.electron &&
         window.electron.ipcRenderer &&
@@ -98,11 +97,45 @@ export default {
       ) {
         this.hasOpenNewWindow = true;
       }
+      this.onIpcRendererOnce();
+
+      this.initOpens();
     },
-    openNewWindow(tag) {
-      let url = this.source.url + "#/open/toolbox/" + tag.openId;
+    onIpcRendererOnce() {
+      if (
+        window.electron &&
+        window.electron.ipcRenderer &&
+        window.electron.ipcRenderer.once
+      ) {
+        window.electron.ipcRenderer.once("close-open-window", (config) => {
+          this.onIpcRendererOnce();
+          if (config == null) {
+            return;
+          }
+          let key = this.getTabKeyByData(config);
+          if (key == null) {
+            return;
+          }
+          let tab = this.getTab(key);
+          if (tab == null) {
+            return;
+          }
+          this.updateOpenExtend(tab.openId, { openNewWindow: false });
+          this.showTab(tab);
+          this.doActiveTab(tab.openId);
+        });
+      }
+    },
+    openNewWindow(tab) {
+      let url = this.source.url + "#/open/toolbox/" + tab.openId;
       if (this.hasOpenNewWindow) {
-        window.electron.ipcRenderer.sendMessage("open-new-window", [url]);
+        this.updateOpenExtend(tab.openId, { openNewWindow: true });
+        this.hideTab(tab);
+        window.electron.ipcRenderer.sendMessage("open-new-window", {
+          url: url,
+          openId: tab.openId,
+          type: "toolbox",
+        });
       } else {
         window.open(url);
       }
@@ -112,6 +145,12 @@ export default {
     },
     getTab(tab) {
       return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
+    },
+    showTab(tab) {
+      return this.$refs.TabEditor && this.$refs.TabEditor.showTab(tab);
+    },
+    hideTab(tab) {
+      return this.$refs.TabEditor && this.$refs.TabEditor.hideTab(tab);
     },
     onRemoveTab(tab) {
       this.source.toolbox.closeOpen(tab.openId);
@@ -185,7 +224,9 @@ export default {
       let extend = {};
 
       if (toolboxData && toolboxData.toolboxType) {
-        let toolboxType = this.getToolboxType(toolboxData.toolboxType);
+        let toolboxType = this.source.toolbox.getToolboxType(
+          toolboxData.toolboxType
+        );
         if (toolboxType && toolboxType.name == "other") {
           extend = this.source.toolbox.getOptionJSON(toolboxData.option);
         }
@@ -263,6 +304,18 @@ export default {
       // 激活最后
       let activeOpenData = null;
       opens.forEach(async (openData) => {
+        if (
+          this.hasOpenNewWindow &&
+          openData.extend &&
+          openData.extend.openNewWindow
+        ) {
+          let key = this.getTabKeyByData(openData);
+          let tab = this.getTab(key);
+          if (tab != null) {
+            this.openNewWindow(tab);
+            return;
+          }
+        }
         if (activeOpenData == null) {
           activeOpenData = openData;
         } else {

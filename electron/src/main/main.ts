@@ -9,14 +9,18 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, Menu, Tray } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, ipcRenderer, Menu, Tray, screen } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath, source } from './util';
 
+
+
 var fs = require("fs")
 const child_process = require('child_process');
+
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 export default class AppUpdater {
   constructor() {
@@ -33,9 +37,10 @@ ipcMain.on('ipc-example', async (event, arg) => {
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
 });
-ipcMain.on('open-new-window', async (event, args: any) => {
-  console.log("open-new-window:args:", args);
-  source.addBrowserView({ url: args[0], title: args.length > 1 ? args[1] : null, })
+ipcMain.on('open-new-window', async (event, config: any) => {
+  config = config || {};
+  console.log("open-new-window:config:", config);
+  source.addBrowserView(config)
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -93,12 +98,22 @@ const createWindow = async () => {
     await installExtensions();
   }
 
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;//获取到屏幕的宽度和高度
+
+  source.windowWidth = 1440;
+  source.windowHeight = 900;
+  if (source.windowWidth > width) {
+    source.windowWidth = (width - 40);
+  }
+  if (source.windowHeight > height) {
+    source.windowHeight = (height - 40);
+  }
 
   mainWindow = new BrowserWindow({
     title: "Team · IDE",
     show: false,
-    width: 1440,
-    height: 900,
+    width: source.windowWidth,
+    height: source.windowHeight,
     icon: iconPath,
     autoHideMenuBar: true,
     webPreferences: {
@@ -112,8 +127,8 @@ const createWindow = async () => {
     let viewWindow = new BrowserWindow({
       title: config.title || "Team · IDE",
       show: false,
-      width: 1440,
-      height: 900,
+      width: source.windowWidth,
+      height: source.windowHeight,
       icon: iconPath,
       autoHideMenuBar: true,
       webPreferences: {
@@ -130,6 +145,9 @@ const createWindow = async () => {
       let index = viewWindowList.indexOf(viewWindow)
       if (index >= 0) {
         viewWindowList.splice(index, 1)
+      }
+      if (mainWindow != null) {
+        mainWindow.webContents.send('close-open-window', config);
       }
     });
   }

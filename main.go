@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"io"
@@ -144,8 +145,7 @@ func main() {
 				_, err := os.Stdin.Read(bs)
 				if err != nil {
 					if err == io.EOF {
-						err = nil
-						break
+						err = errors.New("electron window closed")
 					}
 					panic(err)
 				}

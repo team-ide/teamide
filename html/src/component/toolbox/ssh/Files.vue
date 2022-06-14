@@ -788,17 +788,17 @@ export default {
   text-overflow: ellipsis;
 }
 .file-box .file-date {
-  padding: 0px 5px;
+  padding: 0px 0px;
   font-size: 12px;
-  width: 150px;
+  width: 130px;
 }
 .file-box .file-mode {
-  padding: 0px 5px;
+  padding: 0px 0px;
   font-size: 12px;
-  width: 100px;
+  width: 80px;
 }
 .file-box .file-size {
-  padding: 0px 5px;
+  padding: 0px 0px;
   font-size: 12px;
   width: 90px;
   text-align: right;

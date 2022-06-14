@@ -115,8 +115,6 @@ export default {
       this.source.toolbox.toInsertGroup = this.toInsertGroup;
       this.source.toolbox.toUpdateGroup = this.toUpdateGroup;
       this.source.toolbox.toDeleteGroup = this.toDeleteGroup;
-      this.source.toolbox.getOptionJSON = this.getOptionJSON;
-      this.source.toolbox.getQuickCommandType = this.getQuickCommandType;
 
       this.source.toolbox.showSwitchToolboxType = () => {
         this.$refs.ToolboxType.showSwitch();
@@ -136,6 +134,7 @@ export default {
       if (this.source.toolbox.context == null) {
         await this.source.toolbox.initContext();
       }
+
       this.ready = true;
     },
     toInsert(toolboxType, selectGroup) {
@@ -160,7 +159,7 @@ export default {
       delete toolboxData.toolboxId;
       toolboxData.name = toolboxData.name + " Copy";
 
-      let optionsJSON = this.getOptionJSON(toolboxData.option);
+      let optionsJSON = this.source.toolbox.getOptionJSON(toolboxData.option);
 
       this.$refs.InsertToolbox.show({
         title: `新增[${toolboxType.text}]工具`,
@@ -174,7 +173,7 @@ export default {
       // this.source.toolbox.hideToolboxType();
       this.updateData = toolboxData;
 
-      let optionsJSON = this.getOptionJSON(toolboxData.option);
+      let optionsJSON = this.source.toolbox.getOptionJSON(toolboxData.option);
 
       this.$refs.UpdateToolbox.show({
         title: `编辑[${toolboxType.text}][${toolboxData.name}]工具`,
@@ -182,25 +181,6 @@ export default {
         data: [toolboxData, optionsJSON],
         toolboxType,
       });
-    },
-    getQuickCommandType(name) {
-      if (this.source.toolbox.quickCommandTypes == null) {
-        return null;
-      }
-      let res = null;
-      this.source.toolbox.quickCommandTypes.forEach((one) => {
-        if (one.name == name) {
-          res = one;
-        }
-      });
-      return res;
-    },
-    getOptionJSON(option) {
-      let json = {};
-      if (this.tool.isNotEmpty(option)) {
-        json = JSON.parse(option);
-      }
-      return json;
     },
     toDelete(toolboxType, toolboxData) {
       this.tool.stopEvent();
@@ -301,7 +281,7 @@ export default {
       // this.source.toolbox.hideToolboxType();
       this.updateGroupData = data;
 
-      let optionsJSON = this.getOptionJSON(data.option);
+      let optionsJSON = this.source.toolbox.getOptionJSON(data.option);
 
       this.$refs.UpdateToolboxGroup.show({
         title: `编辑[${data.name}]工具分组`,

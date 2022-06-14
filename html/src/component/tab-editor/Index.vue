@@ -18,6 +18,7 @@
       <div class="tab-header-box" ref="headerBox">
         <template v-for="one in tabs">
           <div
+            v-show="one.show"
             :ref="'tab:' + one.key"
             :key="one.key"
             :tab-key="one.key"
@@ -232,6 +233,15 @@ export default {
     handleCommand(tab) {
       this.toSelectTab(tab);
     },
+    showTab(tab) {
+      tab.show = true;
+      this.initHeader();
+    },
+    hideTab(tab) {
+      tab.show = false;
+      this.activeNextTab(tab);
+      this.initHeader();
+    },
     initHeader() {
       let leftTabs = [];
       let rightTabs = [];
@@ -241,8 +251,12 @@ export default {
       let activeIndex = this.tabs.indexOf(this.activeTab);
       let showWidth = 0;
       if (this.headerBoxWidth < this.tabHeaderWidthCount) {
-        this.tabs.forEach((one, index) => {
-          if (index < activeIndex - 2) {
+        let showIndex = 0;
+        this.tabs.forEach((one) => {
+          if (!one.show) {
+            return;
+          }
+          if (showIndex < activeIndex - 2) {
             scrollLeft += Number(one.headerWidth);
             leftTabs.push(one);
           } else {
@@ -251,9 +265,13 @@ export default {
           if (showWidth > this.headerBoxWidth) {
             rightTabs.push(one);
           }
+          showIndex++;
         });
       } else {
         this.tabs.forEach((one, index) => {
+          if (!one.show) {
+            return;
+          }
           showWidth += Number(one.headerWidth);
         });
       }
@@ -322,6 +340,7 @@ export default {
       if (find != null) {
         return;
       }
+      tab.show = true;
       let fromIndex = this.tabs.indexOf(fromTab);
       if (fromIndex < 0) {
         this.tabs.push(tab);
@@ -371,6 +390,22 @@ export default {
         this.doActiveTab(this.tabs[nextTabIndex]);
       }
       this.onRemoveTab && this.onRemoveTab(find);
+    },
+    activeNextTab(tab) {
+      let find = this.getTab(tab);
+      if (find == null) {
+        return;
+      }
+      let tabIndex = this.tabs.indexOf(find);
+      let nextTab = null;
+      if (tabIndex >= 0) {
+        if (this.tabs[tabIndex + 1]) {
+          nextTab = this.tabs[tabIndex + 1];
+        } else {
+          nextTab = this.tabs[tabIndex - 1];
+        }
+      }
+      this.doActiveTab(nextTab);
     },
     doActiveTab(tab) {
       this.$nextTick(() => {

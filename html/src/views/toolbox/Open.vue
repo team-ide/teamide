@@ -16,13 +16,28 @@
         >
         </ToolboxEditor>
       </div>
+      <QuickCommand
+        v-if="source.toolbox.context != null"
+        :source="source"
+        :toolbox="source.toolbox"
+      >
+      </QuickCommand>
+      <QuickCommandSSHCommandForm
+        v-if="source.toolbox.context != null"
+        :source="source"
+        :toolbox="source.toolbox"
+      >
+      </QuickCommandSSHCommandForm>
     </template>
   </div>
 </template>
 
 <script>
+import QuickCommand from "./QuickCommand";
+import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
+
 export default {
-  components: {},
+  components: { QuickCommand, QuickCommandSSHCommandForm },
   props: ["source", "data"],
   data() {
     return {
