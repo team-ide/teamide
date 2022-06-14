@@ -43,6 +43,7 @@ var (
 	PowerToolboxOpen                   = base.AppendPower(&base.PowerAction{Action: "toolbox_open", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxUpdateOpenExtend       = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_extend", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxQueryOpens             = base.AppendPower(&base.PowerAction{Action: "toolbox_query_opens", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxGetOpen                = base.AppendPower(&base.PowerAction{Action: "toolbox_get_open", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxClose                  = base.AppendPower(&base.PowerAction{Action: "toolbox_close", Text: "工具关闭", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxOpenTab                = base.AppendPower(&base.PowerAction{Action: "toolbox_open_tab", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxQueryOpenTabs          = base.AppendPower(&base.PowerAction{Action: "toolbox_query_open_tabs", Text: "工具查询打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -77,6 +78,7 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: PowerToolboxWork, Do: this_.work})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/open"}, Power: PowerToolboxOpen, Do: this_.open})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/getOpen"}, Power: PowerToolboxGetOpen, Do: this_.getOpen})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpens"}, Power: PowerToolboxQueryOpens, Do: this_.queryOpens})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/close"}, Power: PowerToolboxClose, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenExtend"}, Power: PowerToolboxUpdateOpenExtend, Do: this_.updateOpenExtend})

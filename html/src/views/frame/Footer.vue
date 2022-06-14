@@ -1,6 +1,5 @@
 <template>
-  <div class="frame-footer-box">
-  </div>
+  <div class="frame-footer-box"></div>
 </template>
 
 <script>
@@ -23,4 +22,7 @@ export default {
 </script>
 
 <style>
+.frame-box-only-body .frame-footer-box {
+  display: none;
+}
 </style>

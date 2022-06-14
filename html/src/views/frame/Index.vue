@@ -1,5 +1,8 @@
 <template>
-  <div class="frame-box">
+  <div
+    class="frame-box"
+    :class="{ 'frame-box-only-body': tool.isOpenPage($route.path) }"
+  >
     <Header :source="source"></Header>
     <Body :source="source"></Body>
     <Footer :source="source"></Footer>

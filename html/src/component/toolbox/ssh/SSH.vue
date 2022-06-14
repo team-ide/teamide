@@ -362,52 +362,57 @@ export default {
       this.fitAddon.fit();
 
       this.term.focus();
-      this.term.onKey(async (arg) => {
-        let domEvent = arg.domEvent;
-        // let key = arg.key;
-        // console.log(key);
-        if (this.tool.keyIsCtrlC(domEvent)) {
-          let copiedText = this.term.getSelection();
-          if (this.tool.isNotEmpty(copiedText)) {
-            let res = await this.tool.clipboardWrite(copiedText);
-            if (res.success) {
-              this.tool.success("复制成功");
-            } else {
-              this.tool.warn("复制失败，请允许访问剪贴板！");
-            }
-          }
-        } else if (this.tool.keyIsCtrlV(domEvent)) {
-          let readResult = await this.tool.readClipboardText();
-          if (readResult.success) {
-            if (this.tool.isNotEmpty(readResult.text)) {
-              if (readResult.text.indexOf("\n") >= 0) {
-                let showText = readResult.text;
-                let div = this.tool.jQuery("<div/>");
-
-                let textarea = this.tool.jQuery(
-                  `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
-                );
-                textarea.append(showText);
-
-                div.append("<div>确认粘贴以下内容<div/>");
-                div.append(textarea);
-                this.tool
-                  .confirm(div.html())
-                  .then(() => {
-                    this.writeData(showText);
-                    this.tool.success("粘贴成功");
-                  })
-                  .catch(() => {});
+      this.$refs.terminal.addEventListener(
+        "keydown",
+        async (e) => {
+          // let key = arg.key;
+          // console.log(key);
+          if (this.tool.keyIsCtrlC(e)) {
+            let copiedText = this.term.getSelection();
+            if (this.tool.isNotEmpty(copiedText)) {
+              this.tool.stopEvent(e);
+              let res = await this.tool.clipboardWrite(copiedText);
+              if (res.success) {
+                this.tool.success("复制成功");
               } else {
-                this.writeData(readResult.text);
-                this.tool.success("粘贴成功");
+                this.tool.warn("复制失败，请允许访问剪贴板！");
               }
             }
-          } else {
-            this.tool.warn("粘贴失败，请允许访问剪贴板！");
+          } else if (this.tool.keyIsCtrlV(e)) {
+            let readResult = await this.tool.readClipboardText();
+            this.tool.stopEvent(e);
+            if (readResult.success) {
+              if (this.tool.isNotEmpty(readResult.text)) {
+                if (readResult.text.indexOf("\n") >= 0) {
+                  let showText = readResult.text;
+                  let div = this.tool.jQuery("<div/>");
+
+                  let textarea = this.tool.jQuery(
+                    `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
+                  );
+                  textarea.append(showText);
+
+                  div.append("<div>确认粘贴以下内容<div/>");
+                  div.append(textarea);
+                  this.tool
+                    .confirm(div.html())
+                    .then(() => {
+                      this.writeData(showText);
+                      this.tool.success("粘贴成功");
+                    })
+                    .catch(() => {});
+                } else {
+                  this.writeData(readResult.text);
+                  this.tool.success("粘贴成功");
+                }
+              }
+            } else {
+              this.tool.warn("粘贴失败，请允许访问剪贴板！");
+            }
           }
-        }
-      });
+        },
+        true
+      );
       this.cols = this.term.cols;
       this.rows = this.term.rows;
       this.initSize();

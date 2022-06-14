@@ -71,6 +71,10 @@ export default {
   background: #4e6064;
   font-size: 14px;
 }
+
+.frame-box-only-body .frame-header-box {
+  display: none;
+}
 .frame-header-left {
   display: flex;
   padding: 0px 10px;

@@ -188,6 +188,31 @@ func (this_ *ToolboxApi) queryOpens(requestBean *base.RequestBean, c *gin.Contex
 	return
 }
 
+type GetOpenRequest struct {
+	*ToolboxOpenModel
+}
+
+type GetOpenResponse struct {
+	Open *ToolboxOpenModel `json:"open,omitempty"`
+}
+
+func (this_ *ToolboxApi) getOpen(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &GetOpenRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &GetOpenResponse{}
+
+	response.Open, err = this_.ToolboxService.GetOpen(request.OpenId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
 type CloseRequest struct {
 	*ToolboxOpenModel
 }

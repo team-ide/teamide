@@ -16,3 +16,9 @@ if (process.env.NODE_ENV === 'development') {
     return `file://${path.resolve(__dirname, '../renderer/', htmlFileName)}`;
   };
 }
+
+export const source: any = {
+  iconPath: "",
+  mainWindow: null,
+  addBrowserView: null,
+}

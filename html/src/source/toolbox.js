@@ -1,7 +1,89 @@
 import server from "../server";
 import tool from "../tool";
+import form from "../form";
 
 let toolbox = {
+    async initContext() {
+        let res = await server.toolbox.data();
+        if (res.code != 0) {
+            tool.error(res.msg);
+        } else {
+            let data = res.data || {};
+
+            data.mysqlColumnTypeInfos.forEach((one) => {
+                one.name = one.name.toLowerCase();
+            });
+            data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
+            toolbox.sshTeamIDEBinaryStartBytes =
+                data.sshTeamIDEBinaryStartBytes.split(",");
+            toolbox.sshTeamIDEBinaryStartBytesLength =
+                toolbox.sshTeamIDEBinaryStartBytes.length;
+
+            toolbox.sshTeamIDEEvent = data.sshTeamIDEEvent;
+            toolbox.sshTeamIDEMessage = data.sshTeamIDEMessage;
+            toolbox.sshTeamIDEError = data.sshTeamIDEError;
+            toolbox.sshTeamIDEAlert = data.sshTeamIDEAlert;
+            toolbox.sshTeamIDEConsole = data.sshTeamIDEConsole;
+            toolbox.sshTeamIDEStdout = data.sshTeamIDEStdout;
+            toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
+            toolbox.quickCommandTypes = data.quickCommandTypes;
+            toolbox.databaseTypes = data.databaseTypes;
+            toolbox.types = data.types;
+            data.types.forEach((one) => {
+                form.toolbox[one.name] = one.configForm;
+                if (one.otherForm) {
+                    for (let formName in one.otherForm) {
+                        form.toolbox[one.name][formName] = one.otherForm[formName];
+                    }
+                }
+            });
+            toolbox.sqlConditionalOperations =
+                data.sqlConditionalOperations;
+        }
+
+        let param = {};
+        res = await server.toolbox.context(param);
+        if (res.code != 0) {
+            tool.error(res.msg);
+        } else {
+            let context = res.data.context || {};
+            let groups = res.data.groups || [];
+            toolbox.groups = groups;
+            toolbox.context = context;
+        }
+    },
+
+    getToolboxData(toolboxData) {
+        let res = null;
+        if (toolbox.context) {
+            for (let type in toolbox.context) {
+                if (toolbox.context[type] == null) {
+                    continue;
+                }
+                toolbox.context[type].forEach((one) => {
+                    if (
+                        one == toolboxData ||
+                        one.toolboxId == toolboxData ||
+                        one.toolboxId == toolboxData.toolboxId
+                    ) {
+                        res = one;
+                    }
+                });
+            }
+        }
+        return res;
+    },
+    getToolboxType(type) {
+        let res = null;
+        if (toolbox.types) {
+            toolbox.types.forEach((one) => {
+                if (one == type || one.name == type || one.name == type.name) {
+                    res = one;
+                }
+            });
+        }
+        return res;
+    },
     async open(toolboxId, extend, createTime) {
         let extendStr = null;
         if (extend != null) {

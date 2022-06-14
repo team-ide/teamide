@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -136,6 +137,21 @@ func main() {
 	// 如果是  Electron 打开该程序，则监听控制台
 	if isElectron {
 		os.Stdout.Write([]byte("TeamIDE:event:serverUrl:" + serverUrl))
+
+		go func() {
+			for {
+				var bs = make([]byte, 1024)
+				_, err := os.Stdin.Read(bs)
+				if err != nil {
+					if err == io.EOF {
+						err = nil
+						break
+					}
+					panic(err)
+				}
+				util.Logger.Info("On Electron：", zap.Any("msg", string(bs)))
+			}
+		}()
 	} else {
 		if !serverContext.IsServer {
 			err = window.Start(serverUrl, func() {

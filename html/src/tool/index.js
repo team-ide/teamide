@@ -94,6 +94,12 @@ tool.isToolboxPage = function (path) {
     }
     return false;
 };
+tool.isOpenPage = function (path) {
+    if (path == '/open' || path.indexOf('/open/') == 0) {
+        return true;
+    }
+    return false;
+};
 tool.isApplicationPage = function (path) {
     if (path == '/application' || path.indexOf('/application/') == 0) {
         return true;

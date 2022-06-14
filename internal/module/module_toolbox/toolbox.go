@@ -198,6 +198,23 @@ func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, 
 	return
 }
 
+// GetOpen 查询单个
+func (this_ *ToolboxService) GetOpen(openId int64) (res *ToolboxOpenModel, err error) {
+	res = &ToolboxOpenModel{}
+
+	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE openId=? `
+	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{openId}, res)
+	if err != nil {
+		this_.Logger.Error("GetOpen Error", zap.Error(err))
+		return
+	}
+
+	if !find {
+		res = nil
+	}
+	return
+}
+
 // Close 更新
 func (this_ *ToolboxService) Close(openId int64) (rowsAffected int64, err error) {
 

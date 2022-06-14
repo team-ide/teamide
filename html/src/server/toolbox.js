@@ -62,6 +62,9 @@ let toolbox = {
     close(param) {
         return http.post('api/toolbox/close', param);
     },
+    getOpen(param) {
+        return http.post('api/toolbox/getOpen', param);
+    },
     queryOpens(param) {
         return http.post('api/toolbox/queryOpens', param);
     },

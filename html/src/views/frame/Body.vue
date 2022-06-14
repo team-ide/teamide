@@ -26,6 +26,9 @@
         <template v-if="!tool.isToolboxPage($route.path)">
           <router-view :source="source"></router-view>
         </template>
+        <template v-else-if="!tool.isOpenPage($route.path)">
+          <router-view :source="source"></router-view>
+        </template>
       </template>
       <Toolbox
         v-show="tool.isToolboxPage($route.path)"
@@ -65,6 +68,9 @@ export default {
   position: relative;
   overflow: auto;
   padding: 0px 0px;
+}
+.frame-box-only-body .frame-body-box {
+  height: 100%;
 }
 .frame-body {
   min-width: 1024px;

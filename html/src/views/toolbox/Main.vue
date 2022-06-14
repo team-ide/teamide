@@ -7,6 +7,8 @@
       :onActiveTab="onActiveTab"
       :slotTab="true"
       :copyTab="toCopyTab"
+      :hasOpenNewWindow="hasOpenNewWindow"
+      :openNewWindow="openNewWindow"
     >
       <template v-slot:tab="{ tab }">
         <span class="toolbox-tab-title">
@@ -71,7 +73,9 @@ export default {
   components: {},
   props: ["source", "toolbox", "context"],
   data() {
-    return {};
+    return {
+      hasOpenNewWindow: false,
+    };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
@@ -85,6 +89,24 @@ export default {
     },
   },
   methods: {
+    init() {
+      this.initOpens();
+      if (
+        window.electron &&
+        window.electron.ipcRenderer &&
+        window.electron.ipcRenderer.sendMessage
+      ) {
+        this.hasOpenNewWindow = true;
+      }
+    },
+    openNewWindow(tag) {
+      let url = this.source.url + "#/open/toolbox/" + tag.openId;
+      if (this.hasOpenNewWindow) {
+        window.electron.ipcRenderer.sendMessage("open-new-window", [url]);
+      } else {
+        window.open(url);
+      }
+    },
     getTabs() {
       return this.$refs.TabEditor && this.$refs.TabEditor.getTabs();
     },
@@ -92,14 +114,14 @@ export default {
       return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
     },
     onRemoveTab(tab) {
-      this.toolbox.closeOpen(tab.openId);
+      this.source.toolbox.closeOpen(tab.openId);
       if (this.getTabs().length == 0) {
-        this.toolbox.showToolboxType();
+        this.source.toolbox.showToolboxType();
       }
     },
     onActiveTab(tab) {
-      this.toolbox.activeOpen(tab.openId);
-      this.toolbox.hideToolboxType();
+      this.source.toolbox.activeOpen(tab.openId);
+      this.source.toolbox.hideToolboxType();
     },
     addTab(tab, fromTab) {
       return this.$refs.TabEditor.addTab(tab, fromTab);
@@ -114,16 +136,6 @@ export default {
     getTabByData(openData) {
       let key = this.getTabKeyByData(openData);
       let tab = this.getTab(key);
-      return tab;
-    },
-    createTabByOpenData(openData) {
-      let key = this.getTabKeyByData(openData);
-
-      let tab = this.getTab(key);
-      if (tab == null) {
-        tab = this.toolbox.createToolboxDataTab(openData);
-        tab.key = key;
-      }
       return tab;
     },
     updateOpenComment(openId, comment) {
@@ -168,14 +180,14 @@ export default {
     },
     toolboxDataOpen(toolboxData, fromTab) {
       this.tool.stopEvent();
-      this.toolbox.hideToolboxType();
+      this.source.toolbox.hideToolboxType();
 
       let extend = {};
 
       if (toolboxData && toolboxData.toolboxType) {
         let toolboxType = this.getToolboxType(toolboxData.toolboxType);
         if (toolboxType && toolboxType.name == "other") {
-          extend = this.toolbox.getOptionJSON(toolboxData.option);
+          extend = this.source.toolbox.getOptionJSON(toolboxData.option);
         }
       }
 
@@ -192,12 +204,12 @@ export default {
     },
     toolboxDataOpenSfpt(toolboxData) {
       this.tool.stopEvent();
-      this.toolbox.hideToolboxType();
+      this.source.toolbox.hideToolboxType();
 
       this.openByToolboxData(toolboxData, { isFTP: true });
     },
     async openByToolboxData(toolboxData, extend, fromTab, createTime) {
-      let openData = await this.toolbox.open(
+      let openData = await this.source.toolbox.open(
         toolboxData.toolboxId,
         extend,
         createTime
@@ -211,14 +223,17 @@ export default {
       }
     },
     async openByOpenData(openData, fromTab) {
-      let toolboxData = this.getToolboxData(openData.toolboxId);
+      let toolboxData = this.source.toolbox.getToolboxData(openData.toolboxId);
       if (toolboxData == null) {
-        await this.toolbox.closeOpen(openData.openId);
+        await this.source.toolbox.closeOpen(openData.openId);
         return;
       }
-      let toolboxType = this.getToolboxType(toolboxData.toolboxType);
+      let toolboxType = this.source.toolbox.getToolboxType(
+        toolboxData.toolboxType
+      );
       if (toolboxType == null) {
-        await this.toolbox.closeOpen(openData.openId);
+        await this.source.toolbox.closeOpen(openData.openId);
+        return;
       }
       openData.toolboxData = toolboxData;
       openData.toolboxType = toolboxType;
@@ -227,39 +242,19 @@ export default {
       } else {
         openData.extend = {};
       }
-      let tab = this.createTabByOpenData(openData);
+      let key = this.getTabKeyByData(openData);
+
+      let tab = this.getTab(key);
+      if (tab == null) {
+        tab = this.source.toolbox.createToolboxDataTab(openData);
+        tab.key = key;
+      }
+
       this.addTab(tab, fromTab);
       return tab;
     },
-    getToolboxType(type) {
-      let res = null;
-      this.toolbox.types.forEach((one) => {
-        if (one == type || one.name == type || one.name == type.name) {
-          res = one;
-        }
-      });
-      return res;
-    },
-    getToolboxData(toolboxData) {
-      let res = null;
-      for (let type in this.context) {
-        if (this.context[type] == null) {
-          continue;
-        }
-        this.context[type].forEach((one) => {
-          if (
-            one == toolboxData ||
-            one.toolboxId == toolboxData ||
-            one.toolboxId == toolboxData.toolboxId
-          ) {
-            res = one;
-          }
-        });
-      }
-      return res;
-    },
     async initOpens() {
-      let opens = await this.toolbox.loadOpens();
+      let opens = await this.source.toolbox.loadOpens();
 
       await opens.forEach(async (openData) => {
         await this.openByOpenData(openData);
@@ -282,7 +277,7 @@ export default {
       if (activeOpenData != null) {
         this.doActiveTab(activeOpenData.openId);
       } else {
-        this.toolbox.showToolboxType();
+        this.source.toolbox.showToolboxType();
       }
     },
   },
@@ -290,10 +285,10 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.initOpens();
-    this.toolbox.toolboxDataOpenSfpt = this.toolboxDataOpenSfpt;
-    this.toolbox.toolboxDataOpen = this.toolboxDataOpen;
-    this.toolbox.getTabByData = this.getTabByData;
+    this.init();
+    this.source.toolbox.toolboxDataOpenSfpt = this.toolboxDataOpenSfpt;
+    this.source.toolbox.toolboxDataOpen = this.toolboxDataOpen;
+    this.source.toolbox.getTabByData = this.getTabByData;
   },
 };
 </script>

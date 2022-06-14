@@ -3,6 +3,7 @@ import Router from 'vue-router'
 
 
 import Index from '@/views/Index'
+import Open from '@/views/Open'
 import Manage from '@/views/manage/Index'
 import ManageUserIndex from '@/views/manage/user/Index'
 
@@ -19,6 +20,10 @@ export default new Router({
     {
       path: '/',
       component: Index
+    },
+    {
+      path: '/open/:type/:data',
+      component: Open
     },
     {
       path: '/manage',

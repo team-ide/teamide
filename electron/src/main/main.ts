@@ -13,7 +13,7 @@ import { app, BrowserWindow, shell, ipcMain, Menu, Tray } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
+import { resolveHtmlPath, source } from './util';
 
 var fs = require("fs")
 const child_process = require('child_process');
@@ -32,6 +32,10 @@ ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
+});
+ipcMain.on('open-new-window', async (event, args: any) => {
+  console.log("open-new-window:args:", args);
+  source.addBrowserView({ url: args[0], title: args.length > 1 ? args[1] : null, })
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -75,14 +79,15 @@ const ROOT_PATH = app.isPackaged
   ? path.join(process.resourcesPath, '')
   : path.join(__dirname, '../../');
 
-const getRootPath = (...paths: string[]): string => {
+export const getRootPath = (...paths: string[]): string => {
   return path.join(ROOT_PATH, ...paths);
 };
-let iconPath = getAssetPath('icon.png');
-
+export const iconPath = getAssetPath('icon.png');
+source.iconPath = iconPath;
 
 let serverUrl = resolveHtmlPath('index.html')
 
+const viewWindowList: any = []
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
@@ -102,6 +107,34 @@ const createWindow = async () => {
         : path.join(__dirname, '../../.erb/dll/preload.js'),
     },
   });
+
+  source.addBrowserView = (config: any) => {
+    let viewWindow = new BrowserWindow({
+      title: config.title || "Team · IDE",
+      show: false,
+      width: 1440,
+      height: 900,
+      icon: iconPath,
+      autoHideMenuBar: true,
+      webPreferences: {
+        preload: app.isPackaged
+          ? path.join(__dirname, 'preload.js')
+          : path.join(__dirname, '../../.erb/dll/preload.js'),
+      },
+    });
+    viewWindow.loadURL(config.url);
+    viewWindow.show()
+    viewWindowList.push(viewWindow)
+
+    viewWindow.on('closed', () => {
+      let index = viewWindowList.indexOf(viewWindow)
+      if (index >= 0) {
+        viewWindowList.splice(index, 1)
+      }
+    });
+  }
+
+  source.mainWindow = mainWindow;
 
   mainWindow.loadURL(serverUrl);
 
@@ -130,7 +163,6 @@ const createWindow = async () => {
                 cwd: getRootPath("../"),
               },
             );
-
           } else {
             let exePath = getRootPath('teamide-windows-x64.exe')
             try {
@@ -180,14 +212,13 @@ const createWindow = async () => {
             }
             log.info("msg:", msg);
           });
-
           serverProcess.stderr.on('data', (data: any) => {
             console.log('错误输出:');
             console.log(data.toString());
             console.log('--------------------');
           });
-
           serverProcess.on('close', (code: any) => {
+            serverProcess = null;
             log.info(`server process close: ${code}`);
             if (app != null) {
               app.quit();
@@ -200,7 +231,11 @@ const createWindow = async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    if (serverProcess != null) {
+      serverProcess.kill();
+    }
   });
+
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
@@ -256,7 +291,7 @@ app.on('ready', async () => {
       }
     }
   ])
-  tray.setToolTip('Team IDE')
+  tray.setToolTip('Team · IDE')
   //显示程序页面
   tray.on('click', () => {
     if (mainWindow != null) {

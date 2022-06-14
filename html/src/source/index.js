@@ -371,6 +371,10 @@ source.hasPower = function (action) {
     if (source.powers.indexOf(action) >= 0 || source.powerLinks.indexOf(action) >= 0) {
         find = true;
     }
+
+    if (tool.isOpenPage(action)) {
+        return true;
+    }
     return find;
 }
 export default source;

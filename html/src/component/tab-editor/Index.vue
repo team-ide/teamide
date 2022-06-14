@@ -93,6 +93,8 @@ export default {
     "onOffsetRightDistance",
     "slotTab",
     "copyTab",
+    "hasOpenNewWindow",
+    "openNewWindow",
   ],
   data() {
     return {
@@ -186,6 +188,14 @@ export default {
       menus.push({
         header: tab.name,
       });
+      if (this.hasOpenNewWindow) {
+        menus.push({
+          text: "新窗口打开",
+          onClick: () => {
+            this.openNewWindow && this.openNewWindow(tab);
+          },
+        });
+      }
       menus.push({
         text: "关闭",
         onClick: () => {

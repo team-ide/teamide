@@ -304,6 +304,8 @@ export default {
   overflow: auto;
   border: 0px;
   outline: 0px;
+  background-color: #383838;
+  color: #d9d9d9;
 }
 /* 
 .toolbox-editor ul {

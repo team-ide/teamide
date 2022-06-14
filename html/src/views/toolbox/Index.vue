@@ -133,63 +133,10 @@ export default {
       if (!this.tool.isToolboxPage(this.$route.path)) {
         return;
       }
-      this.source.toolbox.initContext = this.initContext;
       if (this.source.toolbox.context == null) {
-        await this.initContext();
+        await this.source.toolbox.initContext();
       }
       this.ready = true;
-    },
-    async initContext() {
-      let res = await this.server.toolbox.data();
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      } else {
-        let data = res.data || {};
-
-        data.mysqlColumnTypeInfos.forEach((one) => {
-          one.name = one.name.toLowerCase();
-        });
-        data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
-        this.source.toolbox.sshTeamIDEBinaryStartBytes =
-          data.sshTeamIDEBinaryStartBytes.split(",");
-        this.source.toolbox.sshTeamIDEBinaryStartBytesLength =
-          this.source.toolbox.sshTeamIDEBinaryStartBytes.length;
-
-        this.source.toolbox.sshTeamIDEEvent = data.sshTeamIDEEvent;
-        this.source.toolbox.sshTeamIDEMessage = data.sshTeamIDEMessage;
-        this.source.toolbox.sshTeamIDEError = data.sshTeamIDEError;
-        this.source.toolbox.sshTeamIDEAlert = data.sshTeamIDEAlert;
-        this.source.toolbox.sshTeamIDEConsole = data.sshTeamIDEConsole;
-        this.source.toolbox.sshTeamIDEStdout = data.sshTeamIDEStdout;
-        this.source.toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
-        this.source.toolbox.quickCommandTypes = data.quickCommandTypes;
-        this.source.toolbox.databaseTypes = data.databaseTypes;
-        this.source.toolbox.types = data.types;
-        data.types.forEach((one) => {
-          this.form.toolbox[one.name] = one.configForm;
-          if (one.otherForm) {
-            for (let formName in one.otherForm) {
-              this.form.toolbox[one.name][formName] = one.otherForm[formName];
-            }
-          }
-        });
-        this.source.toolbox.sqlConditionalOperations =
-          data.sqlConditionalOperations;
-      }
-
-      await this.loadContext();
-    },
-    async loadContext() {
-      let param = {};
-      let res = await this.server.toolbox.context(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      } else {
-        let context = res.data.context || {};
-        let groups = res.data.groups || [];
-        this.source.toolbox.groups = groups;
-        this.source.toolbox.context = context;
-      }
     },
     toInsert(toolboxType, selectGroup) {
       this.tool.stopEvent();
