@@ -7,7 +7,7 @@ on:
       - main
       # - dev
     # package.json 更改后再触发发布
-    paths: [ "package.json" ]
+#    paths: [ "package.json" ]
 jobs:
   buildStatic:
     runs-on: ubuntu-latest
@@ -25,20 +25,22 @@ jobs:
       - run: cd html && npm install && npm run build
 
       # 创建release相关目录
-      - run: mkdir release
-      - run: mkdir release/base
-      - run: cp -rf package.json release/
-      - run: cp -rf RELEASE.md release/
-      - run: cp -rf README.md release/base/
-      - run: cp -rf CHANGELOG.md release/base/CHANGELOG.md
-
-      - run: cp -rf release/base release/teamide-linux-x64
-      - run: cp -rf release/base release/teamide-server-linux-x64
-      - run: cp -rf release/base release/teamide-darwin-x64
-      - run: cp -rf release/base release/teamide-windows-x64
-
-      - run: mkdir release/teamide-server-linux-x64/conf
-      - run: cp -rf conf/release/* release/teamide-server-linux-x64/conf/
+      - run: |
+          mkdir release
+          mkdir release/base
+          
+          cp -rf package.json release/
+          cp -rf RELEASE.md release/
+          cp -rf README.md release/base/
+          cp -rf CHANGELOG.md release/base/CHANGELOG.md
+          
+          cp -rf release/base release/teamide-linux-x64
+          cp -rf release/base release/teamide-server-linux-x64
+          cp -rf release/base release/teamide-darwin-x64
+          cp -rf release/base release/teamide-windows-x64
+          
+          mkdir release/teamide-server-linux-x64/conf
+          cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -72,6 +74,12 @@ jobs:
           name: release
           path: release
 
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: html
+          path: html/dist
+
       # 读取发布版本
       - name: Read Release Version
         id: release_version
@@ -79,12 +87,6 @@ jobs:
         with:
           path: release/package.json
           property: version
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
 
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
@@ -117,6 +119,12 @@ jobs:
           name: release
           path: release
 
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: html
+          path: html/dist
+
       # 读取发布版本
       - name: Read Release Version
         id: release_version
@@ -124,12 +132,6 @@ jobs:
         with:
           path: release/package.json
           property: version
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
 
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
@@ -164,6 +166,12 @@ jobs:
           name: release
           path: release
 
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: html
+          path: html/dist
+
       # 读取发布版本
       - name: Read Release Version
         id: release_version
@@ -171,12 +179,6 @@ jobs:
         with:
           path: release/package.json
           property: version
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: html
-          path: html/dist
 
       # 将静态资源打包html.go
       - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
@@ -216,110 +218,91 @@ jobs:
           path: release
 
       # 读取发布版本
-#      - name: Read Release Version
-#        id: release_version
-#        uses: ashley-taylor/read-json-property-action@v1.0
-#        with:
-#          path: release/package.json
-#          property: version
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
 
-#      - id: release_check
-#        run: |
-#          echo "::set-output name=RELEASE_STATUS::$(curl -I -m 10 -o /dev/null -s -w %{http_code} https://github.com/team-ide/teamide/releases/tag/${{ steps.release_version.outputs.value }})"
+      - id: release_check
+        run: |
+          echo "::set-output name=RELEASE_STATUS::$(curl -I -m 10 -o /dev/null -s -w %{http_code} https://github.com/team-ide/teamide/releases/tag/${{ steps.release_version.outputs.value }})"
 
-#      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
+      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      #        run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
       #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
       #        run: cd release && zip -q -r teamide-server-linux-x64.zip teamide-server-linux-x64
-#      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
-#      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
+      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      #        run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
+      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      #        run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
 
-      - run: cp -rf release/teamide-darwin-x64/teamide electron/teamide-darwin-x64
-      - run: cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
-      - run: cp -rf release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
-      - run: mv .git electron/
-      - run: chmod +x electron/teamide-darwin-x64
-      - run: chmod +x electron/teamide-linux-x64
-      - run: cd electron && npm install
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        run: |
+          cp -rf release/teamide-darwin-x64/teamide electron/teamide-darwin-x64
+          cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
+          cp -rf release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
+          mv .git electron/
+          chmod +x electron/teamide-darwin-x64
+          chmod +x electron/teamide-linux-x64
 
-      - name: Publish releases
+      - name: Electron Build
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd electron
+          npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --publish always --win --mac --linux
+          #          npm exec electron-builder -- --publish always --win --mac --linux
+          npm exec electron-builder -- --win --mac --linux
 
       # 读取发布说明
-#      - name: Read Release Description
-#        id: release_body
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: juliangruber/read-file-action@v1
-#        with:
-#          path: release/RELEASE.md
+      - name: Read Release Description
+        id: release_body
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: release/RELEASE.md
 
       # 发布
-#      - name: Create Release
-#        id: create_release
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: actions/create-release@v1
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          tag_name: ${{steps.release_version.outputs.value}}
-#          release_name: ${{steps.release_version.outputs.value}}
-#          body: ${{steps.release_body.outputs.content}}
-#          draft: false # 是否是草稿
-#          prerelease: false # 是否是预发布
+      - name: Create Release
+        id: create_release
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{steps.release_version.outputs.value}}
+          release_name: v${{steps.release_version.outputs.value}}
+          body: ${{steps.release_body.outputs.content}}
+          draft: false # 是否是草稿
+          prerelease: false # 是否是预发布
 
-      # 上传构建结果到 Release（把打包的zip上传到Release）
-#      - name: Upload TeamIDE Linux Release Asset
-#        id: upload-teamide-linux-release-asset
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: actions/upload-release-asset@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-#          asset_path: ./release/teamide-linux-x64.zip # 要上传文件
-#          asset_name: teamide-linux-x64.zip # 上传后的文件名
-#          asset_content_type: application/zip
-
-      #      - name: Upload TeamIDE Server Linux Release Asset
-      #        id: upload-teamide-server-linux-release-asset
-      #        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-      #        uses: actions/upload-release-asset@master
-      #        env:
-      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #        with:
-      #          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-      #          asset_path: ./release/teamide-server-linux-x64.zip # 要上传文件
-      #          asset_name: teamide-server-linux-x64.zip # 上传后的文件名
-      #          asset_content_type: application/zip
-
-#      - name: Upload TeamIDE MAC Release Asset
-#        id: upload-teamide-darwin-release-asset
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: actions/upload-release-asset@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-#          asset_path: ./release/teamide-darwin-x64.zip # 要上传文件
-#          asset_name: teamide-darwin-x64.zip # 上传后的文件名
-#          asset_content_type: application/zip
-
-#      - name: Upload TeamIDE Windows Release Asset
-#        id: upload-teamide-windows-release-asset
-#        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-#        uses: actions/upload-release-asset@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-#          asset_path: ./release/teamide-windows-x64.zip # 要上传文件
-#          asset_name: teamide-windows-x64.zip # 上传后的文件名
-#          asset_content_type: application/zip
+      # 上传 到 Release
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: electron/release/build/TeamIDE-win-x64-1.0.0.exe
+          asset_name: TeamIDE-win-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: electron/release/build/TeamIDE-mac-1.0.0.dmg
+          asset_name: TeamIDE-mac-${{steps.release_version.outputs.value}}.dmg # 上传后的文件名
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: electron/release/build/TeamIDE-linux-x64-1.0.0.AppImage
+          asset_name: TeamIDE-linux-x64-${{steps.release_version.outputs.value}}.AppImage # 上传后的文件名

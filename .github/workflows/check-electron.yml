@@ -2,7 +2,7 @@ name: check-electron
 on:
   push:
     branches:
-      - main
+      - main-xxx
 jobs:
   check:
     runs-on: ${{ matrix.os }}
