@@ -249,9 +249,6 @@ const createWindow = async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
-    if (serverProcess != null) {
-      serverProcess.kill();
-    }
   });
 
 
