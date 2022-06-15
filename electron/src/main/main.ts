@@ -98,12 +98,14 @@ let serverUrl = resolveHtmlPath('index.html')
 
 const viewWindowList: BrowserWindow[] = []
 const createWindow = async () => {
-  if (isDebug) {
-    await installExtensions();
-  }
-  if (mainWindow != null) {
+
+  if (mainWindow != null && !mainWindow.isDestroyed()) {
     mainWindow.show()
     return
+  }
+
+  if (isDebug) {
+    await installExtensions();
   }
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;//获取到屏幕的宽度和高度
@@ -139,6 +141,7 @@ const createWindow = async () => {
       height: source.windowHeight,
       icon: iconPath,
       autoHideMenuBar: true,
+      skipTaskbar: true,
       webPreferences: {
         preload: app.isPackaged
           ? path.join(__dirname, 'preload.js')
@@ -154,7 +157,7 @@ const createWindow = async () => {
       if (index >= 0) {
         viewWindowList.splice(index, 1)
       }
-      if (mainWindow != null) {
+      if (mainWindow != null && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('close-open-window', config);
       }
     });
@@ -246,20 +249,17 @@ const createWindow = async () => {
           serverProcess.on('close', (code: any) => {
             serverProcess = null;
             log.info(`server process close: ${code}`);
-            if (app != null) {
-              app.quit();
-            }
+            closeAll()
           });
         }
       }
     }
   });
-
-  mainWindow.on('closed', () => {
+  mainWindow.on('close', (e) => {
+    e.preventDefault();
     // mainWindow = null;
     allWindowHide()
   });
-
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
@@ -292,24 +292,71 @@ app.on('window-all-closed', () => {
   }
 });
 
-
-let allWindowShow = () => {
-  if (mainWindow != null) {
+let isAllWindowHide = false;
+let allWindowShow = async () => {
+  isAllWindowHide = false;
+  if (mainWindow != null && !mainWindow.isDestroyed()) {
     mainWindow.show();
   }
   viewWindowList.forEach((one: BrowserWindow) => {
-    one.show();
+    if (!one.isDestroyed()) {
+      one.show();
+    }
   })
 };
 let allWindowHide = () => {
-  if (mainWindow != null) {
+  isAllWindowHide = true;
+  if (mainWindow != null && !mainWindow.isDestroyed()) {
     mainWindow.hide();
   }
   viewWindowList.forEach((one: BrowserWindow) => {
-    one.hide();
+    if (!one.isDestroyed()) {
+      one.hide();
+    }
   })
 
 };
+let allWindowClose = () => {
+  if (mainWindow != null && !mainWindow.isDestroyed()) {
+    mainWindow.close();
+    mainWindow = null;
+  }
+  viewWindowList.forEach((one: BrowserWindow) => {
+    if (!one.isDestroyed()) {
+      one.close();
+    }
+  })
+  viewWindowList.splice(0, viewWindowList.length)
+};
+
+let closeAll = () => {
+  try {
+    allWindowClose()
+  } catch (error) {
+
+  }
+  try {
+    if (serverProcess != null) {
+      serverProcess.kill();
+    }
+  } catch (error) {
+
+  }
+  try {
+    if (tray != null) {
+      tray.destroy()
+    }
+  } catch (error) {
+
+  }
+  try {
+    if (app != null) {
+      app.quit()
+    }
+  } catch (error) {
+
+  }
+}
 app
   .whenReady()
   .then(() => {
@@ -321,34 +368,25 @@ app
     });
   })
   .catch(console.log);
-let tray = null
 
+let tray: Tray | null = null;
 app.on('ready', async () => {
   tray = new Tray(icon16Path)
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '退出',
       click: function () {
-        allWindowHide()
-        app.quit()
-
-
-        log.info(`window all closed`);
-        if (serverProcess != null) {
-          serverProcess.kill();
-        }
+        closeAll()
       }
     }
   ])
   tray.setToolTip('Team · IDE')
   //显示程序页面
   tray.on('click', () => {
-    if (mainWindow != null) {
-      if (mainWindow.isVisible()) {
-        allWindowHide();
-      } else {
-        allWindowShow();
-      }
+    if (isAllWindowHide) {
+      allWindowShow();
+    } else {
+      allWindowHide();
     }
   })
   tray.setContextMenu(contextMenu)
