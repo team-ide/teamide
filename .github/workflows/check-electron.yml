@@ -1,0 +1,42 @@
+name: check-electron
+on:
+  push:
+    branches:
+      - main
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest ]
+    steps:
+
+      - name: Checkout git repo
+        uses: actions/checkout@v1
+
+      - name: Install Node and NPM
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16
+          cache: npm
+
+      - run: |
+          cp -rf package.json electron/teamide-darwin-x64
+          cp -rf package.json electron/teamide-linux-x64
+          cp -rf package.json electron/teamide-windows-x64.exe
+          mv .git electron/
+          chmod +x electron/teamide-darwin-x64
+          chmod +x electron/teamide-linux-x64
+
+      - name: Electron Build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd electron
+          npm install
+          npm run postinstall
+          npm run build
+          npm exec electron-builder -- --win --mac --linux
+      - run: |
+          cd electron/release/build
+          ls
