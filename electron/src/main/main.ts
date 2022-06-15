@@ -249,7 +249,7 @@ const createWindow = async () => {
           serverProcess.on('close', (code: any) => {
             serverProcess = null;
             log.info(`server process close: ${code}`);
-            closeAll()
+            destroyAll()
           });
         }
       }
