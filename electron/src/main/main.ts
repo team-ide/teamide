@@ -9,7 +9,7 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, ipcRenderer, Menu, Tray, screen } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, Menu, Tray, screen } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
@@ -96,6 +96,10 @@ const viewWindowList: any = []
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
+  }
+  if (mainWindow != null) {
+    mainWindow.show()
+    return
   }
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;//获取到屏幕的宽度和高度
