@@ -114,7 +114,7 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --mac
-          mv electron/release/build/TeamIDE-mac-1.0.0.dmg ./release/TeamIDE-mac.dmg
+          mv release/build/TeamIDE-mac-1.0.0.dmg ../release/TeamIDE-mac.dmg
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -183,7 +183,7 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --linux
-          mv electron/release/build/TeamIDE-linux-x64-1.0.0.AppImage ./release/TeamIDE-linux-x64.AppImage
+          mv release/build/TeamIDE-linux-x64-1.0.0.AppImage ../release/TeamIDE-linux-x64.AppImage
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -249,8 +249,8 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --win
-          move electron/release/build/TeamIDE-win-x64-1.0.0.exe release/TeamIDE-win-x64.exe
-          move electron/teamide-windows-x64.exe release/teamide-windows-x64/teamide.exe
+          move release/build/TeamIDE-win-x64-1.0.0.exe ../release/TeamIDE-win-x64.exe
+          move teamide-windows-x64.exe ../release/teamide-windows-x64/teamide.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
