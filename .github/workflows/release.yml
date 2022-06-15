@@ -17,12 +17,15 @@ jobs:
         uses: actions/checkout@v2
 
       # 打包构建 html
-      - name: use Node.js 10
+      - name: Install Node and NPM
         uses: actions/setup-node@v1
         with:
-          node-version: 10
+          node-version: 16
       # npm install
-      - run: cd html && npm install && npm run build
+      - run: |
+          cd html 
+          npm install
+          npm run build
 
       # 创建release相关目录
       - run: |
@@ -89,26 +92,22 @@ jobs:
           go-version: "^1.17"
 
       # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-
-      - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
+      - run: |
+          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+          go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
         with:
           node-version: 16
-          cache: npm
-
-      - run: |
-          cp -rf release/teamide-darwin-x64/teamide electron/teamide-darwin-x64
-          mv .git electron/
-          chmod +x electron/teamide-darwin-x64
-
 
       - name: Electron Build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cp -rf release/teamide-darwin-x64/teamide electron/teamide-darwin-x64
+          mv .git electron/
+          chmod +x electron/teamide-darwin-x64
           cd electron
           npm install
           npm run postinstall
@@ -157,9 +156,9 @@ jobs:
           go-version: "^1.17"
 
       # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-
-      - run: go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
+      - run: |
+          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+          go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
 
       #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
@@ -167,17 +166,14 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16
-          cache: npm
-
-      - run: |
-          cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
-          mv .git electron/
-          chmod +x electron/teamide-linux-x64
 
       - name: Electron Build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
+          mv .git electron/
+          chmod +x electron/teamide-linux-x64
           cd electron
           npm install
           npm run postinstall
@@ -226,24 +222,21 @@ jobs:
           go-version: "^1.17"
 
       # 将静态资源打包html.go
-      - run: go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-
-      - run: go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
+      - run: |
+          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+          go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
         with:
           node-version: 16
-          cache: npm
-
-      - run: |
-          move release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
-          move .git electron/.git
 
       - name: Electron Build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          move release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
+          move .git electron/.git
           cd electron
           npm install
           npm run postinstall
