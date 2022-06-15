@@ -89,10 +89,14 @@ export const getRootPath = (...paths: string[]): string => {
 };
 export const iconPath = getAssetPath('icon.png');
 source.iconPath = iconPath;
+export const icon16Path = getAssetPath('icon-16.png');
+source.icon16Path = icon16Path;
+export const icon32Path = getAssetPath('icon-32.png');
+source.icon32Path = icon32Path;
 
 let serverUrl = resolveHtmlPath('index.html')
 
-const viewWindowList: any = []
+const viewWindowList: BrowserWindow[] = []
 const createWindow = async () => {
   if (isDebug) {
     await installExtensions();
@@ -252,7 +256,8 @@ const createWindow = async () => {
   });
 
   mainWindow.on('closed', () => {
-    mainWindow = null;
+    // mainWindow = null;
+    allWindowHide()
   });
 
 
@@ -278,15 +283,33 @@ app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
   if (process.platform !== 'darwin') {
-    app.quit();
+    // app.quit();
 
-    log.info(`window all closed`);
-    if (serverProcess != null) {
-      serverProcess.kill();
-    }
+    // log.info(`window all closed`);
+    // if (serverProcess != null) {
+    //   serverProcess.kill();
+    // }
   }
 });
 
+
+let allWindowShow = () => {
+  if (mainWindow != null) {
+    mainWindow.show();
+  }
+  viewWindowList.forEach((one: BrowserWindow) => {
+    one.show();
+  })
+};
+let allWindowHide = () => {
+  if (mainWindow != null) {
+    mainWindow.hide();
+  }
+  viewWindowList.forEach((one: BrowserWindow) => {
+    one.hide();
+  })
+
+};
 app
   .whenReady()
   .then(() => {
@@ -301,12 +324,19 @@ app
 let tray = null
 
 app.on('ready', async () => {
-  tray = new Tray(iconPath)
+  tray = new Tray(icon16Path)
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '退出',
       click: function () {
+        allWindowHide()
         app.quit()
+
+
+        log.info(`window all closed`);
+        if (serverProcess != null) {
+          serverProcess.kill();
+        }
       }
     }
   ])
@@ -315,9 +345,9 @@ app.on('ready', async () => {
   tray.on('click', () => {
     if (mainWindow != null) {
       if (mainWindow.isVisible()) {
-        mainWindow.hide();
+        allWindowHide();
       } else {
-        mainWindow.show();
+        allWindowShow();
       }
     }
   })
