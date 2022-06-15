@@ -316,22 +316,22 @@ let allWindowHide = () => {
   })
 
 };
-let allWindowClose = () => {
+let allWindowDestroy = () => {
   if (mainWindow != null && !mainWindow.isDestroyed()) {
-    mainWindow.close();
+    mainWindow.destroy();
     mainWindow = null;
   }
   viewWindowList.forEach((one: BrowserWindow) => {
     if (!one.isDestroyed()) {
-      one.close();
+      one.destroy();
     }
   })
   viewWindowList.splice(0, viewWindowList.length)
 };
 
-let closeAll = () => {
+let destroyAll = () => {
   try {
-    allWindowClose()
+    allWindowDestroy()
   } catch (error) {
 
   }
@@ -376,7 +376,7 @@ app.on('ready', async () => {
     {
       label: '退出',
       click: function () {
-        closeAll()
+        destroyAll()
       }
     }
   ])
