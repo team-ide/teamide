@@ -37,7 +37,7 @@ ipcMain.on('ipc-example', async (event, arg) => {
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
 });
-ipcMain.on('open-new-window', async (event, config: any) => {
+ipcMain.on('open-new-window', async (_event: any, config: any) => {
   config = config || {};
   console.log("open-new-window:config:", config);
   source.addBrowserView(config)
