@@ -2,6 +2,7 @@ import Vue from 'vue'
 
 import './tm';
 
+import './font/font.css'
 import './iconfont/iconfont.css'
 
 import TMLayout from './tm/Layout.vue'
