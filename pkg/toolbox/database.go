@@ -386,7 +386,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		taskKey := util.GenerateUUID()
+		taskKey := util.UUID()
 
 		var importTask = &task.ImportTask{}
 		err = json.Unmarshal(dataBS, importTask)
@@ -415,7 +415,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 		generateParam.TablePackingCharacter = "`"
 		generateParam.ColumnPackingCharacter = "`"
 
-		taskKey := util.GenerateUUID()
+		taskKey := util.UUID()
 
 		var exportTask = &task.ExportTask{}
 		err = json.Unmarshal(dataBS, exportTask)

@@ -59,7 +59,7 @@ func (this_ *Api) apiUpload(requestBean *base.RequestBean, c *gin.Context) (res 
 		return
 	}
 	defer openFile.Close()
-	fileName := util.GenerateUUID()
+	fileName := util.UUID()
 	if fileType != "" {
 		fileName += "" + fileType
 	}

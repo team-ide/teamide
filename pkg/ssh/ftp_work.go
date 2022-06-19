@@ -122,7 +122,7 @@ func (this_ *SftpClient) callConfirm(confirmInfo *ConfirmInfo) (res *ConfirmInfo
 	}
 	confirmInfo.IsConfirm = true
 	if confirmInfo.ConfirmId == "" {
-		confirmInfo.ConfirmId = util.GenerateUUID()
+		confirmInfo.ConfirmId = util.UUID()
 	}
 	this_.confirmMap[confirmInfo.ConfirmId] = make(chan *ConfirmInfo, 1)
 	bs, err := json.Marshal(confirmInfo)

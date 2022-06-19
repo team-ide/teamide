@@ -144,7 +144,7 @@ func (this_ *OtherExportTask) Start() {
 	var err error
 
 	for _, exportColumn := range this_.ExportColumnList {
-		var exportValueKey = util.GenerateUUID()
+		var exportValueKey = util.UUID()
 		exportColumn["exportValueKey"] = exportValueKey
 	}
 	var fileSuffix = ""

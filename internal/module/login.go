@@ -115,7 +115,7 @@ func (this_ *Api) getJWTStr(user *module_user.UserModel) string {
 		return ""
 	}
 	jwt := &base.JWTBean{
-		Sign:   util.GenerateUUID(),
+		Sign:   util.UUID(),
 		UserId: user.UserId,
 		Name:   user.Name,
 		Time:   util.GetNowTime(),

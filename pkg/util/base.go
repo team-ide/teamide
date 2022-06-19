@@ -5,25 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 )
-
-//GenerateUUID 生成UUID
-func GenerateUUID() string {
-	uuid := uuid.NewV4().String()
-	slice := strings.Split(uuid, "-")
-	var uuidNew string
-	for _, str := range slice {
-		uuidNew += str
-	}
-	return uuidNew
-}
 
 //EncodePassword 加密密码
 func EncodePassword(salt string, password string) (res string) {

@@ -49,7 +49,7 @@ func (this_ *UserPasswordService) CheckPassword(userId int64, password string) (
 // Insert 新增
 func (this_ *UserPasswordService) Insert(userId int64, password string) (rowsAffected int64, err error) {
 
-	salt := util.GenerateUUID()[2:12]
+	salt := util.UUID()[2:12]
 	pwd := util.EncodePassword(salt, password)
 
 	sql := `INSERT INTO ` + TableUserPassword + `(userId, salt, password, createTime) VALUES (?, ?, ?, ?) `
@@ -65,7 +65,7 @@ func (this_ *UserPasswordService) Insert(userId int64, password string) (rowsAff
 // UpdatePassword 修改密码
 func (this_ *UserPasswordService) UpdatePassword(userId int64, password string) (rowsAffected int64, err error) {
 
-	salt := util.GenerateUUID()[2:12]
+	salt := util.UUID()[2:12]
 	pwd := util.EncodePassword(salt, password)
 
 	sql := `UPDATE ` + TableUserPassword + ` SET salt=?,password=?,updateTime=? WHERE userId=? `

@@ -140,7 +140,7 @@ func redisWork(work string, config map[string]interface{}, data map[string]inter
 
 	case "import":
 
-		taskKey := util.GenerateUUID()
+		taskKey := util.UUID()
 
 		var importTask = &redis.ImportTask{}
 		err = json.Unmarshal(dataBS, importTask)

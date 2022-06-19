@@ -79,7 +79,7 @@ func sshWork(work string, config map[string]interface{}, data map[string]interfa
 	res = map[string]interface{}{}
 	switch work {
 	case "createToken":
-		var token = util.GenerateUUID()
+		var token = util.UUID()
 		ssh.TokenCache[token] = sshConfig
 		res["token"] = token
 	case "readText":
