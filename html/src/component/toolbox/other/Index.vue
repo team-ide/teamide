@@ -17,6 +17,14 @@
           :wrap="wrap"
         ></GenerateDataFile>
       </template>
+      <template v-else-if="extend.type == 'fontImage'">
+        <FontImage
+          :source="source"
+          :toolbox="toolbox"
+          :extend="extend"
+          :wrap="wrap"
+        ></FontImage>
+      </template>
     </template>
   </div>
 </template>
@@ -25,9 +33,10 @@
 <script>
 import Format from "./Format";
 import GenerateDataFile from "./GenerateDataFile";
+import FontImage from "./FontImage";
 
 export default {
-  components: { Format, GenerateDataFile },
+  components: { Format, GenerateDataFile, FontImage },
   props: ["source", "toolboxType", "toolbox", "extend", "wrap"],
   data() {
     return {

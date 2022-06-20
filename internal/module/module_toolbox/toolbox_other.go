@@ -19,6 +19,12 @@ func init() {
 		Option:    `{"type":"generateDataFile"}`,
 	})
 
+	Others = append(Others, &ToolboxModel{
+		ToolboxId: OtherToolboxId + 3,
+		Name:      "字体图片",
+		Option:    `{"type":"fontImage"}`,
+	})
+
 	for _, one := range Others {
 		if one.ToolboxId <= OtherToolboxId {
 			panic("其它工具中，内置工具ID异常")
