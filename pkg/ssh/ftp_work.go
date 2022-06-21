@@ -1109,7 +1109,7 @@ func (this_ *SftpClient) localFiles(request *SFTPRequest) (response *SFTPRespons
 	}
 	dir := request.Dir
 	if dir == "" {
-		dir, err = os.Getwd()
+		dir, err = os.UserHomeDir()
 		if err != nil {
 			return
 		}

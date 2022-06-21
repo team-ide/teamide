@@ -1,9 +1,7 @@
 <template>
   <div class="toolbox-generateDataFile-editor">
     <template v-if="ready">
-      <div class="text-center color-orange pdtb-20">
-        生成数据文件功能开发中，敬请期待！
-      </div>
+      <div class="text-center color-orange pdtb-20">功能开发中，敬请期待！</div>
     </template>
   </div>
 </template>

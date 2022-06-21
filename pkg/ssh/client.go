@@ -121,6 +121,10 @@ func (this_ *Client) createClient() (err error) {
 		this_.WSWriteError("连接失败:" + err.Error())
 		return
 	}
+	go func() {
+		err = this_.sshClient.Wait()
+		this_.CloseClient()
+	}()
 	return
 }
 

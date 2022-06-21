@@ -147,7 +147,15 @@ import Files from "./Files";
 import FileEdit from "./FileEdit";
 export default {
   components: { Files, FileEdit },
-  props: ["source", "toolbox", "extend", "wrap", "initToken", "initSocket"],
+  props: [
+    "source",
+    "toolbox",
+    "extend",
+    "wrap",
+    "initToken",
+    "initSocket",
+    "isFromSSH",
+  ],
   data() {
     return {
       localFiles: null,
@@ -414,15 +422,17 @@ export default {
             keyValueMap["remote.dir"] = response.dir;
             this.wrap.updateExtend(keyValueMap);
           }
-          if (response.dir.split("/").length > 3) {
-            let ss = response.dir.split("/");
-            let d = "..";
-            for (var i = ss.length - 2; i < ss.length; i++) {
-              d += "/" + ss[i];
+          if (!this.isFromSSH) {
+            if (response.dir.split("/").length > 3) {
+              let ss = response.dir.split("/");
+              let d = "..";
+              for (var i = ss.length - 2; i < ss.length; i++) {
+                d += "/" + ss[i];
+              }
+              this.wrap.updateComment(d);
+            } else {
+              this.wrap.updateComment(response.dir);
             }
-            this.wrap.updateComment(d);
-          } else {
-            this.wrap.updateComment(response.dir);
           }
           this.remoteFiles = response.files || [];
           this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
@@ -497,6 +507,9 @@ export default {
     onData(data) {
       let response = JSON.parse(data);
       this.onResponse(response);
+    },
+    reStart() {
+      this.toStart();
     },
     toStart() {
       this.writeEvent("ftp start");

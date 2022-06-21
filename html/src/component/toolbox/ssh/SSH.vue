@@ -100,7 +100,19 @@
       <div
         class="toolbox-ssh-editor-ftp-box"
         :class="{ 'toolbox-ssh-editor-ftp-box-show': isShowFTP }"
+        :style="{
+          width: `${ftpWidth}px`,
+          height: `${ftpHeight}px`,
+        }"
       >
+        <div
+          ref="ftpBoxTopLine"
+          class="toolbox-ssh-editor-ftp-box-top-line"
+        ></div>
+        <div
+          ref="ftpBoxLeftLine"
+          class="toolbox-ssh-editor-ftp-box-left-line"
+        ></div>
         <div class="toolbox-ssh-editor-ftp-box-header">
           <div class=""></div>
           <div
@@ -128,6 +140,7 @@
             :wrap="wrap"
             :initToken="initToken"
             :initSocket="initSocket"
+            :isFromSSH="true"
           >
           </FTP>
         </div>
@@ -159,8 +172,12 @@ export default {
         width: null,
         height: null,
       },
+      ftpWidth: 900,
+      ftpHeight: 600,
+
       isOpenFTP: false,
       isShowFTP: true,
+      sshSessionClosed: true,
     };
   },
   computed: {},
@@ -180,6 +197,45 @@ export default {
         this.isOpenFTP = true;
         this.isShowFTP = true;
       }
+      this.$nextTick(this.bindDrapFTPEvent);
+    },
+    bindDrapFTPEvent() {
+      if (this.bindDrapFTPEvented) {
+        return;
+      }
+      this.bindDrapFTPEvented = true;
+      let leftLine = this.$refs.ftpBoxLeftLine;
+      leftLine.addEventListener("mousedown", (e) => {
+        this.lineLeftClientX = e.clientX;
+        document.addEventListener("mouseup", this.documentMouseupEvent);
+        document.addEventListener("mousemove", this.documentMousemoveLeftEvent);
+      });
+      let topLine = this.$refs.ftpBoxTopLine;
+      topLine.addEventListener("mousedown", (e) => {
+        this.lineTopClientY = e.clientY;
+        document.addEventListener("mouseup", this.documentMouseupEvent);
+        document.addEventListener("mousemove", this.documentMousemoveTopEvent);
+      });
+    },
+    documentMouseupEvent() {
+      document.removeEventListener("mouseup", this.documentMouseupEvent);
+      document.removeEventListener(
+        "mousemove",
+        this.documentMousemoveLeftEvent
+      );
+      document.removeEventListener("mousemove", this.documentMousemoveTopEvent);
+    },
+    documentMousemoveLeftEvent(e) {
+      let clientX = e.clientX;
+      this.ftpWidth =
+        Number(this.ftpWidth) - Number(clientX - this.lineLeftClientX);
+      this.lineLeftClientX = clientX;
+    },
+    documentMousemoveTopEvent(e) {
+      let clientY = e.clientY;
+      this.ftpHeight =
+        Number(this.ftpHeight) - Number(clientY - this.lineTopClientY);
+      this.lineTopClientY = clientY;
     },
     hideFTP() {
       this.isShowFTP = false;
@@ -188,9 +244,15 @@ export default {
       if (event == "shell ready") {
         this.toStart();
       } else if (event == "shell created") {
+        this.sshSessionClosed = false;
+        delete this.startIng;
+        this.tool.success("SSH会话连接中成功");
         this.$nextTick(() => {
           this.initAttachAddon();
         });
+      } else if (event == "ssh session closed") {
+        this.sshSessionClosed = true;
+        this.term.write("SSH会话已关闭，输入回车重新连接！");
       } else if (event == "shell to upload file") {
       }
     },
@@ -257,7 +319,11 @@ export default {
         this.$refs.quickCommandDropdown.hide();
       }
     },
+    reStart() {
+      this.toStart();
+    },
     toStart() {
+      this.startIng = true;
       let data = {};
       data.cols = this.cols;
       data.rows = this.rows;
@@ -277,6 +343,10 @@ export default {
       this.writeEvent("change size" + JSON.stringify(data));
     },
     initAttachAddon() {
+      if (this.initAttachAddoned) {
+        return;
+      }
+      this.initAttachAddoned = true;
       this.term.onData((data) => {
         this.writeData(data);
       });
@@ -306,12 +376,66 @@ export default {
       // this.attachAddon = new AttachAddon(this.socket);
       // this.term.loadAddon(this.attachAddon);
     },
-    onKeydown(e) {
-      console.log(this.tool.keyIsCtrlC(e));
+    async onKeydown(e) {
+      // let key = arg.key;
+      // console.log(key);
+
+      if (this.sshSessionClosed) {
+        this.tool.stopEvent(e);
+        if (this.startIng) {
+          this.tool.warn("SSH会话连接中，请稍后");
+          return;
+        }
+        if (this.tool.keyIsEnter(e)) {
+          this.reStart();
+          this.tool.warn("SSH会话连接中，请稍后");
+          return;
+        }
+        this.tool.warn("SSH会话已关闭，请重新连接！");
+        return;
+      }
       if (this.tool.keyIsCtrlC(e)) {
-        this.tool.success("复制成功");
+        let copiedText = this.term.getSelection();
+        if (this.tool.isNotEmpty(copiedText)) {
+          this.tool.stopEvent(e);
+          let res = await this.tool.clipboardWrite(copiedText);
+          if (res.success) {
+            this.tool.success("复制成功");
+          } else {
+            this.tool.warn("复制失败，请允许访问剪贴板！");
+          }
+        }
       } else if (this.tool.keyIsCtrlV(e)) {
-        this.tool.success("粘贴成功");
+        let readResult = await this.tool.readClipboardText();
+        this.tool.stopEvent(e);
+        if (readResult.success) {
+          if (this.tool.isNotEmpty(readResult.text)) {
+            if (readResult.text.indexOf("\n") >= 0) {
+              let showText = readResult.text;
+              let div = this.tool.jQuery("<div/>");
+
+              let textarea = this.tool.jQuery(
+                `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
+              );
+              textarea.append(showText);
+
+              div.append("<div>确认粘贴以下内容<div/>");
+              div.append(textarea);
+              this.tool
+                .confirm(div.html())
+                .then(() => {
+                  this.writeData(showText);
+                  this.tool.success("粘贴成功");
+                })
+                .catch(() => {});
+            } else {
+              this.writeData(readResult.text);
+              this.tool.success("粘贴成功");
+            }
+          }
+        } else {
+          this.tool.warn("粘贴失败，请允许访问剪贴板！");
+        }
       }
     },
     onKeyup(e) {
@@ -362,57 +486,7 @@ export default {
       this.fitAddon.fit();
 
       this.term.focus();
-      this.$refs.terminal.addEventListener(
-        "keydown",
-        async (e) => {
-          // let key = arg.key;
-          // console.log(key);
-          if (this.tool.keyIsCtrlC(e)) {
-            let copiedText = this.term.getSelection();
-            if (this.tool.isNotEmpty(copiedText)) {
-              this.tool.stopEvent(e);
-              let res = await this.tool.clipboardWrite(copiedText);
-              if (res.success) {
-                this.tool.success("复制成功");
-              } else {
-                this.tool.warn("复制失败，请允许访问剪贴板！");
-              }
-            }
-          } else if (this.tool.keyIsCtrlV(e)) {
-            let readResult = await this.tool.readClipboardText();
-            this.tool.stopEvent(e);
-            if (readResult.success) {
-              if (this.tool.isNotEmpty(readResult.text)) {
-                if (readResult.text.indexOf("\n") >= 0) {
-                  let showText = readResult.text;
-                  let div = this.tool.jQuery("<div/>");
-
-                  let textarea = this.tool.jQuery(
-                    `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
-                  );
-                  textarea.append(showText);
-
-                  div.append("<div>确认粘贴以下内容<div/>");
-                  div.append(textarea);
-                  this.tool
-                    .confirm(div.html())
-                    .then(() => {
-                      this.writeData(showText);
-                      this.tool.success("粘贴成功");
-                    })
-                    .catch(() => {});
-                } else {
-                  this.writeData(readResult.text);
-                  this.tool.success("粘贴成功");
-                }
-              }
-            } else {
-              this.tool.warn("粘贴失败，请允许访问剪贴板！");
-            }
-          }
-        },
-        true
-      );
+      this.$refs.terminal.addEventListener("keydown", this.onKeydown, true);
       this.cols = this.term.cols;
       this.rows = this.term.rows;
       this.initSize();
@@ -537,8 +611,6 @@ export default {
 }
 
 .toolbox-ssh-editor-ftp-box {
-  width: 1000px;
-  height: 600px;
   position: absolute;
   right: 20px;
   bottom: 40px;
@@ -551,6 +623,28 @@ export default {
 .toolbox-ssh-editor-ftp-box.toolbox-ssh-editor-ftp-box-show {
   transform: scale(1);
   z-index: 10;
+}
+.toolbox-ssh-editor-ftp-box-top-line {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  margin-top: -2px;
+  height: 4px;
+  background: #4e4e4e;
+  cursor: row-resize;
+  z-index: 1;
+}
+.toolbox-ssh-editor-ftp-box-left-line {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  width: 4px;
+  margin-left: -2px;
+  background: #4e4e4e;
+  cursor: col-resize;
+  z-index: 1;
 }
 
 .toolbox-ssh-editor-ftp-box-header {

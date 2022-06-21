@@ -1,24 +1,29 @@
 <template>
   <div class="toolbox-fontImage-editor">
-    <tm-layout height="100%">
-      <tm-layout width="auto" class="">
-        <div class="fontImage-box">
-          <canvas
-            ref="canvas"
-            class="fontImage-canvas"
-            :style="{
-              width: `${form.width}px`,
-              height: `${form.height}px`,
-              left: `calc(50% - ${form.width / 2}px)`,
-              top: `calc(50% - ${form.height / 2}px)`,
-            }"
-          >
-          </canvas>
-        </div>
+    <template v-if="toOpenUp">
+      <tm-layout height="100%">
+        <tm-layout width="auto" class="">
+          <div class="fontImage-box">
+            <canvas
+              ref="canvas"
+              class="fontImage-canvas"
+              :style="{
+                width: `${form.width}px`,
+                height: `${form.height}px`,
+                left: `calc(50% - ${form.width / 2}px)`,
+                top: `calc(50% - ${form.height / 2}px)`,
+              }"
+            >
+            </canvas>
+          </div>
+        </tm-layout>
+        <tm-layout-bar right></tm-layout-bar>
+        <tm-layout width="300px" class=""> </tm-layout>
       </tm-layout>
-      <tm-layout-bar right></tm-layout-bar>
-      <tm-layout width="300px" class=""> </tm-layout>
-    </tm-layout>
+    </template>
+    <template v-else>
+      <div class="text-center color-orange pdtb-20">功能开发中，敬请期待！</div>
+    </template>
   </div>
 </template>
 
@@ -30,6 +35,7 @@ export default {
   data() {
     return {
       ready: false,
+      toOpenUp: false,
       form: {
         width: 100,
         height: 100,

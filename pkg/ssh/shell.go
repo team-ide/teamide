@@ -137,7 +137,6 @@ func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
 		this_.WSWriteError("SSH客户端创建失败:" + err.Error())
 		return
 	}
-
 	this_.shellSession, err = this_.sshClient.NewSession()
 	if err != nil {
 		util.Logger.Error("Create Shell Open Channel Error", zap.Error(err))
@@ -145,6 +144,7 @@ func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
 		return
 	}
 	defer this_.closeSession(this_.shellSession)
+	defer this_.WSWriteEvent("ssh session closed")
 
 	err = NewSSHShell(terminalSize, this_.shellSession)
 	if err != nil {
@@ -257,6 +257,8 @@ func (this_ *ShellClient) onEvent(event string) {
 	}
 
 	switch strings.ToLower(event) {
+	case "ssh session close":
+		this_.closeSession(this_.shellSession)
 	}
 }
 
