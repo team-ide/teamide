@@ -49,7 +49,7 @@ export default {
   methods: {
     init() {
       this.ready = true;
-      this.buildView();
+      // this.buildView();
     },
     refresh() {
       this.$nextTick(() => {});

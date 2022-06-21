@@ -381,13 +381,24 @@ app.on('ready', async () => {
     }
   ])
   tray.setToolTip('Team · IDE')
-  //显示程序页面
-  tray.on('click', () => {
-    if (isAllWindowHide) {
-      allWindowShow();
-    } else {
-      allWindowHide();
-    }
-  })
+  if (process.platform === `darwin`) {
+    //显示程序页面
+    tray.on('mouse-up', () => {
+      if (isAllWindowHide) {
+        allWindowShow();
+      } else {
+        allWindowHide();
+      }
+    })
+  } else {
+    //显示程序页面
+    tray.on('click', () => {
+      if (isAllWindowHide) {
+        allWindowShow();
+      } else {
+        allWindowHide();
+      }
+    })
+  }
   tray.setContextMenu(contextMenu)
 })
