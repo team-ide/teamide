@@ -357,6 +357,10 @@ let destroyAll = () => {
 
   }
 }
+
+app.on('before-quit', () => {
+  destroyAll()
+})
 app
   .whenReady()
   .then(() => {
