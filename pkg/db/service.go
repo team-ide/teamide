@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"gitee.com/teamide/zorm"
 	"strconv"
 	"strings"
@@ -252,13 +253,18 @@ func (this_ *Service) DataList(param *GenerateParam, database string, table stri
 	}
 	for _, one := range listMap {
 		for k, v := range one {
-			t, tOk := v.(time.Time)
-			if tOk {
-				if t.IsZero() {
+			if v == nil {
+				continue
+			}
+			switch tV := v.(type) {
+			case time.Time:
+				if tV.IsZero() {
 					one[k] = nil
 				} else {
-					one[k] = util.GetTimeTime(t)
+					one[k] = util.GetTimeTime(tV)
 				}
+			default:
+				one[k] = fmt.Sprint(tV)
 			}
 		}
 	}

@@ -653,12 +653,12 @@ export default {
       this.columnList.forEach((column) => {
         let name = column.name;
         if (data[name] !== dataCache[name]) {
-          if (typeof dataCache[name] == "number") {
-            if (this.tool.isNotEmpty(data[name])) {
-              data[name] = Number(data[name]);
-            }
-          }
-          if (data[name] !== dataCache[name]) {
+          // if (typeof dataCache[name] == "number") {
+          //   if (this.tool.isNotEmpty(data[name])) {
+          //     data[name] = Number(data[name]);
+          //   }
+          // }
+          if (data[name] != dataCache[name]) {
             dataUpdated = true;
           }
         }

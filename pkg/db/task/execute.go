@@ -6,7 +6,6 @@ import (
 	"gitee.com/teamide/zorm"
 	"go.uber.org/zap"
 	"io"
-	"strconv"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 	"teamide/pkg/vitess/sqlparser"
@@ -171,13 +170,10 @@ func (this_ *ExecuteSQLTask) doSelect(ctx context.Context, sql string, executeDa
 	executeData["columnList"] = columnList
 	for _, one := range dataList {
 		for k, v := range one {
+			if v == nil {
+				continue
+			}
 			switch tV := v.(type) {
-			case int64:
-				one[k] = strconv.FormatInt(tV, 10)
-			case uint64:
-				one[k] = strconv.FormatInt(int64(tV), 10)
-			case float64:
-				one[k] = strconv.FormatFloat(tV, 'f', -1, 64)
 			case time.Time:
 				if tV.IsZero() {
 					one[k] = nil
@@ -185,7 +181,7 @@ func (this_ *ExecuteSQLTask) doSelect(ctx context.Context, sql string, executeDa
 					one[k] = util.GetTimeTime(tV)
 				}
 			default:
-				one[k] = tV
+				one[k] = fmt.Sprint(tV)
 			}
 		}
 	}
