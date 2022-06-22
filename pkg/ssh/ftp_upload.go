@@ -31,19 +31,24 @@ func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 		err = errors.New("FTP会话丢失")
 		return
 	}
-	file, err := c.FormFile("file")
+	mF, err := c.MultipartForm()
 	if err != nil {
 		return
 	}
-
-	uploadFile := &UploadFile{
-		Dir:      dir,
-		Place:    place,
-		WorkId:   workId,
-		File:     file,
-		FullPath: c.PostForm("fullPath"),
+	fileList := mF.File["file"]
+	if err != nil {
+		return
 	}
-	client.UploadFile <- uploadFile
+	for _, file := range fileList {
+		uploadFile := &UploadFile{
+			Dir:      dir,
+			Place:    place,
+			WorkId:   workId,
+			File:     file,
+			FullPath: c.PostForm("fullPath"),
+		}
+		client.UploadFile <- uploadFile
+	}
 
 	return
 }

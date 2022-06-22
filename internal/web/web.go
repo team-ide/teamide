@@ -38,6 +38,8 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 
 	router := gin.Default()
 
+	router.MaxMultipartMemory = (1024 * 50) << 20 // 设置最大上传大小为50G
+
 	routerGroup := router.Group(this_.ServerContext.ServerContext)
 
 	this_.bindGet(routerGroup)
