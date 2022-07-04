@@ -177,81 +177,79 @@ const createWindow = async () => {
       mainWindow.show();
 
 
-      if (serverProcess == null) {
-        if (mainWindow !== null && serverProcess == null) {
+      if (mainWindow !== null && serverProcess == null) {
 
-          // 打开 Team IDE 服务
+        // 打开 Team IDE 服务
 
-          if (isDev) {
-            const rootPath = getRootPath("../")
-            log.info("root path:", rootPath)
-            serverProcess = child_process.spawn(
-              "go",
-              ["run", ".", "--isDev", "--isElectron"],
-              {
-                cwd: getRootPath("../"),
-              },
-            );
-          } else {
-            let exePath = getRootPath('teamide-windows-x64.exe')
+        if (isDev) {
+          const rootPath = getRootPath("../")
+          log.info("root path:", rootPath)
+          serverProcess = child_process.spawn(
+            "go",
+            ["run", ".", "--isDev", "--isElectron"],
+            {
+              cwd: getRootPath("../"),
+            },
+          );
+        } else {
+          let exePath = getRootPath('teamide-windows-x64.exe')
+          try {
+            fs.statSync(exePath);
+          } catch (error) {
+
             try {
+              exePath = getRootPath('teamide-darwin-x64')
               fs.statSync(exePath);
             } catch (error) {
-
               try {
-                exePath = getRootPath('teamide-darwin-x64')
+                exePath = getRootPath('teamide-linux-x64')
                 fs.statSync(exePath);
               } catch (error) {
-                try {
-                  exePath = getRootPath('teamide-linux-x64')
-                  fs.statSync(exePath);
-                } catch (error) {
-                  exePath = "";
-                }
+                exePath = "";
               }
             }
-            if (exePath == "") {
-              // alert("Team IDE Server not found.")
-              log.error("Team IDE Server not found.")
-              if (app != null) {
-                app.quit();
-              }
-              return
-            }
-            log.info("exePath:" + exePath)
-            serverProcess = child_process.spawn(
-              exePath,
-              ["--isElectron"],
-              {
-                cwd: getRootPath(""),
-              },
-            );
           }
-          serverProcess.stdout.on('data', (data: any) => {
-            if (data == null) {
-              return
+          if (exePath == "") {
+            // alert("Team IDE Server not found.")
+            log.error("Team IDE Server not found.")
+            if (app != null) {
+              app.quit();
             }
-            let msg = data.toString()
-            if (msg.startsWith("TeamIDE:event:serverUrl:")) {
-              serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
-              if (mainWindow != null) {
-                mainWindow.loadURL(serverUrl);
-              }
-              return
-            }
-            log.info("msg:", msg);
-          });
-          serverProcess.stderr.on('data', (data: any) => {
-            console.log('错误输出:');
-            console.log(data.toString());
-            console.log('--------------------');
-          });
-          serverProcess.on('close', (code: any) => {
-            serverProcess = null;
-            log.info(`server process close: ${code}`);
-            destroyAll()
-          });
+            return
+          }
+          log.info("exePath:" + exePath)
+          serverProcess = child_process.spawn(
+            exePath,
+            ["--isElectron"],
+            {
+              cwd: getRootPath(""),
+            },
+          );
         }
+        serverProcess.stdout.on('data', (data: any) => {
+          if (data == null) {
+            return
+          }
+          let msg = data.toString()
+          if (msg.startsWith("TeamIDE:event:serverUrl:")) {
+            serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
+            if (mainWindow != null) {
+              mainWindow.loadURL(serverUrl);
+            }
+            return
+          }
+          log.info("msg:", msg);
+        });
+        serverProcess.stderr.on('data', (data: any) => {
+          console.log('错误输出:');
+          console.log(data.toString());
+          console.log('--------------------');
+        });
+        serverProcess.on('close', (code: any) => {
+          serverProcess = null;
+          log.info(`server process close: ${code}`);
+          destroyAll()
+        });
       }
     }
   });

@@ -1,5 +1,5 @@
 <template>
-  <div></div>
+  <Workspace :source="source"></Workspace>
 </template>
 
 <script>

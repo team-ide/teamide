@@ -4,24 +4,7 @@
       <InfoBox :source="source"></InfoBox>
       <SystemInfoBox :source="source"></SystemInfoBox>
       <AlertBox :source="source"></AlertBox>
-      <Frame
-        :source="source"
-        v-if="!source.frame.remove"
-        v-show="source.frame.show"
-      >
-      </Frame>
-      <Login
-        :source="source"
-        v-if="!source.login.remove"
-        v-show="source.login.show"
-      >
-      </Login>
-      <Register
-        :source="source"
-        v-if="!source.register.remove"
-        v-show="source.register.show"
-      >
-      </Register>
+      <router-view :source="source"></router-view>
       <UpdateCheck :source="source"></UpdateCheck>
     </template>
     <template v-else>
@@ -53,11 +36,10 @@
 <script>
 import source from "@/source";
 
-import Frame from "@/views/frame/Index.vue";
 import UpdateCheck from "@/views/UpdateCheck.vue";
 
 export default {
-  components: { Frame, UpdateCheck },
+  components: { UpdateCheck },
   props: [],
   data() {
     return { source, contextmenu: { menus: [] } };

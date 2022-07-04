@@ -25,8 +25,8 @@ Vue.component('Login', Login);
 import Register from './Register.vue'
 Vue.component('Register', Register);
 
-import WaterfallLayout from './WaterfallLayout.vue'
-Vue.component('WaterfallLayout', WaterfallLayout);
+import Workspace from './workspace/Index.vue'
+Vue.component('Workspace', Workspace);
 
 import IconFont from './icon/IconFont.vue'
 Vue.component('IconFont', IconFont);
