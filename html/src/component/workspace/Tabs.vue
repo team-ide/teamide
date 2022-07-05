@@ -1,7 +1,9 @@
 <template>
   <div class="workspace-tabs">
-    <div class="workspace-tabs-left" v-if="leftTabs.length > 0">
+    <div class="workspace-tabs-left">
+      <slot name="leftExtend"></slot>
       <el-dropdown
+        v-if="leftTabs.length > 0"
         trigger="click"
         @command="handleCommand"
         class="workspace-tabs-nav-dropdown"
@@ -48,8 +50,9 @@
         </div>
       </template>
     </div>
-    <div class="workspace-tabs-right" v-if="rightTabs.length > 0">
+    <div class="workspace-tabs-right">
       <el-dropdown
+        v-if="rightTabs.length > 0"
         trigger="click"
         @command="handleCommand"
         placement="bottom-start"
@@ -66,8 +69,8 @@
           </template>
         </el-dropdown-menu>
       </el-dropdown>
+      <slot name="rightExtend"></slot>
     </div>
-    <slot name="extend" ref="extend"></slot>
   </div>
 </template>
 
@@ -276,6 +279,7 @@ export default {
   position: relative;
   padding: 0px 0px;
   background: #2a2a2a;
+  display: flex;
 }
 .workspace-tabs-nav-dropdown {
   height: 100%;
@@ -285,6 +289,13 @@ export default {
   height: 100%;
   align-items: center;
   display: flex;
+  white-space: nowrap;
+}
+.workspace-tabs-left .workspace-tabs-nav {
+  border-right: 1px solid #404040;
+}
+.workspace-tabs-right .workspace-tabs-nav {
+  border-left: 1px solid #404040;
 }
 .workspace-tabs-nav .mdi {
   font-size: 16px;

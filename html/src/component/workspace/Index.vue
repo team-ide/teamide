@@ -11,7 +11,10 @@
     <div class="workspace-header"></div>
     <div class="workspace-main">
       <div class="workspace-main-tabs-container">
-        <Tabs :source="source" :itemsWorker="mainItemsWorker"> </Tabs>
+        <Tabs :source="source" :itemsWorker="mainItemsWorker">
+          <slot name="mainTabLeftExtend" slot="leftExtend"></slot>
+          <slot name="mainTabRightExtend" slot="rightExtend"></slot>
+        </Tabs>
       </div>
       <div class="workspace-main-spans-container">
         <Spans
@@ -29,20 +32,14 @@
 import Tabs from "./Tabs.vue";
 import Spans from "./Spans.vue";
 
-import ItemsWorker from "./items.js";
-
 export default {
   components: { Tabs, Spans },
   props: ["source", "onRemoveItem", "onActiveItem"],
   data() {
     let that = this;
-    let mainItemsWorker = ItemsWorker.newItemsWorker({
-      onRemoveItem(item) {
-        that.onRemoveItem && that.onRemoveItem(item);
-      },
-      onActiveItem(item) {
-        that.onActiveItem && that.onActiveItem(item);
-      },
+    let mainItemsWorker = this.tool.newItemsWorker({
+      onRemoveItem: this.onRemoveItem,
+      onActiveItem: this.onActiveItem,
     });
     return {
       mainItemsWorker: mainItemsWorker,
@@ -77,28 +74,28 @@ export default {
 }
 .workspace-header {
   width: 100%;
-  height: 35px;
+  height: 0px;
   margin: 0px;
   padding: 0px;
   position: relative;
-  border-bottom: 1px solid #4e4e4e;
+  border-bottom: 0px solid #4e4e4e;
 }
 .workspace-main {
   width: 100%;
-  height: calc(100% - 35px);
+  height: calc(100% - 0px);
   margin: 0px;
   padding: 0px;
   position: relative;
 }
 .workspace-main-tabs-container {
   width: 100%;
-  height: 35px;
+  height: 30px;
   position: relative;
   border-bottom: 1px solid #4e4e4e;
 }
 .workspace-main-spans-container {
   width: 100%;
-  height: calc(100% - 35px);
+  height: calc(100% - 30px);
   position: relative;
 }
 </style>

@@ -1,8 +1,9 @@
 import tool from "@/tool/index.js";
+import server from "../server";
+import form from "../form";
 
-import toolbox from "./toolbox.js";
 
-let source = { toolbox };
+let source = {};
 
 source.status = null;
 source.ready = false;
@@ -285,6 +286,48 @@ source.init = (data) => {
     } else {
         source.status = "error";
         source.ready = false;
+    }
+}
+source.toolboxTypes = [];
+source.toolboxGroups = [];
+source.quickCommands = null;
+source.quickCommandSSHCommands = null;
+source.initToolboxData = async () => {
+    let res = await server.toolbox.data();
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let data = res.data || {};
+
+        data.mysqlColumnTypeInfos.forEach((one) => {
+            one.name = one.name.toLowerCase();
+        });
+        data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
+        source.sshTeamIDEBinaryStartBytes =
+            data.sshTeamIDEBinaryStartBytes.split(",");
+        source.sshTeamIDEBinaryStartBytesLength =
+            source.sshTeamIDEBinaryStartBytes.length;
+
+        source.sshTeamIDEEvent = data.sshTeamIDEEvent;
+        source.sshTeamIDEMessage = data.sshTeamIDEMessage;
+        source.sshTeamIDEError = data.sshTeamIDEError;
+        source.sshTeamIDEAlert = data.sshTeamIDEAlert;
+        source.sshTeamIDEConsole = data.sshTeamIDEConsole;
+        source.sshTeamIDEStdout = data.sshTeamIDEStdout;
+        source.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
+        source.quickCommandTypes = data.quickCommandTypes;
+        source.databaseTypes = data.databaseTypes;
+        source.sqlConditionalOperations = data.sqlConditionalOperations;
+        source.toolboxTypes = data.types || [];
+        source.toolboxTypes.forEach((one) => {
+            form.toolbox[one.name] = one.configForm;
+            if (one.otherForm) {
+                for (let formName in one.otherForm) {
+                    form.toolbox[one.name][formName] = one.otherForm[formName];
+                }
+            }
+        });
+        source.toolboxGroups = data.groups || [];
     }
 }
 

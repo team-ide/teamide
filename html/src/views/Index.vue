@@ -1,10 +1,36 @@
 <template>
-  <Workspace :source="source" ref="Workspace"></Workspace>
+  <Workspace :source="source" ref="Workspace">
+    <el-dropdown
+      slot="mainTabLeftExtend"
+      trigger="click"
+      class="workspace-tabs-nav-dropdown"
+    >
+      <div class="workspace-tabs-nav tm-pointer pdlr-5 ft-12">
+        全部
+        <i class="mdi mdi-menu-down"></i>
+      </div>
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item> 全部 </el-dropdown-item>
+        <el-dropdown-item> 分组1 </el-dropdown-item>
+        <el-dropdown-item> 分组2 </el-dropdown-item>
+        <el-dropdown-item> 分组3 </el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <div
+      slot="mainTabRightExtend"
+      class="workspace-tabs-nav tm-pointer color-green pdlr-2"
+      @click="toolbox.showSwitchToolboxType()"
+    >
+      <i class="mdi mdi-plus"></i>
+    </div>
+    <ToolboxType :source="source"></ToolboxType>
+  </Workspace>
 </template>
 
 <script>
+import ToolboxType from "./toolbox/ToolboxType";
 export default {
-  components: {},
+  components: { ToolboxType },
   props: ["source"],
   data() {
     return {};
@@ -12,7 +38,8 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    init() {
+    async init() {
+      await this.source.initToolboxData();
       this.initOpens();
       let iconFonts = [
         "teamide-database",
@@ -35,7 +62,7 @@ export default {
         item.extend = {
           type: "format",
         };
-        // this.addMainItem(item);
+        this.addMainItem(item);
       }
     },
     addMainItem(item) {
