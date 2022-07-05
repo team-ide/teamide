@@ -38,7 +38,7 @@ func init() {
 }
 
 // GetOtherToolbox 查询单个
-func (this_ *ToolboxService) GetOtherToolbox(toolboxId int64) (res *ToolboxModel, err error) {
+func (this_ *ToolboxService) GetOtherToolbox(toolboxId int64) (res *ToolboxModel) {
 	res = OtherMap[toolboxId]
 	return
 }

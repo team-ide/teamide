@@ -45,13 +45,17 @@ func (entity *ToolboxModel) GetPKColumnName() string {
 
 // ToolboxOpenModel 工具箱打开模型，和工具箱打开表对应
 type ToolboxOpenModel struct {
-	OpenId     int64     `json:"openId,omitempty"`
-	UserId     int64     `json:"userId,omitempty"`
-	ToolboxId  int64     `json:"toolboxId,omitempty"`
-	Extend     string    `json:"extend,omitempty"`
-	CreateTime time.Time `json:"createTime,omitempty"`
-	UpdateTime time.Time `json:"updateTime,omitempty"`
-	OpenTime   time.Time `json:"openTime,omitempty"`
+	OpenId         int64     `json:"openId,omitempty"`
+	UserId         int64     `json:"userId,omitempty"`
+	ToolboxId      int64     `json:"toolboxId,omitempty"`
+	ToolboxType    string    `json:"toolboxType,omitempty"`
+	ToolboxName    string    `json:"toolboxName,omitempty"`
+	ToolboxComment string    `json:"toolboxComment,omitempty"`
+	ToolboxGroupId int64     `json:"toolboxGroupId,omitempty"`
+	Extend         string    `json:"extend,omitempty"`
+	CreateTime     time.Time `json:"createTime,omitempty"`
+	UpdateTime     time.Time `json:"updateTime,omitempty"`
+	OpenTime       time.Time `json:"openTime,omitempty"`
 }
 
 func (entity *ToolboxOpenModel) GetTableName() string {

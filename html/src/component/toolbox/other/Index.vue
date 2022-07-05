@@ -1,6 +1,6 @@
 <template>
   <div class="toolbox-other-editor">
-    <template v-if="ready">
+    <template v-if="extend != null">
       <template v-if="extend.type == 'format'">
         <Format
           :source="source"
@@ -39,16 +39,12 @@ export default {
   components: { Format, GenerateDataFile, FontImage },
   props: ["source", "toolboxType", "toolbox", "extend", "wrap"],
   data() {
-    return {
-      ready: false,
-    };
+    return {};
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
-      this.ready = true;
-    },
+    init() {},
     refresh() {
       this.$nextTick(() => {});
     },

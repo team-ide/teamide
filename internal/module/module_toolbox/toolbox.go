@@ -189,11 +189,21 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 // QueryOpens 查询
 func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, err error) {
 
-	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE userId=? ORDER BY createTime ASC `
+	sql := `SELECT T_O.*,T_T.groupId toolboxGroupId,T_T.toolboxType toolboxType,T_T.name toolboxName ,T_T.comment toolboxComment
+FROM ` + TableToolboxOpen + ` T_O 
+LEFT JOIN ` + TableToolbox + ` T_T ON T_O.toolboxId = T_T.toolboxId 
+WHERE T_O.userId=? ORDER BY T_O.createTime ASC `
 	err = this_.DatabaseWorker.Query(sql, []interface{}{userId}, &res)
 	if err != nil {
 		this_.Logger.Error("QueryOpens Error", zap.Error(err))
 		return
+	}
+	for _, one := range res {
+		otherToolbox := this_.GetOtherToolbox(one.ToolboxId)
+		if otherToolbox != nil {
+			one.ToolboxType = otherToolbox.ToolboxType
+			one.ToolboxName = otherToolbox.Name
+		}
 	}
 	return
 }
@@ -202,7 +212,10 @@ func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, 
 func (this_ *ToolboxService) GetOpen(openId int64) (res *ToolboxOpenModel, err error) {
 	res = &ToolboxOpenModel{}
 
-	sql := `SELECT * FROM ` + TableToolboxOpen + ` WHERE openId=? `
+	sql := `SELECT T_O.*,T_T.groupId toolboxGroupId,T_T.toolboxType toolboxType,T_T.name toolboxName ,T_T.comment toolboxComment
+FROM ` + TableToolboxOpen + ` T_O 
+LEFT JOIN ` + TableToolbox + ` T_T ON T_O.toolboxId = T_T.toolboxId 
+WHERE T_O.openId=? `
 	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{openId}, res)
 	if err != nil {
 		this_.Logger.Error("GetOpen Error", zap.Error(err))
@@ -211,6 +224,12 @@ func (this_ *ToolboxService) GetOpen(openId int64) (res *ToolboxOpenModel, err e
 
 	if !find {
 		res = nil
+	} else {
+		otherToolbox := this_.GetOtherToolbox(res.ToolboxId)
+		if otherToolbox != nil {
+			res.ToolboxType = otherToolbox.ToolboxType
+			res.ToolboxName = otherToolbox.Name
+		}
 	}
 	return
 }

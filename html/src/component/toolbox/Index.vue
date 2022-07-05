@@ -1,7 +1,7 @@
 <template>
   <div class="toolbox-editor" v-if="toolboxType != null" tabindex="-1">
     <template v-if="ready">
-      <template v-if="toolboxType.name == 'redis'">
+      <template v-if="toolboxType == 'redis'">
         <ToolboxRedisEditor
           :source="source"
           :toolbox="toolbox"
@@ -11,7 +11,7 @@
         >
         </ToolboxRedisEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'database'">
+      <template v-else-if="toolboxType == 'database'">
         <ToolboxDatabaseEditor
           :source="source"
           :toolbox="toolbox"
@@ -21,7 +21,7 @@
         >
         </ToolboxDatabaseEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'zookeeper'">
+      <template v-else-if="toolboxType == 'zookeeper'">
         <ToolboxZookeeperEditor
           :source="source"
           :toolbox="toolbox"
@@ -31,7 +31,7 @@
         >
         </ToolboxZookeeperEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'elasticsearch'">
+      <template v-else-if="toolboxType == 'elasticsearch'">
         <ToolboxElasticsearchEditor
           :source="source"
           :toolbox="toolbox"
@@ -41,7 +41,7 @@
         >
         </ToolboxElasticsearchEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'kafka'">
+      <template v-else-if="toolboxType == 'kafka'">
         <ToolboxKafkaEditor
           :source="source"
           :toolbox="toolbox"
@@ -51,7 +51,7 @@
         >
         </ToolboxKafkaEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'ssh'">
+      <template v-else-if="toolboxType == 'ssh'">
         <ToolboxSSHEditor
           :source="source"
           :toolbox="toolbox"
@@ -61,7 +61,7 @@
         >
         </ToolboxSSHEditor>
       </template>
-      <template v-else-if="toolboxType.name == 'other'">
+      <template v-else-if="toolboxType == 'other'">
         <ToolboxOtherEditor
           :source="source"
           :toolbox="toolbox"
@@ -81,18 +81,7 @@ import "./toolbox.css";
 
 export default {
   components: {},
-  props: [
-    "source",
-    "extend",
-    "toolboxData",
-    "toolboxType",
-    "toolbox",
-    "active",
-    "openId",
-    "updateOpenExtend",
-    "updateOpenComment",
-    "tab",
-  ],
+  props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {
     return {
       extendJSON: null,
@@ -104,9 +93,6 @@ export default {
   },
   computed: {},
   watch: {
-    active() {
-      this.init();
-    },
     extend(newExtent, oldExtent) {
       if (newExtent == null || oldExtent == null) {
         return;
@@ -120,9 +106,6 @@ export default {
   methods: {
     init() {
       if (this.inited) {
-        return;
-      }
-      if (!this.active) {
         return;
       }
       this.inited = true;
@@ -150,9 +133,12 @@ export default {
       return res;
     },
     onFocus() {
-      this.$el.focus();
-      this.$children.forEach((one) => {
-        one.onFocus && one.onFocus();
+      this.init();
+      this.$nextTick(() => {
+        this.$el.focus();
+        this.$children.forEach((one) => {
+          one.onFocus && one.onFocus();
+        });
       });
     },
     reload() {},

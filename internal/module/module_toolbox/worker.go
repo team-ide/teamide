@@ -14,10 +14,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		return
 	}
 	if toolboxData == nil {
-		toolboxData, err = this_.GetOtherToolbox(toolboxId)
-		if err != nil {
-			return
-		}
+		toolboxData = this_.GetOtherToolbox(toolboxId)
 	}
 	if toolboxData == nil {
 		err = errors.New("工具配置丢失")

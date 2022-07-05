@@ -663,4 +663,12 @@ tool.initInputWidth = (event, options) => {
     let compute = tool.computeFontSize(str, "12px");
     tool.jQuery(target).css('width', (compute.width + w) + 'px')
 };
+
+tool.getOptionJSON = (option) => {
+    let json = {};
+    if (tool.isNotEmpty(option)) {
+        json = JSON.parse(option);
+    }
+    return json;
+};
 export default tool;

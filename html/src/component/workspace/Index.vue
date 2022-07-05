@@ -8,17 +8,18 @@
       backgroundColor: theme.backgroundColor,
     }"
   >
+    <div class="workspace-header"></div>
     <div class="workspace-main">
       <div class="workspace-main-tabs-container">
-        <Tabs
-          :source="source"
-          :activeTab="mainActiveItem"
-          :tabs="mainItems"
-          :onActiveTab="toMainActiveItem"
-        ></Tabs>
+        <Tabs :source="source" :itemsWorker="mainItemsWorker"> </Tabs>
       </div>
       <div class="workspace-main-spans-container">
-        <div class="workspace-spans"></div>
+        <Spans
+          :source="source"
+          :tabs="mainItemsWorker.items"
+          :activeTab="mainItemsWorker.activeItem"
+        >
+        </Spans>
       </div>
     </div>
   </div>
@@ -26,17 +27,25 @@
 
 <script>
 import Tabs from "./Tabs.vue";
+import Spans from "./Spans.vue";
+
+import ItemsWorker from "./items.js";
 
 export default {
-  components: { Tabs },
-  props: ["source"],
+  components: { Tabs, Spans },
+  props: ["source", "onRemoveItem", "onActiveItem"],
   data() {
+    let that = this;
+    let mainItemsWorker = ItemsWorker.newItemsWorker({
+      onRemoveItem(item) {
+        that.onRemoveItem && that.onRemoveItem(item);
+      },
+      onActiveItem(item) {
+        that.onActiveItem && that.onActiveItem(item);
+      },
+    });
     return {
-      headerItems: [],
-      leftItems: [],
-      mainItems: [],
-      mainActiveItem: null,
-      footerItems: [],
+      mainItemsWorker: mainItemsWorker,
       theme: {
         isDark: true,
         backgroundColor: "#383838",
@@ -46,19 +55,7 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    init() {
-      for (let i = 0; i < 20; i++) {
-        let item = {};
-        item.key = "key:item:" + i;
-        item.name = "name:item:" + i;
-        item.title = "title:item:" + i;
-        item.show = true;
-        this.mainItems.push(item);
-      }
-    },
-    toMainActiveItem(item) {
-      this.mainActiveItem = item;
-    },
+    init() {},
   },
   created() {},
   mounted() {
@@ -78,17 +75,30 @@ export default {
 .workspace-container.workspace-theme-dark {
   color: #d9d9d9;
 }
+.workspace-header {
+  width: 100%;
+  height: 35px;
+  margin: 0px;
+  padding: 0px;
+  position: relative;
+  border-bottom: 1px solid #4e4e4e;
+}
 .workspace-main {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 35px);
   margin: 0px;
   padding: 0px;
   position: relative;
 }
 .workspace-main-tabs-container {
   width: 100%;
-  height: 25px;
+  height: 35px;
   position: relative;
   border-bottom: 1px solid #4e4e4e;
+}
+.workspace-main-spans-container {
+  width: 100%;
+  height: calc(100% - 35px);
+  position: relative;
 }
 </style>

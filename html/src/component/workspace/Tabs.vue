@@ -1,7 +1,11 @@
 <template>
   <div class="workspace-tabs">
     <div class="workspace-tabs-left" v-if="leftTabs.length > 0">
-      <el-dropdown trigger="click" @command="handleCommand">
+      <el-dropdown
+        trigger="click"
+        @command="handleCommand"
+        class="workspace-tabs-nav-dropdown"
+      >
         <div class="workspace-tabs-nav tm-pointer">
           <i class="mdi mdi-menu-down"></i>
         </div>
@@ -15,27 +19,24 @@
       </el-dropdown>
     </div>
     <div class="workspace-tabs-body" ref="workspaceTabsBody">
-      <template v-for="one in mainTabs">
+      <template v-for="(one, index) in mainTabs">
         <div
-          :key="one.key"
-          :tab-key="one.key"
+          :key="index"
           class="workspace-tabs-one"
           :title="one.title"
-          :class="{ active: one == activeTab }"
-          @contextmenu.prevent="tabContextmenu"
-          @mouseup="tabMouseup"
+          :class="{ active: one == itemsWorker.activeItem }"
+          @contextmenu.prevent="tabContextmenu(one)"
+          @mouseup="tabMouseup(one)"
         >
           <span
             class="text"
             @click="toSelectTab(one)"
             @dblclick="toCopyTab(one)"
           >
-            <template v-if="slotTab">
-              <slot name="tab" :tab="one"></slot>
+            <template v-if="tool.isNotEmpty(one.iconFont)">
+              <IconFont class="mgr-5" :class="one.iconFont"> </IconFont>
             </template>
-            <template v-else>
-              {{ one.name || one.title }}
-            </template>
+            {{ one.name || one.title }}
           </span>
           <span
             class="workspace-tabs-delete-btn tm-pointer color-orange"
@@ -51,13 +52,13 @@
       <el-dropdown
         trigger="click"
         @command="handleCommand"
-        size="mini"
         placement="bottom-start"
+        class="workspace-tabs-nav-dropdown"
       >
         <div class="workspace-tabs-nav tm-pointer">
           <i class="mdi mdi-menu-down"></i>
         </div>
-        <el-dropdown-menu slot="dropdown" class="workspace-tabs-right-dropdown">
+        <el-dropdown-menu slot="dropdown">
           <template v-for="(one, index) in rightTabs">
             <el-dropdown-item :key="index" :command="one">
               {{ one.name || one.title }}
@@ -73,18 +74,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "onActive",
-    "onRemoveTab",
-    "onActiveTab",
-    "slotTab",
-    "copyTab",
-    "hasOpenNewWindow",
-    "openNewWindow",
-    "tabs",
-    "activeTab",
-  ],
+  props: ["source", "itemsWorker"],
   data() {
     return {
       mainTabs: [],
@@ -99,16 +89,15 @@ export default {
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {
-    tabs() {
+    "itemsWorker.items"() {
       this.$nextTick(() => {
         this.initTabs();
       });
     },
-    activeTab() {
+    "itemsWorker.activeItem"() {
       this.$nextTick(() => {
         this.initTabs();
       });
-      this.onActiveTabFocue();
     },
   },
   methods: {
@@ -122,7 +111,7 @@ export default {
       let rightTabs = [];
       let mainTabs = [];
 
-      this.tabs.forEach((one) => {
+      this.itemsWorker.items.forEach((one) => {
         if (!one.show) {
           return;
         }
@@ -181,30 +170,75 @@ export default {
       });
     },
     getActiveIndex() {
-      return this.mainTabs.indexOf(this.activeTab);
-    },
-    onFocus() {
-      this.onActiveTabFocue();
+      return this.mainTabs.indexOf(this.itemsWorker.activeItem);
     },
     handleCommand(tab) {
       this.toSelectTab(tab);
     },
-    tabMouseup(e) {
-      e = e || window.event;
-      if (e.button != 1) {
+    tabMouseup(tab) {
+      if (window.event && window.event.button != 1) {
         return;
       }
-      let tab = this.getTabByTarget(e.target);
       if (tab == null) {
         return;
       }
-      this.toDeleteTab(tab);
+      this.itemsWorker.toRemoveItem(tab);
+    },
+    tabContextmenu(tab) {
+      if (tab == null) {
+        return;
+      }
+      let menus = [];
+
+      menus.push({
+        header: tab.name,
+      });
+      if (this.hasOpenNewWindow) {
+        menus.push({
+          text: "新窗口打开",
+          onClick: () => {
+            this.openNewWindow && this.openNewWindow(tab);
+          },
+        });
+      }
+      menus.push({
+        text: "关闭",
+        onClick: () => {
+          this.toDeleteTab(tab);
+        },
+      });
+      menus.push({
+        text: "打开新标签",
+        onClick: () => {
+          this.itemsWorker.toCopyItem(tab);
+        },
+      });
+      menus.push({
+        text: "选择",
+        onClick: () => {
+          this.toSelectTab(tab);
+        },
+      });
+      menus.push({
+        text: "关闭其它",
+        onClick: () => {
+          this.itemsWorker.toDeleteOtherItem(tab);
+        },
+      });
+      menus.push({
+        text: "关闭所有",
+        onClick: () => {
+          this.itemsWorker.toRemoveAll();
+        },
+      });
+
+      this.tool.showContextmenu(menus);
     },
     toSelectTab(tab) {
-      this.onActiveTab(tab);
+      this.itemsWorker.toActiveItem(tab);
     },
     toDeleteTab(tab) {
-      this.onRemoveTab(tab);
+      this.itemsWorker.toRemoveItem(tab);
     },
   },
   // 在实例创建完成后被立即调用
@@ -224,7 +258,7 @@ export default {
 .workspace-tabs {
   width: 100%;
   height: 100%;
-  font-size: 12px;
+  font-size: 14px;
   position: relative;
   user-select: none;
   display: flex;
@@ -236,9 +270,24 @@ export default {
   position: relative;
   overflow: hidden;
 }
-.workspace-tabs-right-dropdown {
-  left: auto !important;
-  right: 0px;
+.workspace-tabs-left,
+.workspace-tabs-right {
+  height: 100%;
+  position: relative;
+  padding: 0px 0px;
+  background: #2a2a2a;
+}
+.workspace-tabs-nav-dropdown {
+  height: 100%;
+  align-items: center;
+}
+.workspace-tabs-nav {
+  height: 100%;
+  align-items: center;
+  display: flex;
+}
+.workspace-tabs-nav .mdi {
+  font-size: 16px;
 }
 .workspace-tabs-one {
   display: flex;
@@ -252,6 +301,9 @@ export default {
   background-color: #172029;
 }
 .workspace-tabs-one .text {
+  display: flex;
+  height: 100%;
+  align-items: center;
   padding: 0px 5px 0px 10px;
   cursor: pointer;
   white-space: nowrap;
