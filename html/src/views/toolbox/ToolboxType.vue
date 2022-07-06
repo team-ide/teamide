@@ -25,7 +25,7 @@
           <span
             class="tm-link color-green mgl-5 mgt-5"
             title="新增分组"
-            @click="toolbox.toInsertGroup()"
+            @click="toInsertGroup()"
           >
             <i class="mdi mdi-plus ft-14"></i>
           </span>
@@ -91,7 +91,7 @@
                   class="tm-link color-green mgl-10"
                   title="新增"
                   v-if="toolboxType.name != 'other'"
-                  @click="toolbox.toInsert(toolboxType, selectGroup)"
+                  @click="toInsert(toolboxType, selectGroup)"
                 >
                   <i class="mdi mdi-plus ft-14"></i>
                 </span>
@@ -115,7 +115,7 @@
                   class="tm-link color-green"
                   title="新增"
                   v-if="toolboxType.name != 'other'"
-                  @click="toolbox.toInsert(toolboxType, selectGroup)"
+                  @click="toInsert(toolboxType, selectGroup)"
                 >
                   新增
                 </span>
@@ -134,7 +134,7 @@
                     "
                     class="toolbox-type-data"
                     @contextmenu="dataContextmenu(toolboxType, toolboxData)"
-                    @click="toolbox.toolboxDataOpen(toolboxData)"
+                    @click="toolboxDataOpen(toolboxData)"
                   >
                     <span class="toolbox-type-data-text" title="打开">
                       {{ toolboxData.name }}
@@ -148,13 +148,37 @@
         </template>
       </div>
     </div>
+    <FormDialog
+      ref="InsertToolbox"
+      :source="source"
+      title="新增Toolbox"
+      :onSave="doInsert"
+    ></FormDialog>
+    <FormDialog
+      ref="UpdateToolbox"
+      :source="source"
+      title="编辑Toolbox"
+      :onSave="doUpdate"
+    ></FormDialog>
+    <FormDialog
+      ref="InsertToolboxGroup"
+      :source="source"
+      title="新增工具分组"
+      :onSave="doInsertGroup"
+    ></FormDialog>
+    <FormDialog
+      ref="UpdateToolboxGroup"
+      :source="source"
+      title="编辑工具分组"
+      :onSave="doUpdateGroup"
+    ></FormDialog>
   </div>
 </template>
 
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "context", "groups"],
+  props: ["source"],
   data() {
     return {
       showBox: false,
@@ -279,18 +303,32 @@ export default {
       menus.push({
         text: "修改",
         onClick: () => {
-          this.toolbox.toUpdateGroup(group);
+          this.toUpdateGroup(group);
         },
       });
       menus.push({
         text: "删除",
         onClick: () => {
-          this.toolbox.toDeleteGroup(group);
+          this.toDeleteGroup(group);
         },
       });
 
       if (menus.length > 0) {
         this.tool.showContextmenu(menus);
+      }
+    },
+    async moveGroup(toolboxId, groupId) {
+      let res = await this.server.toolbox.moveGroup({
+        toolboxId: toolboxId,
+        groupId: groupId,
+      });
+      if (res.code == 0) {
+        this.tool.success("移动成功");
+        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
       }
     },
     dataContextmenu(toolboxType, toolboxData) {
@@ -304,14 +342,14 @@ export default {
       menus.push({
         text: "打开",
         onClick: () => {
-          this.toolbox.toolboxDataOpen(toolboxData);
+          this.toolboxDataOpen(toolboxData);
         },
       });
       if (toolboxType.name == "ssh") {
         menus.push({
           text: "打开FTP",
           onClick: () => {
-            this.toolbox.toolboxDataOpenSfpt(toolboxData);
+            this.toolboxDataOpenSfpt(toolboxData);
           },
         });
       }
@@ -325,7 +363,7 @@ export default {
           moveGroupMenu.menus.push({
             text: one.name,
             onClick: () => {
-              this.toolbox.moveGroup(toolboxData.toolboxId, one.groupId);
+              this.moveGroup(toolboxData.toolboxId, one.groupId);
             },
           });
         });
@@ -333,24 +371,210 @@ export default {
       menus.push({
         text: "修改",
         onClick: () => {
-          this.toolbox.toUpdate(toolboxType, toolboxData);
+          this.toUpdate(toolboxType, toolboxData);
         },
       });
       menus.push({
         text: "复制",
         onClick: () => {
-          this.toolbox.toCopy(toolboxType, toolboxData);
+          this.toCopy(toolboxType, toolboxData);
         },
       });
       menus.push({
         text: "删除",
         onClick: () => {
-          this.toolbox.toDelete(toolboxType, toolboxData);
+          this.toDelete(toolboxType, toolboxData);
         },
       });
 
       if (menus.length > 0) {
         this.tool.showContextmenu(menus);
+      }
+    },
+    toInsert(toolboxType, selectGroup) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let toolboxData = {};
+      let optionsJSON = {};
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+        selectGroup,
+      });
+    },
+    toCopy(toolboxType, copy) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let toolboxData = {};
+      Object.assign(toolboxData, copy);
+      delete toolboxData.toolboxId;
+      toolboxData.name = toolboxData.name + " Copy";
+
+      let optionsJSON = this.tool.getOptionJSON(toolboxData.option);
+
+      this.$refs.InsertToolbox.show({
+        title: `新增[${toolboxType.text}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+      });
+    },
+    toUpdate(toolboxType, toolboxData) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.updateData = toolboxData;
+
+      let optionsJSON = this.tool.getOptionJSON(toolboxData.option);
+
+      this.$refs.UpdateToolbox.show({
+        title: `编辑[${toolboxType.text}][${toolboxData.name}]工具`,
+        form: [this.form.toolbox, toolboxType.configForm],
+        data: [toolboxData, optionsJSON],
+        toolboxType,
+      });
+    },
+    toDelete(toolboxType, toolboxData) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.tool
+        .confirm(
+          "删除[" +
+            toolboxType.text +
+            "]工具[" +
+            toolboxData.name +
+            "]将无法回复，确定删除？"
+        )
+        .then(async () => {
+          return this.doDelete(toolboxType, toolboxData);
+        })
+        .catch((e) => {});
+    },
+    async doDelete(toolboxType, toolboxData) {
+      let res = await this.server.toolbox.delete(toolboxData);
+      if (res.code == 0) {
+        this.initData();
+        this.tool.success("删除成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doUpdate(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
+      toolboxData.toolboxType = toolboxType.name;
+      toolboxData.toolboxId = this.updateData.toolboxId;
+      toolboxData.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.update(toolboxData);
+      if (res.code == 0) {
+        this.initData();
+        this.tool.success("修改成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doInsert(dataList, config) {
+      let toolboxData = dataList[0];
+      let optionJSON = dataList[1];
+      let toolboxType = config.toolboxType;
+      toolboxData.toolboxType = toolboxType.name;
+      if (config.selectGroup) {
+        toolboxData.groupId = config.selectGroup.groupId;
+      }
+      toolboxData.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.insert(toolboxData);
+      if (res.code == 0) {
+        this.initData();
+        this.tool.success("新增成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+
+    toInsertGroup() {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      let data = {};
+      let optionsJSON = {};
+
+      this.$refs.InsertToolboxGroup.show({
+        title: `新增工具分组`,
+        form: [this.form.toolbox.group, this.form.toolbox.group.option],
+        data: [data, optionsJSON],
+      });
+    },
+    toUpdateGroup(data) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.updateGroupData = data;
+
+      let optionsJSON = this.tool.getOptionJSON(data.option);
+
+      this.$refs.UpdateToolboxGroup.show({
+        title: `编辑[${data.name}]工具分组`,
+        form: [this.form.toolbox.group, this.form.toolbox.group.option],
+        data: [data, optionsJSON],
+      });
+    },
+    toDeleteGroup(data) {
+      this.tool.stopEvent();
+      // this.source.toolbox.hideToolboxType();
+      this.tool
+        .confirm(
+          "删除工具分组[" + data.name + "]并将该分组下工具移出该组，确定删除？"
+        )
+        .then(async () => {
+          return this.doDeleteGroup(data);
+        })
+        .catch((e) => {});
+    },
+    async doDeleteGroup(data) {
+      let res = await this.server.toolbox.group.delete(data);
+      if (res.code == 0) {
+        this.tool.success("删除分组成功");
+        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doUpdateGroup(dataList, config) {
+      let data = dataList[0];
+      let optionJSON = dataList[1];
+      data.groupId = this.updateGroupData.groupId;
+      data.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.group.update(data);
+      if (res.code == 0) {
+        this.tool.success("修改分组成功");
+        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doInsertGroup(dataList, config) {
+      let data = dataList[0];
+      let optionJSON = dataList[1];
+      data.option = JSON.stringify(optionJSON);
+      let res = await this.server.toolbox.group.insert(data);
+      if (res.code == 0) {
+        this.tool.success("新增分组成功");
+        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
       }
     },
   },
@@ -419,6 +643,7 @@ export default {
   margin-top: 4px;
   border: 1px solid #767676;
   font-size: 12px;
+  background: transparent;
 }
 
 .toolbox-context-box .toolbox-group-body {
@@ -505,6 +730,7 @@ export default {
   margin-top: 4px;
   border: 1px solid #767676;
   font-size: 12px;
+  background: transparent;
 }
 .toolbox-context-box .toolbox-type-data-box {
   background: #1b2a38;
