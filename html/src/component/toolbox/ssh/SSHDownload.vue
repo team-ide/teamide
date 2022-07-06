@@ -6,7 +6,7 @@
 import Zmodem from "zmodem.js";
 export default {
   components: {},
-  props: ["source", "wrap"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {};
   },
@@ -103,8 +103,8 @@ export default {
   },
   created() {},
   mounted() {
-    this.wrap.showSSHDownload = this.show;
-    this.wrap.hideSSHDownload = this.show;
+    this.toolboxWorker.showSSHDownload = this.show;
+    this.toolboxWorker.hideSSHDownload = this.show;
   },
 };
 </script>

@@ -31,7 +31,7 @@
           </div>
           <div class="pdlr-10">
             <el-form size="mini" inline @submit.native.prevent>
-              <el-form-item label="Filter" class="mgb-0">
+              <el-form-item label="Filter" class="mgb-0 file-filter-input">
                 <el-input v-model="form.filter" style="width: 150px">
                 </el-input>
               </el-form-item>
@@ -119,7 +119,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "dir", "files", "place", "wrap"],
+  props: ["source", "dir", "files", "place"],
   data() {
     return {
       ready: false,
@@ -816,6 +816,12 @@ export default {
 .drag-file .drag-file-name {
   padding: 0px 5px;
   font-size: 15px;
+}
+.file-filter-input input {
+  background: transparent;
+  color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
 }
 .file-dir-input {
   color: #ffffff;

@@ -5,9 +5,8 @@
         <FTP
           ref="ftp"
           :source="source"
-          :toolbox="toolbox"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
           :initToken="initToken"
           :initSocket="initSocket"
         >
@@ -17,9 +16,8 @@
         <SSH
           ref="ssh"
           :source="source"
-          :toolbox="toolbox"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
           :initToken="initToken"
           :initSocket="initSocket"
         >
@@ -36,7 +34,7 @@ import SSH from "./SSH";
 
 export default {
   components: { FTP, SSH },
-  props: ["source", "toolboxType", "toolbox", "option", "extend", "wrap"],
+  props: ["source", "extend", "toolboxWorker"],
   data() {
     return {
       ready: false,
@@ -61,14 +59,14 @@ export default {
     async initToken(obj) {
       if (this.tool.isEmpty(obj.token)) {
         let param = {};
-        let res = await this.wrap.work("createToken", param);
+        let res = await this.toolboxWorker.work("createToken", param);
         res.data = res.data || {};
         obj.token = res.data.token;
       }
       obj.tokenWork = async (work, param) => {
         param = param || {};
         param.token = obj.token;
-        let res = await this.wrap.work(work, param);
+        let res = await this.toolboxWorker.work(work, param);
         return res;
       };
       return obj.token;
@@ -82,13 +80,13 @@ export default {
         obj.socket.send(data);
       };
       obj.writeMessage = (message) => {
-        obj.socket.send(this.toolbox.sshTeamIDEMessage + message);
+        obj.socket.send(this.source.sshTeamIDEMessage + message);
       };
       obj.writeEvent = (event) => {
-        obj.socket.send(this.toolbox.sshTeamIDEEvent + event);
+        obj.socket.send(this.source.sshTeamIDEEvent + event);
       };
       obj.writeError = (error) => {
-        obj.socket.send(this.toolbox.sshTeamIDEError + error);
+        obj.socket.send(this.source.sshTeamIDEError + error);
       };
 
       let url = this.source.api;
@@ -118,35 +116,35 @@ export default {
         //   }
         // }
         if (typeof message == "string") {
-          if (message.indexOf(this.toolbox.sshTeamIDEEvent) == 0) {
+          if (message.indexOf(this.source.sshTeamIDEEvent) == 0) {
             obj.onEvent &&
               obj.onEvent(
-                message.substring(this.toolbox.sshTeamIDEEvent.length)
+                message.substring(this.source.sshTeamIDEEvent.length)
               );
-          } else if (message.indexOf(this.toolbox.sshTeamIDEError) == 0) {
+          } else if (message.indexOf(this.source.sshTeamIDEError) == 0) {
             obj.onError &&
               obj.onError(
-                message.substring(this.toolbox.sshTeamIDEError.length)
+                message.substring(this.source.sshTeamIDEError.length)
               );
-          } else if (message.indexOf(this.toolbox.sshTeamIDEMessage) == 0) {
+          } else if (message.indexOf(this.source.sshTeamIDEMessage) == 0) {
             obj.onMessage &&
               obj.onMessage(
-                message.substring(this.toolbox.sshTeamIDEMessage.length)
+                message.substring(this.source.sshTeamIDEMessage.length)
               );
-          } else if (message.indexOf(this.toolbox.sshTeamIDEAlert) == 0) {
+          } else if (message.indexOf(this.source.sshTeamIDEAlert) == 0) {
             obj.onAlert &&
               obj.onAlert(
-                message.substring(this.toolbox.sshTeamIDEAlert.length)
+                message.substring(this.source.sshTeamIDEAlert.length)
               );
-          } else if (message.indexOf(this.toolbox.sshTeamIDEConsole) == 0) {
+          } else if (message.indexOf(this.source.sshTeamIDEConsole) == 0) {
             obj.onConsole &&
               obj.onConsole(
-                message.substring(this.toolbox.sshTeamIDEConsole.length)
+                message.substring(this.source.sshTeamIDEConsole.length)
               );
-          } else if (message.indexOf(this.toolbox.sshTeamIDEStdout) == 0) {
+          } else if (message.indexOf(this.source.sshTeamIDEStdout) == 0) {
             obj.onStdout &&
               obj.onStdout(
-                message.substring(this.toolbox.sshTeamIDEStdout.length)
+                message.substring(this.source.sshTeamIDEStdout.length)
               );
           } else {
             obj.onData && obj.onData(message);

@@ -33,7 +33,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox"],
+  props: ["source"],
   data() {
     return {
       showDialog: false,

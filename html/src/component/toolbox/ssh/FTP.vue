@@ -9,7 +9,6 @@
             place="local"
             :dir="extend.local.dir"
             :files="localFiles"
-            :wrap="wrap"
             @open="openFile"
             @openDir="openDir"
             @upload="doUploadFile"
@@ -28,7 +27,6 @@
             place="remote"
             :dir="extend.remote.dir"
             :files="remoteFiles"
-            :wrap="wrap"
             @open="openFile"
             @openDir="openDir"
             @upload="doUploadFile"
@@ -138,7 +136,7 @@
         </div>
       </tm-layout>
     </tm-layout>
-    <FileEdit ref="FileEdit" :source="source" :toolbox="toolbox"> </FileEdit>
+    <FileEdit ref="FileEdit" :source="source"> </FileEdit>
   </div>
 </template>
 
@@ -149,9 +147,8 @@ export default {
   components: { Files, FileEdit },
   props: [
     "source",
-    "toolbox",
     "extend",
-    "wrap",
+    "toolboxWorker",
     "initToken",
     "initSocket",
     "isFromSSH",
@@ -412,7 +409,7 @@ export default {
           if (this.extend.local.dir != response.dir) {
             let keyValueMap = {};
             keyValueMap["local.dir"] = response.dir;
-            this.wrap.updateExtend(keyValueMap);
+            this.toolboxWorker.updateExtend(keyValueMap);
           }
           this.localFiles = response.files || [];
           this.$refs.localToolboxFTPFiles.setScrollTop(response.scrollTop);
@@ -420,7 +417,7 @@ export default {
           if (this.extend.remote.dir != response.dir) {
             let keyValueMap = {};
             keyValueMap["remote.dir"] = response.dir;
-            this.wrap.updateExtend(keyValueMap);
+            this.toolboxWorker.updateExtend(keyValueMap);
           }
           if (!this.isFromSSH) {
             if (response.dir.split("/").length > 3) {
@@ -429,9 +426,9 @@ export default {
               for (var i = ss.length - 2; i < ss.length; i++) {
                 d += "/" + ss[i];
               }
-              this.wrap.updateComment(d);
+              this.toolboxWorker.updateComment(d);
             } else {
-              this.wrap.updateComment(response.dir);
+              this.toolboxWorker.updateComment(response.dir);
             }
           }
           this.remoteFiles = response.files || [];

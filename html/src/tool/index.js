@@ -24,7 +24,7 @@ tool.init = function () {
         if (res.code == 0) {
             let data = res.data;
             source.init(data);
-
+            source.initToolboxData()
             tool.initSession();
         } else {
             tool.error(res.msg);

@@ -27,7 +27,7 @@
             </div>
             <div
               class="ft-12 tm-link color-green mgl-10 mgt-3"
-              @click="toolbox.toInsertSSHCommand()"
+              @click="toolboxWorker.toInsertSSHCommand()"
             >
               添加
             </div>
@@ -35,11 +35,11 @@
           <div class="toolbox-ssh-quickCommand-list scrollbar">
             <template
               v-if="
-                toolbox.quickCommandSSHCommands != null &&
-                toolbox.quickCommandSSHCommands.length > 0
+                source.quickCommandSSHCommands != null &&
+                source.quickCommandSSHCommands.length > 0
               "
             >
-              <template v-for="(one, index) in toolbox.quickCommandSSHCommands">
+              <template v-for="(one, index) in source.quickCommandSSHCommands">
                 <div
                   :key="index"
                   v-if="
@@ -68,13 +68,13 @@
                     </div>
                     <div
                       class="ft-12 tm-link color-blue mgl-10"
-                      @click="toolbox.toUpdateSSHCommand(one)"
+                      @click="toolboxWorker.toUpdateSSHCommand(one)"
                     >
                       修改
                     </div>
                     <div
                       class="ft-12 tm-link color-red mgl-10"
-                      @click="toolbox.toDeleteSSHCommand(one)"
+                      @click="toolboxWorker.toDeleteSSHCommand(one)"
                     >
                       删除
                     </div>
@@ -94,8 +94,8 @@
         FTP
       </div>
     </div>
-    <SSHUpload :source="source" :wrap="wrap"></SSHUpload>
-    <SSHDownload :source="source" :wrap="wrap"></SSHDownload>
+    <SSHUpload :source="source" :toolboxWorker="toolboxWorker"></SSHUpload>
+    <SSHDownload :source="source" :toolboxWorker="toolboxWorker"></SSHDownload>
     <template v-if="isOpenFTP">
       <div
         class="toolbox-ssh-editor-ftp-box"
@@ -135,9 +135,8 @@
         <div class="toolbox-ssh-editor-ftp-box-body">
           <FTP
             :source="source"
-            :toolbox="toolbox"
+            :toolboxWorker="toolboxWorker"
             :extend="extend"
-            :wrap="wrap"
             :initToken="initToken"
             :initSocket="initSocket"
             :isFromSSH="true"
@@ -162,7 +161,7 @@ import SSHUpload from "./SSHUpload.vue";
 import SSHDownload from "./SSHDownload.vue";
 export default {
   components: { SSHUpload, SSHDownload, FTP },
-  props: ["source", "toolbox", "extend", "wrap", "initToken", "initSocket"],
+  props: ["source", "extend", "toolboxWorker", "initToken", "initSocket"],
   data() {
     return {
       quickCommandSearch: null,
@@ -246,9 +245,9 @@ export default {
       } else if (event == "shell created") {
         this.sshSessionClosed = false;
         delete this.startIng;
-        this.tool.success("SSH会话连接中成功");
         this.$nextTick(() => {
           this.initAttachAddon();
+          this.tool.success("SSH会话连接中成功");
         });
       } else if (event == "ssh session closed") {
         this.sshSessionClosed = true;
@@ -262,23 +261,21 @@ export default {
         return;
       } else if (data instanceof ArrayBuffer) {
         try {
-          if (
-            data.byteLength >= this.toolbox.sshTeamIDEBinaryStartBytesLength
-          ) {
+          if (data.byteLength >= this.source.sshTeamIDEBinaryStartBytesLength) {
             let bs = data.slice(
               0,
-              this.toolbox.sshTeamIDEBinaryStartBytesLength
+              this.source.sshTeamIDEBinaryStartBytesLength
             );
             let eq = true;
             bs = new Uint8Array(bs);
-            this.toolbox.sshTeamIDEBinaryStartBytes.forEach((a, i) => {
+            this.source.sshTeamIDEBinaryStartBytes.forEach((a, i) => {
               if (eq && a != bs[i]) {
                 eq = false;
               }
             });
             if (eq) {
               data = data.slice(
-                this.toolbox.sshTeamIDEBinaryStartBytesLength,
+                this.source.sshTeamIDEBinaryStartBytesLength,
                 data.length
               );
               this.term.write(new Uint8Array(data));
@@ -297,7 +294,7 @@ export default {
         this.tool.error("快速指令为空");
         return;
       }
-      let option = this.toolbox.getOptionJSON(quickCommand.option);
+      let option = this.tool.getOptionJSON(quickCommand.option);
       if (option == null || this.tool.isEmpty(option.command)) {
         this.tool.error("未配置命令");
         return;
@@ -359,11 +356,11 @@ export default {
         on_detect: (detection) => {
           let zsession = detection.confirm();
           if (zsession.type === "receive") {
-            this.wrap.showSSHDownload(zsession, this.term, () => {
+            this.toolboxWorker.showSSHDownload(zsession, this.term, () => {
               this.onFocus();
             });
           } else {
-            this.wrap.showSSHUpload(zsession, this.term, () => {
+            this.toolboxWorker.showSSHUpload(zsession, this.term, () => {
               this.onFocus();
             });
           }

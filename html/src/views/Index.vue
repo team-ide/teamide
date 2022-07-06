@@ -1,30 +1,40 @@
 <template>
-  <Workspace :source="source" ref="Workspace">
-    <el-dropdown
-      slot="mainTabLeftExtend"
-      trigger="click"
-      class="workspace-tabs-nav-dropdown"
+  <div class="workspace-page">
+    <Workspace
+      :source="source"
+      ref="Workspace"
+      :onMainActiveItem="onMainActiveItem"
+      :onMainRemoveItem="onMainRemoveItem"
     >
-      <div class="workspace-tabs-nav tm-pointer pdlr-5 ft-12">
-        全部
-        <i class="mdi mdi-menu-down"></i>
+      <el-dropdown
+        slot="mainTabLeftExtend"
+        trigger="click"
+        class="workspace-tabs-nav-dropdown"
+      >
+        <div class="workspace-tabs-nav tm-pointer pdlr-5 ft-12">
+          全部
+          <i class="mdi mdi-menu-down"></i>
+        </div>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item> 全部 </el-dropdown-item>
+
+          <template v-for="(one, index) in source.toolboxGroups">
+            <el-dropdown-item :key="index" :command="one">
+              {{ one.name || one.title }}
+            </el-dropdown-item>
+          </template>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <div
+        slot="mainTabRightExtend"
+        class="workspace-tabs-nav tm-pointer color-green pdlr-2"
+        @click="showSwitchToolboxType()"
+      >
+        <i class="mdi mdi-plus"></i>
       </div>
-      <el-dropdown-menu slot="dropdown">
-        <el-dropdown-item> 全部 </el-dropdown-item>
-        <el-dropdown-item> 分组1 </el-dropdown-item>
-        <el-dropdown-item> 分组2 </el-dropdown-item>
-        <el-dropdown-item> 分组3 </el-dropdown-item>
-      </el-dropdown-menu>
-    </el-dropdown>
-    <div
-      slot="mainTabRightExtend"
-      class="workspace-tabs-nav tm-pointer color-green pdlr-2"
-      @click="toolbox.showSwitchToolboxType()"
-    >
-      <i class="mdi mdi-plus"></i>
-    </div>
-    <ToolboxType :source="source"></ToolboxType>
-  </Workspace>
+    </Workspace>
+    <ToolboxType ref="ToolboxType" :source="source"></ToolboxType>
+  </div>
 </template>
 
 <script>
@@ -39,7 +49,7 @@ export default {
   watch: {},
   methods: {
     async init() {
-      await this.source.initToolboxData();
+      await this.source.initToolboxGroups();
       this.initOpens();
       let iconFonts = [
         "teamide-database",
@@ -62,14 +72,26 @@ export default {
         item.extend = {
           type: "format",
         };
-        this.addMainItem(item);
+        // this.addMainItem(item);
       }
+    },
+    showSwitchToolboxType() {
+      this.$refs.ToolboxType.showSwitch();
+    },
+    showToolboxType() {
+      this.$refs.ToolboxType.show();
+    },
+    hideToolboxType() {
+      this.$refs.ToolboxType.hide();
     },
     addMainItem(item) {
       this.$refs.Workspace.mainItemsWorker.addItem(item);
     },
     toMainActiveItem(item) {
       this.$refs.Workspace.mainItemsWorker.toActiveItem(item);
+    },
+    getMainItems() {
+      return this.$refs.Workspace.mainItemsWorker.items || [];
     },
     addMainItemByOpen(open) {
       let item = {};
@@ -79,7 +101,9 @@ export default {
       item.show = true;
       item.isToolbox = true;
       item.toolboxType = open.toolboxType;
-      item.extend = open.extend || {};
+      item.toolboxId = open.toolboxId;
+      item.toolboxGroupId = open.toolboxGroupId;
+      item.extend = this.tool.getOptionJSON(open.extend);
       item.openId = open.openId;
       switch (item.toolboxType) {
         case "database":
@@ -119,7 +143,6 @@ export default {
         opens = res.data.opens || [];
       }
       opens.forEach((one) => {
-        one.extend = this.tool.getOptionJSON(one.extend);
         this.addMainItemByOpen(one);
       });
       // 激活最后
@@ -139,7 +162,33 @@ export default {
       if (activeOpen != null) {
         this.toMainActiveItem(activeOpen.item);
       } else {
-        // this.source.toolbox.showToolboxType();
+        this.showToolboxType();
+      }
+    },
+    async onMainActiveItem(item) {
+      if (item == null || this.tool.isEmpty(item.openId)) {
+        return;
+      }
+      let res = await this.server.toolbox.open({
+        openId: item.openId,
+      });
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      this.hideToolboxType();
+    },
+    async onMainRemoveItem(item) {
+      if (item == null || this.tool.isEmpty(item.openId)) {
+        return;
+      }
+      let res = await this.server.toolbox.close({
+        openId: item.openId,
+      });
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      if (this.getMainItems().length == 0) {
+        this.showToolboxType();
       }
     },
   },
@@ -151,4 +200,11 @@ export default {
 </script>
 
 <style>
+.workspace-page {
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  position: relative;
+}
 </style>

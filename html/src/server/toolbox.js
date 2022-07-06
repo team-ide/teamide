@@ -26,6 +26,9 @@ let toolbox = {
         return http.post('api/toolbox/delete', param);
     },
     group: {
+        list(param) {
+            return http.post('api/toolbox/group/list', param);
+        },
         insert(param) {
             return http.post('api/toolbox/group/insert', param);
         },
@@ -49,9 +52,6 @@ let toolbox = {
         delete(param) {
             return http.post('api/toolbox/quickCommand/delete', param);
         },
-    },
-    context(param) {
-        return http.post('api/toolbox/context', param);
     },
     work(param) {
         return http.post('api/toolbox/work', param);

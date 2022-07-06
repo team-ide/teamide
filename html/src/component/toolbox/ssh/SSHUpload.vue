@@ -39,7 +39,7 @@
 import Zmodem from "zmodem.js";
 export default {
   components: {},
-  props: ["source", "wrap"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -361,8 +361,8 @@ export default {
   },
   created() {},
   mounted() {
-    this.wrap.showSSHUpload = this.show;
-    this.wrap.hideSSHUpload = this.show;
+    this.toolboxWorker.showSSHUpload = this.show;
+    this.toolboxWorker.hideSSHUpload = this.show;
   },
 };
 </script>

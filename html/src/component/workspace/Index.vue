@@ -34,12 +34,11 @@ import Spans from "./Spans.vue";
 
 export default {
   components: { Tabs, Spans },
-  props: ["source", "onRemoveItem", "onActiveItem"],
+  props: ["source", "onMainRemoveItem", "onMainActiveItem"],
   data() {
-    let that = this;
     let mainItemsWorker = this.tool.newItemsWorker({
-      onRemoveItem: this.onRemoveItem,
-      onActiveItem: this.onActiveItem,
+      onRemoveItem: this.onMainRemoveItem,
+      onActiveItem: this.onMainActiveItem,
     });
     return {
       mainItemsWorker: mainItemsWorker,

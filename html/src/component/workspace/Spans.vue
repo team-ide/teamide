@@ -9,8 +9,8 @@
         >
           <template v-if="one.isToolbox">
             <ToolboxEditor
+              :ref="`span-${one.key}`"
               :source="source"
-              :tab="tab"
               :toolboxType="one.toolboxType"
               :toolboxId="one.toolboxId"
               :openId="one.openId"
@@ -34,7 +34,9 @@ export default {
   computed: {},
   watch: {
     activeTab() {
-      this.onActiveTabFocue();
+      this.$nextTick(() => {
+        this.onActiveTabFocue();
+      });
     },
   },
   methods: {

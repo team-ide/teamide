@@ -5,6 +5,33 @@ import (
 	"teamide/internal/base"
 )
 
+type ListRequest struct {
+}
+
+type ListResponse struct {
+	ToolboxList []*ToolboxModel `json:"toolboxList,omitempty"`
+}
+
+func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &ListRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &ListResponse{}
+
+	response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
+		UserId: requestBean.JWT.UserId,
+	})
+	if err != nil {
+		return
+	}
+	response.ToolboxList = append(response.ToolboxList, Others...)
+
+	res = response
+	return
+}
+
 type InsertRequest struct {
 	*ToolboxModel
 }

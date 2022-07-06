@@ -4,70 +4,56 @@
       <template v-if="toolboxType == 'redis'">
         <ToolboxRedisEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxRedisEditor>
       </template>
       <template v-else-if="toolboxType == 'database'">
         <ToolboxDatabaseEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxDatabaseEditor>
       </template>
       <template v-else-if="toolboxType == 'zookeeper'">
         <ToolboxZookeeperEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxZookeeperEditor>
       </template>
       <template v-else-if="toolboxType == 'elasticsearch'">
         <ToolboxElasticsearchEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxElasticsearchEditor>
       </template>
       <template v-else-if="toolboxType == 'kafka'">
         <ToolboxKafkaEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxKafkaEditor>
       </template>
       <template v-else-if="toolboxType == 'ssh'">
         <ToolboxSSHEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxSSHEditor>
       </template>
       <template v-else-if="toolboxType == 'other'">
         <ToolboxOtherEditor
           :source="source"
-          :toolbox="toolbox"
-          :toolboxType="toolboxType"
           :extend="extend"
-          :wrap="wrap"
+          :toolboxWorker="toolboxWorker"
         >
         </ToolboxOtherEditor>
       </template>
@@ -83,12 +69,17 @@ export default {
   components: {},
   props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {
+    let toolboxWorker = this.tool.newToolboxWorker({
+      toolboxId: this.toolboxId,
+      openId: this.openId,
+      toolboxType: this.toolboxType,
+      extend: this.extend,
+    });
+
     return {
+      toolboxWorker: toolboxWorker,
       extendJSON: null,
       ready: false,
-      wrap: {
-        tabs: [],
-      },
     };
   },
   computed: {},
@@ -100,40 +91,20 @@ export default {
       if (JSON.stringify(newExtent) == JSON.stringify(oldExtent)) {
         return;
       }
-      this.wrap.updateOpenExtend(this.extend);
+      this.toolboxWorker.updateOpenExtend(this.extend);
     },
   },
   methods: {
-    init() {
+    async init() {
       if (this.inited) {
         return;
       }
       this.inited = true;
-      this.wrap.work = this.work;
-      this.wrap.openTabByExtend = this.openTabByExtend;
-      this.wrap.onActiveTab = this.onActiveTab;
-      this.wrap.onRemoveTab = this.onRemoveTab;
-      this.wrap.updateComment = this.updateComment;
-      this.wrap.updateOpenExtend = this.updateOpenExtend;
-      this.wrap.updateOpenTabExtend = this.updateOpenTabExtend;
-      this.wrap.updateExtend = this.updateExtend;
+      await this.toolboxWorker.init();
       this.ready = true;
-      this.initOpenTabs();
     },
-    async work(work, data) {
-      let param = {
-        toolboxId: this.toolboxData.toolboxId,
-        work: work,
-        data: data,
-      };
-      let res = await this.server.toolbox.work(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
-      return res;
-    },
-    onFocus() {
-      this.init();
+    async onFocus() {
+      await this.init();
       this.$nextTick(() => {
         this.$el.focus();
         this.$children.forEach((one) => {
@@ -142,115 +113,6 @@ export default {
       });
     },
     reload() {},
-    onRemoveTab(tab) {
-      this.toolbox.closeOpenTab(tab.tabId);
-    },
-    onActiveTab(tab) {
-      this.toolbox.activeOpenTab(tab.tabId);
-    },
-    doActiveTab(tab) {
-      this.wrap.doActiveTab(tab);
-    },
-    updateExtend(keyValueMap) {
-      this.updateOpenExtend(this.openId, keyValueMap);
-    },
-    updateComment(comment) {
-      this.updateOpenComment(this.openId, comment);
-    },
-    async updateOpenTabExtend(tabId, keyValueMap) {
-      let tab = this.wrap.getTab("" + tabId);
-      if (tab == null) {
-        return;
-      }
-      if (keyValueMap == null) {
-        return;
-      }
-      if (Object.keys(keyValueMap) == 0) {
-        return;
-      }
-      let obj = tab.extend;
-      for (let key in keyValueMap) {
-        let value = keyValueMap[key];
-        let names = key.split(".");
-        names.forEach((name, index) => {
-          if (index < names.length - 1) {
-            obj[name] = obj[name] || {};
-            obj = obj[name];
-          } else {
-            obj[name] = value;
-          }
-        });
-      }
-
-      let param = {
-        tabId: tabId,
-        extend: JSON.stringify(tab.extend),
-      };
-      let res = await this.server.toolbox.updateOpenTabExtend(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      }
-    },
-    async openTabByExtend(extend, fromTab) {
-      let data = {
-        openId: this.openId,
-        toolboxId: this.toolboxData.toolboxId,
-      };
-
-      let tabData = await this.toolbox.openTab(data, extend);
-      if (tabData == null) {
-        return;
-      }
-      let tab = await this.openByTabData(tabData, fromTab);
-      if (tab != null) {
-        this.doActiveTab(tab);
-      }
-    },
-    async openByTabData(tabData, fromTab) {
-      if (this.tool.isNotEmpty(tabData.extend)) {
-        tabData.extend = JSON.parse(tabData.extend);
-      } else {
-        tabData.extend = null;
-      }
-      let tab = this.createTabByTabData(tabData);
-      this.wrap.addTab(tab, fromTab);
-      return tab;
-    },
-    createTabByTabData(tabData) {
-      let key = tabData.tabId;
-
-      let tab = this.wrap.getTab(key);
-      if (tab == null) {
-        tab = this.toolbox.createOpenTabTab(tabData);
-        tab.key = key;
-      }
-      return tab;
-    },
-    async initOpenTabs() {
-      let tabs = await this.toolbox.loadOpenTabs(this.openId);
-
-      await tabs.forEach(async (tabData) => {
-        await this.openByTabData(tabData);
-      });
-
-      // 激活最后
-      let activeTabData = null;
-      tabs.forEach(async (tabData) => {
-        if (activeTabData == null) {
-          activeTabData = tabData;
-        } else {
-          if (
-            new Date(tabData.openTime).getTime() >
-            new Date(activeTabData.openTime).getTime()
-          ) {
-            activeTabData = tabData;
-          }
-        }
-      });
-      if (activeTabData != null) {
-        this.doActiveTab(activeTabData.tabId);
-      }
-    },
     onKeyDown() {
       if (this.tool.keyIsF5()) {
         this.tool.stopEvent();
@@ -271,15 +133,10 @@ export default {
   },
   created() {},
   mounted() {
-    this.init();
     this.bindEvent();
   },
   updated() {},
-  beforeDestroy() {
-    if (this.wrap.destroy != null) {
-      this.wrap.destroy();
-    }
-  },
+  beforeDestroy() {},
 };
 </script>
 

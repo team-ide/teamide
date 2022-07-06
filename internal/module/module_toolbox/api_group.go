@@ -5,6 +5,31 @@ import (
 	"teamide/internal/base"
 )
 
+type ListGroupRequest struct {
+}
+
+type ListGroupResponse struct {
+	GroupList []*ToolboxGroupModel `json:"groupList,omitempty"`
+}
+
+func (this_ *ToolboxApi) listGroup(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &ListGroupRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &ListGroupResponse{}
+
+	response.GroupList, err = this_.ToolboxService.QueryGroup(&ToolboxGroupModel{
+		UserId: requestBean.JWT.UserId,
+	})
+	if err != nil {
+		return
+	}
+	res = response
+	return
+}
+
 type InsertGroupRequest struct {
 	*ToolboxGroupModel
 }

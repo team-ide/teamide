@@ -61,7 +61,7 @@
       </div>
 
       <div class="toolbox-type-box scrollbar" v-if="searchMap != null">
-        <template v-for="toolboxType in toolbox.types">
+        <template v-for="toolboxType in toolboxTypes">
           <div :key="toolboxType.name" class="toolbox-type-one">
             <div class="toolbox-type-title">
               <div class="toolbox-type-title-text">
@@ -162,28 +162,41 @@ export default {
       selectGroup: null,
       groupList: [],
       searchGroup: null,
+      toolboxTypes: [],
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {
-    context() {
-      this.initGroup();
-    },
-    groups() {
-      this.initGroup();
+    showBox() {
+      if (this.showBox) {
+        this.initData();
+      }
     },
   },
   methods: {
-    init() {
-      this.initGroup();
-      let searchMap = {};
-      this.toolbox.types.forEach((one) => {
-        searchMap[one.name] = "";
-      });
-      this.searchMap = searchMap;
-      this.initGroup();
+    show() {
+      this.showBox = true;
+    },
+    showSwitch() {
+      this.showBox = !this.showBox;
+    },
+    hide() {
+      this.showBox = false;
+    },
+    init() {},
+    async initData() {
+      await this.source.initToolboxGroups();
+      this.toolboxTypes = this.source.toolboxTypes || [];
+      await this.initToolboxDataGroup();
+      if (this.searchMap == null) {
+        let searchMap = {};
+        this.toolboxTypes.forEach((one) => {
+          searchMap[one.name] = "";
+        });
+        this.searchMap = searchMap;
+      }
     },
     toSelectGroup(group) {
       if (group == null) {
@@ -191,10 +204,26 @@ export default {
       }
       this.selectGroup = group;
     },
-    initGroup() {
+    async initToolboxDataGroup() {
       let groupList = [];
-      let context = this.context || {};
-      let groups = this.groups || [];
+      let toolboxList = [];
+
+      let res = await this.server.toolbox.list({});
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      } else {
+        let data = res.data || {};
+        toolboxList = data.toolboxList || [];
+      }
+
+      let context = {};
+
+      toolboxList.forEach((one) => {
+        context[one.toolboxType] = context[one.toolboxType] || [];
+        context[one.toolboxType].push(one);
+      });
+
+      let groups = this.source.toolboxGroups || [];
       groupList.push({
         groupId: null,
         name: "未分组",
@@ -219,7 +248,7 @@ export default {
           }
         });
       }
-      this.toolbox.types.forEach((type) => {
+      this.toolboxTypes.forEach((type) => {
         if (type.name == "other") {
           return;
         }
@@ -241,15 +270,6 @@ export default {
       });
       this.groupList = groupList;
       this.selectGroup = selectGroup;
-    },
-    show() {
-      this.showBox = true;
-    },
-    showSwitch() {
-      this.showBox = !this.showBox;
-    },
-    hide() {
-      this.showBox = false;
     },
     groupContextmenu(group) {
       let menus = [];
@@ -351,6 +371,7 @@ export default {
   transition: all 0s;
   transform: scale(0);
   height: calc(100% - 25px);
+  color: #ffffff;
 }
 .toolbox-context-box.toolbox-context-box-show {
   transform: scale(1);

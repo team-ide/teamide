@@ -327,7 +327,16 @@ source.initToolboxData = async () => {
                 }
             }
         });
-        source.toolboxGroups = data.groups || [];
+    }
+}
+source.initToolboxGroups = async () => {
+    let res = await server.toolbox.group.list({});
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let data = res.data || {};
+        let groups = data.groupList || [];
+        source.toolboxGroups = groups;
     }
 }
 

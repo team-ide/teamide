@@ -29,13 +29,14 @@ var (
 	// PowerToolbox 工具基本 权限
 	PowerToolbox          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerToolboxPage      = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
-	PowerToolboxContext   = base.AppendPower(&base.PowerAction{Action: "toolbox_context", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxList      = base.AppendPower(&base.PowerAction{Action: "toolbox_list", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxInsert    = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxUpdate    = base.AppendPower(&base.PowerAction{Action: "toolbox_update", Text: "工具修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxRename    = base.AppendPower(&base.PowerAction{Action: "toolbox_rename", Text: "工具重命名", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxDelete    = base.AppendPower(&base.PowerAction{Action: "toolbox_delete", Text: "工具删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxMoveGroup = base.AppendPower(&base.PowerAction{Action: "toolbox_move_group", Text: "工具分组", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 
+	PowerToolboxGroupList   = base.AppendPower(&base.PowerAction{Action: "toolbox_group_list", Text: "工具分组新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxGroupInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_group_insert", Text: "工具分组新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxGroupUpdate = base.AppendPower(&base.PowerAction{Action: "toolbox_group_update", Text: "工具分组修改", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxGroupDelete = base.AppendPower(&base.PowerAction{Action: "toolbox_group_delete", Text: "工具分组删除", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -64,14 +65,15 @@ var (
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox"}, Power: PowerToolbox, Do: this_.index})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/page"}, Power: PowerToolboxPage, Do: this_.context})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/context"}, Power: PowerToolboxContext, Do: this_.context})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/page"}, Power: PowerToolboxPage, Do: this_.list})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/list"}, Power: PowerToolboxList, Do: this_.list})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/insert"}, Power: PowerToolboxInsert, Do: this_.insert})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/update"}, Power: PowerToolboxUpdate, Do: this_.update})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/rename"}, Power: PowerToolboxRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/delete"}, Power: PowerToolboxDelete, Do: this_.delete})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/moveGroup"}, Power: PowerToolboxMoveGroup, Do: this_.moveGroup})
 
+	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/list"}, Power: PowerToolboxGroupList, Do: this_.listGroup})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/insert"}, Power: PowerToolboxGroupInsert, Do: this_.insertGroup})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/update"}, Power: PowerToolboxGroupUpdate, Do: this_.updateGroup})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/delete"}, Power: PowerToolboxGroupDelete, Do: this_.deleteGroup})
@@ -154,43 +156,5 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 }
 
 func (this_ *ToolboxApi) page(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	return
-}
-
-type ContextRequest struct {
-}
-
-type ContextResponse struct {
-	Context map[string][]*ToolboxModel `json:"context,omitempty"`
-	Groups  []*ToolboxGroupModel       `json:"groups,omitempty"`
-}
-
-func (this_ *ToolboxApi) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	request := &ContextRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	response := &ContextResponse{}
-
-	response.Groups, err = this_.ToolboxService.QueryGroup(&ToolboxGroupModel{
-		UserId: requestBean.JWT.UserId,
-	})
-	if err != nil {
-		return
-	}
-
-	list, err := this_.ToolboxService.Query(&ToolboxModel{
-		UserId: requestBean.JWT.UserId,
-	})
-	if err != nil {
-		return
-	}
-	response.Context = make(map[string][]*ToolboxModel)
-	for _, one := range list {
-		response.Context[one.ToolboxType] = append(response.Context[one.ToolboxType], one)
-	}
-	response.Context["other"] = append(response.Context["other"], Others...)
-	res = response
 	return
 }
