@@ -33,7 +33,11 @@
         <i class="mdi mdi-plus"></i>
       </div>
     </Workspace>
-    <ToolboxType ref="ToolboxType" :source="source"></ToolboxType>
+    <ToolboxType
+      ref="ToolboxType"
+      :source="source"
+      :openByToolboxId="openByToolboxId"
+    ></ToolboxType>
   </div>
 </template>
 
@@ -93,7 +97,33 @@ export default {
     getMainItems() {
       return this.$refs.Workspace.mainItemsWorker.items || [];
     },
-    addMainItemByOpen(open) {
+    async openByToolboxId(toolboxId, extend, fromItem, createTime) {
+      let param = {
+        toolboxId: toolboxId,
+        extend: JSON.stringify(extend || {}),
+      };
+      if (createTime) {
+        param.createTime = createTime;
+      }
+      let res = await this.server.toolbox.open(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      } else {
+        res = await this.server.toolbox.getOpen({
+          openId: res.data.open.openId,
+        });
+        if (res.code != 0) {
+          this.tool.error(res.msg);
+        } else {
+          let openData = res.data.open;
+          let item = this.addMainItemByOpen(openData, fromItem);
+          if (item != null) {
+            this.toMainActiveItem(item);
+          }
+        }
+      }
+    },
+    addMainItemByOpen(open, fromItem) {
       let item = {};
       item.key = open.openId;
       item.name = open.toolboxName;
@@ -104,6 +134,13 @@ export default {
       item.toolboxId = open.toolboxId;
       item.toolboxGroupId = open.toolboxGroupId;
       item.extend = this.tool.getOptionJSON(open.extend);
+
+      if (item.extend.isFTP) {
+        item.extend.local = item.extend.local || {};
+        item.extend.remote = item.extend.remote || {};
+        item.extend.local.dir = item.extend.local.dir || "";
+        item.extend.remote.dir = item.extend.remote.dir || "";
+      }
       item.openId = open.openId;
       switch (item.toolboxType) {
         case "database":
@@ -130,7 +167,7 @@ export default {
         case "other":
           break;
       }
-      this.addMainItem(item);
+      this.addMainItem(item, fromItem);
       open.item = item;
       return item;
     },

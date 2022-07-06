@@ -178,7 +178,7 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "openByToolboxId"],
   data() {
     return {
       showBox: false,
@@ -212,7 +212,9 @@ export default {
     init() {},
     async initData() {
       await this.source.initToolboxGroups();
-      this.toolboxTypes = this.source.toolboxTypes || [];
+      if (this.toolboxTypes.length == 0) {
+        this.toolboxTypes = this.source.toolboxTypes || [];
+      }
       await this.initToolboxDataGroup();
       if (this.searchMap == null) {
         let searchMap = {};
@@ -330,6 +332,18 @@ export default {
         this.tool.error(res.msg);
         return false;
       }
+    },
+    toolboxDataOpen(toolboxData) {
+      let extend = {};
+      if (toolboxData.toolboxType == "other") {
+        extend = this.tool.getOptionJSON(toolboxData.option);
+      }
+      this.openByToolboxId(toolboxData.toolboxId, extend);
+      this.hide();
+    },
+    toolboxDataOpenSfpt(toolboxData) {
+      this.openByToolboxId(toolboxData.toolboxId, { isFTP: true });
+      this.hide();
     },
     dataContextmenu(toolboxType, toolboxData) {
       if (toolboxType.name == "other") {

@@ -10,7 +10,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "extend", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,

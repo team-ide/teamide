@@ -419,18 +419,6 @@ export default {
             keyValueMap["remote.dir"] = response.dir;
             this.toolboxWorker.updateExtend(keyValueMap);
           }
-          if (!this.isFromSSH) {
-            if (response.dir.split("/").length > 3) {
-              let ss = response.dir.split("/");
-              let d = "..";
-              for (var i = ss.length - 2; i < ss.length; i++) {
-                d += "/" + ss[i];
-              }
-              this.toolboxWorker.updateComment(d);
-            } else {
-              this.toolboxWorker.updateComment(response.dir);
-            }
-          }
           this.remoteFiles = response.files || [];
           this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
         }

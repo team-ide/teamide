@@ -68,7 +68,7 @@ import jsYaml from "js-yaml";
 
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "extend", "wrap"],
+  props: ["source", "extend", "toolboxWorker"],
   data() {
     return {
       from: null,
@@ -105,7 +105,7 @@ export default {
       extend.from = this.from;
       extend.fromType = this.fromType || "json";
       extend.toTypes = this.toTypes;
-      this.wrap.updateExtend(extend);
+      this.toolboxWorker.updateExtend(extend);
       this.format();
     },
     format() {

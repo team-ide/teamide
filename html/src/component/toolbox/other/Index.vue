@@ -4,25 +4,22 @@
       <template v-if="extend.type == 'format'">
         <Format
           :source="source"
-          :toolbox="toolbox"
+          :toolboxWorker="toolboxWorker"
           :extend="extend"
-          :wrap="wrap"
         ></Format>
       </template>
       <template v-else-if="extend.type == 'generateDataFile'">
         <GenerateDataFile
           :source="source"
-          :toolbox="toolbox"
+          :toolboxWorker="toolboxWorker"
           :extend="extend"
-          :wrap="wrap"
         ></GenerateDataFile>
       </template>
       <template v-else-if="extend.type == 'fontImage'">
         <FontImage
           :source="source"
-          :toolbox="toolbox"
+          :toolboxWorker="toolboxWorker"
           :extend="extend"
-          :wrap="wrap"
         ></FontImage>
       </template>
     </template>
@@ -37,7 +34,7 @@ import FontImage from "./FontImage";
 
 export default {
   components: { Format, GenerateDataFile, FontImage },
-  props: ["source", "toolboxType", "toolbox", "extend", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {};
   },
