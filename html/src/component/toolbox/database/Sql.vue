@@ -33,14 +33,20 @@
           <div
             class="tm-btn tm-btn-sm bg-green ft-13"
             @click="toExecuteSelectSql"
-            @mousedown="toSelectSql"
           >
             执行选中
           </div>
         </el-form>
       </tm-layout>
       <tm-layout height="300px" class="" style="overflow: hidden">
-        <textarea ref="sqlTextarea" v-model="executeSQL"> </textarea>
+        <Editor
+          ref="Editor"
+          :source="source"
+          :value="executeSQL"
+          language="sql"
+          :change="executeSQLChange"
+          :onContextMenu="editorContextmenu"
+        ></Editor>
       </tm-layout>
       <tm-layout-bar bottom></tm-layout-bar>
       <tm-layout height="auto">
@@ -148,6 +154,9 @@ export default {
   watch: {},
   methods: {
     async autoSaveSql() {
+      if (this.isDestroyed) {
+        return;
+      }
       let keyValueMap = {};
       if (this.lastSavedExecuteSQL != this.executeSQL) {
         this.lastSavedExecuteSQL = this.executeSQL;
@@ -167,25 +176,38 @@ export default {
       }
       this.autoSaveSql();
       this.ready = true;
+      this.$refs.Editor.setValue(this.executeSQL);
     },
-    toSelectSql() {
-      this.tool.stopEvent(window.event);
-      let startIndex = this.$refs.sqlTextarea.selectionStart || 0;
-      let endIndex = this.$refs.sqlTextarea.selectionEnd || 0;
-      if (endIndex <= startIndex) {
-        return;
+    executeSQLChange(value) {
+      this.executeSQL = value;
+    },
+    editorContextmenu() {
+      let menus = [];
+      let sql = this.$refs.Editor.getSelection();
+      menus.push({
+        text: "执行选中",
+        disabled: this.tool.isEmpty(sql),
+        onClick: () => {
+          this.toExecuteSelectSql();
+        },
+      });
+      menus.push({
+        text: "执行全部",
+        onClick: () => {
+          this.toExecuteSql();
+        },
+      });
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
       }
-      this.$refs.sqlTextarea.setSelectionRange(startIndex, endIndex); //将光标定位在textarea的开头，需要定位到其他位置的请自行修改
-      this.$refs.sqlTextarea.focus();
     },
     async toExecuteSelectSql() {
-      let startIndex = this.$refs.sqlTextarea.selectionStart || 0;
-      let endIndex = this.$refs.sqlTextarea.selectionEnd || 0;
-      if (endIndex <= startIndex) {
+      let sql = this.$refs.Editor.getSelection();
+      if (this.tool.isEmpty(sql)) {
         this.tool.warn("没有SQL被选中");
         return;
       }
-      let sql = this.executeSQL.substring(startIndex, endIndex);
 
       await this.doExecuteSql(sql);
     },
@@ -261,6 +283,9 @@ export default {
   mounted() {
     this.init();
   },
+  destroyed() {
+    this.isDestroyed = true;
+  },
 };
 </script>
 
@@ -268,25 +293,6 @@ export default {
 .toolbox-database-sql {
   width: 100%;
   height: 100%;
-}
-.toolbox-database-sql textarea {
-  width: 100%;
-  height: 100%;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  padding: 5px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-}
-.toolbox-database-sql textarea::selection {
-  color: #494949;
-  background: lightblue;
 }
 .sql-execute-list {
   font-size: 12px;

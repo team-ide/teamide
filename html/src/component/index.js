@@ -95,7 +95,7 @@ Vue.component('ToolboxOtherEditor', ToolboxOtherEditor);
 import ScriptInfo from './script/Info.vue'
 Vue.component('ScriptInfo', ScriptInfo);
 
-// import Editor from './Editor.vue'
-// Vue.component('Editor', Editor);
+import Editor from './Editor.vue'
+Vue.component('Editor', Editor);
 
 export default {};

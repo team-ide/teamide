@@ -2,7 +2,12 @@
   <div class="toolbox-format-editor">
     <tm-layout height="100%">
       <tm-layout width="50%" class="">
-        <el-form class="pdt-10 pdlr-10" size="mini" @submit.native.prevent>
+        <el-form
+          class="pdt-10 pdlr-10"
+          style="height: 100%"
+          size="mini"
+          @submit.native.prevent
+        >
           <el-form-item label="格式" class="mgb-5">
             <el-select v-model="fromType" style="width: 100px" @change="change">
               <el-option
@@ -15,21 +20,21 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="输入" class="mgb-5">
-            <el-input
-              type="textarea"
-              v-model="from"
-              @change="change"
-              @input="change"
-            >
-            </el-input>
-          </el-form-item>
-        </el-form>
-        <template v-if="error != null">
-          <div class="color-error pdlr-10">
-            异常： <span>{{ error }}</span>
+          <div style="width: 100%; height: calc(100% - 100px)">
+            <Editor
+              ref="Editor"
+              :source="source"
+              :value="from"
+              :language="fromType"
+              :change="fromChange"
+            ></Editor>
           </div>
-        </template>
+          <template v-if="error != null">
+            <div class="color-error pdlr-10">
+              异常： <span>{{ error }}</span>
+            </div>
+          </template>
+        </el-form>
       </tm-layout>
       <tm-layout-bar right></tm-layout-bar>
       <tm-layout width="auto" class="scrollbar">
@@ -94,11 +99,16 @@ export default {
       this.fromType = extend.fromType || "json";
       this.toTypes = extend.toTypes || [];
       this.format();
+      this.$refs.Editor.setValue(this.from);
     },
     refresh() {
       this.$nextTick(() => {
         this.format();
       });
+    },
+    fromChange(value) {
+      this.from = value;
+      this.change(0);
     },
     change() {
       let extend = this.extend || {};
@@ -192,7 +202,7 @@ export default {
   height: 100%;
 }
 
-.toolbox-format-editor textarea {
+.toolbox-format-editor .el-textarea__inner {
   width: 100%;
   height: 300px !important;
   letter-spacing: 1px;

@@ -15,7 +15,8 @@
         <div class="bg-red ft-12 pd-5">{{ error }}</div>
       </template>
       <template v-else>
-        <textarea v-model="text"> </textarea>
+        <textarea v-model="text" class="toolbox-ftp-edit-file-textarea">
+        </textarea>
       </template>
       <div class="pdtb-10">
         <div
@@ -97,7 +98,7 @@ export default {
 </script>
 
 <style>
-.toolbox-ftp-edit-file textarea {
+.toolbox-ftp-edit-file-textarea {
   width: 100%;
   height: 500px;
   letter-spacing: 1px;

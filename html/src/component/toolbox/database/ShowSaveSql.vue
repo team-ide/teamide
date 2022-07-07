@@ -89,7 +89,7 @@
         </el-form-item>
       </el-form>
       <div>
-        <textarea v-model="showSQL"> </textarea>
+        <textarea v-model="showSQL" class="toolbox-database-save-sql-textarea"> </textarea>
       </div>
     </div>
   </el-dialog>
@@ -183,7 +183,7 @@ export default {
 </script>
 
 <style>
-.toolbox-database-save-sql textarea {
+.toolbox-database-save-sql-textarea {
   width: 100%;
   height: 400px;
   letter-spacing: 1px;

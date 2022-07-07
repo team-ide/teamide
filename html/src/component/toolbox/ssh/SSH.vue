@@ -499,6 +499,9 @@ export default {
       this.changeSizeTimer();
     },
     changeSizeTimer() {
+      if (this.isDestroyed) {
+        return;
+      }
       if (this.term == null) {
         return;
       }
@@ -554,6 +557,9 @@ export default {
   },
   beforeDestroy() {
     this.dispose();
+  },
+  destroyed() {
+    this.isDestroyed = true;
   },
 };
 </script>

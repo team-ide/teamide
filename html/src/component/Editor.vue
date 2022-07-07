@@ -3,10 +3,8 @@
 </template>
 
 <script>
-import * as monaco from "monaco-editor";
-
 export default {
-  props: ["source", "language", "readonly", "value"],
+  props: ["source", "language", "readonly", "value", "change", "onContextMenu"],
   components: {},
   data() {
     return {
@@ -17,8 +15,10 @@ export default {
   methods: {
     setValue(value) {
       if (this.monacoInstance) {
-        this.isSetValue = true;
-        this.monacoInstance.setValue(value);
+        if (!this.getValue() != value) {
+          this.isSetValue = true;
+          this.monacoInstance.setValue(value);
+        }
       }
     },
     getValue() {
@@ -35,7 +35,14 @@ export default {
         }
       }
     },
+    getSelection() {
+      return this.monacoInstance
+        .getModel()
+        .getValueInRange(this.monacoInstance.getSelection());
+      // return this.monacoInstance.getSelection().toString();
+    },
     init() {
+      let monaco = window.monaco;
       let languageList = monaco.languages.getLanguages();
       let yamlLanguage = null;
       let htmlLanguage = null;
@@ -58,9 +65,9 @@ export default {
       }
       this.monacoInstance = monaco.editor.create(this.$refs.editor, {
         theme: "vs-dark", //官方自带三种主题vs, hc-black, or vs-dark
-        // minimap: { enabled: false },
+        minimap: { enabled: false }, // 缩略导航
         value: this.value || "", //编辑器初始显示文字
-        language: "html,json,javascript,yaml",
+        language: language.id,
         selectOnLineNumbers: true, //显示行号
         roundedSelection: false,
         readOnly: this.readonly, // 只读
@@ -71,13 +78,18 @@ export default {
         fontSize: 16, //字体大小
         autoIndent: true, //自动布局
         // quickSuggestionsDelay: 500, //代码提示延时
+        contextmenu: false,
       });
       this.monacoInstance.onDidChangeModelContent((e) => {
         if (this.isSetValue) {
           delete this.isSetValue;
         } else {
-          this.$emit("change", this.getValue());
+          this.change && this.change(this.getValue());
         }
+      });
+      this.monacoInstance.onContextMenu((e) => {
+        this.tool.stopEvent();
+        this.onContextMenu && this.onContextMenu();
       });
       //提示项设值
       //       monaco.languages.registerCompletionItemProvider("java", {

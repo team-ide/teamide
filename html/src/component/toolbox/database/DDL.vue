@@ -97,7 +97,8 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <textarea v-model="showDDL"> </textarea>
+      <textarea v-model="showDDL" class="toolbox-database-ddl-textarea">
+      </textarea>
     </template>
   </div>
 </template>
@@ -193,7 +194,7 @@ export default {
   width: 100%;
   height: 100%;
 }
-.toolbox-database-ddl textarea {
+.toolbox-database-ddl-textarea {
   width: 100%;
   height: calc(100% - 140px) !important;
   margin-top: 23px;
