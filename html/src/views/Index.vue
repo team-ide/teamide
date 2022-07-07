@@ -5,8 +5,9 @@
       ref="Workspace"
       :onMainActiveItem="onMainActiveItem"
       :onMainRemoveItem="onMainRemoveItem"
+      :toMainCopyItem="toMainCopyItem"
     >
-      <el-dropdown
+      <!-- <el-dropdown
         slot="mainTabLeftExtend"
         trigger="click"
         class="workspace-tabs-nav-dropdown"
@@ -24,7 +25,7 @@
             </el-dropdown-item>
           </template>
         </el-dropdown-menu>
-      </el-dropdown>
+      </el-dropdown> -->
       <div
         slot="mainTabRightExtend"
         class="workspace-tabs-nav tm-pointer color-green pdlr-2"
@@ -80,14 +81,18 @@ export default {
     hideToolboxType() {
       this.$refs.ToolboxType.hide();
     },
-    addMainItem(item) {
-      this.$refs.Workspace.mainItemsWorker.addItem(item);
+    addMainItem(item, fromItem) {
+      this.$refs.Workspace.mainItemsWorker.addItem(item, fromItem);
     },
     toMainActiveItem(item) {
       this.$refs.Workspace.mainItemsWorker.toActiveItem(item);
     },
     getMainItems() {
       return this.$refs.Workspace.mainItemsWorker.items || [];
+    },
+    toMainCopyItem(item) {
+      let extend = item.extend;
+      this.openByToolboxId(item.toolboxId, extend, item, item.createTime);
     },
     async openByToolboxId(toolboxId, extend, fromItem, createTime) {
       let param = {
@@ -101,17 +106,12 @@ export default {
       if (res.code != 0) {
         this.tool.error(res.msg);
       } else {
-        res = await this.server.toolbox.getOpen({
-          openId: res.data.open.openId,
-        });
-        if (res.code != 0) {
-          this.tool.error(res.msg);
-        } else {
-          let openData = res.data.open;
-          let item = this.addMainItemByOpen(openData, fromItem);
-          if (item != null) {
+        let openData = res.data.open;
+        let item = this.addMainItemByOpen(openData, fromItem);
+        if (item != null) {
+          this.$nextTick(() => {
             this.toMainActiveItem(item);
-          }
+          });
         }
       }
     },
@@ -125,6 +125,7 @@ export default {
       item.toolboxType = open.toolboxType;
       item.toolboxId = open.toolboxId;
       item.toolboxGroupId = open.toolboxGroupId;
+      item.createTime = open.createTime;
       item.extend = this.tool.getOptionJSON(open.extend);
 
       if (item.extend.isFTP) {

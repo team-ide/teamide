@@ -3,9 +3,12 @@
     <div class="workspace-spans-body">
       <template v-for="one in itemsWorker.items">
         <div
-          :key="one.key"
+          :key="`span-${one.key}`"
           class="workspace-spans-one"
-          :class="{ active: one == itemsWorker.activeItem }"
+          :class="{
+            active:
+              itemsWorker.activeItem && one.key == itemsWorker.activeItem.key,
+          }"
         >
           <slot name="span" :item="one" :ref="`span-${one.key}`"></slot>
         </div>
@@ -41,9 +44,15 @@ export default {
       }
     },
     getItemSpanSlot(item) {
-      let index = this.itemsWorker.items.indexOf(item);
-      let $vue = this.$children[index];
-      return $vue;
+      let find = null;
+      this.$children.forEach((one) => {
+        if (item == one.item) {
+          find = one;
+        }
+      });
+      if (find) {
+        return find;
+      }
     },
   },
   created() {},

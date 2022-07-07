@@ -26,6 +26,7 @@
                 :toolboxId="item.toolboxId"
                 :openId="item.openId"
                 :extend="item.extend"
+                :item="item"
               >
               </ToolboxEditor>
             </template>
@@ -39,11 +40,12 @@
 <script>
 export default {
   components: {},
-  props: ["source", "onMainRemoveItem", "onMainActiveItem"],
+  props: ["source", "onMainRemoveItem", "onMainActiveItem", "toMainCopyItem"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
       onRemoveItem: this.onMainRemoveItem,
       onActiveItem: this.onMainActiveItem,
+      toCopyItem: this.toMainCopyItem,
     });
     return {
       mainItemsWorker: mainItemsWorker,

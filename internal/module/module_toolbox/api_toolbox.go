@@ -185,7 +185,10 @@ func (this_ *ToolboxApi) open(requestBean *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
-	response.Open = toolboxOpen
+	response.Open, err = this_.ToolboxService.GetOpen(toolboxOpen.OpenId)
+	if err != nil {
+		return
+	}
 
 	res = response
 	return

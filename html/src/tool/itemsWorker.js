@@ -20,13 +20,16 @@ const newItemsWorker = function (workerOption) {
         },
         getItemIndex(item) {
             let find = worker.getItem(item);
-            if (find) {
+            if (!find) {
                 return -1
             }
             return worker.items.indexOf(find);
         },
         getActiveItemIndex() {
             return worker.items.indexOf(worker.activeItem);
+        },
+        toCopyItem(item) {
+            return workerOption.toCopyItem(item);
         },
         addItem(item, before) {
             let find = worker.getItem(item);

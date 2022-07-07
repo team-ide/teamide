@@ -110,8 +110,8 @@ export default {
       this.ready = true;
     },
     async onFocus() {
-      await this.init();
-      this.$nextTick(() => {
+      this.$nextTick(async () => {
+        await this.init();
         this.$el && this.$el.focus && this.$el.focus();
         this.$children.forEach((one) => {
           one.onFocus && one.onFocus();
