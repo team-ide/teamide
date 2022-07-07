@@ -39,7 +39,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -57,7 +57,7 @@ export default {
     show(data, callback) {
       data = data || {};
 
-      this.quickCommandType = this.toolbox.getQuickCommandType("SSH Command");
+      this.quickCommandType = this.source.getQuickCommandType("SSH Command");
       if (this.quickCommandType == null) {
         this.tool.error("SSH Command类型不存在");
         return;
@@ -66,7 +66,7 @@ export default {
       this.quickCommandId = data.quickCommandId;
       this.name = data.name;
       this.comment = data.comment;
-      this.option = this.toolbox.getOptionJSON(data.option);
+      this.option = this.tool.getOptionJSON(data.option);
       this.option = this.option || {};
       this.command = this.option.command;
 
@@ -110,8 +110,8 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.toolbox.showQuickCommandSSHCommandForm = this.show;
-    this.toolbox.hideQuickCommandSSHCommandForm = this.hide;
+    this.toolboxWorker.showQuickCommandSSHCommandForm = this.show;
+    this.toolboxWorker.hideQuickCommandSSHCommandForm = this.hide;
     this.init();
   },
 };

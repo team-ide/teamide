@@ -2,13 +2,13 @@
   <div class="toolbox-redis-topic">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="80px">
+        <tm-layout height="90px">
           <el-form class="pdt-10 pdlr-10" size="mini" inline>
             <el-form-item label="Database" label-width="70px" class="mgb-5">
               <el-input v-model="searchForm.database" style="width: 80px" />
             </el-form-item>
             <el-form-item label="Key(支持*模糊搜索)" class="mgb-5">
-              <el-input v-model="searchForm.pattern" style="width: 170px" />
+              <el-input v-model="searchForm.pattern" style="width: 150px" />
             </el-form-item>
             <el-form-item label="数量" label-width="70px" class="mgb-5">
               <el-input v-model="searchForm.size" style="width: 80px" />
@@ -80,7 +80,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -97,6 +97,14 @@ export default {
   methods: {
     init() {
       this.ready = true;
+      if (this.extend && this.extend.search) {
+        if (this.extend.search.pattern) {
+          this.searchForm.pattern = this.extend.search.pattern;
+        }
+        if (this.extend.search.database >= 0) {
+          this.searchForm.database = this.extend.search.database;
+        }
+      }
       this.loadKeys();
     },
     refresh() {
@@ -104,6 +112,12 @@ export default {
     },
     toSearch() {
       this.loadKeys();
+      this.toolboxWorker.updateExtend({
+        search: {
+          pattern: this.searchForm.pattern,
+          database: Number(this.searchForm.database),
+        },
+      });
     },
     async loadKeys() {
       this.searchResult = null;
@@ -114,7 +128,7 @@ export default {
         param.size = 50;
       }
       param.size = Number(param.size);
-      let res = await this.wrap.work("keys", param);
+      let res = await this.toolboxWorker.work("keys", param);
       this.searchResult = res.data;
     },
     rowClick(data) {
@@ -176,15 +190,6 @@ export default {
     async toExport(data) {
       this.tool.warn("功能还未完善，敬请期待！");
       return;
-      // data = data || {};
-      // let extend = {
-      //   name: "导出",
-      //   title: "导出",
-      //   type: "export",
-      //   pattern: data.key || this.searchForm.pattern,
-      //   database: data.database || this.searchForm.database,
-      // };
-      // this.wrap.openTabByExtend(extend);
     },
     async toImport(data) {
       data = data || {};
@@ -194,7 +199,7 @@ export default {
         type: "import",
         database: data.database || this.searchForm.database,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     toInsert() {
       let extend = {
@@ -203,7 +208,7 @@ export default {
         type: "data",
         database: this.searchForm.database,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     toUpdate(data) {
       let extend = {
@@ -213,7 +218,7 @@ export default {
         key: data.key,
         database: data.database,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     toDelete(data) {
       this.tool
@@ -236,7 +241,7 @@ export default {
         database: Number(database),
         key: key,
       };
-      let res = await this.wrap.work("delete", param);
+      let res = await this.toolboxWorker.work("delete", param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.toSearch();
@@ -247,7 +252,7 @@ export default {
         database: Number(database),
         pattern: pattern,
       };
-      let res = await this.wrap.work("deletePattern", param);
+      let res = await this.toolboxWorker.work("deletePattern", param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.toSearch();

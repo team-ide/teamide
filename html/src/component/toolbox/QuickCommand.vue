@@ -5,7 +5,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {};
   },
@@ -13,18 +13,17 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.toolbox.toInsertSSHCommand = this.toInsertSSHCommand;
-      this.toolbox.toUpdateSSHCommand = this.toUpdateSSHCommand;
-      this.toolbox.toDeleteSSHCommand = this.toDeleteSSHCommand;
-      this.load();
+      this.toolboxWorker.toInsertSSHCommand = this.toInsertSSHCommand;
+      this.toolboxWorker.toUpdateSSHCommand = this.toUpdateSSHCommand;
+      this.toolboxWorker.toDeleteSSHCommand = this.toDeleteSSHCommand;
     },
     toInsertSSHCommand() {
-      this.toolbox.showQuickCommandSSHCommandForm({}, async (data) => {
+      this.toolboxWorker.showQuickCommandSSHCommandForm({}, async (data) => {
         return await this.doInsert(data);
       });
     },
     toUpdateSSHCommand(param) {
-      this.toolbox.showQuickCommandSSHCommandForm(param, async (data) => {
+      this.toolboxWorker.showQuickCommandSSHCommandForm(param, async (data) => {
         return await this.doUpdate(data);
       });
     },
@@ -53,7 +52,7 @@ export default {
         return false;
       }
       this.tool.success("新增成功");
-      this.load();
+      this.source.initToolboxQuickCommands();
       return true;
     },
     async doUpdate(data) {
@@ -68,7 +67,7 @@ export default {
         return false;
       }
       this.tool.success("修改成功");
-      this.load();
+      this.source.initToolboxQuickCommands();
       return true;
     },
     async doDelete(data) {
@@ -81,31 +80,8 @@ export default {
         return false;
       }
       this.tool.success("删除成功");
-      this.load();
+      this.source.initToolboxQuickCommands();
       return true;
-    },
-    async load() {
-      let param = {};
-      let res = await this.server.toolbox.quickCommand.query(param);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      } else {
-        let quickCommands = res.data.quickCommands || [];
-
-        let quickCommandSSHCommands = [];
-        let quickCommandTypeSSHCommand =
-          this.toolbox.getQuickCommandType("SSH Command");
-
-        quickCommands.forEach((one) => {
-          if (quickCommandTypeSSHCommand) {
-            if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
-              quickCommandSSHCommands.push(one);
-            }
-          }
-        });
-        this.source.toolbox.quickCommands = quickCommands;
-        this.source.toolbox.quickCommandSSHCommands = quickCommandSSHCommands;
-      }
     },
   },
   created() {},

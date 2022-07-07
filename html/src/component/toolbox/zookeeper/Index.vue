@@ -14,6 +14,8 @@
               @node-click="nodeClick"
               @current-change="currentChange"
               :expand-on-click-node="false"
+              @node-expand="nodeExpand"
+              @node-collapse="nodeCollapse"
             >
               <span
                 class="toolbox-editor-tree-span"
@@ -89,7 +91,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       style: {
@@ -105,7 +107,6 @@ export default {
       },
       ready: false,
       expands: [],
-      opens: [],
       defaultProps: {
         children: "children",
         label: "name",
@@ -134,7 +135,28 @@ export default {
   },
   methods: {
     init() {
+      if (this.extend && this.extend.expands) {
+        this.expands = this.extend.expands;
+      }
       this.ready = true;
+    },
+    nodeExpand(data) {
+      let index = this.expands.indexOf(data.key);
+      if (index < 0) {
+        this.expands.push(data.key);
+        this.toolboxWorker.updateExtend({
+          expands: this.expands,
+        });
+      }
+    },
+    nodeCollapse(data) {
+      let index = this.expands.indexOf(data.key);
+      if (index >= 0) {
+        this.expands.splice(index, 1);
+        this.toolboxWorker.updateExtend({
+          expands: this.expands,
+        });
+      }
     },
     refresh() {
       this.reloadChildren(this.$refs.tree.root);
@@ -267,21 +289,21 @@ export default {
       let param = {
         path: path,
       };
-      let res = await this.wrap.work("hasChildren", param);
+      let res = await this.toolboxWorker.work("hasChildren", param);
       return res;
     },
     async loadChildren(path) {
       let param = {
         path: path,
       };
-      let res = await this.wrap.work("getChildren", param);
+      let res = await this.toolboxWorker.work("getChildren", param);
       return res;
     },
     async get(path) {
       let param = {
         path: path,
       };
-      let res = await this.wrap.work("get", param);
+      let res = await this.toolboxWorker.work("get", param);
       return res.data;
     },
     async doSave() {
@@ -299,7 +321,7 @@ export default {
         return;
       }
 
-      let res = await this.wrap.work("save", param);
+      let res = await this.toolboxWorker.work("save", param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
 
@@ -317,7 +339,7 @@ export default {
       let param = {
         path: path,
       };
-      let res = await this.wrap.work("delete", param);
+      let res = await this.toolboxWorker.work("delete", param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
 

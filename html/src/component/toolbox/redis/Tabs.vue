@@ -1,46 +1,39 @@
 <template>
   <div class="toolbox-redis-tabs">
-    <template v-if="ready">
-      <TabEditor
-        ref="TabEditor"
-        :source="source"
-        :onRemoveTab="onRemoveTab"
-        :onActiveTab="onActiveTab"
-      >
-        <template v-slot:body="{ tab }">
-          <template v-if="tab.extend.type == 'data'">
+    <div class="default-tabs-container">
+      <WorkspaceTabs :source="source" :itemsWorker="toolboxWorker.itemsWorker">
+      </WorkspaceTabs>
+    </div>
+    <div class="default-spans-container">
+      <WorkspaceSpans :source="source" :itemsWorker="toolboxWorker.itemsWorker">
+        <template v-slot:span="{ item }">
+          <template v-if="item.extend.type == 'data'">
             <Data
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :extend="item.extend"
             >
             </Data>
           </template>
-          <template v-else-if="tab.extend.type == 'import'">
+          <template v-else-if="item.extend.type == 'import'">
             <Import
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :extend="item.extend"
             >
             </Import>
           </template>
-          <template v-else-if="tab.extend.type == 'export'">
+          <template v-else-if="item.extend.type == 'export'">
             <Export
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :extend="item.extend"
             >
             </Export>
           </template>
         </template>
-      </TabEditor>
-    </template>
+      </WorkspaceSpans>
+    </div>
   </div>
 </template>
 
@@ -52,7 +45,7 @@ import Export from "./Export.vue";
 
 export default {
   components: { Data, Import, Export },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -62,25 +55,7 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.wrap.doActiveTab = this.doActiveTab;
-      this.wrap.addTab = this.addTab;
-      this.wrap.getTab = this.getTab;
       this.ready = true;
-    },
-    getTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
-    },
-    onRemoveTab(tab) {
-      this.wrap.onRemoveTab(tab);
-    },
-    onActiveTab(tab) {
-      this.wrap.onActiveTab(tab);
-    },
-    addTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.addTab(tab);
-    },
-    doActiveTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.doActiveTab(tab);
     },
   },
   created() {},

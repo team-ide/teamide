@@ -189,7 +189,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "tab", "extend"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -249,7 +249,7 @@ export default {
       let param = Object.assign({}, this.form);
       param.strategyDataList = this.strategyDataList;
 
-      let res = await this.wrap.work("import", param);
+      let res = await this.toolboxWorker.work("import", param);
       res.data = res.data || {};
       return res.data;
     },
@@ -265,7 +265,7 @@ export default {
       let param = {
         taskKey: this.taskKey,
       };
-      let res = await this.wrap.work("importStatus", param);
+      let res = await this.toolboxWorker.work("importStatus", param);
       res.data = res.data || {};
       this.task = res.data.task;
       setTimeout(this.loadStatus, 100);
@@ -277,7 +277,7 @@ export default {
       let param = {
         taskKey: this.taskKey,
       };
-      await this.wrap.work("importStop", param);
+      await this.toolboxWorker.work("importStop", param);
     },
     async cleanTask() {
       if (this.taskKey == null) {
@@ -286,7 +286,7 @@ export default {
       let param = {
         taskKey: this.taskKey,
       };
-      await this.wrap.work("importClean", param);
+      await this.toolboxWorker.work("importClean", param);
     },
   },
   created() {},

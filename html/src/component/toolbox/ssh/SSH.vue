@@ -11,12 +11,15 @@
       "
     />
     <div class="terminal-box-back" ref="terminal_back" />
-    <div class="toolbox-ssh-quickCommand-box pdt-2 pdlr-10">
+    <div class="pdt-2 pdlr-10">
       <el-dropdown ref="quickCommandDropdown" size="mini" trigger="click">
         <span class="el-dropdown-link ft-12 mglr-5 color-orange tm-pointer">
           <span>快速指令</span>
         </span>
-        <el-dropdown-menu slot="dropdown" class="pd-0 bd-0">
+        <el-dropdown-menu
+          slot="dropdown"
+          class="pd-0 bd-0 toolbox-ssh-quickCommand-box"
+        >
           <div class="toolbox-ssh-quickCommand-header">
             <div class="toolbox-ssh-quickCommand-search-box">
               <input
@@ -562,6 +565,10 @@ export default {
   position: relative;
 }
 
+.toolbox-ssh-quickCommand-box {
+  background-color: #363636;
+  color: #ddd;
+}
 .toolbox-ssh-quickCommand-header {
   display: flex;
   margin: 5px 0px;
@@ -577,6 +584,7 @@ export default {
   border: 1px solid #ddd;
   font-size: 12px;
   outline: 0px;
+  background-color: transparent;
 }
 .toolbox-ssh-quickCommand-list {
   height: 300px;

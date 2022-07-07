@@ -1,23 +1,13 @@
 <template>
   <div class="workspace-spans">
     <div class="workspace-spans-body">
-      <template v-for="one in tabs">
+      <template v-for="one in itemsWorker.items">
         <div
           :key="one.key"
           class="workspace-spans-one"
-          :class="{ active: one == activeTab }"
+          :class="{ active: one == itemsWorker.activeItem }"
         >
-          <template v-if="one.isToolbox">
-            <ToolboxEditor
-              :ref="`span-${one.key}`"
-              :source="source"
-              :toolboxType="one.toolboxType"
-              :toolboxId="one.toolboxId"
-              :openId="one.openId"
-              :extend="one.extend"
-            >
-            </ToolboxEditor>
-          </template>
+          <slot name="span" :item="one" :ref="`span-${one.key}`"></slot>
         </div>
       </template>
     </div>
@@ -27,35 +17,33 @@
 <script>
 export default {
   components: {},
-  props: ["source", "tabs", "activeTab"],
+  props: ["source", "itemsWorker"],
   data() {
     return {};
   },
   computed: {},
   watch: {
-    activeTab() {
+    "itemsWorker.activeItem"() {
       this.$nextTick(() => {
-        this.onActiveTabFocue();
+        this.onActiveItemFocue();
       });
     },
   },
   methods: {
     init() {},
-    onActiveTabFocue() {
-      if (this.activeTab) {
-        let slot = this.getTabSpanSlot(this.activeTab);
+    onActiveItemFocue() {
+      if (this.itemsWorker.activeItem) {
+        let slot = this.getItemSpanSlot(this.itemsWorker.activeItem);
         if (slot == null) {
           return;
         }
         slot.onFocus && slot.onFocus();
       }
     },
-    getTabSpanSlot(tab) {
-      let refs = this.$refs[`span-${tab == null ? "" : tab.key}`];
-      if (refs != null && refs.length > 0) {
-        return refs[0];
-      }
-      return refs;
+    getItemSpanSlot(item) {
+      let index = this.itemsWorker.items.indexOf(item);
+      let $vue = this.$children[index];
+      return $vue;
     },
   },
   created() {},

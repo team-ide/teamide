@@ -31,7 +31,7 @@
           @mouseup="tabMouseup(one)"
         >
           <span
-            class="text"
+            class="workspace-tabs-one-text"
             @click="toSelectTab(one)"
             @dblclick="toCopyTab(one)"
           >
@@ -311,7 +311,7 @@ export default {
 .workspace-tabs-one.active {
   background-color: #172029;
 }
-.workspace-tabs-one .text {
+.workspace-tabs-one .workspace-tabs-one-text {
   display: flex;
   height: 100%;
   align-items: center;

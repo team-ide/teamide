@@ -3,11 +3,17 @@ import tool from "@/tool/index.js";
 const newToolboxWorker = function (workerOption) {
     workerOption = workerOption || {};
     let itemsWorker = tool.newItemsWorker({
-        onRemoveItem() {
-
+        async onRemoveItem(item) {
+            let res = await server.toolbox.closeTab({ tabId: item.tabId });
+            if (res.code != 0) {
+                tool.error(res.msg);
+            }
         },
-        onActiveItem() {
-
+        async onActiveItem(item) {
+            let res = await server.toolbox.openTab({ tabId: item.tabId });
+            if (res.code != 0) {
+                tool.error(res.msg);
+            }
         },
     });
     const worker = {

@@ -27,6 +27,10 @@ Vue.component('Register', Register);
 
 import Workspace from './workspace/Index.vue'
 Vue.component('Workspace', Workspace);
+import WorkspaceTabs from './workspace/Tabs.vue'
+Vue.component('WorkspaceTabs', WorkspaceTabs);
+import WorkspaceSpans from './workspace/Spans.vue'
+Vue.component('WorkspaceSpans', WorkspaceSpans);
 
 import IconFont from './icon/IconFont.vue'
 Vue.component('IconFont', IconFont);
@@ -73,7 +77,7 @@ Vue.component('ToolboxRedisEditor', ToolboxRedisEditor);
 import ToolboxKafkaEditor from './toolbox/kafka/Index.vue'
 Vue.component('ToolboxKafkaEditor', ToolboxKafkaEditor);
 
-import ToolboxZookeeperEditor from './toolbox/Zookeeper.vue'
+import ToolboxZookeeperEditor from './toolbox/zookeeper/Index.vue'
 Vue.component('ToolboxZookeeperEditor', ToolboxZookeeperEditor);
 
 import ToolboxElasticsearchEditor from './toolbox/elasticsearch/Index.vue'

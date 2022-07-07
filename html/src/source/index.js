@@ -340,6 +340,40 @@ source.initToolboxGroups = async () => {
     }
 }
 
+source.getQuickCommandType = (name) => {
+    if (source.quickCommandTypes == null) {
+        return null;
+    }
+    let res = null;
+    source.quickCommandTypes.forEach((one) => {
+        if (one.name == name) {
+            res = one;
+        }
+    });
+    return res;
+}
+source.initToolboxQuickCommands = async () => {
+    let res = await server.toolbox.quickCommand.query({});
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let quickCommands = res.data.quickCommands || [];
+
+        let quickCommandSSHCommands = [];
+        let quickCommandTypeSSHCommand = source.getQuickCommandType("SSH Command");
+
+        quickCommands.forEach((one) => {
+            if (quickCommandTypeSSHCommand) {
+                if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
+                    quickCommandSSHCommands.push(one);
+                }
+            }
+        });
+        source.quickCommands = quickCommands;
+        source.quickCommandSSHCommands = quickCommandSSHCommands;
+    }
+}
+
 let refreshPowers = function () {
     source.powerLinks = [];
     source.frame.headerNavs = getPowerNavs(headerNavs);

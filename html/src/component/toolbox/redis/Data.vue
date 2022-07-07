@@ -273,15 +273,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "tab",
-    "option",
-    "extend",
-    "wrap",
-  ],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -358,7 +350,7 @@ export default {
         key: key,
         valueSize: Number(this.form.valueSize),
       };
-      let res = await this.wrap.work("get", param);
+      let res = await this.toolboxWorker.work("get", param);
       let data = res.data || {};
       return data;
     },
@@ -475,7 +467,7 @@ export default {
       }
     },
     async doDo(data) {
-      let res = await this.wrap.work("do", data);
+      let res = await this.toolboxWorker.work("do", data);
       if (res.code != 0) {
         this.tool.error(res.msg);
       } else {
@@ -489,7 +481,7 @@ export default {
       this.form.valueSize = Number(this.form.valueSize);
       Object.assign(param, this.form);
       param.doType = "set";
-      let res = await this.wrap.work("do", param);
+      let res = await this.toolboxWorker.work("do", param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
 
@@ -515,7 +507,7 @@ export default {
 }
 .toolbox-redis-value-box {
   width: 100%;
-  height: calc(100% - 300px);
+  height: calc(100% - 330px);
 }
 .toolbox-redis-form-box .el-form .el-form-item {
   padding: 0px 10px;

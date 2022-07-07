@@ -6,9 +6,8 @@
           <Keys
             ref="Keys"
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
+            :extend="extend"
           >
           </Keys>
         </tm-layout>
@@ -16,9 +15,8 @@
         <tm-layout width="auto">
           <Tabs
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
+            :extend="extend"
           >
           </Tabs>
         </tm-layout>
@@ -34,7 +32,7 @@ import Tabs from "./Tabs";
 
 export default {
   components: { Keys, Tabs },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,

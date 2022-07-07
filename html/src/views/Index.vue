@@ -50,34 +50,26 @@ export default {
     return {};
   },
   computed: {},
-  watch: {},
+  watch: {
+    "source.login.user"() {
+      this.initData();
+    },
+  },
   methods: {
-    async init() {
-      await this.source.initToolboxGroups();
-      this.initOpens();
-      let iconFonts = [
-        "teamide-database",
-        "teamide-redis",
-        "teamide-elasticsearch",
-        "teamide-zookeeper",
-        "teamide-kafka",
-        "teamide-ftp",
-        "teamide-ssh",
-      ];
-      for (let i = 0; i < 20; i++) {
-        let item = {};
-        item.key = "key:item:" + i;
-        item.name = "name:item:" + i;
-        item.title = "title:item:" + i;
-        item.show = true;
-        item.isToolbox = true;
-        item.toolboxType = "other";
-        item.iconFont = iconFonts[i % iconFonts.length];
-        item.extend = {
-          type: "format",
-        };
-        // this.addMainItem(item);
+    initData() {
+      if (this.source.login.user == null) {
+        return;
       }
+      if (this.initDataed) {
+        return;
+      }
+      this.initDataed = true;
+      this.source.initToolboxGroups();
+      this.source.initToolboxQuickCommands();
+      this.initOpens();
+    },
+    init() {
+      this.initData();
     },
     showSwitchToolboxType() {
       this.$refs.ToolboxType.showSwitch();

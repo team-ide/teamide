@@ -11,29 +11,34 @@
     <div class="workspace-header"></div>
     <div class="workspace-main">
       <div class="workspace-main-tabs-container">
-        <Tabs :source="source" :itemsWorker="mainItemsWorker">
+        <WorkspaceTabs :source="source" :itemsWorker="mainItemsWorker">
           <slot name="mainTabLeftExtend" slot="leftExtend"></slot>
           <slot name="mainTabRightExtend" slot="rightExtend"></slot>
-        </Tabs>
+        </WorkspaceTabs>
       </div>
       <div class="workspace-main-spans-container">
-        <Spans
-          :source="source"
-          :tabs="mainItemsWorker.items"
-          :activeTab="mainItemsWorker.activeItem"
-        >
-        </Spans>
+        <WorkspaceSpans :source="source" :itemsWorker="mainItemsWorker">
+          <template v-slot:span="{ item }">
+            <template v-if="item.isToolbox">
+              <ToolboxEditor
+                :source="source"
+                :toolboxType="item.toolboxType"
+                :toolboxId="item.toolboxId"
+                :openId="item.openId"
+                :extend="item.extend"
+              >
+              </ToolboxEditor>
+            </template>
+          </template>
+        </WorkspaceSpans>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import Tabs from "./Tabs.vue";
-import Spans from "./Spans.vue";
-
 export default {
-  components: { Tabs, Spans },
+  components: {},
   props: ["source", "onMainRemoveItem", "onMainActiveItem"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
@@ -93,6 +98,17 @@ export default {
   border-bottom: 1px solid #4e4e4e;
 }
 .workspace-main-spans-container {
+  width: 100%;
+  height: calc(100% - 30px);
+  position: relative;
+}
+.default-tabs-container {
+  width: 100%;
+  height: 30px;
+  position: relative;
+  border-bottom: 1px solid #4e4e4e;
+}
+.default-spans-container {
   width: 100%;
   height: calc(100% - 30px);
   position: relative;
