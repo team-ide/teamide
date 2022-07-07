@@ -64,7 +64,7 @@
                         <div style="width: 150px">
                           <div
                             class="tm-btn color-grey tm-btn-xs"
-                            @click="wrap.showData(one)"
+                            @click="toolboxWorker.showData(one)"
                             title="查看"
                           >
                             <i class="mdi mdi-eye-outline"></i>
@@ -106,15 +106,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "tab",
-    "option",
-    "indexName",
-    "wrap",
-  ],
+  props: ["source", "indexName", "toolboxWorker"],
   data() {
     return {
       ready: false,
@@ -151,7 +143,7 @@ export default {
       }
     },
     rowDbClick(data) {
-      this.wrap.showData(data);
+      this.toolboxWorker.showData(data);
     },
     toDelete(data) {
       let indexName = data.indexName;
@@ -171,8 +163,8 @@ export default {
       let data = {
         indexName: indexName,
       };
-      let mapping = await this.wrap.getMapping(indexName);
-      this.wrap.showDataForm(data, mapping, async (m) => {
+      let mapping = await this.toolboxWorker.getMapping(indexName);
+      this.toolboxWorker.showDataForm(data, mapping, async (m) => {
         let flag = await this.doInsert(m);
         return flag;
       });
@@ -183,7 +175,7 @@ export default {
         doc: data.doc,
         id: data.id,
       };
-      let res = await this.wrap.work("insertData", param);
+      let res = await this.toolboxWorker.work("insertData", param);
       if (res.code == 0) {
         await this.toSearch();
         return true;
@@ -198,8 +190,8 @@ export default {
         doc: data._source,
         id: data._id + "xxx",
       };
-      let mapping = await this.wrap.getMapping(indexName);
-      this.wrap.showDataForm(param, mapping, async (m) => {
+      let mapping = await this.toolboxWorker.getMapping(indexName);
+      this.toolboxWorker.showDataForm(param, mapping, async (m) => {
         let flag = await this.doInsert(m);
         return flag;
       });
@@ -211,8 +203,8 @@ export default {
         doc: data._source,
         id: data._id,
       };
-      let mapping = await this.wrap.getMapping(indexName);
-      this.wrap.showDataForm(param, mapping, async (m) => {
+      let mapping = await this.toolboxWorker.getMapping(indexName);
+      this.toolboxWorker.showDataForm(param, mapping, async (m) => {
         let flag = await this.doUpdate(m);
         return flag;
       });
@@ -223,7 +215,7 @@ export default {
         doc: data.doc,
         id: data.id,
       };
-      let res = await this.wrap.work("updateData", param);
+      let res = await this.toolboxWorker.work("updateData", param);
       if (res.code == 0) {
         await this.toSearch();
         return true;
@@ -237,7 +229,7 @@ export default {
         indexName: indexName,
         id: data._id,
       };
-      let res = await this.wrap.work("deleteData", param);
+      let res = await this.toolboxWorker.work("deleteData", param);
       if (res.code == 0) {
         this.doSearch();
         return true;
@@ -250,7 +242,7 @@ export default {
       this.searchForm.pageIndex = Number(this.searchForm.pageIndex);
       this.searchForm.pageSize = Number(this.searchForm.pageSize);
       Object.assign(param, this.searchForm);
-      let res = await this.wrap.work("search", param);
+      let res = await this.toolboxWorker.work("search", param);
       res.data = res.data || {};
       let result = res.data.result || {};
       let hits = result.hits || {};

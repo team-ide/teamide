@@ -6,25 +6,18 @@
           <Topic
             ref="Topic"
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
+            :extend="extend"
           >
           </Topic>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <Tabs
-            :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
-          >
-          </Tabs>
+          <Tabs :source="source" :toolboxWorker="toolboxWorker"> </Tabs>
         </tm-layout>
       </tm-layout>
-      <TopicForm :source="source" :toolbox="toolbox" :wrap="wrap"> </TopicForm>
-      <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
+      <TopicForm :source="source" :toolboxWorker="toolboxWorker"> </TopicForm>
+      <ShowData :source="source" :toolboxWorker="toolboxWorker"> </ShowData>
     </template>
   </div>
 </template>
@@ -37,7 +30,7 @@ import TopicForm from "./TopicForm";
 import ShowData from "./ShowData";
 export default {
   components: { Topic, Tabs, TopicForm, ShowData },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,

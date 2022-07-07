@@ -92,7 +92,7 @@
                         <div style="width: 140px">
                           <div
                             class="tm-btn color-grey tm-btn-xs"
-                            @click="wrap.showData(one)"
+                            @click="toolboxWorker.showData(one)"
                           >
                             查看
                           </div>
@@ -132,7 +132,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "tab", "option", "topic", "wrap"],
+  props: ["source", "topic", "toolboxWorker"],
   data() {
     return {
       ready: false,
@@ -171,7 +171,7 @@ export default {
       }
     },
     rowDbClick(data) {
-      this.wrap.showData(data);
+      this.toolboxWorker.showData(data);
     },
     toPush() {
       let data = {
@@ -190,7 +190,7 @@ export default {
       let data = dataList[0];
       let param = {};
       Object.assign(param, data);
-      let res = await this.wrap.work("push", param);
+      let res = await this.toolboxWorker.work("push", param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -225,7 +225,7 @@ export default {
     async doCommit(data) {
       let param = {};
       Object.assign(param, data);
-      let res = await this.wrap.work("commit", param);
+      let res = await this.toolboxWorker.work("commit", param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -257,7 +257,7 @@ export default {
     async doDelete(data) {
       let param = {};
       Object.assign(param, data);
-      let res = await this.wrap.work("deleteRecords", param);
+      let res = await this.toolboxWorker.work("deleteRecords", param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -269,7 +269,7 @@ export default {
       this.msgList = null;
       let param = {};
       Object.assign(param, this.pullForm);
-      let res = await this.wrap.work("pull", param);
+      let res = await this.toolboxWorker.work("pull", param);
       res.data = res.data || {};
       let msgList = res.data.msgList || [];
       msgList.forEach((one) => {

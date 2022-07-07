@@ -68,7 +68,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -111,7 +111,7 @@ export default {
         type: "data",
         topic: data.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     dataContextmenu(data) {
       let menus = [];
@@ -150,7 +150,7 @@ export default {
         numPartitions: Number(data.numPartitions),
         replicationFactor: Number(data.replicationFactor),
       };
-      let res = await this.wrap.work("createTopic", param);
+      let res = await this.toolboxWorker.work("createTopic", param);
       if (res.code == 0) {
         await this.loadTopics();
         return true;
@@ -173,7 +173,7 @@ export default {
       let param = {
         topic: topic,
       };
-      let res = await this.wrap.work("deleteTopic", param);
+      let res = await this.toolboxWorker.work("deleteTopic", param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.loadTopics();
@@ -182,7 +182,7 @@ export default {
     async loadTopics() {
       this.topics = null;
       let param = {};
-      let res = await this.wrap.work("topics", param);
+      let res = await this.toolboxWorker.work("topics", param);
       res.data = res.data || {};
       res.data.topics = res.data.topics || [];
       let topics = [];

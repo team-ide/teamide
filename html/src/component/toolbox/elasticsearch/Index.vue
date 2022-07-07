@@ -6,29 +6,22 @@
           <IndexNames
             ref="ToolboxElasticsearchIndexNames"
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
+            :extend="extend"
           >
           </IndexNames>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
-          <Tabs
-            :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
-          >
-          </Tabs>
+          <Tabs :source="source" :toolboxWorker="toolboxWorker"> </Tabs>
         </tm-layout>
       </tm-layout>
-      <IndexForm :source="source" :toolbox="toolbox" :wrap="wrap"> </IndexForm>
-      <ReindexForm :source="source" :toolbox="toolbox" :wrap="wrap">
+      <IndexForm :source="source" :toolboxWorker="toolboxWorker"> </IndexForm>
+      <ReindexForm :source="source" :toolboxWorker="toolboxWorker">
       </ReindexForm>
-      <DataForm :source="source" :toolbox="toolbox" :wrap="wrap"> </DataForm>
-      <ShowData :source="source" :toolbox="toolbox" :wrap="wrap"> </ShowData>
-      <MappingForm :source="source" :toolbox="toolbox" :wrap="wrap">
+      <DataForm :source="source" :toolboxWorker="toolboxWorker"> </DataForm>
+      <ShowData :source="source" :toolboxWorker="toolboxWorker"> </ShowData>
+      <MappingForm :source="source" :toolboxWorker="toolboxWorker">
       </MappingForm>
     </template>
   </div>
@@ -53,7 +46,7 @@ export default {
     DataForm,
     ShowData,
   },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,

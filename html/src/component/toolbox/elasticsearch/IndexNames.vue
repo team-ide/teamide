@@ -71,7 +71,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -85,7 +85,7 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.wrap.getMapping = this.getMapping;
+      this.toolboxWorker.getMapping = this.getMapping;
       this.ready = true;
       this.loadIndexNames();
     },
@@ -115,7 +115,7 @@ export default {
         type: "data",
         indexName: data.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     dataContextmenu(data) {
       let menus = [];
@@ -171,7 +171,7 @@ export default {
         indexName: data.indexName,
         mapping: data.mapping,
       };
-      let res = await this.wrap.work("createIndex", param);
+      let res = await this.toolboxWorker.work("createIndex", param);
       if (res.code == 0) {
         await this.loadIndexNames();
         return true;
@@ -180,7 +180,7 @@ export default {
       }
     },
     toReindex(data) {
-      this.wrap.showReindexForm(
+      this.toolboxWorker.showReindexForm(
         {
           indexName: data.name,
         },
@@ -195,7 +195,7 @@ export default {
         sourceIndexName: data.sourceIndexName,
         destIndexName: data.destIndexName,
       };
-      let res = await this.wrap.work("reindex", param);
+      let res = await this.toolboxWorker.work("reindex", param);
       if (res.code == 0) {
         await this.loadIndexNames();
         return true;
@@ -217,7 +217,7 @@ export default {
     async toUpdateMapping(data) {
       let indexName = data.name;
       let mapping = await this.getMapping(indexName);
-      this.wrap.showMappingForm(
+      this.toolboxWorker.showMappingForm(
         {
           indexName: indexName,
           mapping: mapping,
@@ -232,7 +232,7 @@ export default {
       let param = {
         indexName: indexName,
       };
-      let res = await this.wrap.work("deleteIndex", param);
+      let res = await this.toolboxWorker.work("deleteIndex", param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.loadIndexNames();
@@ -241,7 +241,7 @@ export default {
     async loadIndexNames() {
       this.indexNames = null;
       let param = {};
-      let res = await this.wrap.work("indexNames", param);
+      let res = await this.toolboxWorker.work("indexNames", param);
       res.data = res.data || {};
       res.data.indexNames = res.data.indexNames || [];
       let indexNames = [];
@@ -257,7 +257,7 @@ export default {
       let param = {
         indexName: indexName,
       };
-      let res = await this.wrap.work("getMapping", param);
+      let res = await this.toolboxWorker.work("getMapping", param);
       res.data = res.data || {};
       res.data.mapping = res.data.mapping || {};
       return res.data.mapping;
@@ -267,7 +267,7 @@ export default {
         indexName: indexName,
         mapping: mapping,
       };
-      let res = await this.wrap.work("putMapping", param);
+      let res = await this.toolboxWorker.work("putMapping", param);
       if (res.code != 0) {
         return false;
       }

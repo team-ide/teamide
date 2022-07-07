@@ -46,7 +46,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -152,8 +152,8 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.wrap.showIndexForm = this.show;
-    this.wrap.hideIndexForm = this.hide;
+    this.toolboxWorker.showIndexForm = this.show;
+    this.toolboxWorker.hideIndexForm = this.hide;
     this.init();
   },
 };
