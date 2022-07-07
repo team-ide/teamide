@@ -93,6 +93,8 @@ export const icon16Path = getAssetPath('icon-16.png');
 source.icon16Path = icon16Path;
 export const icon32Path = getAssetPath('icon-32.png');
 source.icon32Path = icon32Path;
+export const icon64Path = getAssetPath('icon-64.png');
+source.icon64Path = icon64Path;
 
 let serverUrl = resolveHtmlPath('index.html')
 
@@ -377,7 +379,11 @@ app
 
 let tray: Tray | null = null;
 app.on('ready', async () => {
-  tray = new Tray(icon16Path)
+  if (process.platform === 'darwin') {
+    tray = new Tray(icon16Path)
+  } else {
+    tray = new Tray(icon64Path)
+  }
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '退出',

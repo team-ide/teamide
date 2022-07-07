@@ -27,7 +27,7 @@ var (
 	// 工具 权限
 
 	// PowerToolbox 工具基本 权限
-	PowerToolbox          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerToolbox          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerToolboxPage      = base.AppendPower(&base.PowerAction{Action: "toolbox_page", Text: "工具页面", Parent: PowerToolbox, ShouldLogin: true, StandAlone: true})
 	PowerToolboxList      = base.AppendPower(&base.PowerAction{Action: "toolbox_list", Text: "工具上下文", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxInsert    = base.AppendPower(&base.PowerAction{Action: "toolbox_insert", Text: "工具新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})

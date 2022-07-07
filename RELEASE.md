@@ -7,3 +7,4 @@
 1. 重构Workspace板块
 2. 数据库SQL改为monaco-editor，添加右击执行选中等
 3. redis、zookeeper、database记录查询历史，下次打开自动展开
+4. 工具箱列表展示根据名称排序

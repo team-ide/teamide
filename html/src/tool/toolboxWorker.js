@@ -15,6 +15,9 @@ const newToolboxWorker = function (workerOption) {
                 tool.error(res.msg);
             }
         },
+        async toCopyItem(item) {
+            worker.openTabByExtend(item.extend, item, item.createTime)
+        },
     });
     const worker = {
         toolboxId: workerOption.toolboxId,
@@ -102,12 +105,15 @@ const newToolboxWorker = function (workerOption) {
                 tool.error(res.msg);
             }
         },
-        async openTabByExtend(extend, fromItem) {
+        async openTabByExtend(extend, fromItem, createTime) {
             let param = {
                 openId: worker.openId,
                 toolboxId: worker.toolboxId,
                 extend: JSON.stringify(extend || {}),
             };
+            if (createTime) {
+                param.createTime = createTime;
+            }
             let res = await server.toolbox.openTab(param);
             let openTab = null;
             if (res.code != 0) {
@@ -133,6 +139,7 @@ const newToolboxWorker = function (workerOption) {
                 extend: extend,
                 tabId: data.tabId,
                 openId: worker.openId,
+                createTime: data.createTime,
                 comment: "",
             };
 

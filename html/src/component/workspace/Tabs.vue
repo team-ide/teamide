@@ -30,11 +30,7 @@
           @contextmenu.prevent="tabContextmenu(one)"
           @mouseup="tabMouseup(one)"
         >
-          <span
-            class="workspace-tabs-one-text"
-            @click="toSelectTab(one)"
-            @dblclick="toCopyTab(one)"
-          >
+          <span class="workspace-tabs-one-text" @click="toSelectTab(one)">
             <template v-if="tool.isNotEmpty(one.iconFont)">
               <IconFont class="mgr-5" :class="one.iconFont"> </IconFont>
             </template>

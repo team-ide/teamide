@@ -36,22 +36,17 @@ export default {
     init() {},
     onActiveItemFocue() {
       if (this.itemsWorker.activeItem) {
-        let slot = this.getItemSpanSlot(this.itemsWorker.activeItem);
-        if (slot == null) {
+        let find = null;
+        this.$children.forEach((one) => {
+          let el = this.tool.jQuery(one.$el).parent();
+          if (el.hasClass("active")) {
+            find = one;
+          }
+        });
+        if (find == null) {
           return;
         }
-        slot.onFocus && slot.onFocus();
-      }
-    },
-    getItemSpanSlot(item) {
-      let find = null;
-      this.$children.forEach((one) => {
-        if (item == one.item) {
-          find = one;
-        }
-      });
-      if (find) {
-        return find;
+        find.onFocus && find.onFocus();
       }
     },
   },

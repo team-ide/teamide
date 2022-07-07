@@ -128,7 +128,7 @@ export default {
       item.createTime = open.createTime;
       item.extend = this.tool.getOptionJSON(open.extend);
 
-      if (item.extend.isFTP) {
+      if (item.toolboxType == "ssh" || item.extend.isFTP) {
         item.extend.local = item.extend.local || {};
         item.extend.remote = item.extend.remote || {};
         item.extend.local.dir = item.extend.local.dir || "";

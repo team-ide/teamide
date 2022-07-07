@@ -66,6 +66,7 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 		sql += " AND name like ?"
 		values = append(values, fmt.Sprint("%", toolbox.Name, "%"))
 	}
+	sql += " ORDER BY NAME ASC "
 
 	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {
