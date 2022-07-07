@@ -128,7 +128,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -265,7 +265,7 @@ export default {
       data.updateWhereList = updateWhereList;
       data.deleteList = deleteList;
 
-      let res = await this.wrap.work("dataListSql", data);
+      let res = await this.toolboxWorker.work("dataListSql", data);
       if (res.code != 0) {
         return;
       }
@@ -277,7 +277,7 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.wrap.showExportSql = this.show;
+    this.toolboxWorker.showExportSql = this.show;
     this.init();
   },
 };

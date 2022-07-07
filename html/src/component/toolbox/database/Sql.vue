@@ -44,70 +44,76 @@
       </tm-layout>
       <tm-layout-bar bottom></tm-layout-bar>
       <tm-layout height="auto">
-        <TabEditor
-          ref="TabEditor"
-          :source="source"
-          :onRemoveTab="onRemoveTab"
-          :onActiveTab="onActiveTab"
-          class="sql-execute-tabs"
-        >
-          <template v-slot:body="{ tab }">
-            <template v-if="tab.isExecuteList != null">
-              <div class="sql-execute-list">
-                <template v-for="(one, index) in executeList">
-                  <div :key="index" class="sql-execute-one mgb-10">
-                    <div class="color-grey">
-                      <span class="pdr-5">{{ one.startTime }}</span>
-                      执行
-                    </div>
-                    <div>
-                      <span class="">{{ one.sql }}</span>
-                    </div>
-                    <template v-if="one.error">
-                      <div class="color-orange">
-                        执行异常
-                        <span class="color-orange pdlr-5">{{ one.error }}</span>
+        <div class="default-tabs-container">
+          <WorkspaceTabs :source="source" :itemsWorker="sqlItemsWorker">
+          </WorkspaceTabs>
+        </div>
+        <div class="default-spans-container">
+          <WorkspaceSpans :source="source" :itemsWorker="sqlItemsWorker">
+            <template v-slot:span="{ item }">
+              <template v-if="item.isExecuteList != null">
+                <div class="sql-execute-list">
+                  <template v-for="(one, index) in executeList">
+                    <div :key="index" class="sql-execute-one mgb-10">
+                      <div class="color-grey">
+                        <span class="pdr-5">{{ one.startTime }}</span>
+                        执行
                       </div>
-                    </template>
-                    <template v-else>
                       <div>
-                        <span class="color-green pdr-5"> 执行成功 </span>
-                        <template
-                          v-if="one.rowsAffected == 0 || one.rowsAffected > 0"
-                        >
-                          <span class="">
-                            受影响行数:
-                            <span class="color-green pdlr-5">
-                              {{ one.rowsAffected }}
-                            </span>
-                          </span>
-                        </template>
-                        <template v-if="one.dataList != null">
-                          <span class="">
-                            查询行数:
-                            <span class="color-green pdlr-5">
-                              {{ one.dataList.length }}
-                            </span>
-                          </span>
-                        </template>
-                        <span>
-                          耗时:
-                          <span class="pdlr-5">{{ one.useTime }}毫秒</span>
-                        </span>
+                        <span class="">{{ one.sql }}</span>
                       </div>
-                    </template>
-                  </div>
-                </template>
-              </div>
+                      <template v-if="one.error">
+                        <div class="color-orange">
+                          执行异常
+                          <span class="color-orange pdlr-5">{{
+                            one.error
+                          }}</span>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <div>
+                          <span class="color-green pdr-5"> 执行成功 </span>
+                          <template
+                            v-if="one.rowsAffected == 0 || one.rowsAffected > 0"
+                          >
+                            <span class="">
+                              受影响行数:
+                              <span class="color-green pdlr-5">
+                                {{ one.rowsAffected }}
+                              </span>
+                            </span>
+                          </template>
+                          <template v-if="one.dataList != null">
+                            <span class="">
+                              查询行数:
+                              <span class="color-green pdlr-5">
+                                {{ one.dataList.length }}
+                              </span>
+                            </span>
+                          </template>
+                          <span>
+                            耗时:
+                            <span class="pdlr-5">{{ one.useTime }}毫秒</span>
+                          </span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+              <template v-else-if="item.isSelect">
+                <div class="sql-execute-select">
+                  <SqlSelectDataList
+                    :source="source"
+                    :toolboxWorker="toolboxWorker"
+                    :item="item"
+                  >
+                  </SqlSelectDataList>
+                </div>
+              </template>
             </template>
-            <template v-else-if="tab.isSelect">
-              <div class="sql-execute-select">
-                <SqlSelectDataList :source="source" :wrap="wrap" :tab="tab">
-                </SqlSelectDataList>
-              </div>
-            </template>
-          </template>
-        </TabEditor>
+          </WorkspaceSpans>
+        </div>
       </tm-layout>
     </tm-layout>
   </div>
@@ -119,11 +125,17 @@ import SqlSelectDataList from "./SqlSelectDataList.vue";
 
 export default {
   components: { SqlSelectDataList },
-  props: ["source", "wrap", "extend", "databases", "tab"],
+  props: ["source", "toolboxWorker", "extend", "databases", "tabId"],
   data() {
+    let sqlItemsWorker = this.tool.newItemsWorker({
+      async onRemoveItem(item) {},
+      async onActiveItem(item) {},
+    });
+
     return {
       ready: false,
       executeSQL: null,
+      sqlItemsWorker: sqlItemsWorker,
       form: {
         database: null,
         openTransaction: true,
@@ -145,7 +157,7 @@ export default {
         this.lastSavedDatabase = this.form.database;
         keyValueMap.database = this.form.database;
       }
-      await this.wrap.updateOpenTabExtend(this.tab.tabId, keyValueMap);
+      await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
       setTimeout(this.autoSaveSql, 300);
     },
     init() {
@@ -184,7 +196,7 @@ export default {
       let data = Object.assign({}, this.form);
 
       data.executeSQL = executeSQL;
-      let res = await this.wrap.work("executeSQL", data);
+      let res = await this.toolboxWorker.work("executeSQL", data);
       if (res.code != 0) {
         return;
       }
@@ -233,18 +245,16 @@ export default {
       // this.doActiveTab(tab);
     },
     getTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
+      return this.sqlItemsWorker.getItem(tab);
     },
-    onRemoveTab(tab) {},
-    onActiveTab(tab) {},
     addTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.addTab(tab);
+      this.sqlItemsWorker.addItem(tab);
     },
     cleanTab() {
-      return this.$refs.TabEditor && this.$refs.TabEditor.toDeleteAll();
+      return this.sqlItemsWorker.toRemoveAll();
     },
     doActiveTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.doActiveTab(tab);
+      return this.sqlItemsWorker.toActiveItem(tab);
     },
   },
   created() {},

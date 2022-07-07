@@ -267,7 +267,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "tab", "extend", "database", "table"],
+  props: ["source", "toolboxWorker", "extend", "database", "table"],
   data() {
     return {
       ready: false,
@@ -324,7 +324,7 @@ export default {
   methods: {
     async init() {
       if (this.tool.isNotEmpty(this.table)) {
-        this.tableDetail = await this.wrap.getTableDetail(
+        this.tableDetail = await this.toolboxWorker.getTableDetail(
           this.database,
           this.table
         );
@@ -392,7 +392,7 @@ export default {
       }
       param.exportColumnList = this.exportColumnList;
 
-      let res = await this.wrap.work("export", param);
+      let res = await this.toolboxWorker.work("export", param);
       res.data = res.data || {};
       return res.data;
     },
@@ -408,7 +408,7 @@ export default {
       let param = {
         taskKey: this.taskKey,
       };
-      let res = await this.wrap.work("exportStatus", param);
+      let res = await this.toolboxWorker.work("exportStatus", param);
       res.data = res.data || {};
       this.task = res.data.task;
       setTimeout(this.loadStatus, 100);
@@ -420,13 +420,13 @@ export default {
       let param = {
         taskKey: this.taskKey,
       };
-      await this.wrap.work("exportStop", param);
+      await this.toolboxWorker.work("exportStop", param);
     },
     async cleanTask(taskKey) {
       let param = {
         taskKey: taskKey,
       };
-      await this.wrap.work("exportClean", param);
+      await this.toolboxWorker.work("exportClean", param);
     },
     toDownload() {
       if (this.task == null) {

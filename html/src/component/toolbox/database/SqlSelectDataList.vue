@@ -12,7 +12,7 @@
           <span class="mgl-5">{{ scope.$index + 1 }}</span>
         </template>
       </el-table-column>
-      <template v-for="(column, index) in tab.columnList">
+      <template v-for="(column, index) in item.columnList">
         <el-table-column
           :key="index"
           :prop="column.name"
@@ -38,7 +38,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "wrap", "tab"],
+  props: ["source", "toolboxWorker", "item"],
   data() {
     return {
       dataList: [],
@@ -49,9 +49,9 @@ export default {
   methods: {
     init() {
       let dataList = [];
-      for (let i = 0; i < this.tab.dataList.length; i++) {
+      for (let i = 0; i < this.item.dataList.length; i++) {
         if (i < 50) {
-          dataList.push(this.tab.dataList[i]);
+          dataList.push(this.item.dataList[i]);
         } else {
           break;
         }
@@ -78,7 +78,7 @@ export default {
       }
 
       this.loadmore_ing = true;
-      let allDataList = this.tab.dataList;
+      let allDataList = this.item.dataList;
       let dataList = this.dataList;
       if (allDataList.length <= dataList.length) {
         return;

@@ -407,7 +407,6 @@ export default {
     },
     toInsert(toolboxType, selectGroup) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       let toolboxData = {};
       let optionsJSON = {};
 
@@ -421,7 +420,6 @@ export default {
     },
     toCopy(toolboxType, copy) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       let toolboxData = {};
       Object.assign(toolboxData, copy);
       delete toolboxData.toolboxId;
@@ -438,7 +436,6 @@ export default {
     },
     toUpdate(toolboxType, toolboxData) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       this.updateData = toolboxData;
 
       let optionsJSON = this.tool.getOptionJSON(toolboxData.option);
@@ -452,7 +449,6 @@ export default {
     },
     toDelete(toolboxType, toolboxData) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       this.tool
         .confirm(
           "删除[" +
@@ -516,7 +512,6 @@ export default {
 
     toInsertGroup() {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       let data = {};
       let optionsJSON = {};
 
@@ -528,7 +523,6 @@ export default {
     },
     toUpdateGroup(data) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       this.updateGroupData = data;
 
       let optionsJSON = this.tool.getOptionJSON(data.option);
@@ -541,7 +535,6 @@ export default {
     },
     toDeleteGroup(data) {
       this.tool.stopEvent();
-      // this.source.toolbox.hideToolboxType();
       this.tool
         .confirm(
           "删除工具分组[" + data.name + "]并将该分组下工具移出该组，确定删除？"

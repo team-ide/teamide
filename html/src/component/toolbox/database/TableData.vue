@@ -37,7 +37,7 @@
                     class="part-form-input"
                   >
                     <template
-                      v-for="(one, index) in toolbox.sqlConditionalOperations"
+                      v-for="(one, index) in source.sqlConditionalOperations"
                     >
                       <option :key="index" :value="one.value" :text="one.text">
                         {{ one.text }}
@@ -326,17 +326,7 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "database",
-    "table",
-    "wrap",
-    "extend",
-    "tab",
-  ],
+  props: ["source", "database", "table", "toolboxWorker", "extend", "tabId"],
   data() {
     return {
       ready: false,
@@ -422,7 +412,7 @@ export default {
       this.isInitSearch = false;
     },
     async initTable() {
-      this.tableDetail = await this.wrap.getTableDetail(
+      this.tableDetail = await this.toolboxWorker.getTableDetail(
         this.database,
         this.table
       );
@@ -548,7 +538,7 @@ export default {
       keyValueMap.wheres = this.form.wheres;
       keyValueMap.pageSize = this.pageSize;
       keyValueMap.pageIndex = this.pageIndex;
-      await this.wrap.updateOpenTabExtend(this.tab.tabId, keyValueMap);
+      await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
     },
     async doSearch() {
       if (!this.isInitSearch) {
@@ -597,7 +587,7 @@ export default {
       this.inserts = [];
       this.selects = [];
 
-      let res = await this.wrap.work("dataList", data);
+      let res = await this.toolboxWorker.work("dataList", data);
       res.data = res.data || {};
 
       let dataList = res.data.dataList || [];
@@ -606,7 +596,7 @@ export default {
       dataList.forEach((data) => {
         this.tableDetail.columnList.forEach((column) => {
           if (data[column.name] != null) {
-            data[column.name] = this.wrap.formatDateColumn(
+            data[column.name] = this.toolboxWorker.formatDateColumn(
               column,
               data[column.name]
             );
@@ -780,7 +770,7 @@ export default {
       menus.push({
         text: "查看新增、修改、删除记录SQL",
         onClick: () => {
-          this.wrap.showSaveSql(this.database, this.tableDetail, {
+          this.toolboxWorker.showSaveSql(this.database, this.tableDetail, {
             insertList,
             updateList,
             updateWhereList,
@@ -1020,7 +1010,7 @@ export default {
       data.updateList = updateList;
       data.updateWhereList = updateWhereList;
 
-      let res = await this.wrap.work("saveDataList", data);
+      let res = await this.toolboxWorker.work("saveDataList", data);
       if (res.code != 0) {
         return;
       }
@@ -1043,7 +1033,7 @@ export default {
       data.columnList = this.tableDetail.columnList;
       data.deleteList = deleteList;
 
-      let res = await this.wrap.work("saveDataList", data);
+      let res = await this.toolboxWorker.work("saveDataList", data);
       if (res.code != 0) {
         return;
       }
@@ -1082,7 +1072,11 @@ export default {
       }
     },
     showExportSql() {
-      this.wrap.showExportSql(this.database, this.tableDetail, this.selects);
+      this.toolboxWorker.showExportSql(
+        this.database,
+        this.tableDetail,
+        this.selects
+      );
     },
 
     showSaveSql() {
@@ -1091,7 +1085,7 @@ export default {
       let updateWhereList = this.getUpdateWhereList();
       let deleteList = this.getDeleteList();
 
-      this.wrap.showSaveSql(this.database, this.tableDetail, {
+      this.toolboxWorker.showSaveSql(this.database, this.tableDetail, {
         insertList,
         updateList,
         updateWhereList,

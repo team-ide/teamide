@@ -1,84 +1,79 @@
 <template>
   <div class="toolbox-database-tabs">
-    <template v-if="ready">
-      <TabEditor
-        ref="TabEditor"
-        :source="source"
-        :onRemoveTab="onRemoveTab"
-        :onActiveTab="onActiveTab"
-      >
-        <template v-slot:body="{ tab }">
-          <template v-if="tab.extend.type == 'data'">
+    <div class="default-tabs-container">
+      <WorkspaceTabs :source="source" :itemsWorker="toolboxWorker.itemsWorker">
+      </WorkspaceTabs>
+    </div>
+    <div class="default-spans-container">
+      <WorkspaceSpans :source="source" :itemsWorker="toolboxWorker.itemsWorker">
+        <template v-slot:span="{ item }">
+          <template v-if="item.extend.type == 'data'">
             <TableData
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :database="tab.extend.database"
-              :table="tab.extend.table"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :database="item.extend.database"
+              :table="item.extend.table"
+              :extend="item.extend"
+              :tabId="item.tabId"
             >
             </TableData>
           </template>
-          <template v-else-if="tab.extend.type == 'sql'">
+          <template v-else-if="item.extend.type == 'sql'">
             <Sql
               :source="source"
-              :wrap="wrap"
-              :extend="tab.extend"
+              :toolboxWorker="toolboxWorker"
+              :extend="item.extend"
               :databases="databases"
-              :tab="tab"
+              :tabId="item.tabId"
             >
             </Sql>
           </template>
-          <template v-else-if="tab.extend.type == 'ddl'">
+          <template v-else-if="item.extend.type == 'ddl'">
             <DDL
               :source="source"
-              :wrap="wrap"
-              :database="tab.extend.database"
-              :table="tab.extend.table"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :database="item.extend.database"
+              :table="item.extend.table"
+              :tabId="item.tabId"
             >
             </DDL>
           </template>
-          <template v-if="tab.extend.type == 'table'">
+          <template v-if="item.extend.type == 'table'">
             <Table
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :database="tab.extend.database"
-              :table="tab.extend.table"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :database="item.extend.database"
+              :table="item.extend.table"
+              :extend="item.extend"
+              :tabId="item.tabId"
             >
             </Table>
           </template>
-          <template v-if="tab.extend.type == 'export'">
+          <template v-if="item.extend.type == 'export'">
             <Export
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :database="tab.extend.database"
-              :table="tab.extend.table"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :database="item.extend.database"
+              :table="item.extend.table"
+              :extend="item.extend"
+              :tabId="item.tabId"
             >
             </Export>
           </template>
-          <template v-if="tab.extend.type == 'import'">
+          <template v-if="item.extend.type == 'import'">
             <Import
               :source="source"
-              :toolbox="toolbox"
-              :wrap="wrap"
-              :database="tab.extend.database"
-              :table="tab.extend.table"
-              :extend="tab.extend"
-              :tab="tab"
+              :toolboxWorker="toolboxWorker"
+              :database="item.extend.database"
+              :table="item.extend.table"
+              :extend="item.extend"
+              :tabId="item.tabId"
             >
             </Import>
           </template>
         </template>
-      </TabEditor>
-    </template>
+      </WorkspaceSpans>
+    </div>
   </div>
 </template>
 
@@ -93,36 +88,14 @@ import Import from "./Import";
 
 export default {
   components: { DDL, Sql, Table, TableData, Export, Import },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap", "databases"],
+  props: ["source", "toolboxWorker", "databases"],
   data() {
-    return {
-      ready: false,
-    };
+    return {};
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
-      this.wrap.doActiveTab = this.doActiveTab;
-      this.wrap.addTab = this.addTab;
-      this.wrap.getTab = this.getTab;
-      this.ready = true;
-    },
-    getTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.getTab(tab);
-    },
-    onRemoveTab(tab) {
-      this.wrap.onRemoveTab(tab);
-    },
-    onActiveTab(tab) {
-      this.wrap.onActiveTab(tab);
-    },
-    addTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.addTab(tab);
-    },
-    doActiveTab(tab) {
-      return this.$refs.TabEditor && this.$refs.TabEditor.doActiveTab(tab);
-    },
+    init() {},
   },
   created() {},
   mounted() {

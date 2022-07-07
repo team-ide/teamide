@@ -70,7 +70,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -112,7 +112,7 @@ export default {
     async toExecuteSql() {
       this.executeSqlIng = true;
       let data = Object.assign({}, this.form);
-      let res = await this.wrap.work("createDatabase", data);
+      let res = await this.toolboxWorker.work("createDatabase", data);
       this.error = null;
       this.executeSqlIng = false;
       if (res.code != 0) {
@@ -134,7 +134,7 @@ export default {
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
-      let res = await this.wrap.work("createDatabaseSql", data);
+      let res = await this.toolboxWorker.work("createDatabaseSql", data);
       this.error = null;
       if (res.code != 0) {
         this.error = res.msg;
@@ -148,7 +148,7 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.wrap.showCreateDatabase = this.show;
+    this.toolboxWorker.showCreateDatabase = this.show;
     this.init();
   },
 };

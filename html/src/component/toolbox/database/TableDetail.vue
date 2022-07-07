@@ -43,7 +43,7 @@
                   filterable
                 >
                   <el-option
-                    v-for="(one, index) in toolbox.mysqlColumnTypeInfos"
+                    v-for="(one, index) in source.mysqlColumnTypeInfos"
                     :key="index"
                     :value="one.name"
                     :label="one.name"
@@ -231,7 +231,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolbox", "wrap", "onChange"],
+  props: ["source", "toolboxWorker", "onChange"],
   data() {
     return {
       tableDetail: null,

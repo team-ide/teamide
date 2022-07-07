@@ -6,9 +6,8 @@
           <Database
             ref="ToolboxDatabaseDatabase"
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
+            :extend="extend"
             :databasesChange="databasesChange"
           >
           </Database>
@@ -17,21 +16,19 @@
         <tm-layout width="auto">
           <Tabs
             :source="source"
-            :toolbox="toolbox"
-            :toolboxType="toolboxType"
-            :wrap="wrap"
+            :toolboxWorker="toolboxWorker"
             :databases="databases"
           >
           </Tabs>
         </tm-layout>
       </tm-layout>
-      <ShowExportSql :source="source" :toolbox="toolbox" :wrap="wrap">
+      <ShowExportSql :source="source" :toolboxWorker="toolboxWorker">
       </ShowExportSql>
-      <ShowSaveSql :source="source" :toolbox="toolbox" :wrap="wrap">
+      <ShowSaveSql :source="source" :toolboxWorker="toolboxWorker">
       </ShowSaveSql>
-      <CreateDatabase :source="source" :toolbox="toolbox" :wrap="wrap">
+      <CreateDatabase :source="source" :toolboxWorker="toolboxWorker">
       </CreateDatabase>
-      <Table :source="source" :toolbox="toolbox" :wrap="wrap"> </Table>
+      <Table :source="source" :toolboxWorker="toolboxWorker"> </Table>
     </template>
   </div>
 </template>
@@ -52,7 +49,7 @@ export default {
     ShowSaveSql,
     CreateDatabase,
   },
-  props: ["source", "toolboxType", "toolbox", "option", "wrap"],
+  props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
       ready: false,
@@ -63,9 +60,9 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.wrap.columnIsNumber = this.columnIsNumber;
-      this.wrap.columnIsDate = this.columnIsDate;
-      this.wrap.formatDateColumn = this.formatDateColumn;
+      this.toolboxWorker.columnIsNumber = this.columnIsNumber;
+      this.toolboxWorker.columnIsDate = this.columnIsDate;
+      this.toolboxWorker.formatDateColumn = this.formatDateColumn;
       this.ready = true;
     },
     databasesChange(databases) {

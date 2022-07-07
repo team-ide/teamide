@@ -5,8 +5,7 @@
         class="pd-10"
         ref="TableDetail"
         :source="source"
-        :wrap="wrap"
-        :toolbox="toolbox"
+        :toolboxWorker="toolboxWorker"
         :onChange="onTableDetailChange"
       ></TableDetail>
       <el-form
@@ -140,7 +139,7 @@ import TableDetail from "./TableDetail.vue";
 
 export default {
   components: { TableDetail },
-  props: ["source", "toolbox", "wrap", "tab", "database", "table"],
+  props: ["source", "toolboxWorker", "database", "table"],
   data() {
     return {
       showSQL: null,
@@ -201,7 +200,10 @@ export default {
     async init() {
       let tableDetail = null;
       if (this.tool.isNotEmpty(this.table)) {
-        tableDetail = await this.wrap.getTableDetail(this.database, this.table);
+        tableDetail = await this.toolboxWorker.getTableDetail(
+          this.database,
+          this.table
+        );
       }
 
       this.initForm(this.database, tableDetail);
@@ -280,9 +282,9 @@ export default {
       this.executeSqlIng = true;
       let res = null;
       if (this.isInsert) {
-        res = await this.wrap.work("createTable", data);
+        res = await this.toolboxWorker.work("createTable", data);
       } else {
-        res = await this.wrap.work("updateTable", data);
+        res = await this.toolboxWorker.work("updateTable", data);
       }
       this.executeSqlIng = false;
       this.error = null;
@@ -291,7 +293,7 @@ export default {
         return;
       }
       this.tool.success("执行成功");
-      let tableDetail = await this.wrap.getTableDetail(
+      let tableDetail = await this.toolboxWorker.getTableDetail(
         data.database,
         data.name
       );
@@ -315,9 +317,9 @@ export default {
       let data = this.getFormData();
       let res = null;
       if (this.isInsert) {
-        res = await this.wrap.work("createTableSql", data);
+        res = await this.toolboxWorker.work("createTableSql", data);
       } else {
-        res = await this.wrap.work("updateTableSql", data);
+        res = await this.toolboxWorker.work("updateTableSql", data);
       }
       this.error = null;
       if (res.code != 0) {

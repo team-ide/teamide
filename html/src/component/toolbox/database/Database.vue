@@ -30,6 +30,8 @@
               :expand-on-click-node="false"
               @node-click="nodeClick"
               @node-contextmenu="nodeContextmenu"
+              @node-expand="nodeExpand"
+              @node-collapse="nodeCollapse"
             >
               <span
                 class="toolbox-editor-tree-span"
@@ -84,19 +86,11 @@
 <script>
 export default {
   components: {},
-  props: [
-    "source",
-    "toolboxType",
-    "toolbox",
-    "option",
-    "wrap",
-    "databasesChange",
-  ],
+  props: ["source", "toolboxWorker", "extend", "databasesChange"],
   data() {
     return {
       ready: false,
       expands: [],
-      opens: [],
       defaultProps: {
         children: "children",
         label: "name",
@@ -108,7 +102,28 @@ export default {
   watch: {},
   methods: {
     init() {
+      if (this.extend && this.extend.expands) {
+        this.expands = this.extend.expands;
+      }
       this.ready = true;
+    },
+    nodeExpand(data) {
+      let index = this.expands.indexOf(data.key);
+      if (index < 0) {
+        this.expands.push(data.key);
+        this.toolboxWorker.updateExtend({
+          expands: this.expands,
+        });
+      }
+    },
+    nodeCollapse(data) {
+      let index = this.expands.indexOf(data.key);
+      if (index >= 0) {
+        this.expands.splice(index, 1);
+        this.toolboxWorker.updateExtend({
+          expands: this.expands,
+        });
+      }
     },
     refresh() {
       this.reloadChildren(this.$refs.tree.root);
@@ -145,7 +160,7 @@ export default {
           type: "ddl",
           database: data.name,
         };
-        this.wrap.openTabByExtend(extend);
+        this.toolboxWorker.openTabByExtend(extend);
       } else if (data.isTable) {
         let extend = {
           name: data.database.name + "." + data.name + ">DDL",
@@ -154,7 +169,7 @@ export default {
           database: data.database.name,
           table: data.name,
         };
-        this.wrap.openTabByExtend(extend);
+        this.toolboxWorker.openTabByExtend(extend);
       }
     },
     nodeClick(data, node, nodeView) {
@@ -211,7 +226,7 @@ export default {
               database: data.name,
               executeSQL: "SHOW TABLES;",
             };
-            this.wrap.openTabByExtend(extend);
+            this.toolboxWorker.openTabByExtend(extend);
           },
         });
       }
@@ -239,7 +254,7 @@ export default {
                 data.name +
                 "`;",
             };
-            this.wrap.openTabByExtend(extend);
+            this.toolboxWorker.openTabByExtend(extend);
           },
         });
         menus.push({
@@ -297,7 +312,7 @@ export default {
         title: "新建SQL",
         type: "sql",
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     toOpenTable(data) {
       let extend = {
@@ -307,7 +322,7 @@ export default {
         database: data.database.name,
         table: data.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     toDelete(data) {
       this.tool.stopEvent();
@@ -390,7 +405,7 @@ export default {
       // }, 100);
     },
     toCreateDatabase() {
-      this.wrap.showCreateDatabase(() => {
+      this.toolboxWorker.showCreateDatabase(() => {
         this.refresh();
       });
     },
@@ -404,7 +419,7 @@ export default {
         type: "table",
         database: database.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     async toUpdateTable(table) {
       let database = table.database.name;
@@ -415,7 +430,7 @@ export default {
         database: database,
         table: table.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     async toExport(table) {
       let database = table.database.name;
@@ -426,7 +441,7 @@ export default {
         database: database,
         table: table.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     async toImport(table) {
       let database = table.database.name;
@@ -437,11 +452,11 @@ export default {
         database: database,
         table: table.name,
       };
-      this.wrap.openTabByExtend(extend);
+      this.toolboxWorker.openTabByExtend(extend);
     },
     async loadDatabases() {
       let param = {};
-      let res = await this.wrap.work("databases", param);
+      let res = await this.toolboxWorker.work("databases", param);
       res.data = res.data || {};
       return res.data.databases || [];
     },
@@ -449,7 +464,7 @@ export default {
       let param = {
         database: database,
       };
-      let res = await this.wrap.work("tables", param);
+      let res = await this.toolboxWorker.work("tables", param);
       res.data = res.data || {};
       return res.data.tables || [];
     },
@@ -461,7 +476,7 @@ export default {
       let param = {
         database: database,
       };
-      let res = await this.wrap.work("deleteDatabase", param);
+      let res = await this.toolboxWorker.work("deleteDatabase", param);
       if (res.code != 0) {
         return false;
       }
@@ -473,7 +488,7 @@ export default {
         database: database,
         table: table,
       };
-      let res = await this.wrap.work("deleteTable", param);
+      let res = await this.toolboxWorker.work("deleteTable", param);
       if (res.code != 0) {
         return false;
       }
@@ -485,7 +500,7 @@ export default {
         database: database,
         table: table,
       };
-      let res = await this.wrap.work("tableDetail", param);
+      let res = await this.toolboxWorker.work("tableDetail", param);
       if (res.code != 0) {
         return null;
       }
@@ -500,7 +515,7 @@ export default {
   },
   created() {},
   mounted() {
-    this.wrap.getTableDetail = this.getTableDetail;
+    this.toolboxWorker.getTableDetail = this.getTableDetail;
     this.init();
   },
 };

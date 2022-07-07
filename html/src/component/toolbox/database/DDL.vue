@@ -106,7 +106,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "wrap", "tab", "database", "table"],
+  props: ["source", "toolboxWorker", "database", "table"],
   data() {
     return {
       ready: false,
@@ -176,7 +176,7 @@ export default {
       let param = Object.assign({}, this.form);
       param.database = database;
       param.table = table;
-      let res = await this.wrap.work("ddl", param);
+      let res = await this.toolboxWorker.work("ddl", param);
       res.data = res.data || {};
       return res.data.sqlList || [];
     },

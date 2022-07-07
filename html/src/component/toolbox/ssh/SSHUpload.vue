@@ -80,7 +80,7 @@ export default {
       // 这里直接设置 _last_header_name 为 ZRINIT，就可以强制关闭了
       this.zsession._last_header_name = "ZRINIT";
       this.zsession.close();
-      // this.wrap.writeEvent("shell cancel upload file");
+      // this.toolboxWorker.writeEvent("shell cancel upload file");
     },
     toClickUpload() {
       this.$refs["input-for-upload"].value = null;

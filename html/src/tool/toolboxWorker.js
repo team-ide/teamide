@@ -38,6 +38,41 @@ const newToolboxWorker = function (workerOption) {
             }
             return res;
         },
+        async updateOpenTabExtend(tabId, keyValueMap) {
+            if (keyValueMap == null) {
+                return;
+            }
+            if (Object.keys(keyValueMap) == 0) {
+                return;
+            }
+            let extend = {}
+            itemsWorker.items.forEach(one => {
+                if (one.tabId == tabId) {
+                    extend = one.extend || {};
+                }
+            })
+            let obj = extend;
+            for (let key in keyValueMap) {
+                let value = keyValueMap[key];
+                let names = key.split(".");
+                names.forEach((name, index) => {
+                    if (index < names.length - 1) {
+                        obj[name] = obj[name] || {};
+                        obj = obj[name];
+                    } else {
+                        obj[name] = value;
+                    }
+                });
+            }
+            let param = {
+                tabId: tabId,
+                extend: JSON.stringify(extend),
+            };
+            let res = await server.toolbox.updateOpenTabExtend(param);
+            if (res.code != 0) {
+                tool.error(res.msg);
+            }
+        },
         async updateExtend(keyValueMap) {
             if (keyValueMap == null) {
                 return;
