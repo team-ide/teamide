@@ -117,7 +117,7 @@ func init() {
 }
 
 type IndexResponse struct {
-	Types                      []*toolbox.Worker                  `json:"types,omitempty"`
+	Types                      []*Worker                          `json:"types,omitempty"`
 	SqlConditionalOperations   []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
 	MysqlColumnTypeInfos       []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
 	DatabaseTypes              []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
@@ -135,7 +135,7 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 
 	response := &IndexResponse{}
 
-	response.Types = toolbox.GetWorkers()
+	response.Types = GetWorkers()
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
 	response.MysqlColumnTypeInfos = db.MySqlColumnTypeInfos
 	response.DatabaseTypes = db.DatabaseTypes

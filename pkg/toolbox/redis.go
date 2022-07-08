@@ -3,30 +3,9 @@ package toolbox
 import (
 	"context"
 	"encoding/json"
-	"teamide/pkg/form"
 	"teamide/pkg/redis"
 	"teamide/pkg/util"
 )
-
-func redisWorker() *Worker {
-	worker_ := &Worker{
-		Name: "redis",
-		Text: "Redis",
-		Work: redisWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{Label: "连接地址（127.0.0.1:6379）", Name: "address", DefaultValue: "127.0.0.1:6379",
-					Rules: []*form.Rule{
-						{Required: true, Message: "连接地址不能为空"},
-					},
-				},
-				{Label: "密码", Name: "auth", Type: "password"},
-			},
-		},
-	}
-
-	return worker_
-}
 
 type RedisBaseRequest struct {
 	Key        string `json:"key"`
@@ -43,21 +22,10 @@ type RedisBaseRequest struct {
 	TaskKey    string `json:"taskKey,omitempty"`
 }
 
-func redisWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-
-	var redisConfig redis.Config
-	var configBS []byte
-	configBS, err = json.Marshal(config)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(configBS, &redisConfig)
-	if err != nil {
-		return
-	}
+func RedisWork(work string, config *redis.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service redis.Service
-	service, err = getRedisService(redisConfig)
+	service, err = getRedisService(*config)
 	if err != nil {
 		return
 	}

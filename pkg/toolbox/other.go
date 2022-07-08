@@ -2,26 +2,16 @@ package toolbox
 
 import (
 	"encoding/json"
-	"teamide/pkg/form"
 )
 
-func otherWorker() *Worker {
-	worker_ := &Worker{
-		Name: "other",
-		Text: "其它",
-		Work: otherWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{},
-		},
-	}
-
-	return worker_
+type OtherConfig struct {
+	Type string `json:"type"`
 }
 
 type OtherRequest struct {
 }
 
-func otherWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
+func OtherWork(work string, config *OtherConfig, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	dataBS, err := json.Marshal(data)
 	if err != nil {

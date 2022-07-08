@@ -2,29 +2,8 @@ package toolbox
 
 import (
 	"encoding/json"
-	"teamide/pkg/form"
 	"teamide/pkg/zookeeper"
 )
-
-func zookeeperWorker() *Worker {
-	worker_ := &Worker{
-		Name: "zookeeper",
-		Text: "Zookeeper",
-		Work: zkWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{
-					Label: "连接地址（127.0.0.1:2181）", Name: "address", DefaultValue: "127.0.0.1:2181",
-					Rules: []*form.Rule{
-						{Required: true, Message: "连接地址不能为空"},
-					},
-				},
-			},
-		},
-	}
-
-	return worker_
-}
 
 func getZKService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
 	key := "zookeeper-" + zkConfig.Address
@@ -54,21 +33,10 @@ type ZookeeperBaseRequest struct {
 	Data string `json:"data"`
 }
 
-func zkWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-
-	var zkConfig zookeeper.Config
-	var configBS []byte
-	configBS, err = json.Marshal(config)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(configBS, &zkConfig)
-	if err != nil {
-		return
-	}
+func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *zookeeper.ZKService
-	service, err = getZKService(zkConfig)
+	service, err = getZKService(*config)
 	if err != nil {
 		return
 	}

@@ -5,47 +5,8 @@ import (
 	"fmt"
 	"teamide/pkg/db"
 	"teamide/pkg/db/task"
-	"teamide/pkg/form"
 	"teamide/pkg/util"
 )
-
-func databaseWorker() *Worker {
-
-	worker_ := &Worker{
-		Name: "database",
-		Text: "Database",
-		Work: databaseWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{
-					Label: "类型", Name: "type", Type: "select", DefaultValue: "mysql",
-					Options: []*form.Option{
-						{Text: "MySql", Value: "mysql"},
-					},
-					Rules: []*form.Rule{
-						{Required: true, Message: "数据库类型不能为空"},
-					},
-				},
-				{
-					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1",
-					Rules: []*form.Rule{
-						{Required: true, Message: "数据库连接地址不能为空"},
-					},
-				},
-				{
-					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306",
-					Rules: []*form.Rule{
-						{Required: true, Message: "数据库连接端口不能为空"},
-					},
-				},
-				{Label: "Username", Name: "username"},
-				{Label: "Password", Name: "password", Type: "password"},
-			},
-		},
-	}
-
-	return worker_
-}
 
 type DatabaseBaseRequest struct {
 	Database     string                 `json:"database"`
@@ -60,21 +21,10 @@ type DatabaseBaseRequest struct {
 	DatabaseType string                 `json:"databaseType"`
 }
 
-func databaseWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
+func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interface{}) (res map[string]interface{}, err error) {
 	var service *db.Service
 
-	var databaseConfig db.DatabaseConfig
-	var bs []byte
-	bs, err = json.Marshal(config)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(bs, &databaseConfig)
-	if err != nil {
-		return
-	}
-
-	service, err = getDatabaseService(databaseConfig)
+	service, err = getDatabaseService(*config)
 	if err != nil {
 		return
 	}
@@ -96,7 +46,7 @@ func databaseWork(work string, config map[string]interface{}, data map[string]in
 	}
 
 	if generateParam.DatabaseType == "" {
-		generateParam.DatabaseType = databaseConfig.Type
+		generateParam.DatabaseType = config.Type
 	}
 
 	res = map[string]interface{}{}

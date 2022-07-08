@@ -2,94 +2,8 @@ package toolbox
 
 import (
 	"encoding/json"
-	"teamide/pkg/form"
 	"teamide/pkg/kafka"
 )
-
-func kafkaWorker() *Worker {
-	worker_ := &Worker{
-		Name: "kafka",
-		Text: "Kafka",
-		Work: kafkaWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{Label: "连接地址（127.0.0.1:9092）", Name: "address", DefaultValue: "127.0.0.1:9092",
-					Rules: []*form.Rule{
-						{Required: true, Message: "连接地址不能为空"},
-					},
-				},
-			},
-		},
-		OtherForm: map[string]*form.Form{
-			"topic": {
-				Fields: []*form.Field{
-					{
-						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
-						Rules: []*form.Rule{
-							{Required: true, Message: "主题不能为空"},
-						},
-					},
-					{
-						Label: "Partitions（分区）", Name: "numPartitions", DefaultValue: 1, IsNumber: true,
-						Rules: []*form.Rule{
-							{Required: true, Message: "分区不能为空"},
-						},
-					},
-					{
-						Label: "ReplicationFactor（分区副本）", Name: "replicationFactor", DefaultValue: 1, IsNumber: true,
-						Rules: []*form.Rule{
-							{Required: true, Message: "分区副本不能为空"},
-						},
-					},
-				},
-			},
-			"push": {
-				Fields: []*form.Field{
-					{
-						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
-						Rules: []*form.Rule{
-							{Required: true, Message: "主题不能为空"},
-						},
-					},
-					{
-						Label: "KeyType", Name: "keyType", DefaultValue: "string", Type: "select",
-						Options: []*form.Option{
-							{Text: "String", Value: "string"},
-							{Text: "Long（int64）", Value: "long"},
-						},
-						Rules: []*form.Rule{
-							{Required: true, Message: "KeyType不能为空"},
-						},
-					},
-					{
-						Label: "Key", Name: "key",
-					},
-					{
-						Label: "ValueType", Name: "valueType", DefaultValue: "string", Type: "select",
-						Options: []*form.Option{
-							{Text: "String", Value: "string"},
-							{Text: "Long（int64）", Value: "long"},
-						},
-						Rules: []*form.Rule{
-							{Required: true, Message: "ValueType不能为空"},
-						},
-					},
-					{
-						Label: "Value", Name: "value", Type: "textarea",
-						Rules: []*form.Rule{
-							{Required: true, Message: "Value不能为空"},
-						},
-					},
-					{
-						Label: "ValueJSON预览", Name: "valueView", BindName: "value", Type: "jsonView",
-					},
-				},
-			},
-		},
-	}
-
-	return worker_
-}
 
 func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {
 	key := "kafka-" + kafkaConfig.Address
@@ -129,21 +43,10 @@ type KafkaBaseRequest struct {
 	ValueType string `json:"valueType"`
 }
 
-func kafkaWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-
-	var kafkaConfig kafka.Config
-	var configBS []byte
-	configBS, err = json.Marshal(config)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(configBS, &kafkaConfig)
-	if err != nil {
-		return
-	}
+func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *kafka.SaramaService
-	service, err = getKafkaService(kafkaConfig)
+	service, err = getKafkaService(*config)
 	if err != nil {
 		return
 	}

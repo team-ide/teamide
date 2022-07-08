@@ -3,58 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"teamide/pkg/elasticsearch"
-	"teamide/pkg/form"
 )
-
-func elasticsearchWorker() *Worker {
-	worker_ := &Worker{
-		Name: "elasticsearch",
-		Text: "Elasticsearch",
-		Work: esWork,
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{
-					Label: "连接地址（http://127.0.0.1:9200）", Name: "url", DefaultValue: "http://127.0.0.1:9200",
-					Rules: []*form.Rule{
-						{Required: true, Message: "连接地址不能为空"},
-					},
-				},
-			},
-		},
-		OtherForm: map[string]*form.Form{
-			"index": {
-				Fields: []*form.Field{
-					{
-						Label: "IndexName（索引）", Name: "indexName", DefaultValue: "index_xxx",
-						Rules: []*form.Rule{
-							{Required: true, Message: "索引不能为空"},
-						},
-					},
-					{
-						Label: "结构", Name: "mapping", Type: "json", DefaultValue: map[string]interface{}{
-							"settings": map[string]interface{}{
-								"number_of_shards":   1,
-								"number_of_replicas": 0,
-							},
-							"mappings": map[string]interface{}{
-								"properties": map[string]interface{}{
-									"title": map[string]interface{}{
-										"type": "text",
-									},
-								},
-							},
-						},
-						Rules: []*form.Rule{
-							{Required: true, Message: "结构不能为空"},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	return worker_
-}
 
 func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
 	key := "elasticsearch-" + esConfig.Url
@@ -91,21 +40,10 @@ type ElasticsearchBaseRequest struct {
 	DestIndexName   string                 `json:"destIndexName"`
 }
 
-func esWork(work string, config map[string]interface{}, data map[string]interface{}) (res map[string]interface{}, err error) {
-
-	var esConfig elasticsearch.Config
-	var configBS []byte
-	configBS, err = json.Marshal(config)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(configBS, &esConfig)
-	if err != nil {
-		return
-	}
+func ESWork(work string, config *elasticsearch.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *elasticsearch.V7Service
-	service, err = getESService(esConfig)
+	service, err = getESService(*config)
 	if err != nil {
 		return
 	}
