@@ -1,10 +1,8 @@
-# 1.3.9
+# 1.4.0
 
-## Version 1.3.9 （2022/07/07）
+## Version 1.4.0 （2022/07/08）
 
 发布功能
 
-1. 重构Workspace板块
-2. 数据库SQL改为monaco-editor，添加右击执行选中等
-3. redis、zookeeper、database记录查询历史，下次打开自动展开
-4. 工具箱列表展示根据名称排序
+1. Toolbox Worker配置单独映射执行
+2. 页面Workspace添加头部

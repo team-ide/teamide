@@ -2,8 +2,8 @@
   <el-dialog
     ref="modal"
     :title="`检测新版本`"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
+    :close-on-click-modal="true"
+    :close-on-press-escape="true"
     :show-close="true"
     :append-to-body="true"
     :visible="showDialog"
