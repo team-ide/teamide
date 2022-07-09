@@ -5,12 +5,15 @@ import "time"
 const (
 	// ModulePower 权限模块
 	ModulePower = "power"
-	// TablePowerRole 权限角色信息表
-	TablePowerRole = "TM_POWER_ROLE"
-	// TablePowerRoute 权限路由信息表
-	TablePowerRoute = "TM_POWER_ROUTE"
-	// TablePowerUser 权限用户信息表
-	TablePowerUser = "TM_POWER_USER"
+	// TablePowerRole 权限角色表
+	TablePowerRole        = "TM_POWER_ROLE"
+	TablePowerRoleComment = "权限角色"
+	// TablePowerRoute 权限路由表
+	TablePowerRoute        = "TM_POWER_ROUTE"
+	TablePowerRouteComment = "权限路由"
+	// TablePowerUser 权限用户表
+	TablePowerUser        = "TM_POWER_USER"
+	TablePowerUserComment = "权限用户"
 )
 
 // PowerRoleModel 权限角色模型，和权限角色表对应

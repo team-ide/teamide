@@ -6,7 +6,8 @@ const (
 	// ModuleID ID模块
 	ModuleID = "id"
 	// TableID ID信息表
-	TableID = "TM_ID"
+	TableID        = "TM_ID"
+	TableIDComment = "ID信息"
 )
 
 // IDModel ID模型，和ID表对应

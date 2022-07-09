@@ -12,6 +12,7 @@ import (
 	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_toolbox"
+	"teamide/internal/module/module_tunnel"
 	"teamide/internal/module/module_user"
 	"time"
 )
@@ -104,6 +105,11 @@ func (this_ *InstallService) Install() (err error) {
 	}
 
 	err = this_.InstallSteps(module_toolbox.GetInstallStages())
+	if err != nil {
+		return
+	}
+
+	err = this_.InstallSteps(module_tunnel.GetInstallStages())
 	if err != nil {
 		return
 	}

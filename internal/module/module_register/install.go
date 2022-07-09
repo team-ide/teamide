@@ -9,7 +9,7 @@ func GetInstallStages() []*install.StageModel {
 	return []*install.StageModel{
 
 		// 创建注册表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleRegister,
 			Stage:   `创建表[` + TableRegister + `]`,
@@ -36,7 +36,7 @@ CREATE TABLE ` + TableRegister + ` (
 	KEY index_sourceType (sourceType),
 	KEY index_source (source),
 	KEY index_deleted (deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='注册';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableRegisterComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableRegister + ` (

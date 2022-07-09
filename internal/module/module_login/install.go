@@ -9,7 +9,7 @@ func GetInstallStages() []*install.StageModel {
 	return []*install.StageModel{
 
 		// 创建登录表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleLogin,
 			Stage:   `创建表[` + TableLogin + `]`,
@@ -34,7 +34,7 @@ CREATE TABLE ` + TableLogin + ` (
 	KEY index_sourceType (sourceType),
 	KEY index_source (source),
 	KEY index_deleted (deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableLoginComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableLogin + ` (

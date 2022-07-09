@@ -7,7 +7,7 @@ func GetInstallStages() []*install.StageModel {
 	return []*install.StageModel{
 
 		// 创建权限角色表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModulePower,
 			Stage:   `创建表[` + TablePowerRole + `]`,
@@ -21,7 +21,7 @@ CREATE TABLE ` + TablePowerRole + ` (
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	PRIMARY KEY (powerRoleId),
 	KEY index_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限角色';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TablePowerRoleComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TablePowerRole + ` (
@@ -39,7 +39,7 @@ CREATE TABLE ` + TablePowerRole + ` (
 		},
 
 		// 创建权限路由表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModulePower,
 			Stage:   `创建表[` + TablePowerRoute + `]`,
@@ -56,7 +56,7 @@ CREATE TABLE ` + TablePowerRoute + ` (
 	PRIMARY KEY (powerRouteId),
 	KEY index_powerRoleId (powerRoleId),
 	KEY index_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限路由';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TablePowerRouteComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TablePowerRoute + ` (
@@ -77,7 +77,7 @@ CREATE TABLE ` + TablePowerRoute + ` (
 		},
 
 		// 创建权限用户表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModulePower,
 			Stage:   `创建表[` + TablePowerUser + `]`,
@@ -91,7 +91,7 @@ CREATE TABLE ` + TablePowerUser + ` (
 	updateTime datetime DEFAULT NULL COMMENT '修改时间',
 	PRIMARY KEY (powerUserId),
 	KEY index_userId (userId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限用户';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TablePowerUserComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TablePowerUser + ` (

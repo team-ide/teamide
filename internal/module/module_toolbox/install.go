@@ -7,7 +7,7 @@ func GetInstallStages() []*install.StageModel {
 	return []*install.StageModel{
 
 		// 创建工具箱表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleToolbox,
 			Stage:   `创建表[` + TableToolbox + `]`,
@@ -28,7 +28,7 @@ CREATE TABLE ` + TableToolbox + ` (
 	KEY index_toolboxType (toolboxType),
 	KEY index_name (name),
 	KEY index_deleted (deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolbox + ` (
@@ -52,7 +52,7 @@ CREATE TABLE ` + TableToolbox + ` (
 			},
 		},
 		// 创建工具箱打开记录表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleToolbox,
 			Stage:   `创建表[` + TableToolboxOpen + `]`,
@@ -69,7 +69,7 @@ CREATE TABLE ` + TableToolboxOpen + ` (
 	PRIMARY KEY (openId),
 	KEY index_userId (userId),
 	KEY index_toolboxId (toolboxId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱开启';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxOpenComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolboxOpen + ` (
@@ -89,7 +89,7 @@ CREATE TABLE ` + TableToolboxOpen + ` (
 			},
 		},
 		// 创建工具箱打开标签页表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleToolbox,
 			Stage:   `创建表[` + TableToolboxOpenTab + `]`,
@@ -108,7 +108,7 @@ CREATE TABLE ` + TableToolboxOpenTab + ` (
 	KEY index_openId (openId),
 	KEY index_userId (userId),
 	KEY index_toolboxId (toolboxId)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱开启标签页';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxOpenTabComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolboxOpenTab + ` (
@@ -133,7 +133,7 @@ CREATE TABLE ` + TableToolboxOpenTab + ` (
 		/** 给工具箱添加分组 开始 **/
 
 		// 创建工具箱分组表
-		&install.StageModel{
+		{
 			Version: "1.0.1",
 			Module:  ModuleToolbox,
 			Stage:   `创建表[` + TableToolboxGroup + `]`,
@@ -150,7 +150,7 @@ CREATE TABLE ` + TableToolboxGroup + ` (
 	PRIMARY KEY (groupId),
 	KEY index_userId (userId),
 	KEY index_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱分组';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxGroupComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolboxGroup + ` (
@@ -170,7 +170,7 @@ CREATE TABLE ` + TableToolboxGroup + ` (
 			},
 		},
 		// 工具表添加分组ID
-		&install.StageModel{
+		{
 			Version: "1.0.1",
 			Module:  ModuleToolbox,
 			Stage:   `工具箱[` + TableToolbox + `]添加分组ID[groupId]`,
@@ -193,7 +193,7 @@ CREATE TABLE ` + TableToolboxGroup + ` (
 		/** 给工具箱添加 快速命令 开始 **/
 
 		// 创建工具箱 快速命令 表
-		&install.StageModel{
+		{
 			Version: "1.0.2",
 			Module:  ModuleToolbox,
 			Stage:   `创建表[` + TableToolboxQuickCommand + `]`,
@@ -212,7 +212,7 @@ CREATE TABLE ` + TableToolboxQuickCommand + ` (
 	KEY index_quickCommandType (quickCommandType),
 	KEY index_userId (userId),
 	KEY index_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工具箱分组';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxQuickCommandComment + `';
 `},
 				Sqlite: []string{`
 CREATE TABLE ` + TableToolboxQuickCommand + ` (

@@ -5,8 +5,9 @@ import "time"
 const (
 	// ModuleRegister 注册模块
 	ModuleRegister = "register"
-	// TableRegister 注册信息表
-	TableRegister = "TM_REGISTER"
+	// TableRegister 注册记录表
+	TableRegister        = "TM_REGISTER"
+	TableRegisterComment = "注册记录"
 )
 
 // RegisterModel 注册模型，和注册表对应

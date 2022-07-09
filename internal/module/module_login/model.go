@@ -5,8 +5,9 @@ import "time"
 const (
 	// ModuleLogin 登录模块
 	ModuleLogin = "login"
-	// TableLogin 登录信息表
-	TableLogin = "TM_LOGIN"
+	// TableLogin 登录记录表
+	TableLogin        = "TM_LOGIN"
+	TableLoginComment = "登录记录"
 )
 
 // LoginModel 登录模型，和登录表对应
