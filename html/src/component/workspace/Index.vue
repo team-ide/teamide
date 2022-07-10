@@ -12,13 +12,18 @@
       <div class="workspace-header-nav-box">
         <div class="workspace-header-nav" @click="showSwitchToolboxContext()">
           工具箱
+          <span class="color-green mgl-2">({{ source.toolboxCount }})</span>
         </div>
         <div class="workspace-header-nav tm-disabled">
-          SSH通道
+          隧道|代理|透传
           <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
         </div>
         <div class="workspace-header-nav tm-disabled">
-          代理透传
+          监控
+          <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
+        </div>
+        <div class="workspace-header-nav tm-disabled">
+          节点
           <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
         </div>
         <div style="flex: 1"></div>
@@ -137,8 +142,7 @@ export default {
         return;
       }
       this.initDataed = true;
-      this.source.initToolboxGroups();
-      this.source.initToolboxQuickCommands();
+      this.source.initUserToolboxData();
       this.initOpens();
     },
     showSwitchToolboxContext() {

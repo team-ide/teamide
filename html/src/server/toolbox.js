@@ -10,6 +10,9 @@ let toolbox = {
     list(param) {
         return http.post('api/toolbox/list', param);
     },
+    count(param) {
+        return http.post('api/toolbox/count', param);
+    },
     insert(param) {
         return http.post('api/toolbox/insert', param);
     },

@@ -5,6 +5,34 @@ import (
 	"teamide/internal/base"
 )
 
+type CountRequest struct {
+}
+
+type CountResponse struct {
+	Count int64 `json:"count,omitempty"`
+}
+
+func (this_ *ToolboxApi) count(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &CountRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &CountResponse{}
+
+	response.Count, err = this_.ToolboxService.Count(&ToolboxModel{
+		UserId: requestBean.JWT.UserId,
+	})
+	if err != nil {
+		return
+	}
+
+	response.Count += int64(len(Others))
+
+	res = response
+	return
+}
+
 type ListRequest struct {
 }
 

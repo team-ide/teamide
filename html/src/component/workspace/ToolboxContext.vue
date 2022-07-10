@@ -211,6 +211,7 @@ export default {
     },
     init() {},
     async initData() {
+      this.source.initToolboxCount();
       await this.source.initToolboxGroups();
       if (this.toolboxTypes.length == 0) {
         this.toolboxTypes = this.source.toolboxTypes || [];

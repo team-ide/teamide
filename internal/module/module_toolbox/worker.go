@@ -13,6 +13,92 @@ import (
 	"teamide/pkg/zookeeper"
 )
 
+// EncryptOptionAttr 加密属性
+func (this_ *ToolboxService) EncryptOptionAttr(str string) (res string) {
+	if str == "" {
+		return
+	}
+	// 如果是加密字符串，则直接返回
+	if this_.Decryption.IsEncrypt(str) {
+		res = str
+		return
+	} else {
+		res = this_.Decryption.Encrypt(str)
+		return
+	}
+}
+
+// DecryptOptionAttr 解密属性
+func (this_ *ToolboxService) DecryptOptionAttr(str string) (res string) {
+	if str == "" {
+		return
+	}
+	// 如果不是加密字符串，则直接返回
+	if !this_.Decryption.IsEncrypt(str) {
+		res = str
+		return
+	}
+	res = this_.Decryption.Decrypt(str)
+	if res == "" {
+		res = str
+	}
+	return
+}
+
+// FormatOption 执行
+func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error) {
+	if toolboxData.Option == "" {
+		return
+	}
+	if toolboxData.ToolboxType == "" {
+		return
+	}
+	toolboxWorker := GetWorker(toolboxData.ToolboxType)
+	if toolboxWorker == nil {
+		err = errors.New("不支持的工具类型[" + toolboxData.ToolboxType + "]")
+		return
+	}
+	optionBytes := []byte(toolboxData.Option)
+	optionMap := map[string]interface{}{}
+	err = json.Unmarshal(optionBytes, &optionMap)
+	if err != nil {
+		return
+	}
+
+	switch toolboxWorker {
+	case databaseWorker_:
+		if optionMap["password"] != "" {
+			optionMap["password"] = this_.EncryptOptionAttr(optionMap["password"].(string))
+		}
+		break
+	case redisWorker_:
+		if optionMap["auth"] != "" {
+			optionMap["auth"] = this_.EncryptOptionAttr(optionMap["auth"].(string))
+		}
+		break
+	case zookeeperWorker_:
+		break
+	case elasticsearchWorker_:
+		break
+	case kafkaWorker_:
+		break
+	case otherWorker_:
+		break
+	case sshWorker_:
+		if optionMap["password"] != "" {
+			optionMap["password"] = this_.EncryptOptionAttr(optionMap["password"].(string))
+		}
+		break
+	}
+
+	optionBytes, err = json.Marshal(optionMap)
+	if err != nil {
+		return
+	}
+	toolboxData.Option = string(optionBytes)
+	return
+}
+
 // Work 执行
 func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]interface{}) (res interface{}, err error) {
 
@@ -43,6 +129,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		if err != nil {
 			return
 		}
+		config.Password = this_.DecryptOptionAttr(config.Password)
 		res, err = toolbox.DatabaseWork(work, config, data)
 		break
 	case redisWorker_:
@@ -51,6 +138,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		if err != nil {
 			return
 		}
+		config.Auth = this_.DecryptOptionAttr(config.Auth)
 		res, err = toolbox.RedisWork(work, config, data)
 		break
 	case zookeeperWorker_:
@@ -91,6 +179,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		if err != nil {
 			return
 		}
+		config.Password = this_.DecryptOptionAttr(config.Password)
 		if config.PublicKey != "" {
 			config.PublicKey = this_.GetFilesFile(config.PublicKey)
 		}
@@ -213,18 +302,18 @@ func elasticsearchWorker() *Worker {
 					},
 					{
 						Label: "结构", Name: "mapping", Type: "json", DefaultValue: map[string]interface{}{
-						"settings": map[string]interface{}{
-							"number_of_shards":   1,
-							"number_of_replicas": 0,
-						},
-						"mappings": map[string]interface{}{
-							"properties": map[string]interface{}{
-								"title": map[string]interface{}{
-									"type": "text",
+							"settings": map[string]interface{}{
+								"number_of_shards":   1,
+								"number_of_replicas": 0,
+							},
+							"mappings": map[string]interface{}{
+								"properties": map[string]interface{}{
+									"title": map[string]interface{}{
+										"type": "text",
+									},
 								},
 							},
 						},
-					},
 						Rules: []*form.Rule{
 							{Required: true, Message: "结构不能为空"},
 						},

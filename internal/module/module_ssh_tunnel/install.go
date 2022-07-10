@@ -1,4 +1,4 @@
-package module_tunnel
+package module_ssh_tunnel
 
 import "teamide/internal/install"
 

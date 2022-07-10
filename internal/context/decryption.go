@@ -144,3 +144,12 @@ func (this_ *Decryption) Decrypt(ciphertext string) (data string) {
 	}
 	return
 }
+
+// IsEncrypt 解密
+func (this_ *Decryption) IsEncrypt(ciphertext string) (res bool) {
+	_, err := util.RSADecryptByKey(ciphertext, this_.rsaPrivateKey)
+	if err != nil {
+		return false
+	}
+	return true
+}

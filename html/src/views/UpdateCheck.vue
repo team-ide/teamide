@@ -98,12 +98,12 @@ export default {
           }
           setTimeout(() => {
             this.updateCheck();
-          }, 1000 * 60 * 10);
+          }, 1000 * 60 * 30);
         })
         .catch(() => {
           setTimeout(() => {
             this.updateCheck();
-          }, 1000 * 60 * 10);
+          }, 1000 * 60 * 30);
         });
     },
   },

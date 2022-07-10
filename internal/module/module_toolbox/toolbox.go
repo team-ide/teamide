@@ -77,6 +77,37 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 	return
 }
 
+// Count 查询
+func (this_ *ToolboxService) Count(toolbox *ToolboxModel) (res int64, err error) {
+
+	var values []interface{}
+	sql := `SELECT COUNT(1) FROM ` + TableToolbox + ` WHERE deleted=2 `
+	if toolbox.ToolboxType != "" {
+		sql += " AND toolboxType = ?"
+		values = append(values, toolbox.ToolboxType)
+	}
+	if toolbox.GroupId != 0 {
+		sql += " AND groupId = ?"
+		values = append(values, toolbox.GroupId)
+	}
+	if toolbox.UserId != 0 {
+		sql += " AND userId = ?"
+		values = append(values, toolbox.UserId)
+	}
+	if toolbox.Name != "" {
+		sql += " AND name like ?"
+		values = append(values, fmt.Sprint("%", toolbox.Name, "%"))
+	}
+
+	res, err = this_.DatabaseWorker.Count(sql, values)
+	if err != nil {
+		this_.Logger.Error("Count Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
 // CheckUserToolboxExist 查询
 func (this_ *ToolboxService) CheckUserToolboxExist(toolboxType string, name string, userId int64) (res bool, err error) {
 
@@ -136,6 +167,11 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 	if toolbox.GroupId > 0 {
 		columns += ", groupId"
 		values += ", " + fmt.Sprint(toolbox.GroupId)
+	}
+
+	err = this_.FormatOption(toolbox)
+	if err != nil {
+		return
 	}
 
 	sql := `INSERT INTO ` + TableToolbox + `(` + columns + `) VALUES (` + values + `) `
@@ -289,6 +325,12 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 		}
 
 	}
+
+	err = this_.FormatOption(toolbox)
+	if err != nil {
+		return
+	}
+
 	var values []interface{}
 
 	sql := `UPDATE ` + TableToolbox + ` SET `
@@ -304,6 +346,7 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 		sql += "comment=?,"
 		values = append(values, toolbox.Comment)
 	}
+
 	if toolbox.Option != "" {
 		sql += "option=?,"
 		values = append(values, toolbox.Option)

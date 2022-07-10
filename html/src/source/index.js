@@ -329,6 +329,23 @@ source.initToolboxData = async () => {
         });
     }
 }
+source.initUserToolboxData = async () => {
+
+    source.initToolboxCount();
+    source.initToolboxGroups();
+    source.initToolboxQuickCommands();
+}
+source.toolboxCount = 0;
+source.initToolboxCount = async () => {
+    let res = await server.toolbox.count({});
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let data = res.data || {};
+        source.toolboxCount = data.count || 0;
+    }
+}
+
 source.initToolboxGroups = async () => {
     let res = await server.toolbox.group.list({});
     if (res.code != 0) {
