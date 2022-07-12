@@ -2,7 +2,7 @@ package main
 
 import (
 	"sync"
-	"teamide/pkg/util"
+	"teamide/internal/node"
 )
 
 var (
@@ -12,15 +12,14 @@ var (
 func main() {
 
 	var err error
-	server := &Server{
+	server := &node.Server{
 		ServerHost: "0.0.0.0",
 		ServerPort: 0,
 	}
-	serverUrl, err := server.Start()
+	err = server.Start()
 	if err != nil {
 		panic(err)
 	}
-	util.Logger.Info("Node Server Url:" + serverUrl)
 
 	waitGroupForStop.Add(1)
 
