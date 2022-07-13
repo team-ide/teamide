@@ -13,18 +13,7 @@ export default {
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
-  methods: {
-    toast(title, info, variant) {
-      let config = {
-        title: title,
-        toaster: "b-toaster-top-center",
-        variant: variant,
-        autoHideDelay: 3000,
-        appendToast: true,
-      };
-      this.$bvToast.toast(info, config);
-    },
-  },
+  methods: {},
   // 在实例创建完成后被立即调用
   created() {
     this.tool.info = (info) => {
@@ -44,8 +33,7 @@ export default {
     };
   },
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
-  mounted() {
-  },
+  mounted() {},
 };
 </script>
 

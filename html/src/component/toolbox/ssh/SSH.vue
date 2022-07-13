@@ -395,59 +395,73 @@ export default {
         return;
       }
       if (this.tool.keyIsCtrlC(e)) {
-        let copiedText = this.term.getSelection();
-        if (this.tool.isNotEmpty(copiedText)) {
-          this.tool.stopEvent(e);
-          let res = await this.tool.clipboardWrite(copiedText);
-          if (res.success) {
-            this.tool.success("复制成功");
-          } else {
-            this.tool.warn("复制失败，请允许访问剪贴板！");
-          }
-        }
+        this.doEventCopy();
       } else if (this.tool.keyIsCtrlV(e)) {
-        let readResult = await this.tool.readClipboardText();
-        this.tool.stopEvent(e);
-        if (readResult.success) {
-          if (this.tool.isNotEmpty(readResult.text)) {
-            if (readResult.text.indexOf("\n") >= 0) {
-              let showText = readResult.text;
-              let div = this.tool.jQuery("<div/>");
-
-              let textarea = this.tool.jQuery(
-                `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
-              );
-              textarea.append(showText);
-
-              div.append("<div>确认粘贴以下内容<div/>");
-              div.append(textarea);
-              this.tool
-                .confirm(div.html())
-                .then(() => {
-                  this.writeData(showText);
-                  this.tool.success("粘贴成功");
-                })
-                .catch(() => {});
-            } else {
-              this.writeData(readResult.text);
-              this.tool.success("粘贴成功");
-            }
-          }
+        this.doEventPaste();
+      }
+    },
+    async doEventCopy() {
+      this.tool.stopEvent();
+      let copiedText = this.term.getSelection();
+      if (this.tool.isNotEmpty(copiedText)) {
+        let res = await this.tool.clipboardWrite(copiedText);
+        if (res.success) {
+          this.tool.success("复制成功");
         } else {
-          this.tool.warn("粘贴失败，请允许访问剪贴板！");
+          this.tool.warn("复制失败，请允许访问剪贴板！");
         }
       }
     },
-    onKeyup(e) {
-      console.log(this.tool.keyIsCtrlC(e));
-      if (this.tool.keyIsCtrlC(e)) {
-        this.tool.success("复制成功");
-      } else if (this.tool.keyIsCtrlV(e)) {
-        this.tool.success("粘贴成功");
+    async doEventPaste() {
+      this.tool.stopEvent();
+      let readResult = await this.tool.readClipboardText();
+      if (readResult.success) {
+        this.toPaste(readResult.text);
+      } else {
+        this.tool.warn("粘贴失败，请允许访问剪贴板！");
       }
     },
-    onMousedown(e) {},
-    onMouseup(e) {},
+    toPaste(text) {
+      if (this.tool.isNotEmpty(text)) {
+        if (text.indexOf("\n") >= 0) {
+          let showText = text;
+          let div = this.tool.jQuery("<div/>");
+
+          let textarea = this.tool.jQuery(
+            `<textarea readonly="readonly" style="width: 100%;height: 200px;overflow: auto;color: #a15656;margin-top: 15px;outline: 0px;border: 1px solid #ddd;padding: 5px;"/>`
+          );
+          textarea.append(showText);
+
+          div.append("<div>确认粘贴以下内容<div/>");
+          div.append(textarea);
+          this.tool
+            .confirm(div.html())
+            .then(() => {
+              this.writeData(showText);
+              this.tool.success("粘贴成功");
+            })
+            .catch(() => {});
+        } else {
+          this.writeData(text);
+          this.tool.success("粘贴成功");
+        }
+      }
+    },
+    onKeyup(e) {},
+    async onMousedown(e) {
+      // let event = e || window.event;
+      // this.tool.stopEvent(e);
+      // console.log(event);
+    },
+    async onContextmenu() {
+      let copiedText = this.term.getSelection();
+      if (this.tool.isNotEmpty(copiedText)) {
+        this.doEventCopy();
+      } else {
+        this.doEventPaste();
+      }
+    },
+    async onMouseup(e) {},
     async initTerminal() {
       if (this.term != null) {
         this.term.dispose();
@@ -487,6 +501,13 @@ export default {
 
       this.term.focus();
       this.$refs.terminal.addEventListener("keydown", this.onKeydown, true);
+      this.$refs.terminal.addEventListener("mouseup", this.onMouseup, true);
+      this.$refs.terminal.addEventListener("mousedown", this.onMousedown, true);
+      this.$refs.terminal.addEventListener(
+        "contextmenu",
+        this.onContextmenu,
+        true
+      );
       this.cols = this.term.cols;
       this.rows = this.term.rows;
       this.initSize();

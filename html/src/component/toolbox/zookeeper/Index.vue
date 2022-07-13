@@ -55,8 +55,24 @@
         <tm-layout width="auto">
           <div class="pd-10">
             <el-form ref="form" size="mini" @submit.native.prevent>
+              <el-form-item label="目录">
+                <el-input v-model="form.dir" @change="dirChange"> </el-input>
+              </el-form-item>
+              <el-form-item label="名称">
+                <el-input v-model="form.name" @change="nameChange"> </el-input>
+              </el-form-item>
+              <template v-if="form.nameFormat != null">
+                <el-form-item label="名称解码">
+                  <el-input
+                    type="textarea"
+                    v-model="form.nameFormat"
+                    :autosize="{ minRows: 5, maxRows: 10 }"
+                  >
+                  </el-input>
+                </el-form-item>
+              </template>
               <el-form-item label="Path">
-                <el-input v-model="form.path"> </el-input>
+                <el-input v-model="form.path" @change="pathChange"> </el-input>
               </el-form-item>
               <el-form-item label="Value">
                 <el-input
@@ -101,6 +117,9 @@ export default {
         main: {},
       },
       form: {
+        dir: null,
+        name: null,
+        nameFormat: null,
         path: null,
         value: null,
         valueJson: null,
@@ -116,6 +135,30 @@ export default {
   },
   computed: {},
   watch: {
+    "form.path"() {
+      this.pathChange();
+    },
+    "form.name"(value) {
+      this.form.nameFormat = null;
+      if (this.tool.isNotEmpty(value)) {
+        try {
+          let nameFormat = decodeURIComponent(value);
+          if (nameFormat != value) {
+            this.form.nameFormat = nameFormat;
+            value = nameFormat;
+          }
+        } catch (e) {}
+        try {
+          if (
+            (value.startsWith("{") && value.endsWith("}")) ||
+            (value.startsWith("[") && value.endsWith("]"))
+          ) {
+            let data = JSON.parse(value);
+            this.form.nameFormat = JSON.stringify(data, null, "    ");
+          }
+        } catch (e) {}
+      }
+    },
     "form.value"(value) {
       this.form.valueJson = null;
       if (this.tool.isNotEmpty(value)) {
@@ -134,6 +177,45 @@ export default {
     },
   },
   methods: {
+    dirChange() {
+      this.form.dir = this.form.dir || "";
+      if (!this.form.dir.endsWith("/")) {
+        this.form.dir = this.form.dir + "/";
+      }
+      this.isFromWatchDir = true;
+      this.form.path = this.form.dir + this.form.name;
+    },
+    nameChange() {
+      this.isFromWatchName = true;
+      this.form.path = this.form.dir + this.form.name;
+    },
+    pathChange() {
+      if (this.isFromWatchDir || this.isFromWatchName) {
+        delete this.isFromWatchDir;
+        delete this.isFromWatchName;
+        return;
+      }
+      this.form.dir = "/";
+      this.form.name = "";
+      if (this.tool.isEmpty(this.form.path)) {
+        return;
+      }
+      let index = this.form.path.lastIndexOf("/");
+      if (index >= 0) {
+        let dir = this.form.path.substring(0, index);
+        if (!dir.endsWith("/")) {
+          dir = dir + "/";
+        }
+        let name = "";
+        if (index < this.form.path.length - 1) {
+          name = this.form.path.substring(index + 1);
+        }
+        this.form.dir = dir;
+        this.form.name = name;
+      } else {
+        this.form.name = this.form.path;
+      }
+    },
     init() {
       if (this.extend && this.extend.expands) {
         this.expands = this.extend.expands;
