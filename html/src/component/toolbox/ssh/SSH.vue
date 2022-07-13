@@ -415,7 +415,7 @@ export default {
     async doEventPaste() {
       let readResult = await this.tool.readClipboardText();
       if (readResult.success) {
-        if (this.tool.isNotEmpty(text)) {
+        if (this.tool.isNotEmpty(readResult.text)) {
           this.tool.stopEvent();
           this.toPaste(readResult.text);
         }
