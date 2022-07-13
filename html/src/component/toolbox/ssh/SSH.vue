@@ -401,9 +401,9 @@ export default {
       }
     },
     async doEventCopy() {
-      this.tool.stopEvent();
       let copiedText = this.term.getSelection();
       if (this.tool.isNotEmpty(copiedText)) {
+        this.tool.stopEvent();
         let res = await this.tool.clipboardWrite(copiedText);
         if (res.success) {
           this.tool.success("复制成功");
@@ -413,10 +413,12 @@ export default {
       }
     },
     async doEventPaste() {
-      this.tool.stopEvent();
       let readResult = await this.tool.readClipboardText();
       if (readResult.success) {
-        this.toPaste(readResult.text);
+        if (this.tool.isNotEmpty(text)) {
+          this.tool.stopEvent();
+          this.toPaste(readResult.text);
+        }
       } else {
         this.tool.warn("粘贴失败，请允许访问剪贴板！");
       }
