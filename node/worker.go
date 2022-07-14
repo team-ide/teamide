@@ -83,6 +83,16 @@ func (this_ *Worker) AddNode(node *Info) {
 	this_.addNodeLock.Lock()
 	defer this_.addNodeLock.Unlock()
 
+	for _, one := range this_.childrenNodeList {
+		client := this_.getChildrenNodeClient(one)
+		if !client.isStopped() {
+			bs, _ := json.Marshal(node)
+			if len(bs) > 0 {
+				_, _ = client.Call(AddNode, bs)
+			}
+		}
+	}
+
 	var find *Info
 
 	for _, one := range this_.nodeList {
@@ -94,16 +104,6 @@ func (this_ *Worker) AddNode(node *Info) {
 		this_.nodeList = append(this_.nodeList, node)
 	} else {
 		copyNode(node, find)
-	}
-
-	for _, one := range this_.childrenNodeList {
-		client := this_.getChildrenNodeClient(one)
-		if !client.isStopped() {
-			bs, _ := json.Marshal(this_.nodeList)
-			if len(bs) > 0 {
-				_, _ = client.Call(AddNodeList, bs)
-			}
-		}
 	}
 
 	this_.refreshNodeList()
