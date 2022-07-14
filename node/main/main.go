@@ -2,7 +2,7 @@ package main
 
 import (
 	"sync"
-	"teamide/internal/node"
+	"teamide/node"
 )
 
 var (
@@ -13,8 +13,8 @@ func main() {
 
 	var err error
 	server := &node.Server{
-		ServerHost: "0.0.0.0",
-		ServerPort: 0,
+		Ip:   "0.0.0.0",
+		Port: 0,
 	}
 	err = server.Start()
 	if err != nil {
