@@ -2,81 +2,124 @@ package node
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
 type Worker struct {
-	Node             *Info
-	ChildrenNodeList []*Info
-	ParentNode       *Info
-	Server           *Server
-	isStop           bool
+	Node                    *Info
+	childrenNodeList        []*Info
+	server                  *Server
+	isStop                  bool
+	nodeList                []*Info
+	childrenNodeClientCache map[string]*Client
+	inPortForwardingList    []*PortForwarding
+	outPortForwardingList   []*PortForwarding
+	portForwardingList      []*PortForwarding
+
+	addNodeLock sync.RWMutex
 }
 
-func (this_ *Worker) AddChildrenNode(childrenNode *Info) (err error) {
-	if childrenNode.ParentCode == this_.Node.Code {
-		var find *Info
+func (this_ *Worker) findNode(code string) (find *Info) {
+	for _, one := range this_.nodeList {
+		if one.Code == code {
+			find = one
+		}
+	}
+	return
+}
 
-		for _, one := range this_.ChildrenNodeList {
-			if one.Token == childrenNode.Token {
-				find = one
-			}
+func (this_ *Worker) findChildrenNode(code string) (find *Info) {
+	for _, one := range this_.childrenNodeList {
+		if one.Code == code {
+			find = one
 		}
-		if find == nil {
-			this_.ChildrenNodeList = append(this_.ChildrenNodeList, childrenNode)
-		}
+	}
+	return
+}
+
+func (this_ *Worker) addChildrenNode(childrenNode *Info) {
+	var find = this_.findChildrenNode(childrenNode.Code)
+	if find == nil {
+		this_.childrenNodeClientCache[childrenNode.Code] = this_.getChildrenNodeClient(childrenNode)
+		this_.childrenNodeList = append(this_.childrenNodeList, childrenNode)
 	} else {
-		var callNodeList []*Info
-		for _, one := range this_.ChildrenNodeList {
-			if one.Token == childrenNode.ParentCode {
-				callNodeList = append(callNodeList, one)
-			}
+		copyNode(childrenNode, find)
+	}
+}
+
+func (this_ *Worker) getChildrenNodeClient(childrenNode *Info) (client *Client) {
+	client, ok := this_.childrenNodeClientCache[childrenNode.Code]
+	if !ok {
+		client = &Client{
+			Ip:       childrenNode.Ip,
+			Port:     childrenNode.Port,
+			Node:     childrenNode,
+			doMethod: this_.doMethod,
 		}
-		if len(callNodeList) == 0 {
-			callNodeList = append(callNodeList, this_.ChildrenNodeList...)
-		}
-		var bs []byte
-		bs, err = json.Marshal(childrenNode)
+
+		err := client.Start()
 		if err != nil {
+		}
+		this_.childrenNodeClientCache[childrenNode.Code] = client
+	}
+	if client.isStopped() {
+		err := client.Start()
+		if err != nil {
+			childrenNode.Status = StatusError
+			childrenNode.StatusError = err.Error()
 			return
 		}
-		var lastErr error
-		var added bool
-		for _, one := range callNodeList {
+		bs, _ := json.Marshal(this_.nodeList)
+		if len(bs) > 0 {
+			_, _ = client.Call(AddNodeList, bs)
+		}
+	}
+	return
+}
 
-			client := &Client{
-				Ip:       one.Ip,
-				Port:     one.Port,
-				Node:     one,
-				doMethod: this_.doMethod,
-			}
-			connectErr := client.Start()
-			if connectErr != nil {
-				if lastErr == nil {
-					lastErr = connectErr
-				}
-				continue
-			}
+func (this_ *Worker) AddNode(node *Info) {
+	this_.addNodeLock.Lock()
+	defer this_.addNodeLock.Unlock()
 
-			_, err = client.Call(OK, bs)
-			if err != nil {
-				client.Stop()
-				return
+	var find *Info
+
+	for _, one := range this_.nodeList {
+		if one.Code == node.Code {
+			find = one
+		}
+	}
+	if find == nil {
+		this_.nodeList = append(this_.nodeList, node)
+	} else {
+		copyNode(node, find)
+	}
+
+	for _, one := range this_.childrenNodeList {
+		client := this_.getChildrenNodeClient(one)
+		if !client.isStopped() {
+			bs, _ := json.Marshal(this_.nodeList)
+			if len(bs) > 0 {
+				_, _ = client.Call(AddNodeList, bs)
 			}
-			client.Stop()
-			added = true
 		}
-		if added {
-			return
+	}
+
+	this_.refreshNodeList()
+
+	return
+}
+
+func (this_ *Worker) refreshNodeList() {
+	for _, one := range this_.nodeList {
+		var find = this_.findChildrenNode(one.Code)
+
+		if find == nil {
+			if one.ParentCode == this_.Node.Code {
+				this_.addChildrenNode(one)
+			}
 		}
-		if lastErr != nil {
-			err = lastErr
-			return
-		}
-		err = errors.New(childrenNode.GetNodeStr() + " 无法寻址到父节点，请检查父节点是否存在并且在线")
-		return
 	}
 	return
 }
@@ -90,12 +133,13 @@ func (this_ *Worker) AddPortForwarding(portForwarding *PortForwarding) (err erro
 }
 
 func (this_ *Worker) Start() (err error) {
-	this_.Server = &Server{
+	this_.childrenNodeClientCache = map[string]*Client{}
+	this_.server = &Server{
 		Ip:     this_.Node.Ip,
 		Port:   this_.Node.Port,
 		Worker: this_,
 	}
-	err = this_.Server.Start()
+	err = this_.server.Start()
 	if err != nil {
 		return
 	}
@@ -110,7 +154,7 @@ func (this_ *Worker) childrenListen() {
 		if this_.isStopped() {
 			return
 		}
-		for _, one := range this_.ChildrenNodeList {
+		for _, one := range this_.childrenNodeList {
 			this_.childrenCheck(one)
 			switch one.Status {
 			case StatusStarted:
@@ -134,22 +178,10 @@ func (this_ *Worker) childrenListen() {
 
 func (this_ *Worker) childrenCheck(childrenNode *Info) {
 
-	client := &Client{
-		Ip:       childrenNode.Ip,
-		Port:     childrenNode.Port,
-		Node:     childrenNode,
-		doMethod: this_.doMethod,
-	}
-
-	err := client.Start()
-	if err != nil {
-		childrenNode.Status = StatusError
-		childrenNode.StatusError = err.Error()
+	client := this_.getChildrenNodeClient(childrenNode)
+	if client.isStopped() {
 		return
 	}
-
-	defer client.Stop()
-
 	childrenNode.Status = StatusStarted
 	childrenNode.StatusError = ""
 
@@ -175,7 +207,8 @@ func (this_ *Worker) childrenCheck(childrenNode *Info) {
 
 var (
 	OK                = "OK"
-	AddChildrenNode   = "addChildrenNode"
+	AddNode           = "addNode"
+	AddNodeList       = "addNodeList"
 	AddPortForwarding = "addPortForwarding"
 )
 
@@ -188,14 +221,23 @@ func (this_ *Worker) doMethod(msg *MethodMessage) (body []byte, err error) {
 	case OK:
 		body = msg.Body
 		return
-	case AddChildrenNode:
+	case AddNode:
 		data := &Info{}
-
 		err = json.Unmarshal(msg.Body, data)
 		if err != nil {
 			return
 		}
-		err = this_.AddChildrenNode(data)
+		this_.AddNode(data)
+		return
+	case AddNodeList:
+		var data []*Info
+		err = json.Unmarshal(msg.Body, &data)
+		if err != nil {
+			return
+		}
+		for _, one := range data {
+			this_.AddNode(one)
+		}
 		return
 	case AddPortForwarding:
 		data := &PortForwarding{}

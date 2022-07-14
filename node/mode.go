@@ -40,8 +40,17 @@ func (this_ *Info) checkToken(token []byte) bool {
 }
 
 type PortForwarding struct {
-	InPort  int    `json:"inPort"`
 	InNode  string `json:"inNode"`
-	OutPort int    `json:"outPort"`
+	InIp    string `json:"inIp"`
+	InPort  int    `json:"inPort"`
 	OutNode string `json:"outNode"`
+	OutIp   string `json:"outIp"`
+	OutPort int    `json:"outPort"`
+}
+
+func copyNode(source, target *Info) {
+	target.Name = source.Name
+	target.Ip = source.Ip
+	target.Port = source.Port
+	target.ParentCode = source.ParentCode
 }

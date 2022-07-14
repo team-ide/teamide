@@ -35,3 +35,7 @@ func (this_ *Client) Stop() {
 	}
 	this_.Processor.stopListen()
 }
+
+func (this_ *Client) isStopped() bool {
+	return this_.Processor == nil || this_.needStop()
+}
