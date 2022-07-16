@@ -12,45 +12,83 @@ var (
 )
 
 type Info struct {
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	Ip          string `json:"ip"`
-	Port        int    `json:"port"`
-	Token       string `json:"token"`
-	ParentCode  string `json:"parentCode"`
-	Status      int    `json:"status"`
-	StatusError string `json:"statusError"`
+	Id          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Network     string `json:"network,omitempty"`
+	Address     string `json:"address,omitempty"`
+	Token       string `json:"token,omitempty"`
+	ParentId    string `json:"parentId,omitempty"`
+	Status      int    `json:"status,omitempty"`
+	StatusError string `json:"statusError,omitempty"`
 }
 
 func (this_ *Info) GetNodeStr() (str string) {
-	return fmt.Sprintf("节点[%s]，IP[%s]，Port[%d]", this_.Name, this_.Ip, this_.Port)
+	return fmt.Sprintf("节点[%s][%s]", this_.Name, this_.Address)
+}
+
+func (this_ *Info) GetNetwork() (str string) {
+	return GetNetwork(this_.Network)
+}
+
+func (this_ *Info) GetAddress() (str string) {
+	return GetAddress(this_.Address)
 }
 
 func (this_ *Info) checkToken(token []byte) bool {
 	nodeToken := []byte(this_.Token)
 	if len(nodeToken) != len(token) {
-		println(fmt.Sprintf(this_.GetNodeStr() + " Token check field"))
+		Logger.Error(this_.GetNodeStr() + " Token check field")
 		return false
 	}
 	if !bytes.Contains(token, nodeToken) {
-		println(fmt.Sprintf(this_.GetNodeStr() + " Token check field"))
+		Logger.Error(this_.GetNodeStr() + " Token check field")
 		return false
 	}
 	return true
 }
 
-type PortForwarding struct {
-	InNode  string `json:"inNode"`
-	InIp    string `json:"inIp"`
-	InPort  int    `json:"inPort"`
-	OutNode string `json:"outNode"`
-	OutIp   string `json:"outIp"`
-	OutPort int    `json:"outPort"`
+type NetProxy struct {
+	Id    string     `json:"id,omitempty"`
+	Inner *NetConfig `json:"inner,omitempty"`
+	Outer *NetConfig `json:"outer,omitempty"`
+}
+
+type NetConfig struct {
+	NodeId  string `json:"nodeId,omitempty"`
+	Network string `json:"network,omitempty"`
+	Address string `json:"address,omitempty"`
+}
+
+func (this_ *NetConfig) GetInfoStr() (str string) {
+	return fmt.Sprintf("[%s][%s]", this_.Network, this_.Address)
+}
+
+func (this_ *NetConfig) GetNetwork() (str string) {
+	return GetNetwork(this_.Network)
+}
+
+func (this_ *NetConfig) GetAddress() (str string) {
+	return GetAddress(this_.Address)
+}
+
+func GetNetwork(network string) (str string) {
+	if network == "" {
+		return "tcp"
+	}
+	return network
+}
+
+func GetAddress(address string) (str string) {
+	if address == "" {
+		return ""
+	}
+	return address
 }
 
 func copyNode(source, target *Info) {
+	target.Id = source.Id
 	target.Name = source.Name
-	target.Ip = source.Ip
-	target.Port = source.Port
-	target.ParentCode = source.ParentCode
+	target.Address = source.Address
+	target.Token = source.Token
+	target.ParentId = source.ParentId
 }

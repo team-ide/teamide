@@ -1,72 +1,68 @@
 package node
 
 import (
+	"fmt"
 	"sync"
+	"teamide/pkg/util"
 	"testing"
+	"time"
 )
-
-var ()
-
-func init() {
-}
 
 func TestNode(t *testing.T) {
 
-	port := 11001
+	port := 11000
 
 	root := &Info{
-		Name:  "root",
-		Code:  "root",
-		Ip:    "127.0.0.1",
-		Port:  port,
-		Token: "root_token",
+		Id:      "root",
+		Name:    "root",
+		Address: fmt.Sprintf("127.0.0.1:%d", port),
+		Token:   "root_token",
 	}
 	rootWorker := testStartNode(root)
-	port++
-	node1 := &Info{
-		Name:       "node1",
-		Code:       "node1",
-		Ip:         "127.0.0.1",
-		Port:       port,
-		Token:      "node1_token",
-		ParentCode: "root",
-	}
-	_ = testStartNode(node1)
-	port++
-	node2 := &Info{
-		Name:       "node2",
-		Code:       "node2",
-		Ip:         "127.0.0.1",
-		Port:       port,
-		Token:      "node2_token",
-		ParentCode: "node1",
-	}
-	_ = testStartNode(node2)
-	port++
-	node3 := &Info{
-		Name:       "node3",
-		Code:       "node3",
-		Ip:         "127.0.0.1",
-		Port:       port,
-		Token:      "node3_token",
-		ParentCode: "node1",
-	}
-	_ = testStartNode(node3)
-	port++
-	node4 := &Info{
-		Name:       "node4",
-		Code:       "node4",
-		Ip:         "127.0.0.1",
-		Port:       port,
-		Token:      "node4_token",
-		ParentCode: "node2",
-	}
-	_ = testStartNode(node4)
+	rootWorker.AddNode(root)
+	for n := 1; n <= 10; n++ {
+		port++
 
-	rootWorker.AddNode(node1)
-	rootWorker.AddNode(node2)
-	rootWorker.AddNode(node3)
-	rootWorker.AddNode(node4)
+		node := &Info{
+			Id:      fmt.Sprintf("node-%d", n),
+			Name:    fmt.Sprintf("node-%d", n),
+			Address: fmt.Sprintf("127.0.0.1:%d", port),
+			Token:   fmt.Sprintf("node-%d-token", n),
+		}
+		if util.ContainsInt([]int{1, 2}, n) >= 0 {
+			node.ParentId = root.Id
+		} else if util.ContainsInt([]int{3, 4}, n) >= 0 {
+			node.ParentId = fmt.Sprintf("node-%d", 2)
+		} else if util.ContainsInt([]int{5, 6}, n) >= 0 {
+			node.ParentId = fmt.Sprintf("node-%d", 3)
+		} else if util.ContainsInt([]int{7, 8}, n) >= 0 {
+			node.ParentId = fmt.Sprintf("node-%d", 1)
+		} else if util.ContainsInt([]int{9, 10}, n) >= 0 {
+			node.ParentId = fmt.Sprintf("node-%d", 8)
+		}
+		_ = testStartNode(node)
+
+		rootWorker.AddNode(node)
+	}
+
+	time.Sleep(time.Second * 5)
+
+	err := rootWorker.AddNetProxy(&NetProxy{
+		Inner: &NetConfig{
+			NodeId: fmt.Sprintf("node-%d", 8),
+			//NodeId: fmt.Sprintf("root"),
+		},
+		Outer: &NetConfig{
+			NodeId: fmt.Sprintf("node-%d", 4),
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	//rootWorker.RemoveNode(&Info{
+	//	Id: fmt.Sprintf("node-%d", 5),
+	//})
 
 	var waitGroupForStop sync.WaitGroup
 

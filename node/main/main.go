@@ -12,14 +12,18 @@ var (
 func main() {
 
 	var err error
-	server := &node.Server{
-		Ip:   "0.0.0.0",
-		Port: 0,
+
+	nodeInfo := &node.Info{}
+	worker := &node.Worker{
+		Node: nodeInfo,
 	}
-	err = server.Start()
+	println("启动节点 " + nodeInfo.GetNodeStr() + " 开始")
+	err = worker.Start()
 	if err != nil {
+		println("启动节点 " + nodeInfo.GetNodeStr() + " 异常")
 		panic(err)
 	}
+	println("启动节点 " + nodeInfo.GetNodeStr() + " 成功")
 
 	waitGroupForStop.Add(1)
 

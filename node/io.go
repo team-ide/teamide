@@ -4,18 +4,111 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 	"io"
+	"net"
 )
 
 var (
-	LengthError = errors.New("读取流长度错误")
+	LengthError     = errors.New("读取流长度错误")
+	ConnClosedError = errors.New("连接已关闭")
 )
 
 type Message struct {
-	Token  string `json:"token,omitempty"`
-	Id     string `json:"id,omitempty"`
-	Method string `json:"method,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Token          string   `json:"token,omitempty"`
+	Id             string   `json:"id,omitempty"`
+	Method         int      `json:"method,omitempty"`
+	Error          string   `json:"error,omitempty"`
+	Ok             bool     `json:"ok,omitempty"`
+	Node           *Info    `json:"node,omitempty"`
+	NodeList       []*Info  `json:"nodeList,omitempty"`
+	TrackId        string   `json:"trackId,omitempty"`
+	LineNodeIdList []string `json:"lineNodeIdList,omitempty"`
+	Bytes          []byte   `json:"bytes,omitempty"`
+	listener       *MessageListener
+}
+
+func (this_ *Message) ReturnError(error string) (err error) {
+	err = this_.Return(&Message{
+		Error: error,
+	})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (this_ *Message) Return(msg *Message) (err error) {
+	msg.Id = this_.Id
+	msg.Method = this_.Method
+	msg.Token = this_.Token
+	err = this_.listener.Send(msg)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+type MessageListener struct {
+	conn      net.Conn
+	onMessage func(msg *Message)
+	isClose   bool
+	isStop    bool
+}
+
+func (this_ *MessageListener) stop() {
+	this_.isStop = true
+	_ = this_.conn.Close()
+}
+
+func (this_ *MessageListener) listen(onClose func()) {
+	var err error
+	this_.isClose = false
+	go func() {
+		defer func() {
+			this_.isClose = true
+			if x := recover(); x != nil {
+				Logger.Error("message listen error", zap.Error(err))
+				return
+			}
+			_ = this_.conn.Close()
+			onClose()
+		}()
+
+		for {
+			if this_.isStop {
+				return
+			}
+			var msg *Message
+			msg, err = ReadMessage(this_.conn)
+			if err != nil {
+				if this_.isStop {
+					return
+				}
+				if err == io.EOF {
+					return
+				}
+				Logger.Error("message read error", zap.Error(err))
+				return
+			}
+			msg.listener = this_
+			go this_.onMessage(msg)
+		}
+	}()
+}
+
+func (this_ *MessageListener) Send(msg *Message) (err error) {
+	if msg == nil {
+		return
+	}
+	if this_.isClose {
+		err = ConnClosedError
+		return
+	}
+	err = WriteMessage(this_.conn, msg)
+	return
 }
 
 func ReadMessage(reader io.Reader) (message *Message, err error) {

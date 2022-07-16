@@ -15,6 +15,18 @@ import (
 	"github.com/Chain-Zhang/pinyin"
 )
 
+// ContainsInt Returns the index position of the int val in array
+func ContainsInt(array []int, val int) (index int) {
+	index = -1
+	for i := 0; i < len(array); i++ {
+		if array[i] == val {
+			index = i
+			return
+		}
+	}
+	return
+}
+
 // ContainsString Returns the index position of the string val in array
 func ContainsString(array []string, val string) (index int) {
 	index = -1
