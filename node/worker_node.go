@@ -1,11 +1,13 @@
 package node
 
 import (
+	"errors"
 	"teamide/pkg/util"
 )
 
 func (this_ *Worker) findRootNode() (find *Info) {
-	for _, one := range this_.nodeList {
+	var list = this_.nodeList
+	for _, one := range list {
 		if one.ParentId == "" {
 			find = one
 		}
@@ -14,7 +16,8 @@ func (this_ *Worker) findRootNode() (find *Info) {
 }
 
 func (this_ *Worker) findNode(id string) (find *Info) {
-	for _, one := range this_.nodeList {
+	var list = this_.nodeList
+	for _, one := range list {
 		if one.Id == id {
 			find = one
 		}
@@ -23,7 +26,8 @@ func (this_ *Worker) findNode(id string) (find *Info) {
 }
 
 func (this_ *Worker) findChildrenNodeList(id string) (nodeList []*Info) {
-	for _, one := range this_.nodeList {
+	var list = this_.nodeList
+	for _, one := range list {
 		if one.ParentId == id {
 			nodeList = append(nodeList, one)
 		}
@@ -32,7 +36,8 @@ func (this_ *Worker) findChildrenNodeList(id string) (nodeList []*Info) {
 }
 
 func (this_ *Worker) findChildrenNode(id string) (find *Info) {
-	for _, one := range this_.childrenNodeList {
+	var list = this_.childrenNodeList
+	for _, one := range list {
 		if one.Id == id {
 			find = one
 		}
@@ -40,16 +45,40 @@ func (this_ *Worker) findChildrenNode(id string) (find *Info) {
 	return
 }
 
-func (this_ *Worker) AddNode(node *Info) {
+func (this_ *Worker) AddNode(node *Info) (err error) {
 	this_.nodeLock.Lock()
 	defer this_.nodeLock.Unlock()
+	Logger.Info(this_.Node.GetNodeStr() + " 添加节点 " + node.GetNodeStr())
+
+	if node == nil {
+		err = errors.New("节点为空")
+		return
+	}
+	if node.Id == "" {
+		err = errors.New("节点不能为空")
+		return
+	}
+	if node.GetAddress() == "" {
+		err = errors.New("节点地址不能为空")
+		return
+	}
+	if node.Token == "" {
+		err = errors.New("节点Token为空")
+		return
+	}
 
 	var list = this_.childrenNodeList
 	for _, one := range list {
-		listener := this_.getChildrenNodeListener(one)
-		_, _ = this_.Call(one, listener, methodAddNode, &Message{
-			Node: node,
+		pool := this_.getChildrenNodeListenerPool(one)
+		_ = pool.Do(func(listener *MessageListener) (e error) {
+			e = listener.Send(&Message{
+				Token:  one.Token,
+				Method: methodNodeAdd,
+				Node:   node,
+			})
+			return
 		})
+
 	}
 
 	var find = this_.findNode(node.Id)
@@ -145,16 +174,30 @@ func (this_ *Worker) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 	return
 }
 
-func (this_ *Worker) RemoveNode(node *Info) {
+func (this_ *Worker) RemoveNode(node *Info) (err error) {
 	this_.nodeLock.Lock()
 	defer this_.nodeLock.Unlock()
 
+	Logger.Info(this_.Node.GetNodeStr() + " 移除节点 " + node.GetNodeStr())
+	if node == nil {
+		err = errors.New("节点为空")
+		return
+	}
+	if node.Id == "" {
+		err = errors.New("节点不能为空")
+		return
+	}
 	var list = this_.childrenNodeList
 	var newList []*Info
 	for _, one := range list {
-		listener := this_.getChildrenNodeListener(one)
-		_, _ = this_.Call(one, listener, methodRemoveNode, &Message{
-			Node: node,
+		pool := this_.getChildrenNodeListenerPool(one)
+		_ = pool.Do(func(listener *MessageListener) (e error) {
+			e = listener.Send(&Message{
+				Token:  one.Token,
+				Method: methodNodeRemove,
+				Node:   node,
+			})
+			return
 		})
 		if one.Id != node.Id {
 			newList = append(newList, one)
@@ -174,6 +217,8 @@ func (this_ *Worker) RemoveNode(node *Info) {
 	this_.nodeList = newList
 
 	this_.refreshNodeList()
+
+	return
 }
 
 func (this_ *Worker) refreshNodeList() {
@@ -181,23 +226,9 @@ func (this_ *Worker) refreshNodeList() {
 	for _, one := range list {
 		var find = this_.findChildrenNode(one.Id)
 
-		if find == nil {
-			if one.ParentId == this_.Node.Id {
-				this_.addChildrenNode(one)
-			}
+		if find == nil && one.ParentId == this_.Node.Id {
+			this_.addChildrenNode(one)
 		}
-	}
-	return
-}
-
-func (this_ *Worker) resetNodeList(nodeList []*Info) {
-	var list = this_.nodeList
-	for _, one := range list {
-		this_.RemoveNode(one)
-	}
-
-	for _, one := range nodeList {
-		this_.AddNode(one)
 	}
 	return
 }

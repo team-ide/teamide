@@ -55,12 +55,12 @@ func (this_ *ProxyConnListener) listen(onClose func()) {
 			}
 			bytes = bytes[0:n]
 
-			_ = this_.messageListener.Send(&Message{
-				Method:         methodProxySend,
-				TrackId:        this_.trackId,
-				LineNodeIdList: this_.lineNodeIdList,
-				Bytes:          bytes,
-			})
+			//_ = this_.messageListener.Send(&Message{
+			//	Method:         methodProxySend,
+			//	TrackId:        this_.trackId,
+			//	LineNodeIdList: this_.lineNodeIdList,
+			//	Bytes:          bytes,
+			//})
 
 		}
 	}()

@@ -18,6 +18,7 @@ type Info struct {
 	Address     string `json:"address,omitempty"`
 	Token       string `json:"token,omitempty"`
 	ParentId    string `json:"parentId,omitempty"`
+	ConnSize    int    `json:"connSize,omitempty"`
 	Status      int    `json:"status,omitempty"`
 	StatusError string `json:"statusError,omitempty"`
 }
@@ -34,6 +35,14 @@ func (this_ *Info) GetAddress() (str string) {
 	return GetAddress(this_.Address)
 }
 
+func (this_ *Info) GetConnSize() (size int) {
+	size = this_.ConnSize
+	if this_.ConnSize <= 0 {
+		size = 5
+	}
+	return size
+}
+
 func (this_ *Info) checkToken(token []byte) bool {
 	nodeToken := []byte(this_.Token)
 	if len(nodeToken) != len(token) {
@@ -48,9 +57,11 @@ func (this_ *Info) checkToken(token []byte) bool {
 }
 
 type NetProxy struct {
-	Id    string     `json:"id,omitempty"`
-	Inner *NetConfig `json:"inner,omitempty"`
-	Outer *NetConfig `json:"outer,omitempty"`
+	Id                    string     `json:"id,omitempty"`
+	Inner                 *NetConfig `json:"inner,omitempty"`
+	Outer                 *NetConfig `json:"outer,omitempty"`
+	LineNodeIdList        []string   `json:"lineNodeIdList,omitempty"`
+	ReverseLineNodeIdList []string   `json:"reverseLineNodeIdList,omitempty"`
 }
 
 type NetConfig struct {

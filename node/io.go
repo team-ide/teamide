@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net"
+	"sync"
 )
 
 var (
@@ -15,16 +16,21 @@ var (
 )
 
 type Message struct {
-	Token          string   `json:"token,omitempty"`
-	Id             string   `json:"id,omitempty"`
-	Method         int      `json:"method,omitempty"`
-	Error          string   `json:"error,omitempty"`
-	Ok             bool     `json:"ok,omitempty"`
-	Node           *Info    `json:"node,omitempty"`
-	NodeList       []*Info  `json:"nodeList,omitempty"`
-	TrackId        string   `json:"trackId,omitempty"`
-	LineNodeIdList []string `json:"lineNodeIdList,omitempty"`
-	Bytes          []byte   `json:"bytes,omitempty"`
+	Token          string      `json:"token,omitempty"`
+	Id             string      `json:"id,omitempty"`
+	FromNodeId     string      `json:"fromNodeId,omitempty"`
+	Method         int         `json:"method,omitempty"`
+	Error          string      `json:"error,omitempty"`
+	Ok             bool        `json:"ok,omitempty"`
+	Node           *Info       `json:"node,omitempty"`
+	NodeList       []*Info     `json:"nodeList,omitempty"`
+	NetProxyId     string      `json:"netProxyId,omitempty"`
+	ConnId         string      `json:"connId,omitempty"`
+	IsReverse      bool        `json:"isReverse,omitempty"`
+	LineNodeIdList []string    `json:"lineNodeIdList,omitempty"`
+	NetProxy       *NetProxy   `json:"netProxy,omitempty"`
+	NetProxyList   []*NetProxy `json:"netProxyList,omitempty"`
+	Bytes          []byte      `json:"bytes,omitempty"`
 	listener       *MessageListener
 }
 
@@ -56,6 +62,7 @@ type MessageListener struct {
 	onMessage func(msg *Message)
 	isClose   bool
 	isStop    bool
+	writeMu   sync.Mutex
 }
 
 func (this_ *MessageListener) stop() {
@@ -107,6 +114,8 @@ func (this_ *MessageListener) Send(msg *Message) (err error) {
 		err = ConnClosedError
 		return
 	}
+	this_.writeMu.Lock()
+	defer this_.writeMu.Unlock()
 	err = WriteMessage(this_.conn, msg)
 	return
 }

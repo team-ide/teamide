@@ -9,7 +9,7 @@ import (
 )
 
 func TestNode(t *testing.T) {
-
+	var err error
 	port := 11000
 
 	root := &Info{
@@ -19,8 +19,11 @@ func TestNode(t *testing.T) {
 		Token:   "root_token",
 	}
 	rootWorker := testStartNode(root)
-	rootWorker.AddNode(root)
-	for n := 1; n <= 10; n++ {
+	err = rootWorker.AddNode(root)
+	if err != nil {
+		panic(err)
+	}
+	for n := 1; n <= 3; n++ {
 		port++
 
 		node := &Info{
@@ -42,18 +45,24 @@ func TestNode(t *testing.T) {
 		}
 		_ = testStartNode(node)
 
-		rootWorker.AddNode(node)
+		err = rootWorker.AddNode(node)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	time.Sleep(time.Second * 5)
 
-	err := rootWorker.AddNetProxy(&NetProxy{
+	err = rootWorker.AddNetProxy(&NetProxy{
+		Id: util.UUID(),
 		Inner: &NetConfig{
-			NodeId: fmt.Sprintf("node-%d", 8),
+			Address: ":8088",
+			NodeId:  fmt.Sprintf("node-%d", 1),
 			//NodeId: fmt.Sprintf("root"),
 		},
 		Outer: &NetConfig{
-			NodeId: fmt.Sprintf("node-%d", 4),
+			NodeId:  fmt.Sprintf("node-%d", 3),
+			Address: "teamide.com:22",
 		},
 	})
 	if err != nil {

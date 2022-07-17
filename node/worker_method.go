@@ -9,11 +9,17 @@ import (
 )
 
 var (
-	methodOK            = 1
-	methodAddNode       = 2
-	methodRemoveNode    = 3
-	methodResetNodeList = 4
-	methodProxySend     = 5
+	methodOK         = 1
+	methodInitialize = 2
+
+	methodNodeAdd    = 11
+	methodNodeRemove = 12
+
+	methodNetProxyAdd       = 21
+	methodNetProxyRemove    = 22
+	methodNetProxyNewConn   = 23
+	methodNetProxyCloseConn = 24
+	methodNetProxySend      = 25
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
@@ -109,18 +115,37 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	case methodOK:
 		res.Ok = true
 		return
-	case methodAddNode:
+	case methodInitialize:
+		this_.initialize(msg.NodeList, msg.NetProxyList)
+		return
+	case methodNodeAdd:
 		if msg.Node != nil {
-			this_.AddNode(msg.Node)
+			_ = this_.AddNode(msg.Node)
 		}
 		return
-	case methodRemoveNode:
+	case methodNodeRemove:
 		if msg.Node != nil {
-			this_.RemoveNode(msg.Node)
+			_ = this_.RemoveNode(msg.Node)
 		}
 		return
-	case methodResetNodeList:
-		this_.resetNodeList(msg.NodeList)
+	case methodNetProxyAdd:
+		if msg.NetProxy != nil {
+			err = this_.AddNetProxy(msg.NetProxy)
+		}
+		return
+	case methodNetProxyRemove:
+		if msg.NetProxy != nil {
+			err = this_.RemoveNetProxy(msg.NetProxy)
+		}
+		return
+	case methodNetProxyNewConn:
+		err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)
+		return
+	case methodNetProxyCloseConn:
+		err = this_.netProxyCloseConn(msg.IsReverse, msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)
+		return
+	case methodNetProxySend:
+		err = this_.netProxySend(msg.IsReverse, msg.LineNodeIdList, msg.NetProxyId, msg.ConnId, msg.Bytes)
 		return
 	}
 
