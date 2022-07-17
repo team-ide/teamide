@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 	"teamide/node"
-	"teamide/pkg/util"
 )
 
 var (
@@ -80,7 +79,7 @@ func main() {
 	})
 
 	_ = worker.AddNetProxy(&node.NetProxy{
-		Id: util.UUID(),
+		Id: "1",
 		Inner: &node.NetConfig{
 			NodeId: fmt.Sprintf("node%d", 1),
 			//NodeId: fmt.Sprintf("root"),

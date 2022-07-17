@@ -103,6 +103,13 @@ func (this_ *Worker) RemoveNetProxy(netProxy *NetProxy) (err error) {
 		})
 	}
 
+	if this_.Node.Id == netProxy.Inner.NodeId {
+		_ = this_.removeNetProxyInner(netProxy)
+	}
+	if this_.Node.Id == netProxy.Outer.NodeId {
+		_ = this_.removeNetProxyOuter(netProxy)
+	}
+
 	return
 }
 
@@ -135,6 +142,18 @@ func (this_ *Worker) getNetProxyInner(netProxy *NetProxy) (inner *InnerServer) {
 	return
 }
 
+func (this_ *Worker) removeNetProxyInner(netProxy *NetProxy) (inner *InnerServer) {
+	this_.netProxyInnerLock.Lock()
+	defer this_.netProxyInnerLock.Unlock()
+
+	inner, ok := this_.netProxyInnerCache[netProxy.Id]
+	if ok {
+		inner.Stop()
+		delete(this_.netProxyInnerCache, netProxy.Id)
+	}
+	return
+}
+
 func (this_ *Worker) getNetProxyOuter(netProxy *NetProxy) (outer *OuterListener) {
 	this_.netProxyOuterLock.Lock()
 	defer this_.netProxyOuterLock.Unlock()
@@ -147,6 +166,18 @@ func (this_ *Worker) getNetProxyOuter(netProxy *NetProxy) (outer *OuterListener)
 		}
 		outer.Start()
 		this_.netProxyOuterCache[netProxy.Id] = outer
+	}
+	return
+}
+
+func (this_ *Worker) removeNetProxyOuter(netProxy *NetProxy) (inner *InnerServer) {
+	this_.netProxyOuterLock.Lock()
+	defer this_.netProxyOuterLock.Unlock()
+
+	outer, ok := this_.netProxyOuterCache[netProxy.Id]
+	if ok {
+		outer.Stop()
+		delete(this_.netProxyOuterCache, netProxy.Id)
 	}
 	return
 }

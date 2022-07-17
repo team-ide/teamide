@@ -63,6 +63,7 @@ type MessageListener struct {
 	isClose   bool
 	isStop    bool
 	writeMu   sync.Mutex
+	id        string
 }
 
 func (this_ *MessageListener) stop() {
@@ -78,7 +79,6 @@ func (this_ *MessageListener) listen(onClose func()) {
 			this_.isClose = true
 			if x := recover(); x != nil {
 				Logger.Error("message listen error", zap.Error(err))
-				return
 			}
 			_ = this_.conn.Close()
 			onClose()
@@ -97,7 +97,7 @@ func (this_ *MessageListener) listen(onClose func()) {
 				if err == io.EOF {
 					return
 				}
-				Logger.Error("message read error", zap.Error(err))
+				//Logger.Error("message read error", zap.Error(err))
 				return
 			}
 			msg.listener = this_

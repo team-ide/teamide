@@ -1,7 +1,6 @@
 package node
 
 import (
-	"fmt"
 	"go.uber.org/zap"
 	"io"
 	"net"
@@ -21,8 +20,22 @@ func (this_ *OuterListener) Start() {
 
 	return
 }
+func (this_ *OuterListener) Stop() {
+	this_.isStop = true
+
+	this_.connCacheLock.Lock()
+	defer this_.connCacheLock.Unlock()
+	for _, conn := range this_.connCache {
+		_ = conn.Close()
+	}
+	this_.connCache = make(map[string]net.Conn)
+	return
+}
 
 func (this_ *OuterListener) newConn(connId string) (err error) {
+	if this_.isStop {
+		return
+	}
 	this_.connCacheLock.Lock()
 	defer this_.connCacheLock.Unlock()
 
@@ -43,13 +56,14 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 		}()
 
 		for {
+			var n int
 			var bytes = make([]byte, 1024*8)
-			n, err := conn.Read(bytes)
+			n, err = conn.Read(bytes)
 			if err != nil {
 				if err == io.EOF {
 					break
 				}
-				Logger.Error(this_.Node.GetNodeStr()+" 服务至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 读取异常", zap.Error(err))
+				//Logger.Error(this_.Node.GetNodeStr()+" 服务至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 读取异常", zap.Error(err))
 				break
 			}
 			bytes = bytes[:n]
@@ -85,7 +99,7 @@ func (this_ *OuterListener) send(connId string, bytes []byte) (err error) {
 	conn := this_.getConn(connId)
 	if conn != nil {
 		_, err = conn.Write(bytes)
-		Logger.Info(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
+		//Logger.Info(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
 	} else {
 		Logger.Warn(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 不存在")
 	}

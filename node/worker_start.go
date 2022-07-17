@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"net"
+	"teamide/pkg/util"
+	"time"
 )
 
 func (this_ *Worker) Start() (err error) {
@@ -29,6 +31,7 @@ func (this_ *Worker) serverListenerKeepAlive() {
 		return
 	}
 	defer func() {
+		time.Sleep(5 * time.Second)
 		go this_.serverListenerKeepAlive()
 	}()
 	Logger.Info(this_.Node.GetNodeStr() + " 服务启动 开始")
@@ -59,17 +62,23 @@ func (this_ *Worker) serverListenerKeepAlive() {
 				}
 				if msg.FromNodeId != "" {
 					pool := this_.getFromNodeListenerPool(msg.FromNodeId)
+					var find = this_.findNode(msg.FromNodeId)
 					messageListener := &MessageListener{
 						conn:      conn,
 						onMessage: this_.onMessage,
+						id:        util.UUID(),
 					}
 					messageListener.listen(func() {
-						messageListener.isStop = true
+						messageListener.stop()
 						pool.Remove(messageListener)
+						if find != nil {
+							Logger.Info(this_.Node.GetNodeStr() + " 移除至 " + find.GetNodeStr() + " 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
+						} else {
+							Logger.Info(this_.Node.GetNodeStr() + " 移除至 " + msg.FromNodeId + " 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
+						}
 					})
 					pool.Put(messageListener)
 					this_.Node.ParentId = msg.FromNodeId
-					var find = this_.findNode(msg.FromNodeId)
 					if find != nil {
 						Logger.Info(this_.Node.GetNodeStr() + " 添加至 " + find.GetNodeStr() + " 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 					} else {

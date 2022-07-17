@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"net"
+	"teamide/pkg/util"
 	"time"
 )
 
@@ -30,6 +31,7 @@ func (this_ *Worker) getChildrenNodeListenerPool(childrenNode *Info) (pool *Mess
 			listener := &MessageListener{
 				onMessage: this_.onMessage,
 				isClose:   true,
+				id:        util.UUID(),
 			}
 			this_.messageListenerKeepAlive(childrenNode, listener, i == 0)
 			pool.Put(listener)
@@ -77,6 +79,7 @@ func (this_ *Worker) messageListenerKeepAlive(node *Info, listener *MessageListe
 			if listener.isStop {
 				return
 			}
+			time.Sleep(5 * time.Second)
 			this_.messageListenerKeepAlive(node, listener, isFirst)
 		})
 

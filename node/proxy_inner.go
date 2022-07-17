@@ -1,20 +1,21 @@
 package node
 
 import (
-	"fmt"
 	"go.uber.org/zap"
 	"io"
 	"net"
 	"sync"
 	"teamide/pkg/util"
+	"time"
 )
 
 type InnerServer struct {
 	netProxy *NetProxy
 	isStop   bool
 	*Worker
-	connCache     map[string]net.Conn
-	connCacheLock sync.Mutex
+	connCache      map[string]net.Conn
+	connCacheLock  sync.Mutex
+	serverListener net.Listener
 }
 
 func (this_ *InnerServer) Start() {
@@ -22,6 +23,20 @@ func (this_ *InnerServer) Start() {
 
 	go this_.serverListenerKeepAlive()
 
+	return
+}
+
+func (this_ *InnerServer) Stop() {
+	this_.isStop = true
+
+	this_.connCacheLock.Lock()
+	defer this_.connCacheLock.Unlock()
+	_ = this_.serverListener.Close()
+
+	for _, conn := range this_.connCache {
+		_ = conn.Close()
+	}
+	this_.connCache = make(map[string]net.Conn)
 	return
 }
 
@@ -34,10 +49,12 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		return
 	}
 	defer func() {
+		time.Sleep(5 * time.Second)
 		go this_.serverListenerKeepAlive()
 	}()
 	Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
-	listener, err := net.Listen(this_.netProxy.Inner.GetNetwork(), this_.netProxy.Inner.GetAddress())
+	var err error
+	this_.serverListener, err = net.Listen(this_.netProxy.Inner.GetNetwork(), this_.netProxy.Inner.GetAddress())
 	if err != nil {
 		Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
 		return
@@ -45,7 +62,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 	Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
 	for {
 		var conn net.Conn
-		conn, err = listener.Accept()
+		conn, err = this_.serverListener.Accept()
 		if err != nil {
 			Logger.Error(this_.netProxy.Inner.GetInfoStr()+" listen accept error", zap.Error(err))
 			continue
@@ -74,13 +91,14 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		return
 	}
 	for {
+		var n int
 		var bytes = make([]byte, 1024*8)
-		n, err := conn.Read(bytes)
+		n, err = conn.Read(bytes)
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
-			Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 读取异常", zap.Error(err))
+			//Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 读取异常", zap.Error(err))
 			break
 		}
 		bytes = bytes[:n]
@@ -121,7 +139,7 @@ func (this_ *InnerServer) send(connId string, bytes []byte) (err error) {
 	conn := this_.getConn(connId)
 	if conn != nil {
 		_, err = conn.Write(bytes)
-		Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
+		//Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
 	} else {
 		Logger.Warn(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 不存在")
 	}

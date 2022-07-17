@@ -29,8 +29,8 @@ func (this_ *MessageListenerPool) Remove(listener *MessageListener) {
 
 	var listeners = this_.listeners
 	for _, one := range listeners {
-		if one != listener {
-			list = append(list, listener)
+		if one.id != listener.id {
+			list = append(list, one)
 		}
 	}
 	this_.listeners = list
