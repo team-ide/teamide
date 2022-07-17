@@ -78,7 +78,15 @@ func (this_ *Worker) serverListenerKeepAlive() {
 						}
 					})
 					pool.Put(messageListener)
+
 					this_.Node.ParentId = msg.FromNodeId
+					var findThisNode = this_.findNode(this_.Node.Id)
+					if findThisNode != nil {
+						if findThisNode.ParentId != msg.FromNodeId {
+							findThisNode.ParentId = msg.FromNodeId
+							this_.refreshNodeList()
+						}
+					}
 					if find != nil {
 						Logger.Info(this_.Node.GetNodeStr() + " 添加至 " + find.GetNodeStr() + " 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 					} else {
