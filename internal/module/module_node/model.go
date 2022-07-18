@@ -1,19 +1,19 @@
-package module_ssh_tunnel
+package module_node
 
 import "time"
 
 const (
-	// ModuleTunnel 工具箱模块
-	ModuleTunnel = "tunnel"
-	// TableTunnel 隧道表
-	TableTunnel        = "TM_TUNNEL"
-	TableTunnelComment = "隧道"
+	// ModuleNode 节点模块
+	ModuleNode = "node"
+	// TableNode 节点表
+	TableNode        = "TM_NODE"
+	TableNodeComment = "节点"
 )
 
-// TunnelModel 隧道模型，和隧道表对应
-type TunnelModel struct {
-	TunnelId     int64     `json:"tunnelId,omitempty"`
-	TunnelType   string    `json:"tunnelType,omitempty"`
+// NodeModel 节点模型，和节点表对应
+type NodeModel struct {
+	NodeId       int64     `json:"nodeId,omitempty"`
+	NodeServerId string    `json:"nodeServerId,omitempty"`
 	Name         string    `json:"name,omitempty"`
 	Comment      string    `json:"comment,omitempty"`
 	Option       string    `json:"option,omitempty"`
@@ -25,10 +25,10 @@ type TunnelModel struct {
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
 }
 
-func (entity *TunnelModel) GetTableName() string {
-	return TableTunnel
+func (entity *NodeModel) GetTableName() string {
+	return TableNode
 }
 
-func (entity *TunnelModel) GetPKColumnName() string {
+func (entity *NodeModel) GetPKColumnName() string {
 	return ""
 }

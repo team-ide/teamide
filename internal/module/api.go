@@ -10,6 +10,7 @@ import (
 	"teamide/internal/config"
 	"teamide/internal/context"
 	"teamide/internal/module/module_login"
+	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
@@ -24,6 +25,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		loginService:    module_login.NewLoginService(ServerContext),
 		installService:  NewInstallService(ServerContext),
 		toolboxService:  module_toolbox.NewToolboxService(ServerContext),
+		nodeService:     module_node.NewNodeService(ServerContext),
 
 		apiCache: make(map[string]*base.ApiWorker),
 	}
@@ -75,6 +77,7 @@ type Api struct {
 	config.ServerConfig
 	*context.ServerContext
 	toolboxService  *module_toolbox.ToolboxService
+	nodeService     *module_node.NodeService
 	userService     *module_user.UserService
 	registerService *module_register.RegisterService
 	loginService    *module_login.LoginService
@@ -106,6 +109,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"updateCheck"}, Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
 
 	return
 }
