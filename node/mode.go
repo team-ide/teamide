@@ -13,9 +13,7 @@ var (
 
 type Info struct {
 	Id          string `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Network     string `json:"network,omitempty"`
-	Address     string `json:"address,omitempty"`
+	ConnAddress string `json:"connAddress,omitempty"`
 	Token       string `json:"token,omitempty"`
 	ParentId    string `json:"parentId,omitempty"`
 	ConnSize    int    `json:"connSize,omitempty"`
@@ -24,23 +22,7 @@ type Info struct {
 }
 
 func (this_ *Info) GetNodeStr() (str string) {
-	return fmt.Sprintf("节点[%s][%s]", this_.Name, this_.Address)
-}
-
-func (this_ *Info) GetNetwork() (str string) {
-	return GetNetwork(this_.Network)
-}
-
-func (this_ *Info) GetAddress() (str string) {
-	return GetAddress(this_.Address)
-}
-
-func (this_ *Info) GetConnSize() (size int) {
-	size = this_.ConnSize
-	if this_.ConnSize <= 0 {
-		size = 5
-	}
-	return size
+	return fmt.Sprintf("节点[%s][%s]", this_.Id, this_.ConnAddress)
 }
 
 func (this_ *Info) checkToken(token []byte) bool {
@@ -98,8 +80,7 @@ func GetAddress(address string) (str string) {
 
 func copyNode(source, target *Info) {
 	target.Id = source.Id
-	target.Name = source.Name
-	target.Address = source.Address
+	target.ConnAddress = source.ConnAddress
 	target.Token = source.Token
 	target.ParentId = source.ParentId
 }

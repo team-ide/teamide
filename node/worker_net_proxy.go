@@ -7,7 +7,7 @@ import (
 )
 
 func (this_ *Worker) findNetProxy(id string) (find *NetProxy) {
-	var list = this_.netProxyList
+	var list = this_.cache.netProxyList
 	for _, one := range list {
 		if one.Id == id {
 			find = one
@@ -57,69 +57,57 @@ func (this_ *Worker) formatNetProxy(netProxy *NetProxy) (err error) {
 }
 
 func (this_ *Worker) AddNetProxy(netProxy *NetProxy) (err error) {
-	this_.netProxyLock.Lock()
-	defer this_.netProxyLock.Unlock()
-	Logger.Info(this_.Node.GetNodeStr()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
+	Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
+	this_.cache.netProxyLock.Lock()
+	defer this_.cache.netProxyLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
 
 	err = this_.formatNetProxy(netProxy)
 	if err != nil {
 		return
 	}
 
-	var list = this_.childrenNodeList
-	for _, one := range list {
-		pool := this_.getChildrenNodeListenerPool(one)
-		_ = pool.Do(func(listener *MessageListener) (e error) {
-			e = listener.Send(&Message{
-				Token:    one.Token,
-				Method:   methodNetProxyAdd,
-				NetProxy: netProxy,
-			})
-			return
-		})
-	}
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method:   methodNetProxyAdd,
+		NetProxy: netProxy,
+	})
 
-	this_.netProxyList = append(this_.netProxyList, netProxy)
+	this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
 
 	this_.refreshNetProxy()
 	return
 }
 
-func (this_ *Worker) RemoveNetProxy(netProxy *NetProxy) (err error) {
-	this_.netProxyLock.Lock()
-	defer this_.netProxyLock.Unlock()
-	Logger.Info(this_.Node.GetNodeStr()+" 移除网络代理 ", zap.Any("netProxy", netProxy))
+func (this_ *Worker) RemoveNetProxy(netProxyId string) (err error) {
+	this_.cache.netProxyLock.Lock()
+	defer this_.cache.netProxyLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo()+" 移除网络代理 ", zap.Any("netProxyId", netProxyId))
 
-	var list = this_.childrenNodeList
-	for _, one := range list {
-		pool := this_.getChildrenNodeListenerPool(one)
-		_ = pool.Do(func(listener *MessageListener) (e error) {
-			e = listener.Send(&Message{
-				Token:    one.Token,
-				Method:   methodNetProxyRemove,
-				NetProxy: netProxy,
-			})
-			return
-		})
-	}
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method:     methodNetProxyRemove,
+		NetProxyId: netProxyId,
+	})
 
-	if this_.Node.Id == netProxy.Inner.NodeId {
-		_ = this_.removeNetProxyInner(netProxy)
-	}
-	if this_.Node.Id == netProxy.Outer.NodeId {
-		_ = this_.removeNetProxyOuter(netProxy)
+	var find = this_.findNetProxy(netProxyId)
+	if find != nil {
+		if this_.server.Id == find.Inner.NodeId {
+			_ = this_.removeNetProxyInner(netProxyId)
+		}
+		if this_.server.Id == find.Outer.NodeId {
+			_ = this_.removeNetProxyOuter(netProxyId)
+		}
 	}
 
 	return
 }
 
 func (this_ *Worker) refreshNetProxy() {
-	var list = this_.netProxyList
+	var list = this_.cache.netProxyList
 	for _, one := range list {
-		if this_.Node.Id == one.Inner.NodeId {
+		if this_.server.Id == one.Inner.NodeId {
 			_ = this_.getNetProxyInner(one)
 		}
-		if this_.Node.Id == one.Outer.NodeId {
+		if this_.server.Id == one.Outer.NodeId {
 			_ = this_.getNetProxyOuter(one)
 		}
 	}
@@ -127,83 +115,80 @@ func (this_ *Worker) refreshNetProxy() {
 }
 
 func (this_ *Worker) getNetProxyInner(netProxy *NetProxy) (inner *InnerServer) {
-	this_.netProxyInnerLock.Lock()
-	defer this_.netProxyInnerLock.Unlock()
+	this_.cache.netProxyInnerLock.Lock()
+	defer this_.cache.netProxyInnerLock.Unlock()
 
-	inner, ok := this_.netProxyInnerCache[netProxy.Id]
+	inner, ok := this_.cache.netProxyInnerCache[netProxy.Id]
 	if !ok {
 		inner = &InnerServer{
 			netProxy: netProxy,
 			Worker:   this_,
 		}
 		inner.Start()
-		this_.netProxyInnerCache[netProxy.Id] = inner
+		this_.cache.netProxyInnerCache[netProxy.Id] = inner
 	}
 	return
 }
 
-func (this_ *Worker) removeNetProxyInner(netProxy *NetProxy) (inner *InnerServer) {
-	this_.netProxyInnerLock.Lock()
-	defer this_.netProxyInnerLock.Unlock()
+func (this_ *Worker) removeNetProxyInner(netProxyId string) (inner *InnerServer) {
+	this_.cache.netProxyInnerLock.Lock()
+	defer this_.cache.netProxyInnerLock.Unlock()
 
-	inner, ok := this_.netProxyInnerCache[netProxy.Id]
+	inner, ok := this_.cache.netProxyInnerCache[netProxyId]
 	if ok {
 		inner.Stop()
-		delete(this_.netProxyInnerCache, netProxy.Id)
+		delete(this_.cache.netProxyInnerCache, netProxyId)
 	}
 	return
 }
 
 func (this_ *Worker) getNetProxyOuter(netProxy *NetProxy) (outer *OuterListener) {
-	this_.netProxyOuterLock.Lock()
-	defer this_.netProxyOuterLock.Unlock()
+	this_.cache.netProxyOuterLock.Lock()
+	defer this_.cache.netProxyOuterLock.Unlock()
 
-	outer, ok := this_.netProxyOuterCache[netProxy.Id]
+	outer, ok := this_.cache.netProxyOuterCache[netProxy.Id]
 	if !ok {
 		outer = &OuterListener{
 			netProxy: netProxy,
 			Worker:   this_,
 		}
 		outer.Start()
-		this_.netProxyOuterCache[netProxy.Id] = outer
+		this_.cache.netProxyOuterCache[netProxy.Id] = outer
 	}
 	return
 }
 
-func (this_ *Worker) removeNetProxyOuter(netProxy *NetProxy) (inner *InnerServer) {
-	this_.netProxyOuterLock.Lock()
-	defer this_.netProxyOuterLock.Unlock()
+func (this_ *Worker) removeNetProxyOuter(netProxyId string) (inner *InnerServer) {
+	this_.cache.netProxyOuterLock.Lock()
+	defer this_.cache.netProxyOuterLock.Unlock()
 
-	outer, ok := this_.netProxyOuterCache[netProxy.Id]
+	outer, ok := this_.cache.netProxyOuterCache[netProxyId]
 	if ok {
 		outer.Stop()
-		delete(this_.netProxyOuterCache, netProxy.Id)
+		delete(this_.cache.netProxyOuterCache, netProxyId)
 	}
 	return
 }
 
-func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(node *Info, listener *MessageListener) (err error)) (send bool, err error) {
+func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(listener *MessageListener) (err error)) (send bool, err error) {
 	if len(lineNodeIdList) == 0 {
 		err = errors.New("节点线不存在")
 		return
 	}
-	var thisNodeIndex = util.ContainsString(lineNodeIdList, this_.Node.Id)
+	var thisNodeIndex = util.ContainsString(lineNodeIdList, this_.server.Id)
 	if thisNodeIndex != len(lineNodeIdList)-1 {
 		nodeId := lineNodeIdList[thisNodeIndex+1]
-		var find = this_.findChildrenNode(nodeId)
-		var pool *MessageListenerPool
-		if find == nil {
-			find = this_.findNode(nodeId)
-			if find == nil {
-				err = errors.New("节点[" + nodeId + "]不存在")
-				return
-			}
-			pool = this_.getFromNodeListenerPool(nodeId)
-		} else {
-			pool = this_.getChildrenNodeListenerPool(find)
+
+		var pool = this_.cache.getNodeListenerPool(this_.server.Id, nodeId)
+		if pool == nil {
+			pool = this_.cache.getNodeListenerPool(nodeId, this_.server.Id)
+		}
+		if pool == nil {
+			err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + nodeId + "] 暂无通讯渠道")
+			return
 		}
 		err = pool.Do(func(listener *MessageListener) (e error) {
-			e = doSend(find, listener)
+			e = doSend(listener)
 			return
 		})
 		if err != nil {
@@ -215,8 +200,8 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(node *Info,
 	return
 }
 func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string, connId string) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(node *Info, listener *MessageListener) (e error) {
-		_, e = this_.Call(node, listener, methodNetProxyNewConn, &Message{
+	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyNewConn, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,
 			ConnId:         connId,
@@ -243,8 +228,8 @@ func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string,
 }
 
 func (this_ *Worker) netProxyCloseConn(isReverse bool, lineNodeIdList []string, netProxyId string, connId string) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(node *Info, listener *MessageListener) (e error) {
-		_, e = this_.Call(node, listener, methodNetProxyCloseConn, &Message{
+	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyCloseConn, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,
 			ConnId:         connId,
@@ -277,8 +262,8 @@ func (this_ *Worker) netProxyCloseConn(isReverse bool, lineNodeIdList []string, 
 }
 
 func (this_ *Worker) netProxySend(isReverse bool, lineNodeIdList []string, netProxyId string, connId string, bytes []byte) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(node *Info, listener *MessageListener) (e error) {
-		_, e = this_.Call(node, listener, methodNetProxySend, &Message{
+	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxySend, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,
 			ConnId:         connId,

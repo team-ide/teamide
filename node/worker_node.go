@@ -6,7 +6,7 @@ import (
 )
 
 func (this_ *Worker) findRootNode() (find *Info) {
-	var list = this_.nodeList
+	var list = this_.cache.nodeList
 	for _, one := range list {
 		if one.ParentId == "" {
 			find = one
@@ -16,7 +16,7 @@ func (this_ *Worker) findRootNode() (find *Info) {
 }
 
 func (this_ *Worker) findNode(id string) (find *Info) {
-	var list = this_.nodeList
+	var list = this_.cache.nodeList
 	for _, one := range list {
 		if one.Id == id {
 			find = one
@@ -26,7 +26,7 @@ func (this_ *Worker) findNode(id string) (find *Info) {
 }
 
 func (this_ *Worker) findChildrenNodeList(id string) (nodeList []*Info) {
-	var list = this_.nodeList
+	var list = this_.cache.nodeList
 	for _, one := range list {
 		if one.ParentId == id {
 			nodeList = append(nodeList, one)
@@ -36,7 +36,7 @@ func (this_ *Worker) findChildrenNodeList(id string) (nodeList []*Info) {
 }
 
 func (this_ *Worker) findChildrenNode(id string) (find *Info) {
-	var list = this_.childrenNodeList
+	var list = this_.cache.childrenNodeList
 	for _, one := range list {
 		if one.Id == id {
 			find = one
@@ -46,9 +46,9 @@ func (this_ *Worker) findChildrenNode(id string) (find *Info) {
 }
 
 func (this_ *Worker) AddNode(node *Info) (err error) {
-	this_.nodeLock.Lock()
-	defer this_.nodeLock.Unlock()
-	Logger.Info(this_.Node.GetNodeStr() + " 添加节点 " + node.GetNodeStr())
+	this_.cache.nodeLock.Lock()
+	defer this_.cache.nodeLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo() + " 添加节点 " + node.GetNodeStr())
 
 	if node == nil {
 		err = errors.New("节点为空")
@@ -58,33 +58,20 @@ func (this_ *Worker) AddNode(node *Info) (err error) {
 		err = errors.New("节点不能为空")
 		return
 	}
-	if node.GetAddress() == "" {
-		err = errors.New("节点地址不能为空")
-		return
-	}
 	if node.Token == "" {
 		err = errors.New("节点Token为空")
 		return
 	}
 
-	var list = this_.childrenNodeList
-	for _, one := range list {
-		pool := this_.getChildrenNodeListenerPool(one)
-		_ = pool.Do(func(listener *MessageListener) (e error) {
-			e = listener.Send(&Message{
-				Token:  one.Token,
-				Method: methodNodeAdd,
-				Node:   node,
-			})
-			return
-		})
-
-	}
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method: methodNodeAdd,
+		Node:   node,
+	})
 
 	var find = this_.findNode(node.Id)
 
 	if find == nil {
-		this_.nodeList = append(this_.nodeList, node)
+		this_.cache.nodeList = append(this_.cache.nodeList, node)
 	} else {
 		copyNode(node, find)
 	}
@@ -174,47 +161,36 @@ func (this_ *Worker) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 	return
 }
 
-func (this_ *Worker) RemoveNode(node *Info) (err error) {
-	this_.nodeLock.Lock()
-	defer this_.nodeLock.Unlock()
+func (this_ *Worker) RemoveNode(nodeId string) (err error) {
+	this_.cache.nodeLock.Lock()
+	defer this_.cache.nodeLock.Unlock()
 
-	Logger.Info(this_.Node.GetNodeStr() + " 移除节点 " + node.GetNodeStr())
-	if node == nil {
-		err = errors.New("节点为空")
-		return
-	}
-	if node.Id == "" {
-		err = errors.New("节点不能为空")
-		return
-	}
-	var list = this_.childrenNodeList
+	Logger.Info(this_.server.GetServerInfo() + " 移除节点 " + nodeId)
+
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method: methodNodeRemove,
+		NodeId: nodeId,
+	})
+
+	var list = this_.cache.childrenNodeList
 	var newList []*Info
 	for _, one := range list {
-		pool := this_.getChildrenNodeListenerPool(one)
-		_ = pool.Do(func(listener *MessageListener) (e error) {
-			e = listener.Send(&Message{
-				Token:  one.Token,
-				Method: methodNodeRemove,
-				Node:   node,
-			})
-			return
-		})
-		if one.Id != node.Id {
+		if one.Id != nodeId {
 			newList = append(newList, one)
 		} else {
-			this_.removeChildrenNodeListener(one)
+			this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
 		}
 	}
-	this_.childrenNodeList = newList
+	this_.cache.childrenNodeList = newList
 
-	list = this_.nodeList
+	list = this_.cache.nodeList
 	newList = []*Info{}
 	for _, one := range list {
-		if one.Id != node.Id {
+		if one.Id != nodeId {
 			newList = append(newList, one)
 		}
 	}
-	this_.nodeList = newList
+	this_.cache.nodeList = newList
 
 	this_.refreshNodeList()
 
@@ -222,11 +198,11 @@ func (this_ *Worker) RemoveNode(node *Info) (err error) {
 }
 
 func (this_ *Worker) refreshNodeList() {
-	var list = this_.nodeList
+	var list = this_.cache.nodeList
 	for _, one := range list {
 		var find = this_.findChildrenNode(one.Id)
 
-		if find == nil && one.ParentId == this_.Node.Id {
+		if find == nil && one.ParentId == this_.server.Id {
 			this_.addChildrenNode(one)
 		}
 	}

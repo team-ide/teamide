@@ -6,9 +6,8 @@ import (
 )
 
 var (
-	MessageListenerPoolTimeout = errors.New("可用消息监听器获取超时")
-	MessageListenerPoolStop    = errors.New("消息监听器池已停止")
-	MessageListenerNull        = errors.New("消息监听器池暂无监听器")
+	MessageListenerPoolStop = errors.New("消息监听器池已停止")
+	MessageListenerNull     = errors.New("消息监听器池暂无监听器")
 )
 
 type MessageListenerPool struct {
@@ -29,7 +28,7 @@ func (this_ *MessageListenerPool) Remove(listener *MessageListener) {
 
 	var listeners = this_.listeners
 	for _, one := range listeners {
-		if one.id != listener.id {
+		if one != listener {
 			list = append(list, one)
 		}
 	}
@@ -51,6 +50,18 @@ func (this_ *MessageListenerPool) Stop() {
 	defer this_.listenerMu.Unlock()
 
 	var listeners = this_.listeners
+	this_.listeners = []*MessageListener{}
+	for _, one := range listeners {
+		one.stop()
+	}
+}
+
+func (this_ *MessageListenerPool) Clean() {
+	this_.listenerMu.Lock()
+	defer this_.listenerMu.Unlock()
+
+	var listeners = this_.listeners
+	this_.listeners = []*MessageListener{}
 	for _, one := range listeners {
 		one.stop()
 	}

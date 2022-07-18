@@ -39,14 +39,14 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 	this_.connCacheLock.Lock()
 	defer this_.connCacheLock.Unlock()
 
-	Logger.Info(this_.Node.GetNodeStr() + " 服务新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
+	Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
 
 	conn, err := net.Dial(this_.netProxy.Outer.GetNetwork(), this_.netProxy.Outer.GetAddress())
 	if err != nil {
-		Logger.Error(this_.Node.GetNodeStr()+" 服务至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
+		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
 		return
 	}
-	Logger.Info(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
+	Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
 	this_.connCache[connId] = conn
 	go func() {
 		var netProxyId = this_.netProxy.Id
@@ -63,13 +63,13 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 				if err == io.EOF {
 					break
 				}
-				//Logger.Error(this_.Node.GetNodeStr()+" 服务至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 读取异常", zap.Error(err))
+				//Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 读取异常", zap.Error(err))
 				break
 			}
 			bytes = bytes[:n]
 			err = this_.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, bytes)
 			if err != nil {
-				Logger.Error(this_.Node.GetNodeStr()+" 服务至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 发送异常", zap.Error(err))
+				Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 发送异常", zap.Error(err))
 				break
 			}
 		}
@@ -99,9 +99,9 @@ func (this_ *OuterListener) send(connId string, bytes []byte) (err error) {
 	conn := this_.getConn(connId)
 	if conn != nil {
 		_, err = conn.Write(bytes)
-		//Logger.Info(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
+		//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
 	} else {
-		Logger.Warn(this_.Node.GetNodeStr() + " 服务至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 不存在")
+		Logger.Warn(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 不存在")
 	}
 	return
 }

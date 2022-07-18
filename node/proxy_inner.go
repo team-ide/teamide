@@ -52,14 +52,14 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		time.Sleep(5 * time.Second)
 		go this_.serverListenerKeepAlive()
 	}()
-	Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
 	var err error
 	this_.serverListener, err = net.Listen(this_.netProxy.Inner.GetNetwork(), this_.netProxy.Inner.GetAddress())
 	if err != nil {
-		Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
+		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
 		return
 	}
-	Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
 	for {
 		var conn net.Conn
 		conn, err = this_.serverListener.Accept()
@@ -73,7 +73,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 }
 
 func (this_ *InnerServer) onConn(conn net.Conn) {
-	Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 新连接")
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 新连接")
 	var connId = util.UUID()
 	var netProxyId = this_.netProxy.Id
 	this_.setConn(connId, conn)
@@ -87,7 +87,7 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 	err = this_.netProxyNewConn(this_.netProxy.LineNodeIdList, netProxyId, connId)
 
 	if err != nil {
-		Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
+		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
 		return
 	}
 	for {
@@ -98,13 +98,13 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 			if err == io.EOF {
 				break
 			}
-			//Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 读取异常", zap.Error(err))
+			//Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 读取异常", zap.Error(err))
 			break
 		}
 		bytes = bytes[:n]
 		err = this_.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
 		if err != nil {
-			Logger.Error(this_.Node.GetNodeStr()+" 服务 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
+			Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
 			break
 		}
 	}
@@ -139,9 +139,9 @@ func (this_ *InnerServer) send(connId string, bytes []byte) (err error) {
 	conn := this_.getConn(connId)
 	if conn != nil {
 		_, err = conn.Write(bytes)
-		//Logger.Info(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
+		//Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
 	} else {
-		Logger.Warn(this_.Node.GetNodeStr() + " 服务 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 不存在")
+		Logger.Warn(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 不存在")
 	}
 	return
 }

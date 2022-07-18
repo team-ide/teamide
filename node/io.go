@@ -16,12 +16,13 @@ var (
 )
 
 type Message struct {
-	Token          string      `json:"token,omitempty"`
 	Id             string      `json:"id,omitempty"`
 	FromNodeId     string      `json:"fromNodeId,omitempty"`
 	Method         int         `json:"method,omitempty"`
 	Error          string      `json:"error,omitempty"`
 	Ok             bool        `json:"ok,omitempty"`
+	NodeId         string      `json:"nodeId,omitempty"`
+	NodeIdList     []string    `json:"nodeIdList,omitempty"`
 	Node           *Info       `json:"node,omitempty"`
 	NodeList       []*Info     `json:"nodeList,omitempty"`
 	NetProxyId     string      `json:"netProxyId,omitempty"`
@@ -46,14 +47,15 @@ func (this_ *Message) ReturnError(error string) (err error) {
 }
 
 func (this_ *Message) Return(msg *Message) (err error) {
+	if this_.listener == nil {
+		err = errors.New("消息监听器丢失")
+		return
+	}
 	msg.Id = this_.Id
-	msg.Method = this_.Method
-	msg.Token = this_.Token
 	err = this_.listener.Send(msg)
 	if err != nil {
 		return
 	}
-
 	return
 }
 
@@ -63,7 +65,6 @@ type MessageListener struct {
 	isClose   bool
 	isStop    bool
 	writeMu   sync.Mutex
-	id        string
 }
 
 func (this_ *MessageListener) stop() {
@@ -140,34 +141,6 @@ func WriteMessage(writer io.Writer, message *Message) (err error) {
 	var bytes []byte
 
 	bytes, err = json.Marshal(message)
-	if err != nil {
-		return
-	}
-
-	err = WriteBytes(writer, bytes)
-	return
-}
-
-func ReadData(reader io.Reader) (data map[string]interface{}, err error) {
-	var bytes []byte
-
-	bytes, err = ReadBytes(reader)
-	if err != nil {
-		return
-	}
-	data = map[string]interface{}{}
-
-	err = json.Unmarshal(bytes, &data)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func WriteData(writer io.Writer, data map[string]interface{}) (err error) {
-	var bytes []byte
-
-	bytes, err = json.Marshal(data)
 	if err != nil {
 		return
 	}
