@@ -30,7 +30,9 @@ func (this_ *Server) Start() (err error) {
 	}
 
 	go this_.serverListenerKeepAlive()
-	this_.connNodeListenerKeepAlive(this_.ConnAddress, this_.ConnToken, this_.ConnSize)
+	if this_.ConnAddress != "" {
+		this_.connNodeListenerKeepAlive(this_.ConnAddress, this_.ConnToken, this_.ConnSize)
+	}
 	return
 }
 

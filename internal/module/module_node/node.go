@@ -25,15 +25,8 @@ func NewNodeService(ServerContext *context.ServerContext) (res *NodeService) {
 // NodeService 工具箱服务
 type NodeService struct {
 	*context.ServerContext
-	idService *module_id.IDService
-}
-
-// FormatOption 格式化配置
-func (this_ *NodeService) FormatOption(nodeData *NodeModel) (err error) {
-	if nodeData.Option == "" {
-		return
-	}
-	return
+	idService   *module_id.IDService
+	nodeContext *NodeContext
 }
 
 // Get 查询单个
@@ -78,11 +71,11 @@ func (this_ *NodeService) Query(node *NodeModel) (res []*NodeModel, err error) {
 }
 
 // CheckUserNodeNameExist 查询
-func (this_ *NodeService) CheckUserNodeNameExist(name string, userId int64) (res bool, err error) {
+func (this_ *NodeService) CheckUserNodeNameExist(name string) (res bool, err error) {
 
-	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (userId = ? AND name = ?)`
+	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (name = ?)`
 
-	count, err := this_.DatabaseWorker.Count(sql, []interface{}{userId, name})
+	count, err := this_.DatabaseWorker.Count(sql, []interface{}{name})
 	if err != nil {
 		this_.Logger.Error("CheckUserNodeNameExist Error", zap.Error(err))
 		return
@@ -94,11 +87,11 @@ func (this_ *NodeService) CheckUserNodeNameExist(name string, userId int64) (res
 }
 
 // CheckUserNodeServerIdExist 查询
-func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string, userId int64) (res bool, err error) {
+func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string) (res bool, err error) {
 
-	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (userId = ? AND nodeServerId = ?)`
+	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeServerId = ?)`
 
-	count, err := this_.DatabaseWorker.Count(sql, []interface{}{userId, nodeServerId})
+	count, err := this_.DatabaseWorker.Count(sql, []interface{}{nodeServerId})
 	if err != nil {
 		this_.Logger.Error("CheckUserNodeServerIdExist Error", zap.Error(err))
 		return
@@ -112,14 +105,14 @@ func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string, userId
 // Insert 新增
 func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error) {
 
-	checked, err := this_.CheckUserNodeNameExist(node.Name, node.UserId)
+	checked, err := this_.CheckUserNodeNameExist(node.Name)
 	if checked {
 		err = errors.New(fmt.Sprint("节点名称[", node.Name, "]已存在"))
 		return
 	}
-	checked, err = this_.CheckUserNodeServerIdExist(node.NodeServerId, node.UserId)
+	checked, err = this_.CheckUserNodeServerIdExist(node.ServerId)
 	if checked {
-		err = errors.New(fmt.Sprint("节点服务[", node.NodeServerId, "]已存在"))
+		err = errors.New(fmt.Sprint("节点服务[", node.ServerId, "]已存在"))
 		return
 	}
 	if node.NodeId == 0 {
@@ -132,17 +125,12 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 		node.CreateTime = time.Now()
 	}
 
-	var columns = "nodeId, nodeServerId, name, comment, option, userId, createTime"
-	var values = "?, ?, ?, ?, ?, ?, ?"
-
-	err = this_.FormatOption(node)
-	if err != nil {
-		return
-	}
+	var columns = "nodeId, serverId, name, comment, address, token, connAddress, connToken, parentServerId, option, userId, createTime"
+	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
 
 	sql := `INSERT INTO ` + TableNode + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.NodeServerId, node.Name, node.Comment, node.Option, node.UserId, node.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.Address, node.Token, node.ConnAddress, node.ConnToken, node.ParentServerId, node.Option, node.UserId, node.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
@@ -153,21 +141,11 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 
 // Update 更新
 func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error) {
-	if node.Name != "" || node.NodeServerId != "" {
-		var old *NodeModel
-		old, err = this_.Get(node.NodeId)
-		if err != nil {
-			return
-		}
-		if old == nil {
-			err = errors.New("节点不存在")
-			return
-		}
+	if node.Name != "" || node.ServerId != "" {
 		if node.Name != "" {
-			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND userId = ? AND name = ?)`
-
+			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND name = ?)`
 			var count int64
-			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, old.UserId, node.Name})
+			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, node.Name})
 			if err != nil {
 				return
 			}
@@ -177,24 +155,19 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 			}
 		}
 
-		if node.NodeServerId != "" {
-			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND userId = ? AND nodeServerId = ?)`
+		if node.ServerId != "" {
+			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND serverId = ?)`
 
 			var count int64
-			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, old.UserId, node.NodeServerId})
+			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, node.ServerId})
 			if err != nil {
 				return
 			}
 			if count > 0 {
-				err = errors.New(fmt.Sprint("节点服务[", node.NodeServerId, "]已存在"))
+				err = errors.New(fmt.Sprint("节点服务[", node.ServerId, "]已存在"))
 				return
 			}
 		}
-	}
-
-	err = this_.FormatOption(node)
-	if err != nil {
-		return
 	}
 
 	var values []interface{}
@@ -204,9 +177,9 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 	sql += "updateTime=?,"
 	values = append(values, time.Now())
 
-	if node.NodeServerId != "" {
-		sql += "nodeServerId=?,"
-		values = append(values, node.NodeServerId)
+	if node.ServerId != "" {
+		sql += "serverId=?,"
+		values = append(values, node.ServerId)
 	}
 	if node.Name != "" {
 		sql += "name=?,"
@@ -217,9 +190,29 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		values = append(values, node.Comment)
 	}
 
-	if node.Option != "" {
-		sql += "option=?,"
-		values = append(values, node.Option)
+	if node.Address != "" {
+		sql += "address=?,"
+		values = append(values, node.Address)
+	}
+
+	if node.Token != "" {
+		sql += "token=?,"
+		values = append(values, node.Token)
+	}
+
+	if node.ConnAddress != "" {
+		sql += "connAddress=?,"
+		values = append(values, node.ConnAddress)
+	}
+
+	if node.ConnToken != "" {
+		sql += "connToken=?,"
+		values = append(values, node.ConnToken)
+	}
+
+	if node.ParentServerId != "" {
+		sql += "parentServerId=?,"
+		values = append(values, node.ParentServerId)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")
@@ -237,10 +230,10 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 }
 
 // Delete 更新
-func (this_ *NodeService) Delete(nodeId int64) (rowsAffected int64, err error) {
+func (this_ *NodeService) Delete(nodeId int64, userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + TableNode + ` SET deleted=?,deleteTime=? WHERE nodeId=? `
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), nodeId})
+	sql := `UPDATE ` + TableNode + ` SET deleted=?,deletedUserId=?,deleteTime=? WHERE nodeId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, userId, time.Now(), nodeId})
 	if err != nil {
 		this_.Logger.Error("Delete Error", zap.Error(err))
 		return

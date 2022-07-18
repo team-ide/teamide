@@ -69,6 +69,10 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 			return
 		}
 	}
+	err = api.nodeService.InitContext()
+	if err != nil {
+		return
+	}
 	return
 }
 

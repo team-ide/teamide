@@ -99,7 +99,7 @@ func (this_ *NodeApi) delete(requestBean *base.RequestBean, c *gin.Context) (res
 	}
 	response := &DeleteResponse{}
 
-	_, err = this_.NodeService.Delete(request.NodeModel.NodeId)
+	_, err = this_.NodeService.Delete(request.NodeModel.NodeId, requestBean.JWT.UserId)
 	if err != nil {
 		return
 	}
