@@ -13,7 +13,14 @@
         </span>
       </div>
     </div>
-    <div class="node-context-body"></div>
+    <div class="node-context-body">
+      <template v-if="source.nodeRoot == null">
+        <div class="text-center mgt-50">
+          <div class="tm-btn">添加根节点</div>
+        </div>
+      </template>
+      <template v-else> </template>
+    </div>
     <FormDialog
       ref="InsertNode"
       :source="source"
