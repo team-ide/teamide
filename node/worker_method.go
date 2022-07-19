@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	methodOK         = 1
-	methodInitialize = 2
+	methodOK                  = 1
+	methodNotifyParentRefresh = 2
 
 	methodNodeAdd    = 11
 	methodNodeRemove = 12
@@ -97,27 +97,27 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	case methodOK:
 		res.Ok = true
 		return
-	case methodInitialize:
-		this_.initialize(msg.NodeList, msg.NetProxyList)
+	case methodNotifyParentRefresh:
+		this_.notifyParentRefresh(msg.NodeList, msg.NetProxyList)
 		return
 	case methodNodeAdd:
-		if msg.Node != nil {
-			_ = this_.AddNode(msg.Node)
+		if len(msg.NodeList) > 0 {
+			_ = this_.addNodeList(msg.NodeList)
 		}
 		return
 	case methodNodeRemove:
-		if msg.Node != nil {
-			_ = this_.RemoveNode(msg.NodeId)
+		if len(msg.NodeIdList) > 0 {
+			_ = this_.removeNodeList(msg.NodeIdList)
 		}
 		return
 	case methodNetProxyAdd:
-		if msg.NetProxy != nil {
-			err = this_.AddNetProxy(msg.NetProxy)
+		if len(msg.NetProxyList) > 0 {
+			err = this_.addNetProxyList(msg.NetProxyList)
 		}
 		return
 	case methodNetProxyRemove:
-		if msg.NetProxy != nil {
-			err = this_.RemoveNetProxy(msg.NetProxyId)
+		if len(msg.NetProxyIdList) > 0 {
+			err = this_.removeNetProxyList(msg.NetProxyIdList)
 		}
 		return
 	case methodNetProxyNewConn:

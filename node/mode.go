@@ -1,7 +1,6 @@
 package node
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -14,28 +13,13 @@ var (
 type Info struct {
 	Id          string `json:"id,omitempty"`
 	ConnAddress string `json:"connAddress,omitempty"`
-	Token       string `json:"token,omitempty"`
+	ConnToken   string `json:"connToken,omitempty"`
 	ParentId    string `json:"parentId,omitempty"`
 	ConnSize    int    `json:"connSize,omitempty"`
-	Status      int    `json:"status,omitempty"`
-	StatusError string `json:"statusError,omitempty"`
 }
 
 func (this_ *Info) GetNodeStr() (str string) {
 	return fmt.Sprintf("节点[%s][%s]", this_.Id, this_.ConnAddress)
-}
-
-func (this_ *Info) checkToken(token []byte) bool {
-	nodeToken := []byte(this_.Token)
-	if len(nodeToken) != len(token) {
-		Logger.Error(this_.GetNodeStr() + " Token check field")
-		return false
-	}
-	if !bytes.Contains(token, nodeToken) {
-		Logger.Error(this_.GetNodeStr() + " Token check field")
-		return false
-	}
-	return true
 }
 
 type NetProxy struct {
@@ -81,6 +65,6 @@ func GetAddress(address string) (str string) {
 func copyNode(source, target *Info) {
 	target.Id = source.Id
 	target.ConnAddress = source.ConnAddress
-	target.Token = source.Token
+	target.ConnToken = source.ConnToken
 	target.ParentId = source.ParentId
 }

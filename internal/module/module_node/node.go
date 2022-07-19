@@ -89,7 +89,7 @@ func (this_ *NodeService) CheckUserNodeNameExist(name string) (res bool, err err
 // CheckUserNodeServerIdExist 查询
 func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string) (res bool, err error) {
 
-	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeServerId = ?)`
+	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (serverId = ?)`
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{nodeServerId})
 	if err != nil {

@@ -65,7 +65,7 @@ type UpdateRequest struct {
 type UpdateResponse struct {
 }
 
-func (this_ *NodeApi) update(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *NodeApi) update(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &UpdateRequest{}
 	if !base.RequestJSON(request, c) {

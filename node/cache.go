@@ -46,7 +46,10 @@ func (this_ *Cache) newIfAbsentNodeListenerPool(fromNodeId string, toNodeId stri
 
 	pool, ok := this_.nodeListenerPoolCache[fromNodeId+":"+toNodeId]
 	if !ok {
-		pool = &MessageListenerPool{}
+		pool = &MessageListenerPool{
+			fromNodeId: fromNodeId,
+			toNodeId:   toNodeId,
+		}
 		this_.nodeListenerPoolCache[fromNodeId+":"+toNodeId] = pool
 	}
 	return
@@ -68,6 +71,30 @@ func (this_ *Cache) removeNodeListenerPool(fromNodeId string, toNodeId string) (
 	if ok {
 		delete(this_.nodeListenerPoolCache, fromNodeId+":"+toNodeId)
 		pool.Stop()
+	}
+	return
+}
+
+func (this_ *Cache) getNodeListenerPoolListByFromNodeId(fromNodeId string) (poolList []*MessageListenerPool) {
+	this_.nodeListenerLock.Lock()
+	defer this_.nodeListenerLock.Unlock()
+
+	for _, one := range this_.nodeListenerPoolCache {
+		if one.fromNodeId == fromNodeId {
+			poolList = append(poolList, one)
+		}
+	}
+	return
+}
+
+func (this_ *Cache) getNodeListenerPoolListByToNodeId(toNodeId string) (poolList []*MessageListenerPool) {
+	this_.nodeListenerLock.Lock()
+	defer this_.nodeListenerLock.Unlock()
+
+	for _, one := range this_.nodeListenerPoolCache {
+		if one.toNodeId == toNodeId {
+			poolList = append(poolList, one)
+		}
 	}
 	return
 }

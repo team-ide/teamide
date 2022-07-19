@@ -1,7 +1,7 @@
 package node
 
 import (
-	"errors"
+	"go.uber.org/zap"
 	"teamide/pkg/util"
 )
 
@@ -45,35 +45,100 @@ func (this_ *Worker) findChildrenNode(id string) (find *Info) {
 	return
 }
 
-func (this_ *Worker) AddNode(node *Info) (err error) {
-	this_.cache.nodeLock.Lock()
-	defer this_.cache.nodeLock.Unlock()
-	Logger.Info(this_.server.GetServerInfo() + " 添加节点 " + node.GetNodeStr())
+func (this_ *Worker) AddNodeList(nodeList []*Info) (err error) {
+	err = this_.addNodeList(nodeList)
+	return
+}
 
-	if node == nil {
-		err = errors.New("节点为空")
-		return
-	}
-	if node.Id == "" {
-		err = errors.New("节点不能为空")
-		return
-	}
-	if node.Token == "" {
-		err = errors.New("节点Token为空")
-		return
-	}
+func (this_ *Worker) RemoveNodeList(nodeIdList []string) (err error) {
+	err = this_.removeNodeList(nodeIdList)
+	return
+}
 
+func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
+	if len(nodeList) == 0 {
+		return
+	}
 	_ = this_.callChildrenNodePoolList(&Message{
-		Method: methodNodeAdd,
-		Node:   node,
+		Method:   methodNodeAdd,
+		NodeList: nodeList,
 	})
 
-	var find = this_.findNode(node.Id)
+	err = this_.doAddNodeList(nodeList)
 
-	if find == nil {
-		this_.cache.nodeList = append(this_.cache.nodeList, node)
-	} else {
-		copyNode(node, find)
+	return
+}
+
+func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
+	if len(nodeList) == 0 {
+		return
+	}
+	this_.cache.nodeLock.Lock()
+	defer this_.cache.nodeLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("nodeList", nodeList))
+
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method:   methodNodeAdd,
+		NodeList: nodeList,
+	})
+
+	for _, one := range nodeList {
+		var find = this_.findNode(one.Id)
+
+		if find == nil {
+			this_.cache.nodeList = append(this_.cache.nodeList, one)
+		} else {
+			copyNode(one, find)
+		}
+	}
+
+	this_.refreshNodeList()
+	return
+}
+
+func (this_ *Worker) removeNodeList(nodeIdList []string) (err error) {
+	if len(nodeIdList) == 0 {
+		return
+	}
+	_ = this_.callChildrenNodePoolList(&Message{
+		Method:     methodNodeRemove,
+		NodeIdList: nodeIdList,
+	})
+
+	err = this_.doRemoveNodeList(nodeIdList)
+
+	return
+}
+
+func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
+	if len(nodeIdList) == 0 {
+		return
+	}
+	this_.cache.nodeLock.Lock()
+	defer this_.cache.nodeLock.Unlock()
+
+	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("nodeIdList", nodeIdList))
+
+	for _, nodeId := range nodeIdList {
+		var list = this_.cache.childrenNodeList
+		var newList []*Info
+		for _, one := range list {
+			if one.Id != nodeId {
+				newList = append(newList, one)
+			} else {
+				this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
+			}
+		}
+		this_.cache.childrenNodeList = newList
+
+		list = this_.cache.nodeList
+		newList = []*Info{}
+		for _, one := range list {
+			if one.Id != nodeId {
+				newList = append(newList, one)
+			}
+		}
+		this_.cache.nodeList = newList
 	}
 
 	this_.refreshNodeList()
@@ -161,42 +226,6 @@ func (this_ *Worker) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 	return
 }
 
-func (this_ *Worker) RemoveNode(nodeId string) (err error) {
-	this_.cache.nodeLock.Lock()
-	defer this_.cache.nodeLock.Unlock()
-
-	Logger.Info(this_.server.GetServerInfo() + " 移除节点 " + nodeId)
-
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method: methodNodeRemove,
-		NodeId: nodeId,
-	})
-
-	var list = this_.cache.childrenNodeList
-	var newList []*Info
-	for _, one := range list {
-		if one.Id != nodeId {
-			newList = append(newList, one)
-		} else {
-			this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
-		}
-	}
-	this_.cache.childrenNodeList = newList
-
-	list = this_.cache.nodeList
-	newList = []*Info{}
-	for _, one := range list {
-		if one.Id != nodeId {
-			newList = append(newList, one)
-		}
-	}
-	this_.cache.nodeList = newList
-
-	this_.refreshNodeList()
-
-	return
-}
-
 func (this_ *Worker) refreshNodeList() {
 	var list = this_.cache.nodeList
 	for _, one := range list {
@@ -205,6 +234,9 @@ func (this_ *Worker) refreshNodeList() {
 		if find == nil && one.ParentId == this_.server.Id {
 			this_.addChildrenNode(one)
 		}
+	}
+	if this_.server.OnNodeListChange != nil {
+		this_.server.OnNodeListChange(this_.cache.nodeList)
 	}
 	return
 }

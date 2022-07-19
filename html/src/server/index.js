@@ -1,8 +1,10 @@
 import http from '@/server/http';
 
 import toolbox from "./toolbox.js";
+import node from "./node.js";
 let server = {
     toolbox,
+    node,
     data(param) {
         param = param || {};
         param.origin = location.origin;

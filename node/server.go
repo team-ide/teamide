@@ -20,6 +20,8 @@ type Server struct {
 	serverListener net.Listener
 	cache          *Cache
 	*Worker
+	OnNodeListChange     func([]*Info)
+	OnNetProxyListChange func([]*NetProxy)
 }
 
 func (this_ *Server) Start() (err error) {
@@ -34,6 +36,16 @@ func (this_ *Server) Start() (err error) {
 		this_.connNodeListenerKeepAlive(this_.ConnAddress, this_.ConnToken, this_.ConnSize)
 	}
 	return
+}
+
+func (this_ *Server) Stop() {
+	if this_.serverListener != nil {
+		_ = this_.serverListener.Close()
+	}
+	if this_.Worker != nil {
+		this_.Worker.Stop()
+	}
+
 }
 
 func (this_ *Server) GetServerInfo() (str string) {
@@ -94,6 +106,7 @@ func (this_ *Server) serverListenerKeepAlive() {
 				_ = conn_.Close()
 				return
 			}
+			var clientIndex = msg.ClientIndex
 
 			// 发送当前节点ID
 			err = WriteMessage(conn, &Message{
@@ -125,6 +138,17 @@ func (this_ *Server) serverListenerKeepAlive() {
 			pool.Put(messageListener)
 			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
+			if clientIndex == 0 {
+				err = messageListener.Send(&Message{
+					Method:       methodNotifyParentRefresh,
+					NodeList:     this_.cache.nodeList,
+					NetProxyList: this_.cache.netProxyList,
+				})
+				if err != nil {
+					Logger.Error(this_.GetServerInfo()+" 通知 ["+fromNodeId+"] 刷新 异常 ", zap.Error(err))
+				}
+			}
+
 		}(conn)
 	}
 	return
@@ -146,14 +170,13 @@ func (this_ *Server) connNodeListenerKeepAlive(connAddress, connToken string, co
 	return
 }
 
-func (this_ *Server) connNodeListener(connAddress, connToken string, index int) (pool *MessageListenerPool) {
+func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex int) (pool *MessageListenerPool) {
 	defer func() {
 		if pool != nil {
 			return
 		}
 		time.Sleep(5 * time.Second)
-		go this_.connNodeListener(connAddress, connToken, index)
-
+		go this_.connNodeListener(connAddress, connToken, clientIndex)
 	}()
 	var err error
 	var conn net.Conn
@@ -180,9 +203,10 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, index int) 
 	}
 
 	var msg = &Message{
-		Method:     methodOK,
-		FromNodeId: this_.Id,
-		Ok:         true,
+		Method:      methodOK,
+		FromNodeId:  this_.Id,
+		Ok:          true,
+		ClientIndex: clientIndex,
 	}
 	err = WriteMessage(conn, msg)
 	if err != nil {
@@ -220,66 +244,29 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, index int) 
 		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 		if !pool.isStop {
 			time.Sleep(5 * time.Second)
-			go this_.connNodeListener(connAddress, connToken, index)
+			go this_.connNodeListener(connAddress, connToken, clientIndex)
 		}
 	})
 	pool.Put(messageListener)
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
-	if index == 0 {
+	if clientIndex == 0 {
+		var toNode = &Info{
+			Id:          toNodeId,
+			ParentId:    fromNodeId,
+			ConnToken:   connToken,
+			ConnAddress: connAddress,
+		}
+		_ = this_.addNodeList([]*Info{toNode})
+
 		err = messageListener.Send(&Message{
-			Method:       methodInitialize,
+			Method:       methodNotifyParentRefresh,
 			NodeList:     this_.cache.nodeList,
 			NetProxyList: this_.cache.netProxyList,
 		})
 		if err != nil {
-			Logger.Error(this_.GetServerInfo()+" 推送同步至 ["+toNodeId+"]["+connAddress+"] 异常 ", zap.Error(err))
+			Logger.Error(this_.GetServerInfo()+" 通知 ["+toNodeId+"]["+connAddress+"] 刷新 异常 ", zap.Error(err))
 		}
-		go func() {
-			for {
-				if messageListener.isStop {
-					return
-				}
-				var node = this_.findNode(toNodeId)
-				if node != nil {
-					if messageListener.isClose {
-						node.Status = StatusStopped
-						node.StatusError = ""
-					} else {
-						res, err := this_.Call(messageListener, methodOK, &Message{
-							Ok: true,
-						})
-						if err != nil {
-							node.Status = StatusError
-							node.StatusError = err.Error()
-						} else {
-							if !res.Ok {
-								node.Status = StatusError
-								node.StatusError = "服务节点验证失败"
-							} else {
-								node.Status = StatusStarted
-								node.StatusError = ""
-							}
-						}
-					}
-					switch node.Status {
-					case StatusStarted:
-						Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 验证成功")
-						break
-					case StatusStopped:
-						Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 未启动")
-						break
-					case StatusError:
-						Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 验证异常 " + node.StatusError)
-						break
-					}
-				}
-				if messageListener.isStop {
-					return
-				}
-				time.Sleep(5 * time.Second)
-			}
-		}()
 	}
 	return
 }

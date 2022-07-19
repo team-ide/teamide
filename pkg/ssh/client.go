@@ -144,12 +144,8 @@ func (this_ *Client) ListenWS(onEvent func(event string), onMessage func(bs []by
 		}
 		messageType, bs, err := this_.ws.ReadMessage()
 		if err != nil {
-			if WSIsCloseError(err) {
-				this_.CloseWS()
-				return
-			}
-			util.Logger.Error("WebSocket信息读取异常", zap.Error(err))
-			continue
+			this_.CloseWS()
+			return
 		}
 		if messageType == websocket.TextMessage {
 			if len(bs) > TeamIDEEventByteLength {
@@ -192,11 +188,6 @@ func (this_ *Client) WSWriteBinary(bs []byte) {
 	return
 }
 
-func WSIsCloseError(err error) bool {
-	_, ok := err.(*websocket.CloseError)
-	return ok
-}
-
 func (this_ *Client) WSWriteByType(messageType int, bs []byte) {
 	defer func() {
 		if x := recover(); x != nil {
@@ -227,10 +218,8 @@ func (this_ *Client) WSWriteByType(messageType int, bs []byte) {
 					err := this_.ws.WriteMessage(msg.Type, msg.Data)
 
 					if err != nil {
-						if WSIsCloseError(err) {
-							this_.CloseWS()
-						}
-						util.Logger.Error("WebSocket信息写入异常", zap.Error(err))
+						this_.CloseWS()
+						return
 					}
 				}
 			}

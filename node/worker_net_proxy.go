@@ -56,51 +56,97 @@ func (this_ *Worker) formatNetProxy(netProxy *NetProxy) (err error) {
 	return
 }
 
-func (this_ *Worker) AddNetProxy(netProxy *NetProxy) (err error) {
-	Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
-	this_.cache.netProxyLock.Lock()
-	defer this_.cache.netProxyLock.Unlock()
-	Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
+func (this_ *Worker) AddNetProxyList(netProxyList []*NetProxy) (err error) {
+	err = this_.addNetProxyList(netProxyList)
+	return
+}
 
-	err = this_.formatNetProxy(netProxy)
-	if err != nil {
+func (this_ *Worker) RemoveNetProxyList(netProxyIdList []string) (err error) {
+	err = this_.removeNetProxyList(netProxyIdList)
+	return
+}
+
+func (this_ *Worker) addNetProxyList(netProxyList []*NetProxy) (err error) {
+	if len(netProxyList) == 0 {
 		return
 	}
-
 	_ = this_.callChildrenNodePoolList(&Message{
-		Method:   methodNetProxyAdd,
-		NetProxy: netProxy,
+		Method:       methodNetProxyAdd,
+		NetProxyList: netProxyList,
 	})
+	err = this_.doAddNetProxyList(netProxyList)
+	return
+}
 
-	this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
+func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
+	if len(netProxyList) == 0 {
+		return
+	}
+	this_.cache.netProxyLock.Lock()
+	defer this_.cache.netProxyLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxyList", netProxyList))
+
+	for _, netProxy := range netProxyList {
+
+		var find = this_.findNetProxy(netProxy.Id)
+		if find == nil {
+			this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
+		}
+	}
 
 	this_.refreshNetProxy()
 	return
 }
 
-func (this_ *Worker) RemoveNetProxy(netProxyId string) (err error) {
-	this_.cache.netProxyLock.Lock()
-	defer this_.cache.netProxyLock.Unlock()
-	Logger.Info(this_.server.GetServerInfo()+" 移除网络代理 ", zap.Any("netProxyId", netProxyId))
+func (this_ *Worker) removeNetProxyList(netProxyIdList []string) (err error) {
+	if len(netProxyIdList) == 0 {
+		return
+	}
 
 	_ = this_.callChildrenNodePoolList(&Message{
-		Method:     methodNetProxyRemove,
-		NetProxyId: netProxyId,
+		Method:         methodNetProxyRemove,
+		NetProxyIdList: netProxyIdList,
 	})
 
-	var find = this_.findNetProxy(netProxyId)
-	if find != nil {
-		if this_.server.Id == find.Inner.NodeId {
-			_ = this_.removeNetProxyInner(netProxyId)
-		}
-		if this_.server.Id == find.Outer.NodeId {
-			_ = this_.removeNetProxyOuter(netProxyId)
-		}
-	}
+	err = this_.doRemoveNetProxyList(netProxyIdList)
 
 	return
 }
 
+func (this_ *Worker) doRemoveNetProxyList(netProxyIdList []string) (err error) {
+	if len(netProxyIdList) == 0 {
+		return
+	}
+	this_.cache.netProxyLock.Lock()
+	defer this_.cache.netProxyLock.Unlock()
+	Logger.Info(this_.server.GetServerInfo()+" 移除网络代理 ", zap.Any("netProxyIdList", netProxyIdList))
+
+	for _, netProxyId := range netProxyIdList {
+
+		var find = this_.findNetProxy(netProxyId)
+		if find != nil {
+			if this_.server.Id == find.Inner.NodeId {
+				_ = this_.removeNetProxyInner(netProxyId)
+			}
+			if this_.server.Id == find.Outer.NodeId {
+				_ = this_.removeNetProxyOuter(netProxyId)
+			}
+
+			list := this_.cache.netProxyList
+			var newList []*NetProxy
+			for _, one := range list {
+				if one != find {
+					newList = append(newList, one)
+				}
+			}
+			this_.cache.netProxyList = newList
+		}
+
+	}
+	this_.refreshNetProxy()
+
+	return
+}
 func (this_ *Worker) refreshNetProxy() {
 	var list = this_.cache.netProxyList
 	for _, one := range list {
@@ -110,6 +156,10 @@ func (this_ *Worker) refreshNetProxy() {
 		if this_.server.Id == one.Outer.NodeId {
 			_ = this_.getNetProxyOuter(one)
 		}
+	}
+
+	if this_.server.OnNetProxyListChange != nil {
+		this_.server.OnNetProxyListChange(this_.cache.netProxyList)
 	}
 	return
 }

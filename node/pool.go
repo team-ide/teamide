@@ -16,6 +16,8 @@ type MessageListenerPool struct {
 	timeout    int64
 	isStop     bool
 	getIndex   int
+	fromNodeId string
+	toNodeId   string
 }
 
 func (this_ *MessageListenerPool) Remove(listener *MessageListener) {

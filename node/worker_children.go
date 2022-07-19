@@ -6,7 +6,7 @@ func (this_ *Worker) addChildrenNode(childrenNode *Info) {
 	if find == nil {
 		pool := this_.cache.getNodeListenerPool(this_.server.Id, childrenNode.Id)
 		if pool == nil {
-			this_.server.connNodeListenerKeepAlive(childrenNode.ConnAddress, childrenNode.Token, childrenNode.ConnSize)
+			this_.server.connNodeListenerKeepAlive(childrenNode.ConnAddress, childrenNode.ConnToken, childrenNode.ConnSize)
 		}
 		this_.cache.childrenNodeList = append(this_.cache.childrenNodeList, childrenNode)
 	} else {
@@ -14,20 +14,19 @@ func (this_ *Worker) addChildrenNode(childrenNode *Info) {
 	}
 }
 
-func (this_ *Worker) getChildrenNodePoolList() (poolList []*MessageListenerPool) {
-	var list = this_.cache.childrenNodeList
-	for _, one := range list {
-		pool := this_.cache.getNodeListenerPool(this_.server.Id, one.Id)
-		if pool != nil {
-			poolList = append(poolList, pool)
-		}
-
+func (this_ *Worker) callChildrenNodePoolList(msg *Message) (err error) {
+	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
+	for _, pool := range list {
+		err = pool.Do(func(listener *MessageListener) (e error) {
+			_, e = this_.Call(listener, msg.Method, msg)
+			return
+		})
 	}
 	return
 }
 
-func (this_ *Worker) callChildrenNodePoolList(msg *Message) (err error) {
-	var list = this_.getChildrenNodePoolList()
+func (this_ *Worker) callParentNodePoolList(msg *Message) (err error) {
+	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
 	for _, pool := range list {
 		err = pool.Do(func(listener *MessageListener) (e error) {
 			_, e = this_.Call(listener, msg.Method, msg)

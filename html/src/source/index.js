@@ -390,6 +390,33 @@ source.initToolboxQuickCommands = async () => {
         source.quickCommandSSHCommands = quickCommandSSHCommands;
     }
 }
+source.nodeRoot = []
+source.nodeList = []
+source.nodeCount = 0
+source.nodeSuccessCount = 0
+source.nodeNetProxyList = []
+source.nodeNetProxyCount = 0
+source.nodeNetProxySuccessCount = 0
+
+source.initNodeContext = async () => {
+    let res = await server.node.context({});
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let data = res.data || {};
+        let nodeRoot = data.root;
+        let nodeList = data.nodeList || [];
+        let nodeNetProxyList = data.netProxyList || [];
+        source.nodeRoot = nodeRoot;
+        source.nodeList = nodeList;
+        source.nodeNetProxyList = nodeNetProxyList;
+
+        source.nodeCount = nodeList.length;
+        source.nodeSuccessCount = nodeList.length;
+        source.nodeNetProxyCount = nodeNetProxyList.length;
+        source.nodeNetProxySuccessCount = nodeNetProxyList.length;
+    }
+}
 
 let refreshPowers = function () {
     source.powerLinks = [];

@@ -26,12 +26,14 @@ type Message struct {
 	Node           *Info       `json:"node,omitempty"`
 	NodeList       []*Info     `json:"nodeList,omitempty"`
 	NetProxyId     string      `json:"netProxyId,omitempty"`
+	NetProxyIdList []string    `json:"netProxyIdList,omitempty"`
 	ConnId         string      `json:"connId,omitempty"`
 	IsReverse      bool        `json:"isReverse,omitempty"`
 	LineNodeIdList []string    `json:"lineNodeIdList,omitempty"`
 	NetProxy       *NetProxy   `json:"netProxy,omitempty"`
 	NetProxyList   []*NetProxy `json:"netProxyList,omitempty"`
 	Bytes          []byte      `json:"bytes,omitempty"`
+	ClientIndex    int         `json:"clientIndex,omitempty"`
 	listener       *MessageListener
 }
 

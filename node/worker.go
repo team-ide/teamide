@@ -5,9 +5,21 @@ type Worker struct {
 	cache  *Cache
 }
 
+func (this_ *Worker) Stop() {
+	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
+	for _, pool := range list {
+		this_.cache.removeNodeListenerPool(pool.fromNodeId, pool.toNodeId)
+	}
+	list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
+	for _, pool := range list {
+		this_.cache.removeNodeListenerPool(pool.fromNodeId, pool.toNodeId)
+	}
+}
+
 func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
 
 	var oldList = this_.cache.nodeList
+	var removeNodeIdList []string
 	for _, one := range oldList {
 		var find *Info
 		for _, one_ := range nodeList {
@@ -16,14 +28,14 @@ func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
 			}
 		}
 		if find == nil {
-			_ = this_.RemoveNode(one.Id)
+			removeNodeIdList = append(removeNodeIdList, one.Id)
 		}
 	}
-	for _, one := range nodeList {
-		_ = this_.AddNode(one)
-	}
+	_ = this_.removeNodeList(removeNodeIdList)
+	_ = this_.addNodeList(nodeList)
 
 	var oldNetProxyList = this_.cache.netProxyList
+	var removeNetProxyIdList []string
 	for _, one := range oldNetProxyList {
 		var find *NetProxy
 		for _, one_ := range netProxyList {
@@ -32,10 +44,15 @@ func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
 			}
 		}
 		if find == nil {
-			_ = this_.RemoveNetProxy(one.Id)
+			removeNetProxyIdList = append(removeNetProxyIdList, one.Id)
 		}
 	}
-	for _, one := range netProxyList {
-		_ = this_.AddNetProxy(one)
-	}
+	_ = this_.removeNetProxyList(removeNetProxyIdList)
+	_ = this_.addNetProxyList(netProxyList)
+}
+
+func (this_ *Worker) notifyParentRefresh(nodeList []*Info, netProxyList []*NetProxy) {
+
+	_ = this_.doAddNodeList(nodeList)
+	_ = this_.doAddNetProxyList(netProxyList)
 }

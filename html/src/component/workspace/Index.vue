@@ -14,17 +14,29 @@
           工具箱
           <span class="color-green mgl-2">({{ source.toolboxCount }})</span>
         </div>
-        <div class="workspace-header-nav tm-disabled">
+        <div class="workspace-header-nav" @click="showSwitchNodeNetProxyBox()">
           隧道|代理|透传
-          <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
+          <span class="color-green mgl-2">
+            (
+            {{ source.nodeNetProxyCount }}
+            /
+            {{ source.nodeNetProxySuccessCount }}
+            )
+          </span>
         </div>
         <div class="workspace-header-nav tm-disabled">
           监控
           <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
         </div>
-        <div class="workspace-header-nav tm-disabled">
+        <div class="workspace-header-nav" @click="showSwitchNodeBox()">
           节点
-          <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
+          <span class="color-green mgl-2">
+            (
+            {{ source.nodeCount }}
+            /
+            {{ source.nodeSuccessCount }}
+            )
+          </span>
         </div>
         <div style="flex: 1"></div>
         <template v-if="source.login.user == null">
@@ -100,15 +112,19 @@
         :source="source"
         :openByToolboxId="openByToolboxId"
       ></ToolboxContext>
+      <NodeBox ref="NodeBox" :source="source"></NodeBox>
+      <NodeNetProxyBox ref="NodeNetProxyBox" :source="source"></NodeNetProxyBox>
     </div>
   </div>
 </template>
 
 <script>
 import ToolboxContext from "./ToolboxContext";
+import NodeBox from "./NodeBox";
+import NodeNetProxyBox from "./NodeNetProxyBox";
 
 export default {
-  components: { ToolboxContext },
+  components: { ToolboxContext, NodeBox, NodeNetProxyBox },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
@@ -143,7 +159,26 @@ export default {
       }
       this.initDataed = true;
       this.source.initUserToolboxData();
+      this.source.initNodeContext();
       this.initOpens();
+    },
+    showSwitchNodeBox() {
+      this.$refs.NodeBox.showSwitch();
+    },
+    showNodeBox() {
+      this.$refs.NodeBox.show();
+    },
+    hideNodeBox() {
+      this.$refs.NodeBox.hide();
+    },
+    showSwitchNodeNetProxyBoy() {
+      this.$refs.NodeNetProxyBox.showSwitch();
+    },
+    showNodeNetProxyBox() {
+      this.$refs.NodeNetProxyBox.show();
+    },
+    hideNodeNetProxyBox() {
+      this.$refs.NodeNetProxyBox.hide();
     },
     showSwitchToolboxContext() {
       this.$refs.ToolboxContext.showSwitch();
