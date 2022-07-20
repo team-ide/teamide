@@ -2,6 +2,8 @@ package node
 
 import (
 	"fmt"
+	"sync"
+	"teamide/pkg/util"
 )
 
 var (
@@ -11,15 +13,45 @@ var (
 )
 
 type Info struct {
-	Id          string `json:"id,omitempty"`
-	ConnAddress string `json:"connAddress,omitempty"`
-	ConnToken   string `json:"connToken,omitempty"`
-	ParentId    string `json:"parentId,omitempty"`
-	ConnSize    int    `json:"connSize,omitempty"`
+	Id             string   `json:"id,omitempty"`
+	BindAddress    string   `json:"bindAddress,omitempty"`
+	BindToken      string   `json:"bindToken,omitempty"`
+	ConnAddress    string   `json:"connAddress,omitempty"`
+	ConnToken      string   `json:"connToken,omitempty"`
+	ConnNodeIdList []string `json:"connNodeIdList,omitempty"`
+	ConnSize       int      `json:"connSize,omitempty"`
+	Status         int      `json:"status,omitempty"`
+	StatusError    string   `json:"statusError,omitempty"`
+	connIdListLock sync.Mutex
 }
 
 func (this_ *Info) GetNodeStr() (str string) {
 	return fmt.Sprintf("节点[%s][%s]", this_.Id, this_.ConnAddress)
+}
+
+func (this_ *Info) addConnNodeId(connNodeId string) {
+	this_.connIdListLock.Lock()
+	defer this_.connIdListLock.Unlock()
+
+	if util.ContainsString(this_.ConnNodeIdList, connNodeId) < 0 {
+		this_.ConnNodeIdList = append(this_.ConnNodeIdList, connNodeId)
+	}
+	return
+}
+
+func (this_ *Info) removeConnNodeId(connNodeId string) {
+	this_.connIdListLock.Lock()
+	defer this_.connIdListLock.Unlock()
+
+	var list = this_.ConnNodeIdList
+	var newList []string
+	for _, one := range list {
+		if one != connNodeId {
+			newList = append(newList, one)
+		}
+	}
+	this_.ConnNodeIdList = newList
+	return
 }
 
 type NetProxy struct {
@@ -64,7 +96,12 @@ func GetAddress(address string) (str string) {
 
 func copyNode(source, target *Info) {
 	target.Id = source.Id
+	target.BindAddress = source.BindAddress
+	target.BindToken = source.BindToken
 	target.ConnAddress = source.ConnAddress
 	target.ConnToken = source.ConnToken
-	target.ParentId = source.ParentId
+	var list = source.ConnNodeIdList
+	for _, one := range list {
+		target.addConnNodeId(one)
+	}
 }

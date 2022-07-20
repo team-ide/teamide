@@ -5,16 +5,6 @@ import (
 	"teamide/pkg/util"
 )
 
-func (this_ *Worker) findRootNode() (find *Info) {
-	var list = this_.cache.nodeList
-	for _, one := range list {
-		if one.ParentId == "" {
-			find = one
-		}
-	}
-	return
-}
-
 func (this_ *Worker) findNode(id string) (find *Info) {
 	var list = this_.cache.nodeList
 	for _, one := range list {
@@ -25,43 +15,34 @@ func (this_ *Worker) findNode(id string) (find *Info) {
 	return
 }
 
-func (this_ *Worker) findChildrenNodeList(id string) (nodeList []*Info) {
+func (this_ *Worker) findNodeList(idList []string) (findList []*Info) {
 	var list = this_.cache.nodeList
 	for _, one := range list {
-		if one.ParentId == id {
-			nodeList = append(nodeList, one)
+		if util.ContainsString(idList, one.Id) >= 0 {
+			findList = append(findList, one)
 		}
 	}
 	return
 }
 
-func (this_ *Worker) findChildrenNode(id string) (find *Info) {
-	var list = this_.cache.childrenNodeList
+func (this_ *Worker) findParents(id string) (parents []*Info) {
+	var list = this_.cache.nodeList
 	for _, one := range list {
-		if one.Id == id {
-			find = one
+		if util.ContainsString(one.ConnNodeIdList, id) >= 0 {
+			parents = append(parents, one)
 		}
 	}
 	return
 }
 
-func (this_ *Worker) AddNodeList(nodeList []*Info) (err error) {
-	err = this_.addNodeList(nodeList)
-	return
-}
-
-func (this_ *Worker) RemoveNodeList(nodeIdList []string) (err error) {
-	err = this_.removeNodeList(nodeIdList)
-	return
-}
-
-func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
+func (this_ *Worker) addNodeList(nodeList []*Info, calledNodeIdList []string) (err error) {
 	if len(nodeList) == 0 {
 		return
 	}
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method:   methodNodeAdd,
-		NodeList: nodeList,
+	_ = this_.callAllTo(&Message{
+		Method:           methodNodeAdd,
+		NodeList:         nodeList,
+		CalledNodeIdList: calledNodeIdList,
 	})
 
 	err = this_.doAddNodeList(nodeList)
@@ -77,11 +58,6 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	defer this_.cache.nodeLock.Unlock()
 	Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("nodeList", nodeList))
 
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method:   methodNodeAdd,
-		NodeList: nodeList,
-	})
-
 	for _, one := range nodeList {
 		var find = this_.findNode(one.Id)
 
@@ -96,13 +72,14 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	return
 }
 
-func (this_ *Worker) removeNodeList(nodeIdList []string) (err error) {
+func (this_ *Worker) removeNodeList(nodeIdList []string, calledNodeIdList []string) (err error) {
 	if len(nodeIdList) == 0 {
 		return
 	}
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method:     methodNodeRemove,
-		NodeIdList: nodeIdList,
+	_ = this_.callAllTo(&Message{
+		Method:           methodNodeRemove,
+		NodeIdList:       nodeIdList,
+		CalledNodeIdList: calledNodeIdList,
 	})
 
 	err = this_.doRemoveNodeList(nodeIdList)
@@ -120,22 +97,15 @@ func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
 	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("nodeIdList", nodeIdList))
 
 	for _, nodeId := range nodeIdList {
-		var list = this_.cache.childrenNodeList
+
+		var list = this_.cache.nodeList
 		var newList []*Info
 		for _, one := range list {
 			if one.Id != nodeId {
 				newList = append(newList, one)
 			} else {
 				this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
-			}
-		}
-		this_.cache.childrenNodeList = newList
-
-		list = this_.cache.nodeList
-		newList = []*Info{}
-		for _, one := range list {
-			if one.Id != nodeId {
-				newList = append(newList, one)
+				this_.cache.removeNodeListenerPool(nodeId, this_.server.Id)
 			}
 		}
 		this_.cache.nodeList = newList
@@ -146,80 +116,67 @@ func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
 	return
 }
 
-func (this_ *Worker) findNodeLineToRoot(nodeId string) (list []string) {
-	rootNode := this_.findRootNode()
-	if rootNode == nil {
-		return
+func (this_ *Worker) appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine []string, nodeList []*Info) {
+
+	for _, one := range nodeList {
+		var line []string
+		line = append(line, parentLine...)
+
+		if util.ContainsString(line, one.Id) >= 0 {
+			continue
+		}
+		line = append(line, one.Id)
+
+		*lineList = append(*lineList, line)
+
+		if util.ContainsString(*loadedIdList, one.Id) >= 0 {
+			continue
+		}
+		*loadedIdList = append(*loadedIdList, one.Id)
+
+		var children = this_.findNodeList(one.ConnNodeIdList)
+		this_.appendNodeLineList(loadedIdList, lineList, line, children)
+
+		var parentList = this_.findParents(one.Id)
+		this_.appendNodeLineList(loadedIdList, lineList, line, parentList)
 	}
-	if rootNode.Id == nodeId {
-		list = append(list, nodeId)
-		return
-	}
-	var id = nodeId
+}
+
+/**
+
+
+
+
+ */
+func (this_ *Worker) findNodeLineList(nodeId string) (lineList [][]string) {
+	Logger.Info("查询节点所有线", zap.Any("nodeId", nodeId))
+
 	var loadedIdList []string
+	loadedIdList = append(loadedIdList, nodeId)
+	var line []string
+	line = append(line, nodeId)
 
-	for {
-		if util.ContainsString(loadedIdList, id) >= 0 {
-			break
-		}
-		loadedIdList = append(loadedIdList, id)
+	var find = this_.findNode(nodeId)
+	if find != nil {
+		var children = this_.findNodeList(find.ConnNodeIdList)
+		this_.appendNodeLineList(&loadedIdList, &lineList, line, children)
+	}
+	var parentList = this_.findParents(nodeId)
+	this_.appendNodeLineList(&loadedIdList, &lineList, line, parentList)
 
-		var find = this_.findNode(id)
-		if find == nil {
-			break
-		}
-		list = append(list, find.Id)
-		if find.Id == rootNode.Id {
-			break
-		}
-		id = find.ParentId
-	}
-	if len(list) > 0 {
-		if list[0] != nodeId || list[len(list)-1] != rootNode.Id {
-			list = []string{}
-			return
-		}
-	}
 	return
 }
 
-func (this_ *Worker) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdList []string) {
+func (this_ *Worker) getNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdList []string) {
 
-	fromToRootList := this_.findNodeLineToRoot(fromNodeId)
-	if len(fromToRootList) == 0 {
-		return
-	}
-	toToRootList := this_.findNodeLineToRoot(toNodeId)
-	if len(toToRootList) == 0 {
-		return
-	}
+	Logger.Info("查询节点线", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId))
+	var lineList = this_.findNodeLineList(fromNodeId)
 
-	if len(fromToRootList) == 1 {
-		for i := len(toToRootList) - 1; i >= 0; i-- {
-			lineIdList = append(lineIdList, toToRootList[i])
-		}
-		return
-	} else if len(toToRootList) == 1 {
-		lineIdList = append(lineIdList, fromToRootList...)
-		return
-	} else {
-		for i, id := range toToRootList {
-			var find = false
-			for n, one := range fromToRootList {
-				if one == id {
-					find = true
-					if n > 0 {
-						lineIdList = append(lineIdList, fromToRootList[:n]...)
-					}
-					break
-				}
-
-			}
-			if find {
-				for m := i; m >= 0; m-- {
-					lineIdList = append(lineIdList, toToRootList[m])
-				}
-				break
+	for _, line := range lineList {
+		Logger.Info("已查询的连线", zap.Any("fromNodeId", fromNodeId), zap.Any("line", line))
+		if util.ContainsString(line, toNodeId) >= 0 {
+			if len(lineIdList) == 0 || len(line) < len(lineIdList) {
+				lineIdList = line
 			}
 		}
 	}
@@ -229,14 +186,51 @@ func (this_ *Worker) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 func (this_ *Worker) refreshNodeList() {
 	var list = this_.cache.nodeList
 	for _, one := range list {
-		var find = this_.findChildrenNode(one.Id)
-
-		if find == nil && one.ParentId == this_.server.Id {
-			this_.addChildrenNode(one)
+		if one.Id == this_.server.Id {
+			var connIdList = one.ConnNodeIdList
+			for _, connToId := range connIdList {
+				pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
+				if pool == nil {
+					var find = this_.findNode(connToId)
+					if find != nil && find.ConnAddress != "" {
+						this_.server.connNodeListenerKeepAlive(find.ConnAddress, find.ConnToken, find.ConnSize)
+					}
+				}
+			}
 		}
 	}
 	if this_.server.OnNodeListChange != nil {
 		this_.server.OnNodeListChange(this_.cache.nodeList)
+	}
+	return
+}
+
+func (this_ *Worker) callAllTo(msg *Message) (err error) {
+	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
+	for _, pool := range list {
+		if util.ContainsString(msg.CalledNodeIdList, pool.toNodeId) >= 0 {
+			continue
+		}
+		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.toNodeId)
+		err = pool.Do(func(listener *MessageListener) (e error) {
+			_, e = this_.Call(listener, msg.Method, msg)
+			return
+		})
+	}
+	return
+}
+
+func (this_ *Worker) callAllFrom(msg *Message) (err error) {
+	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
+	for _, pool := range list {
+		if util.ContainsString(msg.CalledNodeIdList, pool.fromNodeId) >= 0 {
+			continue
+		}
+		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.fromNodeId)
+		err = pool.Do(func(listener *MessageListener) (e error) {
+			_, e = this_.Call(listener, msg.Method, msg)
+			return
+		})
 	}
 	return
 }

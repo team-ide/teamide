@@ -127,7 +127,7 @@ func (this_ *NodeContext) initContext() (err error) {
 	list, _ = this_.nodeService.Query(&NodeModel{})
 	for _, one := range list {
 		this_.setNodeModel(one.ServerId, one)
-		if one.ParentServerId == "" {
+		if one.IsROOT() {
 			this_.root = one
 		}
 	}
@@ -148,8 +148,8 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 	this_.root = root
 	this_.server = &node.Server{
 		Id:               this_.root.ServerId,
-		Token:            this_.root.Token,
-		Address:          this_.root.Address,
+		BindToken:        this_.root.BindToken,
+		BindAddress:      this_.root.BindAddress,
 		OnNodeListChange: this_.onNodeListChange,
 	}
 	err = this_.server.Start()
@@ -158,8 +158,11 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 	}
 	_ = this_.server.AddNodeList([]*node.Info{
 		{
-			Id:        this_.root.ServerId,
-			ConnToken: this_.root.Token,
+			Id:          this_.root.ServerId,
+			BindToken:   this_.root.BindToken,
+			BindAddress: this_.root.BindAddress,
+			ConnAddress: this_.root.ConnAddress,
+			ConnToken:   this_.root.ConnToken,
 		},
 	})
 	return

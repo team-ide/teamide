@@ -98,26 +98,26 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		res.Ok = true
 		return
 	case methodNotifyParentRefresh:
-		this_.notifyParentRefresh(msg.NodeList, msg.NetProxyList)
+		this_.notifyParentRefresh(msg)
 		return
 	case methodNodeAdd:
 		if len(msg.NodeList) > 0 {
-			_ = this_.addNodeList(msg.NodeList)
+			_ = this_.addNodeList(msg.NodeList, msg.CalledNodeIdList)
 		}
 		return
 	case methodNodeRemove:
 		if len(msg.NodeIdList) > 0 {
-			_ = this_.removeNodeList(msg.NodeIdList)
+			_ = this_.removeNodeList(msg.NodeIdList, msg.CalledNodeIdList)
 		}
 		return
 	case methodNetProxyAdd:
 		if len(msg.NetProxyList) > 0 {
-			err = this_.addNetProxyList(msg.NetProxyList)
+			err = this_.addNetProxyList(msg.NetProxyList, msg.CalledNodeIdList)
 		}
 		return
 	case methodNetProxyRemove:
 		if len(msg.NetProxyIdList) > 0 {
-			err = this_.removeNetProxyList(msg.NetProxyIdList)
+			err = this_.removeNetProxyList(msg.NetProxyIdList, msg.CalledNodeIdList)
 		}
 		return
 	case methodNetProxyNewConn:

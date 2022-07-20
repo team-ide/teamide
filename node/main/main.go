@@ -47,8 +47,8 @@ func main() {
 
 	worker := &node.Server{
 		Id:          id,
-		Address:     address,
-		Token:       token,
+		BindAddress: address,
+		BindToken:   token,
 		ConnAddress: connAddress,
 		ConnToken:   connToken,
 	}

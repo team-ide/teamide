@@ -2,17 +2,12 @@ package node
 
 import (
 	"sync"
-	"teamide/pkg/util"
 )
 
 type Cache struct {
 	nodeListenerPoolCache map[string]*MessageListenerPool
 	nodeListenerLock      sync.Mutex
 
-	fromNodeIdList []string
-	fromNodeIdLock sync.Mutex
-
-	childrenNodeList              []*Info
 	nodeList                      []*Info
 	childrenNodeListenerPoolCache map[string]*MessageListenerPool
 	fromNodeListenerPoolCache     map[string]*MessageListenerPool
@@ -96,30 +91,6 @@ func (this_ *Cache) getNodeListenerPoolListByToNodeId(toNodeId string) (poolList
 			poolList = append(poolList, one)
 		}
 	}
-	return
-}
-
-func (this_ *Cache) addFromNodeId(fromNodeId string) {
-	this_.fromNodeIdLock.Lock()
-	defer this_.fromNodeIdLock.Unlock()
-
-	if util.ContainsString(this_.fromNodeIdList, fromNodeId) < 0 {
-		this_.fromNodeIdList = append(this_.fromNodeIdList, fromNodeId)
-	}
-	return
-}
-
-func (this_ *Cache) removeFromNodeId(fromNodeId string) {
-	this_.fromNodeIdLock.Lock()
-	defer this_.fromNodeIdLock.Unlock()
-	var list = this_.fromNodeIdList
-	var newList []string
-	for _, one := range list {
-		if one != fromNodeId {
-			newList = append(newList, one)
-		}
-	}
-	this_.fromNodeIdList = newList
 	return
 }
 

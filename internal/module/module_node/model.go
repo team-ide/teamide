@@ -12,22 +12,27 @@ const (
 
 // NodeModel 节点模型，和节点表对应
 type NodeModel struct {
-	NodeId         int64     `json:"nodeId,omitempty"`
-	ServerId       string    `json:"serverId,omitempty"`
-	Name           string    `json:"name,omitempty"`
-	Comment        string    `json:"comment,omitempty"`
-	Address        string    `json:"address,omitempty"`
-	Token          string    `json:"token,omitempty"`
-	ConnAddress    string    `json:"connAddress,omitempty"`
-	ConnToken      string    `json:"connToken,omitempty"`
-	ParentServerId string    `json:"parentServerId,omitempty"`
-	Option         string    `json:"option,omitempty"`
-	UserId         int64     `json:"userId,omitempty"`
-	DeleteUserId   int64     `json:"deleteUserId,omitempty"`
-	Deleted        int8      `json:"deleted,omitempty"`
-	CreateTime     time.Time `json:"createTime,omitempty"`
-	UpdateTime     time.Time `json:"updateTime,omitempty"`
-	DeleteTime     time.Time `json:"deleteTime,omitempty"`
+	NodeId          int64     `json:"nodeId,omitempty"`
+	ServerId        string    `json:"serverId,omitempty"`
+	Name            string    `json:"name,omitempty"`
+	Comment         string    `json:"comment,omitempty"`
+	BindAddress     string    `json:"bindAddress,omitempty"`
+	BindToken       string    `json:"bindToken,omitempty"`
+	ConnAddress     string    `json:"connAddress,omitempty"`
+	ConnToken       string    `json:"connToken,omitempty"`
+	ParentServerIds string    `json:"parentServerIds,omitempty"`
+	Option          string    `json:"option,omitempty"`
+	IsRoot          int8      `json:"isRoot,omitempty"`
+	UserId          int64     `json:"userId,omitempty"`
+	DeleteUserId    int64     `json:"deleteUserId,omitempty"`
+	Deleted         int8      `json:"deleted,omitempty"`
+	CreateTime      time.Time `json:"createTime,omitempty"`
+	UpdateTime      time.Time `json:"updateTime,omitempty"`
+	DeleteTime      time.Time `json:"deleteTime,omitempty"`
+}
+
+func (entity *NodeModel) IsROOT() bool {
+	return entity.IsRoot == 1
 }
 
 func (entity *NodeModel) GetTableName() string {

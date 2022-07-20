@@ -16,13 +16,13 @@ func (this_ *Worker) Stop() {
 	}
 }
 
-func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
+func (this_ *Worker) initialize(msg *Message) {
 
 	var oldList = this_.cache.nodeList
 	var removeNodeIdList []string
 	for _, one := range oldList {
 		var find *Info
-		for _, one_ := range nodeList {
+		for _, one_ := range msg.NodeList {
 			if one_.Id == one.Id {
 				find = one_
 			}
@@ -31,14 +31,14 @@ func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
 			removeNodeIdList = append(removeNodeIdList, one.Id)
 		}
 	}
-	_ = this_.removeNodeList(removeNodeIdList)
-	_ = this_.addNodeList(nodeList)
+	_ = this_.removeNodeList(removeNodeIdList, msg.CalledNodeIdList)
+	_ = this_.addNodeList(msg.NodeList, msg.CalledNodeIdList)
 
 	var oldNetProxyList = this_.cache.netProxyList
 	var removeNetProxyIdList []string
 	for _, one := range oldNetProxyList {
 		var find *NetProxy
-		for _, one_ := range netProxyList {
+		for _, one_ := range msg.NetProxyList {
 			if one_.Id == one.Id {
 				find = one_
 			}
@@ -47,12 +47,12 @@ func (this_ *Worker) initialize(nodeList []*Info, netProxyList []*NetProxy) {
 			removeNetProxyIdList = append(removeNetProxyIdList, one.Id)
 		}
 	}
-	_ = this_.removeNetProxyList(removeNetProxyIdList)
-	_ = this_.addNetProxyList(netProxyList)
+	_ = this_.removeNetProxyList(removeNetProxyIdList, msg.CalledNodeIdList)
+	_ = this_.addNetProxyList(msg.NetProxyList, msg.CalledNodeIdList)
 }
 
-func (this_ *Worker) notifyParentRefresh(nodeList []*Info, netProxyList []*NetProxy) {
-
-	_ = this_.doAddNodeList(nodeList)
-	_ = this_.doAddNetProxyList(netProxyList)
+func (this_ *Worker) notifyParentRefresh(msg *Message) {
+	_ = this_.callAllFrom(msg)
+	_ = this_.doAddNodeList(msg.NodeList)
+	_ = this_.doAddNetProxyList(msg.NetProxyList)
 }

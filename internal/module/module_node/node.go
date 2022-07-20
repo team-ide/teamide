@@ -125,17 +125,21 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 		node.CreateTime = time.Now()
 	}
 
-	var columns = "nodeId, serverId, name, comment, address, token, connAddress, connToken, parentServerId, option, userId, createTime"
-	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, parentServerIds, option, isRoot, userId, createTime"
+	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
 
 	sql := `INSERT INTO ` + TableNode + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.Address, node.Token, node.ConnAddress, node.ConnToken, node.ParentServerId, node.Option, node.UserId, node.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ParentServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
 	}
 
+	err = this_.InitContext()
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -190,14 +194,14 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		values = append(values, node.Comment)
 	}
 
-	if node.Address != "" {
-		sql += "address=?,"
-		values = append(values, node.Address)
+	if node.BindAddress != "" {
+		sql += "bindAddress=?,"
+		values = append(values, node.BindAddress)
 	}
 
-	if node.Token != "" {
-		sql += "token=?,"
-		values = append(values, node.Token)
+	if node.BindToken != "" {
+		sql += "bindToken=?,"
+		values = append(values, node.BindToken)
 	}
 
 	if node.ConnAddress != "" {
@@ -210,9 +214,9 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		values = append(values, node.ConnToken)
 	}
 
-	if node.ParentServerId != "" {
-		sql += "parentServerId=?,"
-		values = append(values, node.ParentServerId)
+	if node.ParentServerIds != "" {
+		sql += "parentServerIds=?,"
+		values = append(values, node.ParentServerIds)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")
@@ -226,6 +230,10 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		return
 	}
 
+	err = this_.InitContext()
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -239,5 +247,9 @@ func (this_ *NodeService) Delete(nodeId int64, userId int64) (rowsAffected int64
 		return
 	}
 
+	err = this_.InitContext()
+	if err != nil {
+		return
+	}
 	return
 }

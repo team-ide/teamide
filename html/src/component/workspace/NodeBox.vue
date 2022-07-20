@@ -15,8 +15,10 @@
     </div>
     <div class="node-context-body">
       <template v-if="source.nodeRoot == null">
-        <div class="text-center mgt-50">
-          <div class="tm-btn">添加根节点</div>
+        <div class="text-center pdt-50">
+          <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
+            设置根节点
+          </div>
         </div>
       </template>
       <template v-else> </template>
@@ -91,73 +93,68 @@ export default {
         this.tool.showContextmenu(menus);
       }
     },
+    toInsertRoot() {
+      this.tool.stopEvent();
+      let data = {
+        name: "根节点",
+        bindAddress: ":21090",
+        bindToken: this.tool.md5("TokenTime" + new Date().getTime()),
+      };
+
+      this.$refs.InsertNode.show({
+        title: `设置根节点`,
+        form: [this.form.node.root],
+        isRoot: true,
+        serverId: this.tool.md5("TokenTime" + new Date().getTime()),
+        data: [data],
+      });
+    },
     toInsert() {
       this.tool.stopEvent();
-      let data = {};
-      let optionsJSON = {};
+      let data = {
+        connToken: this.tool.md5("TokenTime" + new Date().getTime()),
+      };
 
-      this.$refs.InsertNodeGroup.show({
-        title: `新增工具分组`,
-        form: [this.form.node.group, this.form.node.group.option],
-        data: [data, optionsJSON],
+      this.$refs.InsertNode.show({
+        title: `设置根节点`,
+        form: [this.form.node.connNode],
+        data: [data],
       });
-    },
-    toUpdate(data) {
-      this.tool.stopEvent();
-      this.updateGroupData = data;
-
-      let optionsJSON = this.tool.getOptionJSON(data.option);
-
-      this.$refs.UpdateNodeGroup.show({
-        title: `编辑[${data.name}]工具分组`,
-        form: [this.form.node.group, this.form.node.group.option],
-        data: [data, optionsJSON],
-      });
-    },
-    toDelete(data) {
-      this.tool.stopEvent();
-      this.tool
-        .confirm(
-          "删除工具分组[" + data.name + "]并将该分组下工具移出该组，确定删除？"
-        )
-        .then(async () => {
-          return this.doDelete(data);
-        })
-        .catch((e) => {});
-    },
-    async doDelete(data) {
-      let res = await this.server.node.group.delete(data);
-      if (res.code == 0) {
-        this.tool.success("删除分组成功");
-        this.initData();
-        return true;
-      } else {
-        this.tool.error(res.msg);
-        return false;
-      }
-    },
-    async doUpdate(dataList, config) {
-      let data = dataList[0];
-      let optionJSON = dataList[1];
-      data.groupId = this.updateGroupData.groupId;
-      data.option = JSON.stringify(optionJSON);
-      let res = await this.server.node.group.update(data);
-      if (res.code == 0) {
-        this.tool.success("修改分组成功");
-        this.initData();
-        return true;
-      } else {
-        this.tool.error(res.msg);
-        return false;
-      }
     },
     async doInsert(dataList, config) {
       let data = dataList[0];
-      let optionJSON = dataList[1];
-      data.option = JSON.stringify(optionJSON);
-      let res = await this.server.node.group.insert(data);
+      data.parentServerId = config.parentServerId;
+      if (config.isRoot) {
+        data.isRoot = 1;
+        data.serverId = config.serverId;
+      } else {
+        data.isRoot = 0;
+      }
+      let res = await this.server.node.insert(data);
       if (res.code == 0) {
-        this.tool.success("新增分组成功");
+        this.tool.success("新增成功");
+        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    toUpdate(data) {
+      this.tool.stopEvent();
+      this.$refs.UpdateNodeGroup.show({
+        title: `编辑[${data.name}]`,
+        nodeId: data.nodeId,
+        form: [this.form.node.connNode],
+        data: [data],
+      });
+    },
+    async doUpdate(dataList, config) {
+      let data = dataList[0];
+      data.nodeId = config.nodeId;
+      let res = await this.server.node.update(data);
+      if (res.code == 0) {
+        this.tool.success("修改成功");
         this.initData();
         return true;
       } else {
@@ -194,6 +191,5 @@ export default {
 .node-context-body {
   width: 100%;
   height: calc(100% - 40px);
-  display: flex;
 }
 </style>

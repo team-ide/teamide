@@ -42,7 +42,7 @@ func (this_ *Worker) formatNetProxy(netProxy *NetProxy) (err error) {
 		return
 	}
 	if len(netProxy.LineNodeIdList) == 0 {
-		netProxy.LineNodeIdList = this_.GetNodeLineByFromTo(netProxy.Inner.NodeId, netProxy.Outer.NodeId)
+		netProxy.LineNodeIdList = this_.getNodeLineByFromTo(netProxy.Inner.NodeId, netProxy.Outer.NodeId)
 		if len(netProxy.LineNodeIdList) == 0 {
 			err = errors.New("无法正确解析输入输出节点关系")
 			return
@@ -56,23 +56,14 @@ func (this_ *Worker) formatNetProxy(netProxy *NetProxy) (err error) {
 	return
 }
 
-func (this_ *Worker) AddNetProxyList(netProxyList []*NetProxy) (err error) {
-	err = this_.addNetProxyList(netProxyList)
-	return
-}
-
-func (this_ *Worker) RemoveNetProxyList(netProxyIdList []string) (err error) {
-	err = this_.removeNetProxyList(netProxyIdList)
-	return
-}
-
-func (this_ *Worker) addNetProxyList(netProxyList []*NetProxy) (err error) {
+func (this_ *Worker) addNetProxyList(netProxyList []*NetProxy, calledNodeIdList []string) (err error) {
 	if len(netProxyList) == 0 {
 		return
 	}
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method:       methodNetProxyAdd,
-		NetProxyList: netProxyList,
+	_ = this_.callAllTo(&Message{
+		Method:           methodNetProxyAdd,
+		NetProxyList:     netProxyList,
+		CalledNodeIdList: calledNodeIdList,
 	})
 	err = this_.doAddNetProxyList(netProxyList)
 	return
@@ -98,14 +89,15 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 	return
 }
 
-func (this_ *Worker) removeNetProxyList(netProxyIdList []string) (err error) {
+func (this_ *Worker) removeNetProxyList(netProxyIdList []string, calledNodeIdList []string) (err error) {
 	if len(netProxyIdList) == 0 {
 		return
 	}
 
-	_ = this_.callChildrenNodePoolList(&Message{
-		Method:         methodNetProxyRemove,
-		NetProxyIdList: netProxyIdList,
+	_ = this_.callAllTo(&Message{
+		Method:           methodNetProxyRemove,
+		NetProxyIdList:   netProxyIdList,
+		CalledNodeIdList: calledNodeIdList,
 	})
 
 	err = this_.doRemoveNetProxyList(netProxyIdList)
