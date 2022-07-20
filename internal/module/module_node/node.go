@@ -125,21 +125,18 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 		node.CreateTime = time.Now()
 	}
 
-	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, parentServerIds, option, isRoot, userId, createTime"
+	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, connServerIds, option, isRoot, userId, createTime"
 	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
 
 	sql := `INSERT INTO ` + TableNode + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ParentServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ConnServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
 	}
 
-	err = this_.InitContext()
-	if err != nil {
-		return
-	}
+	this_.nodeContext.onAddNodeModel(node)
 	return
 }
 
@@ -214,9 +211,9 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		values = append(values, node.ConnToken)
 	}
 
-	if node.ParentServerIds != "" {
-		sql += "parentServerIds=?,"
-		values = append(values, node.ParentServerIds)
+	if node.ConnServerIds != "" {
+		sql += "connServerIds=?,"
+		values = append(values, node.ConnServerIds)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")
@@ -230,10 +227,7 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		return
 	}
 
-	err = this_.InitContext()
-	if err != nil {
-		return
-	}
+	this_.nodeContext.onUpdateNodeModel(node)
 	return
 }
 
@@ -247,9 +241,6 @@ func (this_ *NodeService) Delete(nodeId int64, userId int64) (rowsAffected int64
 		return
 	}
 
-	err = this_.InitContext()
-	if err != nil {
-		return
-	}
+	this_.nodeContext.onRemoveNodeModel(nodeId)
 	return
 }

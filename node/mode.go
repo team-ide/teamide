@@ -33,6 +33,9 @@ func (this_ *Info) addConnNodeId(connNodeId string) {
 	this_.connIdListLock.Lock()
 	defer this_.connIdListLock.Unlock()
 
+	if connNodeId == "" || connNodeId == this_.Id {
+		return
+	}
 	if util.ContainsString(this_.ConnNodeIdList, connNodeId) < 0 {
 		this_.ConnNodeIdList = append(this_.ConnNodeIdList, connNodeId)
 	}
@@ -100,6 +103,8 @@ func copyNode(source, target *Info) {
 	target.BindToken = source.BindToken
 	target.ConnAddress = source.ConnAddress
 	target.ConnToken = source.ConnToken
+	target.Status = source.Status
+	target.StatusError = source.StatusError
 	var list = source.ConnNodeIdList
 	for _, one := range list {
 		target.addConnNodeId(one)

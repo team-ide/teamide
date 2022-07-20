@@ -39,7 +39,7 @@ func (this_ *Worker) addNodeList(nodeList []*Info, calledNodeIdList []string) (e
 	if len(nodeList) == 0 {
 		return
 	}
-	_ = this_.callAllTo(&Message{
+	this_.sendAllTo(&Message{
 		Method:           methodNodeAdd,
 		NodeList:         nodeList,
 		CalledNodeIdList: calledNodeIdList,
@@ -76,7 +76,7 @@ func (this_ *Worker) removeNodeList(nodeIdList []string, calledNodeIdList []stri
 	if len(nodeIdList) == 0 {
 		return
 	}
-	_ = this_.callAllTo(&Message{
+	this_.sendAllTo(&Message{
 		Method:           methodNodeRemove,
 		NodeIdList:       nodeIdList,
 		CalledNodeIdList: calledNodeIdList,
@@ -184,18 +184,14 @@ func (this_ *Worker) getNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 }
 
 func (this_ *Worker) refreshNodeList() {
-	var list = this_.cache.nodeList
-	for _, one := range list {
-		if one.Id == this_.server.Id {
-			var connIdList = one.ConnNodeIdList
-			for _, connToId := range connIdList {
-				pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-				if pool == nil {
-					var find = this_.findNode(connToId)
-					if find != nil && find.ConnAddress != "" {
-						this_.server.connNodeListenerKeepAlive(find.ConnAddress, find.ConnToken, find.ConnSize)
-					}
-				}
+
+	var connIdList = this_.server.rootNode.ConnNodeIdList
+	for _, connToId := range connIdList {
+		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
+		if pool == nil {
+			var find = this_.findNode(connToId)
+			if find != nil && find.ConnAddress != "" {
+				this_.server.connNodeListenerKeepAlive(find.ConnAddress, find.ConnToken, find.ConnSize)
 			}
 		}
 	}
@@ -205,30 +201,44 @@ func (this_ *Worker) refreshNodeList() {
 	return
 }
 
-func (this_ *Worker) callAllTo(msg *Message) (err error) {
+func (this_ *Worker) sendAllTo(msg *Message) {
+	if util.ContainsString(msg.CalledNodeIdList, this_.server.Id) < 0 {
+		msg.CalledNodeIdList = append(msg.CalledNodeIdList, this_.server.Id)
+	}
 	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
+	var callPools []*MessageListenerPool
 	for _, pool := range list {
 		if util.ContainsString(msg.CalledNodeIdList, pool.toNodeId) >= 0 {
 			continue
 		}
 		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.toNodeId)
-		err = pool.Do(func(listener *MessageListener) (e error) {
-			_, e = this_.Call(listener, msg.Method, msg)
+		callPools = append(callPools, pool)
+	}
+	for _, pool := range callPools {
+		_ = pool.Do(func(listener *MessageListener) (e error) {
+			_ = listener.Send(msg)
 			return
 		})
 	}
 	return
 }
 
-func (this_ *Worker) callAllFrom(msg *Message) (err error) {
+func (this_ *Worker) sendAllFrom(msg *Message) {
+	if util.ContainsString(msg.CalledNodeIdList, this_.server.Id) < 0 {
+		msg.CalledNodeIdList = append(msg.CalledNodeIdList, this_.server.Id)
+	}
 	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
+	var callPools []*MessageListenerPool
 	for _, pool := range list {
 		if util.ContainsString(msg.CalledNodeIdList, pool.fromNodeId) >= 0 {
 			continue
 		}
 		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.fromNodeId)
-		err = pool.Do(func(listener *MessageListener) (e error) {
-			_, e = this_.Call(listener, msg.Method, msg)
+		callPools = append(callPools, pool)
+	}
+	for _, pool := range callPools {
+		_ = pool.Do(func(listener *MessageListener) (e error) {
+			_ = listener.Send(msg)
 			return
 		})
 	}

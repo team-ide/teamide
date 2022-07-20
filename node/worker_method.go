@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	methodOK                  = 1
-	methodNotifyParentRefresh = 2
+	methodOK                    = 1
+	methodNotifyAllRefresh      = 2
+	methodNotifyChildrenRefresh = 3
+	methodNotifyParentRefresh   = 4
 
 	methodNodeAdd    = 11
 	methodNodeRemove = 12
@@ -96,6 +98,12 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	switch method {
 	case methodOK:
 		res.Ok = true
+		return
+	case methodNotifyAllRefresh:
+		this_.notifyParentRefresh(msg)
+		return
+	case methodNotifyChildrenRefresh:
+		this_.notifyChildrenRefresh(msg)
 		return
 	case methodNotifyParentRefresh:
 		this_.notifyParentRefresh(msg)

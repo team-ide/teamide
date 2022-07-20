@@ -3,6 +3,7 @@ package module_node
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 	"sync"
 	"teamide/node"
 )
@@ -12,6 +13,7 @@ func (this_ *NodeService) InitContext() (err error) {
 		this_.nodeContext = &NodeContext{
 			nodeService:            this_,
 			wsCache:                make(map[string]*websocket.Conn),
+			nodeIdNodeModelCache:   make(map[int64]*NodeModel),
 			serverIdNodeModelCache: make(map[string]*NodeModel),
 		}
 	}
@@ -37,6 +39,8 @@ type NodeContext struct {
 	nodeService                *NodeService
 	nodeList                   []*NodeInfo
 	root                       *NodeModel
+	nodeIdNodeModelCache       map[int64]*NodeModel
+	nodeIdNodeModelCacheLock   sync.Mutex
 	serverIdNodeModelCache     map[string]*NodeModel
 	serverIdNodeModelCacheLock sync.Mutex
 	wsCache                    map[string]*websocket.Conn
@@ -44,24 +48,91 @@ type NodeContext struct {
 	netProxyList               []*node.NetProxy
 }
 
-func (this_ *NodeContext) getNodeModel(id string) (res *NodeModel) {
+func (this_ *NodeContext) getNodeModel(id int64) (res *NodeModel) {
+	this_.nodeIdNodeModelCacheLock.Lock()
+	defer this_.nodeIdNodeModelCacheLock.Unlock()
+	res = this_.nodeIdNodeModelCache[id]
+	return
+}
+
+func (this_ *NodeContext) setNodeModel(id int64, nodeModel *NodeModel) {
+	this_.nodeIdNodeModelCacheLock.Lock()
+	defer this_.nodeIdNodeModelCacheLock.Unlock()
+
+	this_.nodeIdNodeModelCache[id] = nodeModel
+}
+
+func (this_ *NodeContext) removeNodeModel(id int64) {
+	this_.nodeIdNodeModelCacheLock.Lock()
+	defer this_.nodeIdNodeModelCacheLock.Unlock()
+	delete(this_.nodeIdNodeModelCache, id)
+}
+
+func (this_ *NodeContext) getNodeModelByServerId(id string) (res *NodeModel) {
 	this_.serverIdNodeModelCacheLock.Lock()
 	defer this_.serverIdNodeModelCacheLock.Unlock()
 	res = this_.serverIdNodeModelCache[id]
 	return
 }
 
-func (this_ *NodeContext) setNodeModel(id string, nodeModel *NodeModel) {
+func (this_ *NodeContext) setNodeModelByServerId(id string, nodeModel *NodeModel) {
 	this_.serverIdNodeModelCacheLock.Lock()
 	defer this_.serverIdNodeModelCacheLock.Unlock()
 
 	this_.serverIdNodeModelCache[id] = nodeModel
 }
 
-func (this_ *NodeContext) removeNodeModel(id string) {
+func (this_ *NodeContext) removeNodeModelByServerId(id string) {
 	this_.serverIdNodeModelCacheLock.Lock()
 	defer this_.serverIdNodeModelCacheLock.Unlock()
 	delete(this_.serverIdNodeModelCache, id)
+}
+
+func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
+	if nodeModel == nil {
+		return
+	}
+	this_.setNodeModel(nodeModel.NodeId, nodeModel)
+	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
+	var err error
+	if nodeModel.IsROOT() {
+		err = this_.initRoot(nodeModel)
+		if err != nil {
+			this_.nodeService.Logger.Error("node context init root error", zap.Error(err))
+		}
+	} else {
+		_ = this_.server.AddNodeList([]*node.Info{
+			{
+				Id:          nodeModel.ServerId,
+				BindToken:   nodeModel.BindToken,
+				BindAddress: nodeModel.BindAddress,
+				ConnAddress: nodeModel.ConnAddress,
+				ConnToken:   nodeModel.ConnToken,
+			},
+		})
+	}
+}
+
+func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
+	if nodeModel == nil {
+		return
+	}
+	var err error
+	if nodeModel.IsROOT() {
+		err = this_.initRoot(nodeModel)
+		if err != nil {
+			this_.nodeService.Logger.Error("node context init root error", zap.Error(err))
+		}
+	}
+	this_.setNodeModel(nodeModel.NodeId, nodeModel)
+	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
+}
+
+func (this_ *NodeContext) onRemoveNodeModel(id int64) {
+	var nodeModel = this_.getNodeModel(id)
+	if nodeModel == nil {
+		return
+	}
 }
 
 func (this_ *NodeContext) getWS(id string) (ws *websocket.Conn) {
@@ -126,16 +197,17 @@ func (this_ *NodeContext) initContext() (err error) {
 	var list []*NodeModel
 	list, _ = this_.nodeService.Query(&NodeModel{})
 	for _, one := range list {
-		this_.setNodeModel(one.ServerId, one)
 		if one.IsROOT() {
 			this_.root = one
 		}
 	}
 
 	if this_.root != nil {
-		err = this_.initRoot(this_.root)
-		if err != nil {
-			return
+		this_.onAddNodeModel(this_.root)
+	}
+	for _, one := range list {
+		if !one.IsROOT() {
+			this_.onAddNodeModel(one)
 		}
 	}
 	return
@@ -187,7 +259,7 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 	for _, one := range nodeList {
 		nodeInfo := &NodeInfo{
 			Info:      one,
-			NodeModel: this_.getNodeModel(one.Id),
+			NodeModel: this_.getNodeModelByServerId(one.Id),
 		}
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}

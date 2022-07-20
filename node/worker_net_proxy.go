@@ -60,7 +60,7 @@ func (this_ *Worker) addNetProxyList(netProxyList []*NetProxy, calledNodeIdList 
 	if len(netProxyList) == 0 {
 		return
 	}
-	_ = this_.callAllTo(&Message{
+	this_.sendAllTo(&Message{
 		Method:           methodNetProxyAdd,
 		NetProxyList:     netProxyList,
 		CalledNodeIdList: calledNodeIdList,
@@ -94,7 +94,7 @@ func (this_ *Worker) removeNetProxyList(netProxyIdList []string, calledNodeIdLis
 		return
 	}
 
-	_ = this_.callAllTo(&Message{
+	this_.sendAllTo(&Message{
 		Method:           methodNetProxyRemove,
 		NetProxyIdList:   netProxyIdList,
 		CalledNodeIdList: calledNodeIdList,

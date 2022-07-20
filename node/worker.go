@@ -52,7 +52,20 @@ func (this_ *Worker) initialize(msg *Message) {
 }
 
 func (this_ *Worker) notifyParentRefresh(msg *Message) {
-	_ = this_.callAllFrom(msg)
+	this_.sendAllFrom(msg)
+	_ = this_.doAddNodeList(msg.NodeList)
+	_ = this_.doAddNetProxyList(msg.NetProxyList)
+}
+
+func (this_ *Worker) notifyChildrenRefresh(msg *Message) {
+	this_.sendAllTo(msg)
+	_ = this_.doAddNodeList(msg.NodeList)
+	_ = this_.doAddNetProxyList(msg.NetProxyList)
+}
+
+func (this_ *Worker) notifyAllRefresh(msg *Message) {
+	this_.sendAllTo(msg)
+	this_.sendAllFrom(msg)
 	_ = this_.doAddNodeList(msg.NodeList)
 	_ = this_.doAddNetProxyList(msg.NetProxyList)
 }

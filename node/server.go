@@ -175,10 +175,10 @@ func (this_ *Server) serverListenerKeepAlive() {
 
 			if clientIndex == 0 {
 				clientNode.addConnNodeId(this_.Id)
-				//_ = this_.worker.addNodeList([]*Info{clientNode})
+				_ = this_.worker.addNodeList([]*Info{clientNode}, []string{})
 
 				err = messageListener.Send(&Message{
-					Method:       methodNotifyParentRefresh,
+					Method:       methodNotifyAllRefresh,
 					NodeList:     this_.cache.nodeList,
 					NetProxyList: this_.cache.netProxyList,
 				})
@@ -289,11 +289,11 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 	if clientIndex == 0 {
-		this_.rootNode.addConnNodeId(this_.Id)
-		//_ = this_.worker.addNodeList([]*Info{serverNode})
+		this_.rootNode.addConnNodeId(serverNode.Id)
+		_ = this_.worker.addNodeList([]*Info{serverNode}, []string{})
 
 		err = messageListener.Send(&Message{
-			Method:       methodNotifyParentRefresh,
+			Method:       methodNotifyAllRefresh,
 			NodeList:     this_.cache.nodeList,
 			NetProxyList: this_.cache.netProxyList,
 		})
