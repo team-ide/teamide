@@ -9,19 +9,12 @@ import (
 )
 
 var (
-	methodOK                    = 1
-	methodNotifyAllRefresh      = 2
-	methodNotifyChildrenRefresh = 3
-	methodNotifyParentRefresh   = 4
+	methodOK      = 1
+	methodGetNode = 11
 
-	methodNodeAdd    = 11
-	methodNodeRemove = 12
-
-	methodNetProxyAdd       = 21
-	methodNetProxyRemove    = 22
-	methodNetProxyNewConn   = 23
-	methodNetProxyCloseConn = 24
-	methodNetProxySend      = 25
+	methodNetProxyNewConn   = 21
+	methodNetProxyCloseConn = 22
+	methodNetProxySend      = 23
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
@@ -32,22 +25,21 @@ func (this_ *Worker) onMessage(msg *Message) {
 	if ok {
 		callback(msg)
 	} else {
-		if msg.Method == 0 {
-			return
-		}
 		res, err := this_.doMethod(msg.Method, msg)
-		if err != nil {
-			err = msg.ReturnError(err.Error())
+		if msg.Id != "" {
+			if err != nil {
+				err = msg.ReturnError(err.Error())
+				if err != nil {
+					Logger.Error("message return error", zap.Error(err))
+					return
+				}
+				return
+			}
+			err = msg.Return(res)
 			if err != nil {
 				Logger.Error("message return error", zap.Error(err))
 				return
 			}
-			return
-		}
-		err = msg.Return(res)
-		if err != nil {
-			Logger.Error("message return error", zap.Error(err))
-			return
 		}
 	}
 
@@ -94,39 +86,22 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	}
 	res = &Message{}
-
+	if msg.NotifyAll {
+		this_.notifyAll(msg)
+	} else {
+		if msg.NotifyChildren {
+			this_.notifyChildren(msg)
+		}
+		if msg.NotifyParent {
+			this_.notifyParent(msg)
+		}
+	}
 	switch method {
 	case methodOK:
 		res.Ok = true
 		return
-	case methodNotifyAllRefresh:
-		this_.notifyParentRefresh(msg)
-		return
-	case methodNotifyChildrenRefresh:
-		this_.notifyChildrenRefresh(msg)
-		return
-	case methodNotifyParentRefresh:
-		this_.notifyParentRefresh(msg)
-		return
-	case methodNodeAdd:
-		if len(msg.NodeList) > 0 {
-			_ = this_.addNodeList(msg.NodeList, msg.CalledNodeIdList)
-		}
-		return
-	case methodNodeRemove:
-		if len(msg.NodeIdList) > 0 {
-			_ = this_.removeNodeList(msg.NodeIdList, msg.CalledNodeIdList)
-		}
-		return
-	case methodNetProxyAdd:
-		if len(msg.NetProxyList) > 0 {
-			err = this_.addNetProxyList(msg.NetProxyList, msg.CalledNodeIdList)
-		}
-		return
-	case methodNetProxyRemove:
-		if len(msg.NetProxyIdList) > 0 {
-			err = this_.removeNetProxyList(msg.NetProxyIdList, msg.CalledNodeIdList)
-		}
+	case methodGetNode:
+		res.Node = this_.getNode(msg.NodeId, msg.NotifiedNodeIdList)
 		return
 	case methodNetProxyNewConn:
 		err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)

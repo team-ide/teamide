@@ -25,13 +25,18 @@ type Server struct {
 	rootNode             *Info
 }
 
+func (this_ *Server) GetNode(nodeId string) (node *Info) {
+	node = this_.worker.getNode(nodeId, []string{})
+	return
+}
+
 func (this_ *Server) AddNodeList(nodeList []*Info) (err error) {
-	err = this_.worker.addNodeList(nodeList, []string{})
+	err = this_.worker.addNodeList(nodeList)
 	return
 }
 
 func (this_ *Server) RemoveNodeList(nodeIdList []string) (err error) {
-	err = this_.worker.removeNodeList(nodeIdList, []string{})
+	err = this_.worker.removeNodeList(nodeIdList)
 	return
 }
 
@@ -41,12 +46,12 @@ func (this_ *Server) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdLis
 }
 
 func (this_ *Server) AddNetProxyList(netProxyList []*NetProxy) (err error) {
-	err = this_.worker.addNetProxyList(netProxyList, []string{})
+	err = this_.worker.addNetProxyList(netProxyList)
 	return
 }
 
 func (this_ *Server) RemoveNetProxyList(netProxyIdList []string) (err error) {
-	err = this_.worker.removeNetProxyList(netProxyIdList, []string{})
+	err = this_.worker.removeNetProxyList(netProxyIdList)
 	return
 }
 
@@ -90,8 +95,11 @@ func (this_ *Server) GetServerInfo() (str string) {
 func (this_ *Server) serverListenerKeepAlive() {
 
 	defer func() {
-		this_.rootNode.Status = StatusStopped
-		this_.rootNode.StatusError = ""
+		this_.worker.notifyAll(&Message{
+			NodeId:          this_.rootNode.Id,
+			NodeStatus:      StatusStopped,
+			NodeStatusError: "",
+		})
 		// 删除所有连接
 		var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.Id)
 		for _, one := range list {
@@ -104,8 +112,11 @@ func (this_ *Server) serverListenerKeepAlive() {
 	Logger.Info(this_.GetServerInfo() + " 服务启动 开始")
 	this_.serverListener, err = net.Listen("tcp", GetAddress(this_.BindAddress))
 	if err != nil {
-		this_.rootNode.Status = StatusError
-		this_.rootNode.StatusError = err.Error()
+		this_.worker.notifyAll(&Message{
+			NodeId:          this_.rootNode.Id,
+			NodeStatus:      StatusError,
+			NodeStatusError: err.Error(),
+		})
 		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Error(err))
 		return
 	}
@@ -174,19 +185,17 @@ func (this_ *Server) serverListenerKeepAlive() {
 					this_.cache.removeNodeListenerPool(fromNodeId, this_.Id)
 
 					if this_.rootNode.Status != StatusStopped {
-						if pool.isStop {
-							clientNode.Status = StatusStopped
-							clientNode.StatusError = ""
-						} else {
-							clientNode.Status = StatusError
-							clientNode.StatusError = "连接异常"
+						var notifyMsg = &Message{
+							NodeId: clientNode.Id,
 						}
-						this_.worker.notifyAllRefresh(&Message{
-							Method:          methodNotifyAllRefresh,
-							NodeId:          clientNode.Id,
-							NodeStatus:      clientNode.Status,
-							NodeStatusError: clientNode.StatusError,
-						})
+						if pool.isStop {
+							notifyMsg.NodeStatus = StatusStopped
+							notifyMsg.NodeStatusError = ""
+						} else {
+							notifyMsg.NodeStatus = StatusError
+							notifyMsg.NodeStatusError = "连接异常"
+						}
+						this_.worker.notifyAll(notifyMsg)
 					}
 				}
 			})
@@ -195,12 +204,14 @@ func (this_ *Server) serverListenerKeepAlive() {
 
 			if clientIndex == 0 {
 				clientNode.addConnNodeId(this_.Id)
-				_ = this_.worker.addNodeList([]*Info{clientNode}, []string{})
+				_ = this_.worker.doAddNodeList([]*Info{clientNode})
 
-				this_.worker.notifyAllRefresh(&Message{
-					Method:       methodNotifyAllRefresh,
-					NodeList:     this_.cache.nodeList,
-					NetProxyList: this_.cache.netProxyList,
+				this_.worker.notifyAll(&Message{
+					NodeId:          clientNode.Id,
+					NodeStatus:      StatusStarted,
+					NodeStatusError: "",
+					NodeList:        this_.cache.nodeList,
+					NetProxyList:    this_.cache.netProxyList,
 				})
 			}
 
@@ -299,20 +310,18 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 		if clientIndex == 0 {
+			var notifyMsg = &Message{
+				NodeId: serverNode.Id,
+			}
 			if pool.isStop {
-				serverNode.Status = StatusStopped
-				serverNode.StatusError = ""
+				notifyMsg.NodeStatus = StatusStopped
+				notifyMsg.NodeStatusError = ""
 			} else {
-				serverNode.Status = StatusError
-				serverNode.StatusError = "连接异常"
+				notifyMsg.NodeStatus = StatusError
+				notifyMsg.NodeStatusError = "连接异常"
 			}
 
-			this_.worker.notifyAllRefresh(&Message{
-				Method:          methodNotifyAllRefresh,
-				NodeId:          serverNode.Id,
-				NodeStatus:      serverNode.Status,
-				NodeStatusError: serverNode.StatusError,
-			})
+			this_.worker.notifyAll(notifyMsg)
 		}
 		if !pool.isStop {
 			time.Sleep(5 * time.Second)
@@ -327,10 +336,9 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 		serverNode.StatusError = ""
 
 		this_.rootNode.addConnNodeId(serverNode.Id)
-		_ = this_.worker.addNodeList([]*Info{serverNode}, []string{})
+		_ = this_.worker.doAddNodeList([]*Info{serverNode})
 
-		this_.worker.notifyAllRefresh(&Message{
-			Method:       methodNotifyAllRefresh,
+		this_.worker.notifyAll(&Message{
 			NodeList:     this_.cache.nodeList,
 			NetProxyList: this_.cache.netProxyList,
 		})

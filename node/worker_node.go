@@ -35,14 +35,13 @@ func (this_ *Worker) findParents(id string) (parents []*Info) {
 	return
 }
 
-func (this_ *Worker) addNodeList(nodeList []*Info, calledNodeIdList []string) (err error) {
+func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
 	if len(nodeList) == 0 {
 		return
 	}
-	this_.sendAllTo(&Message{
-		Method:           methodNodeAdd,
-		NodeList:         nodeList,
-		CalledNodeIdList: calledNodeIdList,
+	this_.notifyAll(&Message{
+		NotifyAll: true,
+		NodeList:  nodeList,
 	})
 
 	err = this_.doAddNodeList(nodeList)
@@ -58,45 +57,54 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	defer this_.cache.nodeLock.Unlock()
 	Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("nodeList", nodeList))
 
+	var findChanged = false
 	for _, one := range nodeList {
 		var find = this_.findNode(one.Id)
 
 		if find == nil {
+			findChanged = true
 			this_.cache.nodeList = append(this_.cache.nodeList, one)
 		} else {
-			copyNode(one, find)
+			if copyNode(one, find) {
+				findChanged = true
+			}
 		}
 	}
 
-	this_.refreshNodeList()
+	if findChanged {
+		this_.refreshNodeList()
+
+		if this_.server.OnNodeListChange != nil {
+			this_.server.OnNodeListChange(this_.cache.nodeList)
+		}
+	}
 	return
 }
 
-func (this_ *Worker) removeNodeList(nodeIdList []string, calledNodeIdList []string) (err error) {
-	if len(nodeIdList) == 0 {
+func (this_ *Worker) removeNodeList(removeNodeIdList []string) (err error) {
+	if len(removeNodeIdList) == 0 {
 		return
 	}
-	this_.sendAllTo(&Message{
-		Method:           methodNodeRemove,
-		NodeIdList:       nodeIdList,
-		CalledNodeIdList: calledNodeIdList,
+	this_.notifyAll(&Message{
+		RemoveNodeIdList: removeNodeIdList,
 	})
 
-	err = this_.doRemoveNodeList(nodeIdList)
+	err = this_.doRemoveNodeList(removeNodeIdList)
 
 	return
 }
 
-func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
-	if len(nodeIdList) == 0 {
+func (this_ *Worker) doRemoveNodeList(removeNodeIdList []string) (err error) {
+	if len(removeNodeIdList) == 0 {
 		return
 	}
 	this_.cache.nodeLock.Lock()
 	defer this_.cache.nodeLock.Unlock()
 
-	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("nodeIdList", nodeIdList))
+	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("removeNodeIdList", removeNodeIdList))
 
-	for _, nodeId := range nodeIdList {
+	var findChanged = false
+	for _, nodeId := range removeNodeIdList {
 
 		var list = this_.cache.nodeList
 		var newList []*Info
@@ -104,6 +112,7 @@ func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
 			if one.Id != nodeId {
 				newList = append(newList, one)
 			} else {
+				findChanged = true
 				this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
 				this_.cache.removeNodeListenerPool(nodeId, this_.server.Id)
 			}
@@ -111,7 +120,13 @@ func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
 		this_.cache.nodeList = newList
 	}
 
-	this_.refreshNodeList()
+	if findChanged {
+		this_.refreshNodeList()
+
+		if this_.server.OnNodeListChange != nil {
+			this_.server.OnNodeListChange(this_.cache.nodeList)
+		}
+	}
 
 	return
 }
@@ -121,11 +136,15 @@ func (this_ *Worker) doChangeNodeStatus(nodeId string, status int, statusError s
 		return
 	}
 	var find = this_.findNode(nodeId)
+	var findChanged = false
 	if find != nil {
-		find.Status = status
-		find.StatusError = statusError
+		if find.Status != status || find.StatusError != statusError {
+			findChanged = true
+			find.Status = status
+			find.StatusError = statusError
+		}
 	}
-	if this_.server.OnNodeListChange != nil {
+	if findChanged && this_.server.OnNodeListChange != nil {
 		this_.server.OnNodeListChange(this_.cache.nodeList)
 	}
 	return
@@ -210,23 +229,20 @@ func (this_ *Worker) refreshNodeList() {
 			}
 		}
 	}
-	if this_.server.OnNodeListChange != nil {
-		this_.server.OnNodeListChange(this_.cache.nodeList)
-	}
 	return
 }
 
-func (this_ *Worker) sendAllTo(msg *Message) {
-	if util.ContainsString(msg.CalledNodeIdList, this_.server.Id) < 0 {
-		msg.CalledNodeIdList = append(msg.CalledNodeIdList, this_.server.Id)
+func (this_ *Worker) notifyAllTo(msg *Message) {
+	if util.ContainsString(msg.NotifiedNodeIdList, this_.server.Id) < 0 {
+		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, this_.server.Id)
 	}
 	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
 	var callPools []*MessageListenerPool
 	for _, pool := range list {
-		if util.ContainsString(msg.CalledNodeIdList, pool.toNodeId) >= 0 {
+		if util.ContainsString(msg.NotifiedNodeIdList, pool.toNodeId) >= 0 {
 			continue
 		}
-		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.toNodeId)
+		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, pool.toNodeId)
 		callPools = append(callPools, pool)
 	}
 	for _, pool := range callPools {
@@ -238,17 +254,17 @@ func (this_ *Worker) sendAllTo(msg *Message) {
 	return
 }
 
-func (this_ *Worker) sendAllFrom(msg *Message) {
-	if util.ContainsString(msg.CalledNodeIdList, this_.server.Id) < 0 {
-		msg.CalledNodeIdList = append(msg.CalledNodeIdList, this_.server.Id)
+func (this_ *Worker) notifyAllFrom(msg *Message) {
+	if util.ContainsString(msg.NotifiedNodeIdList, this_.server.Id) < 0 {
+		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, this_.server.Id)
 	}
 	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
 	var callPools []*MessageListenerPool
 	for _, pool := range list {
-		if util.ContainsString(msg.CalledNodeIdList, pool.fromNodeId) >= 0 {
+		if util.ContainsString(msg.NotifiedNodeIdList, pool.fromNodeId) >= 0 {
 			continue
 		}
-		msg.CalledNodeIdList = append(msg.CalledNodeIdList, pool.fromNodeId)
+		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, pool.fromNodeId)
 		callPools = append(callPools, pool)
 	}
 	for _, pool := range callPools {

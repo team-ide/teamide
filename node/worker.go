@@ -1,5 +1,7 @@
 package node
 
+import "teamide/pkg/util"
+
 type Worker struct {
 	server *Server
 	cache  *Cache
@@ -16,59 +18,80 @@ func (this_ *Worker) Stop() {
 	}
 }
 
-func (this_ *Worker) initialize(msg *Message) {
+func (this_ *Worker) notifyDo(msg *Message) {
+	if msg.NodeId != "" && msg.NodeStatus > 0 {
+		_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
+	}
+	if len(msg.RemoveNodeIdList) > 0 {
+		_ = this_.doRemoveNodeList(msg.RemoveNodeIdList)
+	}
+	if len(msg.RemoveNetProxyIdList) > 0 {
+		_ = this_.doRemoveNetProxyList(msg.RemoveNetProxyIdList)
+	}
+	if len(msg.NodeList) > 0 {
+		_ = this_.doAddNodeList(msg.NodeList)
+	}
+	if len(msg.NetProxyList) > 0 {
+		_ = this_.doAddNetProxyList(msg.NetProxyList)
+	}
+}
+func (this_ *Worker) notifyParent(msg *Message) {
+	msg.NotifyParent = true
+	this_.notifyAllFrom(msg)
+	this_.notifyDo(msg)
+}
 
-	var oldList = this_.cache.nodeList
-	var removeNodeIdList []string
-	for _, one := range oldList {
-		var find *Info
-		for _, one_ := range msg.NodeList {
-			if one_.Id == one.Id {
-				find = one_
-			}
+func (this_ *Worker) notifyChildren(msg *Message) {
+	msg.NotifyChildren = true
+	this_.notifyAllTo(msg)
+	this_.notifyDo(msg)
+}
+
+func (this_ *Worker) notifyAll(msg *Message) {
+	msg.NotifyAll = true
+	this_.notifyAllTo(msg)
+	this_.notifyAllFrom(msg)
+	this_.notifyDo(msg)
+}
+
+func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {
+	if nodeId == "" {
+		return
+	}
+	find = this_.findNode(nodeId)
+	if find != nil {
+		return
+	}
+
+	if util.ContainsString(NotifiedNodeIdList, this_.server.Id) < 0 {
+		NotifiedNodeIdList = append(NotifiedNodeIdList, this_.server.Id)
+	}
+	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
+	list = append(list, this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)...)
+
+	var callPools []*MessageListenerPool
+	for _, pool := range list {
+		if util.ContainsString(NotifiedNodeIdList, pool.toNodeId) >= 0 {
+			continue
 		}
+		NotifiedNodeIdList = append(NotifiedNodeIdList, pool.toNodeId)
+		callPools = append(callPools, pool)
+	}
+	msg := &Message{
+		NodeId:             nodeId,
+		NotifiedNodeIdList: NotifiedNodeIdList,
+	}
+	for _, pool := range callPools {
 		if find == nil {
-			removeNodeIdList = append(removeNodeIdList, one.Id)
+			_ = pool.Do(func(listener *MessageListener) (e error) {
+
+				res, _ := this_.Call(listener, methodGetNode, msg)
+				if res != nil && res.Node != nil {
+					find = res.Node
+				}
+				return
+			})
 		}
 	}
-	_ = this_.removeNodeList(removeNodeIdList, msg.CalledNodeIdList)
-	_ = this_.addNodeList(msg.NodeList, msg.CalledNodeIdList)
-
-	var oldNetProxyList = this_.cache.netProxyList
-	var removeNetProxyIdList []string
-	for _, one := range oldNetProxyList {
-		var find *NetProxy
-		for _, one_ := range msg.NetProxyList {
-			if one_.Id == one.Id {
-				find = one_
-			}
-		}
-		if find == nil {
-			removeNetProxyIdList = append(removeNetProxyIdList, one.Id)
-		}
-	}
-	_ = this_.removeNetProxyList(removeNetProxyIdList, msg.CalledNodeIdList)
-	_ = this_.addNetProxyList(msg.NetProxyList, msg.CalledNodeIdList)
-}
-
-func (this_ *Worker) notifyParentRefresh(msg *Message) {
-	this_.sendAllFrom(msg)
-	_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
-	_ = this_.doAddNodeList(msg.NodeList)
-	_ = this_.doAddNetProxyList(msg.NetProxyList)
-}
-
-func (this_ *Worker) notifyChildrenRefresh(msg *Message) {
-	this_.sendAllTo(msg)
-	_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
-	_ = this_.doAddNodeList(msg.NodeList)
-	_ = this_.doAddNetProxyList(msg.NetProxyList)
-}
-
-func (this_ *Worker) notifyAllRefresh(msg *Message) {
-	this_.sendAllTo(msg)
-	this_.sendAllFrom(msg)
-	_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
-	_ = this_.doAddNodeList(msg.NodeList)
-	_ = this_.doAddNetProxyList(msg.NetProxyList)
+	return
 }
