@@ -8,7 +8,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/node"
-	"teamide/pkg/ssh"
 )
 
 type NodeApi struct {
@@ -27,16 +26,17 @@ var (
 	// 节点 权限
 
 	// PowerNode 节点基本 权限
-	PowerNode          = base.AppendPower(&base.PowerAction{Action: "node", Text: "节点", ShouldLogin: false, StandAlone: true})
-	PowerNodePage      = base.AppendPower(&base.PowerAction{Action: "node_page", Text: "节点页面", Parent: PowerNode, ShouldLogin: true, StandAlone: true})
-	PowerNodeContext   = base.AppendPower(&base.PowerAction{Action: "node_context", Text: "节点列表", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeList      = base.AppendPower(&base.PowerAction{Action: "node_list", Text: "节点列表", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeStart     = base.AppendPower(&base.PowerAction{Action: "node_start", Text: "节点启动", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeStop      = base.AppendPower(&base.PowerAction{Action: "node_stop", Text: "节点停止", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeInsert    = base.AppendPower(&base.PowerAction{Action: "node_insert", Text: "节点新增", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeUpdate    = base.AppendPower(&base.PowerAction{Action: "node_update", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeDelete    = base.AppendPower(&base.PowerAction{Action: "node_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeWebsocket = base.AppendPower(&base.PowerAction{Action: "node_websocket", Text: "节点连接", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNode             = base.AppendPower(&base.PowerAction{Action: "node", Text: "节点", ShouldLogin: false, StandAlone: true})
+	PowerNodePage         = base.AppendPower(&base.PowerAction{Action: "node_page", Text: "节点页面", Parent: PowerNode, ShouldLogin: true, StandAlone: true})
+	PowerNodeContext      = base.AppendPower(&base.PowerAction{Action: "node_context", Text: "节点列表", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeList         = base.AppendPower(&base.PowerAction{Action: "node_list", Text: "节点列表", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeStart        = base.AppendPower(&base.PowerAction{Action: "node_start", Text: "节点启动", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeStop         = base.AppendPower(&base.PowerAction{Action: "node_stop", Text: "节点停止", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeInsert       = base.AppendPower(&base.PowerAction{Action: "node_insert", Text: "节点新增", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeUpdate       = base.AppendPower(&base.PowerAction{Action: "node_update", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeUpdateOption = base.AppendPower(&base.PowerAction{Action: "node_update_option", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeDelete       = base.AppendPower(&base.PowerAction{Action: "node_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeWebsocket    = base.AppendPower(&base.PowerAction{Action: "node_websocket", Text: "节点连接", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
@@ -48,6 +48,7 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/list"}, Power: PowerNodeList, Do: this_.list})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/insert"}, Power: PowerNodeInsert, Do: this_.insert})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/update"}, Power: PowerNodeUpdate, Do: this_.update})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/updateOption"}, Power: PowerNodeUpdateOption, Do: this_.updateOption})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/delete"}, Power: PowerNodeDelete, Do: this_.delete})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/websocket"}, Power: PowerNodeWebsocket, Do: this_.websocket, IsWebSocket: true})
 
@@ -148,8 +149,8 @@ var upGrader = websocket.Upgrader{
 
 func (this_ *NodeApi) websocket(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	token := c.Query("id")
-	if token == "" {
+	id := c.Query("id")
+	if id == "" {
 		err = errors.New("id获取失败")
 		return
 	}
@@ -158,9 +159,8 @@ func (this_ *NodeApi) websocket(_ *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
-	err = ssh.WSSFPTConnection(token, ws)
+	err = this_.NodeService.addWS(id, ws)
 	if err != nil {
-		_ = ws.Close()
 		return
 	}
 	res = base.HttpNotResponse

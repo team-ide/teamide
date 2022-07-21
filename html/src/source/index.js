@@ -408,14 +408,21 @@ source.initNodeContext = async () => {
         let nodeList = data.nodeList || [];
         let nodeNetProxyList = data.netProxyList || [];
         source.nodeRoot = nodeRoot;
-        source.nodeList = nodeList;
-        source.nodeNetProxyList = nodeNetProxyList;
-
-        source.nodeCount = nodeList.length;
-        source.nodeSuccessCount = nodeList.length;
-        source.nodeNetProxyCount = nodeNetProxyList.length;
-        source.nodeNetProxySuccessCount = nodeNetProxyList.length;
+        source.initNodeList(nodeList)
+        source.initNodeNetProxyList(nodeNetProxyList)
     }
+}
+source.initNodeList = (nodeList) => {
+    nodeList = nodeList || []
+    source.nodeList = nodeList;
+    source.nodeCount = nodeList.length;
+    source.nodeSuccessCount = nodeList.length;
+}
+source.initNodeNetProxyList = (nodeNetProxyList) => {
+    nodeNetProxyList = nodeNetProxyList || []
+    source.nodeNetProxyList = nodeNetProxyList;
+    source.nodeNetProxyCount = nodeNetProxyList.length;
+    source.nodeNetProxySuccessCount = nodeNetProxyList.length;
 }
 
 let refreshPowers = function () {

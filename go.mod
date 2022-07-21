@@ -3,7 +3,7 @@ module teamide
 go 1.18
 
 require (
-	gitee.com/teamide/zorm v1.5.7
+	gitee.com/teamide/zorm v1.5.8
 	github.com/Chain-Zhang/pinyin v0.1.3
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Shopify/sarama v1.33.0

@@ -84,6 +84,25 @@ func (this_ *NodeApi) update(_ *base.RequestBean, c *gin.Context) (res interface
 	return
 }
 
+func (this_ *NodeApi) updateOption(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateResponse{}
+
+	node := request.NodeModel
+
+	_, err = this_.NodeService.UpdateOption(node)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
 type DeleteRequest struct {
 	*NodeModel
 }

@@ -494,12 +494,12 @@ tool.getElementLeft = (e) => {
     return offset
 };
 
-tool.computeFontSize = function (str, size, family) {
+tool.computeFontSize = function (str, size, fontWeight) {
     let spanDom = document.createElement("span");
     spanDom.style.fontSize = size;
     spanDom.style.opacity = "0";
-    if (family) {
-        spanDom.style.fontFamily = family;
+    if (fontWeight) {
+        spanDom.style.fontWeight = fontWeight;
     }
     if (tool.isNotEmpty(str)) {
         str = tool.replaceAll(str, " ", "&nbsp;")

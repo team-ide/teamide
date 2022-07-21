@@ -13,15 +13,21 @@
         </span>
       </div>
     </div>
-    <div class="node-context-body">
-      <template v-if="source.nodeRoot == null">
+    <div class="node-context-body" v-if="ready">
+      <template v-if="nodeRoot == null">
         <div class="text-center pdt-50">
           <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
             设置根节点
           </div>
         </div>
       </template>
-      <template v-else> </template>
+      <template v-else>
+        <NodeView
+          :source="source"
+          :nodeList="nodeList"
+          :onNodeMoved="onNodeMoved"
+        ></NodeView>
+      </template>
     </div>
     <FormDialog
       ref="InsertNode"
@@ -39,12 +45,18 @@
 </template>
 
 <script>
+import NodeView from "./NodeView.vue";
+
 export default {
-  components: {},
+  components: { NodeView },
   props: ["source"],
   data() {
     return {
       showBox: false,
+      nodeRoot: null,
+      nodeList: [],
+      loading: false,
+      ready: false,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -54,6 +66,11 @@ export default {
     showBox() {
       if (this.showBox) {
         this.initData();
+      }
+    },
+    "source.nodeList"() {
+      if (this.showBox) {
+        this.initView();
       }
     },
   },
@@ -69,7 +86,14 @@ export default {
     },
     init() {},
     async initData() {
+      this.ready = false;
       await this.source.initNodeContext();
+      this.initView();
+      this.ready = true;
+    },
+    initView() {
+      this.nodeRoot = this.source.nodeRoot;
+      this.nodeList = this.source.nodeList;
     },
     nodeContextmenu(node) {
       let menus = [];
@@ -161,6 +185,19 @@ export default {
         this.tool.error(res.msg);
         return false;
       }
+    },
+    onNodeMoved(node, position) {
+      if (node.nodeModel == null) {
+        return;
+      }
+      let option = this.tool.getOptionJSON(node.nodeModel.option);
+      option.x = position.x;
+      option.y = position.y;
+      let optionStr = JSON.stringify(option);
+      this.server.node.updateOption({
+        nodeId: node.nodeModel.nodeId,
+        option: optionStr,
+      });
     },
   },
   created() {},

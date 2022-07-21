@@ -116,6 +116,21 @@ func (this_ *Worker) doRemoveNodeList(nodeIdList []string) (err error) {
 	return
 }
 
+func (this_ *Worker) doChangeNodeStatus(nodeId string, status int, statusError string) (err error) {
+	if nodeId == "" || status == 0 {
+		return
+	}
+	var find = this_.findNode(nodeId)
+	if find != nil {
+		find.Status = status
+		find.StatusError = statusError
+	}
+	if this_.server.OnNodeListChange != nil {
+		this_.server.OnNodeListChange(this_.cache.nodeList)
+	}
+	return
+}
+
 func (this_ *Worker) appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine []string, nodeList []*Info) {
 
 	for _, one := range nodeList {

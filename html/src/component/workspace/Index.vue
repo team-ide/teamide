@@ -158,9 +158,63 @@ export default {
         return;
       }
       this.initDataed = true;
+      this.initSocket();
       this.source.initUserToolboxData();
       this.source.initNodeContext();
       this.initOpens();
+    },
+    onMessage(message) {
+      if (this.tool.isEmpty(message)) {
+        return;
+      }
+      try {
+        var data = JSON.parse(message);
+        if (data.method == "refresh_node_list") {
+          let nodeList = data.nodeList || [];
+          this.source.initNodeList(nodeList);
+        } else if (data.method == "refresh_net_proxy_list") {
+          let nodeNetProxyList = data.netProxyList || [];
+          this.source.initNodeNetProxyList(nodeNetProxyList);
+        }
+      } catch (error) {}
+    },
+    initSocket() {
+      let obj = this;
+      if (obj.socket != null) {
+        obj.socket.close();
+      }
+
+      obj.writeData = (data) => {
+        obj.socket.send(data);
+      };
+      obj.writeMessage = (message) => {
+        obj.socket.send(message);
+      };
+
+      let url = this.source.api;
+      url = url.substring(url.indexOf(":"));
+      url = "ws" + url + "node/websocket";
+      url += "?id=" + this.tool.md5("SocketID:" + new Date().getTime());
+      url += "&jwt=" + encodeURIComponent(obj.tool.getJWT());
+      obj.socket = new WebSocket(url);
+      obj.socket.onopen = () => {
+        obj.onEvent && obj.onEvent("socket open");
+      };
+      obj.socket.onmessage = (event) => {
+        let message = event.data;
+        if (typeof message == "string") {
+          obj.onMessage && obj.onMessage(message);
+        } else {
+          obj.onData && obj.onData(message);
+        }
+      };
+      obj.socket.onclose = () => {
+        obj.onEvent && obj.onEvent("socket close");
+        obj.socket = null;
+      };
+      obj.socket.onerror = () => {
+        obj.onEvent && obj.onEvent("socket error");
+      };
     },
     showSwitchNodeBox() {
       this.$refs.NodeBox.showSwitch();

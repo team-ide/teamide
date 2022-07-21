@@ -103,8 +103,10 @@ func copyNode(source, target *Info) {
 	target.BindToken = source.BindToken
 	target.ConnAddress = source.ConnAddress
 	target.ConnToken = source.ConnToken
-	target.Status = source.Status
-	target.StatusError = source.StatusError
+	if source.Status != 0 {
+		target.Status = source.Status
+		target.StatusError = source.StatusError
+	}
 	var list = source.ConnNodeIdList
 	for _, one := range list {
 		target.addConnNodeId(one)

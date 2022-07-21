@@ -34,6 +34,8 @@ type Message struct {
 	NetProxyList     []*NetProxy `json:"netProxyList,omitempty"`
 	Bytes            []byte      `json:"bytes,omitempty"`
 	ClientIndex      int         `json:"clientIndex,omitempty"`
+	NodeStatus       int         `json:"nodeStatus,omitempty"`
+	NodeStatusError  string      `json:"nodeStatusError,omitempty"`
 	listener         *MessageListener
 }
 

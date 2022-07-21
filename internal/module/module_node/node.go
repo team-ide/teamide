@@ -231,6 +231,38 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 	return
 }
 
+// UpdateOption 更新
+func (this_ *NodeService) UpdateOption(node *NodeModel) (rowsAffected int64, err error) {
+
+	var values []interface{}
+
+	sql := `UPDATE ` + TableNode + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
+
+	sql += "option=?,"
+	values = append(values, node.Option)
+
+	sql = strings.TrimSuffix(sql, ",")
+
+	sql += " WHERE nodeId=? "
+	values = append(values, node.NodeId)
+
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
+	if err != nil {
+		this_.Logger.Error("UpdateOption Error", zap.Error(err))
+		return
+	}
+
+	var find = this_.nodeContext.getNodeModel(node.NodeId)
+	if find != nil {
+		find.Option = node.Option
+	}
+	//this_.nodeContext.onUpdateNodeModel(node)
+	return
+}
+
 // Delete 更新
 func (this_ *NodeService) Delete(nodeId int64, userId int64) (rowsAffected int64, err error) {
 

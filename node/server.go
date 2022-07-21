@@ -55,8 +55,6 @@ func (this_ *Server) Start() (err error) {
 		Id:          this_.Id,
 		BindAddress: this_.BindAddress,
 		BindToken:   this_.BindToken,
-		ConnAddress: this_.ConnAddress,
-		ConnToken:   this_.ConnToken,
 	}
 	this_.cache = newCache()
 	this_.worker = &Worker{
@@ -92,6 +90,8 @@ func (this_ *Server) GetServerInfo() (str string) {
 func (this_ *Server) serverListenerKeepAlive() {
 
 	defer func() {
+		this_.rootNode.Status = StatusStopped
+		this_.rootNode.StatusError = ""
 		// 删除所有连接
 		var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.Id)
 		for _, one := range list {
@@ -104,11 +104,15 @@ func (this_ *Server) serverListenerKeepAlive() {
 	Logger.Info(this_.GetServerInfo() + " 服务启动 开始")
 	this_.serverListener, err = net.Listen("tcp", GetAddress(this_.BindAddress))
 	if err != nil {
+		this_.rootNode.Status = StatusError
+		this_.rootNode.StatusError = err.Error()
 		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Error(err))
 		return
 	}
 	Logger.Info(this_.GetServerInfo() + " 服务启动 成功")
 
+	this_.rootNode.Status = StatusStarted
+	this_.rootNode.StatusError = ""
 	for {
 		var conn net.Conn
 		conn, err = this_.serverListener.Accept()
@@ -168,6 +172,22 @@ func (this_ *Server) serverListenerKeepAlive() {
 				Logger.Info(this_.GetServerInfo() + " 移除 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 				if len(pool.listeners) == 0 {
 					this_.cache.removeNodeListenerPool(fromNodeId, this_.Id)
+
+					if this_.rootNode.Status != StatusStopped {
+						if pool.isStop {
+							clientNode.Status = StatusStopped
+							clientNode.StatusError = ""
+						} else {
+							clientNode.Status = StatusError
+							clientNode.StatusError = "连接异常"
+						}
+						this_.worker.notifyAllRefresh(&Message{
+							Method:          methodNotifyAllRefresh,
+							NodeId:          clientNode.Id,
+							NodeStatus:      clientNode.Status,
+							NodeStatusError: clientNode.StatusError,
+						})
+					}
 				}
 			})
 			pool.Put(messageListener)
@@ -177,14 +197,11 @@ func (this_ *Server) serverListenerKeepAlive() {
 				clientNode.addConnNodeId(this_.Id)
 				_ = this_.worker.addNodeList([]*Info{clientNode}, []string{})
 
-				err = messageListener.Send(&Message{
+				this_.worker.notifyAllRefresh(&Message{
 					Method:       methodNotifyAllRefresh,
 					NodeList:     this_.cache.nodeList,
 					NetProxyList: this_.cache.netProxyList,
 				})
-				if err != nil {
-					Logger.Error(this_.GetServerInfo()+" 通知 ["+fromNodeId+"] 刷新 异常 ", zap.Error(err))
-				}
 			}
 
 		}(conn)
@@ -280,6 +297,23 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 		messageListener.stop()
 		pool.Remove(messageListener)
 		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
+
+		if clientIndex == 0 {
+			if pool.isStop {
+				serverNode.Status = StatusStopped
+				serverNode.StatusError = ""
+			} else {
+				serverNode.Status = StatusError
+				serverNode.StatusError = "连接异常"
+			}
+
+			this_.worker.notifyAllRefresh(&Message{
+				Method:          methodNotifyAllRefresh,
+				NodeId:          serverNode.Id,
+				NodeStatus:      serverNode.Status,
+				NodeStatusError: serverNode.StatusError,
+			})
+		}
 		if !pool.isStop {
 			time.Sleep(5 * time.Second)
 			go this_.connNodeListener(connAddress, connToken, clientIndex)
@@ -289,17 +323,17 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 	if clientIndex == 0 {
+		serverNode.Status = StatusStarted
+		serverNode.StatusError = ""
+
 		this_.rootNode.addConnNodeId(serverNode.Id)
 		_ = this_.worker.addNodeList([]*Info{serverNode}, []string{})
 
-		err = messageListener.Send(&Message{
+		this_.worker.notifyAllRefresh(&Message{
 			Method:       methodNotifyAllRefresh,
 			NodeList:     this_.cache.nodeList,
 			NetProxyList: this_.cache.netProxyList,
 		})
-		if err != nil {
-			Logger.Error(this_.GetServerInfo()+" 通知 ["+toNodeId+"]["+connAddress+"] 刷新 异常 ", zap.Error(err))
-		}
 	}
 	return
 }

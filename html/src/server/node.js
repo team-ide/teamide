@@ -19,6 +19,9 @@ let node = {
     update(param) {
         return http.post('api/node/update', param);
     },
+    updateOption(param) {
+        return http.post('api/node/updateOption', param);
+    },
     delete(param) {
         return http.post('api/node/delete', param);
     },
