@@ -66,6 +66,7 @@ export default {
           if (nodeModel.isRoot == 1) {
             nodeWrap.isRoot = true;
           }
+          nodeWrap.nodeId = nodeModel.nodeId;
           nodeWrap.id = nodeModel.serverId;
           nodeWrap.text = nodeModel.name;
           nodeWrap.serverId = nodeModel.serverId;
@@ -209,11 +210,14 @@ export default {
           var isConn = one.connIdList.indexOf(connId) >= 0;
           var isConfig = one.connServerIdList.indexOf(connId) >= 0;
           var isHistory = one.historyConnServerIdList.indexOf(connId) >= 0;
+          target.isConn = true;
+          target.isConfig = true;
+          target.isHistory = true;
+
           var stroke = "#8b8b8b";
           var strokeWidth = 1;
           if (isConn) {
             stroke = "#a5a5a5";
-            strokeWidth = 1;
           } else if (isConfig) {
             stroke = "#626262";
           } else if (isHistory) {
@@ -240,6 +244,7 @@ export default {
       });
       graph.on("node:contextmenu", ({ e, node, view }) => {
         let data = node.data;
+        let targetNode = nodeMap[data.id] || {};
         let menus = [];
         menus.push({
           header: data.text,
@@ -256,6 +261,17 @@ export default {
             this.tool.showNodeInfo(data);
           },
         });
+        if (
+          (!data.isRoot && (targetNode.isConfig || targetNode.isHistory)) ||
+          !targetNode.isConn
+        ) {
+          menus.push({
+            text: "删除",
+            onClick: () => {
+              this.tool.toDeleteNode(data);
+            },
+          });
+        }
 
         if (menus.length > 0) {
           this.tool.showContextmenu(menus);

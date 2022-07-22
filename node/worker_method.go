@@ -9,7 +9,9 @@ import (
 )
 
 var (
-	methodOK      = 1
+	methodOK         = 1
+	methodGetVersion = 2
+
 	methodGetNode = 11
 
 	methodNetProxyNewConn   = 21
@@ -99,6 +101,9 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	switch method {
 	case methodOK:
 		res.Ok = true
+		return
+	case methodGetVersion:
+		res.Version = this_.getVersion(msg.NodeId, msg.NotifiedNodeIdList)
 		return
 	case methodGetNode:
 		res.Node = this_.getNode(msg.NodeId, msg.NotifiedNodeIdList)

@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+var (
+	version = ""
+)
 var tokenByteSize = 128
 
 type Server struct {
@@ -77,7 +80,7 @@ func (this_ *Server) Start() (err error) {
 		go this_.serverListenerKeepAlive()
 	}
 	if this_.ConnAddress != "" {
-		this_.connNodeListenerKeepAlive(this_.ConnAddress, this_.ConnToken, this_.ConnSize)
+		this_.connNodeListenerKeepAlive(nil, this_.ConnAddress, this_.ConnToken, this_.ConnSize)
 	}
 	return
 }
@@ -121,7 +124,7 @@ func (this_ *Server) serverListenerKeepAlive() {
 			NodeStatus:      StatusError,
 			NodeStatusError: err.Error(),
 		})
-		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Error(err))
+		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Any("error", err.Error()))
 		return
 	}
 	Logger.Info(this_.GetServerInfo() + " 服务启动 成功")
@@ -225,38 +228,47 @@ func (this_ *Server) serverListenerKeepAlive() {
 	return
 }
 
-func (this_ *Server) connNodeListenerKeepAlive(connAddress, connToken string, connSize int) {
+func (this_ *Server) connNodeListenerKeepAlive(toNode *Info, connAddress, connToken string, connSize int) {
 	if connAddress == "" {
 		Logger.Warn(this_.GetServerInfo() + " 连接 [" + connAddress + "] 连接地址为空")
 		return
 	}
 
+	var pool *MessageListenerPool
+	if toNode != nil {
+		pool = this_.cache.newIfAbsentNodeListenerPool(this_.Id, toNode.Id)
+	}
 	if connSize <= 0 {
 		connSize = 5
 	}
-	_ = this_.connNodeListener(connAddress, connToken, 0)
-	go func() {
-		for i := 1; i < connSize; i++ {
-			_ = this_.connNodeListener(connAddress, connToken, i)
-		}
-	}()
+	this_.connNodeListener(pool, connAddress, connToken, 0)
+	for i := 0; i < connSize; i++ {
+		go this_.connNodeListener(pool, connAddress, connToken, i)
+	}
 	return
 }
 
-func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex int) (pool *MessageListenerPool) {
+func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, connToken string, clientIndex int) {
 	defer func() {
-		if pool != nil {
+		if pool != nil && pool.isStop {
 			return
 		}
 		time.Sleep(5 * time.Second)
-		go this_.connNodeListener(connAddress, connToken, clientIndex)
+		go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
 	}()
 	var err error
 	var conn net.Conn
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + connAddress + "] 开始")
-	conn, err = net.Dial("tcp", GetAddress(connAddress))
+	conn, err = net.DialTimeout("tcp", GetAddress(connAddress), time.Second*2)
 	if err != nil {
-		Logger.Error(this_.GetServerInfo()+" 连接 ["+connAddress+"] 异常", zap.Error(err))
+		if pool != nil && len(pool.listeners) == 0 {
+			this_.worker.notifyAll(&Message{
+				NodeId:          pool.toNodeId,
+				NodeStatus:      StatusError,
+				NodeStatusError: err.Error(),
+			})
+		}
+		Logger.Warn(this_.GetServerInfo()+" 连接 ["+connAddress+"] 异常", zap.Any("error", err.Error()))
 		return
 	}
 
@@ -337,7 +349,7 @@ func (this_ *Server) connNodeListener(connAddress, connToken string, clientIndex
 		}
 		if !pool.isStop {
 			time.Sleep(5 * time.Second)
-			go this_.connNodeListener(connAddress, connToken, clientIndex)
+			go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
 		}
 	})
 	pool.Put(messageListener)

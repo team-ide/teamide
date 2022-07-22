@@ -18,7 +18,6 @@ import (
 
 var (
 	waitGroupForStop sync.WaitGroup
-	serverTitle      = "Team · IDE"
 	serverUrl        = ""
 
 	// buildFlags go build -ldflags '-X main.buildFlags=--isServer' .
@@ -33,9 +32,9 @@ var (
 )
 
 func getUserHome() string {
-	user, err := user.Current()
+	current, err := user.Current()
 	if nil == err {
-		return user.HomeDir
+		return current.HomeDir
 	}
 	return ""
 }
@@ -137,7 +136,7 @@ func main() {
 
 	// 如果是  Electron 打开该程序，则监听控制台
 	if isElectron {
-		os.Stdout.Write([]byte("TeamIDE:event:serverUrl:" + serverUrl))
+		_, _ = os.Stdout.Write([]byte("TeamIDE:event:serverUrl:" + serverUrl))
 
 		go func() {
 			for {

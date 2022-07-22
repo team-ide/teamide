@@ -240,7 +240,7 @@ func (this_ *Worker) refreshNodeList() {
 		if pool == nil {
 			var find = this_.findNode(connToId)
 			if find != nil && find.ConnAddress != "" {
-				this_.server.connNodeListenerKeepAlive(find.ConnAddress, find.ConnToken, find.ConnSize)
+				this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
 			}
 		}
 	}

@@ -95,6 +95,7 @@ jobs:
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
+          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -159,6 +160,7 @@ jobs:
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
+          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node
 
       #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
@@ -225,6 +227,7 @@ jobs:
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
+          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -347,4 +350,31 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
           asset_path: release/TeamIDE-linux-x64.AppImage
           asset_name: TeamIDE-linux-x64-${{steps.release_version.outputs.value}}.AppImage # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: release/teamide-linux-x64/teamide-node
+          asset_name: teamide-node-linux-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: release/teamide-darwin-x64/teamide-node
+          asset_name: teamide-node-darwin-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/upload-release-asset@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          asset_path: release/teamide-windows-x64/teamide-node.exe
+          asset_name: teamide-node-windows-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
           asset_content_type: application/zip

@@ -321,7 +321,7 @@ func (this_ *NodeService) UpdateHistoryConnServerIds(nodeId int64, historyConnSe
 // Delete 更新
 func (this_ *NodeService) Delete(nodeId int64, userId int64) (rowsAffected int64, err error) {
 
-	sql := `UPDATE ` + TableNode + ` SET deleted=?,deletedUserId=?,deleteTime=? WHERE nodeId=? `
+	sql := `UPDATE ` + TableNode + ` SET deleted=?,deleteUserId=?,deleteTime=? WHERE nodeId=? `
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, userId, time.Now(), nodeId})
 	if err != nil {
 		this_.Logger.Error("Delete Error", zap.Error(err))

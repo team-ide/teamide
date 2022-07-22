@@ -95,3 +95,44 @@ func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *
 	}
 	return
 }
+
+func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) string {
+	if nodeId == "" {
+		return ""
+	}
+	if this_.server.Id == nodeId {
+		return version
+	}
+
+	if util.ContainsString(NotifiedNodeIdList, this_.server.Id) < 0 {
+		NotifiedNodeIdList = append(NotifiedNodeIdList, this_.server.Id)
+	}
+	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
+	list = append(list, this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)...)
+
+	var callPools []*MessageListenerPool
+	for _, pool := range list {
+		if util.ContainsString(NotifiedNodeIdList, pool.toNodeId) >= 0 {
+			continue
+		}
+		NotifiedNodeIdList = append(NotifiedNodeIdList, pool.toNodeId)
+		callPools = append(callPools, pool)
+	}
+	msg := &Message{
+		NodeId: nodeId,
+	}
+	var version_ string
+	for _, pool := range callPools {
+		if version_ == "" {
+			_ = pool.Do(func(listener *MessageListener) (e error) {
+
+				res, _ := this_.Call(listener, methodGetNode, msg)
+				if res != nil {
+					version_ = res.Version
+				}
+				return
+			})
+		}
+	}
+	return version_
+}

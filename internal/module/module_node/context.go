@@ -75,6 +75,7 @@ type NodeContext struct {
 	wsCacheLock                sync.Mutex
 	netProxyList               []*node.NetProxy
 	nodeListLock               sync.Mutex
+	nodeListChangeLock         sync.Mutex
 }
 
 func (this_ *NodeContext) getNodeInfo(id string) (res *NodeInfo) {
@@ -203,6 +204,9 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 	if nodeModel == nil {
 		return
 	}
+	this_.removeNodeModel(nodeModel.NodeId)
+	this_.removeNodeModelByServerId(nodeModel.ServerId)
+	_ = this_.server.RemoveNodeList([]string{nodeModel.ServerId})
 }
 
 func (this_ *NodeContext) getWS(id string) (ws *WSConn) {
@@ -249,6 +253,8 @@ func (this_ *NodeContext) initContext() (err error) {
 	var list []*NodeModel
 	list, _ = this_.nodeService.Query(&NodeModel{})
 	for _, one := range list {
+		this_.setNodeModel(one.NodeId, one)
+		this_.setNodeModelByServerId(one.ServerId, one)
 		if one.IsROOT() {
 			this_.root = one
 		}
@@ -298,6 +304,9 @@ func (this_ *NodeContext) callMessage(msg *Message) {
 }
 
 func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
+
+	this_.nodeListChangeLock.Lock()
+	defer this_.nodeListChangeLock.Unlock()
 
 	var nodeInfoList []*NodeInfo
 	for _, one := range nodeList {

@@ -455,7 +455,7 @@ export default {
             toolboxType.text +
             "]工具[" +
             toolboxData.name +
-            "]将无法回复，确定删除？"
+            "]将无法恢复，确定删除？"
         )
         .then(async () => {
           return this.doDelete(toolboxType, toolboxData);

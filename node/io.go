@@ -41,6 +41,7 @@ type Message struct {
 	ClientIndex          int         `json:"clientIndex,omitempty"`
 	NodeStatus           int         `json:"nodeStatus,omitempty"`
 	NodeStatusError      string      `json:"nodeStatusError,omitempty"`
+	Version              string      `json:"version,omitempty"`
 	listener             *MessageListener
 }
 

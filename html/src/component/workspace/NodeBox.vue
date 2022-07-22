@@ -231,7 +231,6 @@ export default {
       let res = await this.server.node.insert(data);
       if (res.code == 0) {
         this.tool.success("新增成功");
-        this.initData();
         return true;
       } else {
         this.tool.error(res.msg);
@@ -240,7 +239,7 @@ export default {
     },
     toUpdate(data) {
       this.tool.stopEvent();
-      this.$refs.UpdateNodeGroup.show({
+      this.$refs.InsertNode.show({
         title: `编辑[${data.name}]`,
         nodeId: data.nodeId,
         form: [this.form.node.connNode],
@@ -253,7 +252,39 @@ export default {
       let res = await this.server.node.update(data);
       if (res.code == 0) {
         this.tool.success("修改成功");
-        this.initData();
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    toDelete(data) {
+      this.tool.stopEvent();
+      if (!data || !data.nodeId) {
+        this.tool.warn("节点ID丢失");
+        return;
+      }
+      this.tool
+        .confirm("删除[" + data.text + "]节点将无法恢复，确定删除？")
+        .then(async () => {
+          return this.doDelete(data.nodeId);
+        })
+        .catch((e) => {});
+    },
+    async doDelete(nodeId) {
+      let res = await this.server.node.delete({ nodeId: nodeId });
+      if (res.code == 0) {
+        this.tool.success("删除成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    async doDeleteByServerId(serverId) {
+      let res = await this.server.node.delete({ serverId: serverId });
+      if (res.code == 0) {
+        this.tool.success("删除成功");
         return true;
       } else {
         this.tool.error(res.msg);
@@ -287,6 +318,8 @@ export default {
     this.tool.hideNodeBox = this.hide;
     this.tool.showNodeInfo = this.showNodeInfo;
     this.tool.toInsertConnNode = this.toInsertConnNode;
+    this.tool.toDeleteNode = this.toDelete;
+    this.tool.doDeleteNode = this.doDelete;
   },
 };
 </script>
