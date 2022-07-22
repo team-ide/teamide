@@ -94,8 +94,8 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
-          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node
+          go build . -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide
+          go build teamide/node/main -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -159,8 +159,8 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
-          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node
+          go build . -ldflags="-w -s -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide
+          go build teamide/node/main -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node
 
       #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
@@ -226,8 +226,8 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
-          go build -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe
+          go build . -ldflags "-w -s -H=windowsgui -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe
+          go build teamide/node/main -ldflags="-w -s -X teamide.node.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
