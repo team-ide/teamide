@@ -119,7 +119,7 @@ export default {
   position: fixed;
   top: 0px;
   left: 0;
-  z-index: 1000;
+  z-index: 9999999;
   float: left;
   min-width: 160px;
   padding: 5px 0;

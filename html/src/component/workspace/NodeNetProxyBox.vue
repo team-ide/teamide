@@ -163,9 +163,16 @@ export default {
     },
   },
   created() {},
-  updated() {},
+  updated() {
+    this.tool.showNodeNetProxyBox = this.show;
+    this.tool.showSwitchNodeNetProxyBox = this.showSwitch;
+    this.tool.hideNodeNetProxyBox = this.hide;
+  },
   mounted() {
     this.init();
+    this.tool.showNodeNetProxyBox = this.show;
+    this.tool.showSwitchNodeNetProxyBox = this.showSwitch;
+    this.tool.hideNodeNetProxyBox = this.hide;
   },
 };
 </script>

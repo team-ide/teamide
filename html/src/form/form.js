@@ -209,6 +209,17 @@ let node = {
                 ],
             },
             {
+                label: "目标节点ID",
+                name: "serverId",
+                rules: [
+                    {
+                        required: true,
+                        message: `目标节点ID不能为空!`
+                    },
+
+                ],
+            },
+            {
                 label: "目标节点地址(ip:port)",
                 name: "connAddress",
                 rules: [

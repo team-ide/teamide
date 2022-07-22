@@ -397,6 +397,7 @@ source.nodeSuccessCount = 0
 source.nodeNetProxyList = []
 source.nodeNetProxyCount = 0
 source.nodeNetProxySuccessCount = 0
+source.localIpList = [];
 
 source.initNodeContext = async () => {
     let res = await server.node.context({});
@@ -404,9 +405,11 @@ source.initNodeContext = async () => {
         tool.error(res.msg);
     } else {
         let data = res.data || {};
+        let localIpList = data.localIpList || [];
         let nodeRoot = data.root;
         let nodeList = data.nodeList || [];
         let nodeNetProxyList = data.netProxyList || [];
+        source.localIpList = localIpList;
         source.nodeRoot = nodeRoot;
         source.initNodeList(nodeList)
         source.initNodeNetProxyList(nodeNetProxyList)

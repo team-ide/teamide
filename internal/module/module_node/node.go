@@ -125,18 +125,17 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 		node.CreateTime = time.Now()
 	}
 
-	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, connServerIds, option, isRoot, userId, createTime"
-	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, connServerIds, historyConnServerIds, option, isRoot, userId, createTime"
+	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
 
 	sql := `INSERT INTO ` + TableNode + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ConnServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ConnServerIds, node.HistoryConnServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
 	}
 
-	this_.nodeContext.onAddNodeModel(node)
 	return
 }
 
@@ -260,6 +259,62 @@ func (this_ *NodeService) UpdateOption(node *NodeModel) (rowsAffected int64, err
 		find.Option = node.Option
 	}
 	//this_.nodeContext.onUpdateNodeModel(node)
+	return
+}
+
+// UpdateConnServerIds 更新
+func (this_ *NodeService) UpdateConnServerIds(nodeId int64, connServerIds string) (rowsAffected int64, err error) {
+
+	var values []interface{}
+
+	sql := `UPDATE ` + TableNode + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
+
+	sql += "connServerIds=?,"
+	values = append(values, connServerIds)
+
+	sql = strings.TrimSuffix(sql, ",")
+
+	sql += " WHERE nodeId=? "
+	values = append(values, nodeId)
+
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
+	if err != nil {
+		this_.Logger.Error("UpdateConnServerIds Error", zap.Error(err))
+		return
+	}
+
+	this_.nodeContext.onUpdateNodeConnServerIds(nodeId, connServerIds)
+	return
+}
+
+// UpdateHistoryConnServerIds 更新
+func (this_ *NodeService) UpdateHistoryConnServerIds(nodeId int64, historyConnServerIds string) (rowsAffected int64, err error) {
+
+	var values []interface{}
+
+	sql := `UPDATE ` + TableNode + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
+
+	sql += "historyConnServerIds=?,"
+	values = append(values, historyConnServerIds)
+
+	sql = strings.TrimSuffix(sql, ",")
+
+	sql += " WHERE nodeId=? "
+	values = append(values, nodeId)
+
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
+	if err != nil {
+		this_.Logger.Error("UpdateHistoryConnServerIds Error", zap.Error(err))
+		return
+	}
+
+	this_.nodeContext.onUpdateNodeHistoryConnServerIds(nodeId, historyConnServerIds)
 	return
 }
 

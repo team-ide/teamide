@@ -7,6 +7,7 @@
           'node-info-started': node.status == 1,
           'node-info-stopped': node.status == 2,
           'node-info-error': node.status == 3,
+          'node-info-root': node.isRoot,
         }"
       >
         <Icon class="node-info-icon mdi-checkbox-blank-circle"></Icon>
@@ -68,14 +69,20 @@ export default {
 .node-info-started.node-info {
   color: #4caf50;
   border-color: #4caf50;
+  background: #163217;
 }
 .node-info-stopped.node-info {
   color: #f44336;
   border-color: #f44336;
+  background: #381613;
 }
 .node-info-error.node-info {
   color: #ff9800;
   border-color: #ff9800;
+  background: #48361a;
+}
+.node-info-root.node-info .node-info-text {
+  color: wheat;
 }
 .node-info-icon {
   position: absolute;

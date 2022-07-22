@@ -10,11 +10,17 @@
   >
     <div class="workspace-header">
       <div class="workspace-header-nav-box">
-        <div class="workspace-header-nav" @click="showSwitchToolboxContext()">
+        <div
+          class="workspace-header-nav"
+          @click="tool.showSwitchToolboxContext()"
+        >
           工具箱
           <span class="color-green mgl-2">({{ source.toolboxCount }})</span>
         </div>
-        <div class="workspace-header-nav" @click="showSwitchNodeNetProxyBox()">
+        <div
+          class="workspace-header-nav"
+          @click="tool.showSwitchNodeNetProxyBox()"
+        >
           隧道|代理|透传
           <span class="color-green mgl-2">
             (
@@ -28,7 +34,7 @@
           监控
           <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
         </div>
-        <div class="workspace-header-nav" @click="showSwitchNodeBox()">
+        <div class="workspace-header-nav" @click="tool.showSwitchNodeBox()">
           节点
           <span class="color-green mgl-2">
             (
@@ -84,7 +90,7 @@
           <!-- <div
             slot="rightExtend"
             class="workspace-tabs-nav tm-pointer color-green pdlr-2"
-            @click="showSwitchToolboxContext()"
+            @click="tool.showSwitchToolboxContext()"
           >
             <i class="mdi mdi-plus"></i>
           </div> -->
@@ -108,12 +114,11 @@
         </WorkspaceSpans>
       </div>
       <ToolboxContext
-        ref="ToolboxContext"
         :source="source"
         :openByToolboxId="openByToolboxId"
       ></ToolboxContext>
-      <NodeBox ref="NodeBox" :source="source"></NodeBox>
-      <NodeNetProxyBox ref="NodeNetProxyBox" :source="source"></NodeNetProxyBox>
+      <NodeBox :source="source"></NodeBox>
+      <NodeNetProxyBox :source="source"></NodeNetProxyBox>
     </div>
   </div>
 </template>
@@ -215,33 +220,6 @@ export default {
       obj.socket.onerror = () => {
         obj.onEvent && obj.onEvent("socket error");
       };
-    },
-    showSwitchNodeBox() {
-      this.$refs.NodeBox.showSwitch();
-    },
-    showNodeBox() {
-      this.$refs.NodeBox.show();
-    },
-    hideNodeBox() {
-      this.$refs.NodeBox.hide();
-    },
-    showSwitchNodeNetProxyBoy() {
-      this.$refs.NodeNetProxyBox.showSwitch();
-    },
-    showNodeNetProxyBox() {
-      this.$refs.NodeNetProxyBox.show();
-    },
-    hideNodeNetProxyBox() {
-      this.$refs.NodeNetProxyBox.hide();
-    },
-    showSwitchToolboxContext() {
-      this.$refs.ToolboxContext.showSwitch();
-    },
-    showToolboxContext() {
-      this.$refs.ToolboxContext.show();
-    },
-    hideToolboxContext() {
-      this.$refs.ToolboxContext.hide();
     },
     addMainItem(item, fromItem) {
       this.mainItemsWorker.addItem(item, fromItem);
@@ -354,7 +332,7 @@ export default {
       if (activeOpen != null) {
         this.toMainActiveItem(activeOpen.item);
       } else {
-        this.showToolboxContext();
+        this.tool.showToolboxContext();
       }
     },
     async onMainActiveItem(item) {
@@ -367,7 +345,7 @@ export default {
       if (res.code != 0) {
         this.tool.error(res.msg);
       }
-      this.hideToolboxContext();
+      this.tool.hideToolboxContext();
     },
     async onMainRemoveItem(item) {
       if (item == null || this.tool.isEmpty(item.openId)) {
@@ -380,7 +358,7 @@ export default {
         this.tool.error(res.msg);
       }
       if (this.getMainItems().length == 0) {
-        this.showToolboxContext();
+        this.tool.showToolboxContext();
       }
     },
   },

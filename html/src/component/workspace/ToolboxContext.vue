@@ -587,9 +587,16 @@ export default {
     },
   },
   created() {},
-  updated() {},
+  updated() {
+    this.tool.showToolboxContext = this.show;
+    this.tool.showSwitchToolboxContext = this.showSwitch;
+    this.tool.hideToolboxContext = this.hide;
+  },
   mounted() {
     this.init();
+    this.tool.showToolboxContext = this.show;
+    this.tool.showSwitchToolboxContext = this.showSwitch;
+    this.tool.hideToolboxContext = this.hide;
   },
 };
 </script>

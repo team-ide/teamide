@@ -35,6 +35,22 @@ func (this_ *Worker) findParents(id string) (parents []*Info) {
 	return
 }
 
+func (this_ *Worker) updateNodeConnNodeIdList(id string, connNodeIdList []string) (err error) {
+	var find = this_.findNode(id)
+
+	if find == nil {
+		return
+	}
+	var newOne = &Info{
+		Id: id,
+	}
+	_ = copyNode(find, newOne)
+	newOne.ConnNodeIdList = connNodeIdList
+	_ = this_.addNodeList([]*Info{newOne})
+
+	return
+}
+
 func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
 	if len(nodeList) == 0 {
 		return
@@ -70,7 +86,6 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 			}
 		}
 	}
-
 	if findChanged {
 		this_.refreshNodeList()
 

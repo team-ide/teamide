@@ -58,6 +58,33 @@ func GetIpFromAddr(addr net.Addr) net.IP {
 	return ip
 }
 
+func GetLocalIPList() (ipList []net.IP) {
+	faces, err := net.Interfaces()
+	if err != nil {
+		return
+	}
+	for _, face := range faces {
+		if face.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if face.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrList, err := face.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrList {
+			ip := GetIpFromAddr(addr)
+			if ip == nil {
+				continue
+			}
+			ipList = append(ipList, ip)
+		}
+	}
+	return
+}
+
 func FormatPath(path string) string {
 
 	var abs string

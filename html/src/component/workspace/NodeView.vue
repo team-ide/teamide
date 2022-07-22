@@ -9,6 +9,7 @@ import { Graph } from "@antv/x6";
 import "@antv/x6-vue-shape";
 
 import NodeInfo from "./NodeInfo.vue";
+import float from "js-yaml/lib/type/float";
 
 export default {
   components: {},
@@ -52,19 +53,41 @@ export default {
     initData() {
       let nodeList = this.nodeList || [];
       let nodeWrapList = [];
-      let lastX = 300;
+      let lastX = 0;
       let lastY = 0;
       nodeList.forEach((one) => {
         let info = one.info;
         let nodeModel = one.nodeModel;
         let nodeWrap = { info, nodeModel };
+        nodeWrap.isRoot = false;
+        var connServerIdList = [];
+        var historyConnServerIdList = [];
         if (nodeModel) {
+          if (nodeModel.isRoot == 1) {
+            nodeWrap.isRoot = true;
+          }
           nodeWrap.id = nodeModel.serverId;
           nodeWrap.text = nodeModel.name;
+          nodeWrap.serverId = nodeModel.serverId;
+          if (this.tool.isNotEmpty(nodeModel.connServerIds)) {
+            try {
+              connServerIdList = JSON.parse(nodeModel.connServerIds);
+            } catch (e) {}
+          }
+          if (this.tool.isNotEmpty(nodeModel.historyConnServerIds)) {
+            try {
+              historyConnServerIdList = JSON.parse(
+                nodeModel.historyConnServerIds
+              );
+            } catch (e) {}
+          }
         } else {
           nodeWrap.id = info.id;
           nodeWrap.text = info.id;
+          nodeWrap.serverId = info.id;
         }
+        nodeWrap.connServerIdList = connServerIdList;
+        nodeWrap.historyConnServerIdList = historyConnServerIdList;
         nodeWrap.status = 2;
         nodeWrap.statusError = null;
         if (info) {
@@ -72,13 +95,14 @@ export default {
           nodeWrap.statusError = info.statusError;
           nodeWrap.connIdList = info.connNodeIdList || [];
         }
-        lastY += 50;
         let compute = this.tool.computeFontSize(nodeWrap.text, "15px", "600");
 
         let width = compute.width + 40;
         if (width < 120) {
           width = 120;
         }
+        lastY += 50;
+        lastX += 50;
         nodeWrap.x = lastX;
         nodeWrap.y = lastY;
         if (nodeModel) {
@@ -93,7 +117,7 @@ export default {
 
         nodeWrap.width = width;
         nodeWrap.height = 70;
-        lastY += nodeWrap.height;
+        // lastY += nodeWrap.height;
 
         nodeWrapList.push(nodeWrap);
       });
@@ -154,23 +178,88 @@ export default {
         if (source == null) {
           return;
         }
-        let connIdList = one.connIdList || [];
-        connIdList.forEach((connId) => {
+        let allConnIdList = [];
+        if (one.connServerIdList) {
+          one.connServerIdList.forEach((one) => {
+            if (allConnIdList.indexOf(one) < 0) {
+              allConnIdList.push(one);
+            }
+          });
+        }
+        if (one.historyConnServerIdList) {
+          one.historyConnServerIdList.forEach((one) => {
+            if (allConnIdList.indexOf(one) < 0) {
+              allConnIdList.push(one);
+            }
+          });
+        }
+        if (one.connIdList) {
+          one.connIdList.forEach((one) => {
+            if (allConnIdList.indexOf(one) < 0) {
+              allConnIdList.push(one);
+            }
+          });
+        }
+        allConnIdList.forEach((connId) => {
           let targetId = connId;
           let target = nodeMap[targetId];
           if (target == null) {
             return;
           }
+          var isConn = one.connIdList.indexOf(connId) >= 0;
+          var isConfig = one.connServerIdList.indexOf(connId) >= 0;
+          var isHistory = one.historyConnServerIdList.indexOf(connId) >= 0;
+          var stroke = "#8b8b8b";
+          var strokeWidth = 1;
+          if (isConn) {
+            stroke = "#a5a5a5";
+            strokeWidth = 1;
+          } else if (isConfig) {
+            stroke = "#626262";
+          } else if (isHistory) {
+            stroke = "#4a4a4a";
+          }
           // 渲染边
           graph.addEdge({
             source: sourceId,
             target: targetId,
+            router: "metro",
+            connector: "rounded",
+            attrs: {
+              line: {
+                stroke: stroke,
+                strokeWidth: strokeWidth,
+              },
+            },
           });
         });
       });
 
       graph.on("node:moved", ({ e, x, y, node, view }) => {
         this.onNodeMoved && this.onNodeMoved(node.data, { x: x, y: y });
+      });
+      graph.on("node:contextmenu", ({ e, node, view }) => {
+        let data = node.data;
+        let menus = [];
+        menus.push({
+          header: data.text,
+        });
+        menus.push({
+          text: "连接节点",
+          onClick: () => {
+            this.tool.toInsertConnNode(data);
+          },
+        });
+        menus.push({
+          text: "查看",
+          onClick: () => {
+            this.tool.showNodeInfo(data);
+          },
+        });
+
+        if (menus.length > 0) {
+          this.tool.showContextmenu(menus);
+        }
       });
     },
   },

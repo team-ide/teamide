@@ -1,47 +1,97 @@
 <template>
-  <div class="node-context-box" :class="{ 'node-context-box-show': showBox }">
-    <div class="node-context-box-header">
-      <div class="color-white ft-16 pdl-10 pdt-5">
-        节点
-        <span class="color-orange mgl-20 ft-12">请右击进行操作</span>
-      </div>
-      <div
-        style="display: inline-block; position: absolute; top: 0px; right: 0px"
-      >
-        <span title="关闭" class="tm-link color-write mgr-0" @click="hide">
-          <i class="mdi mdi-close ft-21"></i>
-        </span>
-      </div>
-    </div>
-    <div class="node-context-body" v-if="ready">
-      <template v-if="nodeRoot == null">
-        <div class="text-center pdt-50">
-          <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
-            设置根节点
+  <el-dialog
+    ref="modal"
+    :title="`节点`"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+    :show-close="true"
+    :append-to-body="true"
+    :visible="showBox"
+    :before-close="hide"
+    :fullscreen="true"
+    width="100%"
+    class="node-context-dialog"
+  >
+    <div class="node-context-box">
+      <div class="node-context-box-header">
+        <div class="pdlr-20 ft-12">
+          <div class="color-grey">
+            节点程序下载地址:
+            <span class="color-green pdlr-10">
+              https://gitee.com/teamide/teamide/releases
+            </span>
+            或
+            <span class="color-green pdlr-10">
+              https://github.com/team-ide/teamide/releases
+            </span>
           </div>
+          <div class="color-grey">
+            节点启动:
+            <span class="color-green pdlr-10">
+              ./node -id node1 -address :21090 -token xxx
+            </span>
+            <span class="color-grey">
+              -id 节点ID,必须唯一 -address 节点启动绑定地址 -token
+              节点Token,用于节点直接连接鉴权
+            </span>
+          </div>
+          <div class="color-grey">
+            节点启动连接到某一个节点:
+            <span class="color-green pdlr-10">
+              ./node -id node1 -address :21090 -token xxx -connAddress ip:port
+              -connToken xxx
+            </span>
+            <span class="color-grey">
+              -connAddress 目标节点的ip:port -connToken 目标节点的Token
+            </span>
+          </div>
+          <template v-if="nodeRoot != null">
+            <div class="color-grey">
+              其它节点连接到当前节点:
+              <template v-for="(address, index) in rootAddressList">
+                <div :key="index" class="color-green">
+                  ./node -id node1 -address :21090 -token xxx -connAddress
+                  {{ address }} -connToken {{ nodeRoot.bindToken }}
+                </div>
+              </template>
+            </div>
+            <div class="color-grey">
+              当前节点连接到其它节点:
+              <span class="color-orange pdlr-10"> 右击节点进行操作 </span>
+            </div>
+          </template>
         </div>
-      </template>
-      <template v-else>
-        <NodeView
-          :source="source"
-          :nodeList="nodeList"
-          :onNodeMoved="onNodeMoved"
-        ></NodeView>
-      </template>
+      </div>
+      <div class="node-context-body" v-if="ready">
+        <template v-if="nodeRoot == null">
+          <div class="text-center pdt-50">
+            <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
+              设置根节点
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <NodeView
+            :source="source"
+            :nodeList="nodeList"
+            :onNodeMoved="onNodeMoved"
+          ></NodeView>
+        </template>
+      </div>
+      <FormDialog
+        ref="InsertNode"
+        :source="source"
+        title="新增节点"
+        :onSave="doInsert"
+      ></FormDialog>
+      <FormDialog
+        ref="UpdateNode"
+        :source="source"
+        title="编辑Node"
+        :onSave="doUpdate"
+      ></FormDialog>
     </div>
-    <FormDialog
-      ref="InsertNode"
-      :source="source"
-      title="新增节点"
-      :onSave="doInsert"
-    ></FormDialog>
-    <FormDialog
-      ref="UpdateNode"
-      :source="source"
-      title="编辑Node"
-      :onSave="doUpdate"
-    ></FormDialog>
-  </div>
+  </el-dialog>
 </template>
 
 <script>
@@ -57,6 +107,7 @@ export default {
       nodeList: [],
       loading: false,
       ready: false,
+      rootAddressList: [],
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -94,6 +145,24 @@ export default {
     initView() {
       this.nodeRoot = this.source.nodeRoot;
       this.nodeList = this.source.nodeList;
+
+      let rootAddressList = [];
+      if (this.nodeRoot != null) {
+        let address = this.nodeRoot.bindAddress;
+        if (this.tool.isNotEmpty(address) && address.indexOf(":") >= 0) {
+          let lastIndex = address.lastIndexOf(":");
+          let ip = address.substring(0, lastIndex);
+          let port = address.substring(lastIndex + 1);
+          if (this.tool.isEmpty(ip) || ip == "0.0.0.0") {
+            this.source.localIpList.forEach((localIp) => {
+              rootAddressList.push(localIp + ":" + port);
+            });
+          } else {
+            rootAddressList.push(address);
+          }
+        }
+      }
+      this.rootAddressList = rootAddressList;
     },
     nodeContextmenu(node) {
       let menus = [];
@@ -122,27 +191,32 @@ export default {
       let data = {
         name: "根节点",
         bindAddress: ":21090",
-        bindToken: this.tool.md5("TokenTime" + new Date().getTime()),
+        bindToken: this.tool.md5("bindToken" + new Date().getTime()),
       };
 
       this.$refs.InsertNode.show({
         title: `设置根节点`,
         form: [this.form.node.root],
         isRoot: true,
-        serverId: this.tool.md5("TokenTime" + new Date().getTime()),
+        serverId: this.tool.md5("serverId" + new Date().getTime()),
         data: [data],
       });
     },
-    toInsert() {
+    toInsertConnNode(parentNode) {
       this.tool.stopEvent();
-      let data = {
-        connToken: this.tool.md5("TokenTime" + new Date().getTime()),
-      };
-
+      let data = {};
+      let parentServerId = null;
+      if (parentNode && parentNode.serverId) {
+        parentServerId = parentNode.serverId;
+      } else {
+        this.tool.warn("父节点ID丢失");
+        return;
+      }
       this.$refs.InsertNode.show({
-        title: `设置根节点`,
+        title: `连接节点`,
         form: [this.form.node.connNode],
         data: [data],
+        parentServerId: parentServerId,
       });
     },
     async doInsert(dataList, config) {
@@ -201,32 +275,47 @@ export default {
     },
   },
   created() {},
-  updated() {},
+  updated() {
+    this.tool.showNodeBox = this.show;
+    this.tool.showSwitchNodeBox = this.showSwitch;
+    this.tool.hideNodeBox = this.hide;
+  },
   mounted() {
     this.init();
+    this.tool.showNodeBox = this.show;
+    this.tool.showSwitchNodeBox = this.showSwitch;
+    this.tool.hideNodeBox = this.hide;
+    this.tool.showNodeInfo = this.showNodeInfo;
+    this.tool.toInsertConnNode = this.toInsertConnNode;
   },
 };
 </script>
 
 <style>
-.node-context-box {
-  position: absolute;
-  top: 30px;
-  width: 100%;
+.node-context-dialog .el-dialog {
   background: #0f1b26;
-  transition: all 0s;
-  transform: scale(0);
-  height: calc(100% - 30px);
   color: #ffffff;
 }
-.node-context-box.node-context-box-show {
-  transform: scale(1);
+.node-context-dialog .el-dialog__title {
+  color: #ffffff;
+}
+.node-context-dialog .el-dialog__body {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 55px);
+  padding: 0px;
+}
+.node-context-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 .node-context-box-header {
-  height: 40px;
+  height: 120px;
+  user-select: text;
 }
 .node-context-body {
   width: 100%;
-  height: calc(100% - 40px);
+  height: calc(100% - 120px);
 }
 </style>

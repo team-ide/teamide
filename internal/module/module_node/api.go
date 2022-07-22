@@ -8,6 +8,7 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/node"
+	"teamide/pkg/util"
 )
 
 type NodeApi struct {
@@ -71,6 +72,7 @@ type ContextRequest struct {
 
 type ContextResponse struct {
 	Root         *NodeModel       `json:"root,omitempty"`
+	LocalIpList  []string         `json:"localIpList,omitempty"`
 	NodeList     []*NodeInfo      `json:"nodeList,omitempty"`
 	NetProxyList []*node.NetProxy `json:"netProxyList,omitempty"`
 }
@@ -86,6 +88,11 @@ func (this_ *NodeApi) context(_ *base.RequestBean, c *gin.Context) (res interfac
 	response.Root = this_.NodeService.nodeContext.root
 	response.NodeList = this_.NodeService.nodeContext.nodeList
 	response.NetProxyList = this_.NodeService.nodeContext.netProxyList
+
+	ipList := util.GetLocalIPList()
+	for _, ip := range ipList {
+		response.LocalIpList = append(response.LocalIpList, ip.String())
+	}
 
 	if err != nil {
 		return

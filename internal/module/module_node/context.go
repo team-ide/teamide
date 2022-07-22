@@ -6,9 +6,10 @@ import (
 	"go.uber.org/zap"
 	"sync"
 	"teamide/node"
+	"teamide/pkg/util"
 )
 
-func (this_ *NodeService) InitContext() (err error) {
+func (this_ *NodeService) InitContext() {
 	if this_.nodeContext == nil {
 		this_.nodeContext = &NodeContext{
 			nodeService:            this_,
@@ -17,8 +18,9 @@ func (this_ *NodeService) InitContext() (err error) {
 			serverIdNodeModelCache: make(map[string]*NodeModel),
 		}
 	}
-	err = this_.nodeContext.initContext()
+	err := this_.nodeContext.initContext()
 	if err != nil {
+		this_.Logger.Error("节点上下文初始化异常", zap.Error(err))
 		return
 	}
 	return
@@ -72,6 +74,20 @@ type NodeContext struct {
 	wsCache                    map[string]*WSConn
 	wsCacheLock                sync.Mutex
 	netProxyList               []*node.NetProxy
+	nodeListLock               sync.Mutex
+}
+
+func (this_ *NodeContext) getNodeInfo(id string) (res *NodeInfo) {
+	this_.nodeListLock.Lock()
+	defer this_.nodeListLock.Unlock()
+	var list = this_.nodeList
+	for _, one := range list {
+		if one.Info != nil && id == one.Info.Id {
+			res = one
+			return
+		}
+	}
+	return
 }
 
 func (this_ *NodeContext) getNodeModel(id int64) (res *NodeModel) {
@@ -126,17 +142,22 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 		if err != nil {
 			this_.nodeService.Logger.Error("node context init root error", zap.Error(err))
 		}
-	} else {
-		_ = this_.server.AddNodeList([]*node.Info{
-			{
-				Id:          nodeModel.ServerId,
-				BindToken:   nodeModel.BindToken,
-				BindAddress: nodeModel.BindAddress,
-				ConnAddress: nodeModel.ConnAddress,
-				ConnToken:   nodeModel.ConnToken,
-			},
-		})
 	}
+	var connNodeIdList []string
+	if nodeModel.ConnServerIds != "" {
+		_ = json.Unmarshal([]byte(nodeModel.ConnServerIds), &connNodeIdList)
+	}
+
+	_ = this_.server.AddNodeList([]*node.Info{
+		{
+			Id:             nodeModel.ServerId,
+			BindToken:      nodeModel.BindToken,
+			BindAddress:    nodeModel.BindAddress,
+			ConnAddress:    nodeModel.ConnAddress,
+			ConnToken:      nodeModel.ConnToken,
+			ConnNodeIdList: connNodeIdList,
+		},
+	})
 }
 
 func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
@@ -152,6 +173,29 @@ func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 	}
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
+}
+
+func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds string) {
+	nodeModel := this_.getNodeModel(nodeId)
+	if nodeModel == nil {
+		return
+	}
+	nodeModel.ConnServerIds = connServerIds
+
+	var connNodeIdList []string
+	if connServerIds != "" {
+		_ = json.Unmarshal([]byte(connServerIds), &connNodeIdList)
+	}
+	_ = this_.server.UpdateNodeConnNodeIdList(nodeModel.ServerId, connNodeIdList)
+}
+
+func (this_ *NodeContext) onUpdateNodeHistoryConnServerIds(nodeId int64, historyConnServerIds string) {
+	nodeModel := this_.getNodeModel(nodeId)
+	if nodeModel == nil {
+		return
+	}
+	nodeModel.HistoryConnServerIds = historyConnServerIds
+
 }
 
 func (this_ *NodeContext) onRemoveNodeModel(id int64) {
@@ -236,15 +280,7 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 	if err != nil {
 		return
 	}
-	_ = this_.server.AddNodeList([]*node.Info{
-		{
-			Id:          this_.root.ServerId,
-			BindToken:   this_.root.BindToken,
-			BindAddress: this_.root.BindAddress,
-			ConnAddress: this_.root.ConnAddress,
-			ConnToken:   this_.root.ConnToken,
-		},
-	})
+
 	return
 }
 func (this_ *NodeContext) callMessage(msg *Message) {
@@ -265,6 +301,41 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 
 	var nodeInfoList []*NodeInfo
 	for _, one := range nodeList {
+		var find = this_.getNodeModelByServerId(one.Id)
+		var historyConnServerIdList []string
+		if find != nil && find.HistoryConnServerIds != "" {
+			_ = json.Unmarshal([]byte(find.HistoryConnServerIds), &historyConnServerIdList)
+		}
+		for _, one := range one.ConnNodeIdList {
+			if util.ContainsString(historyConnServerIdList, one) < 0 {
+				historyConnServerIdList = append(historyConnServerIdList, one)
+			}
+		}
+		var historyConnServerIds string
+		bs, _ := json.Marshal(historyConnServerIdList)
+		if bs != nil {
+			historyConnServerIds = string(bs)
+		}
+		if find == nil {
+			find = &NodeModel{
+				ServerId:             one.Id,
+				Name:                 one.Id,
+				BindToken:            one.BindToken,
+				BindAddress:          one.BindAddress,
+				ConnToken:            one.ConnToken,
+				ConnAddress:          one.ConnAddress,
+				HistoryConnServerIds: historyConnServerIds,
+			}
+			_, err := this_.nodeService.Insert(find)
+			if err != nil {
+				find = nil
+			} else {
+				this_.setNodeModel(find.NodeId, find)
+				this_.setNodeModelByServerId(one.Id, find)
+			}
+		} else {
+			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)
+		}
 		nodeInfo := &NodeInfo{
 			Info:      one,
 			NodeModel: this_.getNodeModelByServerId(one.Id),
