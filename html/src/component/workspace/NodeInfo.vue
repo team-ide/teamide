@@ -7,7 +7,7 @@
           'node-info-started': node.status == 1,
           'node-info-stopped': node.status == 2,
           'node-info-error': node.status == 3,
-          'node-info-root': node.isRoot,
+          'node-info-root': node.isLocal,
         }"
       >
         <Icon class="node-info-icon mdi-checkbox-blank-circle"></Icon>

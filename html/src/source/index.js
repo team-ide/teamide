@@ -398,6 +398,7 @@ source.nodeNetProxyList = []
 source.nodeNetProxyCount = 0
 source.nodeNetProxySuccessCount = 0
 source.localIpList = [];
+source.nodeOptionMap = {};
 
 source.initNodeContext = async () => {
     let res = await server.node.context({});
@@ -416,16 +417,44 @@ source.initNodeContext = async () => {
     }
 }
 source.initNodeList = (nodeList) => {
+    form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
+    let nodeOptionMap = {};
+
     nodeList = nodeList || []
     source.nodeList = nodeList;
     source.nodeCount = nodeList.length;
-    source.nodeSuccessCount = nodeList.length;
+    let nodeSuccessCount = 0
+    nodeList.forEach(one => {
+        let option = {};
+        option.isStarted = one.isStarted
+        if (one.isStarted) {
+            nodeSuccessCount++;
+        }
+        if (one.model) {
+            option.value = one.model.serverId;
+            option.text = one.model.name;
+        } else if (one.info) {
+            option.value = one.info.id;
+            option.text = one.info.id;
+        }
+
+        form.node.nodeOptions.push(option);
+        nodeOptionMap[option.value] = option;
+    });
+    source.nodeSuccessCount = nodeSuccessCount;
+    source.nodeOptionMap = nodeOptionMap;
 }
 source.initNodeNetProxyList = (nodeNetProxyList) => {
     nodeNetProxyList = nodeNetProxyList || []
     source.nodeNetProxyList = nodeNetProxyList;
     source.nodeNetProxyCount = nodeNetProxyList.length;
-    source.nodeNetProxySuccessCount = nodeNetProxyList.length;
+    let nodeNetProxySuccessCount = 0
+    nodeNetProxyList.forEach(one => {
+        if (one.isStarted) {
+            nodeNetProxySuccessCount++;
+        }
+    });
+    source.nodeNetProxySuccessCount = nodeNetProxySuccessCount;
 }
 
 let refreshPowers = function () {

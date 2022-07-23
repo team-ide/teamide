@@ -41,7 +41,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 
 	Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
 
-	conn, err := net.Dial(this_.netProxy.Outer.GetNetwork(), this_.netProxy.Outer.GetAddress())
+	conn, err := net.Dial(this_.netProxy.Outer.GetType(), this_.netProxy.Outer.GetAddress())
 	if err != nil {
 		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
 		return

@@ -71,23 +71,24 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	}
 	this_.cache.nodeLock.Lock()
 	defer this_.cache.nodeLock.Unlock()
-	Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("nodeList", nodeList))
 
 	var findChanged = false
-	for _, one := range nodeList {
-		var find = this_.findNode(one.Id)
+	for _, node := range nodeList {
+		var find = this_.findNode(node.Id)
 
 		if find == nil {
+			Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("node", node))
 			findChanged = true
-			this_.cache.nodeList = append(this_.cache.nodeList, one)
+			this_.cache.nodeList = append(this_.cache.nodeList, node)
 		} else {
-			if copyNode(one, find) {
+			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("node", node))
+			if copyNode(node, find) {
 				findChanged = true
 			}
 		}
 	}
 	if findChanged {
-		this_.refreshNodeList()
+		this_.refresh()
 
 		if this_.server.OnNodeListChange != nil {
 			this_.server.OnNodeListChange(this_.cache.nodeList)
@@ -103,7 +104,6 @@ func (this_ *Worker) removeNodeList(removeNodeIdList []string) (err error) {
 	this_.notifyAll(&Message{
 		RemoveNodeIdList: removeNodeIdList,
 	})
-
 	err = this_.doRemoveNodeList(removeNodeIdList)
 
 	return
@@ -119,24 +119,33 @@ func (this_ *Worker) doRemoveNodeList(removeNodeIdList []string) (err error) {
 	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("removeNodeIdList", removeNodeIdList))
 
 	var findChanged = false
-	for _, nodeId := range removeNodeIdList {
 
-		var list = this_.cache.nodeList
-		var newList []*Info
-		for _, one := range list {
-			if one.Id != nodeId {
-				newList = append(newList, one)
-			} else {
+	var list = this_.cache.nodeList
+	var newList []*Info
+	for _, nodeId := range removeNodeIdList {
+		this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
+		this_.cache.removeNodeListenerPool(nodeId, this_.server.Id)
+	}
+	for _, one := range list {
+		if util.ContainsString(removeNodeIdList, one.Id) >= 0 {
+			findChanged = true
+		} else {
+			newList = append(newList, one)
+		}
+		var newConnNodeIdList []string
+		for _, nodeId := range one.ConnNodeIdList {
+			if util.ContainsString(removeNodeIdList, nodeId) >= 0 {
 				findChanged = true
-				this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
-				this_.cache.removeNodeListenerPool(nodeId, this_.server.Id)
+			} else {
+				newConnNodeIdList = append(newConnNodeIdList, nodeId)
 			}
 		}
-		this_.cache.nodeList = newList
+		one.ConnNodeIdList = newConnNodeIdList
 	}
+	this_.cache.nodeList = newList
 
 	if findChanged {
-		this_.refreshNodeList()
+		this_.refresh()
 
 		if this_.server.OnNodeListChange != nil {
 			this_.server.OnNodeListChange(this_.cache.nodeList)
@@ -146,88 +155,70 @@ func (this_ *Worker) doRemoveNodeList(removeNodeIdList []string) (err error) {
 	return
 }
 
-func (this_ *Worker) doChangeNodeStatus(nodeId string, status int, statusError string) (err error) {
+func (this_ *Worker) removeNodeConnNodeIdList(id string, removeConnNodeIdList []string) (err error) {
+	if len(removeConnNodeIdList) == 0 {
+		return
+	}
+	this_.notifyAll(&Message{
+		NodeId:               id,
+		RemoveConnNodeIdList: removeConnNodeIdList,
+	})
+
+	_ = this_.doRemoveNodeConnNodeIdList(id, removeConnNodeIdList)
+
+	return
+}
+
+func (this_ *Worker) doRemoveNodeConnNodeIdList(id string, removeConnNodeIdList []string) (err error) {
+	if len(removeConnNodeIdList) == 0 {
+		return
+	}
+	var find = this_.findNode(id)
+	if find == nil {
+		return
+	}
+	var removeNetProxyIdList []string
+	for _, nodeId := range removeConnNodeIdList {
+		this_.cache.removeNodeListenerPool(find.Id, nodeId)
+		this_.cache.removeNodeListenerPool(nodeId, find.Id)
+		removeNetProxyIdList = append(removeNetProxyIdList, this_.findNetProxyIdListByNodeId(nodeId)...)
+	}
+	var newConnNodeIdList []string
+	var findChanged bool
+	for _, nodeId := range find.ConnNodeIdList {
+		if util.ContainsString(removeConnNodeIdList, nodeId) >= 0 {
+			findChanged = true
+		} else {
+			newConnNodeIdList = append(newConnNodeIdList, nodeId)
+		}
+	}
+	find.ConnNodeIdList = newConnNodeIdList
+
+	if findChanged {
+		this_.refresh()
+		if this_.server.OnNodeListChange != nil {
+			this_.server.OnNodeListChange(this_.cache.nodeList)
+		}
+	}
+	_ = this_.doRemoveNetProxyList(removeNetProxyIdList)
+
+	return
+}
+
+func (this_ *Worker) doChangeNodeStatus(nodeId string, status int8, statusError string) (err error) {
 	if nodeId == "" || status == 0 {
 		return
 	}
 	var find = this_.findNode(nodeId)
 	var findChanged = false
 	if find != nil {
-		if find.Status != status || find.StatusError != statusError {
-			findChanged = true
-			find.Status = status
-			find.StatusError = statusError
-		}
+		findChanged = copyNode(&Info{
+			Status:      status,
+			StatusError: statusError,
+		}, find)
 	}
 	if findChanged && this_.server.OnNodeListChange != nil {
 		this_.server.OnNodeListChange(this_.cache.nodeList)
-	}
-	return
-}
-
-func (this_ *Worker) appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine []string, nodeList []*Info) {
-
-	for _, one := range nodeList {
-		var line []string
-		line = append(line, parentLine...)
-
-		if util.ContainsString(line, one.Id) >= 0 {
-			continue
-		}
-		line = append(line, one.Id)
-
-		*lineList = append(*lineList, line)
-
-		if util.ContainsString(*loadedIdList, one.Id) >= 0 {
-			continue
-		}
-		*loadedIdList = append(*loadedIdList, one.Id)
-
-		var children = this_.findNodeList(one.ConnNodeIdList)
-		this_.appendNodeLineList(loadedIdList, lineList, line, children)
-
-		var parentList = this_.findParents(one.Id)
-		this_.appendNodeLineList(loadedIdList, lineList, line, parentList)
-	}
-}
-
-/**
-
-
-
-
- */
-func (this_ *Worker) findNodeLineList(nodeId string) (lineList [][]string) {
-	Logger.Info("查询节点所有线", zap.Any("nodeId", nodeId))
-
-	var loadedIdList []string
-	loadedIdList = append(loadedIdList, nodeId)
-	var line []string
-	line = append(line, nodeId)
-
-	var find = this_.findNode(nodeId)
-	if find != nil {
-		var children = this_.findNodeList(find.ConnNodeIdList)
-		this_.appendNodeLineList(&loadedIdList, &lineList, line, children)
-	}
-	var parentList = this_.findParents(nodeId)
-	this_.appendNodeLineList(&loadedIdList, &lineList, line, parentList)
-
-	return
-}
-
-func (this_ *Worker) getNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdList []string) {
-
-	Logger.Info("查询节点线", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId))
-	var lineList = this_.findNodeLineList(fromNodeId)
-
-	for _, line := range lineList {
-		Logger.Info("已查询的连线", zap.Any("fromNodeId", fromNodeId), zap.Any("line", line))
-		if util.ContainsString(line, toNodeId) >= 0 {
-			if len(lineIdList) == 0 || len(line) < len(lineIdList) {
-				lineIdList = line
-			}
-		}
 	}
 	return
 }
@@ -236,9 +227,23 @@ func (this_ *Worker) refreshNodeList() {
 
 	var connIdList = this_.server.rootNode.ConnNodeIdList
 	for _, connToId := range connIdList {
+		var find = this_.findNode(connToId)
+		if find == nil {
+			pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
+			if pool != nil {
+				pool.Stop()
+			}
+			continue
+		}
 		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-		if pool == nil {
-			var find = this_.findNode(connToId)
+
+		//if !find.IsEnabled() {
+		//	if pool != nil {
+		//		pool.Stop()
+		//	}
+		//	continue
+		//}
+		if pool == nil && find.IsEnabled() {
 			if find != nil && find.ConnAddress != "" {
 				this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
 			}
@@ -261,6 +266,9 @@ func (this_ *Worker) notifyAllTo(msg *Message) {
 		callPools = append(callPools, pool)
 	}
 	for _, pool := range callPools {
+		if pool.isStop {
+			continue
+		}
 		_ = pool.Do(func(listener *MessageListener) (e error) {
 			_ = listener.Send(msg)
 			return
@@ -283,6 +291,9 @@ func (this_ *Worker) notifyAllFrom(msg *Message) {
 		callPools = append(callPools, pool)
 	}
 	for _, pool := range callPools {
+		if pool.isStop {
+			continue
+		}
 		_ = pool.Do(func(listener *MessageListener) (e error) {
 			_ = listener.Send(msg)
 			return

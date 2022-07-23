@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	StatusStarted = 1
-	StatusStopped = 2
-	StatusError   = 3
+	StatusStarted int8 = 1
+	StatusStopped int8 = 2
+	StatusError   int8 = 3
 )
 
 type Info struct {
@@ -20,9 +20,14 @@ type Info struct {
 	ConnToken      string   `json:"connToken,omitempty"`
 	ConnNodeIdList []string `json:"connNodeIdList,omitempty"`
 	ConnSize       int      `json:"connSize,omitempty"`
-	Status         int      `json:"status,omitempty"`
+	Status         int8     `json:"status,omitempty"`
 	StatusError    string   `json:"statusError,omitempty"`
+	Enabled        int8     `json:"enabled,omitempty"`
 	connIdListLock sync.Mutex
+}
+
+func (this_ *Info) IsEnabled() bool {
+	return this_.Enabled != 2
 }
 
 func (this_ *Info) GetNodeStr() (str string) {
@@ -63,31 +68,35 @@ type NetProxy struct {
 	Outer                 *NetConfig `json:"outer,omitempty"`
 	LineNodeIdList        []string   `json:"lineNodeIdList,omitempty"`
 	ReverseLineNodeIdList []string   `json:"reverseLineNodeIdList,omitempty"`
+	Status                int8       `json:"status,omitempty"`
+	StatusError           string     `json:"statusError,omitempty"`
+	Enabled               int8       `json:"enabled,omitempty"`
+}
+
+func (this_ *NetProxy) IsEnabled() bool {
+	return this_.Enabled != 2
 }
 
 type NetConfig struct {
 	NodeId  string `json:"nodeId,omitempty"`
-	Network string `json:"network,omitempty"`
+	Type    string `json:"type,omitempty"`
 	Address string `json:"address,omitempty"`
 }
 
 func (this_ *NetConfig) GetInfoStr() (str string) {
-	return fmt.Sprintf("[%s][%s]", this_.Network, this_.Address)
+	return fmt.Sprintf("[%s][%s]", this_.GetType(), this_.Address)
 }
 
-func (this_ *NetConfig) GetNetwork() (str string) {
-	return GetNetwork(this_.Network)
+func (this_ *NetConfig) GetType() (str string) {
+	var t = this_.Type
+	if t == "" {
+		t = "tcp"
+	}
+	return t
 }
 
 func (this_ *NetConfig) GetAddress() (str string) {
 	return GetAddress(this_.Address)
-}
-
-func GetNetwork(network string) (str string) {
-	if network == "" {
-		return "tcp"
-	}
-	return network
 }
 
 func GetAddress(address string) (str string) {
@@ -98,15 +107,29 @@ func GetAddress(address string) (str string) {
 }
 
 func copyNode(source, target *Info) (hasChange bool) {
-	target.BindAddress = source.BindAddress
-	target.BindToken = source.BindToken
-	target.ConnAddress = source.ConnAddress
-	target.ConnToken = source.ConnToken
+	if source.BindAddress != "" {
+		target.BindAddress = source.BindAddress
+	}
+	if source.BindToken != "" {
+		target.BindToken = source.BindToken
+	}
+	if source.ConnAddress != "" {
+		target.ConnAddress = source.ConnAddress
+	}
+	if source.ConnToken != "" {
+		target.ConnToken = source.ConnToken
+	}
 	if source.Status != 0 {
 		if target.Status != source.Status || target.StatusError != source.StatusError {
 			hasChange = true
 			target.Status = source.Status
 			target.StatusError = source.StatusError
+		}
+	}
+	if source.Enabled != 0 {
+		if target.IsEnabled() != source.IsEnabled() {
+			hasChange = true
+			target.Enabled = source.Enabled
 		}
 	}
 	var list = source.ConnNodeIdList

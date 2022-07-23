@@ -22,6 +22,12 @@ func (this_ *Worker) notifyDo(msg *Message) {
 	if msg.NodeId != "" && msg.NodeStatus > 0 {
 		_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
 	}
+	if msg.NetProxyId != "" && msg.NetProxyStatus > 0 {
+		_ = this_.doChangeNetProxyStatus(msg.NetProxyId, msg.NetProxyStatus, msg.NetProxyStatusError)
+	}
+	if msg.NodeId != "" && len(msg.RemoveConnNodeIdList) > 0 {
+		_ = this_.doRemoveNodeConnNodeIdList(msg.NodeId, msg.RemoveConnNodeIdList)
+	}
 	if len(msg.RemoveNodeIdList) > 0 {
 		_ = this_.doRemoveNodeList(msg.RemoveNodeIdList)
 	}
@@ -135,4 +141,11 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		}
 	}
 	return version
+}
+
+func (this_ *Worker) refresh() {
+
+	this_.refreshNodeList()
+	this_.refreshNetProxy()
+	return
 }

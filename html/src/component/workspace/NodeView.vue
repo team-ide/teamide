@@ -9,7 +9,6 @@ import { Graph } from "@antv/x6";
 import "@antv/x6-vue-shape";
 
 import NodeInfo from "./NodeInfo.vue";
-import float from "js-yaml/lib/type/float";
 
 export default {
   components: {},
@@ -19,9 +18,7 @@ export default {
       nodeWrapList: null,
     };
   },
-  // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
-  // 计算属性 数据变，直接会触发相应的操作
   watch: {
     nodeList() {
       this.initData();
@@ -33,7 +30,20 @@ export default {
       // 创建 Graph 的实例
       this.graph = new Graph({
         container: this.$refs.container,
-        grid: true,
+        width: "100%",
+        height: "100%",
+        grid: {
+          visible: true,
+          args: [],
+        },
+        scroller: {
+          enabled: true,
+          pannable: true,
+          padding: {
+            left: 0,
+            top: 0,
+          },
+        },
       });
 
       Graph.unregisterNode("node-info");
@@ -57,29 +67,27 @@ export default {
       let lastY = 0;
       nodeList.forEach((one) => {
         let info = one.info;
-        let nodeModel = one.nodeModel;
-        let nodeWrap = { info, nodeModel };
-        nodeWrap.isRoot = false;
+        let model = one.model;
+        let nodeWrap = { info, model };
+        nodeWrap.isLocal = false;
         var connServerIdList = [];
         var historyConnServerIdList = [];
-        if (nodeModel) {
-          if (nodeModel.isRoot == 1) {
-            nodeWrap.isRoot = true;
+        if (model) {
+          if (model.isLocal == 1) {
+            nodeWrap.isLocal = true;
           }
-          nodeWrap.nodeId = nodeModel.nodeId;
-          nodeWrap.id = nodeModel.serverId;
-          nodeWrap.text = nodeModel.name;
-          nodeWrap.serverId = nodeModel.serverId;
-          if (this.tool.isNotEmpty(nodeModel.connServerIds)) {
+          nodeWrap.nodeId = model.nodeId;
+          nodeWrap.id = model.serverId;
+          nodeWrap.text = model.name;
+          nodeWrap.serverId = model.serverId;
+          if (this.tool.isNotEmpty(model.connServerIds)) {
             try {
-              connServerIdList = JSON.parse(nodeModel.connServerIds);
+              connServerIdList = JSON.parse(model.connServerIds);
             } catch (e) {}
           }
-          if (this.tool.isNotEmpty(nodeModel.historyConnServerIds)) {
+          if (this.tool.isNotEmpty(model.historyConnServerIds)) {
             try {
-              historyConnServerIdList = JSON.parse(
-                nodeModel.historyConnServerIds
-              );
+              historyConnServerIdList = JSON.parse(model.historyConnServerIds);
             } catch (e) {}
           }
         } else {
@@ -102,18 +110,20 @@ export default {
         if (width < 120) {
           width = 120;
         }
-        lastY += 50;
-        lastX += 50;
-        nodeWrap.x = lastX;
-        nodeWrap.y = lastY;
-        if (nodeModel) {
-          let option = this.tool.getOptionJSON(nodeModel.option);
+        if (model) {
+          let option = this.tool.getOptionJSON(model.option);
           if (option.x) {
             nodeWrap.x = option.x;
           }
           if (option.y) {
             nodeWrap.y = option.y;
           }
+        }
+        if (nodeWrap.x == null || nodeWrap.y == null) {
+          lastX += 50;
+          nodeWrap.x = lastX;
+          lastY += 50;
+          nodeWrap.y = lastY;
         }
 
         nodeWrap.width = width;
@@ -261,8 +271,26 @@ export default {
             this.tool.showNodeInfo(data);
           },
         });
+
+        if (data.model && !data.isLocal) {
+          if (data.model.enabled == 1) {
+            menus.push({
+              text: "停用",
+              onClick: () => {
+                this.tool.toDisableNode(data);
+              },
+            });
+          } else {
+            menus.push({
+              text: "启用",
+              onClick: () => {
+                this.tool.toEnableNode(data);
+              },
+            });
+          }
+        }
         if (
-          (!data.isRoot && (targetNode.isConfig || targetNode.isHistory)) ||
+          (!data.isLocal && (targetNode.isConfig || targetNode.isHistory)) ||
           !targetNode.isConn
         ) {
           menus.push({
@@ -295,8 +323,37 @@ export default {
   background: #09131c;
 }
 .node-view-container {
-  width: 100%;
-  height: 100%;
   position: relative;
+}
+
+/* 滚动条样式*/
+.x6-graph-scroller:hover::-webkit-scrollbar-thumb {
+  box-shadow: inset 0 0 5px #333333;
+  background: #333333;
+}
+.x6-graph-scroller:hover::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px #262626;
+  background: #262626;
+}
+.x6-graph-scroller:hover::-webkit-scrollbar-corner {
+  background: #262626;
+}
+
+.x6-graph-scroller::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.x6-graph-scroller:hover::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.x6-graph-scroller::-webkit-scrollbar-thumb {
+  border-radius: 0px;
+}
+.x6-graph-scroller::-webkit-scrollbar-track {
+  border-radius: 0;
+}
+.x6-graph-scroller::-webkit-scrollbar-corner {
+  background: transparent;
 }
 </style>

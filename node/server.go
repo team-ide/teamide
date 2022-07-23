@@ -2,27 +2,26 @@ package node
 
 import (
 	"fmt"
-	"go.uber.org/zap"
 	"net"
-	"strings"
-	"time"
+	"sync"
 )
 
 var tokenByteSize = 128
 
 type Server struct {
-	Id                   string
-	BindAddress          string
-	BindToken            string
-	ConnAddress          string
-	ConnToken            string
-	ConnSize             int
-	serverListener       net.Listener
-	cache                *Cache
-	worker               *Worker
-	OnNodeListChange     func([]*Info)
-	OnNetProxyListChange func([]*NetProxy)
-	rootNode             *Info
+	Id                            string
+	BindAddress                   string
+	BindToken                     string
+	ConnAddress                   string
+	ConnToken                     string
+	ConnSize                      int
+	serverListener                net.Listener
+	cache                         *Cache
+	worker                        *Worker
+	OnNodeListChange              func([]*Info)
+	OnNetProxyListChange          func([]*NetProxy)
+	rootNode                      *Info
+	connNodeListenerKeepAliveLock sync.Mutex
 }
 
 func (this_ *Server) GetNode(nodeId string) (node *Info) {
@@ -45,9 +44,9 @@ func (this_ *Server) RemoveNodeList(nodeIdList []string) (err error) {
 	return
 }
 
-func (this_ *Server) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdList []string) {
+func (this_ *Server) GetNodeLineByFromTo(fromNodeId, toNodeId string, nodeIdConnNodeIdListCache map[string][]string) (lineIdList []string) {
 
-	return this_.worker.getNodeLineByFromTo(fromNodeId, toNodeId)
+	return this_.worker.getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
 }
 
 func (this_ *Server) AddNetProxyList(netProxyList []*NetProxy) (err error) {
@@ -94,263 +93,4 @@ func (this_ *Server) Stop() {
 
 func (this_ *Server) GetServerInfo() (str string) {
 	return fmt.Sprintf("节点服务[%s][%s]", this_.Id, this_.BindAddress)
-}
-
-func (this_ *Server) serverListenerKeepAlive() {
-
-	defer func() {
-		this_.worker.notifyAll(&Message{
-			NodeId:          this_.rootNode.Id,
-			NodeStatus:      StatusStopped,
-			NodeStatusError: "",
-		})
-		// 删除所有连接
-		var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.Id)
-		for _, one := range list {
-			this_.cache.removeNodeListenerPool(one.fromNodeId, one.toNodeId)
-		}
-		time.Sleep(5 * time.Second)
-		go this_.serverListenerKeepAlive()
-	}()
-	var err error
-	Logger.Info(this_.GetServerInfo() + " 服务启动 开始")
-	this_.serverListener, err = net.Listen("tcp", GetAddress(this_.BindAddress))
-	if err != nil {
-		this_.worker.notifyAll(&Message{
-			NodeId:          this_.rootNode.Id,
-			NodeStatus:      StatusError,
-			NodeStatusError: err.Error(),
-		})
-		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Any("error", err.Error()))
-		return
-	}
-	Logger.Info(this_.GetServerInfo() + " 服务启动 成功")
-
-	_ = this_.worker.doChangeNodeStatus(this_.rootNode.Id, StatusStarted, "")
-	for {
-		var conn net.Conn
-		conn, err = this_.serverListener.Accept()
-		if err != nil {
-			Logger.Error(this_.GetServerInfo()+" 服务监听 异常", zap.Error(err))
-			break
-		}
-		go func(conn_ net.Conn) {
-			var bytes = make([]byte, tokenByteSize)
-			_, err = conn_.Read(bytes)
-			if err != nil {
-				_ = conn_.Close()
-				return
-			}
-			token := strings.TrimSpace(string(bytes))
-			if this_.BindToken != token {
-				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 Token验证异常")
-				_ = conn_.Close()
-				return
-			}
-
-			var clientMsg *Message
-			clientMsg, err = ReadMessage(conn_)
-			if err != nil {
-				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
-				_ = conn_.Close()
-				return
-			}
-			if clientMsg.Method != methodOK || clientMsg.Node == nil {
-				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
-				_ = conn_.Close()
-				return
-			}
-			var clientNode = clientMsg.Node
-			var clientIndex = clientMsg.ClientIndex
-
-			// 发送当前节点ID
-			err = WriteMessage(conn, &Message{
-				Node: this_.rootNode,
-			})
-			if err != nil {
-				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
-				_ = conn_.Close()
-				return
-			}
-			var fromNodeId = clientNode.Id
-
-			pool := this_.cache.newIfAbsentNodeListenerPool(fromNodeId, this_.Id)
-
-			messageListener := &MessageListener{
-				conn:      conn,
-				onMessage: this_.worker.onMessage,
-			}
-			messageListener.listen(func() {
-				messageListener.stop()
-				pool.Remove(messageListener)
-				Logger.Info(this_.GetServerInfo() + " 移除 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
-				if len(pool.listeners) == 0 {
-					this_.cache.removeNodeListenerPool(fromNodeId, this_.Id)
-
-					var notifyMsg = &Message{
-						NodeId: clientNode.Id,
-					}
-					notifyMsg.NodeStatus = StatusStopped
-					notifyMsg.NodeStatusError = ""
-					this_.worker.notifyAll(notifyMsg)
-				}
-			})
-			pool.Put(messageListener)
-			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
-
-			if clientIndex == 0 {
-				for _, one := range clientMsg.NodeList {
-					if one.Id == clientNode.Id {
-						one.addConnNodeId(this_.Id)
-						one.Status = StatusStarted
-						one.StatusError = ""
-					} else if one.Id == this_.rootNode.Id {
-						one.Status = StatusStarted
-						one.StatusError = ""
-					}
-				}
-				_ = this_.worker.doAddNodeList(clientMsg.NodeList)
-
-				this_.worker.notifyAll(&Message{
-					NodeId:          clientNode.Id,
-					NodeStatus:      StatusStarted,
-					NodeStatusError: "",
-					NodeList:        this_.cache.nodeList,
-					NetProxyList:    this_.cache.netProxyList,
-				})
-			}
-
-		}(conn)
-	}
-	return
-}
-
-func (this_ *Server) connNodeListenerKeepAlive(toNode *Info, connAddress, connToken string, connSize int) {
-	if connAddress == "" {
-		Logger.Warn(this_.GetServerInfo() + " 连接 [" + connAddress + "] 连接地址为空")
-		return
-	}
-
-	var pool *MessageListenerPool
-	if toNode != nil {
-		pool = this_.cache.newIfAbsentNodeListenerPool(this_.Id, toNode.Id)
-	}
-	if connSize <= 0 {
-		connSize = 5
-	}
-	this_.connNodeListener(pool, connAddress, connToken, 0)
-	for i := 0; i < connSize; i++ {
-		go this_.connNodeListener(pool, connAddress, connToken, i)
-	}
-	return
-}
-
-func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, connToken string, clientIndex int) {
-	defer func() {
-		if pool != nil && pool.isStop {
-			return
-		}
-		time.Sleep(5 * time.Second)
-		go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
-	}()
-	var err error
-	var conn net.Conn
-	Logger.Info(this_.GetServerInfo() + " 连接 [" + connAddress + "] 开始")
-	conn, err = net.DialTimeout("tcp", GetAddress(connAddress), time.Second*2)
-	if err != nil {
-		if pool != nil && len(pool.listeners) == 0 {
-			this_.worker.notifyAll(&Message{
-				NodeId:          pool.toNodeId,
-				NodeStatus:      StatusError,
-				NodeStatusError: err.Error(),
-			})
-		}
-		Logger.Warn(this_.GetServerInfo()+" 连接 ["+connAddress+"] 异常", zap.Any("error", err.Error()))
-		return
-	}
-
-	var tokenBytes = []byte(connToken)
-	if len(tokenBytes) > tokenByteSize {
-		tokenBytes = tokenBytes[:tokenByteSize]
-	} else if len(tokenBytes) < tokenByteSize {
-		for i := len(tokenBytes); i < tokenByteSize; i++ {
-			tokenBytes = append(tokenBytes, []byte(" ")...)
-		}
-	}
-
-	_, err = conn.Write(tokenBytes)
-	if err != nil {
-		_ = conn.Close()
-		return
-	}
-
-	var msg = &Message{
-		Method:      methodOK,
-		Node:        this_.rootNode,
-		Ok:          true,
-		ClientIndex: clientIndex,
-	}
-
-	if clientIndex == 0 {
-		msg.NodeList = this_.cache.nodeList
-		msg.NetProxyList = this_.cache.netProxyList
-	}
-	err = WriteMessage(conn, msg)
-	if err != nil {
-		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
-		_ = conn.Close()
-		return
-	}
-	msg, err = ReadMessage(conn)
-	if err != nil {
-		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
-		_ = conn.Close()
-		return
-	}
-	if msg.Node == nil {
-		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
-		_ = conn.Close()
-		return
-	}
-	serverNode := msg.Node
-	Logger.Info(this_.GetServerInfo() + " 连接 [" + connAddress + "] 成功")
-
-	toNodeId := serverNode.Id
-	var fromNodeId = this_.Id
-
-	pool = this_.cache.newIfAbsentNodeListenerPool(fromNodeId, toNodeId)
-
-	messageListener := &MessageListener{
-		conn:      conn,
-		onMessage: this_.worker.onMessage,
-	}
-
-	messageListener.listen(func() {
-		messageListener.stop()
-		pool.Remove(messageListener)
-		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
-
-		if clientIndex == 0 {
-			var notifyMsg = &Message{
-				NodeId: serverNode.Id,
-			}
-			if pool.isStop {
-				notifyMsg.NodeStatus = StatusStopped
-				notifyMsg.NodeStatusError = ""
-			} else {
-				notifyMsg.NodeStatus = StatusError
-				notifyMsg.NodeStatusError = "连接异常"
-			}
-
-			this_.worker.notifyAll(notifyMsg)
-		}
-		if !pool.isStop {
-			time.Sleep(5 * time.Second)
-			go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
-		}
-	})
-	pool.Put(messageListener)
-	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
-
-	return
 }

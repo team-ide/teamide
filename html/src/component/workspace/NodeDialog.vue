@@ -13,71 +13,78 @@
     class="node-context-dialog"
   >
     <div class="node-context-box">
-      <div class="node-context-box-header">
-        <div class="pdlr-20 ft-12">
-          <div class="color-grey">
-            节点程序下载地址:
-            <span class="color-green pdlr-10">
-              https://gitee.com/teamide/teamide/releases
-            </span>
-            或
-            <span class="color-green pdlr-10">
-              https://github.com/team-ide/teamide/releases
-            </span>
-          </div>
-          <div class="color-grey">
-            节点启动:
-            <span class="color-green pdlr-10">
-              ./node -id node1 -address :21090 -token xxx
-            </span>
-            <span class="color-grey">
-              -id 节点ID,必须唯一 -address 节点启动绑定地址 -token
-              节点Token,用于节点直接连接鉴权
-            </span>
-          </div>
-          <div class="color-grey">
-            节点启动连接到某一个节点:
-            <span class="color-green pdlr-10">
-              ./node -id node1 -address :21090 -token xxx -connAddress ip:port
-              -connToken xxx
-            </span>
-            <span class="color-grey">
-              -connAddress 目标节点的ip:port -connToken 目标节点的Token
-            </span>
-          </div>
-          <template v-if="nodeRoot != null">
-            <div class="color-grey">
-              其它节点连接到当前节点:
-              <template v-for="(address, index) in rootAddressList">
-                <div :key="index" class="color-green">
+      <tm-layout height="100%">
+        <tm-layout height="100px" class="scrollbar">
+          <div class="node-context-box-header">
+            <div class="node-context-box-header pdlr-20 ft-12">
+              <div class="color-grey">
+                节点程序下载地址:
+                <span class="color-green pdlr-10">
+                  https://gitee.com/teamide/teamide/releases
+                </span>
+                或
+                <span class="color-green pdlr-10">
+                  https://github.com/team-ide/teamide/releases
+                </span>
+              </div>
+              <div class="color-grey">
+                节点启动:
+                <span class="color-green pdlr-10">
+                  ./node -id node1 -address :21090 -token xxx
+                </span>
+                <span class="color-grey">
+                  -id 节点ID,必须唯一 -address 节点启动绑定地址 -token
+                  节点Token,用于节点直接连接鉴权
+                </span>
+              </div>
+              <div class="color-grey">
+                节点启动连接到某一个节点:
+                <span class="color-green pdlr-10">
                   ./node -id node1 -address :21090 -token xxx -connAddress
-                  {{ address }} -connToken {{ nodeRoot.bindToken }}
+                  ip:port -connToken xxx
+                </span>
+                <span class="color-grey">
+                  -connAddress 目标节点的ip:port -connToken 目标节点的Token
+                </span>
+              </div>
+              <template v-if="nodeRoot != null">
+                <div class="color-grey">
+                  当前节点连接到其它节点:
+                  <span class="color-orange pdlr-10"> 右击节点进行操作 </span>
+                </div>
+                <div class="color-grey">
+                  其它节点连接到当前节点:
+                  <template v-for="(address, index) in rootAddressList">
+                    <div :key="index" class="color-green">
+                      ./node -id node1 -address :21090 -token xxx -connAddress
+                      {{ address }} -connToken {{ nodeRoot.bindToken }}
+                    </div>
+                  </template>
                 </div>
               </template>
             </div>
-            <div class="color-grey">
-              当前节点连接到其它节点:
-              <span class="color-orange pdlr-10"> 右击节点进行操作 </span>
-            </div>
-          </template>
-        </div>
-      </div>
-      <div class="node-context-body" v-if="ready">
-        <template v-if="nodeRoot == null">
-          <div class="text-center pdt-50">
-            <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
-              设置根节点
-            </div>
           </div>
-        </template>
-        <template v-else>
-          <NodeView
-            :source="source"
-            :nodeList="nodeList"
-            :onNodeMoved="onNodeMoved"
-          ></NodeView>
-        </template>
-      </div>
+        </tm-layout>
+        <tm-layout height="auto" class="">
+          <div class="node-context-body" v-if="ready">
+            <template v-if="nodeRoot == null">
+              <div class="text-center pdt-50">
+                <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
+                  设置根节点
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <NodeView
+                :source="source"
+                :nodeList="nodeList"
+                :onNodeMoved="onNodeMoved"
+              ></NodeView>
+            </template>
+          </div>
+        </tm-layout>
+      </tm-layout>
+
       <FormDialog
         ref="InsertNode"
         :source="source"
@@ -138,7 +145,6 @@ export default {
     init() {},
     async initData() {
       this.ready = false;
-      await this.source.initNodeContext();
       this.initView();
       this.ready = true;
     },
@@ -197,7 +203,7 @@ export default {
       this.$refs.InsertNode.show({
         title: `设置根节点`,
         form: [this.form.node.root],
-        isRoot: true,
+        isLocal: true,
         serverId: this.tool.md5("serverId" + new Date().getTime()),
         data: [data],
       });
@@ -222,15 +228,18 @@ export default {
     async doInsert(dataList, config) {
       let data = dataList[0];
       data.parentServerId = config.parentServerId;
-      if (config.isRoot) {
-        data.isRoot = 1;
+      if (config.isLocal) {
+        data.isLocal = 1;
         data.serverId = config.serverId;
       } else {
-        data.isRoot = 0;
+        data.isLocal = 0;
       }
       let res = await this.server.node.insert(data);
       if (res.code == 0) {
         this.tool.success("新增成功");
+        if (config.isLocal) {
+          this.source.initNodeContext();
+        }
         return true;
       } else {
         this.tool.error(res.msg);
@@ -258,16 +267,61 @@ export default {
         return false;
       }
     },
-    toDelete(data) {
+    toEnable(data) {
+      this.tool.stopEvent();
+      if (!data || !data.nodeId) {
+        this.tool.warn("节点ID丢失");
+        return;
+      }
+      return this.doEnable(data.nodeId);
+    },
+    async doEnable(nodeId) {
+      let res = await this.server.node.enable({ nodeId: nodeId });
+      if (res.code == 0) {
+        this.tool.success("启用成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    toDisable(data) {
       this.tool.stopEvent();
       if (!data || !data.nodeId) {
         this.tool.warn("节点ID丢失");
         return;
       }
       this.tool
-        .confirm("删除[" + data.text + "]节点将无法恢复，确定删除？")
+        .confirm("禁用[" + data.text + "]节点，相关功能将无法使用，确定禁用？")
         .then(async () => {
-          return this.doDelete(data.nodeId);
+          return this.doDisable(data.nodeId);
+        })
+        .catch((e) => {});
+    },
+    async doDisable(nodeId) {
+      let res = await this.server.node.disable({ nodeId: nodeId });
+      if (res.code == 0) {
+        this.tool.success("禁用成功");
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
+    },
+    toDelete(data) {
+      this.tool.stopEvent();
+      if (!data || !data.model || !data.model.nodeId) {
+        this.tool.warn("节点ID丢失");
+        return;
+      }
+      this.tool
+        .confirm(
+          "删除[" +
+            data.model.name +
+            "]节点，将删除所有关联数据且无法恢复，确定删除？"
+        )
+        .then(async () => {
+          return this.doDelete(data.model.nodeId);
         })
         .catch((e) => {});
     },
@@ -292,34 +346,42 @@ export default {
       }
     },
     onNodeMoved(node, position) {
-      if (node.nodeModel == null) {
+      if (node.model == null) {
         return;
       }
-      let option = this.tool.getOptionJSON(node.nodeModel.option);
+      let option = this.tool.getOptionJSON(node.model.option);
       option.x = position.x;
       option.y = position.y;
       let optionStr = JSON.stringify(option);
       this.server.node.updateOption({
-        nodeId: node.nodeModel.nodeId,
+        nodeId: node.model.nodeId,
         option: optionStr,
       });
     },
   },
   created() {},
   updated() {
-    this.tool.showNodeBox = this.show;
-    this.tool.showSwitchNodeBox = this.showSwitch;
-    this.tool.hideNodeBox = this.hide;
-  },
-  mounted() {
-    this.init();
-    this.tool.showNodeBox = this.show;
-    this.tool.showSwitchNodeBox = this.showSwitch;
-    this.tool.hideNodeBox = this.hide;
+    this.tool.showNodeDialog = this.show;
+    this.tool.showSwitchNodeDialog = this.showSwitch;
+    this.tool.hideNodeDialog = this.hide;
     this.tool.showNodeInfo = this.showNodeInfo;
     this.tool.toInsertConnNode = this.toInsertConnNode;
     this.tool.toDeleteNode = this.toDelete;
     this.tool.doDeleteNode = this.doDelete;
+    this.tool.toEnableNode = this.toEnable;
+    this.tool.toDisableNode = this.toDisable;
+  },
+  mounted() {
+    this.init();
+    this.tool.showNodeDialog = this.show;
+    this.tool.showSwitchNodeDialog = this.showSwitch;
+    this.tool.hideNodeDialog = this.hide;
+    this.tool.showNodeInfo = this.showNodeInfo;
+    this.tool.toInsertConnNode = this.toInsertConnNode;
+    this.tool.toDeleteNode = this.toDelete;
+    this.tool.doDeleteNode = this.doDelete;
+    this.tool.toEnableNode = this.toEnable;
+    this.tool.toDisableNode = this.toDisable;
   },
 };
 </script>
@@ -344,11 +406,14 @@ export default {
   height: 100%;
 }
 .node-context-box-header {
-  height: 120px;
+  position: relative;
   user-select: text;
+  width: 100%;
+  height: 100%;
 }
 .node-context-body {
+  position: relative;
   width: 100%;
-  height: calc(100% - 120px);
+  height: 100%;
 }
 </style>

@@ -125,12 +125,27 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 		node.CreateTime = time.Now()
 	}
 
-	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, connServerIds, historyConnServerIds, option, isRoot, userId, createTime"
+	var columns = "nodeId, serverId, name, comment, bindAddress, bindToken, connAddress, connToken, connServerIds, historyConnServerIds, option, isLocal, userId, createTime"
 	var values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
 
 	sql := `INSERT INTO ` + TableNode + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{node.NodeId, node.ServerId, node.Name, node.Comment, node.BindAddress, node.BindToken, node.ConnAddress, node.ConnToken, node.ConnServerIds, node.HistoryConnServerIds, node.Option, node.IsRoot, node.UserId, node.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{
+		node.NodeId,
+		node.ServerId,
+		node.Name,
+		node.Comment,
+		node.BindAddress,
+		node.BindToken,
+		node.ConnAddress,
+		node.ConnToken,
+		node.ConnServerIds,
+		node.HistoryConnServerIds,
+		node.Option,
+		node.IsLocal,
+		node.UserId,
+		node.CreateTime,
+	})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
@@ -226,7 +241,13 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		return
 	}
 
-	this_.nodeContext.onUpdateNodeModel(node)
+	node, err = this_.Get(node.NodeId)
+	if err != nil {
+		return
+	}
+	if node != nil {
+		this_.nodeContext.onUpdateNodeModel(node)
+	}
 	return
 }
 
@@ -315,6 +336,34 @@ func (this_ *NodeService) UpdateHistoryConnServerIds(nodeId int64, historyConnSe
 	}
 
 	this_.nodeContext.onUpdateNodeHistoryConnServerIds(nodeId, historyConnServerIds)
+	return
+}
+
+// Enable 更新
+func (this_ *NodeService) Enable(nodeId int64, _ int64) (rowsAffected int64, err error) {
+
+	sql := `UPDATE ` + TableNode + ` SET enabled=?,updateTime=? WHERE nodeId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{1, time.Now(), nodeId})
+	if err != nil {
+		this_.Logger.Error("Enabled Error", zap.Error(err))
+		return
+	}
+
+	this_.nodeContext.onEnableNodeModel(nodeId)
+	return
+}
+
+// Disable 更新
+func (this_ *NodeService) Disable(nodeId int64, _ int64) (rowsAffected int64, err error) {
+
+	sql := `UPDATE ` + TableNode + ` SET enabled=?,updateTime=? WHERE nodeId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{2, time.Now(), nodeId})
+	if err != nil {
+		this_.Logger.Error("Disable Error", zap.Error(err))
+		return
+	}
+
+	this_.nodeContext.onDisableNodeModel(nodeId)
 	return
 }
 

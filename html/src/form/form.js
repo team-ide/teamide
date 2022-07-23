@@ -143,8 +143,10 @@ let toolbox = {
     },
 };
 
-
+var nodeOptions = []
+var netProxyNetTypes = [{ text: "TCP", value: "tcp" }];
 let node = {
+    nodeOptions: nodeOptions,
     root: {
 
         fields: [
@@ -265,6 +267,8 @@ let node = {
             {
                 label: "输入端节点",
                 name: "innerServerId",
+                type: "select",
+                options: nodeOptions,
                 rules: [
                     {
                         required: true,
@@ -276,6 +280,9 @@ let node = {
             {
                 label: "输入端类型",
                 name: "innerType",
+                type: "select",
+                options: netProxyNetTypes,
+                defaultValue: "tcp",
                 rules: [
                     {
                         required: true,
@@ -298,6 +305,8 @@ let node = {
             {
                 label: "输出端节点",
                 name: "outerServerId",
+                type: "select",
+                options: nodeOptions,
                 rules: [
                     {
                         required: true,
@@ -309,6 +318,9 @@ let node = {
             {
                 label: "输出端类型",
                 name: "outerType",
+                type: "select",
+                options: netProxyNetTypes,
+                defaultValue: "tcp",
                 rules: [
                     {
                         required: true,

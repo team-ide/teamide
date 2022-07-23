@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"teamide/internal/base"
 	"teamide/internal/context"
-	"teamide/node"
 	"teamide/pkg/util"
 )
 
@@ -36,8 +35,17 @@ var (
 	PowerNodeInsert       = base.AppendPower(&base.PowerAction{Action: "node_insert", Text: "节点新增", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeUpdate       = base.AppendPower(&base.PowerAction{Action: "node_update", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeUpdateOption = base.AppendPower(&base.PowerAction{Action: "node_update_option", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeEnable       = base.AppendPower(&base.PowerAction{Action: "node_enable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeDisable      = base.AppendPower(&base.PowerAction{Action: "node_disable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeDelete       = base.AppendPower(&base.PowerAction{Action: "node_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeWebsocket    = base.AppendPower(&base.PowerAction{Action: "node_websocket", Text: "节点连接", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+
+	PowerNetProxyInsert       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_insert", Text: "节点新增", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyUpdate       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_update", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyUpdateOption = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_update_option", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyEnable       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_enable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyDisable      = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_disable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyDelete       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
@@ -50,8 +58,17 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/insert"}, Power: PowerNodeInsert, Do: this_.insert})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/update"}, Power: PowerNodeUpdate, Do: this_.update})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/updateOption"}, Power: PowerNodeUpdateOption, Do: this_.updateOption})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/enable"}, Power: PowerNodeEnable, Do: this_.enable})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/disable"}, Power: PowerNodeDisable, Do: this_.disable})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/delete"}, Power: PowerNodeDelete, Do: this_.delete})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/websocket"}, Power: PowerNodeWebsocket, Do: this_.websocket, IsWebSocket: true})
+
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/insert"}, Power: PowerNetProxyInsert, Do: this_.netProxyInsert})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/update"}, Power: PowerNetProxyUpdate, Do: this_.netProxyUpdate})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/updateOption"}, Power: PowerNetProxyUpdateOption, Do: this_.netProxyUpdateOption})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/enable"}, Power: PowerNetProxyEnable, Do: this_.netProxyEnable})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/disable"}, Power: PowerNetProxyDisable, Do: this_.netProxyDisable})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/delete"}, Power: PowerNetProxyDelete, Do: this_.netProxyDelete})
 
 	return
 }
@@ -71,10 +88,10 @@ type ContextRequest struct {
 }
 
 type ContextResponse struct {
-	Root         *NodeModel       `json:"root,omitempty"`
-	LocalIpList  []string         `json:"localIpList,omitempty"`
-	NodeList     []*NodeInfo      `json:"nodeList,omitempty"`
-	NetProxyList []*node.NetProxy `json:"netProxyList,omitempty"`
+	Root         *NodeModel      `json:"root,omitempty"`
+	LocalIpList  []string        `json:"localIpList,omitempty"`
+	NodeList     []*NodeInfo     `json:"nodeList,omitempty"`
+	NetProxyList []*NetProxyInfo `json:"netProxyList,omitempty"`
 }
 
 func (this_ *NodeApi) context(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {

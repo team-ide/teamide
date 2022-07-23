@@ -22,8 +22,34 @@ let node = {
     updateOption(param) {
         return http.post('api/node/updateOption', param);
     },
+    enable(param) {
+        return http.post('api/node/enable', param);
+    },
+    disable(param) {
+        return http.post('api/node/disable', param);
+    },
     delete(param) {
         return http.post('api/node/delete', param);
+    },
+    netProxy: {
+        insert(param) {
+            return http.post('api/node/netProxy/insert', param);
+        },
+        update(param) {
+            return http.post('api/node/netProxy/update', param);
+        },
+        updateOption(param) {
+            return http.post('api/node/netProxy/updateOption', param);
+        },
+        enable(param) {
+            return http.post('api/node/netProxy/enable', param);
+        },
+        disable(param) {
+            return http.post('api/node/netProxy/disable', param);
+        },
+        delete(param) {
+            return http.post('api/node/netProxy/delete', param);
+        },
     },
 };
 

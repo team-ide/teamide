@@ -27,6 +27,7 @@ type Message struct {
 	NodeIdList           []string    `json:"nodeIdList,omitempty"`
 	RemoveNodeIdList     []string    `json:"removeNodeIdList,omitempty"`
 	NotifiedNodeIdList   []string    `json:"notifiedNodeIdList,omitempty"`
+	RemoveConnNodeIdList []string    `json:"removeConnNodeIdList,omitempty"`
 	Node                 *Info       `json:"node,omitempty"`
 	NodeList             []*Info     `json:"nodeList,omitempty"`
 	NetProxyId           string      `json:"netProxyId,omitempty"`
@@ -39,8 +40,10 @@ type Message struct {
 	NetProxyList         []*NetProxy `json:"netProxyList,omitempty"`
 	Bytes                []byte      `json:"bytes,omitempty"`
 	ClientIndex          int         `json:"clientIndex,omitempty"`
-	NodeStatus           int         `json:"nodeStatus,omitempty"`
+	NodeStatus           int8        `json:"nodeStatus,omitempty"`
 	NodeStatusError      string      `json:"nodeStatusError,omitempty"`
+	NetProxyStatus       int8        `json:"netProxyStatus,omitempty"`
+	NetProxyStatusError  string      `json:"netProxyStatusError,omitempty"`
 	Version              string      `json:"version,omitempty"`
 	listener             *MessageListener
 }

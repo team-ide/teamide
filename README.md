@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.3.3-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.5.0-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -142,6 +142,11 @@ Team IDE 团队在线开发工具
         <td>XML、JSON、URL、YAML、TOML等格式相互转换</td>
         <td>进行中</td>
     </tr>
+    <tr>
+        <td >节点功能</td>
+        <td>可以配置多服务器之间网络透传，内外网相互透传等</td>
+        <td>完成</td>
+    </tr>
 </table>
 
 ## 目录结构
@@ -236,6 +241,14 @@ go mod tidy
 # 需要conf目录
 go build -ldflags "-X main.buildFlags=--isServer" .
 ```
+
+## Node 模块
+
+节点服务，用于不同网段通信，借助节点模块的网络代理实现内外网透传等
+
+![avatar](doc/toolbox-node.png)
+
+![avatar](doc/toolbox-node-net-proxy.png)
 
 ## Toolbox 模块
 

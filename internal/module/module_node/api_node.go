@@ -15,7 +15,7 @@ type ListResponse struct {
 	NodeList []*NodeModel `json:"nodeList,omitempty"`
 }
 
-func (this_ *NodeApi) list(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &ListRequest{}
 	if !base.RequestJSON(request, c) {
@@ -23,9 +23,7 @@ func (this_ *NodeApi) list(requestBean *base.RequestBean, c *gin.Context) (res i
 	}
 	response := &ListResponse{}
 
-	response.NodeList, err = this_.NodeService.Query(&NodeModel{
-		UserId: requestBean.JWT.UserId,
-	})
+	response.NodeList, err = this_.NodeService.Query(&NodeModel{})
 	if err != nil {
 		return
 	}
@@ -68,7 +66,7 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 			err = errors.New("父节点[" + request.ParentServerId + "]节点服务不存在")
 			return
 		}
-		if nodeInfo.NodeModel == nil {
+		if nodeInfo.Model == nil {
 			err = errors.New("父节点[" + request.ParentServerId + "]节点数据不存在")
 			return
 		}
@@ -78,18 +76,26 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
+	node, err = this_.NodeService.Get(node.NodeId)
+	if err != nil {
+		return
+	}
+	if node == nil {
+		err = errors.New("节点数据插入失败")
+		return
+	}
 	this_.NodeService.nodeContext.onAddNodeModel(node)
-	if nodeInfo != nil && nodeInfo.Info != nil && nodeInfo.NodeModel != nil {
+	if nodeInfo != nil && nodeInfo.Info != nil && nodeInfo.Model != nil {
 		var connNodeIdList []string
-		if nodeInfo.NodeModel.ConnServerIds != "" {
-			_ = json.Unmarshal([]byte(nodeInfo.NodeModel.ConnServerIds), &connNodeIdList)
+		if nodeInfo.Model.ConnServerIds != "" {
+			_ = json.Unmarshal([]byte(nodeInfo.Model.ConnServerIds), &connNodeIdList)
 		}
 		if util.ContainsString(connNodeIdList, node.ServerId) < 0 {
 			connNodeIdList = append(connNodeIdList, node.ServerId)
 		}
 		bs, _ := json.Marshal(connNodeIdList)
 		if bs != nil {
-			_, err = this_.NodeService.UpdateConnServerIds(nodeInfo.NodeModel.NodeId, string(bs))
+			_, err = this_.NodeService.UpdateConnServerIds(nodeInfo.Model.NodeId, string(bs))
 			if err != nil {
 				return
 			}
@@ -137,6 +143,40 @@ func (this_ *NodeApi) updateOption(_ *base.RequestBean, c *gin.Context) (res int
 	node := request.NodeModel
 
 	_, err = this_.NodeService.UpdateOption(node)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+func (this_ *NodeApi) enable(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &DeleteRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &DeleteResponse{}
+
+	_, err = this_.NodeService.Enable(request.NodeModel.NodeId, requestBean.JWT.UserId)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+func (this_ *NodeApi) disable(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &DeleteRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &DeleteResponse{}
+
+	_, err = this_.NodeService.Disable(request.NodeModel.NodeId, requestBean.JWT.UserId)
 	if err != nil {
 		return
 	}

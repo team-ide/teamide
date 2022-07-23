@@ -9,6 +9,7 @@
     :visible="showDialog"
     :before-close="hide"
     :width="width || '700px'"
+    top="40px"
   >
     <FormBox
       :source="source"

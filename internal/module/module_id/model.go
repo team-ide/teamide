@@ -51,4 +51,6 @@ const (
 
 	// IDTypeNode 节点
 	IDTypeNode = 6001
+	// IDTypeNodeNetProxy 节点
+	IDTypeNodeNetProxy = 6002
 )

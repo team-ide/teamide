@@ -19,9 +19,9 @@
         </div>
         <div
           class="workspace-header-nav"
-          @click="tool.showSwitchNodeNetProxyBox()"
+          @click="tool.showSwitchNodeNetProxyDialog()"
         >
-          隧道|代理|透传
+          网络代理|透传
           <span class="color-green mgl-2">
             (
             {{ source.nodeNetProxyCount }}
@@ -34,7 +34,7 @@
           监控
           <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
         </div>
-        <div class="workspace-header-nav" @click="tool.showSwitchNodeBox()">
+        <div class="workspace-header-nav" @click="tool.showSwitchNodeDialog()">
           节点
           <span class="color-green mgl-2">
             (
@@ -117,19 +117,19 @@
         :source="source"
         :openByToolboxId="openByToolboxId"
       ></ToolboxContext>
-      <NodeBox :source="source"></NodeBox>
-      <NodeNetProxyBox :source="source"></NodeNetProxyBox>
+      <NodeDialog :source="source"></NodeDialog>
+      <NodeNetProxyDialog :source="source"></NodeNetProxyDialog>
     </div>
   </div>
 </template>
 
 <script>
 import ToolboxContext from "./ToolboxContext";
-import NodeBox from "./NodeBox";
-import NodeNetProxyBox from "./NodeNetProxyBox";
+import NodeDialog from "./NodeDialog";
+import NodeNetProxyDialog from "./NodeNetProxyDialog";
 
 export default {
-  components: { ToolboxContext, NodeBox, NodeNetProxyBox },
+  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
