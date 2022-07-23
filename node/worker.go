@@ -101,7 +101,7 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		return ""
 	}
 	if this_.server.Id == nodeId {
-		return version
+		return util.GetVersion()
 	}
 
 	if util.ContainsString(NotifiedNodeIdList, this_.server.Id) < 0 {
@@ -121,18 +121,18 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 	msg := &Message{
 		NodeId: nodeId,
 	}
-	var version_ string
+	var version string
 	for _, pool := range callPools {
-		if version_ == "" {
+		if version == "" {
 			_ = pool.Do(func(listener *MessageListener) (e error) {
 
 				res, _ := this_.Call(listener, methodGetNode, msg)
 				if res != nil {
-					version_ = res.Version
+					version = res.Version
 				}
 				return
 			})
 		}
 	}
-	return version_
+	return version
 }

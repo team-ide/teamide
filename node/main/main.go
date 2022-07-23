@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"os"
 	"sync"
 	"teamide/node"
+	"teamide/pkg/util"
 )
 
 var (
@@ -11,7 +13,12 @@ var (
 )
 
 func main() {
-
+	for _, v := range os.Args {
+		if v == "-version" || v == "-v" {
+			println(util.GetVersion())
+			return
+		}
+	}
 	var err error
 
 	var id string

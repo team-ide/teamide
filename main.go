@@ -22,7 +22,6 @@ var (
 
 	// buildFlags go build -ldflags '-X main.buildFlags=--isServer' .
 	buildFlags  = ""
-	version     = ""
 	isServer    = false
 	isHtmlDev   = false
 	isServerDev = false
@@ -92,6 +91,10 @@ func main() {
 	}()
 
 	for _, v := range os.Args {
+		if v == "-version" || v == "-v" {
+			println(util.GetVersion())
+			return
+		}
 		if v == "--isServer" {
 			isServer = true
 		}
@@ -110,7 +113,7 @@ func main() {
 	waitGroupForStop.Add(1)
 
 	serverConf := &context.ServerConf{
-		Version:     version,
+		Version:     util.GetVersion(),
 		IsServer:    isServer,
 		IsHtmlDev:   isHtmlDev,
 		IsServerDev: isServerDev,

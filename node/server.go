@@ -8,9 +8,6 @@ import (
 	"time"
 )
 
-var (
-	version = ""
-)
 var tokenByteSize = 128
 
 type Server struct {
