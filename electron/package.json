@@ -226,7 +226,7 @@
       ]
     },
     "win": {
-      "artifactName": "${productName}-win-x64-${version}.${ext}",
+      "artifactName": "${productName}-windows-x64-${version}.${ext}",
       "target": [
         {
           "target": "nsis",

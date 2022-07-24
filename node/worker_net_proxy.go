@@ -87,17 +87,36 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 	return
 }
 
-func (this_ *Worker) doChangeNetProxyStatus(netProxyId string, status int8, statusError string) (err error) {
+func (this_ *Worker) doChangeNetProxyOuterStatus(netProxyId string, status int8, statusError string) (err error) {
 	if netProxyId == "" || status == 0 {
 		return
 	}
 	var find = this_.findNetProxy(netProxyId)
 	var findChanged = false
 	if find != nil {
-		if find.Status != status || find.StatusError != statusError {
+		if find.OuterStatus != status || find.OuterStatusError != statusError {
 			findChanged = true
-			find.Status = status
-			find.StatusError = statusError
+			find.OuterStatus = status
+			find.OuterStatusError = statusError
+		}
+	}
+	if findChanged && this_.server.OnNetProxyListChange != nil {
+		this_.server.OnNetProxyListChange(this_.cache.netProxyList)
+	}
+	return
+}
+
+func (this_ *Worker) doChangeNetProxyInnerStatus(netProxyId string, status int8, statusError string) (err error) {
+	if netProxyId == "" || status == 0 {
+		return
+	}
+	var find = this_.findNetProxy(netProxyId)
+	var findChanged = false
+	if find != nil {
+		if find.InnerStatus != status || find.InnerStatusError != statusError {
+			findChanged = true
+			find.InnerStatus = status
+			find.InnerStatusError = statusError
 		}
 	}
 	if findChanged && this_.server.OnNetProxyListChange != nil {

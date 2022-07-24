@@ -18,6 +18,11 @@ type OuterListener struct {
 func (this_ *OuterListener) Start() {
 	this_.connCache = make(map[string]net.Conn)
 
+	this_.notifyAll(&Message{
+		NetProxyId:               this_.netProxy.Id,
+		NetProxyOuterStatus:      StatusStarted,
+		NetProxyOuterStatusError: "",
+	})
 	return
 }
 func (this_ *OuterListener) Stop() {
@@ -29,6 +34,12 @@ func (this_ *OuterListener) Stop() {
 		_ = conn.Close()
 	}
 	this_.connCache = make(map[string]net.Conn)
+
+	this_.notifyAll(&Message{
+		NetProxyId:               this_.netProxy.Id,
+		NetProxyOuterStatus:      StatusStopped,
+		NetProxyOuterStatusError: "",
+	})
 	return
 }
 
@@ -39,14 +50,14 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 	this_.connCacheLock.Lock()
 	defer this_.connCacheLock.Unlock()
 
-	Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
+	//Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
 
 	conn, err := net.Dial(this_.netProxy.Outer.GetType(), this_.netProxy.Outer.GetAddress())
 	if err != nil {
 		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
 		return
 	}
-	Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
+	//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
 	this_.connCache[connId] = conn
 	go func() {
 		var netProxyId = this_.netProxy.Id

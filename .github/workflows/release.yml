@@ -246,7 +246,7 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --win
-          move release/build/TeamIDE-win-x64-1.0.0.exe ../release/TeamIDE-win-x64.exe
+          move release/build/TeamIDE-windows-x64-1.0.0.exe ../release/TeamIDE-windows-x64.exe
           move teamide-windows-x64.exe ../release/teamide-windows-x64/teamide.exe
 
       # 上传共享资源
@@ -331,8 +331,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/TeamIDE-win-x64.exe
-          asset_name: TeamIDE-win-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
+          asset_path: release/TeamIDE-windows-x64.exe
+          asset_name: TeamIDE-windows-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master

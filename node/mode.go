@@ -68,8 +68,10 @@ type NetProxy struct {
 	Outer                 *NetConfig `json:"outer,omitempty"`
 	LineNodeIdList        []string   `json:"lineNodeIdList,omitempty"`
 	ReverseLineNodeIdList []string   `json:"reverseLineNodeIdList,omitempty"`
-	Status                int8       `json:"status,omitempty"`
-	StatusError           string     `json:"statusError,omitempty"`
+	InnerStatus           int8       `json:"innerStatus,omitempty"`
+	InnerStatusError      string     `json:"innerStatusError,omitempty"`
+	OuterStatus           int8       `json:"outerStatus,omitempty"`
+	OuterStatusError      string     `json:"outerStatusError,omitempty"`
 	Enabled               int8       `json:"enabled,omitempty"`
 }
 

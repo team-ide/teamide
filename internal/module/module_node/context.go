@@ -51,9 +51,10 @@ type NodeContext struct {
 }
 
 type NetProxyInfo struct {
-	Info      *node.NetProxy `json:"info,omitempty"`
-	Model     *NetProxyModel `json:"model,omitempty"`
-	IsStarted bool           `json:"isStarted,omitempty"`
+	Info           *node.NetProxy `json:"info,omitempty"`
+	Model          *NetProxyModel `json:"model,omitempty"`
+	InnerIsStarted bool           `json:"innerIsStarted,omitempty"`
+	OuterIsStarted bool           `json:"outerIsStarted,omitempty"`
 }
 
 func (this_ *NodeContext) initContext() (err error) {

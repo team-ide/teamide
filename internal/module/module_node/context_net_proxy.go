@@ -246,9 +246,10 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 			}
 		}
 		netProxyInfo := &NetProxyInfo{
-			Info:      one,
-			IsStarted: one.Status == node.StatusStarted,
-			Model:     this_.getNetProxyModelByCode(one.Id),
+			Info:           one,
+			InnerIsStarted: one.InnerStatus == node.StatusStarted,
+			OuterIsStarted: one.OuterStatus == node.StatusStarted,
+			Model:          this_.getNetProxyModelByCode(one.Id),
 		}
 		netProxyInfoList = append(netProxyInfoList, netProxyInfo)
 	}

@@ -1,6 +1,7 @@
 package module_node
 
 import (
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"strings"
@@ -49,9 +50,62 @@ func (this_ *NodeService) QueryNetProxy(netProxy *NetProxyModel) (res []*NetProx
 	return
 }
 
+// CheckNetProxyNameExist 查询
+func (this_ *NodeService) CheckNetProxyNameExist(name string) (res bool, err error) {
+
+	sql := `SELECT COUNT(1) FROM ` + TableNodeNetProxy + ` WHERE deleted=2 AND (name = ?)`
+
+	count, err := this_.DatabaseWorker.Count(sql, []interface{}{name})
+	if err != nil {
+		this_.Logger.Error("CheckNetProxyNameExist Error", zap.Error(err))
+		return
+	}
+
+	res = count > 0
+
+	return
+}
+
+// CheckServerBindAddressExist 查询
+func (this_ *NodeService) CheckServerBindAddressExist(serverId string, bindAddress string) (res bool, err error) {
+	lastIndex := strings.LastIndex(bindAddress, ":")
+	if lastIndex < 0 || lastIndex == len(bindAddress)-1 {
+		err = errors.New(fmt.Sprint("网络代理[", bindAddress, "]配置有误"))
+		return
+	}
+	endStr := bindAddress[lastIndex:]
+
+	sql := `SELECT COUNT(1) FROM ` + TableNodeNetProxy + ` WHERE deleted=2 AND (innerServerId = ? AND innerAddress LIKE ?)`
+
+	count, err := this_.DatabaseWorker.Count(sql, []interface{}{serverId, "%" + endStr})
+	if err != nil {
+		this_.Logger.Error("CheckServerBindAddressExist Error", zap.Error(err))
+		return
+	}
+
+	res = count > 0
+
+	return
+}
+
 // InsertNetProxy 新增
 func (this_ *NodeService) InsertNetProxy(netProxy *NetProxyModel) (rowsAffected int64, err error) {
-
+	checked, err := this_.CheckNetProxyNameExist(netProxy.Name)
+	if err != nil {
+		return
+	}
+	if checked {
+		err = errors.New(fmt.Sprint("网络代理[", netProxy.Name, "]已存在"))
+		return
+	}
+	checked, err = this_.CheckServerBindAddressExist(netProxy.InnerServerId, netProxy.InnerAddress)
+	if err != nil {
+		return
+	}
+	if checked {
+		err = errors.New(fmt.Sprint("网络代理[", netProxy.InnerAddress, "]冲突"))
+		return
+	}
 	if netProxy.NetProxyId == 0 {
 		netProxy.NetProxyId, err = this_.idService.GetNextID(module_id.IDTypeNodeNetProxy)
 		if err != nil {

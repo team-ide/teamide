@@ -59,7 +59,20 @@
                           null
                         "
                       >
-                        节点:<span class="pdl-10">
+                        节点:<span
+                          class="pdl-10"
+                          :class="{
+                            'color-green':
+                              source.nodeOptionMap[
+                                scope.row.model.innerServerId
+                              ].isStarted,
+
+                            'color-red':
+                              !source.nodeOptionMap[
+                                scope.row.model.innerServerId
+                              ].isStarted,
+                          }"
+                        >
                           {{
                             source.nodeOptionMap[scope.row.model.innerServerId]
                               .text
@@ -73,14 +86,23 @@
                       </template>
                     </div>
                     <div class="">
-                      类型:<span class="pdl-10">{{
-                        scope.row.model.innerType
-                      }}</span>
+                      类型:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.innerType }}
+                      </span>
                     </div>
                     <div class="">
-                      地址:<span class="pdl-10">{{
-                        scope.row.model.innerAddress
-                      }}</span>
+                      地址:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.innerAddress }}
+                      </span>
+                    </div>
+                    <div class="">
+                      状态:
+                      <template v-if="scope.row.innerIsStarted">
+                        <span class="pdl-10 color-green"> 启动中 </span>
+                      </template>
+                      <template v-else>
+                        <span class="pdl-10 color-red"> 已停止 </span>
+                      </template>
                     </div>
                   </div>
                 </template>
@@ -95,7 +117,20 @@
                           null
                         "
                       >
-                        节点:<span class="pdl-10">
+                        节点:<span
+                          class="pdl-10"
+                          :class="{
+                            'color-green':
+                              source.nodeOptionMap[
+                                scope.row.model.outerServerId
+                              ].isStarted,
+
+                            'color-red':
+                              !source.nodeOptionMap[
+                                scope.row.model.outerServerId
+                              ].isStarted,
+                          }"
+                        >
                           {{
                             source.nodeOptionMap[scope.row.model.outerServerId]
                               .text
@@ -109,27 +144,22 @@
                       </template>
                     </div>
                     <div class="">
-                      类型:<span class="pdl-10">{{
-                        scope.row.model.outerType
-                      }}</span>
+                      类型:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.outerType }}
+                      </span>
                     </div>
                     <div class="">
-                      地址:<span class="pdl-10">{{
-                        scope.row.model.outerAddress
-                      }}</span>
+                      地址:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.outerAddress }}
+                      </span>
                     </div>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column label="启动状态" width="100">
-                <template slot-scope="scope">
-                  <div class="text-left pd-5">
                     <div class="">
-                      <template v-if="scope.row.isStarted">
-                        <span class="color-green"> 启动中 </span>
+                      状态:
+                      <template v-if="scope.row.outerIsStarted">
+                        <span class="pdl-10 color-green"> 启动中 </span>
                       </template>
                       <template v-else>
-                        <span class="color-red"> 已停止 </span>
+                        <span class="pdl-10 color-red"> 已停止 </span>
                       </template>
                     </div>
                   </div>

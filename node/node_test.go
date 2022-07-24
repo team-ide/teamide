@@ -118,7 +118,7 @@ func TestNodeLine(t *testing.T) {
 		panic(err)
 	}
 
-	line := server.GetNodeLineByFromTo("node-2", "node-9")
+	line := server.GetNodeLineByFromTo("node-2", "node-9", nil)
 	println("节点线:", fmt.Sprint(line))
 
 }

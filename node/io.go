@@ -16,36 +16,38 @@ var (
 )
 
 type Message struct {
-	Id                   string      `json:"id,omitempty"`
-	Method               int         `json:"method,omitempty"`
-	Error                string      `json:"error,omitempty"`
-	Ok                   bool        `json:"ok,omitempty"`
-	NotifyChildren       bool        `json:"notifyChildren,omitempty"`
-	NotifyParent         bool        `json:"notifyParent,omitempty"`
-	NotifyAll            bool        `json:"notifyAll,omitempty"`
-	NodeId               string      `json:"nodeId,omitempty"`
-	NodeIdList           []string    `json:"nodeIdList,omitempty"`
-	RemoveNodeIdList     []string    `json:"removeNodeIdList,omitempty"`
-	NotifiedNodeIdList   []string    `json:"notifiedNodeIdList,omitempty"`
-	RemoveConnNodeIdList []string    `json:"removeConnNodeIdList,omitempty"`
-	Node                 *Info       `json:"node,omitempty"`
-	NodeList             []*Info     `json:"nodeList,omitempty"`
-	NetProxyId           string      `json:"netProxyId,omitempty"`
-	NetProxyIdList       []string    `json:"netProxyIdList,omitempty"`
-	RemoveNetProxyIdList []string    `json:"removeNetProxyIdList,omitempty"`
-	ConnId               string      `json:"connId,omitempty"`
-	IsReverse            bool        `json:"isReverse,omitempty"`
-	LineNodeIdList       []string    `json:"lineNodeIdList,omitempty"`
-	NetProxy             *NetProxy   `json:"netProxy,omitempty"`
-	NetProxyList         []*NetProxy `json:"netProxyList,omitempty"`
-	Bytes                []byte      `json:"bytes,omitempty"`
-	ClientIndex          int         `json:"clientIndex,omitempty"`
-	NodeStatus           int8        `json:"nodeStatus,omitempty"`
-	NodeStatusError      string      `json:"nodeStatusError,omitempty"`
-	NetProxyStatus       int8        `json:"netProxyStatus,omitempty"`
-	NetProxyStatusError  string      `json:"netProxyStatusError,omitempty"`
-	Version              string      `json:"version,omitempty"`
-	listener             *MessageListener
+	Id                       string      `json:"id,omitempty"`
+	Method                   int         `json:"method,omitempty"`
+	Error                    string      `json:"error,omitempty"`
+	Ok                       bool        `json:"ok,omitempty"`
+	NotifyChildren           bool        `json:"notifyChildren,omitempty"`
+	NotifyParent             bool        `json:"notifyParent,omitempty"`
+	NotifyAll                bool        `json:"notifyAll,omitempty"`
+	NodeId                   string      `json:"nodeId,omitempty"`
+	NodeIdList               []string    `json:"nodeIdList,omitempty"`
+	RemoveNodeIdList         []string    `json:"removeNodeIdList,omitempty"`
+	NotifiedNodeIdList       []string    `json:"notifiedNodeIdList,omitempty"`
+	RemoveConnNodeIdList     []string    `json:"removeConnNodeIdList,omitempty"`
+	Node                     *Info       `json:"node,omitempty"`
+	NodeList                 []*Info     `json:"nodeList,omitempty"`
+	NetProxyId               string      `json:"netProxyId,omitempty"`
+	NetProxyIdList           []string    `json:"netProxyIdList,omitempty"`
+	RemoveNetProxyIdList     []string    `json:"removeNetProxyIdList,omitempty"`
+	ConnId                   string      `json:"connId,omitempty"`
+	IsReverse                bool        `json:"isReverse,omitempty"`
+	LineNodeIdList           []string    `json:"lineNodeIdList,omitempty"`
+	NetProxy                 *NetProxy   `json:"netProxy,omitempty"`
+	NetProxyList             []*NetProxy `json:"netProxyList,omitempty"`
+	Bytes                    []byte      `json:"bytes,omitempty"`
+	ClientIndex              int         `json:"clientIndex,omitempty"`
+	NodeStatus               int8        `json:"nodeStatus,omitempty"`
+	NodeStatusError          string      `json:"nodeStatusError,omitempty"`
+	NetProxyInnerStatus      int8        `json:"netProxyInnerStatus,omitempty"`
+	NetProxyInnerStatusError string      `json:"netProxyInnerStatusError,omitempty"`
+	NetProxyOuterStatus      int8        `json:"netProxyOuterStatus,omitempty"`
+	NetProxyOuterStatusError string      `json:"netProxyOuterStatusError,omitempty"`
+	Version                  string      `json:"version,omitempty"`
+	listener                 *MessageListener
 }
 
 func (this_ *Message) ReturnError(error string) (err error) {

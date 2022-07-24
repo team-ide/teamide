@@ -161,6 +161,7 @@ func (this_ *NodeContext) onEnableNodeModel(id int64) {
 			BindAddress: nodeModel.BindAddress,
 			ConnAddress: nodeModel.ConnAddress,
 			ConnToken:   nodeModel.ConnToken,
+			Enabled:     nodeModel.Enabled,
 		},
 	})
 }
@@ -180,6 +181,7 @@ func (this_ *NodeContext) onDisableNodeModel(id int64) {
 			BindAddress: nodeModel.BindAddress,
 			ConnAddress: nodeModel.ConnAddress,
 			ConnToken:   nodeModel.ConnToken,
+			Enabled:     nodeModel.Enabled,
 		},
 	})
 }
@@ -220,8 +222,11 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 			if err != nil {
 				find = nil
 			} else {
-				this_.setNodeModel(find.NodeId, find)
-				this_.setNodeModelByServerId(one.Id, find)
+				find, _ = this_.nodeService.Get(find.NodeId)
+				if find != nil {
+					this_.setNodeModel(find.NodeId, find)
+					this_.setNodeModelByServerId(one.Id, find)
+				}
 			}
 		} else {
 			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)

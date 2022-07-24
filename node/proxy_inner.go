@@ -50,9 +50,9 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 	}
 	defer func() {
 		this_.notifyAll(&Message{
-			NetProxyId:          this_.netProxy.Id,
-			NetProxyStatus:      StatusStopped,
-			NetProxyStatusError: "",
+			NetProxyId:               this_.netProxy.Id,
+			NetProxyInnerStatus:      StatusStopped,
+			NetProxyInnerStatusError: "",
 		})
 		if !this_.isStopped() {
 			return
@@ -60,24 +60,25 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		time.Sleep(5 * time.Second)
 		go this_.serverListenerKeepAlive()
 	}()
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
 	var err error
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
+
 	this_.serverListener, err = net.Listen(this_.netProxy.Inner.GetType(), this_.netProxy.Inner.GetAddress())
 	if err != nil {
 		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
 
 		this_.notifyAll(&Message{
-			NetProxyId:          this_.netProxy.Id,
-			NetProxyStatus:      StatusError,
-			NetProxyStatusError: err.Error(),
+			NetProxyId:               this_.netProxy.Id,
+			NetProxyInnerStatus:      StatusError,
+			NetProxyInnerStatusError: err.Error(),
 		})
 		return
 	}
 	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
 	this_.notifyAll(&Message{
-		NetProxyId:          this_.netProxy.Id,
-		NetProxyStatus:      StatusStarted,
-		NetProxyStatusError: "",
+		NetProxyId:               this_.netProxy.Id,
+		NetProxyInnerStatus:      StatusStarted,
+		NetProxyInnerStatusError: "",
 	})
 	for {
 		var conn net.Conn
@@ -95,7 +96,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 }
 
 func (this_ *InnerServer) onConn(conn net.Conn) {
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 新连接")
+	//Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 新连接")
 	var connId = util.UUID()
 	var netProxyId = this_.netProxy.Id
 	this_.setConn(connId, conn)

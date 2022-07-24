@@ -22,8 +22,11 @@ func (this_ *Worker) notifyDo(msg *Message) {
 	if msg.NodeId != "" && msg.NodeStatus > 0 {
 		_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
 	}
-	if msg.NetProxyId != "" && msg.NetProxyStatus > 0 {
-		_ = this_.doChangeNetProxyStatus(msg.NetProxyId, msg.NetProxyStatus, msg.NetProxyStatusError)
+	if msg.NetProxyId != "" && msg.NetProxyInnerStatus > 0 {
+		_ = this_.doChangeNetProxyInnerStatus(msg.NetProxyId, msg.NetProxyInnerStatus, msg.NetProxyInnerStatusError)
+	}
+	if msg.NetProxyId != "" && msg.NetProxyOuterStatus > 0 {
+		_ = this_.doChangeNetProxyOuterStatus(msg.NetProxyId, msg.NetProxyOuterStatus, msg.NetProxyOuterStatusError)
 	}
 	if msg.NodeId != "" && len(msg.RemoveConnNodeIdList) > 0 {
 		_ = this_.doRemoveNodeConnNodeIdList(msg.NodeId, msg.RemoveConnNodeIdList)

@@ -243,7 +243,7 @@ func (this_ *Worker) refreshNodeList() {
 		//	}
 		//	continue
 		//}
-		if pool == nil && find.IsEnabled() {
+		if pool == nil { //  && find.IsEnabled()
 			if find != nil && find.ConnAddress != "" {
 				this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
 			}

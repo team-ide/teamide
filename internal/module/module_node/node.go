@@ -70,14 +70,14 @@ func (this_ *NodeService) Query(node *NodeModel) (res []*NodeModel, err error) {
 	return
 }
 
-// CheckUserNodeNameExist 查询
-func (this_ *NodeService) CheckUserNodeNameExist(name string) (res bool, err error) {
+// CheckNodeNameExist 查询
+func (this_ *NodeService) CheckNodeNameExist(name string) (res bool, err error) {
 
 	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (name = ?)`
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{name})
 	if err != nil {
-		this_.Logger.Error("CheckUserNodeNameExist Error", zap.Error(err))
+		this_.Logger.Error("CheckNodeNameExist Error", zap.Error(err))
 		return
 	}
 
@@ -86,14 +86,14 @@ func (this_ *NodeService) CheckUserNodeNameExist(name string) (res bool, err err
 	return
 }
 
-// CheckUserNodeServerIdExist 查询
-func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string) (res bool, err error) {
+// CheckNodeServerIdExist 查询
+func (this_ *NodeService) CheckNodeServerIdExist(nodeServerId string) (res bool, err error) {
 
 	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (serverId = ?)`
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{nodeServerId})
 	if err != nil {
-		this_.Logger.Error("CheckUserNodeServerIdExist Error", zap.Error(err))
+		this_.Logger.Error("CheckNodeServerIdExist Error", zap.Error(err))
 		return
 	}
 
@@ -105,12 +105,18 @@ func (this_ *NodeService) CheckUserNodeServerIdExist(nodeServerId string) (res b
 // Insert 新增
 func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error) {
 
-	checked, err := this_.CheckUserNodeNameExist(node.Name)
+	checked, err := this_.CheckNodeNameExist(node.Name)
+	if err != nil {
+		return
+	}
 	if checked {
 		err = errors.New(fmt.Sprint("节点名称[", node.Name, "]已存在"))
 		return
 	}
-	checked, err = this_.CheckUserNodeServerIdExist(node.ServerId)
+	checked, err = this_.CheckNodeServerIdExist(node.ServerId)
+	if err != nil {
+		return
+	}
 	if checked {
 		err = errors.New(fmt.Sprint("节点服务[", node.ServerId, "]已存在"))
 		return

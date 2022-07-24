@@ -450,7 +450,7 @@ source.initNodeNetProxyList = (nodeNetProxyList) => {
     source.nodeNetProxyCount = nodeNetProxyList.length;
     let nodeNetProxySuccessCount = 0
     nodeNetProxyList.forEach(one => {
-        if (one.isStarted) {
+        if (one.innerIsStarted && one.outerIsStarted) {
             nodeNetProxySuccessCount++;
         }
     });
