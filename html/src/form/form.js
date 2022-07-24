@@ -246,10 +246,12 @@ let node = {
         ],
     },
     netProxy: {
+        labelWidth: "140px",
         fields: [
             {
                 label: "名称",
                 name: "name",
+                columnSize: 6,
                 rules: [
                     {
                         required: true,
@@ -261,12 +263,14 @@ let node = {
             {
                 label: "说明",
                 name: "comment",
+                columnSize: 6,
                 rules: [
                 ],
             },
             {
                 label: "输入端节点",
                 name: "innerServerId",
+                columnSize: 4,
                 type: "select",
                 options: nodeOptions,
                 rules: [
@@ -280,6 +284,7 @@ let node = {
             {
                 label: "输入端类型",
                 name: "innerType",
+                columnSize: 4,
                 type: "select",
                 options: netProxyNetTypes,
                 defaultValue: "tcp",
@@ -294,6 +299,7 @@ let node = {
             {
                 label: "输入端绑定地址",
                 name: "innerAddress",
+                columnSize: 4,
                 rules: [
                     {
                         required: true,
@@ -305,6 +311,7 @@ let node = {
             {
                 label: "输出端节点",
                 name: "outerServerId",
+                columnSize: 4,
                 type: "select",
                 options: nodeOptions,
                 rules: [
@@ -318,6 +325,7 @@ let node = {
             {
                 label: "输出端类型",
                 name: "outerType",
+                columnSize: 4,
                 type: "select",
                 options: netProxyNetTypes,
                 defaultValue: "tcp",
@@ -332,6 +340,7 @@ let node = {
             {
                 label: "输出端绑定地址",
                 name: "outerAddress",
+                columnSize: 4,
                 rules: [
                     {
                         required: true,

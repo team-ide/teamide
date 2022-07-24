@@ -387,6 +387,9 @@ export default {
 </script>
 
 <style>
+.node-context-dialog {
+  top: 30px !important;
+}
 .node-context-dialog .el-dialog {
   background: #0f1b26;
   color: #ffffff;

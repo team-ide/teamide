@@ -1,5 +1,10 @@
 <template>
-  <el-form v-if="ready" size="mini" @submit.native.prevent>
+  <el-form
+    v-if="ready"
+    size="mini"
+    @submit.native.prevent
+    :label-width="`${formBuild.labelWidth}`"
+  >
     <template
       v-if="
         key != null &&
@@ -16,6 +21,8 @@
               :placeholder="field.placeholder"
               :required="field.required"
               style="width: 100%"
+              clearable
+              filterable
             >
               <el-option
                 v-for="(one, index) in field.options"

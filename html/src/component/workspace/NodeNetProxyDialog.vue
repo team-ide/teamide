@@ -44,14 +44,14 @@
               </el-table-column>
               <el-table-column label="名称" width="200">
                 <template slot-scope="scope">
-                  <div class="">
+                  <div class="" v-if="scope.row.model != null">
                     {{ scope.row.model.name }}
                   </div>
                 </template>
               </el-table-column>
               <el-table-column label="输入端">
                 <template slot-scope="scope">
-                  <div class="text-left pd-5">
+                  <div class="text-left pd-5" v-if="scope.row.model != null">
                     <div class="">
                       <template
                         v-if="
@@ -109,7 +109,7 @@
               </el-table-column>
               <el-table-column label="输出端">
                 <template slot-scope="scope">
-                  <div class="text-left pd-5">
+                  <div class="text-left pd-5" v-if="scope.row.model != null">
                     <div class="">
                       <template
                         v-if="
@@ -167,7 +167,7 @@
               </el-table-column>
               <el-table-column label="状态" width="100">
                 <template slot-scope="scope">
-                  <div class="text-left pd-5">
+                  <div class="text-left pd-5" v-if="scope.row.model != null">
                     <div class="">
                       <template v-if="scope.row.model.enabled == 1">
                         <span class="color-green"> 启用 </span>
@@ -180,7 +180,7 @@
                 </template>
               </el-table-column>
               <el-table-column label="操作" width="200">
-                <template slot-scope="scope">
+                <template slot-scope="scope" v-if="scope.row.model != null">
                   <div
                     class="tm-link color-orange mgl-5"
                     v-if="scope.row.model.enabled == 1"
@@ -418,6 +418,9 @@ export default {
 </script>
 
 <style>
+.node-net-proxy-dialog {
+  top: 30px !important;
+}
 .node-net-proxy-dialog .el-dialog {
   background: #0f1b26;
   color: #ffffff;

@@ -164,9 +164,6 @@ export default {
       }
       this.initDataed = true;
       this.initSocket();
-      this.source.initUserToolboxData();
-      this.source.initNodeContext();
-      this.initOpens();
     },
     onMessage(message) {
       if (this.tool.isEmpty(message)) {
@@ -182,6 +179,13 @@ export default {
           this.source.initNodeNetProxyList(nodeNetProxyList);
         }
       } catch (error) {}
+    },
+    onEvent(event) {
+      if (event == "socket open") {
+        this.source.initUserToolboxData();
+        this.source.initNodeContext();
+        this.initOpens();
+      }
     },
     initSocket() {
       let obj = this;

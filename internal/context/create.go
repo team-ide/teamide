@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"teamide/internal/config"
+	"teamide/node"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 )
@@ -179,6 +180,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 	util.Logger = this_.Logger
 	util.TempDir = serverConfig.Server.TempDir
+	node.Logger = this_.Logger
 
 	err = db.CheckColumnType()
 	if err != nil {
