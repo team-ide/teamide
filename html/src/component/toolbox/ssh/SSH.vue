@@ -250,11 +250,20 @@ export default {
         delete this.startIng;
         this.$nextTick(() => {
           this.initAttachAddon();
-          this.tool.success("SSH会话连接中成功");
+          // this.tool.success("SSH会话连接成功");
+        });
+      } else if (event == "shell create error") {
+        this.sshSessionClosed = true;
+        delete this.startIng;
+        this.term.write("\r\nSSH创建失败，输入回车重新连接！");
+        this.$nextTick(() => {
+          this.initAttachAddon();
+          // this.tool.error("SSH会话连接失败");
         });
       } else if (event == "ssh session closed") {
+        delete this.startIng;
         this.sshSessionClosed = true;
-        this.term.write("SSH会话已关闭，输入回车重新连接！");
+        this.term.write("\r\nSSH会话已关闭，输入回车重新连接！");
       } else if (event == "shell to upload file") {
       }
     },

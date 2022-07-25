@@ -152,7 +152,7 @@ func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
 		this_.WSWriteError("SSH Shell创建失败:" + err.Error())
 		return
 	}
-
+	this_.shellOK = true
 	var errReader io.Reader
 	errReader, err = this_.shellSession.StderrPipe()
 	go func() {
@@ -230,15 +230,16 @@ func (this_ *ShellClient) onEvent(event string) {
 		}()
 		for {
 			time.Sleep(100 * time.Millisecond)
-			if err == nil || this_.shellOK {
+			if err != nil || this_.shellOK {
 				break
 			}
 		}
 		if err != nil {
+			this_.WSWriteEvent("shell create error")
 			return
 		}
+		//time.Sleep(1000 * time.Millisecond)
 		this_.WSWriteEvent("shell created")
-		time.Sleep(1000 * time.Millisecond)
 		this_.startReadChannel = true
 		return
 	} else if strings.HasPrefix(event, "change size") {

@@ -69,11 +69,21 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 			this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
 		} else {
 			Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
-			if netProxy.IsEnabled() && find.IsEnabled() {
-				find.Enabled = netProxy.Enabled
-			} else {
-				find.Enabled = netProxy.Enabled
+			if netProxy.InnerStatus != 0 && netProxy.InnerStatus != find.InnerStatus {
+				find.InnerStatus = netProxy.InnerStatus
 				findChanged = true
+			}
+			if netProxy.OuterStatus != 0 && netProxy.OuterStatus != find.OuterStatus {
+				find.OuterStatus = netProxy.OuterStatus
+				findChanged = true
+			}
+			if netProxy.Enabled != 0 {
+				if netProxy.IsEnabled() && find.IsEnabled() {
+					find.Enabled = netProxy.Enabled
+				} else {
+					find.Enabled = netProxy.Enabled
+					findChanged = true
+				}
 			}
 		}
 	}
