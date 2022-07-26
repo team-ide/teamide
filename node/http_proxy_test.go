@@ -1,93 +1,14 @@
 package node
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"crypto/tls"
+	"io"
 	"net"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"testing"
-	"time"
 )
-
-var (
-	projectDir, _              = os.Getwd()
-	fileName                   = projectDir + "/domain.config"
-	readFileTime    int64      = 0 //读取文件的时间
-	fileChangedTime int64      = 0 //文件修改时间
-	domainData      [][]string     //[{***.gq,8080,http://127.0.0.1:8080/}]
-	duPeiZhiSuo     sync.Mutex     //读配置锁
-)
-
-// 获取反向代理域名
-func getProxyUrl(reqDomain string) string {
-	checkFile()
-	for _, dms := range domainData {
-		if strings.Index(reqDomain, dms[0]) >= 0 {
-			return dms[2]
-		}
-	}
-	return domainData[0][2]
-}
-
-//读取配置文件
-
-//域名:端口号，未知域名默认用第一个
-
-func checkFile() {
-	nowTime := time.Now().Unix()
-	if nowTime-readFileTime < 300 {
-		return
-	}
-	//每5分钟判断文件是否修改
-	domainFile, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0)
-	info, _ := domainFile.Stat()
-	if info.ModTime().Unix() == fileChangedTime {
-		return
-	}
-	duPeiZhiSuo.Lock()
-	defer duPeiZhiSuo.Unlock()
-	domainFile, _ = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND, 0) //加锁再来一遍，防止重入
-	info, _ = domainFile.Stat()
-	changedTime := info.ModTime().Unix()
-	if changedTime == fileChangedTime {
-		return
-	}
-
-	//文件改变
-	//重置数据
-	readFileTime = nowTime
-	fileChangedTime = changedTime
-	domainData = [][]string{}
-	bytes, _ := ioutil.ReadFile(fileName)
-	split := strings.Split(string(bytes), "\n")
-	for _, domainInfo := range split {
-		dLen := len(domainInfo)
-		if dLen < 8 || dLen > 20 { //忽略错误信息
-			continue
-		}
-		domainItems := strings.Split(domainInfo, ":")
-		if len(domainItems) != 2 || len(domainItems[0]) < 3 || len(domainItems[1]) < 2 {
-			continue
-		}
-
-		if strings.HasSuffix(domainItems[1], "/") {
-			domainItems = append(domainItems, "http://127.0.0.1:"+domainItems[1])
-		} else {
-			domainItems = append(domainItems, "http://127.0.0.1:"+domainItems[1]+"/")
-
-		}
-		domainData = append(domainData, domainItems)
-	}
-	domainSt, _ := json.Marshal(domainData)
-
-	println("配置已修改：" + string(domainSt))
-
-}
 
 //获取主机名
 
@@ -102,26 +23,131 @@ func getHost(req *http.Request) string {
 
 }
 
+var (
+	testClient = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				CipherSuites: []uint16{
+					tls.TLS_RSA_WITH_RC4_128_SHA,
+					tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+					tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+					tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				},
+			},
+		},
+	}
+	bindUrl   = "http://127.0.0.1:8081"
+	bindHost  = "127.0.0.1:8081"
+	proxyUrl  = "https://www.baidu.com"
+	proxyHost = "www.baidu.com"
+)
+
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
-	host := getHost(req)
-	proxyUrl := getProxyUrl(host)
-	url2, _ := url.Parse(proxyUrl)
-	println("请求域名：" + host + "，转到：" + proxyUrl)
-	// create the reverse proxy
-	proxy := httputil.NewSingleHostReverseProxy(url2)
-	// Update the headers to allow for SSL redirection
-	req.URL.Host = url2.Host
-	req.URL.Scheme = url2.Scheme
-	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
-	req.Host = url2.Host
-	// Note that ServeHttp is non blocking and uses a go routine under the hood
-	proxy.ServeHTTP(res, req)
+	//host := getHost(req)
+	println("请求域名：" + bindUrl + "，转到：" + proxyUrl)
+
+	header := req.Header
+	requestPath := req.RequestURI
+	println("requestPath:", requestPath)
+	println("proxyUrl:", proxyUrl+requestPath)
+	toReq, err := http.NewRequest(req.Method, proxyUrl+requestPath, nil)
+	if err != nil {
+		panic(err)
+	}
+	//toReq.Header.Set(":authority", "192.168.6.160")
+	//toReq.Header.Set(":method", req.Method)
+	//toReq.Header.Set(":scheme", "https")
+	//toReq.Header.Set(":path", req.RequestURI)
+	cs := req.Cookies()
+	for _, c := range cs {
+		toReq.AddCookie(c)
+	}
+	for key, value := range header {
+		for _, v := range value {
+			if strings.ToLower(key) == "content-length" {
+				continue
+			}
+			//if key == "Connection" {
+			//	continue
+			//}
+			v = strings.ReplaceAll(v, bindUrl, proxyUrl)
+			v = strings.ReplaceAll(v, bindHost, proxyHost)
+			req.Header.Set(key, v)
+			if requestPath == "/users/sign_in" {
+				println("request header set key:", key, ",value:", v)
+			}
+		}
+	}
+	req.Header.Add("X-Forwarded-Host", proxyHost)
+
+	_ = req.ParseMultipartForm(1024 * 1024 * 1024)
+	if requestPath == "/users/sign_in" {
+		println(req.Method)
+		println(req.Form)
+		println(req.PostForm)
+		println(req.MultipartForm)
+		println(req.Body)
+	}
+	if req.PostForm != nil {
+		toReq.PostForm = req.PostForm
+	}
+	if req.Form != nil {
+		toReq.Form = req.Form
+	}
+	toReq.MultipartForm = req.MultipartForm
+	toReq.Body = req.Body
+	toReq.Host = proxyHost
+
+	req.RequestURI = ""
+	req.URL = toReq.URL
+
+	toRes, err := testClient.Do(toReq)
+
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = toRes.Body.Close()
+	}()
+	resHeader := res.Header()
+
+	for key, value := range toRes.Header {
+		for _, v := range value {
+			if strings.ToLower(key) == "content-length" {
+				continue
+			}
+			v = strings.ReplaceAll(v, bindUrl, proxyUrl)
+			v = strings.ReplaceAll(v, bindHost, proxyHost)
+			resHeader.Set(key, v)
+			if requestPath == "/users/sign_in" {
+				println("response header set key:", key, ",value:", v)
+			}
+		}
+	}
+	res.WriteHeader(toRes.StatusCode)
+	_, err = io.Copy(res, toRes.Body)
+
+	if err != nil {
+		panic(err)
+	}
+	//url2, _ := url.Parse(proxyUrl)
+	//// create the reverse proxy
+	//proxy := httputil.NewSingleHostReverseProxy(url2)
+	//// Update the headers to allow for SSL redirection
+	//req.URL.Host = url2.Host
+	//req.URL.Scheme = url2.Scheme
+	//req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+	//req.Host = url2.Host
+	//// Note that ServeHttp is non blocking and uses a go routine under the hood
+	//proxy.ServeHTTP(res, req)
 
 }
 
 func TestHttpProxy(t *testing.T) {
 	http.HandleFunc("/", handleRequestAndRedirect)
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":8081", nil); err != nil {
 		println("Proxy监听80端口错误：" + err.Error())
 		panic(err)
 	}
