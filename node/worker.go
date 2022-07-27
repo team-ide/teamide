@@ -3,8 +3,9 @@ package node
 import "teamide/pkg/util"
 
 type Worker struct {
-	server *Server
-	cache  *Cache
+	server      *Server
+	cache       *Cache
+	MonitorData *MonitorData
 }
 
 func (this_ *Worker) Stop() {

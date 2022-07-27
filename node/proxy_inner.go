@@ -4,7 +4,6 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net"
-	"sync"
 	"teamide/pkg/util"
 	"time"
 )
@@ -13,13 +12,14 @@ type InnerServer struct {
 	netProxy *NetProxy
 	isStop   bool
 	*Worker
-	connCache      map[string]net.Conn
-	connCacheLock  sync.Mutex
+	*connCache
 	serverListener net.Listener
+	MonitorData    *MonitorData
 }
 
 func (this_ *InnerServer) Start() {
-	this_.connCache = make(map[string]net.Conn)
+	this_.MonitorData = &MonitorData{}
+	this_.connCache = newConnCache(this_.MonitorData)
 
 	go this_.serverListenerKeepAlive()
 
@@ -28,15 +28,8 @@ func (this_ *InnerServer) Start() {
 
 func (this_ *InnerServer) Stop() {
 	this_.isStop = true
-
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
 	_ = this_.serverListener.Close()
-
-	for _, conn := range this_.connCache {
-		_ = conn.Close()
-	}
-	this_.connCache = make(map[string]net.Conn)
+	this_.connCache.clean()
 	return
 }
 
@@ -81,6 +74,9 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		NetProxyInnerStatusError: "",
 	})
 	for {
+		if this_.isStopped() {
+			break
+		}
 		var conn net.Conn
 		conn, err = this_.serverListener.Accept()
 		if err != nil {
@@ -96,6 +92,10 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 }
 
 func (this_ *InnerServer) onConn(conn net.Conn) {
+	if this_.isStopped() {
+		_ = conn.Close()
+		return
+	}
 	//Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 新连接")
 	var connId = util.UUID()
 	var netProxyId = this_.netProxy.Id
@@ -117,6 +117,8 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		if this_.isStopped() {
 			break
 		}
+		start := util.Now().UnixNano()
+
 		var n int
 		var bytes = make([]byte, 1024*8)
 		n, err = conn.Read(bytes)
@@ -128,6 +130,10 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 			break
 		}
 		bytes = bytes[:n]
+
+		end := util.Now().UnixNano()
+		this_.MonitorData.monitorRead(int64(n), end-start)
+
 		err = this_.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
 		if err != nil {
 			Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
@@ -135,43 +141,4 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		}
 	}
 
-}
-
-func (this_ *InnerServer) setConn(connId string, conn net.Conn) {
-	if this_.isStopped() {
-		_ = conn.Close()
-		return
-	}
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	this_.connCache[connId] = conn
-	return
-}
-func (this_ *InnerServer) getConn(connId string) (conn net.Conn) {
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	conn, _ = this_.connCache[connId]
-	return
-}
-
-func (this_ *InnerServer) closeConn(connId string) (err error) {
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	conn, ok := this_.connCache[connId]
-	if ok {
-		delete(this_.connCache, connId)
-		_ = conn.Close()
-	}
-	return
-}
-
-func (this_ *InnerServer) send(connId string, bytes []byte) (err error) {
-	conn := this_.getConn(connId)
-	if conn != nil {
-		_, err = conn.Write(bytes)
-		//Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
-	} else {
-		Logger.Warn(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 不存在")
-	}
-	return
 }

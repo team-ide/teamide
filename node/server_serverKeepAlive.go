@@ -61,7 +61,7 @@ func (this_ *Server) serverListenerKeepAlive() {
 			}
 
 			var clientMsg *Message
-			clientMsg, err = ReadMessage(conn_)
+			clientMsg, err = ReadMessage(conn_, this_.worker.MonitorData)
 			if err != nil {
 				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
 				_ = conn_.Close()
@@ -78,7 +78,7 @@ func (this_ *Server) serverListenerKeepAlive() {
 			// 发送当前节点ID
 			err = WriteMessage(conn, &Message{
 				Node: this_.rootNode,
-			})
+			}, this_.worker.MonitorData)
 			if err != nil {
 				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
 				_ = conn_.Close()
@@ -108,7 +108,7 @@ func (this_ *Server) serverListenerKeepAlive() {
 					notifyMsg.NodeStatusError = ""
 					this_.worker.notifyAll(notifyMsg)
 				}
-			})
+			}, this_.worker.MonitorData)
 			pool.Put(messageListener)
 			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 

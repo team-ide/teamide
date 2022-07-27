@@ -239,8 +239,8 @@ func (this_ *Worker) removeNetProxyInner(netProxyId string) (inner *InnerServer)
 
 	inner, ok := this_.cache.netProxyInnerCache[netProxyId]
 	if ok {
-		inner.Stop()
 		delete(this_.cache.netProxyInnerCache, netProxyId)
+		inner.Stop()
 	}
 	return
 }
@@ -275,8 +275,8 @@ func (this_ *Worker) removeNetProxyOuter(netProxyId string) (inner *InnerServer)
 
 	outer, ok := this_.cache.netProxyOuterCache[netProxyId]
 	if ok {
-		outer.Stop()
 		delete(this_.cache.netProxyOuterCache, netProxyId)
+		outer.Stop()
 	}
 	return
 }

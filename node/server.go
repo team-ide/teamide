@@ -67,8 +67,9 @@ func (this_ *Server) Start() (err error) {
 	}
 	this_.cache = newCache()
 	this_.worker = &Worker{
-		server: this_,
-		cache:  this_.cache,
+		server:      this_,
+		cache:       this_.cache,
+		MonitorData: &MonitorData{},
 	}
 	_ = this_.worker.doAddNodeList([]*Info{this_.rootNode})
 

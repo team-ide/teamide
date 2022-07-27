@@ -93,13 +93,13 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 		msg.NodeList = this_.cache.nodeList
 		msg.NetProxyList = this_.cache.netProxyList
 	}
-	err = WriteMessage(conn, msg)
+	err = WriteMessage(conn, msg, this_.worker.MonitorData)
 	if err != nil {
 		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
 		_ = conn.Close()
 		return
 	}
-	msg, err = ReadMessage(conn)
+	msg, err = ReadMessage(conn, this_.worker.MonitorData)
 	if err != nil {
 		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
 		_ = conn.Close()
@@ -155,7 +155,7 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 			time.Sleep(5 * time.Second)
 			go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
 		}
-	})
+	}, this_.worker.MonitorData)
 	pool.Put(messageListener)
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
 

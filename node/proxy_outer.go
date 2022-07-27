@@ -4,19 +4,20 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net"
-	"sync"
+	"teamide/pkg/util"
 )
 
 type OuterListener struct {
 	netProxy *NetProxy
 	isStop   bool
 	*Worker
-	connCache     map[string]net.Conn
-	connCacheLock sync.Mutex
+	*connCache
+	MonitorData *MonitorData
 }
 
 func (this_ *OuterListener) Start() {
-	this_.connCache = make(map[string]net.Conn)
+	this_.MonitorData = &MonitorData{}
+	this_.connCache = newConnCache(this_.MonitorData)
 
 	this_.notifyAll(&Message{
 		NetProxyId:               this_.netProxy.Id,
@@ -25,15 +26,11 @@ func (this_ *OuterListener) Start() {
 	})
 	return
 }
+
 func (this_ *OuterListener) Stop() {
 	this_.isStop = true
 
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	for _, conn := range this_.connCache {
-		_ = conn.Close()
-	}
-	this_.connCache = make(map[string]net.Conn)
+	this_.connCache.clean()
 
 	this_.notifyAll(&Message{
 		NetProxyId:               this_.netProxy.Id,
@@ -43,12 +40,14 @@ func (this_ *OuterListener) Stop() {
 	return
 }
 
+func (this_ *OuterListener) isStopped() bool {
+	return this_.isStop
+}
+
 func (this_ *OuterListener) newConn(connId string) (err error) {
-	if this_.isStop {
+	if this_.isStopped() {
 		return
 	}
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
 
 	//Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
 
@@ -58,7 +57,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 		return
 	}
 	//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
-	this_.connCache[connId] = conn
+	this_.setConn(connId, conn)
 	go func() {
 		var netProxyId = this_.netProxy.Id
 		defer func() {
@@ -67,6 +66,12 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 		}()
 
 		for {
+			if this_.isStopped() {
+				return
+			}
+
+			start := util.Now().UnixNano()
+
 			var n int
 			var bytes = make([]byte, 1024*8)
 			n, err = conn.Read(bytes)
@@ -78,6 +83,10 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 				break
 			}
 			bytes = bytes[:n]
+
+			end := util.Now().UnixNano()
+			this_.MonitorData.monitorRead(int64(n), end-start)
+
 			err = this_.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, bytes)
 			if err != nil {
 				Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 发送异常", zap.Error(err))
@@ -85,34 +94,5 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 			}
 		}
 	}()
-	return
-}
-
-func (this_ *OuterListener) getConn(connId string) (conn net.Conn) {
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	conn, _ = this_.connCache[connId]
-	return
-}
-
-func (this_ *OuterListener) closeConn(connId string) (err error) {
-	this_.connCacheLock.Lock()
-	defer this_.connCacheLock.Unlock()
-	conn, ok := this_.connCache[connId]
-	if ok {
-		delete(this_.connCache, connId)
-		_ = conn.Close()
-	}
-	return
-}
-
-func (this_ *OuterListener) send(connId string, bytes []byte) (err error) {
-	conn := this_.getConn(connId)
-	if conn != nil {
-		_, err = conn.Write(bytes)
-		//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
-	} else {
-		Logger.Warn(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 不存在")
-	}
 	return
 }

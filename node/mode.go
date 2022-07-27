@@ -143,3 +143,28 @@ func copyNode(source, target *Info) (hasChange bool) {
 	}
 	return
 }
+
+type MonitorData struct {
+	ReadSize  int64 `json:"readSize,omitempty"`
+	ReadTime  int64 `json:"readTime,omitempty"`
+	readLock  sync.Mutex
+	WriteSize int64 `json:"writeSize,omitempty"`
+	WriteTime int64 `json:"writeTime,omitempty"`
+	writeLock sync.Mutex
+}
+
+func (this_ *MonitorData) monitorRead(bytesSize int64, useTime int64) {
+	this_.readLock.Lock()
+	defer this_.readLock.Unlock()
+
+	this_.ReadSize += bytesSize
+	this_.ReadTime += useTime
+}
+
+func (this_ *MonitorData) monitorWrite(bytesSize int64, useTime int64) {
+	this_.writeLock.Lock()
+	defer this_.writeLock.Unlock()
+
+	this_.WriteSize += bytesSize
+	this_.WriteTime += useTime
+}

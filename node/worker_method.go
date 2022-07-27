@@ -30,14 +30,14 @@ func (this_ *Worker) onMessage(msg *Message) {
 		res, err := this_.doMethod(msg.Method, msg)
 		if msg.Id != "" {
 			if err != nil {
-				err = msg.ReturnError(err.Error())
+				err = msg.ReturnError(err.Error(), this_.MonitorData)
 				if err != nil {
 					Logger.Error("message return error", zap.Error(err))
 					return
 				}
 				return
 			}
-			err = msg.Return(res)
+			err = msg.Return(res, this_.MonitorData)
 			if err != nil {
 				Logger.Error("message return error", zap.Error(err))
 				return
@@ -59,7 +59,7 @@ func (this_ *Worker) Call(listener *MessageListener, method int, msg *Message) (
 	this_.cache.setCallback(msg.Id, func(msg *Message) {
 		waitResult <- msg
 	})
-	err = listener.Send(msg)
+	err = listener.Send(msg, this_.MonitorData)
 	if err != nil {
 		return
 	}

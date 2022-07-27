@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"teamide/pkg/util"
 )
 
 var (
@@ -50,10 +51,10 @@ type Message struct {
 	listener                 *MessageListener
 }
 
-func (this_ *Message) ReturnError(error string) (err error) {
+func (this_ *Message) ReturnError(error string, MonitorData *MonitorData) (err error) {
 	err = this_.Return(&Message{
 		Error: error,
-	})
+	}, MonitorData)
 	if err != nil {
 		return
 	}
@@ -61,13 +62,13 @@ func (this_ *Message) ReturnError(error string) (err error) {
 	return
 }
 
-func (this_ *Message) Return(msg *Message) (err error) {
+func (this_ *Message) Return(msg *Message, MonitorData *MonitorData) (err error) {
 	if this_.listener == nil {
 		err = errors.New("消息监听器丢失")
 		return
 	}
 	msg.Id = this_.Id
-	err = this_.listener.Send(msg)
+	err = this_.listener.Send(msg, MonitorData)
 	if err != nil {
 		return
 	}
@@ -87,7 +88,7 @@ func (this_ *MessageListener) stop() {
 	_ = this_.conn.Close()
 }
 
-func (this_ *MessageListener) listen(onClose func()) {
+func (this_ *MessageListener) listen(onClose func(), MonitorData *MonitorData) {
 	var err error
 	this_.isClose = false
 	go func() {
@@ -105,7 +106,7 @@ func (this_ *MessageListener) listen(onClose func()) {
 				return
 			}
 			var msg *Message
-			msg, err = ReadMessage(this_.conn)
+			msg, err = ReadMessage(this_.conn, MonitorData)
 			if err != nil {
 				if this_.isStop {
 					return
@@ -122,7 +123,7 @@ func (this_ *MessageListener) listen(onClose func()) {
 	}()
 }
 
-func (this_ *MessageListener) Send(msg *Message) (err error) {
+func (this_ *MessageListener) Send(msg *Message, MonitorData *MonitorData) (err error) {
 	if msg == nil {
 		return
 	}
@@ -132,14 +133,14 @@ func (this_ *MessageListener) Send(msg *Message) (err error) {
 	}
 	this_.writeMu.Lock()
 	defer this_.writeMu.Unlock()
-	err = WriteMessage(this_.conn, msg)
+	err = WriteMessage(this_.conn, msg, MonitorData)
 	return
 }
 
-func ReadMessage(reader io.Reader) (message *Message, err error) {
+func ReadMessage(reader io.Reader, MonitorData *MonitorData) (message *Message, err error) {
 	var bytes []byte
 
-	bytes, err = ReadBytes(reader)
+	bytes, err = ReadBytes(reader, MonitorData)
 	if err != nil {
 		return
 	}
@@ -152,7 +153,7 @@ func ReadMessage(reader io.Reader) (message *Message, err error) {
 	return
 }
 
-func WriteMessage(writer io.Writer, message *Message) (err error) {
+func WriteMessage(writer io.Writer, message *Message, MonitorData *MonitorData) (err error) {
 	var bytes []byte
 
 	bytes, err = json.Marshal(message)
@@ -160,11 +161,14 @@ func WriteMessage(writer io.Writer, message *Message) (err error) {
 		return
 	}
 
-	err = WriteBytes(writer, bytes)
+	err = WriteBytes(writer, bytes, MonitorData)
 	return
 }
 
-func ReadBytes(reader io.Reader) (bytes []byte, err error) {
+func ReadBytes(reader io.Reader, MonitorData *MonitorData) (bytes []byte, err error) {
+
+	start := util.Now().UnixNano()
+
 	var buf []byte
 	var n int
 
@@ -195,28 +199,23 @@ func ReadBytes(reader io.Reader) (bytes []byte, err error) {
 			return
 		}
 	}
+	end := util.Now().UnixNano()
+	MonitorData.monitorWrite(int64(length+4), end-start)
 	return
 }
 
-func WriteBytes(writer io.Writer, bytes []byte) (err error) {
+func WriteBytes(writer io.Writer, bytes []byte, MonitorData *MonitorData) (err error) {
 	var n int
 	var length = len(bytes)
 
-	lengthBytes := []byte{0, 0, 0, 0}
-	binary.LittleEndian.PutUint32(lengthBytes, uint32(length))
+	start := util.Now().UnixNano()
 
-	n, err = writer.Write(lengthBytes)
-	if err != nil {
-		return
-	}
-	if n < 4 {
-		err = LengthError
-		return
-	}
-	if length == 0 {
-		return
-	}
-	n, err = writer.Write(bytes)
+	writeBytes := []byte{0, 0, 0, 0}
+	binary.LittleEndian.PutUint32(writeBytes, uint32(length))
+
+	writeBytes = append(writeBytes, bytes...)
+	length += 4
+	n, err = writer.Write(writeBytes)
 	if err != nil {
 		return
 	}
@@ -224,5 +223,7 @@ func WriteBytes(writer io.Writer, bytes []byte) (err error) {
 		err = LengthError
 		return
 	}
+	end := util.Now().UnixNano()
+	MonitorData.monitorWrite(int64(length), end-start)
 	return
 }

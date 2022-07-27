@@ -270,7 +270,7 @@ func (this_ *Worker) notifyAllTo(msg *Message) {
 			continue
 		}
 		_ = pool.Do(func(listener *MessageListener) (e error) {
-			_ = listener.Send(msg)
+			_ = listener.Send(msg, this_.MonitorData)
 			return
 		})
 	}
@@ -295,7 +295,7 @@ func (this_ *Worker) notifyAllFrom(msg *Message) {
 			continue
 		}
 		_ = pool.Do(func(listener *MessageListener) (e error) {
-			_ = listener.Send(msg)
+			_ = listener.Send(msg, this_.MonitorData)
 			return
 		})
 	}
