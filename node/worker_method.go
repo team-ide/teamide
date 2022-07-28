@@ -12,11 +12,14 @@ var (
 	methodOK         = 1
 	methodGetVersion = 2
 
-	methodGetNode = 11
+	methodGetNode            = 11
+	methodGetNodeMonitorData = 12
 
-	methodNetProxyNewConn   = 21
-	methodNetProxyCloseConn = 22
-	methodNetProxySend      = 23
+	methodNetProxyNewConn             = 21
+	methodNetProxyCloseConn           = 22
+	methodNetProxySend                = 23
+	methodNetProxyGetInnerMonitorData = 24
+	methodNetProxyGetOuterMonitorData = 25
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
@@ -108,6 +111,9 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	case methodGetNode:
 		res.Node = this_.getNode(msg.NodeId, msg.NotifiedNodeIdList)
 		return
+	case methodGetNodeMonitorData:
+		res.MonitorData = this_.getNodeMonitorData(msg.NodeId, msg.NotifiedNodeIdList)
+		return
 	case methodNetProxyNewConn:
 		err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)
 		return
@@ -116,6 +122,11 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodNetProxySend:
 		err = this_.netProxySend(msg.IsReverse, msg.LineNodeIdList, msg.NetProxyId, msg.ConnId, msg.Bytes)
+	case methodNetProxyGetInnerMonitorData:
+		res.MonitorData = this_.getNetProxyInnerMonitorData(msg.NetProxyId, msg.NotifiedNodeIdList)
+		return
+	case methodNetProxyGetOuterMonitorData:
+		res.MonitorData = this_.getNetProxyOuterMonitorData(msg.NetProxyId, msg.NotifiedNodeIdList)
 		return
 	}
 

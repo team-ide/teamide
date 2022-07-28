@@ -29,6 +29,21 @@ func (this_ *Server) GetNode(nodeId string) (node *Info) {
 	return
 }
 
+func (this_ *Server) GetNodeMonitorData(nodeId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNodeMonitorData(nodeId, []string{})
+	return
+}
+
+func (this_ *Server) GetNetProxyInnerMonitorData(netProxyId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNetProxyInnerMonitorData(netProxyId, []string{})
+	return
+}
+
+func (this_ *Server) GetNetProxyOuterMonitorData(netProxyId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNetProxyOuterMonitorData(netProxyId, []string{})
+	return
+}
+
 func (this_ *Server) AddNodeList(nodeList []*Info) (err error) {
 	err = this_.worker.addNodeList(nodeList)
 	return

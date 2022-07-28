@@ -7,6 +7,15 @@ import (
 	"teamide/pkg/util"
 )
 
+type NetProxyInfo struct {
+	Info             *node.NetProxy     `json:"info,omitempty"`
+	Model            *NetProxyModel     `json:"model,omitempty"`
+	InnerIsStarted   bool               `json:"innerIsStarted,omitempty"`
+	OuterIsStarted   bool               `json:"outerIsStarted,omitempty"`
+	InnerMonitorData *MonitorDataFormat `json:"innerMonitorData,omitempty"`
+	OuterMonitorData *MonitorDataFormat `json:"outerMonitorData,omitempty"`
+}
+
 func (this_ *NodeContext) getNetProxyInfo(id string) (res *NetProxyInfo) {
 	this_.netProxyListLock.Lock()
 	defer this_.netProxyListLock.Unlock()
@@ -223,6 +232,9 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 	this_.netProxyListLock.Lock()
 	defer this_.netProxyListLock.Unlock()
 
+	this_.onNetProxyListChangeIng = true
+	defer func() { this_.onNetProxyListChangeIng = false }()
+
 	var netProxyInfoList []*NetProxyInfo
 	for _, one := range netProxyList {
 		var find = this_.getNetProxyModelByCode(one.Id)
@@ -254,8 +266,20 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 		netProxyInfoList = append(netProxyInfoList, netProxyInfo)
 	}
 	this_.netProxyList = netProxyInfoList
+	this_.refreshNetProxyList(this_.netProxyList)
+}
+
+func (this_ *NodeContext) refreshNetProxyList(netProxyList []*NetProxyInfo) {
+
+	for _, one := range netProxyList {
+		if one.Info != nil {
+			one.InnerMonitorData = ToMonitorDataFormat(this_.server.GetNetProxyInnerMonitorData(one.Info.Id))
+			one.OuterMonitorData = ToMonitorDataFormat(this_.server.GetNetProxyOuterMonitorData(one.Info.Id))
+		}
+	}
+
 	this_.callMessage(&Message{
 		Method:       "refresh_net_proxy_list",
-		NetProxyList: this_.netProxyList,
+		NetProxyList: netProxyList,
 	})
 }

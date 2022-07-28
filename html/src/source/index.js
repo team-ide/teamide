@@ -416,7 +416,59 @@ source.initNodeContext = async () => {
         source.initNodeNetProxyList(nodeNetProxyList)
     }
 }
+source.nodeEquals = (data1, data2) => {
+    if (data1.isStarted != data2.isStarted) {
+        return false
+    }
+    if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
+        return false
+    }
+    if (JSON.stringify(data1.model) != JSON.stringify(data2.model)) {
+        return false
+    }
+    return true
+};
+source.nodeListEquals = (list1, list2) => {
+    if (list1.length != list2.length) {
+        return false
+    }
+    for (var i = 0; i < list1.length; i++) {
+        if (!source.nodeEquals(list1[i], list2[i])) {
+            return false
+        }
+    }
+    return true
+};
+source.nodeNetProxyEquals = (data1, data2) => {
+    if (data1.innerIsStarted != data2.innerIsStarted || data1.outerIsStarted != data2.outerIsStarted) {
+        return false
+    }
+    if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
+        return false
+    }
+    if (JSON.stringify(data1.model) != JSON.stringify(data2.model)) {
+        return false
+    }
+    return true
+};
+source.nodeNetProxyListEquals = (list1, list2) => {
+    if (list1.length != list2.length) {
+        return false
+    }
+    for (var i = 0; i < list1.length; i++) {
+        if (!source.nodeNetProxyEquals(list1[i], list2[i])) {
+            return false
+        }
+    }
+    return true
+};
 source.initNodeList = (nodeList) => {
+    if (source.nodeListEquals(source.nodeList, nodeList)) {
+        for (var i = 0; i < source.nodeList.length; i++) {
+            Object.assign(source.nodeList[i].monitorData, nodeList[i].monitorData)
+        }
+        return
+    }
     form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
     let nodeOptionMap = {};
 
@@ -445,6 +497,13 @@ source.initNodeList = (nodeList) => {
     source.nodeOptionMap = nodeOptionMap;
 }
 source.initNodeNetProxyList = (nodeNetProxyList) => {
+    if (source.nodeListEquals(source.nodeNetProxyList, nodeNetProxyList)) {
+        for (var i = 0; i < source.nodeNetProxyList.length; i++) {
+            Object.assign(source.nodeNetProxyList[i].innerMonitorData, nodeNetProxyList[i].innerMonitorData)
+            Object.assign(source.nodeNetProxyList[i].outerMonitorData, nodeNetProxyList[i].outerMonitorData)
+        }
+        return
+    }
     nodeNetProxyList = nodeNetProxyList || []
     source.nodeNetProxyList = nodeNetProxyList;
     source.nodeNetProxyCount = nodeNetProxyList.length;

@@ -5,7 +5,7 @@ import (
 	"teamide/pkg/util"
 )
 
-func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(listener *MessageListener) (err error)) (send bool, err error) {
+func (this_ *Worker) sendToNext(lineNodeIdList []string, connId string, doSend func(listener *MessageListener) (err error)) (send bool, err error) {
 	if len(lineNodeIdList) == 0 {
 		err = errors.New("节点线不存在")
 		return
@@ -22,7 +22,7 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(listener *M
 			err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + nodeId + "] 暂无通讯渠道")
 			return
 		}
-		err = pool.Do(func(listener *MessageListener) (e error) {
+		err = pool.Do(connId, func(listener *MessageListener) (e error) {
 			e = doSend(listener)
 			return
 		})
@@ -35,7 +35,7 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, doSend func(listener *M
 	return
 }
 func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string, connId string) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+	send, err := this_.sendToNext(lineNodeIdList, connId, func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxyNewConn, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,
@@ -65,7 +65,7 @@ func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string,
 }
 
 func (this_ *Worker) netProxyCloseConn(isReverse bool, lineNodeIdList []string, netProxyId string, connId string) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+	send, err := this_.sendToNext(lineNodeIdList, connId, func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxyCloseConn, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,
@@ -103,7 +103,7 @@ func (this_ *Worker) netProxyCloseConn(isReverse bool, lineNodeIdList []string, 
 }
 
 func (this_ *Worker) netProxySend(isReverse bool, lineNodeIdList []string, netProxyId string, connId string, bytes []byte) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, func(listener *MessageListener) (e error) {
+	send, err := this_.sendToNext(lineNodeIdList, connId, func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxySend, &Message{
 			LineNodeIdList: lineNodeIdList,
 			NetProxyId:     netProxyId,

@@ -269,7 +269,7 @@ func (this_ *Worker) notifyAllTo(msg *Message) {
 		if pool.isStop {
 			continue
 		}
-		_ = pool.Do(func(listener *MessageListener) (e error) {
+		_ = pool.Do("", func(listener *MessageListener) (e error) {
 			_ = listener.Send(msg, this_.MonitorData)
 			return
 		})
@@ -294,7 +294,7 @@ func (this_ *Worker) notifyAllFrom(msg *Message) {
 		if pool.isStop {
 			continue
 		}
-		_ = pool.Do(func(listener *MessageListener) (e error) {
+		_ = pool.Do("", func(listener *MessageListener) (e error) {
 			_ = listener.Send(msg, this_.MonitorData)
 			return
 		})

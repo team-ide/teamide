@@ -2,6 +2,7 @@ package node
 
 import (
 	"errors"
+	"hash/crc32"
 	"sync"
 )
 
@@ -74,7 +75,7 @@ func (this_ *MessageListenerPool) getTimeout() (timeout int64) {
 	return timeout * 1000
 
 }
-func (this_ *MessageListenerPool) get() (listener *MessageListener, err error) {
+func (this_ *MessageListenerPool) get(key string) (listener *MessageListener, err error) {
 
 	if this_.isStop {
 		err = MessageListenerPoolStop
@@ -84,12 +85,19 @@ func (this_ *MessageListenerPool) get() (listener *MessageListener, err error) {
 	this_.listenerMu.Lock()
 	defer this_.listenerMu.Unlock()
 
-	var size = len(this_.listeners)
+	var list = this_.listeners
+	var size = len(list)
 	if size == 0 {
 		err = MessageListenerNull
 		return
 	}
-	listener = this_.listeners[this_.getIndex%size]
+	if key != "" {
+		hashCode := int(crc32.ChecksumIEEE([]byte(key)))
+		listener = list[hashCode%size]
+		return
+	}
+
+	listener = list[this_.getIndex%size]
 
 	this_.getIndex++
 	if this_.getIndex >= size {
@@ -99,13 +107,13 @@ func (this_ *MessageListenerPool) get() (listener *MessageListener, err error) {
 	return
 }
 
-func (this_ *MessageListenerPool) Do(do func(listener *MessageListener) (err error)) (err error) {
+func (this_ *MessageListenerPool) Do(key string, do func(listener *MessageListener) (err error)) (err error) {
 
 	if this_.isStop {
 		err = MessageListenerPoolStop
 		return
 	}
-	listener, err := this_.get()
+	listener, err := this_.get(key)
 	if err != nil {
 		return
 	}

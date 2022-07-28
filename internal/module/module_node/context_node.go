@@ -8,9 +8,10 @@ import (
 )
 
 type NodeInfo struct {
-	Info      *node.Info `json:"info,omitempty"`
-	Model     *NodeModel `json:"model,omitempty"`
-	IsStarted bool       `json:"isStarted,omitempty"`
+	Info        *node.Info         `json:"info,omitempty"`
+	Model       *NodeModel         `json:"model,omitempty"`
+	IsStarted   bool               `json:"isStarted,omitempty"`
+	MonitorData *MonitorDataFormat `json:"monitorData,omitempty"`
 }
 
 func (this_ *NodeContext) getNodeInfo(id string) (res *NodeInfo) {
@@ -191,6 +192,9 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 	this_.nodeListLock.Lock()
 	defer this_.nodeListLock.Unlock()
 
+	this_.onNodeListChangeIng = true
+	defer func() { this_.onNodeListChangeIng = false }()
+
 	var nodeInfoList []*NodeInfo
 	for _, one := range nodeList {
 		var find = this_.getNodeModelByServerId(one.Id)
@@ -239,8 +243,18 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}
 	this_.nodeList = nodeInfoList
+	this_.refreshNodeList(this_.nodeList)
+}
+
+func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
+
+	for _, one := range nodeList {
+		if one.Info != nil {
+			one.MonitorData = ToMonitorDataFormat(this_.server.GetNodeMonitorData(one.Info.Id))
+		}
+	}
 	this_.callMessage(&Message{
 		Method:   "refresh_node_list",
-		NodeList: this_.nodeList,
+		NodeList: nodeList,
 	})
 }
