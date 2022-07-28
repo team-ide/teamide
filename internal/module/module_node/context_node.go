@@ -236,9 +236,10 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)
 		}
 		nodeInfo := &NodeInfo{
-			Info:      one,
-			IsStarted: one.Status == node.StatusStarted,
-			Model:     this_.getNodeModelByServerId(one.Id),
+			MonitorData: ToMonitorDataFormat(this_.server.GetNodeMonitorData(one.Id)),
+			Info:        one,
+			IsStarted:   one.Status == node.StatusStarted,
+			Model:       this_.getNodeModelByServerId(one.Id),
 		}
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}
@@ -248,11 +249,6 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 
 func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
 
-	for _, one := range nodeList {
-		if one.Info != nil {
-			one.MonitorData = ToMonitorDataFormat(this_.server.GetNodeMonitorData(one.Info.Id))
-		}
-	}
 	this_.callMessage(&Message{
 		Method:   "refresh_node_list",
 		NodeList: nodeList,

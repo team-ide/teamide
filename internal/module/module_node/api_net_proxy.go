@@ -7,6 +7,37 @@ import (
 	"teamide/pkg/util"
 )
 
+type netProxyMonitorDataRequest struct {
+	IdList []string `json:"idList,omitempty"`
+}
+
+type netProxyMonitorDataResponse struct {
+	NetProxyList []*NetProxyInfo `json:"netProxyList,omitempty"`
+}
+
+func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &netProxyMonitorDataRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &netProxyMonitorDataResponse{}
+
+	for _, id := range request.IdList {
+		netProxyInfo := this_.NodeService.nodeContext.getNetProxyInfo(id)
+		if netProxyInfo == nil {
+			continue
+		}
+
+		netProxyInfo.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(id))
+		netProxyInfo.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(id))
+		response.NetProxyList = append(response.NetProxyList, netProxyInfo)
+	}
+
+	res = response
+	return
+}
+
 type NetProxyListRequest struct {
 }
 

@@ -86,16 +86,6 @@
                       </template>
                     </div>
                     <div class="">
-                      类型:<span class="pdl-10 color-blue">
-                        {{ scope.row.model.innerType }}
-                      </span>
-                    </div>
-                    <div class="">
-                      地址:<span class="pdl-10 color-blue">
-                        {{ scope.row.model.innerAddress }}
-                      </span>
-                    </div>
-                    <div class="">
                       状态:
                       <template v-if="scope.row.innerIsStarted">
                         <span class="pdl-10 color-green"> 启动中 </span>
@@ -103,6 +93,36 @@
                       <template v-else>
                         <span class="pdl-10 color-red"> 已停止 </span>
                       </template>
+                    </div>
+                    <div class="">
+                      类型:<span class="pdlr-10 color-blue">
+                        {{ scope.row.model.innerType }}
+                      </span>
+                      地址:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.innerAddress }}
+                      </span>
+                    </div>
+                    <div class="" v-if="scope.row.innerMonitorData != null">
+                      <div class="">
+                        输入:<span class="pdlr-10 color-blue">
+                          {{ scope.row.innerMonitorData.readSize }}
+                          {{ scope.row.innerMonitorData.readSizeUnit }}
+                        </span>
+                        输入速度:<span class="pdlr-10 color-blue">
+                          {{ scope.row.innerMonitorData.readLastSleep }}
+                          {{ scope.row.innerMonitorData.readLastSleepUnit }}
+                        </span>
+                      </div>
+                      <div class="">
+                        输出:<span class="pdlr-10 color-blue">
+                          {{ scope.row.innerMonitorData.writeSize }}
+                          {{ scope.row.innerMonitorData.writeSizeUnit }}
+                        </span>
+                        输出速度:<span class="pdlr-10 color-blue">
+                          {{ scope.row.innerMonitorData.writeLastSleep }}
+                          {{ scope.row.innerMonitorData.writeLastSleepUnit }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -144,16 +164,6 @@
                       </template>
                     </div>
                     <div class="">
-                      类型:<span class="pdl-10 color-blue">
-                        {{ scope.row.model.outerType }}
-                      </span>
-                    </div>
-                    <div class="">
-                      地址:<span class="pdl-10 color-blue">
-                        {{ scope.row.model.outerAddress }}
-                      </span>
-                    </div>
-                    <div class="">
                       状态:
                       <template v-if="scope.row.outerIsStarted">
                         <span class="pdl-10 color-green"> 启动中 </span>
@@ -162,12 +172,42 @@
                         <span class="pdl-10 color-red"> 已停止 </span>
                       </template>
                     </div>
+                    <div class="">
+                      类型:<span class="pdlr-10 color-blue">
+                        {{ scope.row.model.outerType }}
+                      </span>
+                      地址:<span class="pdl-10 color-blue">
+                        {{ scope.row.model.outerAddress }}
+                      </span>
+                    </div>
+                    <div class="" v-if="scope.row.outerMonitorData != null">
+                      <div class="">
+                        输入:<span class="pdlr-10 color-blue">
+                          {{ scope.row.outerMonitorData.readSize }}
+                          {{ scope.row.outerMonitorData.readSizeUnit }}
+                        </span>
+                        输入速度:<span class="pdlr-10 color-blue">
+                          {{ scope.row.outerMonitorData.readLastSleep }}
+                          {{ scope.row.outerMonitorData.readLastSleepUnit }}
+                        </span>
+                      </div>
+                      <div class="">
+                        输出:<span class="pdlr-10 color-blue">
+                          {{ scope.row.outerMonitorData.writeSize }}
+                          {{ scope.row.outerMonitorData.writeSizeUnit }}
+                        </span>
+                        输出速度:<span class="pdlr-10 color-blue">
+                          {{ scope.row.outerMonitorData.writeLastSleep }}
+                          {{ scope.row.outerMonitorData.writeLastSleepUnit }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column label="状态" width="100">
+              <el-table-column label="状态" width="60">
                 <template slot-scope="scope">
-                  <div class="text-left pd-5" v-if="scope.row.model != null">
+                  <div class="pd-5" v-if="scope.row.model != null">
                     <div class="">
                       <template v-if="scope.row.model.enabled == 1">
                         <span class="color-green"> 启用 </span>
@@ -179,7 +219,7 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="200">
+              <el-table-column label="操作" width="150">
                 <template slot-scope="scope" v-if="scope.row.model != null">
                   <div
                     class="tm-link color-orange mgl-5"
@@ -236,6 +276,7 @@ export default {
       showBox: false,
       ready: false,
       dataList: null,
+      loadMonitorDataInit: false,
     };
   },
   computed: {},
@@ -256,7 +297,12 @@ export default {
     hide() {
       this.showBox = false;
     },
-    init() {},
+    async init() {
+      if (!this.loadMonitorDataInit) {
+        this.loadMonitorDataInit = true;
+        await this.loadMonitorData();
+      }
+    },
     async initData() {
       this.ready = false;
       this.dataList = this.source.nodeNetProxyList || [];
@@ -391,6 +437,39 @@ export default {
         return false;
       }
     },
+    async loadMonitorData() {
+      if (!this.showBox) {
+        window.setTimeout(() => {
+          this.loadMonitorData();
+        }, 1000 * 5);
+        return;
+      }
+      let idList = [];
+      let list = this.source.nodeNetProxyList || [];
+      list.forEach((one) => {
+        if (one.info) {
+          idList.push(one.info.id);
+        }
+      });
+      if (idList.length > 0) {
+        let res = await this.server.node.netProxy.monitorData({
+          idList: idList,
+        });
+        res.data = res.data || {};
+        let netProxyList = res.data.netProxyList || [];
+        netProxyList.forEach((netProxy) => {
+          list.forEach((one) => {
+            if (one.info && one.info.id == netProxy.info.id) {
+              one.innerMonitorData = netProxy.innerMonitorData;
+              one.outerMonitorData = netProxy.outerMonitorData;
+            }
+          });
+        });
+      }
+      window.setTimeout(() => {
+        this.loadMonitorData();
+      }, 1000 * 5);
+    },
   },
   created() {},
   updated() {
@@ -403,7 +482,7 @@ export default {
     this.tool.toEnableNodeNetProxy = this.toEnable;
     this.tool.toDisableNodeNetProxy = this.toDisable;
   },
-  mounted() {
+  async mounted() {
     this.init();
     this.tool.showNodeNetProxyDialog = this.show;
     this.tool.showSwitchNodeNetProxyDialog = this.showSwitch;

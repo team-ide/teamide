@@ -171,12 +171,17 @@ export default {
       }
       try {
         var data = JSON.parse(message);
-        if (data.method == "refresh_node_list") {
-          let nodeList = data.nodeList || [];
-          this.source.initNodeList(nodeList);
+        if (data.method == "refresh_node_context") {
+          if (data.nodeList) {
+            this.source.initNodeList(data.nodeList);
+          }
+          if (data.netProxyList) {
+            this.source.initNodeNetProxyList(data.netProxyList);
+          }
+        } else if (data.method == "refresh_node_list") {
+          this.source.initNodeList(data.nodeList);
         } else if (data.method == "refresh_net_proxy_list") {
-          let nodeNetProxyList = data.netProxyList || [];
-          this.source.initNodeNetProxyList(nodeNetProxyList);
+          this.source.initNodeNetProxyList(data.netProxyList);
         }
       } catch (error) {}
     },

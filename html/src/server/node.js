@@ -41,6 +41,9 @@ let node = {
         updateOption(param) {
             return http.post('api/node/netProxy/updateOption', param);
         },
+        monitorData(param) {
+            return http.post('api/node/netProxy/monitorData', param);
+        },
         enable(param) {
             return http.post('api/node/netProxy/enable', param);
         },

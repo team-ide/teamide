@@ -73,15 +73,15 @@ func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *
 		return
 	}
 
-	var callPools = this_.getOtherPool(nodeId, &NotifiedNodeIdList)
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
 
-	msg := &Message{
-		NodeId:             nodeId,
-		NotifiedNodeIdList: NotifiedNodeIdList,
-	}
 	for _, pool := range callPools {
 		if find == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
+				msg := &Message{
+					NodeId:             nodeId,
+					NotifiedNodeIdList: NotifiedNodeIdList,
+				}
 				res, _ := this_.Call(listener, methodGetNode, msg)
 				if res != nil && res.Node != nil {
 					find = res.Node
@@ -101,16 +101,16 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		return util.GetVersion()
 	}
 
-	var callPools = this_.getOtherPool(nodeId, &NotifiedNodeIdList)
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
 
-	msg := &Message{
-		NodeId: nodeId,
-	}
 	var version string
 	for _, pool := range callPools {
 		if version == "" {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
-
+				msg := &Message{
+					NodeId:             nodeId,
+					NotifiedNodeIdList: NotifiedNodeIdList,
+				}
 				res, _ := this_.Call(listener, methodGetNode, msg)
 				if res != nil {
 					version = res.Version
@@ -122,12 +122,20 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 	return version
 }
 
-func (this_ *Worker) getOtherPool(nodeId string, NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {
+func (this_ *Worker) getOtherPool(NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {
 	if util.ContainsString(*NotifiedNodeIdList, this_.server.Id) < 0 {
 		*NotifiedNodeIdList = append(*NotifiedNodeIdList, this_.server.Id)
 	}
 	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
-	list = append(list, this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)...)
+	for _, pool := range list {
+		if util.ContainsString(*NotifiedNodeIdList, pool.fromNodeId) >= 0 {
+			continue
+		}
+		*NotifiedNodeIdList = append(*NotifiedNodeIdList, pool.fromNodeId)
+		callPools = append(callPools, pool)
+	}
+
+	list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
 
 	for _, pool := range list {
 		if util.ContainsString(*NotifiedNodeIdList, pool.toNodeId) >= 0 {
@@ -148,16 +156,15 @@ func (this_ *Worker) getNodeMonitorData(nodeId string, NotifiedNodeIdList []stri
 		return
 	}
 
-	var callPools = this_.getOtherPool(nodeId, &NotifiedNodeIdList)
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
 
-	msg := &Message{
-		NodeId:             nodeId,
-		NotifiedNodeIdList: NotifiedNodeIdList,
-	}
 	for _, pool := range callPools {
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodGetNodeMonitorData, msg)
+				res, _ := this_.Call(listener, methodGetNodeMonitorData, &Message{
+					NodeId:             nodeId,
+					NotifiedNodeIdList: NotifiedNodeIdList,
+				})
 				if res != nil && res.MonitorData != nil {
 					monitorData = res.MonitorData
 				}
@@ -178,16 +185,15 @@ func (this_ *Worker) getNetProxyInnerMonitorData(netProxyId string, NotifiedNode
 		return
 	}
 
-	var callPools = this_.getOtherPool(this_.server.rootNode.Id, &NotifiedNodeIdList)
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
 
-	msg := &Message{
-		NetProxyId:         netProxyId,
-		NotifiedNodeIdList: NotifiedNodeIdList,
-	}
 	for _, pool := range callPools {
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodNetProxyGetInnerMonitorData, msg)
+				res, _ := this_.Call(listener, methodNetProxyGetInnerMonitorData, &Message{
+					NetProxyId:         netProxyId,
+					NotifiedNodeIdList: NotifiedNodeIdList,
+				})
 				if res != nil && res.MonitorData != nil {
 					monitorData = res.MonitorData
 				}
@@ -208,16 +214,15 @@ func (this_ *Worker) getNetProxyOuterMonitorData(netProxyId string, NotifiedNode
 		return
 	}
 
-	var callPools = this_.getOtherPool(this_.server.rootNode.Id, &NotifiedNodeIdList)
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
 
-	msg := &Message{
-		NetProxyId:         netProxyId,
-		NotifiedNodeIdList: NotifiedNodeIdList,
-	}
 	for _, pool := range callPools {
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodNetProxyGetOuterMonitorData, msg)
+				res, _ := this_.Call(listener, methodNetProxyGetOuterMonitorData, &Message{
+					NetProxyId:         netProxyId,
+					NotifiedNodeIdList: NotifiedNodeIdList,
+				})
 				if res != nil && res.MonitorData != nil {
 					monitorData = res.MonitorData
 				}

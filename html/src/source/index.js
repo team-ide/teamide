@@ -420,6 +420,9 @@ source.nodeEquals = (data1, data2) => {
     if (data1.isStarted != data2.isStarted) {
         return false
     }
+    if ((data1.monitorData == null && data2.monitorData != null) || (data2.monitorData == null && data1.monitorData != null)) {
+        return false
+    }
     if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
         return false
     }
@@ -443,6 +446,12 @@ source.nodeNetProxyEquals = (data1, data2) => {
     if (data1.innerIsStarted != data2.innerIsStarted || data1.outerIsStarted != data2.outerIsStarted) {
         return false
     }
+    if ((data1.innerMonitorData == null && data2.innerMonitorData != null) || (data2.innerMonitorData == null && data1.innerMonitorData != null)) {
+        return false
+    }
+    if ((data1.outerMonitorData == null && data2.outerMonitorData != null) || (data2.outerMonitorData == null && data1.outerMonitorData != null)) {
+        return false
+    }
     if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
         return false
     }
@@ -463,20 +472,18 @@ source.nodeNetProxyListEquals = (list1, list2) => {
     return true
 };
 source.initNodeList = (nodeList) => {
+    nodeList = nodeList || []
     if (source.nodeListEquals(source.nodeList, nodeList)) {
         for (var i = 0; i < source.nodeList.length; i++) {
-            Object.assign(source.nodeList[i].monitorData, nodeList[i].monitorData)
+            source.nodeList[i].monitorData = nodeList[i].monitorData;
         }
         return
     }
     form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
     let nodeOptionMap = {};
-
-    nodeList = nodeList || []
-    source.nodeList = nodeList;
-    source.nodeCount = nodeList.length;
     let nodeSuccessCount = 0
     nodeList.forEach(one => {
+        one.monitorData = one.monitorData || null;
         let option = {};
         option.isStarted = one.isStarted
         if (one.isStarted) {
@@ -493,26 +500,30 @@ source.initNodeList = (nodeList) => {
         form.node.nodeOptions.push(option);
         nodeOptionMap[option.value] = option;
     });
+    source.nodeList = nodeList;
+    source.nodeCount = nodeList.length;
     source.nodeSuccessCount = nodeSuccessCount;
     source.nodeOptionMap = nodeOptionMap;
 }
 source.initNodeNetProxyList = (nodeNetProxyList) => {
-    if (source.nodeListEquals(source.nodeNetProxyList, nodeNetProxyList)) {
+    nodeNetProxyList = nodeNetProxyList || []
+    if (source.nodeNetProxyListEquals(source.nodeNetProxyList, nodeNetProxyList)) {
         for (var i = 0; i < source.nodeNetProxyList.length; i++) {
-            Object.assign(source.nodeNetProxyList[i].innerMonitorData, nodeNetProxyList[i].innerMonitorData)
-            Object.assign(source.nodeNetProxyList[i].outerMonitorData, nodeNetProxyList[i].outerMonitorData)
+            source.nodeNetProxyList[i].innerMonitorData = nodeNetProxyList[i].innerMonitorData
+            source.nodeNetProxyList[i].outerMonitorData = nodeNetProxyList[i].outerMonitorData
         }
         return
     }
-    nodeNetProxyList = nodeNetProxyList || []
-    source.nodeNetProxyList = nodeNetProxyList;
-    source.nodeNetProxyCount = nodeNetProxyList.length;
     let nodeNetProxySuccessCount = 0
     nodeNetProxyList.forEach(one => {
+        one.innerMonitorData = one.innerMonitorData || null;
+        one.outerMonitorData = one.outerMonitorData || null;
         if (one.innerIsStarted && one.outerIsStarted) {
             nodeNetProxySuccessCount++;
         }
     });
+    source.nodeNetProxyList = nodeNetProxyList;
+    source.nodeNetProxyCount = nodeNetProxyList.length;
     source.nodeNetProxySuccessCount = nodeNetProxySuccessCount;
 }
 
