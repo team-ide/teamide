@@ -20,9 +20,13 @@ func (this_ *OuterListener) Start() {
 	this_.connCache = newConnCache(this_.MonitorData)
 
 	this_.notifyAll(&Message{
-		NetProxyId:               this_.netProxy.Id,
-		NetProxyOuterStatus:      StatusStarted,
-		NetProxyOuterStatusError: "",
+		NetProxyOuterStatusChangeList: []*StatusChange{
+			{
+				Id:          this_.netProxy.Id,
+				Status:      StatusStarted,
+				StatusError: "",
+			},
+		},
 	})
 	return
 }
@@ -33,9 +37,13 @@ func (this_ *OuterListener) Stop() {
 	this_.connCache.clean()
 
 	this_.notifyAll(&Message{
-		NetProxyId:               this_.netProxy.Id,
-		NetProxyOuterStatus:      StatusStopped,
-		NetProxyOuterStatusError: "",
+		NetProxyOuterStatusChangeList: []*StatusChange{
+			{
+				Id:          this_.netProxy.Id,
+				Status:      StatusStopped,
+				StatusError: "",
+			},
+		},
 	})
 	return
 }

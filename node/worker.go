@@ -20,14 +20,14 @@ func (this_ *Worker) Stop() {
 }
 
 func (this_ *Worker) notifyDo(msg *Message) {
-	if msg.NodeId != "" && msg.NodeStatus > 0 {
-		_ = this_.doChangeNodeStatus(msg.NodeId, msg.NodeStatus, msg.NodeStatusError)
+	if len(msg.NodeStatusChangeList) > 0 {
+		_ = this_.doChangeNodeStatus(msg.NodeStatusChangeList)
 	}
-	if msg.NetProxyId != "" && msg.NetProxyInnerStatus > 0 {
-		_ = this_.doChangeNetProxyInnerStatus(msg.NetProxyId, msg.NetProxyInnerStatus, msg.NetProxyInnerStatusError)
+	if len(msg.NetProxyInnerStatusChangeList) > 0 {
+		_ = this_.doChangeNetProxyInnerStatus(msg.NetProxyInnerStatusChangeList)
 	}
-	if msg.NetProxyId != "" && msg.NetProxyOuterStatus > 0 {
-		_ = this_.doChangeNetProxyOuterStatus(msg.NetProxyId, msg.NetProxyOuterStatus, msg.NetProxyOuterStatusError)
+	if len(msg.NetProxyOuterStatusChangeList) > 0 {
+		_ = this_.doChangeNetProxyOuterStatus(msg.NetProxyOuterStatusChangeList)
 	}
 	if msg.NodeId != "" && len(msg.RemoveConnNodeIdList) > 0 {
 		_ = this_.doRemoveNodeConnNodeIdList(msg.NodeId, msg.RemoveConnNodeIdList)
@@ -62,6 +62,12 @@ func (this_ *Worker) notifyAll(msg *Message) {
 	this_.notifyAllTo(msg)
 	this_.notifyAllFrom(msg)
 	this_.notifyDo(msg)
+}
+
+func (this_ *Worker) notifyOther(msg *Message) {
+	msg.NotifyAll = true
+	this_.notifyAllTo(msg)
+	this_.notifyAllFrom(msg)
 }
 
 func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {

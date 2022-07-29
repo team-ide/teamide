@@ -239,31 +239,32 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 	for _, one := range netProxyList {
 		var find = this_.getNetProxyModelByCode(one.Id)
 		if find == nil {
-			find = &NetProxyModel{
-				Code:          one.Id,
-				Name:          one.Id,
-				InnerServerId: one.Inner.NodeId,
-				InnerType:     one.Inner.Type,
-				InnerAddress:  one.Inner.Address,
-				OuterServerId: one.Outer.NodeId,
-				OuterType:     one.Outer.Type,
-				OuterAddress:  one.Outer.Address,
-			}
-			_, err := this_.nodeService.InsertNetProxy(find)
-			if err != nil {
-				find = nil
-			} else {
-				this_.setNetProxyModel(find.NetProxyId, find)
-				this_.setNetProxyModelByCode(one.Id, find)
-			}
+			continue
+			//find = &NetProxyModel{
+			//	Code:          one.Id,
+			//	Name:          one.Id,
+			//	InnerServerId: one.Inner.NodeId,
+			//	InnerType:     one.Inner.Type,
+			//	InnerAddress:  one.Inner.Address,
+			//	OuterServerId: one.Outer.NodeId,
+			//	OuterType:     one.Outer.Type,
+			//	OuterAddress:  one.Outer.Address,
+			//}
+			//_, err := this_.nodeService.InsertNetProxy(find)
+			//if err != nil {
+			//	find = nil
+			//} else {
+			//	this_.setNetProxyModel(find.NetProxyId, find)
+			//	this_.setNetProxyModelByCode(one.Id, find)
+			//}
 		}
 		netProxyInfo := &NetProxyInfo{
-			Info:             one,
-			InnerIsStarted:   one.InnerStatus == node.StatusStarted,
-			OuterIsStarted:   one.OuterStatus == node.StatusStarted,
-			Model:            this_.getNetProxyModelByCode(one.Id),
-			InnerMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyInnerMonitorData(one.Id)),
-			OuterMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyOuterMonitorData(one.Id)),
+			Info:           one,
+			InnerIsStarted: one.InnerStatus == node.StatusStarted,
+			OuterIsStarted: one.OuterStatus == node.StatusStarted,
+			Model:          this_.getNetProxyModelByCode(one.Id),
+			//InnerMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyInnerMonitorData(one.Id)),
+			//OuterMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyOuterMonitorData(one.Id)),
 		}
 		netProxyInfoList = append(netProxyInfoList, netProxyInfo)
 	}

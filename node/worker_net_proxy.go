@@ -59,6 +59,8 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 	this_.cache.netProxyLock.Lock()
 	defer this_.cache.netProxyLock.Unlock()
 
+	var innerStatusChangeList []*StatusChange
+	var outerStatusChangeList []*StatusChange
 	var findChanged = false
 	for _, netProxy := range netProxyList {
 
@@ -69,6 +71,24 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 			this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
 		} else {
 			Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
+			if this_.server.rootNode.Id == netProxy.Inner.NodeId {
+				if find.InnerStatus != 0 && netProxy.InnerStatus != find.InnerStatus {
+					innerStatusChangeList = append(innerStatusChangeList, &StatusChange{
+						Id:          netProxy.Id,
+						Status:      find.InnerStatus,
+						StatusError: find.InnerStatusError,
+					})
+				}
+			}
+			if this_.server.rootNode.Id == netProxy.Outer.NodeId {
+				if find.OuterStatus != 0 && netProxy.OuterStatus != find.OuterStatus {
+					outerStatusChangeList = append(outerStatusChangeList, &StatusChange{
+						Id:          netProxy.Id,
+						Status:      find.OuterStatus,
+						StatusError: find.OuterStatusError,
+					})
+				}
+			}
 			if netProxy.InnerStatus != 0 && netProxy.InnerStatus != find.InnerStatus {
 				find.InnerStatus = netProxy.InnerStatus
 				findChanged = true
@@ -88,26 +108,41 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 		}
 	}
 
+	if len(innerStatusChangeList) > 0 || len(outerStatusChangeList) > 0 {
+		this_.notifyOther(&Message{
+			NetProxyInnerStatusChangeList: innerStatusChangeList,
+			NetProxyOuterStatusChangeList: outerStatusChangeList,
+		})
+	}
+
 	if findChanged {
 		this_.refresh()
 		if this_.server.OnNetProxyListChange != nil {
 			this_.server.OnNetProxyListChange(this_.cache.netProxyList)
 		}
 	}
+
 	return
 }
 
-func (this_ *Worker) doChangeNetProxyOuterStatus(netProxyId string, status int8, statusError string) (err error) {
-	if netProxyId == "" || status == 0 {
+func (this_ *Worker) doChangeNetProxyInnerStatus(statusChangeList []*StatusChange) (err error) {
+	if len(statusChangeList) == 0 {
 		return
 	}
-	var find = this_.findNetProxy(netProxyId)
+
 	var findChanged = false
-	if find != nil {
-		if find.OuterStatus != status || find.OuterStatusError != statusError {
+	for _, one := range statusChangeList {
+		if one.Id == "" || one.Status == 0 {
+			continue
+		}
+		var find = this_.findNetProxy(one.Id)
+		if find == nil {
+			continue
+		}
+		if find.InnerStatus != one.Status || find.InnerStatusError != one.StatusError {
 			findChanged = true
-			find.OuterStatus = status
-			find.OuterStatusError = statusError
+			find.InnerStatus = one.Status
+			find.InnerStatusError = one.StatusError
 		}
 	}
 	if findChanged && this_.server.OnNetProxyListChange != nil {
@@ -116,17 +151,24 @@ func (this_ *Worker) doChangeNetProxyOuterStatus(netProxyId string, status int8,
 	return
 }
 
-func (this_ *Worker) doChangeNetProxyInnerStatus(netProxyId string, status int8, statusError string) (err error) {
-	if netProxyId == "" || status == 0 {
+func (this_ *Worker) doChangeNetProxyOuterStatus(statusChangeList []*StatusChange) (err error) {
+	if len(statusChangeList) == 0 {
 		return
 	}
-	var find = this_.findNetProxy(netProxyId)
+
 	var findChanged = false
-	if find != nil {
-		if find.InnerStatus != status || find.InnerStatusError != statusError {
+	for _, one := range statusChangeList {
+		if one.Id == "" || one.Status == 0 {
+			continue
+		}
+		var find = this_.findNetProxy(one.Id)
+		if find == nil {
+			continue
+		}
+		if find.OuterStatus != one.Status || find.OuterStatusError != one.StatusError {
 			findChanged = true
-			find.InnerStatus = status
-			find.InnerStatusError = statusError
+			find.OuterStatus = one.Status
+			find.OuterStatusError = one.StatusError
 		}
 	}
 	if findChanged && this_.server.OnNetProxyListChange != nil {

@@ -58,9 +58,13 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 	if err != nil {
 		if pool != nil && len(pool.listeners) == 0 {
 			this_.worker.notifyAll(&Message{
-				NodeId:          pool.toNodeId,
-				NodeStatus:      StatusError,
-				NodeStatusError: err.Error(),
+				NodeStatusChangeList: []*StatusChange{
+					{
+						Id:          pool.toNodeId,
+						Status:      StatusError,
+						StatusError: err.Error(),
+					},
+				},
 			})
 		}
 		Logger.Warn(this_.GetServerInfo()+" 连接 ["+connAddress+"] 异常", zap.Any("error", err.Error()))
@@ -138,15 +142,23 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 		if clientIndex == 0 {
-			var notifyMsg = &Message{
-				NodeId: serverNode.Id,
-			}
+			var notifyMsg = &Message{}
 			if pool.isStop {
-				notifyMsg.NodeStatus = StatusStopped
-				notifyMsg.NodeStatusError = ""
+				notifyMsg.NetProxyInnerStatusChangeList = []*StatusChange{
+					{
+						Id:          serverNode.Id,
+						Status:      StatusStopped,
+						StatusError: "",
+					},
+				}
 			} else {
-				notifyMsg.NodeStatus = StatusError
-				notifyMsg.NodeStatusError = "连接异常"
+				notifyMsg.NetProxyInnerStatusChangeList = []*StatusChange{
+					{
+						Id:          serverNode.Id,
+						Status:      StatusError,
+						StatusError: "连接异常",
+					},
+				}
 			}
 
 			this_.worker.notifyAll(notifyMsg)

@@ -112,6 +112,13 @@
                           {{ scope.row.innerMonitorData.readLastSleep }}
                           {{ scope.row.innerMonitorData.readLastSleepUnit }}
                         </span>
+                        时间:<span class="pdlr-10 color-blue">
+                          {{
+                            tool.formatDateByTime(
+                              scope.row.innerMonitorData.readLastTimestamp
+                            )
+                          }}
+                        </span>
                       </div>
                       <div class="">
                         输出:<span class="pdlr-10 color-blue">
@@ -121,6 +128,13 @@
                         输出速度:<span class="pdlr-10 color-blue">
                           {{ scope.row.innerMonitorData.writeLastSleep }}
                           {{ scope.row.innerMonitorData.writeLastSleepUnit }}
+                        </span>
+                        时间:<span class="pdlr-10 color-blue">
+                          {{
+                            tool.formatDateByTime(
+                              scope.row.innerMonitorData.writeLastTimestamp
+                            )
+                          }}
                         </span>
                       </div>
                     </div>
@@ -190,6 +204,13 @@
                           {{ scope.row.outerMonitorData.readLastSleep }}
                           {{ scope.row.outerMonitorData.readLastSleepUnit }}
                         </span>
+                        时间:<span class="pdlr-10 color-blue">
+                          {{
+                            tool.formatDateByTime(
+                              scope.row.outerMonitorData.readLastTimestamp
+                            )
+                          }}
+                        </span>
                       </div>
                       <div class="">
                         输出:<span class="pdlr-10 color-blue">
@@ -199,6 +220,13 @@
                         输出速度:<span class="pdlr-10 color-blue">
                           {{ scope.row.outerMonitorData.writeLastSleep }}
                           {{ scope.row.outerMonitorData.writeLastSleepUnit }}
+                        </span>
+                        时间:<span class="pdlr-10 color-blue">
+                          {{
+                            tool.formatDateByTime(
+                              scope.row.outerMonitorData.writeLastTimestamp
+                            )
+                          }}
                         </span>
                       </div>
                     </div>

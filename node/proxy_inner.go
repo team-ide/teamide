@@ -43,9 +43,13 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 	}
 	defer func() {
 		this_.notifyAll(&Message{
-			NetProxyId:               this_.netProxy.Id,
-			NetProxyInnerStatus:      StatusStopped,
-			NetProxyInnerStatusError: "",
+			NetProxyInnerStatusChangeList: []*StatusChange{
+				{
+					Id:          this_.netProxy.Id,
+					Status:      StatusStopped,
+					StatusError: "",
+				},
+			},
 		})
 		if !this_.isStopped() {
 			return
@@ -61,17 +65,25 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
 
 		this_.notifyAll(&Message{
-			NetProxyId:               this_.netProxy.Id,
-			NetProxyInnerStatus:      StatusError,
-			NetProxyInnerStatusError: err.Error(),
+			NetProxyInnerStatusChangeList: []*StatusChange{
+				{
+					Id:          this_.netProxy.Id,
+					Status:      StatusError,
+					StatusError: err.Error(),
+				},
+			},
 		})
 		return
 	}
 	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
 	this_.notifyAll(&Message{
-		NetProxyId:               this_.netProxy.Id,
-		NetProxyInnerStatus:      StatusStarted,
-		NetProxyInnerStatusError: "",
+		NetProxyInnerStatusChangeList: []*StatusChange{
+			{
+				Id:          this_.netProxy.Id,
+				Status:      StatusStarted,
+				StatusError: "",
+			},
+		},
 	})
 	for {
 		if this_.isStopped() {

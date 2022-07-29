@@ -12,9 +12,13 @@ func (this_ *Server) serverListenerKeepAlive() {
 
 	defer func() {
 		this_.worker.notifyAll(&Message{
-			NodeId:          this_.rootNode.Id,
-			NodeStatus:      StatusStopped,
-			NodeStatusError: "",
+			NodeStatusChangeList: []*StatusChange{
+				{
+					Id:          this_.rootNode.Id,
+					Status:      StatusStopped,
+					StatusError: "",
+				},
+			},
 		})
 		// 删除所有连接
 		var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.Id)
@@ -29,16 +33,26 @@ func (this_ *Server) serverListenerKeepAlive() {
 	this_.serverListener, err = net.Listen("tcp", GetAddress(this_.BindAddress))
 	if err != nil {
 		this_.worker.notifyAll(&Message{
-			NodeId:          this_.rootNode.Id,
-			NodeStatus:      StatusError,
-			NodeStatusError: err.Error(),
+			NodeStatusChangeList: []*StatusChange{
+				{
+					Id:          this_.rootNode.Id,
+					Status:      StatusError,
+					StatusError: err.Error(),
+				},
+			},
 		})
 		Logger.Error(this_.GetServerInfo()+" 服务启动 异常", zap.Any("error", err.Error()))
 		return
 	}
 	Logger.Info(this_.GetServerInfo() + " 服务启动 成功")
 
-	_ = this_.worker.doChangeNodeStatus(this_.rootNode.Id, StatusStarted, "")
+	_ = this_.worker.doChangeNodeStatus([]*StatusChange{
+		{
+			Id:          this_.rootNode.Id,
+			Status:      StatusStarted,
+			StatusError: "",
+		},
+	})
 	for {
 		var conn net.Conn
 		conn, err = this_.serverListener.Accept()
@@ -102,10 +116,14 @@ func (this_ *Server) serverListenerKeepAlive() {
 					this_.cache.removeNodeListenerPool(fromNodeId, this_.Id)
 
 					var notifyMsg = &Message{
-						NodeId: clientNode.Id,
+						NodeStatusChangeList: []*StatusChange{
+							{
+								Id:          clientNode.Id,
+								Status:      StatusStopped,
+								StatusError: "",
+							},
+						},
 					}
-					notifyMsg.NodeStatus = StatusStopped
-					notifyMsg.NodeStatusError = ""
 					this_.worker.notifyAll(notifyMsg)
 				}
 			}, this_.worker.MonitorData)
@@ -126,11 +144,15 @@ func (this_ *Server) serverListenerKeepAlive() {
 				_ = this_.worker.doAddNodeList(clientMsg.NodeList)
 
 				this_.worker.notifyAll(&Message{
-					NodeId:          clientNode.Id,
-					NodeStatus:      StatusStarted,
-					NodeStatusError: "",
-					NodeList:        this_.cache.nodeList,
-					NetProxyList:    this_.cache.netProxyList,
+					NodeStatusChangeList: []*StatusChange{
+						{
+							Id:          clientNode.Id,
+							Status:      StatusStarted,
+							StatusError: "",
+						},
+					},
+					NodeList:     this_.cache.nodeList,
+					NetProxyList: this_.cache.netProxyList,
 				})
 			}
 

@@ -232,9 +232,22 @@ export default {
       }
     },
     nodeCollapse(data) {
-      let index = this.expands.indexOf(data.key);
-      if (index >= 0) {
-        this.expands.splice(index, 1);
+      console.log(data);
+      let needDeletes = [];
+      this.expands.forEach((one) => {
+        if (data.key == "/") {
+          needDeletes.push(one);
+        } else if (one == data.key || one.startsWith(data.key + "/")) {
+          needDeletes.push(one);
+        }
+      });
+      if (needDeletes.length > 0) {
+        needDeletes.forEach((one) => {
+          let index = this.expands.indexOf(one);
+          if (index >= 0) {
+            this.expands.splice(index, 1);
+          }
+        });
         this.toolboxWorker.updateExtend({
           expands: this.expands,
         });

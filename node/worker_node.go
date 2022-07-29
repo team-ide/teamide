@@ -72,6 +72,7 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	this_.cache.nodeLock.Lock()
 	defer this_.cache.nodeLock.Unlock()
 
+	var statusChangeList []*StatusChange
 	var findChanged = false
 	for _, node := range nodeList {
 		var find = this_.findNode(node.Id)
@@ -82,11 +83,29 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 			this_.cache.nodeList = append(this_.cache.nodeList, node)
 		} else {
 			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("node", node))
+
+			if this_.server.rootNode.Id == node.Id {
+				if find.Status != 0 && node.Status != find.Status {
+					statusChangeList = append(statusChangeList, &StatusChange{
+						Id:          node.Id,
+						Status:      find.Status,
+						StatusError: find.StatusError,
+					})
+				}
+			}
+
 			if copyNode(node, find) {
 				findChanged = true
 			}
 		}
 	}
+
+	if len(statusChangeList) > 0 {
+		this_.notifyOther(&Message{
+			NodeStatusChangeList: statusChangeList,
+		})
+	}
+
 	if findChanged {
 		this_.refresh()
 
@@ -205,17 +224,26 @@ func (this_ *Worker) doRemoveNodeConnNodeIdList(id string, removeConnNodeIdList 
 	return
 }
 
-func (this_ *Worker) doChangeNodeStatus(nodeId string, status int8, statusError string) (err error) {
-	if nodeId == "" || status == 0 {
+func (this_ *Worker) doChangeNodeStatus(statusChangeList []*StatusChange) (err error) {
+	if len(statusChangeList) == 0 {
 		return
 	}
-	var find = this_.findNode(nodeId)
+
 	var findChanged = false
-	if find != nil {
-		findChanged = copyNode(&Info{
-			Status:      status,
-			StatusError: statusError,
-		}, find)
+	for _, one := range statusChangeList {
+		if one.Id == "" || one.Status == 0 {
+			continue
+		}
+		var find = this_.findNode(one.Id)
+		if find == nil {
+			continue
+		}
+		if copyNode(&Info{
+			Status:      one.Status,
+			StatusError: one.StatusError,
+		}, find) {
+			findChanged = true
+		}
 	}
 	if findChanged && this_.server.OnNodeListChange != nil {
 		this_.server.OnNodeListChange(this_.cache.nodeList)
