@@ -232,7 +232,6 @@ export default {
       }
     },
     nodeCollapse(data) {
-      console.log(data);
       let needDeletes = [];
       this.expands.forEach((one) => {
         if (data.key == "/") {
