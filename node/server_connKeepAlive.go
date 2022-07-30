@@ -58,11 +58,13 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 	if err != nil {
 		if pool != nil && len(pool.listeners) == 0 {
 			this_.worker.notifyAll(&Message{
-				NodeStatusChangeList: []*StatusChange{
-					{
-						Id:          pool.toNodeId,
-						Status:      StatusError,
-						StatusError: err.Error(),
+				NotifyChange: &NotifyChange{
+					NodeStatusChangeList: []*StatusChange{
+						{
+							Id:          pool.toNodeId,
+							Status:      StatusError,
+							StatusError: err.Error(),
+						},
 					},
 				},
 			})
@@ -87,15 +89,18 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 	}
 
 	var msg = &Message{
-		Method:      methodOK,
-		Node:        this_.rootNode,
-		Ok:          true,
-		ClientIndex: clientIndex,
+		Method: methodOK,
+		ClientData: &ClientData{
+			Node:  this_.rootNode,
+			Index: clientIndex,
+		},
 	}
 
 	if clientIndex == 0 {
-		msg.NodeList = this_.cache.nodeList
-		msg.NetProxyList = this_.cache.netProxyList
+		msg.NotifyChange = &NotifyChange{
+			NodeList:     this_.cache.nodeList,
+			NetProxyList: this_.cache.netProxyList,
+		}
 	}
 	err = WriteMessage(conn, msg, this_.worker.MonitorData)
 	if err != nil {
@@ -109,12 +114,12 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 		_ = conn.Close()
 		return
 	}
-	if msg.Node == nil {
+	if msg.ClientData == nil || msg.ClientData.Node == nil {
 		Logger.Error(this_.GetServerInfo() + " 连接 [" + connAddress + "] 接口异常")
 		_ = conn.Close()
 		return
 	}
-	serverNode := msg.Node
+	serverNode := msg.ClientData.Node
 	Logger.Info(this_.GetServerInfo() + " 连接 [" + connAddress + "] 成功")
 
 	toNodeId := serverNode.Id
@@ -142,9 +147,11 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 		Logger.Info(this_.GetServerInfo() + " 移除 连接至 [" + toNodeId + "][" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 		if clientIndex == 0 {
-			var notifyMsg = &Message{}
+			var notifyMsg = &Message{
+				NotifyChange: &NotifyChange{},
+			}
 			if pool.isStop {
-				notifyMsg.NetProxyInnerStatusChangeList = []*StatusChange{
+				notifyMsg.NotifyChange.NetProxyInnerStatusChangeList = []*StatusChange{
 					{
 						Id:          serverNode.Id,
 						Status:      StatusStopped,
@@ -152,7 +159,7 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 					},
 				}
 			} else {
-				notifyMsg.NetProxyInnerStatusChangeList = []*StatusChange{
+				notifyMsg.NotifyChange.NetProxyInnerStatusChangeList = []*StatusChange{
 					{
 						Id:          serverNode.Id,
 						Status:      StatusError,

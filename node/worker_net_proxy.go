@@ -46,7 +46,9 @@ func (this_ *Worker) addNetProxyList(netProxyList []*NetProxy) (err error) {
 		return
 	}
 	this_.notifyAll(&Message{
-		NetProxyList: netProxyList,
+		NotifyChange: &NotifyChange{
+			NetProxyList: netProxyList,
+		},
 	})
 	err = this_.doAddNetProxyList(netProxyList)
 	return
@@ -110,8 +112,10 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 
 	if len(innerStatusChangeList) > 0 || len(outerStatusChangeList) > 0 {
 		this_.notifyOther(&Message{
-			NetProxyInnerStatusChangeList: innerStatusChangeList,
-			NetProxyOuterStatusChangeList: outerStatusChangeList,
+			NotifyChange: &NotifyChange{
+				NetProxyInnerStatusChangeList: innerStatusChangeList,
+				NetProxyOuterStatusChangeList: outerStatusChangeList,
+			},
 		})
 	}
 
@@ -183,7 +187,9 @@ func (this_ *Worker) removeNetProxyList(removeNetProxyIdList []string) (err erro
 	}
 
 	this_.notifyAll(&Message{
-		RemoveNetProxyIdList: removeNetProxyIdList,
+		NotifyChange: &NotifyChange{
+			RemoveNetProxyIdList: removeNetProxyIdList,
+		},
 	})
 
 	err = this_.doRemoveNetProxyList(removeNetProxyIdList)

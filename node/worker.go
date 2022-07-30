@@ -1,6 +1,9 @@
 package node
 
-import "teamide/pkg/util"
+import (
+	"errors"
+	"teamide/pkg/util"
+)
 
 type Worker struct {
 	server      *Server
@@ -19,7 +22,10 @@ func (this_ *Worker) Stop() {
 	}
 }
 
-func (this_ *Worker) notifyDo(msg *Message) {
+func (this_ *Worker) notifyDo(msg *NotifyChange) {
+	if msg == nil {
+		return
+	}
 	if len(msg.NodeStatusChangeList) > 0 {
 		_ = this_.doChangeNodeStatus(msg.NodeStatusChangeList)
 	}
@@ -46,26 +52,38 @@ func (this_ *Worker) notifyDo(msg *Message) {
 	}
 }
 func (this_ *Worker) notifyParent(msg *Message) {
-	msg.NotifyParent = true
+	if msg.NotifyChange == nil {
+		return
+	}
+	msg.NotifyChange.NotifyParent = true
 	this_.notifyAllFrom(msg)
-	this_.notifyDo(msg)
+	this_.notifyDo(msg.NotifyChange)
 }
 
 func (this_ *Worker) notifyChildren(msg *Message) {
-	msg.NotifyChildren = true
+	if msg.NotifyChange == nil {
+		return
+	}
+	msg.NotifyChange.NotifyChildren = true
 	this_.notifyAllTo(msg)
-	this_.notifyDo(msg)
+	this_.notifyDo(msg.NotifyChange)
 }
 
 func (this_ *Worker) notifyAll(msg *Message) {
-	msg.NotifyAll = true
+	if msg.NotifyChange == nil {
+		return
+	}
+	msg.NotifyChange.NotifyAll = true
 	this_.notifyAllTo(msg)
 	this_.notifyAllFrom(msg)
-	this_.notifyDo(msg)
+	this_.notifyDo(msg.NotifyChange)
 }
 
 func (this_ *Worker) notifyOther(msg *Message) {
-	msg.NotifyAll = true
+	if msg.NotifyChange == nil {
+		return
+	}
+	msg.NotifyChange.NotifyAll = true
 	this_.notifyAllTo(msg)
 	this_.notifyAllFrom(msg)
 }
@@ -85,12 +103,14 @@ func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *
 		if find == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
 				msg := &Message{
-					NodeId:             nodeId,
 					NotifiedNodeIdList: NotifiedNodeIdList,
+					NodeWorkData: &NodeWorkData{
+						NodeId: nodeId,
+					},
 				}
 				res, _ := this_.Call(listener, methodGetNode, msg)
-				if res != nil && res.Node != nil {
-					find = res.Node
+				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.Node != nil {
+					find = res.NodeWorkData.Node
 				}
 				return
 			})
@@ -114,12 +134,14 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		if version == "" {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
 				msg := &Message{
-					NodeId:             nodeId,
 					NotifiedNodeIdList: NotifiedNodeIdList,
+					NodeWorkData: &NodeWorkData{
+						NodeId: nodeId,
+					},
 				}
 				res, _ := this_.Call(listener, methodGetNode, msg)
-				if res != nil {
-					version = res.Version
+				if res != nil && res.NodeWorkData != nil {
+					version = res.NodeWorkData.Version
 				}
 				return
 			})
@@ -168,11 +190,13 @@ func (this_ *Worker) getNodeMonitorData(nodeId string, NotifiedNodeIdList []stri
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
 				res, _ := this_.Call(listener, methodGetNodeMonitorData, &Message{
-					NodeId:             nodeId,
 					NotifiedNodeIdList: NotifiedNodeIdList,
+					NodeWorkData: &NodeWorkData{
+						NodeId: nodeId,
+					},
 				})
-				if res != nil && res.MonitorData != nil {
-					monitorData = res.MonitorData
+				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.MonitorData != nil {
+					monitorData = res.NodeWorkData.MonitorData
 				}
 				return
 			})
@@ -197,11 +221,13 @@ func (this_ *Worker) getNetProxyInnerMonitorData(netProxyId string, NotifiedNode
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
 				res, _ := this_.Call(listener, methodNetProxyGetInnerMonitorData, &Message{
-					NetProxyId:         netProxyId,
+					NetProxyWorkData: &NetProxyWorkData{
+						NetProxyId: netProxyId,
+					},
 					NotifiedNodeIdList: NotifiedNodeIdList,
 				})
-				if res != nil && res.MonitorData != nil {
-					monitorData = res.MonitorData
+				if res != nil && res.NetProxyWorkData != nil && res.NetProxyWorkData.MonitorData != nil {
+					monitorData = res.NetProxyWorkData.MonitorData
 				}
 				return
 			})
@@ -226,11 +252,13 @@ func (this_ *Worker) getNetProxyOuterMonitorData(netProxyId string, NotifiedNode
 		if monitorData == nil {
 			_ = pool.Do("", func(listener *MessageListener) (e error) {
 				res, _ := this_.Call(listener, methodNetProxyGetOuterMonitorData, &Message{
-					NetProxyId:         netProxyId,
+					NetProxyWorkData: &NetProxyWorkData{
+						NetProxyId: netProxyId,
+					},
 					NotifiedNodeIdList: NotifiedNodeIdList,
 				})
-				if res != nil && res.MonitorData != nil {
-					monitorData = res.MonitorData
+				if res != nil && res.NetProxyWorkData != nil && res.NetProxyWorkData.MonitorData != nil {
+					monitorData = res.NetProxyWorkData.MonitorData
 				}
 				return
 			})
@@ -243,5 +271,35 @@ func (this_ *Worker) refresh() {
 
 	this_.refreshNodeList()
 	this_.refreshNetProxy()
+	return
+}
+
+func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func(listener *MessageListener) (err error)) (send bool, err error) {
+	if len(lineNodeIdList) == 0 {
+		err = errors.New("节点线不存在")
+		return
+	}
+	var thisNodeIndex = util.ContainsString(lineNodeIdList, this_.server.Id)
+	if thisNodeIndex != len(lineNodeIdList)-1 {
+		nodeId := lineNodeIdList[thisNodeIndex+1]
+
+		var pool = this_.cache.getNodeListenerPool(this_.server.Id, nodeId)
+		if pool == nil {
+			pool = this_.cache.getNodeListenerPool(nodeId, this_.server.Id)
+		}
+		if pool == nil {
+			err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + nodeId + "] 暂无通讯渠道")
+			return
+		}
+		err = pool.Do(key, func(listener *MessageListener) (e error) {
+			e = doSend(listener)
+			return
+		})
+		if err != nil {
+			return
+		}
+		send = true
+		return
+	}
 	return
 }

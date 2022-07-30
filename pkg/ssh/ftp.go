@@ -10,17 +10,6 @@ import (
 	"teamide/pkg/util"
 )
 
-type ConfirmInfo struct {
-	ConfirmId   string `json:"confirmId,omitempty"`
-	IsConfirm   bool   `json:"isConfirm,omitempty"`
-	Confirm     string `json:"confirm,omitempty"`
-	Path        string `json:"path,omitempty"`
-	Name        string `json:"name,omitempty"`
-	IsFileExist bool   `json:"isFileExist,omitempty"`
-	IsOk        bool   `json:"isOk,omitempty"`
-	IsCancel    bool   `json:"isCancel,omitempty"`
-}
-
 type UploadFile struct {
 	Dir      string
 	Place    string
@@ -32,7 +21,7 @@ type UploadFile struct {
 type SftpClient struct {
 	Client
 	UploadFile chan *UploadFile
-	confirmMap map[string]chan *ConfirmInfo
+	confirmMap map[string]chan *util.FileConfirmInfo
 }
 
 func (this_ *SftpClient) listenUpload() {

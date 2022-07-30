@@ -67,7 +67,7 @@ type Client struct {
 	ws                 *websocket.Conn
 	isClosedClient     bool
 	isClosedWS         bool
-	wsWriteLock        sync.RWMutex
+	wsWriteLock        sync.Locker
 	writeWSMessageList chan *writeWSMessage
 }
 

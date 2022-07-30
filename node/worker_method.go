@@ -20,6 +20,19 @@ var (
 	methodNetProxySend                = 23
 	methodNetProxyGetInnerMonitorData = 24
 	methodNetProxyGetOuterMonitorData = 25
+
+	methodFileFiles         = 31
+	methodFileCopy          = 32
+	methodFileRemove        = 33
+	methodFileRename        = 34
+	methodFileUpload        = 35
+	methodFileConfirmResult = 36
+	methodFileProgress      = 37
+	methodFileRead          = 38
+
+	methodShellNewConn   = 41
+	methodShellCloseConn = 42
+	methodShellSend      = 43
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
@@ -91,42 +104,84 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	}
 	res = &Message{}
-	if msg.NotifyAll {
-		this_.notifyAll(msg)
-	} else {
-		if msg.NotifyChildren {
-			this_.notifyChildren(msg)
-		}
-		if msg.NotifyParent {
-			this_.notifyParent(msg)
+	if msg.NotifyChange != nil {
+		if msg.NotifyChange.NotifyAll {
+			this_.notifyAll(msg)
+		} else {
+			if msg.NotifyChange.NotifyChildren {
+				this_.notifyChildren(msg)
+			}
+			if msg.NotifyChange.NotifyParent {
+				this_.notifyParent(msg)
+			}
 		}
 	}
 	switch method {
 	case methodOK:
-		res.Ok = true
 		return
 	case methodGetVersion:
-		res.Version = this_.getVersion(msg.NodeId, msg.NotifiedNodeIdList)
+		if msg.NodeWorkData != nil {
+			version := this_.getVersion(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			if version != "" {
+				res.NodeWorkData = &NodeWorkData{
+					Version: version,
+				}
+			}
+		}
 		return
 	case methodGetNode:
-		res.Node = this_.getNode(msg.NodeId, msg.NotifiedNodeIdList)
+		if msg.NodeWorkData != nil {
+			node := this_.getNode(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			if node != nil {
+				res.NodeWorkData = &NodeWorkData{
+					Node: node,
+				}
+			}
+		}
 		return
 	case methodGetNodeMonitorData:
-		res.MonitorData = this_.getNodeMonitorData(msg.NodeId, msg.NotifiedNodeIdList)
+		if msg.NodeWorkData != nil {
+			monitorData := this_.getNodeMonitorData(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			if monitorData != nil {
+				res.NodeWorkData = &NodeWorkData{
+					MonitorData: monitorData,
+				}
+			}
+		}
 		return
 	case methodNetProxyNewConn:
-		err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)
+		if msg.NetProxyWorkData != nil {
+			err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId)
+		}
 		return
 	case methodNetProxyCloseConn:
-		err = this_.netProxyCloseConn(msg.IsReverse, msg.LineNodeIdList, msg.NetProxyId, msg.ConnId)
+		if msg.NetProxyWorkData != nil {
+			err = this_.netProxyCloseConn(msg.NetProxyWorkData.IsReverse, msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId)
+		}
 		return
 	case methodNetProxySend:
-		err = this_.netProxySend(msg.IsReverse, msg.LineNodeIdList, msg.NetProxyId, msg.ConnId, msg.Bytes)
+		if msg.NetProxyWorkData != nil {
+			err = this_.netProxySend(msg.NetProxyWorkData.IsReverse, msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId, msg.NetProxyWorkData.Bytes)
+		}
 	case methodNetProxyGetInnerMonitorData:
-		res.MonitorData = this_.getNetProxyInnerMonitorData(msg.NetProxyId, msg.NotifiedNodeIdList)
+		if msg.NetProxyWorkData != nil {
+			monitorData := this_.getNetProxyInnerMonitorData(msg.NetProxyWorkData.NetProxyId, msg.NotifiedNodeIdList)
+			if monitorData != nil {
+				res.NetProxyWorkData = &NetProxyWorkData{
+					MonitorData: monitorData,
+				}
+			}
+		}
 		return
 	case methodNetProxyGetOuterMonitorData:
-		res.MonitorData = this_.getNetProxyOuterMonitorData(msg.NetProxyId, msg.NotifiedNodeIdList)
+		if msg.NetProxyWorkData != nil {
+			monitorData := this_.getNetProxyOuterMonitorData(msg.NetProxyWorkData.NetProxyId, msg.NotifiedNodeIdList)
+			if monitorData != nil {
+				res.NetProxyWorkData = &NetProxyWorkData{
+					MonitorData: monitorData,
+				}
+			}
+		}
 		return
 	}
 

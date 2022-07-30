@@ -56,8 +56,9 @@ func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
 		return
 	}
 	this_.notifyAll(&Message{
-		NotifyAll: true,
-		NodeList:  nodeList,
+		NotifyChange: &NotifyChange{
+			NodeList: nodeList,
+		},
 	})
 
 	err = this_.doAddNodeList(nodeList)
@@ -102,7 +103,9 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 
 	if len(statusChangeList) > 0 {
 		this_.notifyOther(&Message{
-			NodeStatusChangeList: statusChangeList,
+			NotifyChange: &NotifyChange{
+				NodeStatusChangeList: statusChangeList,
+			},
 		})
 	}
 
@@ -121,7 +124,9 @@ func (this_ *Worker) removeNodeList(removeNodeIdList []string) (err error) {
 		return
 	}
 	this_.notifyAll(&Message{
-		RemoveNodeIdList: removeNodeIdList,
+		NotifyChange: &NotifyChange{
+			RemoveNodeIdList: removeNodeIdList,
+		},
 	})
 	err = this_.doRemoveNodeList(removeNodeIdList)
 
@@ -179,8 +184,10 @@ func (this_ *Worker) removeNodeConnNodeIdList(id string, removeConnNodeIdList []
 		return
 	}
 	this_.notifyAll(&Message{
-		NodeId:               id,
-		RemoveConnNodeIdList: removeConnNodeIdList,
+		NotifyChange: &NotifyChange{
+			NodeId:               id,
+			RemoveConnNodeIdList: removeConnNodeIdList,
+		},
 	})
 
 	_ = this_.doRemoveNodeConnNodeIdList(id, removeConnNodeIdList)

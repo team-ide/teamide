@@ -12,11 +12,13 @@ func (this_ *Server) serverListenerKeepAlive() {
 
 	defer func() {
 		this_.worker.notifyAll(&Message{
-			NodeStatusChangeList: []*StatusChange{
-				{
-					Id:          this_.rootNode.Id,
-					Status:      StatusStopped,
-					StatusError: "",
+			NotifyChange: &NotifyChange{
+				NodeStatusChangeList: []*StatusChange{
+					{
+						Id:          this_.rootNode.Id,
+						Status:      StatusStopped,
+						StatusError: "",
+					},
 				},
 			},
 		})
@@ -33,11 +35,13 @@ func (this_ *Server) serverListenerKeepAlive() {
 	this_.serverListener, err = net.Listen("tcp", GetAddress(this_.BindAddress))
 	if err != nil {
 		this_.worker.notifyAll(&Message{
-			NodeStatusChangeList: []*StatusChange{
-				{
-					Id:          this_.rootNode.Id,
-					Status:      StatusError,
-					StatusError: err.Error(),
+			NotifyChange: &NotifyChange{
+				NodeStatusChangeList: []*StatusChange{
+					{
+						Id:          this_.rootNode.Id,
+						Status:      StatusError,
+						StatusError: err.Error(),
+					},
 				},
 			},
 		})
@@ -81,17 +85,19 @@ func (this_ *Server) serverListenerKeepAlive() {
 				_ = conn_.Close()
 				return
 			}
-			if clientMsg.Method != methodOK || clientMsg.Node == nil {
+			if clientMsg.Method != methodOK || clientMsg.ClientData == nil || clientMsg.ClientData.Node == nil {
 				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
 				_ = conn_.Close()
 				return
 			}
-			var clientNode = clientMsg.Node
-			var clientIndex = clientMsg.ClientIndex
+			var clientNode = clientMsg.ClientData.Node
+			var clientIndex = clientMsg.ClientData.Index
 
 			// 发送当前节点ID
 			err = WriteMessage(conn, &Message{
-				Node: this_.rootNode,
+				ClientData: &ClientData{
+					Node: this_.rootNode,
+				},
 			}, this_.worker.MonitorData)
 			if err != nil {
 				Logger.Error(this_.GetServerInfo() + " 来之客户端连接 接口异常")
@@ -116,11 +122,13 @@ func (this_ *Server) serverListenerKeepAlive() {
 					this_.cache.removeNodeListenerPool(fromNodeId, this_.Id)
 
 					var notifyMsg = &Message{
-						NodeStatusChangeList: []*StatusChange{
-							{
-								Id:          clientNode.Id,
-								Status:      StatusStopped,
-								StatusError: "",
+						NotifyChange: &NotifyChange{
+							NodeStatusChangeList: []*StatusChange{
+								{
+									Id:          clientNode.Id,
+									Status:      StatusStopped,
+									StatusError: "",
+								},
 							},
 						},
 					}
@@ -131,28 +139,33 @@ func (this_ *Server) serverListenerKeepAlive() {
 			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
 
 			if clientIndex == 0 {
-				for _, one := range clientMsg.NodeList {
-					if one.Id == clientNode.Id {
-						one.addConnNodeId(this_.Id)
-						one.Status = StatusStarted
-						one.StatusError = ""
-					} else if one.Id == this_.rootNode.Id {
-						one.Status = StatusStarted
-						one.StatusError = ""
+				if clientMsg.ClientData != nil {
+					for _, one := range clientMsg.ClientData.NodeList {
+						if one.Id == clientNode.Id {
+							one.addConnNodeId(this_.Id)
+							one.Status = StatusStarted
+							one.StatusError = ""
+						} else if one.Id == this_.rootNode.Id {
+							one.Status = StatusStarted
+							one.StatusError = ""
+						}
 					}
+					_ = this_.worker.doAddNodeList(clientMsg.ClientData.NodeList)
+					_ = this_.worker.doAddNetProxyList(clientMsg.ClientData.NetProxyList)
 				}
-				_ = this_.worker.doAddNodeList(clientMsg.NodeList)
 
 				this_.worker.notifyAll(&Message{
-					NodeStatusChangeList: []*StatusChange{
-						{
-							Id:          clientNode.Id,
-							Status:      StatusStarted,
-							StatusError: "",
+					NotifyChange: &NotifyChange{
+						NodeStatusChangeList: []*StatusChange{
+							{
+								Id:          clientNode.Id,
+								Status:      StatusStarted,
+								StatusError: "",
+							},
 						},
+						NodeList:     this_.cache.nodeList,
+						NetProxyList: this_.cache.netProxyList,
 					},
-					NodeList:     this_.cache.nodeList,
-					NetProxyList: this_.cache.netProxyList,
 				})
 			}
 

@@ -17,36 +17,65 @@ var (
 )
 
 type Message struct {
-	Id                            string          `json:"id,omitempty"`
-	Method                        int             `json:"method,omitempty"`
-	Error                         string          `json:"error,omitempty"`
-	Ok                            bool            `json:"ok,omitempty"`
+	Id                 string            `json:"id,omitempty"`
+	Method             int               `json:"method,omitempty"`
+	Error              string            `json:"error,omitempty"`
+	NotifiedNodeIdList []string          `json:"notifiedNodeIdList,omitempty"`
+	LineNodeIdList     []string          `json:"lineNodeIdList,omitempty"`
+	ClientData         *ClientData       `json:"clientData,omitempty"`
+	NodeWorkData       *NodeWorkData     `json:"nodeWorkData,omitempty"`
+	NetProxyWorkData   *NetProxyWorkData `json:"netProxyWorkData,omitempty"`
+	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
+	NotifyChange       *NotifyChange     `json:"notifyChange,omitempty"`
+	listener           *MessageListener
+}
+
+type ClientData struct {
+	Index        int         `json:"index,omitempty"`
+	Node         *Info       `json:"node,omitempty"`
+	NodeList     []*Info     `json:"nodeList,omitempty"`
+	NetProxyList []*NetProxy `json:"netProxyList,omitempty"`
+}
+
+type NodeWorkData struct {
+	NodeId      string       `json:"nodeId,omitempty"`
+	Node        *Info        `json:"node,omitempty"`
+	Version     string       `json:"version,omitempty"`
+	MonitorData *MonitorData `json:"monitorData,omitempty"`
+}
+
+type NetProxyWorkData struct {
+	NetProxyId  string       `json:"netProxyId,omitempty"`
+	ConnId      string       `json:"connId,omitempty"`
+	Bytes       []byte       `json:"bytes,omitempty"`
+	IsReverse   bool         `json:"isReverse,omitempty"`
+	MonitorData *MonitorData `json:"monitorData,omitempty"`
+}
+
+type FileWorkData struct {
+	FileList []*FileInfo `json:"fileList,omitempty"`
+	Dir      string      `json:"dir,omitempty"`
+	Path     string      `json:"path,omitempty"`
+	OldPath  string      `json:"oldPath,omitempty"`
+	NewPath  string      `json:"newPath,omitempty"`
+	Text     string      `json:"text,omitempty"`
+	IsNew    bool        `json:"isNew,omitempty"`
+	IsDir    bool        `json:"isDir,omitempty"`
+}
+
+type NotifyChange struct {
+	NodeId                        string          `json:"nodeId,omitempty"`
 	NotifyChildren                bool            `json:"notifyChildren,omitempty"`
 	NotifyParent                  bool            `json:"notifyParent,omitempty"`
 	NotifyAll                     bool            `json:"notifyAll,omitempty"`
-	NodeId                        string          `json:"nodeId,omitempty"`
-	NodeIdList                    []string        `json:"nodeIdList,omitempty"`
-	RemoveNodeIdList              []string        `json:"removeNodeIdList,omitempty"`
-	NotifiedNodeIdList            []string        `json:"notifiedNodeIdList,omitempty"`
-	RemoveConnNodeIdList          []string        `json:"removeConnNodeIdList,omitempty"`
-	Node                          *Info           `json:"node,omitempty"`
 	NodeList                      []*Info         `json:"nodeList,omitempty"`
-	NetProxyId                    string          `json:"netProxyId,omitempty"`
-	NetProxyIdList                []string        `json:"netProxyIdList,omitempty"`
-	RemoveNetProxyIdList          []string        `json:"removeNetProxyIdList,omitempty"`
-	ConnId                        string          `json:"connId,omitempty"`
-	IsReverse                     bool            `json:"isReverse,omitempty"`
-	LineNodeIdList                []string        `json:"lineNodeIdList,omitempty"`
-	NetProxy                      *NetProxy       `json:"netProxy,omitempty"`
 	NetProxyList                  []*NetProxy     `json:"netProxyList,omitempty"`
-	Bytes                         []byte          `json:"bytes,omitempty"`
-	ClientIndex                   int             `json:"clientIndex,omitempty"`
+	RemoveNodeIdList              []string        `json:"removeNodeIdList,omitempty"`
+	RemoveConnNodeIdList          []string        `json:"removeConnNodeIdList,omitempty"`
+	RemoveNetProxyIdList          []string        `json:"removeNetProxyIdList,omitempty"`
 	NodeStatusChangeList          []*StatusChange `json:"nodeStatusChangeList,omitempty"`
 	NetProxyInnerStatusChangeList []*StatusChange `json:"netProxyInnerStatusChangeList,omitempty"`
 	NetProxyOuterStatusChangeList []*StatusChange `json:"netProxyOuterStatusChangeList,omitempty"`
-	Version                       string          `json:"version,omitempty"`
-	MonitorData                   *MonitorData    `json:"monitorData,omitempty"`
-	listener                      *MessageListener
 }
 
 type StatusChange struct {
