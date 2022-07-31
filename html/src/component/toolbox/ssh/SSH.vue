@@ -140,8 +140,6 @@
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
-            :initToken="initToken"
-            :initSocket="initSocket"
             :isFromSSH="true"
           >
           </FTP>

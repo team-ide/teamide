@@ -2,7 +2,7 @@ package toolbox
 
 import (
 	"encoding/json"
-	"errors"
+	"sync"
 	"teamide/pkg/ssh"
 	"teamide/pkg/util"
 )
@@ -10,6 +10,7 @@ import (
 type SSHBaseRequest struct {
 	Token string `json:"token"`
 	*ssh.SFTPRequest
+	WorkerId string `json:"workerId,omitempty"`
 }
 
 func SSHWork(work string, config *ssh.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -31,12 +32,7 @@ func SSHWork(work string, config *ssh.Config, data map[string]interface{}) (res 
 		ssh.TokenCache[token] = config
 		res["token"] = token
 	case "readText":
-		var token = request.Token
-		client := ssh.SftpCache[token]
-		if client == nil {
-			err = errors.New("FTP会话丢失")
-			return
-		}
+		client := createOrGetSftpClient(request.WorkerId, config)
 		var response *ssh.SFTPResponse
 		if request.Place == "local" {
 			response, err = client.LocalReadText(request.SFTPRequest)
@@ -48,12 +44,7 @@ func SSHWork(work string, config *ssh.Config, data map[string]interface{}) (res 
 		}
 		res["response"] = response
 	case "saveText":
-		var token = request.Token
-		client := ssh.SftpCache[token]
-		if client == nil {
-			err = errors.New("FTP会话丢失")
-			return
-		}
+		client := createOrGetSftpClient(request.WorkerId, config)
 		var response *ssh.SFTPResponse
 		if request.Place == "local" {
 			response, err = client.LocalSaveText(request.SFTPRequest)
@@ -64,6 +55,53 @@ func SSHWork(work string, config *ssh.Config, data map[string]interface{}) (res 
 			return
 		}
 		res["response"] = response
+	case "ftpWork":
+		client := createOrGetSftpClient(request.WorkerId, config)
+		var response *ssh.SFTPResponse
+		response, err = client.Work(request.SFTPRequest)
+		if err != nil {
+			return
+		}
+		res["response"] = response
+	case "close":
+		closeSftpClient(request.WorkerId)
+	}
+	return
+}
+
+var (
+	sftpCache     = make(map[string]*ssh.SftpClient)
+	sftpCacheLock sync.Mutex
+)
+
+func createOrGetSftpClient(workerId string, config *ssh.Config) (res *ssh.SftpClient) {
+	sftpCacheLock.Lock()
+	defer sftpCacheLock.Unlock()
+	res, ok := sftpCache[workerId]
+	if !ok {
+		res = &ssh.SftpClient{
+			WorkerId: workerId,
+			Config:   *config,
+		}
+		res.Start()
+		sftpCache[workerId] = res
+	}
+	return
+}
+func GetSftpClient(workerId string) (res *ssh.SftpClient) {
+	sftpCacheLock.Lock()
+	defer sftpCacheLock.Unlock()
+	res = sftpCache[workerId]
+	return
+}
+
+func closeSftpClient(workerId string) (res *ssh.SftpClient) {
+	sftpCacheLock.Lock()
+	defer sftpCacheLock.Unlock()
+	res, ok := sftpCache[workerId]
+	if ok {
+		delete(sftpCache, workerId)
+		res.Close()
 	}
 	return
 }

@@ -248,9 +248,8 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 }
 
 func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
-
-	this_.callMessage(&Message{
-		Method:   "refresh_node_list",
+	this_.callNodeDataChange(&NodeDataChange{
+		Type:     "nodeList",
 		NodeList: nodeList,
 	})
 }

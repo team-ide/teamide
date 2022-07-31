@@ -146,89 +146,23 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    "source.login.user"() {
-      this.initData();
-    },
-  },
+  watch: {},
   methods: {
     init() {
-      this.initData();
-    },
-    initData() {
-      if (this.source.login.user == null) {
-        return;
-      }
-      if (this.initDataed) {
-        return;
-      }
-      this.initDataed = true;
-      this.initSocket();
-    },
-    onMessage(message) {
-      if (this.tool.isEmpty(message)) {
-        return;
-      }
-      try {
-        var data = JSON.parse(message);
-        if (data.method == "refresh_node_context") {
-          if (data.nodeList) {
-            this.source.initNodeList(data.nodeList);
-          }
-          if (data.netProxyList) {
-            this.source.initNodeNetProxyList(data.netProxyList);
-          }
-        } else if (data.method == "refresh_node_list") {
-          this.source.initNodeList(data.nodeList);
-        } else if (data.method == "refresh_net_proxy_list") {
-          this.source.initNodeNetProxyList(data.netProxyList);
-        }
-      } catch (error) {}
-    },
-    onEvent(event) {
-      if (event == "socket open") {
+      this.server.addServerSocketOnOpen(() => {
         this.source.initUserToolboxData();
         this.source.initNodeContext();
         this.initOpens();
-      }
-    },
-    initSocket() {
-      let obj = this;
-      if (obj.socket != null) {
-        obj.socket.close();
-      }
-
-      obj.writeData = (data) => {
-        obj.socket.send(data);
-      };
-      obj.writeMessage = (message) => {
-        obj.socket.send(message);
-      };
-
-      let url = this.source.api;
-      url = url.substring(url.indexOf(":"));
-      url = "ws" + url + "node/websocket";
-      url += "?id=" + this.tool.md5("SocketID:" + new Date().getTime());
-      url += "&jwt=" + encodeURIComponent(obj.tool.getJWT());
-      obj.socket = new WebSocket(url);
-      obj.socket.onopen = () => {
-        obj.onEvent && obj.onEvent("socket open");
-      };
-      obj.socket.onmessage = (event) => {
-        let message = event.data;
-        if (typeof message == "string") {
-          obj.onMessage && obj.onMessage(message);
-        } else {
-          obj.onData && obj.onData(message);
-        }
-      };
-      obj.socket.onclose = () => {
-        obj.onEvent && obj.onEvent("socket close");
-        obj.socket = null;
-      };
-      obj.socket.onerror = () => {
-        obj.onEvent && obj.onEvent("socket error");
-      };
+      });
+      this.server.addServerSocketOnEvent("node-data-change", (data) => {
+        try {
+          if (data.type == "nodeList") {
+            this.source.initNodeList(data.nodeList);
+          } else if (data.type == "netProxyList") {
+            this.source.initNodeNetProxyList(data.netProxyList);
+          }
+        } catch (error) {}
+      });
     },
     addMainItem(item, fromItem) {
       this.mainItemsWorker.addItem(item, fromItem);

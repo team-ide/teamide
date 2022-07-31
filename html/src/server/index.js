@@ -2,6 +2,8 @@ import http from '@/server/http';
 
 import toolbox from "./toolbox.js";
 import node from "./node.js";
+import tool from '../tool/index.js';
+import source from '../source/index.js';
 let server = {
     toolbox,
     node,
@@ -32,6 +34,103 @@ let server = {
     updateCheck(param) {
         return http.post('api/updateCheck', param,);
     },
+    openWebsocket() {
+        if (serverSocket != null) { return }
+        if (source.login.user == null) { return; }
+        let url = source.api;
+        url = url.substring(url.indexOf(":"));
+        url = "ws" + url + "websocket";
+        url += "?id=" + tool.md5("serverSocket:" + new Date().getTime());
+        url += "&jwt=" + encodeURIComponent(tool.getJWT());
+        serverSocket = new WebSocket(url);
+        serverSocket.onopen = () => {
+            serverSocketIsOpen = true;
+            serverSocketOnOpen();
+        };
+        serverSocket.onmessage = (event) => {
+            serverSocketOnMessage(event)
+        };
+        serverSocket.onclose = () => {
+            serverSocketIsOpen = false;
+            serverSocket = null;
+            serverSocketOnClose();
+            server.openWebsocket()
+        };
+        serverSocket.onerror = () => {
+            serverSocketOnError();
+        };
+
+    },
+    closeWebsocket() {
+        if (serverSocket == null) { return }
+        serverSocket.close()
+    },
+    addServerSocketOnEvent(event, call) {
+        if (call == null) { return }
+        serverSocketOnEventList[event] = serverSocketOnEventList[event] || []
+        serverSocketOnEventList[event].push(call)
+    },
+    addServerSocketOnOpen(call) {
+        if (call == null) { return }
+        if (serverSocketIsOpen) {
+            call()
+        }
+        serverSocketOnOpenList.push(call)
+    },
 };
+
+let serverSocket = null;
+let serverSocketIsOpen = false;
+const serverSocketOnOpenList = []
+const serverSocketOnEventList = {}
+const serverSocketOnCloseList = []
+const getServerSocketOnEventList = (event) => {
+    return serverSocketOnEventList[event] || []
+}
+
+const serverSocketOnOpen = () => {
+    serverSocketOnOpenList.forEach(one => {
+        if (one == null) { return }
+        one()
+    })
+}
+
+const serverSocketOnClose = () => {
+    serverSocketOnCloseList.forEach(one => {
+        if (one == null) { return }
+        one()
+    })
+}
+
+const serverSocketOnError = () => {
+
+}
+
+const serverSocketOnMessage = (event) => {
+    let message = event.data;
+    let json = JSON.parse(message)
+    if (json == null) { return }
+    if (json.isMessage) {
+        if (tool.isNotEmpty(json.errorMessage)) {
+            tool.error(json.errorMessage)
+        }
+        if (tool.isNotEmpty(json.warnMessage)) {
+            tool.warn(json.warnMessage)
+        }
+        if (tool.isNotEmpty(json.infoMessage)) {
+            tool.info(json.infoMessage)
+        }
+        if (tool.isNotEmpty(json.successMessage)) {
+            tool.success(json.successMessage)
+        }
+    }
+    if (json.isEvent) {
+        let list = getServerSocketOnEventList(json.event,)
+        list.forEach(one => {
+            if (one == null) { return }
+            one(json.data)
+        })
+    }
+}
 
 export default server;

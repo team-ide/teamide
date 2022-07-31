@@ -7,8 +7,6 @@
           :source="source"
           :extend="extend"
           :toolboxWorker="toolboxWorker"
-          :initToken="initToken"
-          :initSocket="initSocket"
         >
         </FTP>
       </template>

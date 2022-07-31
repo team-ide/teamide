@@ -17,6 +17,17 @@ type FileInfo struct {
 	FileMode string `json:"fileMode,omitempty"`
 }
 
+type FileRenameProgress struct {
+	WaitCall     bool  `json:"-"`
+	StartTime    int64 `json:"startTime"`
+	EndTime      int64 `json:"endTime"`
+	Timestamp    int64 `json:"timestamp"`
+	Count        int64 `json:"count"`
+	Size         int64 `json:"size"`
+	SuccessCount int64 `json:"successCount"`
+	Error        error
+}
+
 type FileRemoveProgress struct {
 	WaitCall     bool  `json:"-"`
 	StartTime    int64 `json:"startTime"`
@@ -25,6 +36,7 @@ type FileRemoveProgress struct {
 	Count        int64 `json:"count"`
 	Size         int64 `json:"size"`
 	SuccessCount int64 `json:"successCount"`
+	Error        error
 }
 
 type FileCopyProgress struct {
@@ -37,6 +49,7 @@ type FileCopyProgress struct {
 	Count        int64        `json:"count"`
 	SuccessCount int64        `json:"successCount"`
 	Copying      *FileCopying `json:"copying,omitempty"`
+	Error        error
 }
 
 type FileCopying struct {
@@ -58,6 +71,19 @@ type FileUploadProgress struct {
 	Count        int64          `json:"count"`
 	SuccessCount int64          `json:"successCount"`
 	Uploading    *FileUploading `json:"uploading,omitempty"`
+	Error        error
+}
+
+type FileDownloadProgress struct {
+	WaitCall     bool  `json:"-"`
+	StartTime    int64 `json:"startTime"`
+	EndTime      int64 `json:"endTime"`
+	Timestamp    int64 `json:"timestamp"`
+	Size         int64 `json:"size"`
+	SuccessSize  int64 `json:"successSize"`
+	Count        int64 `json:"count"`
+	SuccessCount int64 `json:"successCount"`
+	Error        error
 }
 
 type FileUploading struct {
@@ -87,7 +113,7 @@ func LocalLoadFiles(path string) (files []os.FileInfo, err error) {
 
 	for _, d := range ds {
 		var file os.FileInfo
-		file, err = os.Lstat(d.Name())
+		file, err = os.Lstat(path + "/" + d.Name())
 		if err != nil {
 			return
 		}
@@ -107,14 +133,10 @@ func LoadFiles(
 			IsDir: true,
 		},
 	}
-	dir = FormatPath(dir)
-	if err != nil {
-		return
-	}
 
 	fileInfo, err := lstat(dir)
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			err = nil
 			return
 		}
@@ -180,10 +202,13 @@ func LoadFiles(
 func FileRemove(
 	lstat func(string) (os.FileInfo, error),
 	loadFiles func(string) ([]os.FileInfo, error),
+	remove func(string) error,
 	path string,
 	progress *FileRemoveProgress,
-) (err error) {
+) {
+	var err error
 	defer func() {
+		progress.Error = err
 		progress.EndTime = GetNowTime()
 	}()
 	progress.StartTime = GetNowTime()
@@ -193,16 +218,17 @@ func FileRemove(
 		return
 	}
 
-	err = FileRemoveAll(lstat, loadFiles, path, progress)
+	err = fileRemoveAll(lstat, loadFiles, remove, path, progress)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func FileRemoveAll(
+func fileRemoveAll(
 	lstat func(string) (os.FileInfo, error),
 	loadFiles func(string) ([]os.FileInfo, error),
+	remove func(string) error,
 	path string,
 	progress *FileRemoveProgress,
 ) (err error) {
@@ -222,14 +248,14 @@ func FileRemoveAll(
 			return
 		}
 		for _, f := range files {
-			err = FileRemoveAll(lstat, loadFiles, path+"/"+f.Name(), progress)
+			err = fileRemoveAll(lstat, loadFiles, remove, path+"/"+f.Name(), progress)
 			if err != nil {
 				return
 			}
 		}
 
 	}
-	err = os.Remove(path)
+	err = remove(path)
 	if err != nil {
 		return
 	}
@@ -368,14 +394,15 @@ func FileUpload(
 	filePath string,
 	callConfirm func(*FileConfirmInfo) (*FileConfirmInfo, error),
 	progress *FileUploadProgress,
-) (err error) {
-
+) {
+	var err error
+	defer func() {
+		progress.Error = err
+		progress.EndTime = GetNowTime()
+	}()
 	progress.StartTime = GetNowTime()
 	progress.Count = 1
 	progress.Size = fileSize
-	defer func() {
-		progress.EndTime = GetNowTime()
-	}()
 
 	pathDir := filePath[0:strings.LastIndex(filePath, "/")]
 
@@ -460,8 +487,10 @@ func FileCopy(
 	toPath string,
 	callConfirm func(*FileConfirmInfo) (*FileConfirmInfo, error),
 	progress *FileCopyProgress,
-) (err error) {
+) {
+	var err error
 	defer func() {
+		progress.Error = err
 		progress.EndTime = GetNowTime()
 	}()
 	progress.StartTime = GetNowTime()
@@ -470,14 +499,14 @@ func FileCopy(
 	if err != nil {
 		return
 	}
-	err = FileCopyAll(fromLstat, fromLoadFiles, fromReader, fromPath, toLstat, toMkdirAll, toWriter, toPath, callConfirm, progress)
+	err = fileCopyAll(fromLstat, fromLoadFiles, fromReader, fromPath, toLstat, toMkdirAll, toWriter, toPath, callConfirm, progress)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func FileCopyAll(
+func fileCopyAll(
 	fromLstat func(string) (os.FileInfo, error),
 	fromLoadFiles func(string) ([]os.FileInfo, error),
 	fromReader func(string) (io.Reader, error),
@@ -514,7 +543,7 @@ func FileCopyAll(
 		}
 
 		for _, f := range files {
-			err = FileCopyAll(fromLstat, fromLoadFiles, fromReader, fromPath+"/"+f.Name(), toLstat, toMkdirAll, toWriter, toPath+"/"+f.Name(), callConfirm, progress)
+			err = fileCopyAll(fromLstat, fromLoadFiles, fromReader, fromPath+"/"+f.Name(), toLstat, toMkdirAll, toWriter, toPath+"/"+f.Name(), callConfirm, progress)
 			if err != nil {
 				return
 			}

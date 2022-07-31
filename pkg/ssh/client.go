@@ -19,36 +19,20 @@ var (
 
 func WSSSHConnection(token string, ws *websocket.Conn) (err error) {
 	var sshConfig = TokenCache[token]
-	client := Client{
-		Token:  token,
-		Config: *sshConfig,
-		ws:     ws,
-	}
+
 	shellClient := &ShellClient{
-		Client: client,
+		Client: Client{
+			Token:  token,
+			Config: *sshConfig,
+			ws:     ws,
+		},
 	}
 	shellClient.start()
 
 	return
 }
 
-func WSSFPTConnection(token string, ws *websocket.Conn) (err error) {
-	var sshConfig = TokenCache[token]
-	client := Client{
-		Token:  token,
-		Config: *sshConfig,
-		ws:     ws,
-	}
-	sftpClient := &SftpClient{
-		Client: client,
-	}
-	sftpClient.start()
-
-	return
-}
-
 var (
-	SftpCache  = map[string]*SftpClient{}
 	ShellCache = map[string]*ShellClient{}
 )
 
@@ -67,7 +51,7 @@ type Client struct {
 	ws                 *websocket.Conn
 	isClosedClient     bool
 	isClosedWS         bool
-	wsWriteLock        sync.Locker
+	wsWriteLock        sync.Mutex
 	writeWSMessageList chan *writeWSMessage
 }
 
@@ -88,7 +72,6 @@ func (this_ *Client) CloseClient() {
 }
 
 func (this_ *Client) CloseWS() {
-	delete(SftpCache, this_.Token)
 	delete(ShellCache, this_.Token)
 	this_.isClosedWS = true
 	if this_.ws != nil {

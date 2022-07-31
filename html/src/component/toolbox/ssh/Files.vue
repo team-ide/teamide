@@ -493,12 +493,13 @@ export default {
           files.forEach((one) => {
             this.$emit(
               "copy",
-              { place: place, dir: dir, path: one.path },
+              { dir: dir, path: one.path },
+              place,
               {
-                place: this.place,
                 dir: putDir,
                 path: putDir + "/" + one.name,
-              }
+              },
+              this.place
             );
           });
         } else {

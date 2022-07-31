@@ -53,10 +53,9 @@ var (
 	PowerToolboxUpdateOpenTabExtend    = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_tab_extend", Text: "工具打开", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxWork                   = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具工作", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxSSHShell               = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_shell", Text: "工具SSH Shell连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtp                 = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp", Text: "工具SSH FTP连接", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtpUpload           = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_upload", Text: "工具SSH FTP上传", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
-	PowerToolboxSSHFtpDownload         = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
-	PowerToolboxDatabaseExportDownload = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxSSHFtp, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHFtpUpload           = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_upload", Text: "工具SSH FTP上传", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxSSHFtpDownload         = base.AppendPower(&base.PowerAction{Action: "toolbox_ssh_ftp_download", Text: "工具SSH FTP下载", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
+	PowerToolboxDatabaseExportDownload = base.AppendPower(&base.PowerAction{Action: "toolbox_database_export_download", Text: "工具SSH FTP下载", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 
 	PowerToolboxQuickCommandQuery  = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_query", Text: "工具快速指令查询", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
 	PowerToolboxQuickCommandInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_insert", Text: "工具快速指令新增", Parent: PowerToolboxPage, ShouldLogin: true, StandAlone: true})
@@ -91,7 +90,6 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/closeTab"}, Power: PowerToolboxCloseTab, Do: this_.closeTab})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenTabExtend"}, Power: PowerToolboxUpdateOpenTabExtend, Do: this_.updateOpenTabExtend})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/shell"}, Power: PowerToolboxSSHShell, Do: this_.sshShell, IsWebSocket: true})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp"}, Power: PowerToolboxSSHFtp, Do: this_.sshFtp, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp/upload"}, Power: PowerToolboxSSHFtpUpload, Do: this_.sshFtpUpload})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/ftp/download"}, Power: PowerToolboxSSHFtpDownload, Do: this_.sshFtpDownload, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/database/export/download"}, Power: PowerToolboxDatabaseExportDownload, Do: this_.databaseExportDownload, IsGet: true})
@@ -133,7 +131,7 @@ type IndexResponse struct {
 	SSHTeamIDEBinaryStartBytes string                             `json:"sshTeamIDEBinaryStartBytes,omitempty"`
 }
 
-func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
 
 	response := &IndexResponse{}
 
@@ -157,6 +155,6 @@ func (this_ *ToolboxApi) index(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-func (this_ *ToolboxApi) page(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) page(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
 	return
 }

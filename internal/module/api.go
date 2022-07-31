@@ -97,6 +97,7 @@ var (
 	PowerAutoLogin   = base.AppendPower(&base.PowerAction{Action: "auto_login", Text: "自动登录", StandAlone: false})
 	PowerUpload      = base.AppendPower(&base.PowerAction{Action: "upload", Text: "上传", StandAlone: true})
 	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "updateCheck", Text: "更新检测", StandAlone: true})
+	PowerWebsocket   = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "更新检测", StandAlone: true})
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
@@ -108,6 +109,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: PowerSession, Do: this_.apiSession})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"upload"}, Power: PowerUpload, Do: this_.apiUpload})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"updateCheck"}, Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"websocket"}, Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true})
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)

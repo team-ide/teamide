@@ -141,6 +141,10 @@ export default {
   mounted() {
     this.bindEvent();
   },
+  destroyed() {
+    let param = {};
+    this.toolboxWorker.work("close", param);
+  },
   updated() {},
   beforeDestroy() {},
 };

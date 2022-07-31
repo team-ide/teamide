@@ -1,10 +1,7 @@
 package module_node
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"net/http"
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/util"
@@ -38,7 +35,6 @@ var (
 	PowerNodeEnable       = base.AppendPower(&base.PowerAction{Action: "node_enable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeDisable      = base.AppendPower(&base.PowerAction{Action: "node_disable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNodeDelete       = base.AppendPower(&base.PowerAction{Action: "node_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
-	PowerNodeWebsocket    = base.AppendPower(&base.PowerAction{Action: "node_websocket", Text: "节点连接", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 
 	PowerNetProxyInsert       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_insert", Text: "节点新增", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyUpdate       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_update", Text: "节点修改", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
@@ -62,7 +58,6 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/enable"}, Power: PowerNodeEnable, Do: this_.enable})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/disable"}, Power: PowerNodeDisable, Do: this_.disable})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/delete"}, Power: PowerNodeDelete, Do: this_.delete})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"node/websocket"}, Power: PowerNodeWebsocket, Do: this_.websocket, IsWebSocket: true})
 
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/insert"}, Power: PowerNetProxyInsert, Do: this_.netProxyInsert})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/update"}, Power: PowerNetProxyUpdate, Do: this_.netProxyUpdate})
@@ -162,34 +157,5 @@ func (this_ *NodeApi) stop(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 
 	res = response
-	return
-}
-
-var upGrader = websocket.Upgrader{
-	ReadBufferSize:  1024 * 1024,
-	WriteBufferSize: 1024 * 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (this_ *NodeApi) websocket(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	id := c.Query("id")
-	if id == "" {
-		err = errors.New("id获取失败")
-		return
-	}
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-	err = this_.NodeService.addWS(id, ws)
-	if err != nil {
-		return
-	}
-	res = base.HttpNotResponse
-
 	return
 }

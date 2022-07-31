@@ -228,6 +228,8 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		return
 	}
 
+	initServerWebsocket()
+
 	return
 }
 

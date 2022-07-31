@@ -1,7 +1,6 @@
 package module_node
 
 import (
-	"encoding/json"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
@@ -12,7 +11,6 @@ func (this_ *NodeService) InitContext() {
 	if this_.nodeContext == nil {
 		this_.nodeContext = &NodeContext{
 			nodeService: this_,
-			wsCache:     make(map[string]*WSConn),
 
 			nodeIdModelCache:   make(map[int64]*NodeModel),
 			serverIdModelCache: make(map[string]*NodeModel),
@@ -34,9 +32,6 @@ type NodeContext struct {
 	nodeService *NodeService
 	root        *NodeModel
 
-	wsCache     map[string]*WSConn
-	wsCacheLock sync.Mutex
-
 	nodeList               []*NodeInfo
 	nodeListLock           sync.Mutex
 	nodeIdModelCache       map[int64]*NodeModel
@@ -57,7 +52,6 @@ type NodeContext struct {
 }
 
 func (this_ *NodeContext) initContext() (err error) {
-	go this_.runTimer()
 	var list []*NodeModel
 	list, _ = this_.nodeService.Query(&NodeModel{})
 	for _, one := range list {
@@ -103,61 +97,6 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 		return
 	}
 
-	return
-}
-
-func (this_ *NodeContext) runTimer() {
-	if this_.runTimerRunning {
-		return
-	}
-	this_.runTimerLock.Lock()
-	defer this_.runTimerLock.Unlock()
-	this_.runTimerRunning = true
-	defer func() {
-		//go func() {
-		//	time.Sleep(time.Second * 10)
-		//	this_.runTimerRunning = false
-		//	go this_.runTimer()
-		//}()
-	}()
-	var bs []byte
-	var nodeList []*NodeInfo
-	if !this_.onNodeListChangeIng && len(this_.nodeList) > 0 {
-		nodeList = this_.nodeList
-		bs, _ = json.Marshal(nodeList)
-		oldStr := string(bs)
-		for _, one := range nodeList {
-			one.MonitorData = ToMonitorDataFormat(this_.server.GetNodeMonitorData(one.Info.Id))
-		}
-		bs, _ = json.Marshal(nodeList)
-		newStr := string(bs)
-		if newStr == oldStr {
-			nodeList = []*NodeInfo{}
-		}
-	}
-	var netProxyList []*NetProxyInfo
-	if !this_.onNetProxyListChangeIng && len(this_.netProxyList) > 0 {
-		netProxyList = this_.netProxyList
-		bs, _ = json.Marshal(netProxyList)
-		oldStr := string(bs)
-		for _, one := range netProxyList {
-			one.InnerMonitorData = ToMonitorDataFormat(this_.server.GetNetProxyInnerMonitorData(one.Info.Id))
-			one.OuterMonitorData = ToMonitorDataFormat(this_.server.GetNetProxyOuterMonitorData(one.Info.Id))
-		}
-		bs, _ = json.Marshal(netProxyList)
-		newStr := string(bs)
-		if newStr == oldStr {
-			netProxyList = []*NetProxyInfo{}
-		}
-	}
-
-	if len(nodeList) > 0 || len(netProxyList) > 0 {
-		this_.callMessage(&Message{
-			Method:       "refresh_node_context",
-			NodeList:     nodeList,
-			NetProxyList: netProxyList,
-		})
-	}
 	return
 }
 

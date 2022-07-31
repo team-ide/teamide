@@ -1,12 +1,10 @@
 package ssh
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/pkg/sftp"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/ssh"
 	"mime/multipart"
-	"strings"
 	"teamide/pkg/util"
 )
 
@@ -16,14 +14,20 @@ type UploadFile struct {
 	WorkId   string
 	FullPath string
 	File     *multipart.FileHeader
+	WorkerId string
 }
 
 type SftpClient struct {
-	Client
+	WorkerId   string
+	Config     Config
+	sshClient  *ssh.Client
 	UploadFile chan *UploadFile
 	confirmMap map[string]chan *util.FileConfirmInfo
 }
 
+func (this_ *SftpClient) Start() {
+	this_.listenUpload()
+}
 func (this_ *SftpClient) listenUpload() {
 	if this_.UploadFile == nil {
 		this_.UploadFile = make(chan *UploadFile, 10)
@@ -32,7 +36,7 @@ func (this_ *SftpClient) listenUpload() {
 			for {
 				select {
 				case uploadFile := <-this_.UploadFile:
-					this_.work(&SFTPRequest{
+					_, _ = this_.Work(&SFTPRequest{
 						Work:     "upload",
 						WorkId:   uploadFile.WorkId,
 						Dir:      uploadFile.Dir,
@@ -55,54 +59,40 @@ func (this_ *SftpClient) newSftp() (sftpClient *sftp.Client, err error) {
 
 	sftpClient, err = sftp.NewClient(this_.sshClient)
 	if err != nil {
-		this_.WSWriteError("SSH FTP创建失败:" + err.Error())
 		return
 	}
 
 	return
 }
 
-func (this_ *SftpClient) start() {
-	SftpCache[this_.Token] = this_
-	go this_.ListenWS(this_.onEvent, this_.onMessage, this_.CloseClient)
-	this_.listenUpload()
-	this_.WSWriteEvent("ftp ready")
+func (this_ *SftpClient) Close() {
+	this_.closeClient()
+	return
 }
 
-func (this_ *SftpClient) closeSftClient(sftpClient *sftp.Client) {
-	if sftpClient == nil {
+func (this_ *SftpClient) closeClient() {
+	if this_.sshClient != nil {
+		_ = this_.sshClient.Close()
+		this_.sshClient = nil
+	}
+	return
+}
+func (this_ *SftpClient) initClient() (err error) {
+	if this_.sshClient == nil {
+		err = this_.createClient()
+	}
+	return
+}
+
+func (this_ *SftpClient) createClient() (err error) {
+
+	if this_.sshClient, err = NewClient(this_.Config); err != nil {
+		util.Logger.Error("createClient error", zap.Error(err))
 		return
 	}
-	err := sftpClient.Close()
-	if err != nil {
-		fmt.Println("sftp client close error", err)
-		return
-	}
-}
-func (this_ *SftpClient) onEvent(event string) {
-	var err error
-	util.Logger.Info("SSH FTP On Event:", zap.Any("event", event))
-	switch strings.ToLower(event) {
-	case "ftp start":
-		var sftpClient *sftp.Client
-		sftpClient, err = this_.newSftp()
-		if err != nil {
-			return
-		}
-		defer this_.closeSftClient(sftpClient)
-		this_.WSWriteEvent("ftp created")
-	}
-}
-
-func (this_ *SftpClient) onMessage(bs []byte) {
-
 	go func() {
-		var request *SFTPRequest
-		err := json.Unmarshal(bs, &request)
-		if err != nil {
-			fmt.Println("sftp ws message to struct err:", err)
-			return
-		}
-		this_.work(request)
+		err = this_.sshClient.Wait()
+		this_.Close()
 	}()
+	return
 }

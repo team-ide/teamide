@@ -273,9 +273,8 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 }
 
 func (this_ *NodeContext) refreshNetProxyList(netProxyList []*NetProxyInfo) {
-
-	this_.callMessage(&Message{
-		Method:       "refresh_net_proxy_list",
+	this_.callNodeDataChange(&NodeDataChange{
+		Type:         "netProxyList",
 		NetProxyList: netProxyList,
 	})
 }

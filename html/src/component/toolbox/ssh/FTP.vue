@@ -79,6 +79,10 @@
                   <span class="pdr-5">上传文件：{{ one.fileName }}</span>
                   <span class="pdr-5">目录：{{ one.dir }}</span>
                 </template>
+                <template v-else-if="one.work == 'download'">
+                  <span class="pdr-5">文件下载</span>
+                  <span class="pdr-5">下载文件：{{ one.path }}</span>
+                </template>
                 <template v-else-if="one.work == 'remove'">
                   <span class="pdr-5">删除文件</span>
                   <span class="pdr-5">{{ one.path }}</span>
@@ -121,8 +125,8 @@
                     </span>
                   </template>
                 </template>
-                <template v-if="one.msg">
-                  <span class="color-red">{{ one.msg }}</span>
+                <template v-if="one.error">
+                  <span class="color-red">{{ one.error }}</span>
                 </template>
                 <template v-else-if="one.isEnd">
                   <span class="color-green">完成</span>
@@ -136,7 +140,8 @@
         </div>
       </tm-layout>
     </tm-layout>
-    <FileEdit ref="FileEdit" :source="source"> </FileEdit>
+    <FileEdit ref="FileEdit" :source="source" :toolboxWorker="toolboxWorker">
+    </FileEdit>
   </div>
 </template>
 
@@ -145,14 +150,7 @@ import Files from "./Files";
 import FileEdit from "./FileEdit";
 export default {
   components: { Files, FileEdit },
-  props: [
-    "source",
-    "extend",
-    "toolboxWorker",
-    "initToken",
-    "initSocket",
-    "isFromSSH",
-  ],
+  props: ["source", "extend", "toolboxWorker", "isFromSSH"],
   data() {
     return {
       localFiles: null,
@@ -165,8 +163,16 @@ export default {
   watch: {},
   methods: {
     async init() {
-      await this.initToken(this);
-      this.initSocket(this);
+      this.server.addServerSocketOnEvent("ftp-data", (data) => {
+        try {
+          if (data.workerId != this.toolboxWorker.workerId) {
+            return;
+          }
+          this.onResponse(data);
+        } catch (error) {}
+      });
+      this.doLoadFiles("local", this.extend.local.dir);
+      this.doLoadFiles("remote", this.extend.remote.dir);
     },
     onFocus() {
       this.$refs.remoteToolboxFTPFiles.onFocus();
@@ -221,9 +227,26 @@ export default {
       if (work == null) {
         return;
       }
-      work.msg = data.msg;
+      work.error = data.error;
       work.status = "worked";
       work.isEnd = true;
+
+      if (
+        data.work == "upload" ||
+        data.work == "remove" ||
+        data.work == "copy" ||
+        data.work == "rename"
+      ) {
+        if (data.place == "local") {
+          if (data.dir == this.extend.local.dir) {
+            this.loadFiles("local", this.extend.local.dir);
+          }
+        } else if (data.place == "remote") {
+          if (data.dir == this.extend.remote.dir) {
+            this.loadFiles("remote", this.extend.remote.dir);
+          }
+        }
+      }
     },
     onWorkProgress(data) {
       let work = this.getWork(data.workId);
@@ -274,6 +297,9 @@ export default {
           }
         }
       }
+      if (work.progress.endTime > 0) {
+        this.onWorkSuccess(data);
+      }
     },
     openFile(place, dir, file) {
       if (file.isDir) {
@@ -283,7 +309,7 @@ export default {
       }
     },
     toEditFile(place, file) {
-      this.$refs.FileEdit.show(place, file, this.tokenWork);
+      this.$refs.FileEdit.show(place, file);
       // this.tool.info("编辑文件:" + file.path);
     },
     openDir(place, dir, pattern) {
@@ -295,7 +321,7 @@ export default {
     loadFiles(place, dir, pattern) {
       this.doLoadFiles(place, dir, pattern);
     },
-    doLoadFiles(place, dir, pattern) {
+    async doLoadFiles(place, dir, pattern) {
       let scrollTop = 0;
       if (place == "local") {
         this.localFiles = null;
@@ -309,12 +335,32 @@ export default {
         dir: dir,
         work: "files",
         pattern: pattern,
-        scrollTop: Number(scrollTop),
       };
-
-      this.send(request);
+      let res = await this.toolboxWorker.work("ftpWork", request);
+      if (res.code != 0) {
+        return;
+      }
+      res.data = res.data || {};
+      let response = res.data.response || {};
+      if (response.place == "local") {
+        if (this.extend.local.dir != response.dir) {
+          let keyValueMap = {};
+          keyValueMap["local.dir"] = response.dir;
+          this.toolboxWorker.updateExtend(keyValueMap);
+        }
+        this.localFiles = response.files || [];
+        this.$refs.localToolboxFTPFiles.setScrollTop(scrollTop);
+      } else if (response.place == "remote") {
+        if (this.extend.remote.dir != response.dir) {
+          let keyValueMap = {};
+          keyValueMap["remote.dir"] = response.dir;
+          this.toolboxWorker.updateExtend(keyValueMap);
+        }
+        this.remoteFiles = response.files || [];
+        this.$refs.remoteToolboxFTPFiles.setScrollTop(scrollTop);
+      }
     },
-    doRenameFile(place, dir, oldPath, newPath, isDir, isNew) {
+    async doRenameFile(place, dir, oldPath, newPath, isDir, isNew) {
       let request = {
         place: place,
         dir: dir,
@@ -325,18 +371,20 @@ export default {
         isNew: isNew,
       };
       this.addWork(request);
-      this.send(request);
+      this.toolboxWorker.work("ftpWork", request);
     },
-    toCopy(fromFile, toFile) {
+    toCopy(fromFile, fromFilePlace, toFile, toFilePlace) {
       let request = {
-        place: toFile.place,
+        place: toFilePlace,
         dir: toFile.dir,
         fromFile: fromFile,
+        fromFilePlace: fromFilePlace,
         toFile: toFile,
+        toFilePlace: toFilePlace,
         work: "copy",
       };
       this.addWork(request);
-      this.send(request);
+      this.toolboxWorker.work("ftpWork", request);
     },
     doRemoveFile(place, dir, files) {
       let names = [];
@@ -355,14 +403,10 @@ export default {
             };
 
             this.addWork(request);
-            this.send(request);
+            this.toolboxWorker.work("ftpWork", request);
           });
         })
         .catch((e) => {});
-    },
-    send(request) {
-      let message = JSON.stringify(request);
-      this.writeData(message);
     },
     onConfirm(response) {
       let confirm = response.confirm;
@@ -381,7 +425,7 @@ export default {
             work: "confirmResult",
             isOk: true,
           };
-          this.send(request);
+          this.toolboxWorker.work("ftpWork", request);
         })
         .catch((e) => {
           let request = {
@@ -389,12 +433,12 @@ export default {
             work: "confirmResult",
             isCancel: true,
           };
-          this.send(request);
+          this.toolboxWorker.work("ftpWork", request);
         });
     },
     onResponse(response) {
-      if (this.tool.isNotEmpty(response.msg)) {
-        this.tool.error(response.msg);
+      if (this.tool.isNotEmpty(response.error)) {
+        this.tool.error(response.error);
       }
       if (response.isProgress) {
         this.onWorkProgress(response);
@@ -404,49 +448,13 @@ export default {
         this.onConfirm(response);
         return;
       }
-      if (response.work == "files") {
-        if (response.place == "local") {
-          if (this.extend.local.dir != response.dir) {
-            let keyValueMap = {};
-            keyValueMap["local.dir"] = response.dir;
-            this.toolboxWorker.updateExtend(keyValueMap);
-          }
-          this.localFiles = response.files || [];
-          this.$refs.localToolboxFTPFiles.setScrollTop(response.scrollTop);
-        } else if (response.place == "remote") {
-          if (this.extend.remote.dir != response.dir) {
-            let keyValueMap = {};
-            keyValueMap["remote.dir"] = response.dir;
-            this.toolboxWorker.updateExtend(keyValueMap);
-          }
-          this.remoteFiles = response.files || [];
-          this.$refs.remoteToolboxFTPFiles.setScrollTop(response.scrollTop);
-        }
-      }
-      this.onWorkSuccess(response);
-      if (
-        response.work == "upload" ||
-        response.work == "remove" ||
-        response.work == "copy" ||
-        response.work == "rename"
-      ) {
-        if (response.place == "local") {
-          if (response.dir == this.extend.local.dir) {
-            this.loadFiles("local", this.extend.local.dir);
-          }
-        } else if (response.place == "remote") {
-          if (response.dir == this.extend.remote.dir) {
-            this.loadFiles("remote", this.extend.remote.dir);
-          }
-        }
-      }
     },
     async doUploadFile(place, dir, file, fullPath) {
       let request = {
         work: "upload",
         place: place,
         dir: dir,
-        token: this.token,
+        workerId: this.toolboxWorker.workerId,
         fileName: fullPath || file.name,
         fullPath: fullPath,
       };
@@ -464,10 +472,21 @@ export default {
       return true;
     },
     async doDownloadFile(place, dir, file) {
+      let request = {
+        work: "download",
+        place: place,
+        dir: dir,
+        workerId: this.toolboxWorker.workerId,
+        path: file.path,
+      };
+      this.addWork(request);
+
       let url =
         this.source.api +
-        "api/toolbox/ssh/ftp/download?token=" +
-        encodeURIComponent(this.token) +
+        "api/toolbox/ssh/ftp/download?workerId=" +
+        this.toolboxWorker.workerId +
+        "&workId=" +
+        request.workId +
         "&jwt=" +
         encodeURIComponent(this.tool.getJWT()) +
         "&place=" +
@@ -477,27 +496,6 @@ export default {
         "&path=" +
         encodeURIComponent(file.path);
       window.location.href = url;
-    },
-    onEvent(event) {
-      if (event == "ftp ready") {
-        this.toStart();
-      } else if (event == "ftp created") {
-        this.doLoadFiles("local", this.extend.local.dir);
-        this.doLoadFiles("remote", this.extend.remote.dir);
-      }
-    },
-    onError(error) {
-      this.tool.error(error);
-    },
-    onData(data) {
-      let response = JSON.parse(data);
-      this.onResponse(response);
-    },
-    reStart() {
-      this.toStart();
-    },
-    toStart() {
-      this.writeEvent("ftp start");
     },
     dispose() {},
   },

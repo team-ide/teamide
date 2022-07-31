@@ -24,12 +24,15 @@ const newToolboxWorker = function (workerOption) {
         openId: workerOption.openId,
         toolboxType: workerOption.toolboxType,
         extend: workerOption.extend,
+        workerId: tool.generatekey(30),
         itemsWorker: itemsWorker,
 
         async init() {
             await this.initOpenTabs()
         },
         async work(work, data) {
+            data = data || {};
+            data.workerId = worker.workerId
             let param = {
                 toolboxId: worker.toolboxId,
                 work: work,

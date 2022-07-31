@@ -44,11 +44,17 @@ export default {
   data() {
     return { source, contextmenu: { menus: [] } };
   },
-  // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
-  // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "source.login.user"() {
+      this.server.closeWebsocket();
+      this.server.openWebsocket();
+    },
+  },
   methods: {
+    init() {
+      this.server.openWebsocket();
+    },
     showContextmenu(menus) {
       let e = window.event;
       this.tool.stopEvent(e || window.event);
@@ -94,6 +100,7 @@ export default {
   mounted() {
     this.tool.showContextmenu = this.showContextmenu;
     this.bindEvent();
+    this.init();
   },
   destroyed() {},
 };

@@ -1,18 +1,17 @@
 package ssh
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/sftp"
-	"go.uber.org/zap"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"teamide/internal/context"
 	"teamide/pkg/util"
 	"time"
 )
@@ -42,10 +41,10 @@ type SFTPRequest struct {
 	IsNew         bool           `json:"isNew,omitempty"`
 }
 type SFTPResponse struct {
+	WorkerId  string           `json:"workerId,omitempty"`
 	Work      string           `json:"work,omitempty"`
 	WorkId    string           `json:"workId,omitempty"`
 	Dir       string           `json:"dir,omitempty"`
-	Msg       string           `json:"msg,omitempty"`
 	Files     []*util.FileInfo `json:"files,omitempty"`
 	Place     string           `json:"place,omitempty"`
 	Path      string           `json:"path,omitempty"`
@@ -66,12 +65,9 @@ func (this_ *SftpClient) callConfirm(confirmInfo *util.FileConfirmInfo) (res *ut
 		confirmInfo.ConfirmId = util.UUID()
 	}
 	this_.confirmMap[confirmInfo.ConfirmId] = make(chan *util.FileConfirmInfo, 1)
-	bs, err := json.Marshal(confirmInfo)
-	if err != nil {
-		util.Logger.Error("call confirm to json err error", zap.Error(err))
-		return
-	}
-	this_.WSWriteText(bs)
+
+	context.ServerWebsocketOutEvent("ftp-data", confirmInfo)
+
 	res = <-this_.confirmMap[confirmInfo.ConfirmId]
 
 	close(this_.confirmMap[confirmInfo.ConfirmId])
@@ -84,31 +80,38 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 	for {
 		time.Sleep(100 * time.Millisecond)
 
-		if this_.isClosedWS {
-			return
-		}
 		var waitCall bool
 		var endTime int64 = -1
-		UploadProgress, UploadProgressOk := progress.(*util.FileUploadProgress)
-		if UploadProgressOk {
-			UploadProgress.Timestamp = util.GetNowTime()
-			endTime = UploadProgress.EndTime
-			waitCall = UploadProgress.WaitCall
+		var err error
+		switch p := progress.(type) {
+		case *util.FileUploadProgress:
+			p.Timestamp = util.GetNowTime()
+			endTime = p.EndTime
+			waitCall = p.WaitCall
+			err = p.Error
+		case *util.FileCopyProgress:
+			p.Timestamp = util.GetNowTime()
+			endTime = p.EndTime
+			waitCall = p.WaitCall
+			err = p.Error
+		case *util.FileRemoveProgress:
+			p.Timestamp = util.GetNowTime()
+			endTime = p.EndTime
+			waitCall = p.WaitCall
+			err = p.Error
+		case *util.FileRenameProgress:
+			p.Timestamp = util.GetNowTime()
+			endTime = p.EndTime
+			waitCall = p.WaitCall
+			err = p.Error
+		case *util.FileDownloadProgress:
+			p.Timestamp = util.GetNowTime()
+			endTime = p.EndTime
+			waitCall = p.WaitCall
+			err = p.Error
+
 		}
 
-		CopyProgress, CopyProgressOK := progress.(*util.FileCopyProgress)
-		if CopyProgressOK {
-			CopyProgress.Timestamp = util.GetNowTime()
-			endTime = CopyProgress.EndTime
-			waitCall = CopyProgress.WaitCall
-		}
-
-		RemoveProgress, RemoveProgressOk := progress.(*util.FileRemoveProgress)
-		if RemoveProgressOk {
-			RemoveProgress.Timestamp = util.GetNowTime()
-			endTime = RemoveProgress.EndTime
-			waitCall = RemoveProgress.WaitCall
-		}
 		if endTime == -1 {
 			return
 		}
@@ -120,16 +123,17 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 		out := map[string]interface{}{
 			"work":       request.Work,
 			"workId":     request.WorkId,
+			"place":      request.Place,
+			"dir":        request.Dir,
 			"isProgress": true,
 			"progress":   progress,
+			"workerId":   this_.WorkerId,
+		}
+		if err != nil {
+			out["error"] = err.Error()
 		}
 
-		bs, err := json.Marshal(out)
-		if err != nil {
-			util.Logger.Error("sftp upload progress to json err", zap.Error(err))
-			continue
-		}
-		this_.WSWriteText(bs)
+		context.ServerWebsocketOutEvent("ftp-data", out)
 
 		if endTime > 0 {
 			break
@@ -137,9 +141,8 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 	}
 }
 
-func (this_ *SftpClient) work(request *SFTPRequest) {
-	response := &SFTPResponse{}
-	var err error
+func (this_ *SftpClient) Work(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{}
 	switch request.Work {
 	case "confirmResult":
 		if this_.confirmMap == nil {
@@ -166,11 +169,12 @@ func (this_ *SftpClient) work(request *SFTPRequest) {
 		progress := &util.FileUploadProgress{
 			StartTime: util.GetNowTime(),
 		}
-		go this_.callProgress(request, progress)
 		if request.Place == "local" {
-			response, err = this_.localUpdate(request, progress)
+			go this_.callProgress(request, progress)
+			go this_.localUpdate(request, progress)
 		} else if request.Place == "remote" {
-			response, err = this_.remoteUpdate(request, progress)
+			go this_.callProgress(request, progress)
+			go this_.remoteUpdate(request, progress)
 		}
 	case "copy":
 		if request.FromFile == nil {
@@ -185,60 +189,62 @@ func (this_ *SftpClient) work(request *SFTPRequest) {
 			StartTime: util.GetNowTime(),
 		}
 		go this_.callProgress(request, progress)
-		response, err = this_.copy(request, progress)
+		go this_.copy(request, progress)
 	case "remove":
 		progress := &util.FileRemoveProgress{
 			StartTime: util.GetNowTime(),
 		}
-		go this_.callProgress(request, progress)
 		if request.Place == "local" {
-			response, err = this_.localRemove(request, progress)
+			go this_.callProgress(request, progress)
+			go this_.localRemove(request, progress)
 		} else if request.Place == "remote" {
-			response, err = this_.remoteRemove(request, progress)
+			go this_.callProgress(request, progress)
+			go this_.remoteRemove(request, progress)
 		}
 	case "rename":
+		progress := &util.FileRenameProgress{
+			StartTime: util.GetNowTime(),
+		}
+		go this_.callProgress(request, progress)
 		if request.Place == "local" {
-			response, err = this_.localRename(request)
+			err = this_.localRename(request, progress)
 		} else if request.Place == "remote" {
-			response, err = this_.remoteRename(request)
+			err = this_.remoteRename(request, progress)
 		}
 	}
 	if response == nil {
 		response = &SFTPResponse{}
 	}
 	if err != nil {
-		util.Logger.Error("ssh ftp work{"+request.Work+"} error", zap.Error(err))
-		response.Msg = err.Error()
+		return
 	}
 	response.Work = request.Work
 	response.WorkId = request.WorkId
 	response.Place = request.Place
 	response.ScrollTop = request.ScrollTop
 
-	this_.WSWriteData(response)
-
 	return
 }
 
-func (this_ *SftpClient) localUpdate(request *SFTPRequest, progress *util.FileUploadProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) localUpdate(request *SFTPRequest, progress *util.FileUploadProgress) {
+	var err error
 
+	defer func() {
+		if err != nil {
+			progress.Error = err
+			progress.EndTime = util.GetNowTime()
+		}
+	}()
 	progress.StartTime = util.GetNowTime()
 	progress.Count = 1
 	progress.Size = request.File.Size
-	defer func() {
-		progress.EndTime = util.GetNowTime()
-	}()
 
 	path := request.Dir + "/" + request.File.Filename
 	if request.FullPath != "" {
 		path = request.Dir + "/" + strings.TrimPrefix(request.FullPath, "/")
 	}
-	response = &SFTPResponse{
-		Path: path,
-		Dir:  request.Dir,
-	}
 
-	err = util.FileUpload(os.Lstat,
+	util.FileUpload(os.Lstat,
 		func(s string) error {
 			return os.MkdirAll(s, os.ModePerm)
 		},
@@ -248,28 +254,25 @@ func (this_ *SftpClient) localUpdate(request *SFTPRequest, progress *util.FileUp
 		util.LocalFileWrite,
 		request.File.Size, request.File.Filename, path, this_.callConfirm, progress)
 
-	if err != nil {
-		return
-	}
 	return
 }
 
-func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *util.FileUploadProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *util.FileUploadProgress) {
+	var err error
 
+	defer func() {
+		if err != nil {
+			progress.Error = err
+			progress.EndTime = util.GetNowTime()
+		}
+	}()
 	progress.StartTime = util.GetNowTime()
 	progress.Count = 1
 	progress.Size = request.File.Size
-	defer func() {
-		progress.EndTime = util.GetNowTime()
-	}()
 
 	path := request.Dir + "/" + request.File.Filename
 	if request.FullPath != "" {
 		path = request.Dir + "/" + strings.TrimPrefix(request.FullPath, "/")
-	}
-	response = &SFTPResponse{
-		Path: path,
-		Dir:  request.Dir,
 	}
 
 	var sftpClient *sftp.Client
@@ -277,9 +280,9 @@ func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *util.FileU
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
-	err = util.FileUpload(sftpClient.Lstat, sftpClient.MkdirAll,
+	util.FileUpload(sftpClient.Lstat, sftpClient.MkdirAll,
 		func() (io.Reader, error) {
 			return request.File.Open()
 		},
@@ -288,14 +291,19 @@ func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *util.FileU
 		},
 		request.File.Size, request.File.Filename, path, this_.callConfirm, progress)
 
-	if err != nil {
-		return
-	}
-
 	return
 }
 
-func (this_ *SftpClient) localDownload(c *gin.Context, path string) (err error) {
+func (this_ *SftpClient) LocalDownload(c *gin.Context, workId string, path string) (err error) {
+	progress := &util.FileDownloadProgress{}
+	defer func() {
+		progress.Error = err
+		progress.SuccessCount = 1
+		progress.EndTime = util.GetNowTime()
+	}()
+	progress.StartTime = util.GetNowTime()
+	progress.Count = 1
+	go this_.callProgress(&SFTPRequest{WorkId: workId, Work: "download"}, progress)
 
 	var fileName string
 	var fileSize int64
@@ -305,6 +313,7 @@ func (this_ *SftpClient) localDownload(c *gin.Context, path string) (err error) 
 	}
 	fileName = ff.Name()
 	fileSize = ff.Size()
+	progress.Size = fileSize
 
 	var fileInfo *os.File
 	fileInfo, err = os.Open(path)
@@ -320,6 +329,7 @@ func (this_ *SftpClient) localDownload(c *gin.Context, path string) (err error) 
 	c.Header("download-file-name", fileName)
 
 	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+		progress.SuccessSize += writeSize
 	})
 	if err != nil {
 		return
@@ -329,14 +339,23 @@ func (this_ *SftpClient) localDownload(c *gin.Context, path string) (err error) 
 	return
 }
 
-func (this_ *SftpClient) remoteDownload(c *gin.Context, path string) (err error) {
+func (this_ *SftpClient) RemoteDownload(c *gin.Context, workId string, path string) (err error) {
+	progress := &util.FileDownloadProgress{}
+	defer func() {
+		progress.Error = err
+		progress.SuccessCount = 1
+		progress.EndTime = util.GetNowTime()
+	}()
+	progress.StartTime = util.GetNowTime()
+	progress.Count = 1
+	go this_.callProgress(&SFTPRequest{WorkId: workId, Work: "download"}, progress)
 
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.newSftp()
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
 	var fileName string
 	var fileSize int64
@@ -346,6 +365,7 @@ func (this_ *SftpClient) remoteDownload(c *gin.Context, path string) (err error)
 	}
 	fileName = ff.Name()
 	fileSize = ff.Size()
+	progress.Size = fileSize
 
 	var fileInfo *sftp.File
 	fileInfo, err = sftpClient.Open(path)
@@ -361,6 +381,7 @@ func (this_ *SftpClient) remoteDownload(c *gin.Context, path string) (err error)
 	c.Header("download-file-name", fileName)
 
 	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
+		progress.SuccessSize += writeSize
 	})
 	if err != nil {
 		return
@@ -370,14 +391,14 @@ func (this_ *SftpClient) remoteDownload(c *gin.Context, path string) (err error)
 	return
 }
 
-func (this_ *SftpClient) copy(request *SFTPRequest, progress *util.FileCopyProgress) (response *SFTPResponse, err error) {
+func (this_ *SftpClient) copy(request *SFTPRequest, progress *util.FileCopyProgress) {
+	var err error
 
-	response = &SFTPResponse{
-		Path: request.Path,
-		Dir:  request.Dir,
-	}
 	defer func() {
-		progress.EndTime = util.GetNowTime()
+		if err != nil {
+			progress.Error = err
+			progress.EndTime = util.GetNowTime()
+		}
 	}()
 	progress.StartTime = util.GetNowTime()
 
@@ -387,7 +408,7 @@ func (this_ *SftpClient) copy(request *SFTPRequest, progress *util.FileCopyProgr
 		if err != nil {
 			return
 		}
-		defer this_.closeSftClient(sftpClient)
+		defer func() { _ = sftpClient.Close() }()
 	}
 
 	var fromLstat func(string) (os.FileInfo, error)
@@ -424,10 +445,7 @@ func (this_ *SftpClient) copy(request *SFTPRequest, progress *util.FileCopyProgr
 		toWriter = util.LocalFileWrite
 	}
 
-	err = util.FileCopy(fromLstat, fromLoadFiles, fromReader, request.FromFile.Path, toLstat, toMkdirAll, toWriter, request.ToFile.Path, callConfirm, progress)
-	if err != nil {
-		return
-	}
+	util.FileCopy(fromLstat, fromLoadFiles, fromReader, request.FromFile.Path, toLstat, toMkdirAll, toWriter, request.ToFile.Path, callConfirm, progress)
 	return
 }
 
@@ -454,26 +472,28 @@ func closeIfCloser(obj interface{}) {
 	}
 }
 
-func (this_ *SftpClient) localRemove(request *SFTPRequest, progress *util.FileRemoveProgress) (response *SFTPResponse, err error) {
-
+func (this_ *SftpClient) localRemove(request *SFTPRequest, progress *util.FileRemoveProgress) {
+	var err error
 	defer func() {
-		progress.EndTime = util.GetNowTime()
+		if err != nil {
+			progress.Error = err
+			progress.EndTime = util.GetNowTime()
+		}
 	}()
 	progress.StartTime = util.GetNowTime()
 
-	err = util.FileRemove(os.Lstat, util.LocalLoadFiles, request.Path, progress)
-
-	if err != nil {
-		return
-	}
+	util.FileRemove(os.Lstat, util.LocalLoadFiles, os.Remove, request.Path, progress)
 
 	return
 }
 
-func (this_ *SftpClient) remoteRemove(request *SFTPRequest, progress *util.FileRemoveProgress) (response *SFTPResponse, err error) {
-
+func (this_ *SftpClient) remoteRemove(request *SFTPRequest, progress *util.FileRemoveProgress) {
+	var err error
 	defer func() {
-		progress.EndTime = util.GetNowTime()
+		if err != nil {
+			progress.Error = err
+			progress.EndTime = util.GetNowTime()
+		}
 	}()
 	progress.StartTime = util.GetNowTime()
 	var sftpClient *sftp.Client
@@ -481,22 +501,24 @@ func (this_ *SftpClient) remoteRemove(request *SFTPRequest, progress *util.FileR
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
-	err = util.FileRemove(sftpClient.Lstat, sftpClient.ReadDir, request.Path, progress)
-
-	if err != nil {
-		return
-	}
+	util.FileRemove(sftpClient.Lstat, sftpClient.ReadDir, sftpClient.Remove, request.Path, progress)
 
 	return
 }
 
-func (this_ *SftpClient) localRename(request *SFTPRequest) (response *SFTPResponse, err error) {
-	response = &SFTPResponse{
-		Path: request.OldPath,
-		Dir:  request.Dir,
-	}
+func (this_ *SftpClient) localRename(request *SFTPRequest, progress *util.FileRenameProgress) (err error) {
+
+	defer func() {
+		if err == nil {
+			progress.SuccessCount = 1
+		}
+		progress.Error = err
+		progress.EndTime = util.GetNowTime()
+	}()
+	progress.StartTime = util.GetNowTime()
+	progress.Count = 1
 
 	if request.IsNew {
 		if request.IsDir {
@@ -524,17 +546,23 @@ func (this_ *SftpClient) localRename(request *SFTPRequest) (response *SFTPRespon
 	return
 }
 
-func (this_ *SftpClient) remoteRename(request *SFTPRequest) (response *SFTPResponse, err error) {
-	response = &SFTPResponse{
-		Path: request.OldPath,
-		Dir:  request.Dir,
-	}
+func (this_ *SftpClient) remoteRename(request *SFTPRequest, progress *util.FileRenameProgress) (err error) {
+	defer func() {
+		if err == nil {
+			progress.SuccessCount = 1
+		}
+		progress.Error = err
+		progress.EndTime = util.GetNowTime()
+	}()
+	progress.StartTime = util.GetNowTime()
+	progress.Count = 1
+
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.newSftp()
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
 	if request.IsNew {
 		if request.IsDir {
@@ -565,6 +593,7 @@ func (this_ *SftpClient) remoteRename(request *SFTPRequest) (response *SFTPRespo
 }
 
 func (this_ *SftpClient) localFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{}
 	dir := request.Dir
 	if dir == "" {
 		dir, err = os.UserHomeDir()
@@ -588,12 +617,13 @@ func (this_ *SftpClient) localFiles(request *SFTPRequest) (response *SFTPRespons
 }
 
 func (this_ *SftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
+	response = &SFTPResponse{}
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.newSftp()
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
 	dir := request.Dir
 	if dir == "" {
@@ -637,7 +667,7 @@ func (this_ *SftpClient) RemoteReadText(request *SFTPRequest) (response *SFTPRes
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
 	response.Size, response.Text, err = util.FileRead(sftpClient.Lstat, func(s string) (io.Reader, error) {
 		return sftpClient.Open(s)
@@ -669,7 +699,7 @@ func (this_ *SftpClient) RemoteSaveText(request *SFTPRequest) (response *SFTPRes
 	if err != nil {
 		return
 	}
-	defer this_.closeSftClient(sftpClient)
+	defer func() { _ = sftpClient.Close() }()
 
 	err = util.FileWrite(sftpClient.Lstat, func(s string) (io.Writer, error) {
 		return sftpClient.Create(s)

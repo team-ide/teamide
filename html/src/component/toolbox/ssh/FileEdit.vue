@@ -34,7 +34,7 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "toolboxWorker"],
   data() {
     return {
       showDialog: false,
@@ -48,8 +48,7 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    async show(place, file, tokenWork) {
-      this.tokenWork = tokenWork;
+    async show(place, file) {
       this.place = place;
       this.file = file;
       this.path = file.path;
@@ -66,7 +65,7 @@ export default {
       };
       this.error = null;
       this.text = null;
-      let res = await this.tokenWork("readText", param);
+      let res = await this.toolboxWorker.work("readText", param);
       if (res.code != 0) {
         this.error = res.msg || res.error;
         return;
@@ -82,7 +81,7 @@ export default {
         path: this.path,
         text: this.text,
       };
-      let res = await this.tokenWork("saveText", param);
+      let res = await this.toolboxWorker.work("saveText", param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
       }

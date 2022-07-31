@@ -5,7 +5,7 @@ import (
 	"teamide/internal/web"
 )
 
-func Start(ServerContext *context.ServerContext) (serverUrl string, err error) {
-	webServer := web.NewWebServer(ServerContext)
+func Start(serverContext *context.ServerContext) (serverUrl string, err error) {
+	webServer := web.NewWebServer(serverContext)
 	return webServer.Start()
 }
