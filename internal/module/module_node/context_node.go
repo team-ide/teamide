@@ -236,10 +236,10 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)
 		}
 		nodeInfo := &NodeInfo{
-			Info:      one,
-			IsStarted: one.Status == node.StatusStarted,
-			Model:     this_.getNodeModelByServerId(one.Id),
-			//MonitorData: ToMonitorDataFormat(this_.server.GetNodeMonitorData(one.Id)),
+			Info:        one,
+			IsStarted:   one.Status == node.StatusStarted,
+			Model:       this_.getNodeModelByServerId(one.Id),
+			MonitorData: ToMonitorDataFormat(nil),
 		}
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}

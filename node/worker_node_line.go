@@ -77,6 +77,12 @@ func (this_ *Worker) findNodeLineList(nodeId string, nodeIdConnNodeIdListCache m
 func (this_ *Worker) getNodeLineByFromTo(fromNodeId, toNodeId string, nodeIdConnNodeIdListCache map[string][]string) (lineIdList []string) {
 
 	Logger.Info("查询节点线", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId))
+
+	if fromNodeId == toNodeId {
+		lineIdList = append(lineIdList, fromNodeId)
+		return
+	}
+
 	var lineList = this_.findNodeLineList(fromNodeId, nodeIdConnNodeIdListCache)
 
 	for _, line := range lineList {

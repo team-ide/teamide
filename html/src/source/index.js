@@ -396,7 +396,8 @@ source.nodeCount = 0
 source.nodeSuccessCount = 0
 source.nodeNetProxyList = []
 source.nodeNetProxyCount = 0
-source.nodeNetProxySuccessCount = 0
+source.nodeNetProxyInnerSuccessCount = 0
+source.nodeNetProxyOuterSuccessCount = 0
 source.localIpList = [];
 source.nodeOptionMap = {};
 
@@ -483,7 +484,6 @@ source.initNodeList = (nodeList) => {
     let nodeOptionMap = {};
     let nodeSuccessCount = 0
     nodeList.forEach(one => {
-        one.monitorData = one.monitorData || null;
         let option = {};
         option.isStarted = one.isStarted
         if (one.isStarted) {
@@ -514,17 +514,20 @@ source.initNodeNetProxyList = (nodeNetProxyList) => {
         }
         return
     }
-    let nodeNetProxySuccessCount = 0
+    let nodeNetProxyInnerSuccessCount = 0
+    let nodeNetProxyOuterSuccessCount = 0
     nodeNetProxyList.forEach(one => {
-        one.innerMonitorData = one.innerMonitorData || null;
-        one.outerMonitorData = one.outerMonitorData || null;
-        if (one.innerIsStarted && one.outerIsStarted) {
-            nodeNetProxySuccessCount++;
+        if (one.innerIsStarted) {
+            nodeNetProxyInnerSuccessCount++;
+        }
+        if (one.outerIsStarted) {
+            nodeNetProxyOuterSuccessCount++;
         }
     });
     source.nodeNetProxyList = nodeNetProxyList;
     source.nodeNetProxyCount = nodeNetProxyList.length;
-    source.nodeNetProxySuccessCount = nodeNetProxySuccessCount;
+    source.nodeNetProxyInnerSuccessCount = nodeNetProxyInnerSuccessCount;
+    source.nodeNetProxyOuterSuccessCount = nodeNetProxyOuterSuccessCount;
 }
 
 let refreshPowers = function () {

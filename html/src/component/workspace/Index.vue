@@ -26,7 +26,9 @@
             (
             {{ source.nodeNetProxyCount }}
             /
-            {{ source.nodeNetProxySuccessCount }}
+            {{ source.nodeNetProxyInnerSuccessCount }}
+            |
+            {{ source.nodeNetProxyOuterSuccessCount }}
             )
           </span>
         </div>

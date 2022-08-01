@@ -73,7 +73,6 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 	this_.cache.nodeLock.Lock()
 	defer this_.cache.nodeLock.Unlock()
 
-	var statusChangeList []*StatusChange
 	var findChanged = false
 	for _, node := range nodeList {
 		var find = this_.findNode(node.Id)
@@ -85,28 +84,10 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 		} else {
 			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("node", node))
 
-			if this_.server.rootNode.Id == node.Id {
-				if find.Status != 0 && node.Status != find.Status {
-					statusChangeList = append(statusChangeList, &StatusChange{
-						Id:          node.Id,
-						Status:      find.Status,
-						StatusError: find.StatusError,
-					})
-				}
-			}
-
 			if copyNode(node, find) {
 				findChanged = true
 			}
 		}
-	}
-
-	if len(statusChangeList) > 0 {
-		this_.notifyOther(&Message{
-			NotifyChange: &NotifyChange{
-				NodeStatusChangeList: statusChangeList,
-			},
-		})
 	}
 
 	if findChanged {
@@ -260,6 +241,7 @@ func (this_ *Worker) doChangeNodeStatus(statusChangeList []*StatusChange) (err e
 
 func (this_ *Worker) refreshNodeList() {
 
+	var statusChangeList []*StatusChange
 	var connIdList = this_.server.rootNode.ConnNodeIdList
 	for _, connToId := range connIdList {
 		var find = this_.findNode(connToId)
@@ -268,22 +250,39 @@ func (this_ *Worker) refreshNodeList() {
 			if pool != nil {
 				pool.Stop()
 			}
-			continue
-		}
-		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-
-		//if !find.IsEnabled() {
-		//	if pool != nil {
-		//		pool.Stop()
-		//	}
-		//	continue
-		//}
-		if pool == nil { //  && find.IsEnabled()
-			if find != nil && find.ConnAddress != "" {
-				this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
+		} else {
+			pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
+			if pool == nil { //  && find.IsEnabled()
+				if find != nil && find.ConnAddress != "" {
+					this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
+				}
 			}
 		}
+
+		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
+
+		if len(pool.listeners) > 0 {
+			statusChangeList = append(statusChangeList, &StatusChange{
+				Id:          connToId,
+				Status:      StatusStarted,
+				StatusError: "",
+			})
+		}
 	}
+	statusChangeList = append(statusChangeList, &StatusChange{
+		Id:          this_.server.Id,
+		Status:      StatusStarted,
+		StatusError: "",
+	})
+
+	if len(statusChangeList) > 0 {
+		this_.notifyOther(&Message{
+			NotifyChange: &NotifyChange{
+				NodeStatusChangeList: statusChangeList,
+			},
+		})
+	}
+
 	return
 }
 

@@ -154,7 +154,7 @@ func GetSizeAndUnit(size float64) (res float64, unit string) {
 
 func ToMonitorDataFormat(monitorData *node.MonitorData) *MonitorDataFormat {
 	if monitorData == nil {
-		return nil
+		monitorData = &node.MonitorData{}
 	}
 
 	ReadSize, ReadSizeUnit := GetSizeAndUnit(float64(monitorData.ReadSize))

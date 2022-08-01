@@ -53,37 +53,31 @@
                 <template slot-scope="scope">
                   <div class="text-left pd-5" v-if="scope.row.model != null">
                     <div class="">
-                      <template
+                      节点:
+                      <span
                         v-if="
                           source.nodeOptionMap[scope.row.model.innerServerId] !=
                           null
                         "
-                      >
-                        节点:<span
-                          class="pdl-10"
-                          :class="{
-                            'color-green':
-                              source.nodeOptionMap[
-                                scope.row.model.innerServerId
-                              ].isStarted,
-
-                            'color-red':
-                              !source.nodeOptionMap[
-                                scope.row.model.innerServerId
-                              ].isStarted,
-                          }"
-                        >
-                          {{
+                        class="pdl-10"
+                        :class="{
+                          'color-green':
                             source.nodeOptionMap[scope.row.model.innerServerId]
-                              .text
-                          }}
-                        </span>
-                      </template>
-                      <template v-else>
-                        节点:<span class="pdl-10">
-                          {{ scope.row.model.innerServerId }}
-                        </span>
-                      </template>
+                              .isStarted,
+
+                          'color-red':
+                            !source.nodeOptionMap[scope.row.model.innerServerId]
+                              .isStarted,
+                        }"
+                      >
+                        {{
+                          source.nodeOptionMap[scope.row.model.innerServerId]
+                            .text
+                        }}
+                      </span>
+                      <span v-else class="pdl-10">
+                        {{ scope.row.model.innerServerId }}
+                      </span>
                     </div>
                     <div class="">
                       状态:
@@ -102,41 +96,39 @@
                         {{ scope.row.model.innerAddress }}
                       </span>
                     </div>
-                    <div class="" v-if="scope.row.innerMonitorData != null">
-                      <div class="">
-                        输入:<span class="pdlr-10 color-blue">
-                          {{ scope.row.innerMonitorData.readSize }}
-                          {{ scope.row.innerMonitorData.readSizeUnit }}
-                        </span>
-                        输入速度:<span class="pdlr-10 color-blue">
-                          {{ scope.row.innerMonitorData.readLastSleep }}
-                          {{ scope.row.innerMonitorData.readLastSleepUnit }}
-                        </span>
-                        时间:<span class="pdlr-10 color-blue">
-                          {{
-                            tool.formatDateByTime(
-                              scope.row.innerMonitorData.readLastTimestamp
-                            )
-                          }}
-                        </span>
-                      </div>
-                      <div class="">
-                        输出:<span class="pdlr-10 color-blue">
-                          {{ scope.row.innerMonitorData.writeSize }}
-                          {{ scope.row.innerMonitorData.writeSizeUnit }}
-                        </span>
-                        输出速度:<span class="pdlr-10 color-blue">
-                          {{ scope.row.innerMonitorData.writeLastSleep }}
-                          {{ scope.row.innerMonitorData.writeLastSleepUnit }}
-                        </span>
-                        时间:<span class="pdlr-10 color-blue">
-                          {{
-                            tool.formatDateByTime(
-                              scope.row.innerMonitorData.writeLastTimestamp
-                            )
-                          }}
-                        </span>
-                      </div>
+                    <div class="">
+                      输入:<span class="pdlr-10 color-blue">
+                        {{ scope.row.innerMonitorData.readSize }}
+                        {{ scope.row.innerMonitorData.readSizeUnit }}
+                      </span>
+                      输入速度:<span class="pdlr-10 color-blue">
+                        {{ scope.row.innerMonitorData.readLastSleep }}
+                        {{ scope.row.innerMonitorData.readLastSleepUnit }}
+                      </span>
+                      最后时间:<span class="pdlr-10 color-blue">
+                        {{
+                          tool.formatDateByTime(
+                            scope.row.innerMonitorData.readLastTimestamp
+                          )
+                        }}
+                      </span>
+                    </div>
+                    <div class="ft-12">
+                      输出:<span class="pdlr-10 color-blue">
+                        {{ scope.row.innerMonitorData.writeSize }}
+                        {{ scope.row.innerMonitorData.writeSizeUnit }}
+                      </span>
+                      输出速度:<span class="pdlr-10 color-blue">
+                        {{ scope.row.innerMonitorData.writeLastSleep }}
+                        {{ scope.row.innerMonitorData.writeLastSleepUnit }}
+                      </span>
+                      最后时间:<span class="pdlr-10 color-blue">
+                        {{
+                          tool.formatDateByTime(
+                            scope.row.innerMonitorData.writeLastTimestamp
+                          )
+                        }}
+                      </span>
                     </div>
                   </div>
                 </template>
@@ -145,37 +137,30 @@
                 <template slot-scope="scope">
                   <div class="text-left pd-5" v-if="scope.row.model != null">
                     <div class="">
-                      <template
+                      节点:<span
                         v-if="
                           source.nodeOptionMap[scope.row.model.outerServerId] !=
                           null
                         "
-                      >
-                        节点:<span
-                          class="pdl-10"
-                          :class="{
-                            'color-green':
-                              source.nodeOptionMap[
-                                scope.row.model.outerServerId
-                              ].isStarted,
-
-                            'color-red':
-                              !source.nodeOptionMap[
-                                scope.row.model.outerServerId
-                              ].isStarted,
-                          }"
-                        >
-                          {{
+                        class="pdl-10"
+                        :class="{
+                          'color-green':
                             source.nodeOptionMap[scope.row.model.outerServerId]
-                              .text
-                          }}
-                        </span>
-                      </template>
-                      <template v-else>
-                        节点:<span class="pdl-10">
-                          {{ scope.row.model.outerServerId }}
-                        </span>
-                      </template>
+                              .isStarted,
+
+                          'color-red':
+                            !source.nodeOptionMap[scope.row.model.outerServerId]
+                              .isStarted,
+                        }"
+                      >
+                        {{
+                          source.nodeOptionMap[scope.row.model.outerServerId]
+                            .text
+                        }}
+                      </span>
+                      <span v-else class="pdl-10">
+                        {{ scope.row.model.outerServerId }}
+                      </span>
                     </div>
                     <div class="">
                       状态:
@@ -194,41 +179,39 @@
                         {{ scope.row.model.outerAddress }}
                       </span>
                     </div>
-                    <div class="" v-if="scope.row.outerMonitorData != null">
-                      <div class="">
-                        输入:<span class="pdlr-10 color-blue">
-                          {{ scope.row.outerMonitorData.readSize }}
-                          {{ scope.row.outerMonitorData.readSizeUnit }}
-                        </span>
-                        输入速度:<span class="pdlr-10 color-blue">
-                          {{ scope.row.outerMonitorData.readLastSleep }}
-                          {{ scope.row.outerMonitorData.readLastSleepUnit }}
-                        </span>
-                        时间:<span class="pdlr-10 color-blue">
-                          {{
-                            tool.formatDateByTime(
-                              scope.row.outerMonitorData.readLastTimestamp
-                            )
-                          }}
-                        </span>
-                      </div>
-                      <div class="">
-                        输出:<span class="pdlr-10 color-blue">
-                          {{ scope.row.outerMonitorData.writeSize }}
-                          {{ scope.row.outerMonitorData.writeSizeUnit }}
-                        </span>
-                        输出速度:<span class="pdlr-10 color-blue">
-                          {{ scope.row.outerMonitorData.writeLastSleep }}
-                          {{ scope.row.outerMonitorData.writeLastSleepUnit }}
-                        </span>
-                        时间:<span class="pdlr-10 color-blue">
-                          {{
-                            tool.formatDateByTime(
-                              scope.row.outerMonitorData.writeLastTimestamp
-                            )
-                          }}
-                        </span>
-                      </div>
+                    <div class="ft-12">
+                      输入:<span class="pdlr-10 color-blue">
+                        {{ scope.row.outerMonitorData.readSize }}
+                        {{ scope.row.outerMonitorData.readSizeUnit }}
+                      </span>
+                      输入速度:<span class="pdlr-10 color-blue">
+                        {{ scope.row.outerMonitorData.readLastSleep }}
+                        {{ scope.row.outerMonitorData.readLastSleepUnit }}
+                      </span>
+                      最后时间:<span class="pdlr-10 color-blue">
+                        {{
+                          tool.formatDateByTime(
+                            scope.row.outerMonitorData.readLastTimestamp
+                          )
+                        }}
+                      </span>
+                    </div>
+                    <div class="ft-12">
+                      输出:<span class="pdlr-10 color-blue">
+                        {{ scope.row.outerMonitorData.writeSize }}
+                        {{ scope.row.outerMonitorData.writeSizeUnit }}
+                      </span>
+                      输出速度:<span class="pdlr-10 color-blue">
+                        {{ scope.row.outerMonitorData.writeLastSleep }}
+                        {{ scope.row.outerMonitorData.writeLastSleepUnit }}
+                      </span>
+                      最后时间:<span class="pdlr-10 color-blue">
+                        {{
+                          tool.formatDateByTime(
+                            scope.row.outerMonitorData.writeLastTimestamp
+                          )
+                        }}
+                      </span>
                     </div>
                   </div>
                 </template>

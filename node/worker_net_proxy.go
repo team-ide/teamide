@@ -61,8 +61,6 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 	this_.cache.netProxyLock.Lock()
 	defer this_.cache.netProxyLock.Unlock()
 
-	var innerStatusChangeList []*StatusChange
-	var outerStatusChangeList []*StatusChange
 	var findChanged = false
 	for _, netProxy := range netProxyList {
 
@@ -73,24 +71,6 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 			this_.cache.netProxyList = append(this_.cache.netProxyList, netProxy)
 		} else {
 			Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
-			if this_.server.rootNode.Id == netProxy.Inner.NodeId {
-				if find.InnerStatus != 0 && netProxy.InnerStatus != find.InnerStatus {
-					innerStatusChangeList = append(innerStatusChangeList, &StatusChange{
-						Id:          netProxy.Id,
-						Status:      find.InnerStatus,
-						StatusError: find.InnerStatusError,
-					})
-				}
-			}
-			if this_.server.rootNode.Id == netProxy.Outer.NodeId {
-				if find.OuterStatus != 0 && netProxy.OuterStatus != find.OuterStatus {
-					outerStatusChangeList = append(outerStatusChangeList, &StatusChange{
-						Id:          netProxy.Id,
-						Status:      find.OuterStatus,
-						StatusError: find.OuterStatusError,
-					})
-				}
-			}
 			if netProxy.InnerStatus != 0 && netProxy.InnerStatus != find.InnerStatus {
 				find.InnerStatus = netProxy.InnerStatus
 				findChanged = true
@@ -110,15 +90,6 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 		}
 	}
 
-	if len(innerStatusChangeList) > 0 || len(outerStatusChangeList) > 0 {
-		this_.notifyOther(&Message{
-			NotifyChange: &NotifyChange{
-				NetProxyInnerStatusChangeList: innerStatusChangeList,
-				NetProxyOuterStatusChangeList: outerStatusChangeList,
-			},
-		})
-	}
-
 	if findChanged {
 		this_.refresh()
 		if this_.server.OnNetProxyListChange != nil {
@@ -129,13 +100,11 @@ func (this_ *Worker) doAddNetProxyList(netProxyList []*NetProxy) (err error) {
 	return
 }
 
-func (this_ *Worker) doChangeNetProxyInnerStatus(statusChangeList []*StatusChange) (err error) {
-	if len(statusChangeList) == 0 {
-		return
-	}
+func (this_ *Worker) doChangeNetProxyStatus(innerStatusChangeList []*StatusChange, outerStatusChangeList []*StatusChange) (err error) {
 
 	var findChanged = false
-	for _, one := range statusChangeList {
+
+	for _, one := range innerStatusChangeList {
 		if one.Id == "" || one.Status == 0 {
 			continue
 		}
@@ -149,19 +118,8 @@ func (this_ *Worker) doChangeNetProxyInnerStatus(statusChangeList []*StatusChang
 			find.InnerStatusError = one.StatusError
 		}
 	}
-	if findChanged && this_.server.OnNetProxyListChange != nil {
-		this_.server.OnNetProxyListChange(this_.cache.netProxyList)
-	}
-	return
-}
 
-func (this_ *Worker) doChangeNetProxyOuterStatus(statusChangeList []*StatusChange) (err error) {
-	if len(statusChangeList) == 0 {
-		return
-	}
-
-	var findChanged = false
-	for _, one := range statusChangeList {
+	for _, one := range outerStatusChangeList {
 		if one.Id == "" || one.Status == 0 {
 			continue
 		}
@@ -238,23 +196,57 @@ func (this_ *Worker) doRemoveNetProxyList(removeNetProxyIdList []string) (err er
 	return
 }
 func (this_ *Worker) refreshNetProxy() {
+
+	var innerStatusChangeList []*StatusChange
+	var outerStatusChangeList []*StatusChange
+
 	var list = this_.cache.netProxyList
 	for _, netProxy := range list {
 		if this_.server.rootNode.Id == netProxy.Inner.NodeId {
 			if this_.server.rootNode.IsEnabled() && netProxy.IsEnabled() {
 				_ = this_.newIfAbsentNetProxyInner(netProxy)
+				innerStatusChangeList = append(innerStatusChangeList, &StatusChange{
+					Id:          netProxy.Id,
+					Status:      StatusStarted,
+					StatusError: "",
+				})
 			} else {
 				_ = this_.removeNetProxyInner(netProxy.Id)
+				innerStatusChangeList = append(innerStatusChangeList, &StatusChange{
+					Id:          netProxy.Id,
+					Status:      StatusStopped,
+					StatusError: "",
+				})
 			}
 		}
 		if this_.server.rootNode.Id == netProxy.Outer.NodeId {
 			if this_.server.rootNode.IsEnabled() && netProxy.IsEnabled() {
 				_ = this_.newIfAbsentNetProxyOuter(netProxy)
+				outerStatusChangeList = append(outerStatusChangeList, &StatusChange{
+					Id:          netProxy.Id,
+					Status:      StatusStarted,
+					StatusError: "",
+				})
 			} else {
 				_ = this_.removeNetProxyOuter(netProxy.Id)
+				outerStatusChangeList = append(outerStatusChangeList, &StatusChange{
+					Id:          netProxy.Id,
+					Status:      StatusStopped,
+					StatusError: "",
+				})
 			}
 		}
 	}
+
+	if len(innerStatusChangeList) > 0 || len(outerStatusChangeList) > 0 {
+		this_.notifyOther(&Message{
+			NotifyChange: &NotifyChange{
+				NetProxyInnerStatusChangeList: innerStatusChangeList,
+				NetProxyOuterStatusChangeList: outerStatusChangeList,
+			},
+		})
+	}
+
 	return
 }
 

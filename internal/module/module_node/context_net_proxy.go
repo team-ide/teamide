@@ -263,12 +263,12 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 			//}
 		}
 		netProxyInfo := &NetProxyInfo{
-			Info:           one,
-			InnerIsStarted: one.InnerStatus == node.StatusStarted,
-			OuterIsStarted: one.OuterStatus == node.StatusStarted,
-			Model:          this_.getNetProxyModelByCode(one.Id),
-			//InnerMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyInnerMonitorData(one.Id)),
-			//OuterMonitorData: ToMonitorDataFormat(this_.server.GetNetProxyOuterMonitorData(one.Id)),
+			Info:             one,
+			InnerIsStarted:   one.InnerStatus == node.StatusStarted,
+			OuterIsStarted:   one.OuterStatus == node.StatusStarted,
+			Model:            this_.getNetProxyModelByCode(one.Id),
+			InnerMonitorData: ToMonitorDataFormat(nil),
+			OuterMonitorData: ToMonitorDataFormat(nil),
 		}
 		netProxyInfoList = append(netProxyInfoList, netProxyInfo)
 	}
