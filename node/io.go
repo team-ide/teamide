@@ -27,6 +27,8 @@ type Message struct {
 	NetProxyWorkData   *NetProxyWorkData `json:"netProxyWorkData,omitempty"`
 	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
 	NotifyChange       *NotifyChange     `json:"notifyChange,omitempty"`
+	HasBytes           bool              `json:"hasBytes,omitempty"`
+	Bytes              []byte            `json:"-"`
 	listener           *MessageListener
 }
 
@@ -47,7 +49,6 @@ type NodeWorkData struct {
 type NetProxyWorkData struct {
 	NetProxyId  string       `json:"netProxyId,omitempty"`
 	ConnId      string       `json:"connId,omitempty"`
-	Bytes       []byte       `json:"bytes,omitempty"`
 	IsReverse   bool         `json:"isReverse,omitempty"`
 	MonitorData *MonitorData `json:"monitorData,omitempty"`
 }
@@ -183,6 +184,13 @@ func ReadMessage(reader io.Reader, MonitorData *MonitorData) (message *Message, 
 	if err != nil {
 		return
 	}
+	if message.HasBytes {
+		bytes, err = ReadBytes(reader, MonitorData)
+		if err != nil {
+			return
+		}
+		message.Bytes = bytes
+	}
 	return
 }
 
@@ -195,6 +203,12 @@ func WriteMessage(writer io.Writer, message *Message, MonitorData *MonitorData) 
 	}
 
 	err = WriteBytes(writer, bytes, MonitorData)
+	if err != nil {
+		return
+	}
+	if message.HasBytes {
+		err = WriteBytes(writer, message.Bytes, MonitorData)
+	}
 	return
 }
 

@@ -161,7 +161,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodNetProxySend:
 		if msg.NetProxyWorkData != nil {
-			err = this_.netProxySend(msg.NetProxyWorkData.IsReverse, msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId, msg.NetProxyWorkData.Bytes)
+			err = this_.netProxySend(msg.NetProxyWorkData.IsReverse, msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId, msg.Bytes)
 		}
 	case methodNetProxyGetInnerMonitorData:
 		if msg.NetProxyWorkData != nil {

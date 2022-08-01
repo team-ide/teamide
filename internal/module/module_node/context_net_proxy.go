@@ -157,6 +157,10 @@ func (this_ *NodeContext) formatNetProxy(netProxyModel *NetProxyModel) (netProxy
 		netProxy.ReverseLineNodeIdList = append(netProxy.ReverseLineNodeIdList, netProxy.LineNodeIdList[i])
 	}
 
+	bs, _ := json.Marshal(&netProxy.LineNodeIdList)
+	if len(bs) > 0 {
+		netProxyModel.LineServerIds = string(bs)
+	}
 	return
 }
 

@@ -80,10 +80,11 @@ func (this_ *Worker) netProxySend(isReverse bool, lineNodeIdList []string, netPr
 	send, err := this_.sendToNext(lineNodeIdList, connId, func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxySend, &Message{
 			LineNodeIdList: lineNodeIdList,
+			HasBytes:       true,
+			Bytes:          bytes,
 			NetProxyWorkData: &NetProxyWorkData{
 				NetProxyId: netProxyId,
 				ConnId:     connId,
-				Bytes:      bytes,
 				IsReverse:  isReverse,
 			},
 		})
