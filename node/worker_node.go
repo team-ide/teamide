@@ -261,7 +261,7 @@ func (this_ *Worker) refreshNodeList() {
 
 		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
 
-		if len(pool.listeners) > 0 {
+		if pool != nil && len(pool.listeners) > 0 {
 			statusChangeList = append(statusChangeList, &StatusChange{
 				Id:          connToId,
 				Status:      StatusStarted,
