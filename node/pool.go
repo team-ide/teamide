@@ -22,6 +22,7 @@ type MessageListenerPool struct {
 }
 
 func (this_ *MessageListenerPool) Remove(listener *MessageListener) {
+	listener.stop()
 	if this_.isStop {
 		return
 	}
@@ -38,13 +39,15 @@ func (this_ *MessageListenerPool) Remove(listener *MessageListener) {
 	this_.listeners = list
 }
 
-func (this_ *MessageListenerPool) Put(listener *MessageListener) {
+func (this_ *MessageListenerPool) Put(listener *MessageListener) (size int) {
 	if this_.isStop {
 		return
 	}
 	this_.listenerMu.Lock()
 	defer this_.listenerMu.Unlock()
 	this_.listeners = append(this_.listeners, listener)
+	size = len(this_.listeners)
+	return
 }
 
 func (this_ *MessageListenerPool) Stop() {

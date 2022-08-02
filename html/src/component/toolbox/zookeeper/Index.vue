@@ -55,9 +55,55 @@
         <tm-layout width="auto">
           <div class="pd-10">
             <el-form ref="form" size="mini" @submit.native.prevent>
+              <div class="ft-12 color-grey" v-if="stat != null">
+                节点信息：
+                <div>
+                  <div class="pdtb-2">
+                    创建时间:
+                    <span class="mglr-5">
+                      {{ tool.formatDateByTime(stat.ctime) }}
+                    </span>
+                    创建事务ID:
+                    <span class="mglr-5">
+                      {{ stat.czxid }}
+                    </span>
+                  </div>
+                  <div class="pdtb-2">
+                    修改时间:
+                    <span class="mglr-5">
+                      {{ tool.formatDateByTime(stat.mtime) }}
+                    </span>
+                    修改事务ID:
+                    <span class="mglr-5">
+                      {{ stat.mzxid }}
+                    </span>
+                  </div>
+                  <div class="pdtb-2" v-if="stat.ephemeralOwner != null">
+                    临时节点:
+                    <span class="mglr-5 color-green"> 是 </span>
+                    所有者SessionID:
+                    <span class="mglr-5">
+                      {{ stat.ephemeralOwner }}
+                    </span>
+                  </div>
+                  <div class="pdtb-2" v-if="stat.dataVersion != null">
+                    更改次数:
+                    <span class="mglr-5">
+                      {{ stat.dataVersion }}
+                    </span>
+                  </div>
+                  <div class="pdtb-2" v-if="stat.numChildren != null">
+                    子节点数量:
+                    <span class="mglr-5">
+                      {{ stat.numChildren }}
+                    </span>
+                  </div>
+                </div>
+              </div>
               <el-form-item label="目录">
                 <el-input v-model="form.dir" @change="dirChange"> </el-input>
               </el-form-item>
+
               <el-form-item label="名称">
                 <el-input v-model="form.name" @change="nameChange"> </el-input>
               </el-form-item>
@@ -124,6 +170,7 @@ export default {
         value: null,
         valueJson: null,
       },
+      stat: null,
       ready: false,
       expands: [],
       defaultProps: {
@@ -331,18 +378,9 @@ export default {
       }
       data.key = data.path;
       data.leaf = false;
-
-      this.loadHasChildren(data.path).then((res) => {
-        if (res.code == 0) {
-          if (!res.data.hasChildren) {
-            data.leaf = true;
-            let node = this.$refs.tree.getNode(data);
-            if (node != null) {
-              node.isLeaf = true;
-            }
-          }
-        }
-      });
+      if (!data.hasChildren) {
+        data.leaf = true;
+      }
     },
     currentChange(data) {
       this.toUpdate(data);
@@ -357,6 +395,7 @@ export default {
       } else {
         this.form.path = one.path + "/xxx";
       }
+      this.stat = null;
       this.form.value = null;
     },
     async toUpdate(one) {
@@ -366,6 +405,7 @@ export default {
         data = {};
       }
       this.form.path = one.path;
+      this.stat = data.stat;
       this.form.value = data.data;
     },
     toDelete(data) {

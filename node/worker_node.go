@@ -61,8 +61,6 @@ func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
 		},
 	})
 
-	err = this_.doAddNodeList(nodeList)
-
 	return
 }
 
@@ -94,7 +92,7 @@ func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
 		this_.refresh()
 
 		if this_.server.OnNodeListChange != nil {
-			this_.server.OnNodeListChange(this_.cache.nodeList)
+			go this_.server.OnNodeListChange(this_.cache.nodeList)
 		}
 	}
 	return
@@ -153,7 +151,7 @@ func (this_ *Worker) doRemoveNodeList(removeNodeIdList []string) (err error) {
 		this_.refresh()
 
 		if this_.server.OnNodeListChange != nil {
-			this_.server.OnNodeListChange(this_.cache.nodeList)
+			go this_.server.OnNodeListChange(this_.cache.nodeList)
 		}
 	}
 
@@ -204,7 +202,7 @@ func (this_ *Worker) doRemoveNodeConnNodeIdList(id string, removeConnNodeIdList 
 	if findChanged {
 		this_.refresh()
 		if this_.server.OnNodeListChange != nil {
-			this_.server.OnNodeListChange(this_.cache.nodeList)
+			go this_.server.OnNodeListChange(this_.cache.nodeList)
 		}
 	}
 	_ = this_.doRemoveNetProxyList(removeNetProxyIdList)
@@ -234,14 +232,13 @@ func (this_ *Worker) doChangeNodeStatus(statusChangeList []*StatusChange) (err e
 		}
 	}
 	if findChanged && this_.server.OnNodeListChange != nil {
-		this_.server.OnNodeListChange(this_.cache.nodeList)
+		go this_.server.OnNodeListChange(this_.cache.nodeList)
 	}
 	return
 }
 
 func (this_ *Worker) refreshNodeList() {
 
-	var statusChangeList []*StatusChange
 	var connIdList = this_.server.rootNode.ConnNodeIdList
 	for _, connToId := range connIdList {
 		var find = this_.findNode(connToId)
@@ -259,28 +256,6 @@ func (this_ *Worker) refreshNodeList() {
 			}
 		}
 
-		pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-
-		if pool != nil && len(pool.listeners) > 0 {
-			statusChangeList = append(statusChangeList, &StatusChange{
-				Id:          connToId,
-				Status:      StatusStarted,
-				StatusError: "",
-			})
-		}
-	}
-	statusChangeList = append(statusChangeList, &StatusChange{
-		Id:          this_.server.Id,
-		Status:      StatusStarted,
-		StatusError: "",
-	})
-
-	if len(statusChangeList) > 0 {
-		this_.notifyOther(&Message{
-			NotifyChange: &NotifyChange{
-				NodeStatusChangeList: statusChangeList,
-			},
-		})
 	}
 
 	return

@@ -37,7 +37,7 @@ func (this_ *Api) apiUpload(requestBean *base.RequestBean, c *gin.Context) (res 
 		return
 	}
 	nowTime := time.Now()
-	filePath := fmt.Sprintf("%s/%d/%d/%d", place, nowTime.Year(), nowTime.Month(), nowTime.Day())
+	filePath := fmt.Sprintf("%s/%d/%d/%d/%s", place, nowTime.Year(), nowTime.Month(), nowTime.Day(), util.UUID())
 
 	fileDir := this_.GetFilesFile(filePath)
 
@@ -49,20 +49,16 @@ func (this_ *Api) apiUpload(requestBean *base.RequestBean, c *gin.Context) (res 
 		err = os.MkdirAll(fileDir, 0777)
 	}
 
-	//获取文件名称带后缀
-	fileNameWithSuffix := path.Base(uploadFile.Filename)
-	//获取文件的后缀(文件类型)
-	fileType := path.Ext(fileNameWithSuffix)
-
 	openFile, err := uploadFile.Open()
 	if err != nil {
 		return
 	}
 	defer openFile.Close()
-	fileName := util.UUID()
-	if fileType != "" {
-		fileName += "" + fileType
-	}
+	fileName := uploadFile.Filename
+	//获取文件名称带后缀
+	fileNameWithSuffix := path.Base(uploadFile.Filename)
+	//获取文件的后缀(文件类型)
+	fileType := path.Ext(fileNameWithSuffix)
 	filePath += "/" + fileName
 
 	fileSavePath := this_.GetFilesFile(filePath)
@@ -71,7 +67,7 @@ func (this_ *Api) apiUpload(requestBean *base.RequestBean, c *gin.Context) (res 
 	if err != nil {
 		return
 	}
-	defer createFile.Close()
+	defer func() { _ = createFile.Close() }()
 
 	_, err = io.Copy(createFile, openFile)
 	if err != nil {

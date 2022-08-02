@@ -155,6 +155,9 @@ func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]
 		if err != nil {
 			return
 		}
+		if config.CertPath != "" {
+			config.CertPath = this_.GetFilesFile(config.CertPath)
+		}
 		res, err = toolbox.ESWork(work, config, data)
 		break
 	case kafkaWorker_:
@@ -289,6 +292,9 @@ func elasticsearchWorker() *Worker {
 						{Required: true, Message: "连接地址不能为空"},
 					},
 				},
+				{Label: "用户名", Name: "username"},
+				{Label: "密码", Name: "password"},
+				{Label: "Cert", Name: "certPath", Type: "file", Placeholder: "请上传Cert"},
 			},
 		},
 		OtherForm: map[string]*form.Form{

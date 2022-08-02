@@ -2,18 +2,31 @@ package elasticsearch
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"github.com/olivere/elastic/v7"
+	"io/ioutil"
+	"net/http"
 	"sort"
+	"strings"
+	"sync"
 	"teamide/pkg/util"
 )
 
 type Config struct {
-	Url string `json:"url"`
+	Url      string `json:"url,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	CertPath string `json:"certPath,omitempty"`
 }
 
 func CreateESService(config Config) (*V7Service, error) {
 	service := &V7Service{
-		Url: config.Url,
+		Url:      config.Url,
+		Username: config.Username,
+		Password: config.Password,
+		CertPath: config.CertPath,
 	}
 	err := service.Init()
 	return service, err
@@ -22,7 +35,12 @@ func CreateESService(config Config) (*V7Service, error) {
 //V7Service 注册处理器在线信息等
 type V7Service struct {
 	Url         string
+	Username    string
+	Password    string
+	CertPath    string
 	lastUseTime int64
+	client      *elastic.Client
+	clientLock  sync.Mutex
 }
 
 func (this_ *V7Service) Init() error {
@@ -42,15 +60,74 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 	defer func() {
 		this_.lastUseTime = util.GetNowTime()
 	}()
-	client, err = elastic.NewClient(
-		elastic.SetURL(this_.Url),
-		//docker
-		elastic.SetSniff(false),
-	)
+	this_.clientLock.Lock()
+	defer this_.clientLock.Unlock()
+	if this_.client != nil && this_.client.IsRunning() {
+		client = this_.client
+		return
+	}
+	var urls []string
+	if strings.Contains(this_.Url, ",") {
+		urls = strings.Split(this_.Url, ",")
+	} else if strings.Contains(this_.Url, ";") {
+		urls = strings.Split(this_.Url, ";")
+	} else {
+		urls = []string{this_.Url}
+	}
+	var isHttps bool
+	for _, one := range urls {
+		if strings.HasPrefix(one, "https") {
+			isHttps = true
+		}
+	}
+
+	var options []elastic.ClientOptionFunc
+
+	options = append(options, elastic.SetURL(urls...))
+	options = append(options, elastic.SetSniff(false))
+	if isHttps {
+		httpClient := &http.Client{}
+		TLSClientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		if this_.CertPath != "" {
+			certPool := x509.NewCertPool()
+			var pemCerts []byte
+			pemCerts, err = ioutil.ReadFile(this_.CertPath)
+			if err != nil {
+				return
+			}
+
+			if !certPool.AppendCertsFromPEM(pemCerts) {
+				err = errors.New("证书[" + this_.CertPath + "]解析失败")
+				return
+			}
+			TLSClientConfig.RootCAs = certPool
+
+			//TLSClientConfig.Certificates = []tls.Certificate{clicrt}
+
+		}
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: TLSClientConfig,
+		}
+		options = append(options, elastic.SetHttpClient(httpClient))
+	}
+	if this_.Username != "" {
+		options = append(options, elastic.SetBasicAuth(this_.Username, this_.Password))
+	}
+	client, err = elastic.NewClient(options...)
+	if err != nil {
+		return
+	}
+	this_.client = client
 	return
 }
 
 func (this_ *V7Service) Stop() {
+	if this_.client != nil {
+		this_.client.Stop()
+		this_.client = nil
+	}
 }
 
 func (this_ *V7Service) DeleteIndex(indexName string) (err error) {
@@ -58,7 +135,7 @@ func (this_ *V7Service) DeleteIndex(indexName string) (err error) {
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	_, err = client.DeleteIndex(indexName).Do(context.Background())
 	if err != nil {
 		return
@@ -71,7 +148,7 @@ func (this_ *V7Service) CreateIndex(indexName string, bodyJSON map[string]interf
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	_, err = client.CreateIndex(indexName).BodyJson(bodyJSON).Do(context.Background())
 	if err != nil {
 		return
@@ -84,7 +161,7 @@ func (this_ *V7Service) IndexNames() (res []string, err error) {
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	res, err = client.IndexNames()
 	if err != nil {
 		return
@@ -99,7 +176,7 @@ func (this_ *V7Service) GetMapping(indexName string) (res interface{}, err error
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	mappingMap, err := client.GetMapping().Index(indexName).Do(context.Background())
 	if err != nil {
 		return
@@ -117,7 +194,7 @@ func (this_ *V7Service) PutMapping(indexName string, bodyJSON map[string]interfa
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	_, err = client.PutMapping().Index(indexName).BodyJson(bodyJSON).Do(context.Background())
 	if err != nil {
 		return
@@ -148,7 +225,7 @@ func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int) (r
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 
 	doer := client.Search(indexName)
 	query := elastic.NewBoolQuery()
@@ -172,7 +249,7 @@ func (this_ *V7Service) Insert(indexName string, id string, doc interface{}) (re
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 	doer := client.Index()
 	indexResponse, err := doer.Index(indexName).Id(id).BodyJson(doc).Refresh("wait_for").Do(context.Background())
 	if err != nil {
@@ -193,7 +270,7 @@ func (this_ *V7Service) Update(indexName string, id string, doc interface{}) (re
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 
 	doer := client.Update()
 	updateResponse, err := doer.Index(indexName).Id(id).Doc(doc).Refresh("wait_for").Do(context.Background())
@@ -216,7 +293,7 @@ func (this_ *V7Service) Delete(indexName string, id string) (res *DeleteResponse
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 
 	doer := client.Delete()
 	deleteResponse, err := doer.Index(indexName).Id(id).Refresh("wait_for").Do(context.Background())
@@ -239,7 +316,7 @@ func (this_ *V7Service) Reindex(sourceIndexName string, toIndexName string) (res
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 
 	doer := client.Reindex()
 	bulkIndexByScrollResponse, err := doer.Source(elastic.NewReindexSource().Index(sourceIndexName)).DestinationIndex(toIndexName).Refresh("true").Do(context.Background())
@@ -258,7 +335,7 @@ func (this_ *V7Service) Scroll(indexName string, scrollId string, pageSize int) 
 	if err != nil {
 		return
 	}
-	defer client.Stop()
+	//defer client.Stop()
 
 	doer := client.Scroll(indexName)
 	query := elastic.NewBoolQuery()

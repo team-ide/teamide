@@ -135,8 +135,8 @@ func (this_ *Server) serverListenerKeepAlive() {
 					this_.worker.notifyAll(notifyMsg)
 				}
 			}, this_.worker.MonitorData)
-			pool.Put(messageListener)
-			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
+			size := pool.Put(messageListener)
+			Logger.Info(this_.GetServerInfo() + " 添加 来至 [" + fromNodeId + "] 节点的连接 现有连接 " + fmt.Sprint(size))
 
 			if clientIndex == 0 {
 				if clientMsg.ClientData != nil {

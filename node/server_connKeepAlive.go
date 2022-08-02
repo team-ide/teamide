@@ -97,10 +97,8 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 	}
 
 	if clientIndex == 0 {
-		msg.NotifyChange = &NotifyChange{
-			NodeList:     this_.cache.nodeList,
-			NetProxyList: this_.cache.netProxyList,
-		}
+		msg.ClientData.NodeList = this_.cache.nodeList
+		msg.ClientData.NetProxyList = this_.cache.netProxyList
 	}
 	err = WriteMessage(conn, msg, this_.worker.MonitorData)
 	if err != nil {
@@ -175,8 +173,8 @@ func (this_ *Server) connNodeListener(pool *MessageListenerPool, connAddress, co
 			go this_.connNodeListener(pool, connAddress, connToken, clientIndex)
 		}
 	}, this_.worker.MonitorData)
-	pool.Put(messageListener)
-	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(len(pool.listeners)))
+	size := pool.Put(messageListener)
+	Logger.Info(this_.GetServerInfo() + " 连接 [" + toNodeId + "][" + connAddress + "] 成功 现有连接 " + fmt.Sprint(size))
 
 	return
 }

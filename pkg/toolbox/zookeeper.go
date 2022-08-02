@@ -55,11 +55,13 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 	switch work {
 	case "get":
 		var data []byte
-		data, err = service.Get(request.Path)
+		var statInfo *zookeeper.StatInfo
+		data, statInfo, err = service.Get(request.Path)
 		if err != nil {
 			return
 		}
 		res["data"] = string(data)
+		res["stat"] = statInfo
 	case "save":
 		var isEx bool
 		isEx, err = service.Exists(request.Path)
@@ -93,28 +95,20 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 				var one = map[string]interface{}{}
 				one["name"] = name
 
-				//var nameSubs []string
-				//nameSubs, _ = service.GetChildren(request.Path + "/" + name)
-				//one["hasChildren"] = len(nameSubs) > 0
+				childrenPath := "/" + name
+				if request.Path != "/" {
+					childrenPath = request.Path + childrenPath
+				}
+				var statInfo *zookeeper.StatInfo
+				statInfo, err = service.Stat(childrenPath)
+				if err != nil {
+					return
+				}
+				one["hasChildren"] = statInfo.NumChildren > 0
 
 				children = append(children, one)
 			}
 			res["children"] = children
-		}
-	case "hasChildren":
-		var isEx bool
-		isEx, err = service.Exists(request.Path)
-		if err != nil {
-			return
-		}
-		if isEx {
-
-			var names []string
-			names, err = service.GetChildren(request.Path)
-			if err != nil {
-				return
-			}
-			res["hasChildren"] = len(names) > 0
 		}
 	case "delete":
 		var isEx bool

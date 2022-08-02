@@ -53,8 +53,8 @@ func (this_ *Worker) notifyParent(msg *Message) {
 		return
 	}
 	msg.NotifyChange.NotifyParent = true
-	this_.notifyAllFrom(msg)
 	this_.notifyDo(msg.NotifyChange)
+	this_.notifyAllFrom(msg)
 }
 
 func (this_ *Worker) notifyChildren(msg *Message) {
@@ -62,8 +62,8 @@ func (this_ *Worker) notifyChildren(msg *Message) {
 		return
 	}
 	msg.NotifyChange.NotifyChildren = true
-	this_.notifyAllTo(msg)
 	this_.notifyDo(msg.NotifyChange)
+	this_.notifyAllTo(msg)
 }
 
 func (this_ *Worker) notifyAll(msg *Message) {
@@ -71,9 +71,9 @@ func (this_ *Worker) notifyAll(msg *Message) {
 		return
 	}
 	msg.NotifyChange.NotifyAll = true
+	this_.notifyDo(msg.NotifyChange)
 	this_.notifyAllTo(msg)
 	this_.notifyAllFrom(msg)
-	this_.notifyDo(msg.NotifyChange)
 }
 
 func (this_ *Worker) notifyOther(msg *Message) {
@@ -83,37 +83,6 @@ func (this_ *Worker) notifyOther(msg *Message) {
 	msg.NotifyChange.NotifyAll = true
 	this_.notifyAllTo(msg)
 	this_.notifyAllFrom(msg)
-}
-
-func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {
-	if nodeId == "" {
-		return
-	}
-	find = this_.findNode(nodeId)
-	if find != nil {
-		return
-	}
-
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if find == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					NodeWorkData: &NodeWorkData{
-						NodeId: nodeId,
-					},
-				}
-				res, _ := this_.Call(listener, methodGetNode, msg)
-				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.Node != nil {
-					find = res.NodeWorkData.Node
-				}
-				return
-			})
-		}
-	}
-	return
 }
 
 func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) string {
@@ -145,6 +114,39 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		}
 	}
 	return version
+}
+
+func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {
+	if nodeId == "" {
+		return
+	}
+	if this_.server.rootNode.Id == nodeId {
+		find = this_.server.rootNode
+	}
+	if find != nil {
+		return
+	}
+
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
+
+	for _, pool := range callPools {
+		if find == nil {
+			_ = pool.Do("", func(listener *MessageListener) (e error) {
+				msg := &Message{
+					NotifiedNodeIdList: NotifiedNodeIdList,
+					NodeWorkData: &NodeWorkData{
+						NodeId: nodeId,
+					},
+				}
+				res, _ := this_.Call(listener, methodGetNode, msg)
+				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.Node != nil {
+					find = res.NodeWorkData.Node
+				}
+				return
+			})
+		}
+	}
+	return
 }
 
 func (this_ *Worker) getOtherPool(NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {

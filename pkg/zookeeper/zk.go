@@ -144,9 +144,65 @@ func (this_ *ZKService) Exists(path string) (isExist bool, err error) {
 	return
 }
 
+type StatInfo struct {
+	Czxid          int64 `json:"czxid,omitempty"`
+	Mzxid          int64 `json:"mzxid,omitempty"`
+	Ctime          int64 `json:"ctime,omitempty"`
+	Mtime          int64 `json:"mtime,omitempty"`
+	Version        int32 `json:"version,omitempty"`
+	Cversion       int32 `json:"cversion,omitempty"`
+	Aversion       int32 `json:"aversion,omitempty"`
+	EphemeralOwner int64 `json:"ephemeralOwner,omitempty"`
+	DataLength     int32 `json:"dataLength,omitempty"`
+	NumChildren    int32 `json:"numChildren,omitempty"`
+	Pzxid          int64 `json:"pzxid,omitempty"`
+}
+
 //Get 判断节点是否存在
-func (this_ *ZKService) Get(path string) (data []byte, err error) {
-	data, _, err = this_.GetConn().Get(path)
+func (this_ *ZKService) Get(path string) (data []byte, info *StatInfo, err error) {
+	data, stat, err := this_.GetConn().Get(path)
+	if err != nil {
+		return
+	}
+	if stat != nil {
+		info = &StatInfo{
+			Czxid:          stat.Czxid,
+			Mzxid:          stat.Mzxid,
+			Ctime:          stat.Ctime,
+			Mtime:          stat.Mtime,
+			Version:        stat.Version,
+			Cversion:       stat.Cversion,
+			Aversion:       stat.Aversion,
+			EphemeralOwner: stat.EphemeralOwner,
+			DataLength:     stat.DataLength,
+			NumChildren:    stat.NumChildren,
+			Pzxid:          stat.Pzxid,
+		}
+	}
+	return
+}
+
+//Stat 判断节点是否存在
+func (this_ *ZKService) Stat(path string) (info *StatInfo, err error) {
+	_, stat, err := this_.GetConn().Exists(path)
+	if err != nil {
+		return
+	}
+	if stat != nil {
+		info = &StatInfo{
+			Czxid:          stat.Czxid,
+			Mzxid:          stat.Mzxid,
+			Ctime:          stat.Ctime,
+			Mtime:          stat.Mtime,
+			Version:        stat.Version,
+			Cversion:       stat.Cversion,
+			Aversion:       stat.Aversion,
+			EphemeralOwner: stat.EphemeralOwner,
+			DataLength:     stat.DataLength,
+			NumChildren:    stat.NumChildren,
+			Pzxid:          stat.Pzxid,
+		}
+	}
 	return
 }
 
