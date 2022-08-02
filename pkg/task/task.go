@@ -3,6 +3,7 @@ package task
 import (
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
+	"teamide/pkg/util"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func (this_ *CronTask) run() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("任务执行异常", zap.Any("error", err))
+			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 	}()
 
@@ -50,20 +51,20 @@ func (this_ *CronTask) runBefore() bool {
 
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("任务执行异常", zap.Any("error", err))
+			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 	}()
 	if this_.isStop {
 		return false
 	}
-	Logger.Debug("任务执行开始", zap.Any("Key", this_.Key))
+	util.Logger.Debug("任务执行开始", zap.Any("Key", this_.Key))
 
 	NewTime := time.Now()
 	// 如果有开始时间
 	if !this_.StartTime.IsZero() {
 		// 如果当前时间小于指定开始时间，则还未开始
 		if NewTime.Unix() < this_.StartTime.Unix() {
-			Logger.Debug("任务执行未到开始时间", zap.Any("Key", this_.Key), zap.Any("NewTime", NewTime), zap.Any("StartTime", this_.StartTime))
+			util.Logger.Debug("任务执行未到开始时间", zap.Any("Key", this_.Key), zap.Any("NewTime", NewTime), zap.Any("StartTime", this_.StartTime))
 			return false
 		}
 	}
@@ -72,7 +73,7 @@ func (this_ *CronTask) runBefore() bool {
 	if !this_.EndTime.IsZero() {
 		// 如果当前时间大于指定结束时间，则已经结束
 		if NewTime.Unix() > this_.EndTime.Unix() {
-			Logger.Debug("任务执行已到截至时间", zap.Any("Key", this_.Key), zap.Any("NewTime", NewTime), zap.Any("EndTime", this_.EndTime))
+			util.Logger.Debug("任务执行已到截至时间", zap.Any("Key", this_.Key), zap.Any("NewTime", NewTime), zap.Any("EndTime", this_.EndTime))
 			this_.isStop = true
 			return false
 		}
@@ -95,7 +96,7 @@ func (this_ *CronTask) runAfter() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("任务执行异常", zap.Any("error", err))
+			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 	}()
 	this_.executedTimes++
@@ -108,7 +109,7 @@ func (this_ *CronTask) runAfter() {
 	if this_.ExecutionTimes > 0 {
 		// 如果已经执行的次数大于等于指定执行次数，则需要停止执行
 		if this_.executedTimes >= this_.ExecutionTimes {
-			Logger.Debug("任务执行已达到次数", zap.Any("Key", this_.Key), zap.Any("executedTimes", this_.executedTimes), zap.Any("ExecutionTimes", this_.ExecutionTimes))
+			util.Logger.Debug("任务执行已达到次数", zap.Any("Key", this_.Key), zap.Any("executedTimes", this_.executedTimes), zap.Any("ExecutionTimes", this_.ExecutionTimes))
 			this_.isStop = true
 		}
 	}
@@ -129,12 +130,12 @@ func (this_ *CronTask) Stop() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Error("任务执行异常", zap.Any("error", err))
+			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 	}()
 
 	this_.isStop = true
-	Logger.Info("任务执行结束", zap.Any("Key", this_.Key))
+	util.Logger.Info("任务执行结束", zap.Any("Key", this_.Key))
 	removeTaskCache(this_)
 	taskCron.Remove(this_.cronEntryID)
 

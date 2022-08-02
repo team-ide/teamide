@@ -3,12 +3,13 @@ package task
 import (
 	"go.uber.org/zap"
 	"sync"
+	"teamide/pkg/util"
 	"testing"
 	"time"
 )
 
 func TestAddTask(t *testing.T) {
-	Logger.Info("TestAddTask Start", zap.Any("Time", time.Now()))
+	util.Logger.Info("TestAddTask Start", zap.Any("Time", time.Now()))
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
@@ -18,10 +19,10 @@ func TestAddTask(t *testing.T) {
 	task.Spec = "*/5 * * * * ?"
 	task.ExecutionTimes = 2
 	task.Do = func() {
-		Logger.Info("执行", zap.Any("Time", time.Now()))
+		util.Logger.Info("执行", zap.Any("Time", time.Now()))
 	}
 	task.DoEnd = func() {
-		Logger.Info("执行结束", zap.Any("Time", time.Now()))
+		util.Logger.Info("执行结束", zap.Any("Time", time.Now()))
 		wg.Done()
 	}
 
@@ -36,7 +37,7 @@ func TestAddTask(t *testing.T) {
 	case <-wait(wg):
 		break
 	}
-	Logger.Info("TestAddTask End", zap.Any("Time", time.Now()))
+	util.Logger.Info("TestAddTask End", zap.Any("Time", time.Now()))
 }
 
 func wait(wg *sync.WaitGroup) chan bool {
