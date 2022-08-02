@@ -355,8 +355,7 @@ export default {
         let list = res.data.children || [];
         let dataList = [];
         list.forEach((one) => {
-          let name = one.name;
-          let oneData = { name: name };
+          let oneData = Object.assign({}, one);
           dataList.push(oneData);
         });
         this.formatDataList(parent, dataList);

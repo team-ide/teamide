@@ -104,7 +104,9 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 				if err != nil {
 					return
 				}
-				one["hasChildren"] = statInfo.NumChildren > 0
+				if statInfo != nil {
+					one["hasChildren"] = statInfo.NumChildren > 0
+				}
 
 				children = append(children, one)
 			}
