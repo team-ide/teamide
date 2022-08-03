@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
 
@@ -27,6 +28,7 @@ type Message struct {
 	NetProxyWorkData   *NetProxyWorkData `json:"netProxyWorkData,omitempty"`
 	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
 	NotifyChange       *NotifyChange     `json:"notifyChange,omitempty"`
+	SystemData         *SystemData       `json:"systemData,omitempty"`
 	HasBytes           bool              `json:"hasBytes,omitempty"`
 	Bytes              []byte            `json:"-"`
 	listener           *MessageListener
@@ -37,6 +39,12 @@ type ClientData struct {
 	Node         *Info       `json:"node,omitempty"`
 	NodeList     []*Info     `json:"nodeList,omitempty"`
 	NetProxyList []*NetProxy `json:"netProxyList,omitempty"`
+}
+
+type SystemData struct {
+	NodeId        string                `json:"nodeId,omitempty"`
+	QueryRequest  *system.QueryRequest  `json:"queryRequest,omitempty"`
+	QueryResponse *system.QueryResponse `json:"queryResponse,omitempty"`
 }
 
 type NodeWorkData struct {

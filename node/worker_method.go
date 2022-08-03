@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	methodOK         = 1
-	methodGetVersion = 2
+	methodOK            = 1
+	methodGetVersion    = 2
+	methodGetSystemInfo = 3
 
 	methodGetNode            = 11
 	methodGetNodeMonitorData = 12
@@ -125,6 +126,16 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 			if version != "" {
 				res.NodeWorkData = &NodeWorkData{
 					Version: version,
+				}
+			}
+		}
+		return
+	case methodGetSystemInfo:
+		if msg.SystemData != nil {
+			response := this_.getSystemInfo(msg.SystemData.NodeId, msg.NotifiedNodeIdList, msg.SystemData.QueryRequest)
+			if response != nil {
+				res.SystemData = &SystemData{
+					QueryResponse: response,
 				}
 			}
 		}

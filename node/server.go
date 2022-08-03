@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"teamide/pkg/system"
 )
 
 var tokenByteSize = 128
@@ -26,6 +27,11 @@ type Server struct {
 
 func (this_ *Server) GetNode(nodeId string) (node *Info) {
 	node = this_.worker.getNode(nodeId, []string{})
+	return
+}
+
+func (this_ *Server) GetSystemInfo(nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
+	response = this_.worker.getSystemInfo(nodeId, []string{}, request)
 	return
 }
 
@@ -94,6 +100,7 @@ func (this_ *Server) Start() (err error) {
 	if this_.ConnAddress != "" {
 		this_.connNodeListenerKeepAlive(nil, this_.ConnAddress, this_.ConnToken, this_.ConnSize)
 	}
+	system.StartCollect()
 	return
 }
 

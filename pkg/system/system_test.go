@@ -1,6 +1,7 @@
 package system
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -32,4 +33,11 @@ func TestSystem(t *testing.T) {
 	fmt.Printf("SSD : %v GB Free: %v GB Usage:%f%%\n", d.Total/1024/1024/1024, d.Free/1024/1024/1024, d.UsedPercent)
 	fmt.Printf("OS : %v(%v) %v \n", n.Platform, n.PlatformFamily, n.PlatformVersion)
 	fmt.Printf("Hostname : %v \n", n.Hostname)
+}
+
+func TestSystemInfo(t *testing.T) {
+	info, _ := GetInfo()
+	bs, _ := json.Marshal(info)
+	println(len(bs))
+	println(string(bs))
 }

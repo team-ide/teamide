@@ -2,6 +2,7 @@ package node
 
 import (
 	"errors"
+	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
 
@@ -114,6 +115,38 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		}
 	}
 	return version
+}
+
+func (this_ *Worker) getSystemInfo(nodeId string, NotifiedNodeIdList []string, request *system.QueryRequest) (response *system.QueryResponse) {
+	if nodeId == "" {
+		return
+	}
+	if this_.server.Id == nodeId {
+		response = system.QueryInfo(request)
+		return
+	}
+
+	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
+
+	for _, pool := range callPools {
+		if response == nil {
+			_ = pool.Do("", func(listener *MessageListener) (e error) {
+				msg := &Message{
+					NotifiedNodeIdList: NotifiedNodeIdList,
+					SystemData: &SystemData{
+						NodeId:       nodeId,
+						QueryRequest: request,
+					},
+				}
+				res, _ := this_.Call(listener, methodGetNode, msg)
+				if res != nil && res.SystemData != nil {
+					response = res.SystemData.QueryResponse
+				}
+				return
+			})
+		}
+	}
+	return
 }
 
 func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {
