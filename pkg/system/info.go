@@ -16,12 +16,12 @@ import (
 )
 
 var (
-	infoList       []*Info
-	WaitSecond     = 5
-	CollectMaxSize = 3600
-	collectLock    sync.Mutex
-	infoListLock   sync.Mutex
-	isStart        bool
+	monitorDataList     []*MonitorData
+	WaitSecond          = 5
+	CollectMaxSize      = 3600
+	collectLock         sync.Mutex
+	monitorDataListLock sync.Mutex
+	isStart             bool
 )
 
 type VirtualMemoryStat struct {
@@ -122,7 +122,8 @@ type CpuInfoStat struct {
 	Flags      []string `json:"flags,omitempty"`
 	Microcode  string   `json:"microcode,omitempty"`
 }
-type Info struct {
+
+type MonitorData struct {
 	BootTime           int64                `json:"bootTime,omitempty"`
 	VirtualMemoryStat  *VirtualMemoryStat   `json:"virtualMemoryStat,omitempty"`
 	CpuInfoStats       []*CpuInfoStat       `json:"cpuInfoStats,omitempty"`
@@ -134,22 +135,26 @@ type Info struct {
 	EndTime            int64                `json:"endTime,omitempty"`
 }
 
+type Info struct {
+	*MonitorData
+}
+
 type QueryRequest struct {
 	Timestamp int64 `json:"timestamp,omitempty"`
 	Size      int   `json:"size,omitempty"`
 }
 
 type QueryResponse struct {
-	LastTimestamp int64   `json:"lastTimestamp,omitempty"`
-	InfoList      []*Info `json:"infoList,omitempty"`
-	Size          int     `json:"size,omitempty"`
+	LastTimestamp   int64          `json:"lastTimestamp,omitempty"`
+	MonitorDataList []*MonitorData `json:"monitorDataList,omitempty"`
+	Size            int            `json:"size,omitempty"`
 }
 
-func StopCollect() {
+func StopCollectMonitorData() {
 	isStart = false
 }
 
-func StartCollect() {
+func StartCollectMonitorData() {
 	collectLock.Lock()
 	defer collectLock.Unlock()
 	if isStart {
@@ -168,21 +173,21 @@ func start() {
 		start()
 	}()
 
-	infoListLock.Lock()
-	defer infoListLock.Unlock()
+	monitorDataListLock.Lock()
+	defer monitorDataListLock.Unlock()
 
-	info, err := GetInfo()
+	monitorData, err := GetMonitorData()
 	if err != nil {
 		util.Logger.Error("system get info error", zap.Error(err))
 		return
 	}
-	if len(infoList) >= CollectMaxSize {
-		infoList = infoList[len(infoList)-CollectMaxSize+1:]
+	if len(monitorDataList) >= CollectMaxSize {
+		monitorDataList = monitorDataList[len(monitorDataList)-CollectMaxSize+1:]
 	}
-	infoList = append(infoList, info)
+	monitorDataList = append(monitorDataList, monitorData)
 }
 
-func QueryInfo(request *QueryRequest) (response *QueryResponse) {
+func QueryMonitorData(request *QueryRequest) (response *QueryResponse) {
 	response = &QueryResponse{}
 	var startTimestamp int64
 	var size int
@@ -194,7 +199,7 @@ func QueryInfo(request *QueryRequest) (response *QueryResponse) {
 		size = 100
 	}
 
-	var list = infoList
+	var list = monitorDataList
 	var appendSize = 0
 	for _, one := range list {
 		if appendSize >= size {
@@ -203,7 +208,7 @@ func QueryInfo(request *QueryRequest) (response *QueryResponse) {
 		if one.StartTime <= startTimestamp {
 			continue
 		}
-		response.InfoList = append(response.InfoList, one)
+		response.MonitorDataList = append(response.MonitorDataList, one)
 		response.LastTimestamp = one.StartTime
 		appendSize++
 	}
@@ -211,28 +216,38 @@ func QueryInfo(request *QueryRequest) (response *QueryResponse) {
 	return
 }
 
-func Clean() {
-	infoListLock.Lock()
-	defer infoListLock.Unlock()
+func CleanMonitorData() {
+	monitorDataListLock.Lock()
+	defer monitorDataListLock.Unlock()
 
-	infoList = []*Info{}
+	monitorDataList = []*MonitorData{}
 }
 
-func GetInfo() (info *Info, err error) {
-	info = &Info{
+func GetInfo() (info *Info) {
+	info = &Info{}
+	monitorData, err := GetMonitorData()
+	if err != nil {
+		return
+	}
+	info.MonitorData = monitorData
+	return
+}
+
+func GetMonitorData() (monitorData *MonitorData, err error) {
+	monitorData = &MonitorData{
 		StartTime: util.GetNowTime(),
 	}
 	defer func() {
-		info.EndTime = util.GetNowTime()
+		monitorData.EndTime = util.GetNowTime()
 	}()
 
 	bootTime, err := host.BootTime()
 	if err != nil {
 		return
 	}
-	info.BootTime = util.GetTimeTime(time.Unix(int64(bootTime), 0))
+	monitorData.BootTime = util.GetTimeTime(time.Unix(int64(bootTime), 0))
 
-	info.CpuPercents, err = cpu.Percent(time.Second, true)
+	monitorData.CpuPercents, err = cpu.Percent(time.Second, true)
 	if err != nil {
 		return
 	}
@@ -241,8 +256,8 @@ func GetInfo() (info *Info, err error) {
 	if err != nil {
 		return
 	}
-	info.VirtualMemoryStat = &VirtualMemoryStat{}
-	err = SimpleCopyProperties(info.VirtualMemoryStat, virtualMemoryStat)
+	monitorData.VirtualMemoryStat = &VirtualMemoryStat{}
+	err = SimpleCopyProperties(monitorData.VirtualMemoryStat, virtualMemoryStat)
 	if err != nil {
 		return
 	}
@@ -257,15 +272,15 @@ func GetInfo() (info *Info, err error) {
 		if err != nil {
 			return
 		}
-		info.CpuInfoStats = append(info.CpuInfoStats, cInfo)
+		monitorData.CpuInfoStats = append(monitorData.CpuInfoStats, cInfo)
 	}
 
 	diskUsageStat, err := disk.Usage("/")
 	if err != nil {
 		return
 	}
-	info.DiskUsageStat = &DiskUsageStat{}
-	err = SimpleCopyProperties(info.DiskUsageStat, diskUsageStat)
+	monitorData.DiskUsageStat = &DiskUsageStat{}
+	err = SimpleCopyProperties(monitorData.DiskUsageStat, diskUsageStat)
 	if err != nil {
 		return
 	}
@@ -274,8 +289,8 @@ func GetInfo() (info *Info, err error) {
 	if err != nil {
 		return
 	}
-	info.HostInfoStat = &HostInfoStat{}
-	err = SimpleCopyProperties(info.HostInfoStat, hostInfoStat)
+	monitorData.HostInfoStat = &HostInfoStat{}
+	err = SimpleCopyProperties(monitorData.HostInfoStat, hostInfoStat)
 	if err != nil {
 		return
 	}
@@ -290,7 +305,7 @@ func GetInfo() (info *Info, err error) {
 		if err != nil {
 			return
 		}
-		info.NetIOCountersStats = append(info.NetIOCountersStats, nInfo)
+		monitorData.NetIOCountersStats = append(monitorData.NetIOCountersStats, nInfo)
 	}
 
 	return

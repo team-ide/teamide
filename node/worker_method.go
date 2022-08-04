@@ -9,9 +9,8 @@ import (
 )
 
 var (
-	methodOK            = 1
-	methodGetVersion    = 2
-	methodGetSystemInfo = 3
+	methodOK         = 1
+	methodGetVersion = 2
 
 	methodGetNode            = 11
 	methodGetNodeMonitorData = 12
@@ -34,6 +33,10 @@ var (
 	methodShellNewConn   = 41
 	methodShellCloseConn = 42
 	methodShellSend      = 43
+
+	methodSystemGetInfo          = 51
+	methodSystemQueryMonitorData = 52
+	methodSystemCleanMonitorData = 53
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
@@ -130,13 +133,27 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 			}
 		}
 		return
-	case methodGetSystemInfo:
+	case methodSystemGetInfo:
 		if msg.SystemData != nil {
-			response := this_.getSystemInfo(msg.SystemData.NodeId, msg.NotifiedNodeIdList, msg.SystemData.QueryRequest)
+			response := this_.systemGetInfo(msg.SystemData.NodeId, msg.NotifiedNodeIdList)
 			if response != nil {
-				res.SystemData = &SystemData{
-					QueryResponse: response,
-				}
+				res.SystemData = response
+			}
+		}
+		return
+	case methodSystemQueryMonitorData:
+		if msg.SystemData != nil {
+			response := this_.systemQueryMonitorData(msg.SystemData.NodeId, msg.NotifiedNodeIdList, msg.SystemData)
+			if response != nil {
+				res.SystemData = response
+			}
+		}
+		return
+	case methodSystemCleanMonitorData:
+		if msg.SystemData != nil {
+			response := this_.systemCleanMonitorData(msg.SystemData.NodeId, msg.NotifiedNodeIdList)
+			if response != nil {
+				res.SystemData = response
 			}
 		}
 		return

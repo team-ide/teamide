@@ -45,6 +45,7 @@ type SystemData struct {
 	NodeId        string                `json:"nodeId,omitempty"`
 	QueryRequest  *system.QueryRequest  `json:"queryRequest,omitempty"`
 	QueryResponse *system.QueryResponse `json:"queryResponse,omitempty"`
+	Info          *system.Info          `json:"info,omitempty"`
 }
 
 type NodeWorkData struct {

@@ -30,8 +30,26 @@ func (this_ *Server) GetNode(nodeId string) (node *Info) {
 	return
 }
 
-func (this_ *Server) GetSystemInfo(nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
-	response = this_.worker.getSystemInfo(nodeId, []string{}, request)
+func (this_ *Server) SystemGetInfo(nodeId string) (info *system.Info) {
+	res := this_.worker.systemGetInfo(nodeId, []string{})
+	if res != nil {
+		info = res.Info
+	}
+	return
+}
+
+func (this_ *Server) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
+	res := this_.worker.systemQueryMonitorData(nodeId, []string{}, &SystemData{
+		QueryRequest: request,
+	})
+	if res != nil {
+		response = res.QueryResponse
+	}
+	return
+}
+
+func (this_ *Server) SystemCleanMonitorData(nodeId string) {
+	_ = this_.worker.systemCleanMonitorData(nodeId, []string{})
 	return
 }
 
@@ -100,7 +118,7 @@ func (this_ *Server) Start() (err error) {
 	if this_.ConnAddress != "" {
 		this_.connNodeListenerKeepAlive(nil, this_.ConnAddress, this_.ConnToken, this_.ConnSize)
 	}
-	system.StartCollect()
+	system.StartCollectMonitorData()
 	return
 }
 

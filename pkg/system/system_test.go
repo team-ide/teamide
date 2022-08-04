@@ -36,7 +36,7 @@ func TestSystem(t *testing.T) {
 }
 
 func TestSystemInfo(t *testing.T) {
-	info, _ := GetInfo()
+	info, _ := GetMonitorData()
 	bs, _ := json.Marshal(info)
 	println(len(bs))
 	println(string(bs))
