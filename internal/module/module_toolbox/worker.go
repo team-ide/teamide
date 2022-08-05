@@ -67,13 +67,19 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 
 	switch toolboxWorker {
 	case databaseWorker_:
-		if optionMap["password"] != "" {
-			optionMap["password"] = this_.EncryptOptionAttr(optionMap["password"].(string))
+		str, ok := optionMap["password"].(string)
+		if ok {
+			optionMap["password"] = this_.EncryptOptionAttr(str)
+		} else {
+			delete(optionMap, "password")
 		}
 		break
 	case redisWorker_:
-		if optionMap["auth"] != "" {
-			optionMap["auth"] = this_.EncryptOptionAttr(optionMap["auth"].(string))
+		str, ok := optionMap["auth"].(string)
+		if ok {
+			optionMap["auth"] = this_.EncryptOptionAttr(str)
+		} else {
+			delete(optionMap, "auth")
 		}
 		break
 	case zookeeperWorker_:
@@ -85,8 +91,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	case otherWorker_:
 		break
 	case sshWorker_:
-		if optionMap["password"] != "" {
-			optionMap["password"] = this_.EncryptOptionAttr(optionMap["password"].(string))
+		str, ok := optionMap["password"].(string)
+		if ok {
+			optionMap["password"] = this_.EncryptOptionAttr(str)
+		} else {
+			delete(optionMap, "password")
 		}
 		break
 	}
