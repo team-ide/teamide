@@ -2,99 +2,258 @@
   <div class="toolbox-elasticsearch-indexName-data">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout height="140px">
-          <el-form
-            class="pdt-20 mglr-10"
-            ref="form"
-            :model="form"
-            label-width="90px"
-            size="mini"
-            :inline="true"
-          >
-            <el-form-item label="IndexName">
-              <el-input v-model="searchForm.indexName" />
-            </el-form-item>
-            <el-form-item label="PageIndex">
-              <el-input v-model="searchForm.pageIndex" />
-            </el-form-item>
-            <el-form-item label="PageSize">
-              <el-input v-model="searchForm.pageSize" />
-            </el-form-item>
-            <div class="pdt-25">
-              <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
-                搜索
-              </div>
-              <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toInsert">
-                新增
-              </div>
-            </div>
-          </el-form>
-        </tm-layout>
-        <tm-layout height="auto" class="scrollbar">
-          <div class="pd-10" style="o">
-            <table>
-              <thead>
-                <tr>
-                  <th width="100">_id</th>
-                  <th width="">_source</th>
-                  <th width="150">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="dataList == null">
-                  <tr>
-                    <td colspan="3">
-                      <div class="text-center ft-13 pdtb-10">查询中...</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else-if="dataList.length == 0">
-                  <tr>
-                    <td colspan="3">
-                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                    </td>
-                  </tr>
-                </template>
-                <template v-else>
-                  <template v-for="(one, index) in dataList">
-                    <tr :key="index" @click="rowClick(one)">
-                      <td>{{ one._id }}</td>
-                      <td>{{ one._source }}</td>
-                      <td>
-                        <div style="width: 150px">
-                          <div
-                            class="tm-btn color-grey tm-btn-xs"
-                            @click="toolboxWorker.showData(one)"
-                            title="查看"
-                          >
-                            <i class="mdi mdi-eye-outline"></i>
-                          </div>
-                          <div
-                            class="tm-btn color-blue tm-btn-xs"
-                            @click="toUpdate(one)"
-                          >
-                            修改
-                          </div>
-                          <div
-                            class="tm-btn color-grey tm-btn-xs"
-                            @click="toCopy(one)"
-                          >
-                            复制
-                          </div>
-                          <div
-                            class="tm-btn color-orange tm-btn-xs"
-                            @click="toDelete(one)"
-                            title="删除"
-                          >
-                            <i class="mdi mdi-delete-outline"></i>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+        <tm-layout height="120px" style="overflow: hidden">
+          <tm-layout width="400px">
+            <ul class="part-box scrollbar mg-0">
+              <template v-for="(one, index) in searchForm.whereList">
+                <li :key="index">
+                  <input v-model="one.checked" type="checkbox" />
+                  <template v-if="one.sqlConditionalOperation == 'custom'">
                   </template>
+                  <template v-else>
+                    <select
+                      v-model="one.name"
+                      @change="initInputWidth"
+                      class="part-form-input"
+                    >
+                      <option :value="null" text="请选择">请选择</option>
+                      <template v-for="(one, index) in pointColumnList">
+                        <option
+                          :key="index"
+                          :value="one.name"
+                          :text="one.name + '&nbsp;'"
+                        >
+                          {{ one.name }}
+                          <template v-if="tool.isNotEmpty(one.comment)">
+                            （{{ one.comment }}）
+                          </template>
+                        </option>
+                      </template>
+                    </select>
+                  </template>
+                  <select
+                    v-model="one.sqlConditionalOperation"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option value="=">等于</option>
+                    <option value="like">包含</option>
+                    <option value="not like">不包含</option>
+                    <option value="like start">开始以</option>
+                    <option value="not like start">开始不是以</option>
+                    <option value="like end">结束以</option>
+                    <option value="not like end">结束不是以</option>
+                    <option value="between">介于</option>
+                    <option value="not between">不介于</option>
+                    <option value="in">在列表</option>
+                    <option value="not in">不在列表</option>
+                  </select>
+                  <template
+                    v-if="
+                      one.sqlConditionalOperation == 'is null' ||
+                      one.sqlConditionalOperation == 'is not null' ||
+                      one.sqlConditionalOperation == 'is empty' ||
+                      one.sqlConditionalOperation == 'is not empty'
+                    "
+                  >
+                  </template>
+                  <template
+                    v-else-if="
+                      one.sqlConditionalOperation == 'between' ||
+                      one.sqlConditionalOperation == 'not between'
+                    "
+                  >
+                    <input
+                      v-model="one.before"
+                      type="text"
+                      @input="initInputWidth"
+                      @change="initInputWidth"
+                      class="part-form-input"
+                    />
+                    <span class="mglr-5">,</span>
+                    <input
+                      v-model="one.after"
+                      type="text"
+                      @input="initInputWidth"
+                      @change="initInputWidth"
+                      class="part-form-input"
+                    />
+                  </template>
+                  <template v-else>
+                    <input
+                      v-model="one.value"
+                      type="text"
+                      @input="initInputWidth"
+                      @change="initInputWidth"
+                      class="part-form-input"
+                    />
+                  </template>
+                  <!-- <select
+                    v-model="one.andOr"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                  </select> -->
+                  <div
+                    @click="removeWhere(one)"
+                    class="color-grey tm-link mgl-10"
+                  >
+                    删除
+                  </div>
+                </li>
+              </template>
+              <li class="pdl-5">
+                <div @click="addWhere" class="color-green tm-link mgr-10">
+                  添加条件
+                </div>
+              </li>
+            </ul>
+          </tm-layout>
+          <!-- <tm-layout-bar right></tm-layout-bar> -->
+          <tm-layout width="400px">
+            <ul class="part-box scrollbar mg-0">
+              <template v-for="(one, index) in searchForm.orderList">
+                <li :key="index">
+                  <input v-model="one.checked" type="checkbox" />
+                  <select
+                    v-model="one.name"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option :value="null" text="请选择">请选择</option>
+                    <template v-for="(one, index) in pointColumnList">
+                      <option
+                        :key="index"
+                        :value="one.name"
+                        :text="one.name + '&nbsp;'"
+                      >
+                        {{ one.name }}
+                        <template v-if="tool.isNotEmpty(one.comment)">
+                          （{{ one.comment }}）
+                        </template>
+                      </option>
+                    </template>
+                  </select>
+                  <select
+                    v-model="one.ascDesc"
+                    @change="initInputWidth"
+                    class="part-form-input"
+                  >
+                    <option value="DESC">DESC</option>
+                    <option value="ASC">ASC</option>
+                  </select>
+                  <div
+                    @click="removeOrder(one)"
+                    class="color-grey tm-link mgl-10"
+                  >
+                    删除
+                  </div>
+                </li>
+              </template>
+              <li class="pdl-5">
+                <div @click="addOrder" class="color-green tm-link mgr-10">
+                  添加排序
+                </div>
+              </li>
+            </ul>
+          </tm-layout>
+          <!-- <tm-layout-bar right></tm-layout-bar> -->
+          <tm-layout>
+            <ul class="part-box scrollbar mg-0">
+              <li></li>
+            </ul>
+          </tm-layout>
+        </tm-layout>
+        <tm-layout height="30px">
+          <div class="pdl-10">
+            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
+              搜索
+            </div>
+            <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toInsert">
+              新增
+            </div>
+          </div>
+        </tm-layout>
+        <tm-layout height="auto">
+          <div style="height: 100%">
+            <el-table
+              :data="dataList"
+              :border="true"
+              height="100%"
+              style="width: 100%"
+              size="mini"
+              @row-dblclick="rowDblClick"
+            >
+              <el-table-column width="120" label="_id">
+                <template slot-scope="scope">
+                  <span class="mgl-5">{{ scope.row._id }}</span>
                 </template>
-              </tbody>
-            </table>
+              </el-table-column>
+              <template v-for="(column, index) in columnList">
+                <template v-if="column.checked">
+                  <el-table-column
+                    :key="index"
+                    :prop="column.name"
+                    :label="column.name"
+                    width="120"
+                  >
+                    <template slot-scope="scope">
+                      <div class="">
+                        {{ scope.row._source[column.name] }}
+                      </div>
+                    </template>
+                  </el-table-column>
+                </template>
+              </template>
+              <el-table-column width="180" label="操作">
+                <template slot-scope="scope">
+                  <div
+                    class="tm-btn color-grey tm-btn-xs"
+                    @click="toolboxWorker.showData(scope.row)"
+                    title="查看"
+                  >
+                    <i class="mdi mdi-eye-outline"></i>
+                  </div>
+                  <div
+                    class="tm-btn color-blue tm-btn-xs"
+                    @click="toUpdate(scope.row)"
+                  >
+                    修改
+                  </div>
+                  <div
+                    class="tm-btn color-grey tm-btn-xs"
+                    @click="toCopy(scope.row)"
+                  >
+                    复制
+                  </div>
+                  <div
+                    class="tm-btn color-orange tm-btn-xs"
+                    @click="toDelete(scope.row)"
+                    title="删除"
+                  >
+                    <i class="mdi mdi-delete-outline"></i>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </tm-layout>
+        <tm-layout height="30px">
+          <div class="ft-12 pdt-2 text-center">
+            <el-pagination
+              small
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="searchForm.pageIndex"
+              :page-sizes="[10, 50, 100, 200, 500]"
+              :page-size="searchForm.pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="total"
+              :disabled="total <= 0"
+            >
+            </el-pagination>
           </div>
         </tm-layout>
       </tm-layout>
@@ -104,6 +263,8 @@
 
 
 <script>
+var JSONbig = require("json-bigint");
+
 export default {
   components: {},
   props: ["source", "indexName", "toolboxWorker"],
@@ -112,10 +273,16 @@ export default {
       ready: false,
       searchForm: {
         indexName: this.indexName,
-        pageIndex: 1,
-        pageSize: 10,
+        whereList: [],
+        orderList: [],
       },
+      pageIndex: 1,
+      pageSize: 10,
+      total: 0,
       dataList: null,
+      mapping: null,
+      columnList: [],
+      pointColumnList: [],
     };
   },
   computed: {},
@@ -128,22 +295,171 @@ export default {
     async toSearch() {
       await this.doSearch();
     },
-    toIndex() {},
-    rowClick(data) {
-      this.rowClickTimeCache = this.rowClickTimeCache || {};
-      let nowTime = new Date().getTime();
-      let clickTime = this.rowClickTimeCache[data];
-      this.rowClickTimeCache[data] = nowTime;
-      if (clickTime) {
-        let timeout = nowTime - clickTime;
-        if (timeout < 300) {
-          delete this.rowClickTimeCache[data];
-          this.rowDbClick(data);
+    handleSizeChange(pageSize) {
+      this.pageSize = pageSize;
+      this.doSearch();
+    },
+    handleCurrentChange(pageIndex) {
+      this.pageIndex = pageIndex;
+      this.doSearch();
+    },
+    async initMapping() {
+      let indexName = this.indexName;
+      this.mapping = await this.toolboxWorker.getMapping(indexName);
+      let columnList = [];
+      let pointColumnList = [];
+      if (
+        this.mapping &&
+        this.mapping.mappings &&
+        this.mapping.mappings.properties
+      ) {
+        this.appendColumnList(
+          columnList,
+          pointColumnList,
+          this.mapping.mappings.properties
+        );
+      }
+      this.columnList = columnList;
+      this.pointColumnList = pointColumnList;
+    },
+    appendColumnList(columnList, pointColumnList, properties, parentName) {
+      if (properties == null) {
+        return;
+      }
+      for (let key in properties) {
+        let option = properties[key];
+        let name = key;
+        if (this.tool.isNotEmpty(parentName)) {
+          name = parentName + "." + key;
+        }
+        let isStruct = option.properties != null;
+        if (isStruct) {
+          this.appendColumnList(
+            columnList,
+            pointColumnList,
+            option.properties,
+            name
+          );
+        }
+        let column = {
+          name: name,
+          type: option.type,
+          checked: true,
+          isStruct: isStruct,
+        };
+        pointColumnList.push(column);
+        if (this.tool.isEmpty(parentName)) {
+          columnList.push(column);
         }
       }
     },
-    rowDbClick(data) {
-      this.toolboxWorker.showData(data);
+    inputValueChange() {},
+    initInputWidth() {
+      this.$nextTick(() => {
+        if (this.initInputWidthIng) {
+          return;
+        }
+        this.initInputWidthIng = true;
+        let es = this.$el.getElementsByClassName("part-form-input");
+        if (es) {
+          Array.prototype.forEach.call(es, (one) => {
+            this.tool.initInputWidth(one);
+          });
+        }
+        this.initInputWidthIng = false;
+      });
+    },
+    addOrder() {
+      let order = {
+        checked: true,
+        name: null,
+        ascDesc: "ASC",
+      };
+      let column = null;
+      if (this.pointColumnList.length > 0) {
+        this.pointColumnList.forEach((one) => {
+          if (column != null) {
+            return;
+          }
+          let find = false;
+          this.searchForm.orderList.forEach((w) => {
+            if (w.name == one.name) {
+              find = true;
+            }
+          });
+          if (find) {
+            return;
+          }
+          column = one;
+        });
+      }
+      if (column != null) {
+        order.name = column.name;
+      }
+
+      this.searchForm.orderList.push(order);
+      this.initInputWidth();
+      return order;
+    },
+    removeOrder(order) {
+      let orderList = this.searchForm.orderList;
+      if (orderList.indexOf(order) >= 0) {
+        orderList.splice(orderList.indexOf(order), 1);
+      }
+    },
+    removeWhere(where) {
+      let whereList = this.searchForm.whereList;
+      if (whereList.indexOf(where) >= 0) {
+        whereList.splice(whereList.indexOf(where), 1);
+      }
+    },
+    addWhere() {
+      let where = {
+        checked: true,
+        name: null,
+        value: null,
+        before: null,
+        after: null,
+        sqlConditionalOperation: "=",
+        andOr: "AND",
+      };
+      let column = null;
+      if (this.pointColumnList.length > 0) {
+        this.pointColumnList.forEach((one) => {
+          if (column != null) {
+            return;
+          }
+          let find = false;
+          this.searchForm.whereList.forEach((w) => {
+            if (w.name == one.name) {
+              find = true;
+            }
+          });
+          if (find) {
+            return;
+          }
+          column = one;
+        });
+      }
+      if (column != null) {
+        where.name = column.name;
+      }
+
+      this.searchForm.whereList.push(where);
+      this.initInputWidth();
+      return where;
+    },
+    async saveExtend() {
+      let keyValueMap = {};
+      keyValueMap.orderList = this.searchForm.orderList;
+      keyValueMap.whereList = this.searchForm.whereList;
+      keyValueMap.pageSize = this.pageSize;
+      keyValueMap.pageIndex = this.pageIndex;
+      await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
+    },
+    toIndex() {},
+    rowDblClick(row, column, event) {
+      this.toolboxWorker.showData(row);
     },
     toDelete(data) {
       let indexName = data.indexName;
@@ -163,8 +479,7 @@ export default {
       let data = {
         indexName: indexName,
       };
-      let mapping = await this.toolboxWorker.getMapping(indexName);
-      this.toolboxWorker.showDataForm(data, mapping, async (m) => {
+      this.toolboxWorker.showDataForm(data, this.mapping, async (m) => {
         let flag = await this.doInsert(m);
         return flag;
       });
@@ -190,8 +505,7 @@ export default {
         doc: data._source,
         id: data._id + "xxx",
       };
-      let mapping = await this.toolboxWorker.getMapping(indexName);
-      this.toolboxWorker.showDataForm(param, mapping, async (m) => {
+      this.toolboxWorker.showDataForm(param, this.mapping, async (m) => {
         let flag = await this.doInsert(m);
         return flag;
       });
@@ -203,8 +517,7 @@ export default {
         doc: data._source,
         id: data._id,
       };
-      let mapping = await this.toolboxWorker.getMapping(indexName);
-      this.toolboxWorker.showDataForm(param, mapping, async (m) => {
+      this.toolboxWorker.showDataForm(param, this.mapping, async (m) => {
         let flag = await this.doUpdate(m);
         return flag;
       });
@@ -237,16 +550,47 @@ export default {
         return false;
       }
     },
+    formatSourceJSON(_source) {
+      var JSONbigString = JSONbig({ storeAsString: true });
+      let sourceJSON = {};
+      try {
+        sourceJSON = JSONbigString.parse(_source);
+      } catch (error) {}
+      return sourceJSON;
+    },
     async doSearch() {
+      await this.initMapping();
       let param = {};
-      this.searchForm.pageIndex = Number(this.searchForm.pageIndex);
-      this.searchForm.pageSize = Number(this.searchForm.pageSize);
       Object.assign(param, this.searchForm);
+      let whereList = [];
+      let orderList = [];
+      this.searchForm.whereList.forEach((one) => {
+        if (one.checked) {
+          whereList.push(one);
+        }
+      });
+      this.searchForm.orderList.forEach((one) => {
+        if (one.checked) {
+          orderList.push(one);
+        }
+      });
+      param.whereList = whereList;
+      param.orderList = orderList;
+
+      param.pageIndex = Number(this.pageIndex);
+      param.pageSize = Number(this.pageSize);
       let res = await this.toolboxWorker.work("search", param);
       res.data = res.data || {};
       let result = res.data.result || {};
-      let hits = result.hits || {};
-      this.dataList = hits.hits || [];
+      let hits = result.hits || [];
+      hits.forEach((one) => {
+        one._source = this.formatSourceJSON(one._source);
+      });
+      this.dataList = hits;
+      this.total = 0;
+      if (result.total) {
+        this.total = result.total.value;
+      }
     },
   },
   created() {},

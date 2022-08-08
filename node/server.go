@@ -118,7 +118,7 @@ func (this_ *Server) Start() (err error) {
 	if this_.ConnAddress != "" {
 		this_.connNodeListenerKeepAlive(nil, this_.ConnAddress, this_.ConnToken, this_.ConnSize)
 	}
-	system.StartCollectMonitorData()
+	go system.StartCollectMonitorData()
 	return
 }
 

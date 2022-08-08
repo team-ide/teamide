@@ -10,7 +10,7 @@
     :before-close="hide"
     width="1200px"
   >
-    <div class="">
+    <div class="mgt--25">
       <el-form ref="form" size="mini" @submit.native.prevent>
         <el-form-item label="ID">
           <el-input type="input" v-model="id"> </el-input>
@@ -21,7 +21,7 @@
               <el-input
                 type="textarea"
                 v-model="docValue"
-                :autosize="{ minRows: 10, maxRows: 30 }"
+                :autosize="{ minRows: 10, maxRows: 20 }"
               >
               </el-input>
             </el-form-item>
@@ -31,7 +31,7 @@
               <el-input
                 type="textarea"
                 v-model="docJSON"
-                :autosize="{ minRows: 10, maxRows: 30 }"
+                :autosize="{ minRows: 10, maxRows: 20 }"
               >
               </el-input>
             </el-form-item>
@@ -107,6 +107,13 @@ export default {
           doc[name] = null;
           if (property.type == "text") {
             doc[name] = null;
+          }
+          if (property.properties) {
+            let v = {};
+            for (let k in property.properties) {
+              v[k] = null;
+            }
+            doc[name] = v;
           }
         }
       }

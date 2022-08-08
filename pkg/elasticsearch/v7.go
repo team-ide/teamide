@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"github.com/olivere/elastic/v7"
+	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"sort"
@@ -217,10 +219,36 @@ func (this_ *V7Service) SetFieldType(indexName string, fieldName string, fieldTy
 }
 
 type SearchResult struct {
-	*elastic.SearchResult
+	TotalHits *elastic.TotalHits `json:"total,omitempty"`     // total number of hits found
+	MaxScore  *float64           `json:"max_score,omitempty"` // maximum score of all hits
+	Hits      []*HitData         `json:"hits,omitempty"`      // the actual hits returned
 }
 
-func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int) (res *SearchResult, err error) {
+type HitData struct {
+	Index   string `json:"_index,omitempty"`   // index name
+	Type    string `json:"_type,omitempty"`    // type meta field
+	Id      string `json:"_id,omitempty"`      // external or internal
+	Uid     string `json:"_uid,omitempty"`     // uid meta field (see MapperService.java for all meta fields)
+	Version *int64 `json:"_version,omitempty"` // version number, when Version is set to true in SearchService
+	Source  string `json:"_source,omitempty"`  // stored document source
+}
+
+type Where struct {
+	Name                    string `json:"name"`
+	Value                   string `json:"value"`
+	Before                  string `json:"before"`
+	After                   string `json:"after"`
+	CustomSql               string `json:"customSql"`
+	SqlConditionalOperation string `json:"sqlConditionalOperation"`
+	AndOr                   string `json:"andOr"`
+}
+
+type Order struct {
+	Name    string `json:"name"`
+	AscDesc string `json:"ascDesc"`
+}
+
+func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int, whereList []*Where, orderList []*Order) (res *SearchResult, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
@@ -228,13 +256,95 @@ func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int) (r
 	//defer client.Stop()
 
 	doer := client.Search(indexName)
-	query := elastic.NewBoolQuery()
-	searchResult, err := doer.Query(query).Size(pageSize).From((pageIndex - 1) * pageSize).Do(context.Background())
+	var query = elastic.NewBoolQuery()
+	for _, where := range whereList {
+		var q elastic.Query
+		var isNot = false
+		switch where.SqlConditionalOperation {
+		case "like":
+			q = elastic.NewWildcardQuery(where.Name, "*"+where.Value+"*")
+		case "not like":
+			q = elastic.NewWildcardQuery(where.Name, "*"+where.Value+"*")
+			isNot = true
+		case "like start":
+			q = elastic.NewWildcardQuery(where.Name, where.Value+"*")
+		case "not like start":
+			q = elastic.NewWildcardQuery(where.Name, where.Value+"*")
+			isNot = true
+		case "like end":
+			q = elastic.NewWildcardQuery(where.Name, "*"+where.Value)
+		case "not like end":
+			q = elastic.NewWildcardQuery(where.Name, "*"+where.Value)
+			isNot = true
+		case "between":
+			q = elastic.NewRangeQuery(where.Name).Gte(where.Before).Lte(where.After)
+		case "not between":
+			q = elastic.NewRangeQuery(where.Name).Gte(where.Before).Lte(where.After)
+			isNot = true
+		case "in":
+			q = elastic.NewTermsQuery(where.Name, strings.Split(where.Value, ","))
+		case "not in":
+			q = elastic.NewTermsQuery(where.Name, strings.Split(where.Value, ","))
+			isNot = true
+		default:
+			q = elastic.NewTermQuery(where.Name, where.Value)
+		}
+		var addQ elastic.Query
+		if strings.Contains(where.Name, ".") {
+			addQ = elastic.NewNestedQuery(where.Name[0:strings.LastIndex(where.Name, ".")], q)
+		} else {
+			addQ = q
+		}
+		if isNot {
+			query.MustNot(addQ)
+		} else {
+			query.Must(addQ)
+		}
+	}
+
+	doer.Query(query)
+
+	for _, one := range orderList {
+		switch one.AscDesc {
+		case "ASC":
+			doer.Sort(one.Name, true)
+			break
+		default:
+			doer.Sort(one.Name, false)
+			break
+		}
+	}
+
+	ss, _ := query.Source()
+	util.Logger.Info("es search", zap.Any("query", ss))
+
+	doer.MaxResponseSize(2147483647)
+
+	searchResult, err := doer.Size(pageSize).From((pageIndex - 1) * pageSize).Do(context.Background())
 	if err != nil {
 		return
 	}
-	res = &SearchResult{
-		SearchResult: searchResult,
+	res = &SearchResult{}
+	if searchResult.Hits != nil {
+		res.TotalHits = searchResult.Hits.TotalHits
+		res.MaxScore = searchResult.Hits.MaxScore
+		for _, one := range searchResult.Hits.Hits {
+			data := &HitData{
+				Id:      one.Id,
+				Type:    one.Type,
+				Index:   one.Index,
+				Uid:     one.Uid,
+				Version: one.Version,
+			}
+			if one.Source != nil {
+				bs, _ := json.Marshal(one.Source)
+				if bs != nil {
+					data.Source = string(bs)
+				}
+
+			}
+			res.Hits = append(res.Hits, data)
+		}
 	}
 
 	return
@@ -330,7 +440,7 @@ func (this_ *V7Service) Reindex(sourceIndexName string, toIndexName string) (res
 	return
 }
 
-func (this_ *V7Service) Scroll(indexName string, scrollId string, pageSize int) (res *SearchResult, err error) {
+func (this_ *V7Service) Scroll(indexName string, scrollId string, pageSize int, whereList []*Where, orderList []*Order) (res *SearchResult, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
@@ -343,8 +453,26 @@ func (this_ *V7Service) Scroll(indexName string, scrollId string, pageSize int) 
 	if err != nil {
 		return
 	}
-	res = &SearchResult{
-		SearchResult: searchResult,
+	if searchResult.Hits != nil {
+		res.TotalHits = searchResult.Hits.TotalHits
+		res.MaxScore = searchResult.Hits.MaxScore
+		for _, one := range searchResult.Hits.Hits {
+			data := &HitData{
+				Id:      one.Id,
+				Type:    one.Type,
+				Index:   one.Index,
+				Uid:     one.Uid,
+				Version: one.Version,
+			}
+			if one.Source != nil {
+				bs, _ := json.Marshal(one.Source)
+				if bs != nil {
+					data.Source = string(bs)
+				}
+
+			}
+			res.Hits = append(res.Hits, data)
+		}
 	}
 
 	return

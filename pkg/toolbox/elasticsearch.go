@@ -38,6 +38,8 @@ type ElasticsearchBaseRequest struct {
 	Doc             interface{}            `json:"doc"`
 	SourceIndexName string                 `json:"sourceIndexName"`
 	DestIndexName   string                 `json:"destIndexName"`
+	WhereList       []*elasticsearch.Where `json:"whereList"`
+	OrderList       []*elasticsearch.Order `json:"orderList"`
 }
 
 func ESWork(work string, config *elasticsearch.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -91,14 +93,14 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 		}
 	case "search":
 		var queryResult *elasticsearch.SearchResult
-		queryResult, err = service.Search(request.IndexName, request.PageIndex, request.PageSize)
+		queryResult, err = service.Search(request.IndexName, request.PageIndex, request.PageSize, request.WhereList, request.OrderList)
 		if err != nil {
 			return
 		}
 		res["result"] = queryResult
 	case "scroll":
 		var result *elasticsearch.SearchResult
-		result, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize)
+		result, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize, request.WhereList, request.OrderList)
 		if err != nil {
 			return
 		}

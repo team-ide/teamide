@@ -8,13 +8,13 @@
     :append-to-body="true"
     :visible="showDialog"
     :before-close="hide"
-    width="700px"
+    width="1000px"
   >
     <div class="ft-15">
       <el-input
         type="textarea"
         v-model="showData"
-        :autosize="{ minRows: 10, maxRows: 20 }"
+        :autosize="{ minRows: 10, maxRows: 25 }"
       >
       </el-input>
     </div>
