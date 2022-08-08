@@ -119,6 +119,9 @@
 
 
 <script>
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
   components: {},
   props: ["source", "formBuild", "formData"],
@@ -210,14 +213,11 @@ export default {
       let jsonView = this.jsonViewMap[field.name];
       if (jsonView != null) {
         let jsonString = null;
-        if (
-          this.tool.isNotEmpty(value) &&
-          (("" + value).startsWith("{") || ("" + value).startsWith("["))
-        ) {
+        if (this.tool.isJSONString(value)) {
           try {
             let json = null;
             try {
-              json = JSON.parse(value);
+              json = JSONbigString.parse(value);
             } catch (error) {
               try {
                 json = eval("(" + value + ")");

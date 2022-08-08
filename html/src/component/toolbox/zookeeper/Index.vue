@@ -151,6 +151,9 @@
 
 
 <script>
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
   components: {},
   props: ["source", "toolboxWorker", "extend"],
@@ -195,28 +198,20 @@ export default {
             value = nameFormat;
           }
         } catch (e) {}
-        try {
-          if (
-            (value.startsWith("{") && value.endsWith("}")) ||
-            (value.startsWith("[") && value.endsWith("]"))
-          ) {
-            let data = JSON.parse(value);
+        if (this.tool.isJSONString(value)) {
+          try {
+            let data = JSONbigString.parse(value);
             this.form.nameFormat = JSON.stringify(data, null, "    ");
-          }
-        } catch (e) {}
+          } catch (e) {}
+        }
       }
     },
     "form.value"(value) {
       this.form.valueJson = null;
-      if (this.tool.isNotEmpty(value)) {
+      if (this.tool.isJSONString(value)) {
         try {
-          if (
-            (value.startsWith("{") && value.endsWith("}")) ||
-            (value.startsWith("[") && value.endsWith("]"))
-          ) {
-            let data = JSON.parse(value);
-            this.form.valueJson = JSON.stringify(data, null, "    ");
-          }
+          let data = JSONbigString.parse(value);
+          this.form.valueJson = JSON.stringify(data, null, "    ");
         } catch (e) {
           this.form.valueJson = e;
         }

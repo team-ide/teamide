@@ -264,6 +264,7 @@
 
 <script>
 var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({ storeAsString: true });
 
 export default {
   components: {},
@@ -551,7 +552,6 @@ export default {
       }
     },
     formatSourceJSON(_source) {
-      var JSONbigString = JSONbig({ storeAsString: true });
       let sourceJSON = {};
       try {
         sourceJSON = JSONbigString.parse(_source);

@@ -116,6 +116,14 @@
                   </el-col>
                   <el-col :span="4">
                     <a
+                      v-if="tool.isJSONString(one.value)"
+                      class="tm-link color-grey ft-15 mgt-30"
+                      @click="toViewJSONValue(one.value)"
+                      title="预览JSON"
+                    >
+                      <i class="mdi mdi-eye"></i>
+                    </a>
+                    <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
                         toDo(one.isNew ? 'RPush' : 'LSet', {
@@ -173,6 +181,14 @@
                     </el-form-item>
                   </el-col>
                   <el-col :span="4">
+                    <a
+                      v-if="tool.isJSONString(one.value)"
+                      class="tm-link color-grey ft-15 mgt-30"
+                      @click="toViewJSONValue(one.value)"
+                      title="预览JSON"
+                    >
+                      <i class="mdi mdi-eye"></i>
+                    </a>
                     <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
@@ -233,6 +249,14 @@
                   </el-col>
                   <el-col :span="4">
                     <a
+                      v-if="tool.isJSONString(one.value)"
+                      class="tm-link color-grey ft-15 mgt-30"
+                      @click="toViewJSONValue(one.value)"
+                      title="预览JSON"
+                    >
+                      <i class="mdi mdi-eye"></i>
+                    </a>
+                    <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
                         toDo('HSet', {
@@ -266,13 +290,19 @@
         </el-form>
       </div>
     </template>
+    <ShowValue :source="source" :toolboxWorker="toolboxWorker"></ShowValue>
   </div>
 </template>
 
 
 <script>
+import ShowValue from "./ShowValue.vue";
+
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
-  components: {},
+  components: { ShowValue },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
@@ -293,21 +323,17 @@ export default {
       setList: [],
       listList: [],
       hashList: [],
+      jsonList: [],
     };
   },
   computed: {},
   watch: {
     "form.value"(value) {
       this.form.valueJson = null;
-      if (this.tool.isNotEmpty(value)) {
+      if (this.tool.isJSONString(value)) {
         try {
-          if (
-            (value.startsWith("{") && value.endsWith("}")) ||
-            (value.startsWith("[") && value.endsWith("]"))
-          ) {
-            let data = JSON.parse(value);
-            this.form.valueJson = JSON.stringify(data, null, "    ");
-          }
+          let data = JSONbigString.parse(value);
+          this.form.valueJson = JSON.stringify(data, null, "    ");
         } catch (e) {
           this.form.valueJson = e;
         }
@@ -323,6 +349,9 @@ export default {
       this.form.key = key;
       this.initForm();
       this.ready = true;
+    },
+    toViewJSONValue(value) {
+      this.toolboxWorker.showValue(value);
     },
     refresh() {},
     async initForm() {

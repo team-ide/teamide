@@ -449,7 +449,16 @@ tool.generatekey = function (num) {
     }
     return key;
 };
-
+tool.isJSONString = function (value) {
+    if (tool.isEmpty(value) || typeof value != "string") {
+        return false
+    }
+    if ((value.startsWith("{") && value.endsWith("}")) ||
+        (value.startsWith("[") && value.endsWith("]"))) {
+        return true
+    }
+    return false
+}
 // 加密
 tool.aesEncrypt = function (str) {
     return tool.encrypt(str, k);
