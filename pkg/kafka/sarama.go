@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/Shopify/sarama"
+	"sort"
 	"strconv"
 	"strings"
 	"teamide/pkg/util"
@@ -86,6 +87,11 @@ func (this_ *SaramaService) GetTopics() (topics []string, err error) {
 	}
 	defer closeSaramaClient(saramaClient)
 	topics, err = saramaClient.Topics()
+	if err != nil {
+		return
+	}
+
+	sort.Strings(topics)
 	return
 }
 

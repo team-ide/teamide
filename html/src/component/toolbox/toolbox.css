@@ -154,8 +154,8 @@
     color: #ffffff;
     width: 40px;
     min-width: 40px;
-    border: 1px dashed transparent;
-    background-color: transparent;
+    border: 1px dashed transparent !important;
+    background-color: transparent !important;
     height: 20px;
     max-width: 100%;
     padding: 0px;
@@ -167,12 +167,13 @@
 }
 
 .part-box input {
-    border-bottom: 1px dashed #636363;
+    border-bottom: 1px dashed #636363 !important;
 }
 
 .part-box select {
     -moz-appearance: auto;
     -webkit-appearance: auto;
+    /* border-bottom: 1px dashed #636363 !important; */
 }
 
 .part-box option {

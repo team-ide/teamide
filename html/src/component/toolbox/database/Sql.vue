@@ -264,7 +264,7 @@ export default {
       tab.columnList = executeData.columnList || [];
       tab.dataList = executeData.dataList;
       this.addTab(tab);
-      // this.doActiveTab(tab);
+      this.doActiveTab(tab);
     },
     getTab(tab) {
       return this.sqlItemsWorker.getItem(tab);

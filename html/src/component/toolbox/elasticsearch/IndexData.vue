@@ -168,7 +168,11 @@
         </tm-layout>
         <tm-layout height="30px">
           <div class="pdl-10">
-            <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
+            <div
+              class="tm-btn tm-btn-sm bg-teal-8 ft-13"
+              @click="toSearch"
+              :class="{ 'tm-disabled': dataListLoading }"
+            >
               搜索
             </div>
             <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toInsert">
@@ -184,11 +188,12 @@
               height="100%"
               style="width: 100%"
               size="mini"
-              @row-dblclick="rowDblClick"
+              v-loading="dataListLoading"
             >
-              <el-table-column width="120" label="_id">
+              <!-- @row-dblclick="rowDblClick" -->
+              <el-table-column label="_id" fixed>
                 <template slot-scope="scope">
-                  <span class="mgl-5">{{ scope.row._id }}</span>
+                  <span>{{ scope.row._id }}</span>
                 </template>
               </el-table-column>
               <template v-for="(column, index) in columnList">
@@ -197,24 +202,22 @@
                     :key="index"
                     :prop="column.name"
                     :label="column.name"
-                    width="120"
                   >
                     <template slot-scope="scope">
-                      <div class="">
+                      <span class="">
                         {{ scope.row._source[column.name] }}
-                      </div>
+                      </span>
                     </template>
                   </el-table-column>
                 </template>
               </template>
-              <el-table-column width="180" label="操作">
+              <el-table-column width="180" label="操作" fixed="right">
                 <template slot-scope="scope">
                   <div
                     class="tm-btn color-grey tm-btn-xs"
                     @click="toolboxWorker.showData(scope.row)"
-                    title="查看"
                   >
-                    <i class="mdi mdi-eye-outline"></i>
+                    查看
                   </div>
                   <div
                     class="tm-btn color-blue tm-btn-xs"
@@ -284,6 +287,7 @@ export default {
       mapping: null,
       columnList: [],
       pointColumnList: [],
+      dataListLoading: false,
     };
   },
   computed: {},
@@ -559,38 +563,42 @@ export default {
       return sourceJSON;
     },
     async doSearch() {
-      await this.initMapping();
-      let param = {};
-      Object.assign(param, this.searchForm);
-      let whereList = [];
-      let orderList = [];
-      this.searchForm.whereList.forEach((one) => {
-        if (one.checked) {
-          whereList.push(one);
-        }
-      });
-      this.searchForm.orderList.forEach((one) => {
-        if (one.checked) {
-          orderList.push(one);
-        }
-      });
-      param.whereList = whereList;
-      param.orderList = orderList;
+      this.dataListLoading = true;
+      try {
+        await this.initMapping();
+        let param = {};
+        Object.assign(param, this.searchForm);
+        let whereList = [];
+        let orderList = [];
+        this.searchForm.whereList.forEach((one) => {
+          if (one.checked) {
+            whereList.push(one);
+          }
+        });
+        this.searchForm.orderList.forEach((one) => {
+          if (one.checked) {
+            orderList.push(one);
+          }
+        });
+        param.whereList = whereList;
+        param.orderList = orderList;
 
-      param.pageIndex = Number(this.pageIndex);
-      param.pageSize = Number(this.pageSize);
-      let res = await this.toolboxWorker.work("search", param);
-      res.data = res.data || {};
-      let result = res.data.result || {};
-      let hits = result.hits || [];
-      hits.forEach((one) => {
-        one._source = this.formatSourceJSON(one._source);
-      });
-      this.dataList = hits;
-      this.total = 0;
-      if (result.total) {
-        this.total = result.total.value;
-      }
+        param.pageIndex = Number(this.pageIndex);
+        param.pageSize = Number(this.pageSize);
+        let res = await this.toolboxWorker.work("search", param);
+        res.data = res.data || {};
+        let result = res.data.result || {};
+        let hits = result.hits || [];
+        hits.forEach((one) => {
+          one._source = this.formatSourceJSON(one._source);
+        });
+        this.dataList = hits;
+        this.total = 0;
+        if (result.total) {
+          this.total = result.total.value;
+        }
+      } catch (error) {}
+      this.dataListLoading = false;
     },
   },
   created() {},

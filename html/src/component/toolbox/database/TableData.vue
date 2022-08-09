@@ -266,7 +266,6 @@
                     :key="index"
                     :prop="column.name"
                     :label="column.name"
-                    width="120"
                   >
                     <template slot-scope="scope">
                       <div class="">

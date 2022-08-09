@@ -9,16 +9,11 @@
     >
       <el-table-column width="70" label="序号">
         <template slot-scope="scope">
-          <span class="mgl-5">{{ scope.$index + 1 }}</span>
+          <span>{{ scope.$index + 1 }}</span>
         </template>
       </el-table-column>
       <template v-for="(column, index) in item.columnList">
-        <el-table-column
-          :key="index"
-          :prop="column.name"
-          :label="column.name"
-          width="120"
-        >
+        <el-table-column :key="index" :prop="column.name" :label="column.name">
           <template slot-scope="scope">
             <div class="">
               <input

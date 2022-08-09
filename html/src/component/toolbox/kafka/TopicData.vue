@@ -37,7 +37,11 @@
             </el-form-item>
             <el-form-item label="">
               <div class="">
-                <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toPull">
+                <div
+                  class="tm-btn tm-btn-sm bg-teal-8 ft-13"
+                  @click="toPull"
+                  :class="{ 'tm-disabled': dataListLoading }"
+                >
                   拉取
                 </div>
                 <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toPush">
@@ -47,74 +51,75 @@
             </el-form-item>
           </el-form>
         </tm-layout>
-        <tm-layout height="auto" class="scrollbar">
-          <div class="pd-10" style="o">
-            <table>
-              <thead>
-                <tr>
-                  <th width="100">Partition</th>
-                  <th width="80">Offset</th>
-                  <th>Key</th>
-                  <th>Value</th>
-                  <th width="150">
-                    <div
-                      class="tm-link color-green-3 ft-14 mglr-2"
-                      @click="toPush()"
-                    >
-                      <i class="mdi mdi-plus"></i>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-if="msgList == null">
-                  <tr>
-                    <td colspan="5">
-                      <div class="text-center ft-13 pdtb-10">拉取中...</div>
-                    </td>
-                  </tr>
+        <tm-layout height="auto" class="">
+          <div style="height: 100%">
+            <el-table
+              :data="dataList"
+              :border="true"
+              height="100%"
+              style="width: 100%"
+              size="mini"
+              v-loading="dataListLoading"
+            >
+              <!-- @row-dblclick="rowDblClick" -->
+              <el-table-column width="60" label="分区">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.partition }}</span>
                 </template>
-                <template v-else-if="msgList.length == 0">
-                  <tr>
-                    <td colspan="5">
-                      <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-                    </td>
-                  </tr>
+              </el-table-column>
+              <el-table-column width="80" label="偏移量">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.offset }}</span>
                 </template>
-                <template v-else>
-                  <template v-for="(one, index) in msgList">
-                    <tr :key="index" @click="rowClick(one)">
-                      <td>{{ one.partition }}</td>
-                      <td>{{ one.offset }}</td>
-                      <td>{{ one.key }}</td>
-                      <td>{{ one.value }}</td>
-                      <td>
-                        <div style="width: 140px">
-                          <div
-                            class="tm-btn color-grey tm-btn-xs"
-                            @click="toolboxWorker.showData(one)"
-                          >
-                            查看
-                          </div>
-                          <div
-                            class="tm-btn color-blue tm-btn-xs"
-                            @click="toCommit(one)"
-                          >
-                            消费
-                          </div>
-                          <div
-                            class="tm-btn color-orange tm-btn-xs"
-                            @click="toDelete(one)"
-                          >
-                            删除
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
+              </el-table-column>
+              <el-table-column width="120" label="Key">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.key }}</span>
                 </template>
-              </tbody>
-            </table>
+              </el-table-column>
+              <el-table-column label="Value">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.value }}</span>
+                </template>
+              </el-table-column>
+              <template v-for="(column, index) in columnList">
+                <template v-if="column.checked">
+                  <el-table-column
+                    :key="index"
+                    :prop="column.name"
+                    :label="`json:${column.name}`"
+                  >
+                    <template slot-scope="scope">
+                      <div class="">
+                        {{ scope.row.jsonValue[column.name] }}
+                      </div>
+                    </template>
+                  </el-table-column>
+                </template>
+              </template>
+              <el-table-column width="150" label="操作" fixed="right">
+                <template slot-scope="scope">
+                  <div
+                    class="tm-btn color-grey tm-btn-xs"
+                    @click="toolboxWorker.showData(scope.row)"
+                  >
+                    查看
+                  </div>
+                  <div
+                    class="tm-btn color-blue tm-btn-xs"
+                    @click="toCommit(scope.row)"
+                  >
+                    消费
+                  </div>
+                  <div
+                    class="tm-btn color-orange tm-btn-xs"
+                    @click="toDelete(scope.row)"
+                  >
+                    删除
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
           </div>
         </tm-layout>
       </tm-layout>
@@ -130,6 +135,9 @@
 
 
 <script>
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
   components: {},
   props: ["source", "topic", "toolboxWorker"],
@@ -144,7 +152,9 @@ export default {
         pullSize: 10,
         pullTimeout: 1000,
       },
-      msgList: null,
+      dataList: [],
+      columnList: [],
+      dataListLoading: false,
     };
   },
   computed: {},
@@ -265,29 +275,48 @@ export default {
         return false;
       }
     },
-    async doPull() {
-      this.msgList = null;
-      let param = {};
-      Object.assign(param, this.pullForm);
-      let res = await this.toolboxWorker.work("pull", param);
-      res.data = res.data || {};
-      let msgList = res.data.msgList || [];
-      msgList.forEach((one) => {
-        if (this.tool.isNotEmpty(one.value)) {
+    initDataList(dataList) {
+      dataList = dataList || [];
+      let columnList = [];
+      let columnNameList = [];
+      dataList.forEach((one) => {
+        let jsonValue = {};
+        let value = one.value;
+        if (this.tool.isJSONString(value)) {
           try {
-            if (
-              (one.value.startsWith("{") && one.value.endsWith("}")) ||
-              (one.value.startsWith("[") && one.value.endsWith("]"))
-            ) {
-              let data = JSON.parse(one.value);
-              one.valueJson = JSON.stringify(data, null, "    ");
-            }
+            let data = JSONbigString.parse(value);
+            let jsonStr = JSON.stringify(data, null, "    ");
+            jsonValue = JSON.parse(jsonStr);
           } catch (e) {
-            one.valueJsonError = e;
+            this.form.valueJson = e;
           }
         }
+        for (let key in jsonValue) {
+          if (columnNameList.indexOf(key) >= 0) {
+            continue;
+          }
+          columnNameList.push(key);
+          columnList.push({
+            name: key,
+            checked: true,
+          });
+        }
+        one.jsonValue = jsonValue;
       });
-      this.msgList = res.data.msgList || [];
+      this.columnList = columnList;
+    },
+    async doPull() {
+      this.dataListLoading = true;
+      try {
+        let param = {};
+        Object.assign(param, this.pullForm);
+        let res = await this.toolboxWorker.work("pull", param);
+        res.data = res.data || {};
+        let dataList = res.data.msgList || [];
+        this.initDataList(dataList);
+        this.dataList = dataList;
+      } catch (error) {}
+      this.dataListLoading = false;
     },
   },
   created() {},
