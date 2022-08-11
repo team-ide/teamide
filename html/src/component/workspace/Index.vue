@@ -121,6 +121,7 @@
       ></ToolboxContext>
       <NodeDialog :source="source"></NodeDialog>
       <NodeNetProxyDialog :source="source"></NodeNetProxyDialog>
+      <NodeInfoShow :source="source"></NodeInfoShow>
     </div>
   </div>
 </template>
@@ -129,9 +130,10 @@
 import ToolboxContext from "./ToolboxContext";
 import NodeDialog from "./NodeDialog";
 import NodeNetProxyDialog from "./NodeNetProxyDialog";
+import NodeInfoShow from "./NodeInfoShow.vue";
 
 export default {
-  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog },
+  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog, NodeInfoShow },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({

@@ -147,7 +147,7 @@ var nodeOptions = []
 var netProxyNetTypes = [{ text: "TCP", value: "tcp" }];
 let node = {
     nodeOptions: nodeOptions,
-    root: {
+    local: {
 
         fields: [
             {

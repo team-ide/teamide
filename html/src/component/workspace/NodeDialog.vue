@@ -2,8 +2,8 @@
   <el-dialog
     ref="modal"
     :title="`节点`"
-    :close-on-click-modal="false"
-    :close-on-press-escape="false"
+    :close-on-click-modal="true"
+    :close-on-press-escape="true"
     :show-close="true"
     :append-to-body="true"
     :visible="showBox"
@@ -14,9 +14,9 @@
   >
     <div class="node-context-box">
       <tm-layout height="100%">
-        <tm-layout height="100px" class="scrollbar">
+        <tm-layout height="150px" class="scrollbar">
           <div class="node-context-box-header">
-            <div class="node-context-box-header pdlr-20 ft-12">
+            <div class="pdlr-20 ft-12 pdtb-10">
               <div class="color-grey">
                 节点程序下载地址:
                 <span class="color-green pdlr-10">
@@ -47,17 +47,17 @@
                   -connAddress 目标节点的ip:port -connToken 目标节点的Token
                 </span>
               </div>
-              <template v-if="nodeRoot != null">
+              <template v-if="localNodeConnList.length > 0">
                 <div class="color-grey">
                   当前节点连接到其它节点:
                   <span class="color-orange pdlr-10"> 右击节点进行操作 </span>
                 </div>
                 <div class="color-grey">
                   其它节点连接到当前节点:
-                  <template v-for="(address, index) in rootAddressList">
+                  <template v-for="(conn, index) in localNodeConnList">
                     <div :key="index" class="color-green">
                       ./node -id node1 -address :21090 -token xxx -connAddress
-                      {{ address }} -connToken {{ nodeRoot.bindToken }}
+                      {{ conn.address }} -connToken {{ conn.bindToken }}
                     </div>
                   </template>
                 </div>
@@ -67,10 +67,10 @@
         </tm-layout>
         <tm-layout height="auto" class="">
           <div class="node-context-body" v-if="ready">
-            <template v-if="nodeRoot == null">
+            <template v-if="localNodeConnList.length == 0">
               <div class="text-center pdt-50">
-                <div class="tm-btn bg-green tm-btn-lg" @click="toInsertRoot">
-                  设置根节点
+                <div class="tm-btn bg-green tm-btn-lg" @click="toInsertLocal">
+                  设置本地节点
                 </div>
               </div>
             </template>
@@ -110,11 +110,10 @@ export default {
   data() {
     return {
       showBox: false,
-      nodeRoot: null,
       nodeList: [],
       loading: false,
       ready: false,
-      rootAddressList: [],
+      localNodeConnList: [],
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -149,26 +148,36 @@ export default {
       this.ready = true;
     },
     initView() {
-      this.nodeRoot = this.source.nodeRoot;
-      this.nodeList = this.source.nodeList;
+      let nodeLocalList = this.source.nodeLocalList || [];
 
-      let rootAddressList = [];
-      if (this.nodeRoot != null) {
-        let address = this.nodeRoot.bindAddress;
+      let localNodeConnList = [];
+      nodeLocalList.forEach((one) => {
+        let model = one.model;
+        if (model == null) {
+          return;
+        }
+        let address = model.bindAddress;
         if (this.tool.isNotEmpty(address) && address.indexOf(":") >= 0) {
           let lastIndex = address.lastIndexOf(":");
           let ip = address.substring(0, lastIndex);
           let port = address.substring(lastIndex + 1);
           if (this.tool.isEmpty(ip) || ip == "0.0.0.0") {
             this.source.localIpList.forEach((localIp) => {
-              rootAddressList.push(localIp + ":" + port);
+              localNodeConnList.push({
+                address: localIp + ":" + port,
+                bindToken: model.bindToken,
+              });
             });
           } else {
-            rootAddressList.push(address);
+            localNodeConnList.push({
+              address: address,
+              bindToken: model.bindToken,
+            });
           }
         }
-      }
-      this.rootAddressList = rootAddressList;
+      });
+      this.localNodeConnList = localNodeConnList;
+      this.nodeList = this.source.nodeList;
     },
     nodeContextmenu(node) {
       let menus = [];
@@ -192,17 +201,17 @@ export default {
         this.tool.showContextmenu(menus);
       }
     },
-    toInsertRoot() {
+    toInsertLocal() {
       this.tool.stopEvent();
       let data = {
-        name: "根节点",
+        name: "本地节点",
         bindAddress: ":21090",
         bindToken: this.tool.md5("bindToken" + new Date().getTime()),
       };
 
       this.$refs.InsertNode.show({
-        title: `设置根节点`,
-        form: [this.form.node.root],
+        title: `设置本地节点`,
+        form: [this.form.node.local],
         isLocal: true,
         serverId: this.tool.md5("serverId" + new Date().getTime()),
         data: [data],
@@ -364,7 +373,6 @@ export default {
     this.tool.showNodeDialog = this.show;
     this.tool.showSwitchNodeDialog = this.showSwitch;
     this.tool.hideNodeDialog = this.hide;
-    this.tool.showNodeInfo = this.showNodeInfo;
     this.tool.toInsertConnNode = this.toInsertConnNode;
     this.tool.toDeleteNode = this.toDelete;
     this.tool.doDeleteNode = this.doDelete;
@@ -376,7 +384,6 @@ export default {
     this.tool.showNodeDialog = this.show;
     this.tool.showSwitchNodeDialog = this.showSwitch;
     this.tool.hideNodeDialog = this.hide;
-    this.tool.showNodeInfo = this.showNodeInfo;
     this.tool.toInsertConnNode = this.toInsertConnNode;
     this.tool.toDeleteNode = this.toDelete;
     this.tool.doDeleteNode = this.doDelete;
@@ -388,11 +395,19 @@ export default {
 
 <style>
 .node-context-dialog {
-  top: 30px !important;
+  width: 100%;
+  height: 100%;
 }
 .node-context-dialog .el-dialog {
   background: #0f1b26;
   color: #ffffff;
+  position: absolute;
+  top: 30px;
+  bottom: 30px;
+  left: 30px;
+  right: 30px;
+  width: auto;
+  height: auto;
 }
 .node-context-dialog .el-dialog__title {
   color: #ffffff;
@@ -411,8 +426,6 @@ export default {
 .node-context-box-header {
   position: relative;
   user-select: text;
-  width: 100%;
-  height: 100%;
 }
 .node-context-body {
   position: relative;

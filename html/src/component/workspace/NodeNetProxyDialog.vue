@@ -509,12 +509,20 @@ export default {
 
 <style>
 .node-net-proxy-dialog {
-  top: 30px !important;
+  width: 100%;
+  height: 100%;
 }
 .node-net-proxy-dialog .el-dialog {
   background: #0f1b26;
   color: #ffffff;
   user-select: text;
+  position: absolute;
+  top: 30px;
+  bottom: 30px;
+  left: 30px;
+  right: 30px;
+  width: auto;
+  height: auto;
 }
 .node-net-proxy-dialog .el-dialog__title {
   color: #ffffff;

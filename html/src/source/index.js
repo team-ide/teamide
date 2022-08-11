@@ -390,7 +390,7 @@ source.initToolboxQuickCommands = async () => {
         source.quickCommandSSHCommands = quickCommandSSHCommands;
     }
 }
-source.nodeRoot = []
+source.nodeLocalList = []
 source.nodeList = []
 source.nodeCount = 0
 source.nodeSuccessCount = 0
@@ -408,11 +408,9 @@ source.initNodeContext = async () => {
     } else {
         let data = res.data || {};
         let localIpList = data.localIpList || [];
-        let nodeRoot = data.root;
         let nodeList = data.nodeList || [];
         let nodeNetProxyList = data.netProxyList || [];
         source.localIpList = localIpList;
-        source.nodeRoot = nodeRoot;
         source.initNodeList(nodeList)
         source.initNodeNetProxyList(nodeNetProxyList)
     }
@@ -483,6 +481,7 @@ source.initNodeList = (nodeList) => {
     form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
     let nodeOptionMap = {};
     let nodeSuccessCount = 0
+    var nodeLocalList = [];
     nodeList.forEach(one => {
         let option = {};
         option.isStarted = one.isStarted
@@ -499,7 +498,11 @@ source.initNodeList = (nodeList) => {
 
         form.node.nodeOptions.push(option);
         nodeOptionMap[option.value] = option;
+        if (one.isLocal) {
+            nodeLocalList.push(one);
+        }
     });
+    source.nodeLocalList = nodeLocalList;
     source.nodeList = nodeList;
     source.nodeCount = nodeList.length;
     source.nodeSuccessCount = nodeSuccessCount;

@@ -85,7 +85,6 @@ type ContextRequest struct {
 }
 
 type ContextResponse struct {
-	Root         *NodeModel      `json:"root,omitempty"`
 	LocalIpList  []string        `json:"localIpList,omitempty"`
 	NodeList     []*NodeInfo     `json:"nodeList,omitempty"`
 	NetProxyList []*NetProxyInfo `json:"netProxyList,omitempty"`
@@ -99,7 +98,6 @@ func (this_ *NodeApi) context(_ *base.RequestBean, c *gin.Context) (res interfac
 	}
 	response := &ContextResponse{}
 
-	response.Root = this_.NodeService.nodeContext.root
 	response.NodeList = this_.NodeService.nodeContext.nodeList
 	response.NetProxyList = this_.NodeService.nodeContext.netProxyList
 

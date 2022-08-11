@@ -12,6 +12,7 @@ type NodeInfo struct {
 	Model       *NodeModel         `json:"model,omitempty"`
 	IsStarted   bool               `json:"isStarted,omitempty"`
 	MonitorData *MonitorDataFormat `json:"monitorData,omitempty"`
+	IsLocal     bool               `json:"isLocal,omitempty"`
 }
 
 func (this_ *NodeContext) getNodeInfo(id string) (res *NodeInfo) {
@@ -244,6 +245,10 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 			IsStarted:   IsStarted,
 			Model:       this_.getNodeModelByServerId(one.Id),
 			MonitorData: ToMonitorDataFormat(nodeMonitorData),
+		}
+
+		if nodeInfo.Model != nil && this_.root != nil && nodeInfo.Model.NodeId == this_.root.NodeId {
+			nodeInfo.IsLocal = true
 		}
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}
