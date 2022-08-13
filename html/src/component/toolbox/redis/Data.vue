@@ -290,19 +290,16 @@
         </el-form>
       </div>
     </template>
-    <ShowValue :source="source" :toolboxWorker="toolboxWorker"></ShowValue>
   </div>
 </template>
 
 
 <script>
-import ShowValue from "./ShowValue.vue";
-
 var JSONbig = require("json-bigint");
 var JSONbigString = JSONbig({});
 
 export default {
-  components: { ShowValue },
+  components: {},
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {

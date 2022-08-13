@@ -2,6 +2,7 @@ package toolbox
 
 import (
 	"encoding/json"
+	"github.com/olivere/elastic/v7"
 	"teamide/pkg/elasticsearch"
 )
 
@@ -62,6 +63,13 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 
 	res = map[string]interface{}{}
 	switch work {
+	case "info":
+		var info *elastic.NodesInfoResponse
+		info, err = service.Info()
+		if err != nil {
+			return
+		}
+		res["info"] = info
 	case "indexNames":
 		var indexNames []string
 		indexNames, err = service.IndexNames()

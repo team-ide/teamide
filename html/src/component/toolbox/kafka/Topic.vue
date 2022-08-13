@@ -8,10 +8,16 @@
               <el-input v-model="searchForm.pattern" style="width: 300px" />
             </el-form-item>
             <el-form-item label="" class="mgb-5">
-              <div class="tm-btn tm-btn-sm bg-grey-6 ft-13" @click="loadTopics">
+              <div class="tm-btn tm-btn-xs bg-grey-6" @click="loadTopics">
                 刷新
               </div>
-              <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toInsert">
+              <div class="tm-btn tm-btn-xs bg-teal-8" @click="toInsert">
+                新建主题
+              </div>
+              <div
+                class="tm-btn tm-btn-xs bg-grey"
+                @click="toolboxWorker.showInfo()"
+              >
                 新建主题
               </div>
             </el-form-item>

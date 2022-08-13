@@ -132,6 +132,20 @@ func (this_ *V7Service) Stop() {
 	}
 }
 
+func (this_ *V7Service) Info() (res *elastic.NodesInfoResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	//defer client.Stop()
+	res, err = client.NodesInfo().Do(context.Background())
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (this_ *V7Service) DeleteIndex(indexName string) (err error) {
 	client, err := this_.GetClient()
 	if err != nil {

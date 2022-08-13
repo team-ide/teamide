@@ -23,6 +23,7 @@
       <ShowData :source="source" :toolboxWorker="toolboxWorker"> </ShowData>
       <MappingForm :source="source" :toolboxWorker="toolboxWorker">
       </MappingForm>
+      <ShowInfo :source="source" :toolboxWorker="toolboxWorker"> </ShowInfo>
     </template>
   </div>
 </template>
@@ -36,6 +37,7 @@ import ReindexForm from "./ReindexForm";
 import MappingForm from "./MappingForm";
 import DataForm from "./DataForm";
 import ShowData from "./ShowData";
+import ShowInfo from "./ShowInfo";
 export default {
   components: {
     IndexNames,
@@ -45,6 +47,7 @@ export default {
     MappingForm,
     DataForm,
     ShowData,
+    ShowInfo,
   },
   props: ["source", "toolboxWorker", "extend"],
   data() {

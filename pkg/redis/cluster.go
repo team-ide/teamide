@@ -59,6 +59,16 @@ func (this_ *ClusterService) GetClient(ctx context.Context, database int) (clien
 	return
 }
 
+func (this_ *ClusterService) Info(ctx context.Context) (res string, err error) {
+
+	client, err := this_.GetClient(ctx, 0)
+	if err != nil {
+		return
+	}
+
+	return Info(ctx, client)
+}
+
 func (this_ *ClusterService) Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error) {
 
 	client, err := this_.GetClient(ctx, database)

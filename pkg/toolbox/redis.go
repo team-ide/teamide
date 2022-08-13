@@ -44,6 +44,13 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 	ctx := context.TODO()
 	res = map[string]interface{}{}
 	switch work {
+	case "info":
+		var info string
+		info, err = service.Info(ctx)
+		if err != nil {
+			return
+		}
+		res["info"] = info
 	case "get":
 		var valueInfo *redis.ValueInfo
 		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)

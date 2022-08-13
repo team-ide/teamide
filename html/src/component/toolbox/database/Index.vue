@@ -30,6 +30,7 @@
       </CreateDatabase>
       <Table :source="source" :toolboxWorker="toolboxWorker"> </Table>
     </template>
+    <ShowInfo :source="source" :toolboxWorker="toolboxWorker"> </ShowInfo>
   </div>
 </template>
 
@@ -40,6 +41,7 @@ import Tabs from "./Tabs";
 import ShowExportSql from "./ShowExportSql";
 import ShowSaveSql from "./ShowSaveSql";
 import CreateDatabase from "./CreateDatabase";
+import ShowInfo from "./ShowInfo";
 
 export default {
   components: {
@@ -48,6 +50,7 @@ export default {
     ShowExportSql,
     ShowSaveSql,
     CreateDatabase,
+    ShowInfo,
   },
   props: ["source", "toolboxWorker", "extend"],
   data() {

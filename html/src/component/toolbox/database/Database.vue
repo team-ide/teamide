@@ -4,17 +4,18 @@
       <tm-layout height="100%">
         <tm-layout height="50px">
           <div class="pdlr-10 pdt-10">
-            <div class="tm-btn tm-btn-sm bg-grey-6 ft-13" @click="refresh">
-              刷新
-            </div>
-            <div
-              class="tm-btn tm-btn-sm bg-teal-8 ft-13"
-              @click="toCreateDatabase"
-            >
+            <div class="tm-btn tm-btn-xs bg-grey-6" @click="refresh">刷新</div>
+            <div class="tm-btn tm-btn-xs bg-teal-8" @click="toCreateDatabase">
               新建库
             </div>
-            <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toOpenSql">
+            <div class="tm-btn tm-btn-xs bg-green" @click="toOpenSql">
               新建查询
+            </div>
+            <div
+              class="tm-btn tm-btn-xs bg-grey"
+              @click="toolboxWorker.showInfo()"
+            >
+              信息
             </div>
           </div>
         </tm-layout>

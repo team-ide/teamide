@@ -163,9 +163,12 @@ export default {
   watch: {},
   methods: {
     async init() {
-      this.server.addServerSocketOnEvent("ftp-data", this.onFTPData);
+      this.bindFTPData();
       this.doLoadFiles("local", this.extend.local.dir);
       this.doLoadFiles("remote", this.extend.remote.dir);
+    },
+    bindFTPData() {
+      this.server.addServerSocketOnEvent("ftp-data", this.onFTPData);
     },
     unbindFTPData() {
       this.server.removeServerSocketOnEvent("ftp-data", this.onFTPData);
@@ -514,6 +517,7 @@ export default {
   },
   destroyed() {
     this.isDestroyed = true;
+    this.unbindFTPData();
   },
 };
 </script>

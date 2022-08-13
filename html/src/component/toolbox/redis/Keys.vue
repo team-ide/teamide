@@ -4,30 +4,36 @@
       <tm-layout height="100%">
         <tm-layout height="90px">
           <el-form class="pdt-10 pdlr-10" size="mini" inline>
-            <el-form-item label="Database" label-width="70px" class="mgb-5">
+            <el-form-item label="Database" class="mgb-5">
               <el-input v-model="searchForm.database" style="width: 80px" />
             </el-form-item>
-            <el-form-item label="Key(支持*模糊搜索)" class="mgb-5">
-              <el-input v-model="searchForm.pattern" style="width: 150px" />
+            <el-form-item label="搜索" class="mgb-5">
+              <el-input v-model="searchForm.pattern" style="width: 160px" />
             </el-form-item>
-            <el-form-item label="数量" label-width="70px" class="mgb-5">
-              <el-input v-model="searchForm.size" style="width: 80px" />
+            <el-form-item label="数量" class="mgb-5">
+              <el-input v-model="searchForm.size" style="width: 50px" />
             </el-form-item>
             <el-form-item label="" class="mgb-5">
-              <div class="tm-btn tm-btn-sm bg-teal-8 ft-13" @click="toSearch">
+              <div class="tm-btn tm-btn-xs bg-teal-8" @click="toSearch">
                 搜索
               </div>
-              <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toInsert">
+              <div class="tm-btn tm-btn-xs bg-green" @click="toInsert">
                 新增
               </div>
-              <div class="tm-btn tm-btn-sm bg-grey ft-13" @click="toImport()">
+              <div class="tm-btn tm-btn-xs bg-grey" @click="toImport()">
                 导入
               </div>
-              <div class="tm-btn tm-btn-sm bg-grey ft-13" @click="toExport()">
+              <div class="tm-btn tm-btn-xs bg-grey" @click="toExport()">
                 导出
               </div>
               <div
-                class="tm-btn tm-btn-sm bg-orange ft-13"
+                class="tm-btn tm-btn-xs bg-grey"
+                @click="toolboxWorker.showInfo()"
+              >
+                信息
+              </div>
+              <div
+                class="tm-btn tm-btn-xs bg-orange"
                 @click="
                   toDeletePattern(searchForm.database, searchForm.pattern)
                 "
