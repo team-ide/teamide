@@ -124,18 +124,17 @@ type CpuInfoStat struct {
 }
 
 type MonitorData struct {
-	BootTime           int64                `json:"bootTime,omitempty"`
 	VirtualMemoryStat  *VirtualMemoryStat   `json:"virtualMemoryStat,omitempty"`
-	CpuInfoStats       []*CpuInfoStat       `json:"cpuInfoStats,omitempty"`
 	CpuPercents        []float64            `json:"cpuPercents,omitempty"`
 	DiskUsageStat      *DiskUsageStat       `json:"diskUsageStat,omitempty"`
-	HostInfoStat       *HostInfoStat        `json:"hostInfoStat,omitempty"`
 	NetIOCountersStats []*NetIOCountersStat `json:"netIOCountersStats,omitempty"`
 	StartTime          int64                `json:"startTime,omitempty"`
 	EndTime            int64                `json:"endTime,omitempty"`
 }
 
 type Info struct {
+	HostInfoStat *HostInfoStat  `json:"hostInfoStat,omitempty"`
+	CpuInfoStats []*CpuInfoStat `json:"cpuInfoStats,omitempty"`
 	*MonitorData
 }
 
@@ -230,6 +229,29 @@ func GetInfo() (info *Info) {
 		return
 	}
 	info.MonitorData = monitorData
+
+	hostInfoStat, err := host.Info()
+	if err != nil {
+		return
+	}
+	info.HostInfoStat = &HostInfoStat{}
+	err = SimpleCopyProperties(info.HostInfoStat, hostInfoStat)
+	if err != nil {
+		return
+	}
+
+	cpus, err := cpu.Info()
+	if err != nil {
+		return
+	}
+	for _, one := range cpus {
+		cInfo := &CpuInfoStat{}
+		err = SimpleCopyProperties(cInfo, one)
+		if err != nil {
+			return
+		}
+		info.CpuInfoStats = append(info.CpuInfoStats, cInfo)
+	}
 	return
 }
 
@@ -240,12 +262,6 @@ func GetMonitorData() (monitorData *MonitorData, err error) {
 	defer func() {
 		monitorData.EndTime = util.GetNowTime()
 	}()
-
-	bootTime, err := host.BootTime()
-	if err != nil {
-		return
-	}
-	monitorData.BootTime = util.GetTimeTime(time.Unix(int64(bootTime), 0))
 
 	monitorData.CpuPercents, err = cpu.Percent(time.Second, true)
 	if err != nil {
@@ -262,35 +278,12 @@ func GetMonitorData() (monitorData *MonitorData, err error) {
 		return
 	}
 
-	cpus, err := cpu.Info()
-	if err != nil {
-		return
-	}
-	for _, one := range cpus {
-		cInfo := &CpuInfoStat{}
-		err = SimpleCopyProperties(cInfo, one)
-		if err != nil {
-			return
-		}
-		monitorData.CpuInfoStats = append(monitorData.CpuInfoStats, cInfo)
-	}
-
 	diskUsageStat, err := disk.Usage("/")
 	if err != nil {
 		return
 	}
 	monitorData.DiskUsageStat = &DiskUsageStat{}
 	err = SimpleCopyProperties(monitorData.DiskUsageStat, diskUsageStat)
-	if err != nil {
-		return
-	}
-
-	hostInfoStat, err := host.Info()
-	if err != nil {
-		return
-	}
-	monitorData.HostInfoStat = &HostInfoStat{}
-	err = SimpleCopyProperties(monitorData.HostInfoStat, hostInfoStat)
 	if err != nil {
 		return
 	}

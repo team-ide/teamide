@@ -2,6 +2,11 @@ import Vue from 'vue'
 import App from '@/App.vue'
 import router from '@/router'
 
+
+// 引入echarts
+import * as echarts from 'echarts'
+Vue.prototype.$echarts = echarts
+
 Vue.config.productionTip = false
 
 import ElementUI from 'element-ui'

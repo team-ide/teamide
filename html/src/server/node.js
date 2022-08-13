@@ -54,6 +54,17 @@ let node = {
             return http.post('api/node/netProxy/delete', param);
         },
     },
+    system: {
+        info(param) {
+            return http.post('api/node/system/info', param);
+        },
+        queryMonitorData(param) {
+            return http.post('api/node/system/queryMonitorData', param);
+        },
+        cleanMonitorData(param) {
+            return http.post('api/node/system/cleanMonitorData', param);
+        },
+    },
 };
 
 

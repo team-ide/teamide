@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
 
@@ -43,6 +44,10 @@ var (
 	PowerNetProxyEnable       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_enable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyDisable      = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_disable", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyDelete       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_delete", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+
+	PowerNodeSystemInfo             = base.AppendPower(&base.PowerAction{Action: "node_system_info", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeSystemQueryMonitorData = base.AppendPower(&base.PowerAction{Action: "node_system_queryMonitorData", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
+	PowerNodeSystemCleanMonitorData = base.AppendPower(&base.PowerAction{Action: "node_system_cleanMonitorData", Text: "节点删除", Parent: PowerNodePage, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
@@ -66,6 +71,10 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/enable"}, Power: PowerNetProxyEnable, Do: this_.netProxyEnable})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/disable"}, Power: PowerNetProxyDisable, Do: this_.netProxyDisable})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/netProxy/delete"}, Power: PowerNetProxyDelete, Do: this_.netProxyDelete})
+
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/system/info"}, Power: PowerNodeSystemInfo, Do: this_.nodeSystemInfo})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/system/queryMonitorData"}, Power: PowerNodeSystemQueryMonitorData, Do: this_.nodeSystemQueryMonitorData})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"node/system/cleanMonitorData"}, Power: PowerNodeSystemCleanMonitorData, Do: this_.nodeSystemCleanMonitorData})
 
 	return
 }
@@ -155,5 +164,55 @@ func (this_ *NodeApi) stop(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 
 	res = response
+	return
+}
+
+type NodeSystemRequest struct {
+	NodeId string `json:"nodeId,omitempty"`
+	*system.QueryRequest
+}
+
+func (this_ *NodeApi) nodeSystemInfo(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &NodeSystemRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if err != nil {
+		return
+	}
+
+	res = this_.NodeService.nodeContext.SystemGetInfo(request.NodeId)
+	return
+}
+
+func (this_ *NodeApi) nodeSystemQueryMonitorData(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &NodeSystemRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if err != nil {
+		return
+	}
+
+	res = this_.NodeService.nodeContext.SystemQueryMonitorData(request.NodeId, request.QueryRequest)
+	return
+}
+
+func (this_ *NodeApi) nodeSystemCleanMonitorData(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &NodeSystemRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if err != nil {
+		return
+	}
+
+	this_.NodeService.nodeContext.SystemCleanMonitorData(request.NodeId)
 	return
 }

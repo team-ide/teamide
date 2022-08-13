@@ -53,6 +53,13 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 
 	res = map[string]interface{}{}
 	switch work {
+	case "info":
+		var info *zookeeper.Info
+		info, err = service.Info()
+		if err != nil {
+			return
+		}
+		res["info"] = info
 	case "get":
 		var data []byte
 		var statInfo *zookeeper.StatInfo

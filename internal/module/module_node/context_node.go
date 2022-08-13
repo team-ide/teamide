@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"go.uber.org/zap"
 	"teamide/node"
+	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
 
@@ -261,4 +262,16 @@ func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
 		Type:     "nodeList",
 		NodeList: nodeList,
 	})
+}
+
+func (this_ *NodeContext) SystemGetInfo(nodeId string) (info *system.Info) {
+	return this_.server.SystemGetInfo(nodeId)
+}
+
+func (this_ *NodeContext) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (info *system.QueryResponse) {
+	return this_.server.SystemQueryMonitorData(nodeId, request)
+}
+
+func (this_ *NodeContext) SystemCleanMonitorData(nodeId string) {
+	this_.server.SystemCleanMonitorData(nodeId)
 }

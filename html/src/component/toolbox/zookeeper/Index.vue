@@ -3,53 +3,77 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout :width="style.left.width" class="scrollbar">
-          <div class="pd-10">
-            <el-tree
-              ref="tree"
-              :load="loadNode"
-              lazy
-              :props="defaultProps"
-              :default-expanded-keys="expands"
-              node-key="key"
-              @node-click="nodeClick"
-              @current-change="currentChange"
-              :expand-on-click-node="false"
-              @node-expand="nodeExpand"
-              @node-collapse="nodeCollapse"
-            >
-              <span
-                class="toolbox-editor-tree-span"
-                slot-scope="{ node, data }"
+          <tm-layout height="50px">
+            <div class="pdlr-10 pdt-5">
+              <div class="tm-btn tm-btn-xs bg-grey-6" @click="refresh">
+                刷新
+              </div>
+              <div
+                class="tm-btn tm-btn-xs bg-teal-8"
+                @click="toInsert({ path: '/' })"
               >
-                <template v-if="data.path == '/'">
-                  <span>/</span>
-                </template>
-                <template v-else>
-                  <span>{{ node.label }}</span>
-                </template>
-                <div class="toolbox-editor-tree-btn-group">
-                  <div
-                    class="tm-link color-grey ft-14 mgr-2"
-                    @click="toReloadChildren(data)"
-                  >
-                    <i class="mdi mdi-reload"></i>
+                新建
+              </div>
+              <div
+                class="tm-btn tm-btn-xs bg-grey"
+                @click="toolboxWorker.showInfo()"
+              >
+                信息
+              </div>
+              <div class="color-orange ft-12 pdt-5">
+                双击展开目录，单机查看节点数据
+              </div>
+            </div>
+          </tm-layout>
+          <tm-layout height="auto">
+            <div class="pd-10">
+              <el-tree
+                ref="tree"
+                :load="loadNode"
+                lazy
+                :props="defaultProps"
+                :default-expanded-keys="expands"
+                node-key="key"
+                @node-click="nodeClick"
+                @current-change="currentChange"
+                :expand-on-click-node="false"
+                @node-expand="nodeExpand"
+                @node-collapse="nodeCollapse"
+              >
+                <span
+                  class="toolbox-editor-tree-span"
+                  slot-scope="{ node, data }"
+                >
+                  <template v-if="data.path == '/'">
+                    <span>/</span>
+                  </template>
+                  <template v-else>
+                    <span>{{ node.label }}</span>
+                  </template>
+                  <div class="toolbox-editor-tree-btn-group">
+                    <div
+                      class="tm-link color-grey ft-14 mgr-2"
+                      @click="toReloadChildren(data)"
+                    >
+                      <i class="mdi mdi-reload"></i>
+                    </div>
+                    <div
+                      class="tm-link color-blue ft-16 mgr-2"
+                      @click="toInsert(data)"
+                    >
+                      <i class="mdi mdi-plus"></i>
+                    </div>
+                    <div
+                      class="tm-link color-orange ft-15 mgr-2"
+                      @click="toDelete(data)"
+                    >
+                      <i class="mdi mdi-delete-outline"></i>
+                    </div>
                   </div>
-                  <div
-                    class="tm-link color-blue ft-16 mgr-2"
-                    @click="toInsert(data)"
-                  >
-                    <i class="mdi mdi-plus"></i>
-                  </div>
-                  <div
-                    class="tm-link color-orange ft-15 mgr-2"
-                    @click="toDelete(data)"
-                  >
-                    <i class="mdi mdi-delete-outline"></i>
-                  </div>
-                </div>
-              </span>
-            </el-tree>
-          </div>
+                </span>
+              </el-tree>
+            </div>
+          </tm-layout>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
@@ -146,16 +170,19 @@
         </tm-layout>
       </tm-layout>
     </template>
+    <ShowInfo :source="source" :toolboxWorker="toolboxWorker"></ShowInfo>
   </div>
 </template>
 
 
 <script>
+import ShowInfo from "./ShowInfo.vue";
+
 var JSONbig = require("json-bigint");
 var JSONbigString = JSONbig({});
 
 export default {
-  components: {},
+  components: { ShowInfo },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
@@ -164,6 +191,9 @@ export default {
           width: "600px",
         },
         main: {},
+      },
+      searchForm: {
+        pattern: null,
       },
       form: {
         dir: null,
@@ -492,5 +522,9 @@ export default {
 .toolbox-zookeeper-editor {
   width: 100%;
   height: 100%;
+  user-select: text;
+}
+.toolbox-zookeeper-editor .el-tree {
+  user-select: text;
 }
 </style>

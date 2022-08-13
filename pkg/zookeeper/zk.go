@@ -98,6 +98,20 @@ func (this_ *ZKService) Create(path string, data []byte, mode int32) (err error)
 	return nil
 }
 
+type Info struct {
+	Server    string   `json:"server"`
+	SessionID int64    `json:"sessionID"`
+	State     zk.State `json:"state"`
+}
+
+func (this_ *ZKService) Info() (info *Info, err error) {
+	info = &Info{}
+	info.SessionID = this_.GetConn().SessionID()
+	info.Server = this_.GetConn().Server()
+	info.State = this_.GetConn().State()
+	return
+}
+
 func (this_ *ZKService) SetData(path string, data []byte) (err error) {
 	isExist, state, err := this_.GetConn().Exists(path)
 	if err != nil {

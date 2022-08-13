@@ -57,6 +57,7 @@
           <template v-else>
             <div class="text-center ft-13 pdtb-10" style="height: 40px">
               Keys （{{ searchResult.count }}）
+              <span class="color-orange">双击查看Key数据</span>
             </div>
             <div
               class="data-list-box scrollbar"
