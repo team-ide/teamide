@@ -266,9 +266,6 @@ export default {
           this.netIOCountersStatsList.push(one.netIOCountersStats);
         });
         if (data.monitorDataList.length == size) {
-          if (this.loadMonitorDataIng) {
-            return;
-          }
           this.loadMonitorDataIng = false;
           this.loadMonitorData();
           return;
@@ -276,19 +273,20 @@ export default {
       }
       this.initView();
       window.setTimeout(() => {
-        if (this.loadMonitorDataIng) {
-          return;
-        }
         this.loadMonitorDataIng = false;
         this.loadMonitorData();
       }, 5000);
     },
     async loadInfo() {
-      let res = await this.server.node.system.info({ nodeId: this.nodeId });
-      if (res.code == 0) {
-        return res.data;
-      } else {
-        this.tool.error(res.msg);
+      try {
+        let res = await this.server.node.system.info({ nodeId: this.nodeId });
+        if (res.code == 0) {
+          return res.data;
+        } else {
+          this.tool.error(res.msg);
+          return null;
+        }
+      } catch (error) {
         return null;
       }
     },
@@ -297,28 +295,35 @@ export default {
         timestamp = new Date().getTime() - 60 * 1000 * 5;
       }
       size = size || 30;
-      let res = await this.server.node.system.queryMonitorData({
-        nodeId: this.nodeId,
-        timestamp: Number(timestamp),
-        size: Number(size),
-      });
-      if (res.code == 0) {
-        return res.data;
-      } else {
-        this.tool.error(res.msg);
+      try {
+        let res = await this.server.node.system.queryMonitorData({
+          nodeId: this.nodeId,
+          timestamp: Number(timestamp),
+          size: Number(size),
+        });
+        if (res.code == 0) {
+          return res.data;
+        } else {
+          this.tool.error(res.msg);
+          return null;
+        }
+      } catch (error) {
+        this.tool.error(error.message);
         return null;
       }
     },
     async cleanMonitorData() {
-      let res = await this.server.node.system.cleanMonitorData({
-        nodeId: this.nodeId,
-      });
-      if (res.code == 0) {
-        return res.data;
-      } else {
-        this.tool.error(res.msg);
-        return null;
-      }
+      try {
+        let res = await this.server.node.system.cleanMonitorData({
+          nodeId: this.nodeId,
+        });
+        if (res.code == 0) {
+          return res.data;
+        } else {
+          this.tool.error(res.msg);
+          return null;
+        }
+      } catch (error) {}
     },
     init() {},
   },
