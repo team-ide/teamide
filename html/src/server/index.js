@@ -70,6 +70,17 @@ let server = {
         serverSocketOnEventList[event] = serverSocketOnEventList[event] || []
         serverSocketOnEventList[event].push(call)
     },
+    removeServerSocketOnEvent(event, call) {
+        if (call == null) { return }
+        let list = serverSocketOnEventList[event] || []
+        let newList = [];
+        list.forEach(one => {
+            if (one != call) {
+                newList.push(one)
+            }
+        })
+        serverSocketOnEventList[event] = newList
+    },
     addServerSocketOnOpen(call) {
         if (call == null) { return }
         if (serverSocketIsOpen) {

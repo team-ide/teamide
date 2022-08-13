@@ -163,16 +163,23 @@ export default {
   watch: {},
   methods: {
     async init() {
-      this.server.addServerSocketOnEvent("ftp-data", (data) => {
-        try {
-          if (data.workerId != this.toolboxWorker.workerId) {
-            return;
-          }
-          this.onResponse(data);
-        } catch (error) {}
-      });
+      this.server.addServerSocketOnEvent("ftp-data", this.onFTPData);
       this.doLoadFiles("local", this.extend.local.dir);
       this.doLoadFiles("remote", this.extend.remote.dir);
+    },
+    unbindFTPData() {
+      this.server.removeServerSocketOnEvent("ftp-data", this.onFTPData);
+    },
+    onFTPData(data) {
+      if (this.isDestroyed) {
+        return;
+      }
+      try {
+        if (data.workerId != this.toolboxWorker.workerId) {
+          return;
+        }
+        this.onResponse(data);
+      } catch (error) {}
     },
     onFocus() {
       this.$refs.remoteToolboxFTPFiles.onFocus();
@@ -442,11 +449,9 @@ export default {
       }
       if (response.isProgress) {
         this.onWorkProgress(response);
-        return;
       }
       if (response.isConfirm) {
         this.onConfirm(response);
-        return;
       }
     },
     async doUploadFile(place, dir, file, fullPath) {
@@ -506,6 +511,9 @@ export default {
   beforeUpdate() {},
   beforeDestroy() {
     this.dispose();
+  },
+  destroyed() {
+    this.isDestroyed = true;
   },
 };
 </script>

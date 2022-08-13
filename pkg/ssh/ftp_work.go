@@ -64,6 +64,7 @@ func (this_ *SftpClient) callConfirm(confirmInfo *util.FileConfirmInfo) (res *ut
 	if confirmInfo.ConfirmId == "" {
 		confirmInfo.ConfirmId = util.UUID()
 	}
+	confirmInfo.WorkerId = this_.WorkerId
 	this_.confirmMap[confirmInfo.ConfirmId] = make(chan *util.FileConfirmInfo, 1)
 
 	context.ServerWebsocketOutEvent("ftp-data", confirmInfo)
@@ -77,8 +78,9 @@ func (this_ *SftpClient) callConfirm(confirmInfo *util.FileConfirmInfo) (res *ut
 }
 
 func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}) {
+	var needBreak bool
 	for {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 
 		var waitCall bool
 		var endTime int64 = -1
@@ -89,6 +91,7 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 			endTime = p.EndTime
 			waitCall = p.WaitCall
 			err = p.Error
+			break
 		case *util.FileCopyProgress:
 			p.Timestamp = util.GetNowTime()
 			endTime = p.EndTime
@@ -99,17 +102,19 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 			endTime = p.EndTime
 			waitCall = p.WaitCall
 			err = p.Error
+			break
 		case *util.FileRenameProgress:
 			p.Timestamp = util.GetNowTime()
 			endTime = p.EndTime
 			waitCall = p.WaitCall
 			err = p.Error
+			break
 		case *util.FileDownloadProgress:
 			p.Timestamp = util.GetNowTime()
 			endTime = p.EndTime
 			waitCall = p.WaitCall
 			err = p.Error
-
+			break
 		}
 
 		if endTime == -1 {
@@ -132,11 +137,12 @@ func (this_ *SftpClient) callProgress(request *SFTPRequest, progress interface{}
 		if err != nil {
 			out["error"] = err.Error()
 		}
-
 		context.ServerWebsocketOutEvent("ftp-data", out)
-
-		if endTime > 0 {
+		if needBreak {
 			break
+		}
+		if endTime > 0 {
+			needBreak = true
 		}
 	}
 }

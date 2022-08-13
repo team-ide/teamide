@@ -103,6 +103,7 @@ type FileConfirmInfo struct {
 	IsFileExist bool   `json:"isFileExist,omitempty"`
 	IsOk        bool   `json:"isOk,omitempty"`
 	IsCancel    bool   `json:"isCancel,omitempty"`
+	WorkerId    string `json:"workerId,omitempty"`
 }
 
 func LocalLoadFiles(path string) (files []os.FileInfo, err error) {
@@ -213,7 +214,10 @@ func FileRemove(
 	}()
 	progress.StartTime = GetNowTime()
 
-	progress.Count, progress.Size, err = LoadFileCount(lstat, loadFiles, path)
+	progress.Count, progress.Size, err = LoadFileCount(lstat, loadFiles, path, func(count, size int64) {
+		progress.Count = count
+		progress.Size = size
+	})
 	if err != nil {
 		return
 	}
@@ -267,6 +271,7 @@ func LoadFileCount(
 	lstat func(string) (os.FileInfo, error),
 	loadFiles func(string) ([]os.FileInfo, error),
 	path string,
+	onLoad func(count, size int64),
 ) (fileCount int64, fileSize int64, err error) {
 	var isDir bool
 
@@ -283,6 +288,7 @@ func LoadFileCount(
 
 	fileCount++
 	fileSize += thisFileSize
+	onLoad(fileCount, fileSize)
 	if isDir {
 		var files []os.FileInfo
 		files, err = loadFiles(path)
@@ -293,12 +299,13 @@ func LoadFileCount(
 		for _, f := range files {
 			var fileCount_ int64
 			var fileSize_ int64
-			fileCount_, fileSize_, err = LoadFileCount(lstat, loadFiles, path+"/"+f.Name())
+			fileCount_, fileSize_, err = LoadFileCount(lstat, loadFiles, path+"/"+f.Name(), onLoad)
 			if err != nil {
 				return
 			}
 			fileCount += fileCount_
 			fileSize += fileSize_
+			onLoad(fileCount, fileSize)
 		}
 	}
 	return
@@ -495,7 +502,10 @@ func FileCopy(
 	}()
 	progress.StartTime = GetNowTime()
 
-	progress.Count, progress.Size, err = LoadFileCount(fromLstat, fromLoadFiles, fromPath)
+	progress.Count, progress.Size, err = LoadFileCount(fromLstat, fromLoadFiles, fromPath, func(count, size int64) {
+		progress.Count = count
+		progress.Size = size
+	})
 	if err != nil {
 		return
 	}
