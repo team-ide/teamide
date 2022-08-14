@@ -10,8 +10,8 @@ import (
 type cronLogger struct {
 }
 
-func (this_ *cronLogger) Info(msg string, keysAndValues ...interface{}) {
-	util.Logger.Info(msg, zap.Any("keysAndValues", keysAndValues))
+func (this_ *cronLogger) Info(_ string, _ ...interface{}) {
+	//util.Logger.Info(msg, zap.Any("keysAndValues", keysAndValues))
 
 }
 func (this_ *cronLogger) Error(err error, msg string, keysAndValues ...interface{}) {

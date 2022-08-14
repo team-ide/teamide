@@ -11,17 +11,16 @@ import (
 	"go.uber.org/zap"
 	"reflect"
 	"sync"
+	"teamide/pkg/task"
 	"teamide/pkg/util"
 	"time"
 )
 
 var (
 	monitorDataList     []*MonitorData
-	WaitSecond          = 5
 	CollectMaxSize      = 3600
 	collectLock         sync.Mutex
 	monitorDataListLock sync.Mutex
-	isStart             bool
 )
 
 type VirtualMemoryStat struct {
@@ -99,6 +98,8 @@ type NetIOCountersStat struct {
 	BytesRecv   uint64 `json:"bytesRecv,omitempty"`   // number of bytes received
 	PacketsSent uint64 `json:"packetsSent,omitempty"` // number of packets sent
 	PacketsRecv uint64 `json:"packetsRecv,omitempty"` // number of packets received
+	SpeedSent   uint64 `json:"speedSent,omitempty"`   // number of packets sent
+	SpeedRecv   uint64 `json:"speedRecv,omitempty"`   // number of packets received
 	Errin       uint64 `json:"errin,omitempty"`       // total number of errors while receiving
 	Errout      uint64 `json:"errout,omitempty"`      // total number of errors while sending
 	Dropin      uint64 `json:"dropin,omitempty"`      // total number of incoming packets which were dropped
@@ -135,7 +136,6 @@ type MonitorData struct {
 type Info struct {
 	HostInfoStat *HostInfoStat  `json:"hostInfoStat,omitempty"`
 	CpuInfoStats []*CpuInfoStat `json:"cpuInfoStats,omitempty"`
-	*MonitorData
 }
 
 type QueryRequest struct {
@@ -149,42 +149,49 @@ type QueryResponse struct {
 	Size            int            `json:"size,omitempty"`
 }
 
-func StopCollectMonitorData() {
-	isStart = false
-}
+var (
+	monitorDataTask *task.CronTask
+)
+
+//func StopCollectMonitorData() {
+//	if monitorDataTask != nil {
+//		monitorDataTask.Stop()
+//	}
+//	monitorDataTask = nil
+//}
 
 func StartCollectMonitorData() {
 	collectLock.Lock()
 	defer collectLock.Unlock()
-	if isStart {
+	if monitorDataTask != nil {
 		return
 	}
-	isStart = true
-	go start()
+	monitorDataTask = &task.CronTask{
+		Key:  monitorDataTaskKey,
+		Spec: "0/5 * * * * *",
+		Do: func() {
+			monitorData, err := GetMonitorData()
+			if err != nil {
+				util.Logger.Error("system get info error", zap.Error(err))
+				return
+			}
+
+			monitorDataListLock.Lock()
+			defer monitorDataListLock.Unlock()
+
+			if len(monitorDataList) >= CollectMaxSize {
+				monitorDataList = monitorDataList[len(monitorDataList)-CollectMaxSize+1:]
+			}
+			monitorDataList = append(monitorDataList, monitorData)
+		},
+	}
+
+	_ = task.AddTask(monitorDataTask)
 }
 
-func start() {
-	if !isStart {
-		return
-	}
-	defer func() {
-		time.Sleep(time.Second * time.Duration(WaitSecond))
-		start()
-	}()
-
-	monitorDataListLock.Lock()
-	defer monitorDataListLock.Unlock()
-
-	monitorData, err := GetMonitorData()
-	if err != nil {
-		util.Logger.Error("system get info error", zap.Error(err))
-		return
-	}
-	if len(monitorDataList) >= CollectMaxSize {
-		monitorDataList = monitorDataList[len(monitorDataList)-CollectMaxSize+1:]
-	}
-	monitorDataList = append(monitorDataList, monitorData)
-}
+const (
+	monitorDataTaskKey = "system-monitor-data-task-key"
+)
 
 func QueryMonitorData(request *QueryRequest) (response *QueryResponse) {
 	response = &QueryResponse{}
@@ -224,11 +231,6 @@ func CleanMonitorData() {
 
 func GetInfo() (info *Info) {
 	info = &Info{}
-	monitorData, err := GetMonitorData()
-	if err != nil {
-		return
-	}
-	info.MonitorData = monitorData
 
 	hostInfoStat, err := host.Info()
 	if err != nil {
@@ -288,17 +290,27 @@ func GetMonitorData() (monitorData *MonitorData, err error) {
 		return
 	}
 
+	network, err := net.IOCounters(true)
+	if err != nil {
+		return
+	}
+	time.Sleep(time.Second * 1)
 	netIOCountersStats, err := net.IOCounters(true)
 	if err != nil {
 		return
 	}
-	for _, one := range netIOCountersStats {
+	for i, one := range netIOCountersStats {
 		nInfo := &NetIOCountersStat{}
 		err = SimpleCopyProperties(nInfo, one)
 		if err != nil {
 			return
 		}
+
+		nInfo.SpeedSent = nInfo.BytesSent - network[i].BytesSent
+		nInfo.SpeedRecv = nInfo.BytesRecv - network[i].BytesRecv
+
 		monitorData.NetIOCountersStats = append(monitorData.NetIOCountersStats, nInfo)
+
 	}
 
 	return

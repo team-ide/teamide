@@ -57,7 +57,7 @@ func (this_ *CronTask) runBefore() bool {
 	if this_.isStop {
 		return false
 	}
-	util.Logger.Debug("任务执行开始", zap.Any("Key", this_.Key))
+	//util.Logger.Debug("任务执行开始", zap.Any("Key", this_.Key))
 
 	NewTime := time.Now()
 	// 如果有开始时间

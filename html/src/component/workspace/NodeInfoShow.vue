@@ -70,7 +70,7 @@
         </div>
       </tm-layout>
       <tm-layout height="auto" class="" style="overflow: auto">
-        <div class="node-info-dialog-body">
+        <div class="node-info-dialog-body scrollbar">
           <div class="pd-10">
             <div
               class="tm-btn tm-btn-xs bg-grey-6"
@@ -79,7 +79,38 @@
               清理节点监控数据
             </div>
           </div>
-          <div ref="cpuView" style="width: 100%; height: 300px"></div>
+          <div>
+            <CPU
+              ref="cpu"
+              :source="source"
+              :timeList="timeList"
+              :cpuPercentsList="cpuPercentsList"
+            ></CPU>
+          </div>
+          <div>
+            <Mem
+              ref="mem"
+              :source="source"
+              :timeList="timeList"
+              :virtualMemoryStatList="virtualMemoryStatList"
+            ></Mem>
+          </div>
+          <div>
+            <Disk
+              ref="disk"
+              :source="source"
+              :timeList="timeList"
+              :diskUsageStatList="diskUsageStatList"
+            ></Disk>
+          </div>
+          <div>
+            <Net
+              ref="net"
+              :source="source"
+              :timeList="timeList"
+              :netIOCountersStatsList="netIOCountersStatsList"
+            ></Net>
+          </div>
         </div>
       </tm-layout>
     </tm-layout>
@@ -87,8 +118,13 @@
 </template>
 
 <script>
+import CPU from "./echarts/CPU.vue";
+import Mem from "./echarts/Mem.vue";
+import Net from "./echarts/Net.vue";
+import Disk from "./echarts/Disk.vue";
+
 export default {
-  components: {},
+  components: { CPU, Mem, Net, Disk },
   props: ["source"],
   data() {
     return {
@@ -101,6 +137,7 @@ export default {
       cpuPercentsList: [],
       diskUsageStatList: [],
       netIOCountersStatsList: [],
+      viewList: ["cpu", "disk", "mem", "net"],
     };
   },
   computed: {},
@@ -118,10 +155,12 @@ export default {
       this.loadMonitorData();
     },
     hide() {
-      if (this.$refs.cpuView.echarts) {
-        this.$refs.cpuView.echarts.dispose();
-        this.$refs.cpuView.echarts = null;
-      }
+      this.viewList.forEach((one) => {
+        if (this.$refs[one] && this.$refs[one].dispose) {
+          this.$refs[one].dispose();
+        }
+      });
+
       this.showBox = false;
       this.cleanCacheData();
     },
@@ -139,9 +178,12 @@ export default {
     async cleanNodeMonitorData() {
       await this.cleanMonitorData();
 
-      if (this.$refs.cpuView.echarts) {
-        this.$refs.cpuView.echarts.clear();
-      }
+      this.viewList.forEach((one) => {
+        if (this.$refs[one] && this.$refs[one].clear) {
+          this.$refs[one].clear();
+        }
+      });
+
       this.lastTimestamp = null;
       this.timeList = [];
       this.virtualMemoryStatList = [];
@@ -151,94 +193,11 @@ export default {
       this.loadMonitorData();
     },
     initView() {
-      this.initCpuView();
-    },
-    initCpuView() {
-      if (!this.$refs.cpuView) {
-        return;
-      }
-      let myChart = this.$refs.cpuView.echarts;
-      if (myChart) {
-        // myChart.clear();
-      } else {
-        myChart = this.$echarts.init(this.$refs.cpuView);
-        this.$refs.cpuView.echarts = myChart;
-      }
-
-      let legendData = [{ name: "CPU", textStyle: { color: "#ffffff" } }];
-      let xAxisData = [];
-      let seriesList = [
-        {
-          name: "CPU",
-          type: "line",
-          smooth: true,
-          data: [],
-        },
-      ];
-
-      let timeList = this.timeList || [];
-      let list = this.cpuPercentsList || [];
-
-      list.forEach((one, i) => {
-        let time = timeList[i];
-        xAxisData.push(time);
-        let cpuPercents = one || [];
-        let cP = 0;
-        cpuPercents.forEach((d, dIndex) => {
-          let ser = seriesList[dIndex + 1];
-          if (ser == null) {
-            let name = "CPU-" + dIndex;
-            legendData.push({ name: name, textStyle: { color: "#ffffff" } });
-            ser = {
-              name: name,
-              type: "line",
-              smooth: true,
-              data: [],
-            };
-            seriesList.push(ser);
-          }
-          ser.data.push(Number(d));
-          cP += Number(d);
-        });
-        seriesList[0].data.push(cP.toFixed(2));
+      this.viewList.forEach((one) => {
+        if (this.$refs[one] && this.$refs[one].initView) {
+          this.$refs[one].initView();
+        }
       });
-
-      let option = {
-        title: {
-          text: "CPU",
-          textStyle: { color: "#ffffff" },
-        },
-        tooltip: {
-          trigger: "axis",
-          confine: true,
-        },
-        legend: {
-          data: legendData,
-        },
-        grid: {
-          left: "3%",
-          right: "4%",
-          bottom: "3%",
-          containLabel: true,
-        },
-        toolbox: {
-          feature: {
-            saveAsImage: {},
-          },
-        },
-        xAxis: {
-          name: "时间",
-          type: "category",
-          boundaryGap: false,
-          data: xAxisData,
-        },
-        yAxis: {
-          name: "消耗/%",
-          type: "value",
-        },
-        series: seriesList,
-      };
-      myChart.setOption(option);
     },
     async loadMonitorData() {
       if (!this.showBox || this.tool.isEmpty(this.nodeId)) {
@@ -257,12 +216,46 @@ export default {
           this.timeList.push(
             this.tool.formatDateByTime(one.startTime, "HH:mm:ss")
           );
+
+          one.virtualMemoryStat.total = Number(
+            one.virtualMemoryStat.total / 1024 / 1024 / 1024
+          ).toFixed(2);
+          one.virtualMemoryStat.free = Number(
+            one.virtualMemoryStat.free / 1024 / 1024 / 1024
+          ).toFixed(2);
+          one.virtualMemoryStat.used = Number(
+            one.virtualMemoryStat.used / 1024 / 1024 / 1024
+          ).toFixed(2);
           this.virtualMemoryStatList.push(one.virtualMemoryStat);
+
           one.cpuPercents.forEach((d, i) => {
             one.cpuPercents[i] = Number(d).toFixed(2);
           });
           this.cpuPercentsList.push(one.cpuPercents);
+
+          one.diskUsageStat.total = Number(
+            one.diskUsageStat.total / 1024 / 1024 / 1024
+          ).toFixed(2);
+          one.diskUsageStat.free = Number(
+            one.diskUsageStat.free / 1024 / 1024 / 1024
+          ).toFixed(2);
+          one.diskUsageStat.used = Number(
+            one.diskUsageStat.used / 1024 / 1024 / 1024
+          ).toFixed(2);
           this.diskUsageStatList.push(one.diskUsageStat);
+
+          one.netIOCountersStats.forEach((d, i) => {
+            one.netIOCountersStats[i].speedRecv =
+              one.netIOCountersStats[i].speedRecv || 0;
+            one.netIOCountersStats[i].speedRecv = Number(
+              d.speedRecv / 1024 / 1024
+            ).toFixed(2);
+            one.netIOCountersStats[i].speedSent =
+              one.netIOCountersStats[i].speedSent || 0;
+            one.netIOCountersStats[i].speedSent = Number(
+              d.speedSent / 1024 / 1024
+            ).toFixed(2);
+          });
           this.netIOCountersStatsList.push(one.netIOCountersStats);
         });
         if (data.monitorDataList.length == size) {
@@ -337,7 +330,9 @@ export default {
     this.tool.showNodeInfo = this.show;
     this.tool.hideNodeInfo = this.hide;
   },
-  destroyed() {},
+  destroyed() {
+    this.showBox = false;
+  },
 };
 </script>
 
