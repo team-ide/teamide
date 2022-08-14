@@ -25,21 +25,21 @@ type Server struct {
 	connNodeListenerKeepAliveLock sync.Mutex
 }
 
-func (this_ *Server) GetNode(nodeId string) (node *Info) {
-	node = this_.worker.getNode(nodeId, []string{})
+func (this_ *Server) GetNode(lineNodeIdList []string, nodeId string) (node *Info) {
+	node = this_.worker.getNode(lineNodeIdList, nodeId)
 	return
 }
 
-func (this_ *Server) SystemGetInfo(nodeId string) (info *system.Info) {
-	res := this_.worker.systemGetInfo(nodeId, []string{})
+func (this_ *Server) SystemGetInfo(lineNodeIdList []string, nodeId string) (info *system.Info) {
+	res := this_.worker.systemGetInfo(lineNodeIdList, nodeId)
 	if res != nil {
 		info = res.Info
 	}
 	return
 }
 
-func (this_ *Server) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
-	res := this_.worker.systemQueryMonitorData(nodeId, []string{}, &SystemData{
+func (this_ *Server) SystemQueryMonitorData(lineNodeIdList []string, nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
+	res := this_.worker.systemQueryMonitorData(lineNodeIdList, nodeId, &SystemData{
 		QueryRequest: request,
 	})
 	if res != nil {
@@ -48,23 +48,23 @@ func (this_ *Server) SystemQueryMonitorData(nodeId string, request *system.Query
 	return
 }
 
-func (this_ *Server) SystemCleanMonitorData(nodeId string) {
-	_ = this_.worker.systemCleanMonitorData(nodeId, []string{})
+func (this_ *Server) SystemCleanMonitorData(lineNodeIdList []string, nodeId string) {
+	_ = this_.worker.systemCleanMonitorData(lineNodeIdList, nodeId)
 	return
 }
 
-func (this_ *Server) GetNodeMonitorData(nodeId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNodeMonitorData(nodeId, []string{})
+func (this_ *Server) GetNodeMonitorData(lineNodeIdList []string, nodeId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNodeMonitorData(lineNodeIdList, nodeId)
 	return
 }
 
-func (this_ *Server) GetNetProxyInnerMonitorData(netProxyId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNetProxyInnerMonitorData(netProxyId, []string{})
+func (this_ *Server) GetNetProxyInnerMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNetProxyInnerMonitorData(lineNodeIdList, netProxyId)
 	return
 }
 
-func (this_ *Server) GetNetProxyOuterMonitorData(netProxyId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNetProxyOuterMonitorData(netProxyId, []string{})
+func (this_ *Server) GetNetProxyOuterMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	monitorData = this_.worker.getNetProxyOuterMonitorData(lineNodeIdList, netProxyId)
 	return
 }
 

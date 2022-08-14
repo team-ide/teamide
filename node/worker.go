@@ -85,7 +85,28 @@ func (this_ *Worker) notifyOther(msg *Message) {
 	this_.notifyAllFrom(msg)
 }
 
-func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) string {
+func (this_ *Worker) getVersion(lineNodeIdList []string, nodeId string) (version string) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodGetVersion, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NodeWorkData: &NodeWorkData{
+				NodeId: nodeId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NodeWorkData != nil {
+			version = resMsg.NodeWorkData.Version
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return ""
 	}
@@ -93,63 +114,41 @@ func (this_ *Worker) getVersion(nodeId string, NotifiedNodeIdList []string) stri
 		return util.GetVersion()
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	var version string
-	for _, pool := range callPools {
-		if version == "" {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					NodeWorkData: &NodeWorkData{
-						NodeId: nodeId,
-					},
-				}
-				res, _ := this_.Call(listener, methodGetVersion, msg)
-				if res != nil && res.NodeWorkData != nil {
-					version = res.NodeWorkData.Version
-				}
-				return
-			})
-		}
-	}
-	return version
+	return
 }
 
-func (this_ *Worker) getNode(nodeId string, NotifiedNodeIdList []string) (find *Info) {
+func (this_ *Worker) getNode(lineNodeIdList []string, nodeId string) (find *Info) {
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodGetNode, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NodeWorkData: &NodeWorkData{
+				NodeId: nodeId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NodeWorkData != nil {
+			find = resMsg.NodeWorkData.Node
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return
 	}
 	if this_.server.rootNode.Id == nodeId {
 		find = this_.server.rootNode
-	}
-	if find != nil {
 		return
-	}
-
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if find == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					NodeWorkData: &NodeWorkData{
-						NodeId: nodeId,
-					},
-				}
-				res, _ := this_.Call(listener, methodGetNode, msg)
-				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.Node != nil {
-					find = res.NodeWorkData.Node
-				}
-				return
-			})
-		}
 	}
 	return
 }
 
-func (this_ *Worker) getOtherPool(NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {
+func (this_ *Worker) getOtherPool1(NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {
 	if util.ContainsString(*NotifiedNodeIdList, this_.server.Id) < 0 {
 		*NotifiedNodeIdList = append(*NotifiedNodeIdList, this_.server.Id)
 	}
@@ -174,7 +173,27 @@ func (this_ *Worker) getOtherPool(NotifiedNodeIdList *[]string) (callPools []*Me
 	return
 }
 
-func (this_ *Worker) getNodeMonitorData(nodeId string, NotifiedNodeIdList []string) (monitorData *MonitorData) {
+func (this_ *Worker) getNodeMonitorData(lineNodeIdList []string, nodeId string) (monitorData *MonitorData) {
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodGetNodeMonitorData, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NodeWorkData: &NodeWorkData{
+				NodeId: nodeId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NodeWorkData != nil {
+			monitorData = resMsg.NodeWorkData.MonitorData
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return
 	}
@@ -183,28 +202,30 @@ func (this_ *Worker) getNodeMonitorData(nodeId string, NotifiedNodeIdList []stri
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if monitorData == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodGetNodeMonitorData, &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					NodeWorkData: &NodeWorkData{
-						NodeId: nodeId,
-					},
-				})
-				if res != nil && res.NodeWorkData != nil && res.NodeWorkData.MonitorData != nil {
-					monitorData = res.NodeWorkData.MonitorData
-				}
-				return
-			})
-		}
-	}
 	return
 }
 
-func (this_ *Worker) getNetProxyInnerMonitorData(netProxyId string, NotifiedNodeIdList []string) (monitorData *MonitorData) {
+func (this_ *Worker) getNetProxyInnerMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodNetProxyGetInnerMonitorData, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyId: netProxyId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NetProxyWorkData != nil {
+			monitorData = resMsg.NetProxyWorkData.MonitorData
+		}
+		return
+	}
+
 	if netProxyId == "" {
 		return
 	}
@@ -214,28 +235,30 @@ func (this_ *Worker) getNetProxyInnerMonitorData(netProxyId string, NotifiedNode
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if monitorData == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodNetProxyGetInnerMonitorData, &Message{
-					NetProxyWorkData: &NetProxyWorkData{
-						NetProxyId: netProxyId,
-					},
-					NotifiedNodeIdList: NotifiedNodeIdList,
-				})
-				if res != nil && res.NetProxyWorkData != nil && res.NetProxyWorkData.MonitorData != nil {
-					monitorData = res.NetProxyWorkData.MonitorData
-				}
-				return
-			})
-		}
-	}
 	return
 }
 
-func (this_ *Worker) getNetProxyOuterMonitorData(netProxyId string, NotifiedNodeIdList []string) (monitorData *MonitorData) {
+func (this_ *Worker) getNetProxyOuterMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodNetProxyGetOuterMonitorData, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyId: netProxyId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NetProxyWorkData != nil {
+			monitorData = resMsg.NetProxyWorkData.MonitorData
+		}
+		return
+	}
+
 	if netProxyId == "" {
 		return
 	}
@@ -245,24 +268,6 @@ func (this_ *Worker) getNetProxyOuterMonitorData(netProxyId string, NotifiedNode
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if monitorData == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				res, _ := this_.Call(listener, methodNetProxyGetOuterMonitorData, &Message{
-					NetProxyWorkData: &NetProxyWorkData{
-						NetProxyId: netProxyId,
-					},
-					NotifiedNodeIdList: NotifiedNodeIdList,
-				})
-				if res != nil && res.NetProxyWorkData != nil && res.NetProxyWorkData.MonitorData != nil {
-					monitorData = res.NetProxyWorkData.MonitorData
-				}
-				return
-			})
-		}
-	}
 	return
 }
 
@@ -290,10 +295,12 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 			err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + nodeId + "] 暂无通讯渠道")
 			return
 		}
-		err = pool.Do(key, func(listener *MessageListener) (e error) {
-			e = doSend(listener)
+		var listener *MessageListener
+		listener, err = pool.GetOne(key)
+		if err != nil {
 			return
-		})
+		}
+		err = doSend(listener)
 		if err != nil {
 			return
 		}

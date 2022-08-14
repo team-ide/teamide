@@ -25,12 +25,14 @@ func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (
 
 	for _, id := range request.IdList {
 		netProxyInfo := this_.NodeService.nodeContext.getNetProxyInfo(id)
-		if netProxyInfo == nil {
+		if netProxyInfo == nil || netProxyInfo.Info == nil {
 			continue
 		}
+		innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.Info.Inner.NodeId)
+		outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.Info.Outer.NodeId)
 
-		netProxyInfo.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(id))
-		netProxyInfo.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(id))
+		netProxyInfo.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
+		netProxyInfo.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
 		response.NetProxyList = append(response.NetProxyList, netProxyInfo)
 	}
 

@@ -1,10 +1,12 @@
 package module_node
 
 import (
+	"encoding/json"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"teamide/node"
+	"teamide/pkg/util"
 )
 
 func (this_ *NodeService) InitContext() {
@@ -17,6 +19,8 @@ func (this_ *NodeService) InitContext() {
 
 			netProxyIdModelCache: make(map[int64]*NetProxyModel),
 			codeModelCache:       make(map[string]*NetProxyModel),
+
+			lineNodeIdListCache: make(map[string][]string),
 		}
 	}
 	err := this_.nodeContext.initContext()
@@ -39,6 +43,9 @@ type NodeContext struct {
 	serverIdModelCache     map[string]*NodeModel
 	serverIdModelCacheLock sync.Mutex
 
+	lineNodeIdListCache     map[string][]string
+	lineNodeIdListCacheLock sync.Mutex
+
 	netProxyList             []*NetProxyInfo
 	netProxyListLock         sync.Mutex
 	netProxyIdModelCache     map[int64]*NetProxyModel
@@ -49,6 +56,71 @@ type NodeContext struct {
 	runTimerRunning          bool
 	onNetProxyListChangeIng  bool
 	onNodeListChangeIng      bool
+}
+
+func (this_ *NodeContext) cleanNodeLine() {
+	this_.lineNodeIdListCacheLock.Lock()
+	defer this_.lineNodeIdListCacheLock.Unlock()
+
+	this_.lineNodeIdListCache = make(map[string][]string)
+
+}
+
+func (this_ *NodeContext) GetNodeLineTo(nodeId string) (lineIdList []string) {
+	lineIdList = this_.GetNodeLineByFromTo(this_.root.ServerId, nodeId)
+	return
+}
+
+func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (lineIdList []string) {
+	this_.lineNodeIdListCacheLock.Lock()
+	defer this_.lineNodeIdListCacheLock.Unlock()
+
+	key := "from:" + fromNodeId + " to:" + toNodeId
+	lineIdList, ok := this_.lineNodeIdListCache[key]
+	if ok {
+		return
+	}
+
+	var nodeIdConnNodeIdListCache = make(map[string][]string)
+	var list = this_.nodeList
+	for _, one := range list {
+		var id string
+		if one.Info != nil {
+			id = one.Info.Id
+		} else if one.Model != nil {
+			id = one.Model.ServerId
+		}
+		var connNodeIdList []string
+		if one.Info != nil {
+			connNodeIdList = append(connNodeIdList, one.Info.ConnNodeIdList...)
+		}
+		if one.Model != nil {
+			if one.Model.ConnServerIds != "" {
+				var connServerIdList []string
+				_ = json.Unmarshal([]byte(one.Model.ConnServerIds), &connServerIdList)
+				for _, connNodeId := range connServerIdList {
+					if util.ContainsString(connNodeIdList, connNodeId) < 0 {
+						connNodeIdList = append(connNodeIdList, connNodeId)
+					}
+				}
+			}
+			if one.Model.HistoryConnServerIds != "" {
+				var historyConnServerIdList []string
+				_ = json.Unmarshal([]byte(one.Model.HistoryConnServerIds), &historyConnServerIdList)
+				for _, connNodeId := range historyConnServerIdList {
+					if util.ContainsString(connNodeIdList, connNodeId) < 0 {
+						connNodeIdList = append(connNodeIdList, connNodeId)
+					}
+				}
+			}
+		}
+
+		nodeIdConnNodeIdListCache[id] = connNodeIdList
+	}
+	lineIdList = this_.server.GetNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
+
+	this_.lineNodeIdListCache[key] = lineIdList
+	return
 }
 
 func (this_ *NodeContext) initContext() (err error) {

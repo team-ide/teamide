@@ -110,16 +110,15 @@ func (this_ *MessageListenerPool) get(key string) (listener *MessageListener, er
 	return
 }
 
-func (this_ *MessageListenerPool) Do(key string, do func(listener *MessageListener) (err error)) (err error) {
+func (this_ *MessageListenerPool) GetOne(key string) (listener *MessageListener, err error) {
 
 	if this_.isStop {
 		err = MessageListenerPoolStop
 		return
 	}
-	listener, err := this_.get(key)
+	listener, err = this_.get(key)
 	if err != nil {
 		return
 	}
-	err = do(listener)
 	return
 }

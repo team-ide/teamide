@@ -238,7 +238,8 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)
 		}
 
-		nodeMonitorData := this_.server.GetNodeMonitorData(one.Id)
+		lineNodeIdList := this_.GetNodeLineTo(one.Id)
+		nodeMonitorData := this_.server.GetNodeMonitorData(lineNodeIdList, one.Id)
 		IsStarted := nodeMonitorData != nil
 
 		nodeInfo := &NodeInfo{
@@ -254,6 +255,7 @@ func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
 		nodeInfoList = append(nodeInfoList, nodeInfo)
 	}
 	this_.nodeList = nodeInfoList
+	this_.cleanNodeLine()
 	this_.refreshNodeList(this_.nodeList)
 }
 
@@ -265,13 +267,16 @@ func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
 }
 
 func (this_ *NodeContext) SystemGetInfo(nodeId string) (info *system.Info) {
-	return this_.server.SystemGetInfo(nodeId)
+	lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	return this_.server.SystemGetInfo(lineNodeIdList, nodeId)
 }
 
 func (this_ *NodeContext) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (info *system.QueryResponse) {
-	return this_.server.SystemQueryMonitorData(nodeId, request)
+	lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	return this_.server.SystemQueryMonitorData(lineNodeIdList, nodeId, request)
 }
 
 func (this_ *NodeContext) SystemCleanMonitorData(nodeId string) {
-	this_.server.SystemCleanMonitorData(nodeId)
+	lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	this_.server.SystemCleanMonitorData(lineNodeIdList, nodeId)
 }

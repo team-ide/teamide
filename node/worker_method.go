@@ -105,9 +105,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 	if msg == nil {
 		return
 	}
-	res = &Message{
-		Id: msg.Id,
-	}
+	res = &Message{}
 	if msg.NotifyChange != nil {
 		if msg.NotifyChange.NotifyAll {
 			this_.notifyAll(msg)
@@ -125,7 +123,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodGetVersion:
 		if msg.NodeWorkData != nil {
-			version := this_.getVersion(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			version := this_.getVersion(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
 			if version != "" {
 				res.NodeWorkData = &NodeWorkData{
 					Version: version,
@@ -135,7 +133,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodSystemGetInfo:
 		if msg.SystemData != nil {
-			response := this_.systemGetInfo(msg.SystemData.NodeId, msg.NotifiedNodeIdList)
+			response := this_.systemGetInfo(msg.LineNodeIdList, msg.SystemData.NodeId)
 			if response != nil {
 				res.SystemData = response
 			}
@@ -143,7 +141,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodSystemQueryMonitorData:
 		if msg.SystemData != nil {
-			response := this_.systemQueryMonitorData(msg.SystemData.NodeId, msg.NotifiedNodeIdList, msg.SystemData)
+			response := this_.systemQueryMonitorData(msg.LineNodeIdList, msg.SystemData.NodeId, msg.SystemData)
 			if response != nil {
 				res.SystemData = response
 			}
@@ -151,7 +149,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodSystemCleanMonitorData:
 		if msg.SystemData != nil {
-			response := this_.systemCleanMonitorData(msg.SystemData.NodeId, msg.NotifiedNodeIdList)
+			response := this_.systemCleanMonitorData(msg.LineNodeIdList, msg.SystemData.NodeId)
 			if response != nil {
 				res.SystemData = response
 			}
@@ -159,7 +157,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodGetNode:
 		if msg.NodeWorkData != nil {
-			node := this_.getNode(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			node := this_.getNode(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
 			if node != nil {
 				res.NodeWorkData = &NodeWorkData{
 					Node: node,
@@ -169,7 +167,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodGetNodeMonitorData:
 		if msg.NodeWorkData != nil {
-			monitorData := this_.getNodeMonitorData(msg.NodeWorkData.NodeId, msg.NotifiedNodeIdList)
+			monitorData := this_.getNodeMonitorData(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
 			if monitorData != nil {
 				res.NodeWorkData = &NodeWorkData{
 					MonitorData: monitorData,
@@ -193,7 +191,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		}
 	case methodNetProxyGetInnerMonitorData:
 		if msg.NetProxyWorkData != nil {
-			monitorData := this_.getNetProxyInnerMonitorData(msg.NetProxyWorkData.NetProxyId, msg.NotifiedNodeIdList)
+			monitorData := this_.getNetProxyInnerMonitorData(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId)
 			if monitorData != nil {
 				res.NetProxyWorkData = &NetProxyWorkData{
 					MonitorData: monitorData,
@@ -203,7 +201,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	case methodNetProxyGetOuterMonitorData:
 		if msg.NetProxyWorkData != nil {
-			monitorData := this_.getNetProxyOuterMonitorData(msg.NetProxyWorkData.NetProxyId, msg.NotifiedNodeIdList)
+			monitorData := this_.getNetProxyOuterMonitorData(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId)
 			if monitorData != nil {
 				res.NetProxyWorkData = &NetProxyWorkData{
 					MonitorData: monitorData,

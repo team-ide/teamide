@@ -278,10 +278,10 @@ func (this_ *Worker) notifyAllTo(msg *Message) {
 		if pool.isStop {
 			continue
 		}
-		_ = pool.Do("", func(listener *MessageListener) (e error) {
+		listener, _ := pool.GetOne("")
+		if listener != nil {
 			_ = listener.Send(msg, this_.MonitorData)
-			return
-		})
+		}
 	}
 	return
 }
@@ -303,10 +303,10 @@ func (this_ *Worker) notifyAllFrom(msg *Message) {
 		if pool.isStop {
 			continue
 		}
-		_ = pool.Do("", func(listener *MessageListener) (e error) {
+		listener, _ := pool.GetOne("")
+		if listener != nil {
 			_ = listener.Send(msg, this_.MonitorData)
-			return
-		})
+		}
 	}
 	return
 }

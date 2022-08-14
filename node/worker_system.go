@@ -2,7 +2,29 @@ package node
 
 import "teamide/pkg/system"
 
-func (this_ *Worker) systemQueryMonitorData(nodeId string, NotifiedNodeIdList []string, request *SystemData) (response *SystemData) {
+func (this_ *Worker) systemQueryMonitorData(lineNodeIdList []string, nodeId string, request *SystemData) (response *SystemData) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodSystemQueryMonitorData, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SystemData: &SystemData{
+				NodeId:       nodeId,
+				QueryRequest: request.QueryRequest,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil {
+			response = resMsg.SystemData
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return
 	}
@@ -13,30 +35,31 @@ func (this_ *Worker) systemQueryMonitorData(nodeId string, NotifiedNodeIdList []
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if response == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					SystemData: &SystemData{
-						NodeId:       nodeId,
-						QueryRequest: request.QueryRequest,
-					},
-				}
-				res, _ := this_.Call(listener, methodSystemQueryMonitorData, msg)
-				if res != nil && res.SystemData != nil {
-					response = res.SystemData
-				}
-				return
-			})
-		}
-	}
 	return
 }
 
-func (this_ *Worker) systemCleanMonitorData(nodeId string, NotifiedNodeIdList []string) (response *SystemData) {
+func (this_ *Worker) systemCleanMonitorData(lineNodeIdList []string, nodeId string) (response *SystemData) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodSystemCleanMonitorData, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SystemData: &SystemData{
+				NodeId: nodeId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil {
+			response = resMsg.SystemData
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return
 	}
@@ -46,29 +69,30 @@ func (this_ *Worker) systemCleanMonitorData(nodeId string, NotifiedNodeIdList []
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if response == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					SystemData: &SystemData{
-						NodeId: nodeId,
-					},
-				}
-				res, _ := this_.Call(listener, methodSystemCleanMonitorData, msg)
-				if res != nil && res.SystemData != nil {
-					response = res.SystemData
-				}
-				return
-			})
-		}
-	}
 	return
 }
 
-func (this_ *Worker) systemGetInfo(nodeId string, NotifiedNodeIdList []string) (response *SystemData) {
+func (this_ *Worker) systemGetInfo(lineNodeIdList []string, nodeId string) (response *SystemData) {
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodSystemGetInfo, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SystemData: &SystemData{
+				NodeId: nodeId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil {
+			response = resMsg.SystemData
+		}
+		return
+	}
+
 	if nodeId == "" {
 		return
 	}
@@ -79,24 +103,5 @@ func (this_ *Worker) systemGetInfo(nodeId string, NotifiedNodeIdList []string) (
 		return
 	}
 
-	var callPools = this_.getOtherPool(&NotifiedNodeIdList)
-
-	for _, pool := range callPools {
-		if response == nil {
-			_ = pool.Do("", func(listener *MessageListener) (e error) {
-				msg := &Message{
-					NotifiedNodeIdList: NotifiedNodeIdList,
-					SystemData: &SystemData{
-						NodeId: nodeId,
-					},
-				}
-				res, _ := this_.Call(listener, methodSystemGetInfo, msg)
-				if res != nil && res.SystemData != nil {
-					response = res.SystemData
-				}
-				return
-			})
-		}
-	}
 	return
 }

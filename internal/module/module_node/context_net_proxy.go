@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"teamide/node"
-	"teamide/pkg/util"
 )
 
 type NetProxyInfo struct {
@@ -110,43 +109,7 @@ func (this_ *NodeContext) formatNetProxy(netProxyModel *NetProxyModel) (netProxy
 		return
 	}
 	if len(netProxy.LineNodeIdList) == 0 {
-		var nodeIdConnNodeIdListCache = make(map[string][]string)
-		var list = this_.nodeList
-		for _, one := range list {
-			var id string
-			if one.Info != nil {
-				id = one.Info.Id
-			} else if one.Model != nil {
-				id = one.Model.ServerId
-			}
-			var connNodeIdList []string
-			if one.Info != nil {
-				connNodeIdList = append(connNodeIdList, one.Info.ConnNodeIdList...)
-			}
-			if one.Model != nil {
-				if one.Model.ConnServerIds != "" {
-					var connServerIdList []string
-					_ = json.Unmarshal([]byte(one.Model.ConnServerIds), &connServerIdList)
-					for _, connNodeId := range connServerIdList {
-						if util.ContainsString(connNodeIdList, connNodeId) < 0 {
-							connNodeIdList = append(connNodeIdList, connNodeId)
-						}
-					}
-				}
-				if one.Model.HistoryConnServerIds != "" {
-					var historyConnServerIdList []string
-					_ = json.Unmarshal([]byte(one.Model.HistoryConnServerIds), &historyConnServerIdList)
-					for _, connNodeId := range historyConnServerIdList {
-						if util.ContainsString(connNodeIdList, connNodeId) < 0 {
-							connNodeIdList = append(connNodeIdList, connNodeId)
-						}
-					}
-				}
-			}
-
-			nodeIdConnNodeIdListCache[id] = connNodeIdList
-		}
-		netProxy.LineNodeIdList = this_.server.GetNodeLineByFromTo(netProxy.Inner.NodeId, netProxy.Outer.NodeId, nodeIdConnNodeIdListCache)
+		netProxy.LineNodeIdList = this_.GetNodeLineByFromTo(netProxy.Inner.NodeId, netProxy.Outer.NodeId)
 		if len(netProxy.LineNodeIdList) == 0 {
 			err = errors.New("无法正确解析输入输出节点关系")
 			return
@@ -262,8 +225,12 @@ func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
 			//	this_.setNetProxyModelByCode(one.Id, find)
 			//}
 		}
-		innerMonitorData := this_.server.GetNetProxyInnerMonitorData(one.Id)
-		outerMonitorData := this_.server.GetNetProxyOuterMonitorData(one.Id)
+
+		innerLineNodeIdList := this_.GetNodeLineTo(one.Inner.NodeId)
+		outerLineNodeIdList := this_.GetNodeLineTo(one.Outer.NodeId)
+
+		innerMonitorData := this_.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, one.Id)
+		outerMonitorData := this_.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, one.Id)
 		InnerIsStarted := innerMonitorData != nil
 		OuterIsStarted := outerMonitorData != nil
 		netProxyInfo := &NetProxyInfo{
