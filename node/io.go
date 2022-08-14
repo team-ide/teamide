@@ -157,7 +157,6 @@ func (this_ *MessageListener) listen(onClose func(), MonitorData *MonitorData) {
 				if err == io.EOF {
 					return
 				}
-				//Logger.Error("message read error", zap.Error(err))
 				return
 			}
 			msg.listener = this_
@@ -191,6 +190,7 @@ func ReadMessage(reader io.Reader, MonitorData *MonitorData) (message *Message, 
 
 	err = json.Unmarshal(bytes, &message)
 	if err != nil {
+		Logger.Error("ReadMessage JSON Unmarshal error", zap.Any("bytes length", len(bytes)), zap.Error(err))
 		return
 	}
 	if message.HasBytes {
@@ -245,14 +245,20 @@ func ReadBytes(reader io.Reader, MonitorData *MonitorData) (bytes []byte, err er
 	}
 
 	if length > 0 {
-		bytes = make([]byte, length)
-		n, err = reader.Read(bytes)
-		if err != nil {
-			return
-		}
-		if n < length {
-			err = LengthError
-			return
+		var hasLen = length
+		for {
+
+			bs := make([]byte, hasLen)
+			n, err = reader.Read(bs)
+			if err != nil {
+				return
+			}
+			hasLen = hasLen - n
+			bytes = append(bytes, bs[0:n]...)
+			//Logger.Info("ReadBytes", zap.Any("should read", length), zap.Any("has size", hasLen))
+			if hasLen <= 0 {
+				break
+			}
 		}
 	}
 	end := util.Now().UnixNano()
@@ -269,12 +275,20 @@ func WriteBytes(writer io.Writer, bytes []byte, MonitorData *MonitorData) (err e
 	writeBytes := []byte{0, 0, 0, 0}
 	binary.LittleEndian.PutUint32(writeBytes, uint32(length))
 
-	writeBytes = append(writeBytes, bytes...)
-	length += 4
 	n, err = writer.Write(writeBytes)
 	if err != nil {
 		return
 	}
+	if n < 4 {
+		err = LengthError
+		return
+	}
+
+	n, err = writer.Write(bytes)
+	if err != nil {
+		return
+	}
+	//Logger.Info("WriteBytes", zap.Any("should write", length), zap.Any("write size", n))
 	if n < length {
 		err = LengthError
 		return

@@ -204,7 +204,7 @@ func QueryMonitorData(request *QueryRequest) (response *QueryResponse) {
 	if size <= 0 {
 		size = 100
 	}
-
+	//util.Logger.Info("QueryMonitorData start", zap.Any("request", request))
 	var list = monitorDataList
 	var appendSize = 0
 	for _, one := range list {
@@ -219,6 +219,7 @@ func QueryMonitorData(request *QueryRequest) (response *QueryResponse) {
 		appendSize++
 	}
 
+	//util.Logger.Info("QueryMonitorData end", zap.Any("response", response))
 	return
 }
 
