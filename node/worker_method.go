@@ -2,8 +2,10 @@ package node
 
 import (
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"time"
 )
 
 var (
@@ -81,18 +83,18 @@ func (this_ *Worker) Call(listener *MessageListener, method int, msg *Message) (
 	if err != nil {
 		return
 	}
-	//var isEnd bool
-	//go func() {
-	//	time.Sleep(time.Second * 60 * 10)
-	//	if isEnd {
-	//		return
-	//	}
-	//	waitResult <- &Message{
-	//		Error: fmt.Sprintf("请求超时，超时时间%d秒", 5),
-	//	}
-	//}()
+	var isEnd bool
+	go func() {
+		time.Sleep(time.Second * 60 * 1)
+		if isEnd {
+			return
+		}
+		waitResult <- &Message{
+			Error: fmt.Sprintf("请求超时，超时时间%d秒", 5),
+		}
+	}()
 	res := <-waitResult
-	//isEnd = true
+	isEnd = true
 	if res.Error != "" {
 		err = errors.New(res.Error)
 		return
