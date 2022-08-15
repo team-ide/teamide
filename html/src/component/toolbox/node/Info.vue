@@ -1,20 +1,8 @@
 <template>
-  <el-dialog
-    ref="modal"
-    :title="`节点查看`"
-    :close-on-click-modal="true"
-    :close-on-press-escape="true"
-    :show-close="true"
-    :append-to-body="true"
-    :visible="showBox"
-    :before-close="hide"
-    :fullscreen="true"
-    width="100%"
-    class="node-info-dialog"
-  >
+  <div class="toolbox-node-info-editor">
     <tm-layout height="100%">
       <tm-layout height="150px">
-        <div class="node-info-dialog-header pd-10 color-grey">
+        <div class="toolbox-node-info-editor-header pd-10 color-grey">
           <template v-if="node != null && node.model != null">
             <div>
               节点:
@@ -70,7 +58,7 @@
         </div>
       </tm-layout>
       <tm-layout height="auto" class="" style="overflow: auto">
-        <div class="node-info-dialog-body scrollbar">
+        <div class="toolbox-node-info-editor-body scrollbar">
           <div class="pd-10">
             <div
               class="tm-btn tm-btn-xs bg-grey-6"
@@ -114,7 +102,7 @@
         </div>
       </tm-layout>
     </tm-layout>
-  </el-dialog>
+  </div>
 </template>
 
 <script>
@@ -125,10 +113,10 @@ import Disk from "./echarts/Disk.vue";
 
 export default {
   components: { CPU, Mem, Net, Disk },
-  props: ["source"],
+  props: ["source", "serverId"],
   data() {
     return {
-      showBox: false,
+      isDestroyed: false,
       node: null,
       hostInfoStat: null,
       loading: false,
@@ -143,10 +131,7 @@ export default {
   computed: {},
   watch: {},
   methods: {
-    async show(node) {
-      this.node = node;
-      this.nodeId = node.info.id;
-      this.showBox = true;
+    async init() {
       let systemInfo = await this.loadInfo();
       if (systemInfo != null) {
         this.hostInfoStat = systemInfo.hostInfoStat;
@@ -154,26 +139,12 @@ export default {
       this.lastTimestamp = null;
       this.loadMonitorData();
     },
-    hide() {
+    dispose() {
       this.viewList.forEach((one) => {
         if (this.$refs[one] && this.$refs[one].dispose) {
           this.$refs[one].dispose();
         }
       });
-
-      this.showBox = false;
-      this.cleanCacheData();
-    },
-    cleanCacheData() {
-      this.node = null;
-      this.nodeId = null;
-      this.hostInfoStat = null;
-      this.lastTimestamp = null;
-      this.timeList = [];
-      this.virtualMemoryStatList = [];
-      this.cpuPercentsList = [];
-      this.diskUsageStatList = [];
-      this.netIOCountersStatsList = [];
     },
     async cleanNodeMonitorData() {
       await this.cleanMonitorData();
@@ -200,7 +171,7 @@ export default {
       });
     },
     async loadMonitorData() {
-      if (!this.showBox || this.tool.isEmpty(this.nodeId)) {
+      if (this.isDestroyed || this.tool.isEmpty(this.serverId)) {
         return;
       }
       if (this.loadMonitorDataIng) {
@@ -272,7 +243,7 @@ export default {
     },
     async loadInfo() {
       try {
-        let res = await this.server.node.system.info({ nodeId: this.nodeId });
+        let res = await this.server.node.system.info({ nodeId: this.serverId });
         if (res.code == 0) {
           return res.data;
         } else {
@@ -290,7 +261,7 @@ export default {
       size = size || 30;
       try {
         let res = await this.server.node.system.queryMonitorData({
-          nodeId: this.nodeId,
+          nodeId: this.serverId,
           timestamp: Number(timestamp),
           size: Number(size),
         });
@@ -308,7 +279,7 @@ export default {
     async cleanMonitorData() {
       try {
         let res = await this.server.node.system.cleanMonitorData({
-          nodeId: this.nodeId,
+          nodeId: this.serverId,
         });
         if (res.code == 0) {
           return res.data;
@@ -318,54 +289,29 @@ export default {
         }
       } catch (error) {}
     },
-    init() {},
   },
   created() {},
-  updated() {
-    this.tool.showNodeInfo = this.show;
-    this.tool.hideNodeInfo = this.hide;
-  },
+  updated() {},
   mounted() {
     this.init();
-    this.tool.showNodeInfo = this.show;
-    this.tool.hideNodeInfo = this.hide;
   },
   destroyed() {
-    this.showBox = false;
+    this.isDestroyed = true;
+    this.dispose();
   },
 };
 </script>
 
 <style>
-.node-info-dialog {
+.toolbox-node-info-editor {
   width: 100%;
   height: 100%;
   user-select: text;
 }
-.node-info-dialog .el-dialog {
-  background: #0f1b26;
-  color: #ffffff;
-  position: absolute;
-  top: 30px;
-  bottom: 30px;
-  left: 30px;
-  right: 30px;
-  width: auto;
-  height: auto;
-}
-.node-info-dialog .el-dialog__title {
-  color: #ffffff;
-}
-.node-info-dialog .el-dialog__body {
-  position: relative;
-  width: 100%;
-  height: calc(100% - 55px);
-  padding: 0px;
-}
-.node-info-dialog-header {
+.toolbox-node-info-editor-header {
   position: relative;
 }
-.node-info-dialog-body {
+.toolbox-node-info-editor-body {
   position: relative;
   width: 100%;
   height: 100%;

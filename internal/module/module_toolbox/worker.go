@@ -109,27 +109,34 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 }
 
 // Work 执行
-func (this_ *ToolboxService) Work(toolboxId int64, work string, data map[string]interface{}) (res interface{}, err error) {
+func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
 
-	toolboxData, err := this_.Get(toolboxId)
+	tD, err := this_.Get(toolboxId)
 	if err != nil {
 		return
 	}
-	if toolboxData == nil {
-		toolboxData = this_.GetOtherToolbox(toolboxId)
+	if tD == nil {
+		tD = this_.GetOtherToolbox(toolboxId)
 	}
-	if toolboxData == nil {
-		err = errors.New("工具配置丢失")
+	option := ""
+	if tD != nil {
+		if tD.ToolboxType != "" {
+			toolboxType = tD.ToolboxType
+		}
+		option = tD.Option
+	}
+
+	if toolboxType == "" {
 		return
 	}
 
-	toolboxWorker := GetWorker(toolboxData.ToolboxType)
+	toolboxWorker := GetWorker(toolboxType)
 	if toolboxWorker == nil {
-		err = errors.New("不支持的工具类型[" + toolboxData.ToolboxType + "]")
+		//err = errors.New("不支持的工具类型[" + toolboxType + "]")
 		return
 	}
 
-	optionBytes := []byte(toolboxData.Option)
+	optionBytes := []byte(option)
 
 	switch toolboxWorker {
 	case databaseWorker_:

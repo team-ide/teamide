@@ -57,6 +57,10 @@
         >
         </ToolboxOtherEditor>
       </template>
+      <template v-else-if="toolboxType == 'node'">
+        <Node :source="source" :extend="extend" :toolboxWorker="toolboxWorker">
+        </Node>
+      </template>
     </template>
     <QuickCommand :source="source" :toolboxWorker="toolboxWorker">
     </QuickCommand>
@@ -70,9 +74,10 @@
 import "./toolbox.css";
 import QuickCommand from "./QuickCommand";
 import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
+import Node from "./node/Index.vue";
 
 export default {
-  components: { QuickCommand, QuickCommandSSHCommandForm },
+  components: { Node, QuickCommand, QuickCommandSSHCommandForm },
   props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {
     let toolboxWorker = this.tool.newToolboxWorker({

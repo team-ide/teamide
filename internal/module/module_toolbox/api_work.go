@@ -12,9 +12,10 @@ import (
 )
 
 type WorkRequest struct {
-	ToolboxId int64                  `json:"toolboxId,omitempty"`
-	Work      string                 `json:"work,omitempty"`
-	Data      map[string]interface{} `json:"data,omitempty"`
+	ToolboxId   int64                  `json:"toolboxId,omitempty"`
+	ToolboxType string                 `json:"toolboxType,omitempty"`
+	Work        string                 `json:"work,omitempty"`
+	Data        map[string]interface{} `json:"data,omitempty"`
 }
 
 func (this_ *ToolboxApi) work(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -24,7 +25,7 @@ func (this_ *ToolboxApi) work(_ *base.RequestBean, c *gin.Context) (res interfac
 		return
 	}
 
-	res, err = this_.ToolboxService.Work(request.ToolboxId, request.Work, request.Data)
+	res, err = this_.ToolboxService.Work(request.ToolboxId, request.ToolboxType, request.Work, request.Data)
 	if err != nil {
 		return
 	}

@@ -641,6 +641,7 @@ export default {
   height: calc(100% - 30px);
   position: relative;
   background-color: black;
+  overflow: hidden;
 }
 .terminal-box-back {
   width: calc(100% - 20px) !important;

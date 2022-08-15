@@ -35,6 +35,7 @@ const newToolboxWorker = function (workerOption) {
             data.workerId = worker.workerId
             let param = {
                 toolboxId: worker.toolboxId,
+                toolboxType: worker.toolboxType,
                 work: work,
                 data: data,
             };

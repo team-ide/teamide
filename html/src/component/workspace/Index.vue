@@ -121,7 +121,6 @@
       ></ToolboxContext>
       <NodeDialog :source="source"></NodeDialog>
       <NodeNetProxyDialog :source="source"></NodeNetProxyDialog>
-      <NodeInfoShow :source="source"></NodeInfoShow>
     </div>
   </div>
 </template>
@@ -130,10 +129,9 @@
 import ToolboxContext from "./ToolboxContext";
 import NodeDialog from "./NodeDialog";
 import NodeNetProxyDialog from "./NodeNetProxyDialog";
-import NodeInfoShow from "./NodeInfoShow.vue";
 
 export default {
-  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog, NodeInfoShow },
+  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
@@ -179,11 +177,47 @@ export default {
     },
     toMainCopyItem(item) {
       let extend = item.extend;
-      this.openByToolboxId(item.toolboxId, extend, item, item.createTime);
+      if (this.tool.isEmpty(item.toolboxId)) {
+        this.openByExtend(extend, item, item.createTime);
+      } else {
+        this.openByToolboxId(item.toolboxId, extend, item, item.createTime);
+      }
     },
     async openByToolboxId(toolboxId, extend, fromItem, createTime) {
       let param = {
         toolboxId: toolboxId,
+        extend: JSON.stringify(extend || {}),
+      };
+      if (createTime) {
+        param.createTime = createTime;
+      }
+      let res = await this.server.toolbox.open(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      } else {
+        let openData = res.data.open;
+        let item = this.addMainItemByOpen(openData, fromItem);
+        if (item != null) {
+          this.$nextTick(() => {
+            this.toMainActiveItem(item);
+          });
+        }
+      }
+    },
+    async openByExtend(extend, fromItem, createTime) {
+      if (
+        extend == null ||
+        Object.keys(extend) == 0 ||
+        this.tool.isEmpty(extend.toolboxType)
+      ) {
+        this.tool.error("根据扩展打开需要配置类型");
+        return;
+      }
+      if (this.tool.isEmpty(extend.title)) {
+        this.tool.error("根据扩展打开需要配置标题");
+        return;
+      }
+      let param = {
         extend: JSON.stringify(extend || {}),
       };
       if (createTime) {
@@ -214,6 +248,14 @@ export default {
       item.toolboxGroupId = open.toolboxGroupId;
       item.createTime = open.createTime;
       item.extend = this.tool.getOptionJSON(open.extend);
+
+      if (this.tool.isEmpty(item.title)) {
+        item.name = item.extend.name;
+        item.title = item.extend.title;
+      }
+      if (this.tool.isEmpty(item.toolboxType)) {
+        item.toolboxType = item.extend.toolboxType;
+      }
 
       if (item.toolboxType == "ssh" || item.extend.isFTP) {
         item.extend.local = item.extend.local || {};
@@ -310,7 +352,11 @@ export default {
     },
   },
   created() {},
+  updated() {
+    this.tool.openByExtend = this.openByExtend;
+  },
   mounted() {
+    this.tool.openByExtend = this.openByExtend;
     this.init();
   },
 };

@@ -2,7 +2,7 @@
   <div class="toolbox-zookeeper-editor">
     <template v-if="ready">
       <tm-layout height="100%">
-        <tm-layout :width="style.left.width" class="scrollbar">
+        <tm-layout :width="style.left.width">
           <tm-layout height="50px">
             <div class="pdlr-10 pdt-5">
               <div class="tm-btn tm-btn-xs bg-grey-6" @click="refresh">
@@ -25,7 +25,7 @@
               </div>
             </div>
           </tm-layout>
-          <tm-layout height="auto">
+          <tm-layout height="auto" class="scrollbar">
             <div class="pd-10">
               <el-tree
                 ref="tree"
@@ -377,6 +377,7 @@ export default {
         resolve([]);
         this.initTreeWidth();
       } else {
+        res.data = res.data || {};
         let list = res.data.children || [];
         let dataList = [];
         list.forEach((one) => {

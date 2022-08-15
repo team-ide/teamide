@@ -265,12 +265,20 @@ export default {
             this.tool.toInsertConnNode(data);
           },
         });
-        menus.push({
-          text: "查看",
-          onClick: () => {
-            this.tool.showNodeInfo(data);
-          },
-        });
+        if (this.tool.openByExtend && data.model) {
+          menus.push({
+            text: "查看",
+            onClick: () => {
+              this.tool.openByExtend({
+                toolboxType: "node",
+                type: "info",
+                title: "查看节点-" + data.model.name,
+                serverId: data.model.serverId,
+              });
+              this.tool.hideNodeDialog();
+            },
+          });
+        }
 
         if (data.model && !data.isLocal) {
           if (data.model.enabled == 1) {
