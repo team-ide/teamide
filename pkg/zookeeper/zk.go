@@ -14,12 +14,12 @@ type Config struct {
 	Address string `json:"address"`
 }
 
-func CreateZKService(config Config) (*ZKService, error) {
-	service := &ZKService{
+func CreateZKService(config Config) (service *ZKService, err error) {
+	service = &ZKService{
 		Address: config.Address,
 	}
-	err := service.init()
-	return service, err
+	err = service.init()
+	return
 }
 
 //ZKService 注册处理器在线信息等
@@ -30,12 +30,17 @@ type ZKService struct {
 	lastUseTime int64
 }
 
-func (this_ *ZKService) init() error {
-	var err error
+func (this_ *ZKService) init() (err error) {
 	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*60, func(c *zk.Conn) {
 		c.SetLogger(defaultLogger{})
 	})
-	return err
+	if err != nil {
+		util.Logger.Error("zk.Connect error", zap.Any("servers", this_.GetServers()), zap.Error(err))
+		if this_.zkConn != nil {
+			this_.zkConn.Close()
+		}
+	}
+	return
 }
 
 type defaultLogger struct{}

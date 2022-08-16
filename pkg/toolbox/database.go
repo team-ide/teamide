@@ -3,6 +3,7 @@ package toolbox
 import (
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"teamide/pkg/db"
 	"teamide/pkg/db/task"
 	"teamide/pkg/util"
@@ -439,6 +440,10 @@ func getDatabaseService(config db.DatabaseConfig) (res *db.Service, err error) {
 		var s *db.Service
 		s, err = db.CreateService(config)
 		if err != nil {
+			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		res = s

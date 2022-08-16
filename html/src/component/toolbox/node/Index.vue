@@ -1,6 +1,12 @@
 <template>
   <div class="toolbox-node-editor">
-    <template v-if="type == 'info'">
+    <template v-if="type == 'node-context'">
+      <NodeContext :source="source"></NodeContext>
+    </template>
+    <template v-if="type == 'net-proxy-context'">
+      <NetProxyContext :source="source"></NetProxyContext>
+    </template>
+    <template v-else-if="type == 'node-info'">
       <Info :source="source" :serverId="serverId"></Info>
     </template>
   </div>
@@ -9,9 +15,11 @@
 
 <script>
 import Info from "./Info.vue";
+import NodeContext from "./NodeContext.vue";
+import NetProxyContext from "./NetProxyContext.vue";
 
 export default {
-  components: { Info },
+  components: { Info, NodeContext, NetProxyContext },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {

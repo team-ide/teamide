@@ -68,6 +68,7 @@ func (this_ *SaramaService) getClient() (saramaClient sarama.Client, err error) 
 	adders := strings.Split(this_.Address, ",")
 	saramaClient, err = sarama.NewClient(adders, SaramaConfig)
 	if err != nil {
+		_ = saramaClient.Close()
 		return
 	}
 	return
@@ -325,6 +326,7 @@ func (this_ *SaramaService) NewSyncProducer() (sarama.SyncProducer, error) {
 	var err error
 	syncProducer, err := sarama.NewSyncProducer(this_.GetServers(), config)
 	if err != nil {
+		_ = syncProducer.Close()
 		return nil, err
 	}
 	return syncProducer, nil

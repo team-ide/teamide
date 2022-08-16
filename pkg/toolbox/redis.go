@@ -3,6 +3,7 @@ package toolbox
 import (
 	"context"
 	"encoding/json"
+	"go.uber.org/zap"
 	"teamide/pkg/redis"
 	"teamide/pkg/util"
 )
@@ -150,12 +151,20 @@ func getRedisService(redisConfig redis.Config) (res redis.Service, err error) {
 		var s redis.Service
 		s, err = redis.CreateService(redisConfig)
 		if err != nil {
+			util.Logger.Error("getRedisService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 
 		ctx := context.TODO()
 		_, err = s.Exists(ctx, 0, "_")
 		if err != nil {
+			util.Logger.Error("getRedisService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		res = s

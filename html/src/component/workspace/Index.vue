@@ -17,10 +17,17 @@
           工具箱
           <span class="color-green mgl-2">({{ source.toolboxCount }})</span>
         </div>
-        <div
-          class="workspace-header-nav"
-          @click="tool.showSwitchNodeNetProxyDialog()"
-        >
+        <div class="workspace-header-nav" @click="openNodeContext()">
+          节点
+          <span class="color-green mgl-2">
+            (
+            {{ source.nodeCount }}
+            /
+            {{ source.nodeSuccessCount }}
+            )
+          </span>
+        </div>
+        <div class="workspace-header-nav" @click="openNodeNetProxyContext()">
           网络代理|透传
           <span class="color-green mgl-2">
             (
@@ -29,20 +36,6 @@
             {{ source.nodeNetProxyInnerSuccessCount }}
             |
             {{ source.nodeNetProxyOuterSuccessCount }}
-            )
-          </span>
-        </div>
-        <div class="workspace-header-nav tm-disabled">
-          监控
-          <span class="color-green mgl-2">({{ 0 }}/{{ 0 }})</span>
-        </div>
-        <div class="workspace-header-nav" @click="tool.showSwitchNodeDialog()">
-          节点
-          <span class="color-green mgl-2">
-            (
-            {{ source.nodeCount }}
-            /
-            {{ source.nodeSuccessCount }}
             )
           </span>
         </div>
@@ -119,19 +112,19 @@
         :source="source"
         :openByToolboxId="openByToolboxId"
       ></ToolboxContext>
-      <NodeDialog :source="source"></NodeDialog>
-      <NodeNetProxyDialog :source="source"></NodeNetProxyDialog>
     </div>
+    <NodeForm :source="source"></NodeForm>
+    <NodeNetProxyForm :source="source"></NodeNetProxyForm>
   </div>
 </template>
 
 <script>
 import ToolboxContext from "./ToolboxContext";
-import NodeDialog from "./NodeDialog";
-import NodeNetProxyDialog from "./NodeNetProxyDialog";
+import NodeForm from "./NodeForm";
+import NodeNetProxyForm from "./NodeNetProxyForm";
 
 export default {
-  components: { ToolboxContext, NodeDialog, NodeNetProxyDialog },
+  components: { ToolboxContext, NodeForm, NodeNetProxyForm },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
@@ -164,6 +157,20 @@ export default {
             this.source.initNodeNetProxyList(data.netProxyList);
           }
         } catch (error) {}
+      });
+    },
+    openNodeContext() {
+      this.tool.openByExtend({
+        toolboxType: "node",
+        type: "node-context",
+        title: "节点",
+      });
+    },
+    openNodeNetProxyContext() {
+      this.tool.openByExtend({
+        toolboxType: "node",
+        type: "net-proxy-context",
+        title: "网络透传",
       });
     },
     addMainItem(item, fromItem) {

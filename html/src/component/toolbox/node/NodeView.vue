@@ -217,9 +217,12 @@ export default {
           if (target == null) {
             return;
           }
-          var isConn = one.connIdList.indexOf(connId) >= 0;
-          var isConfig = one.connServerIdList.indexOf(connId) >= 0;
-          var isHistory = one.historyConnServerIdList.indexOf(connId) >= 0;
+          var isConn = one.connIdList && one.connIdList.indexOf(connId) >= 0;
+          var isConfig =
+            one.connServerIdList && one.connServerIdList.indexOf(connId) >= 0;
+          var isHistory =
+            one.historyConnServerIdList &&
+            one.historyConnServerIdList.indexOf(connId) >= 0;
           target.isConn = true;
           target.isConfig = true;
           target.isHistory = true;
@@ -271,11 +274,10 @@ export default {
             onClick: () => {
               this.tool.openByExtend({
                 toolboxType: "node",
-                type: "info",
+                type: "node-info",
                 title: "查看节点-" + data.model.name,
                 serverId: data.model.serverId,
               });
-              this.tool.hideNodeDialog();
             },
           });
         }

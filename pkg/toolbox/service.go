@@ -26,6 +26,9 @@ func GetService(key string, create func() (Service, error)) (Service, error) {
 	util.Logger.Info("缓存暂无该服务，创建服务", zap.Any("Key", key))
 	res, err := create()
 	if err != nil {
+		if res != nil {
+			res.Stop()
+		}
 		return nil, err
 	}
 	serviceCache[key] = res

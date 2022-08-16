@@ -3,7 +3,9 @@ package toolbox
 import (
 	"encoding/json"
 	"github.com/olivere/elastic/v7"
+	"go.uber.org/zap"
 	"teamide/pkg/elasticsearch"
+	"teamide/pkg/util"
 )
 
 func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
@@ -13,10 +15,18 @@ func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, 
 		var s *elasticsearch.V7Service
 		s, err = elasticsearch.CreateESService(esConfig)
 		if err != nil {
+			util.Logger.Error("getESService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		_, err = s.GetClient()
 		if err != nil {
+			util.Logger.Error("getESService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		res = s

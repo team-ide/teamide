@@ -2,6 +2,8 @@ package toolbox
 
 import (
 	"encoding/json"
+	"go.uber.org/zap"
+	"teamide/pkg/util"
 	"teamide/pkg/zookeeper"
 )
 
@@ -12,10 +14,18 @@ func getZKService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err erro
 		var s *zookeeper.ZKService
 		s, err = zookeeper.CreateZKService(zkConfig)
 		if err != nil {
+			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		_, err = s.Exists("/")
 		if err != nil {
+			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		res = s

@@ -54,7 +54,9 @@ func (this_ *Service) SetLastUseTime() {
 }
 
 func (this_ *Service) Stop() {
-	_ = this_.DatabaseWorker.Close()
+	if this_.DatabaseWorker != nil {
+		_ = this_.DatabaseWorker.Close()
+	}
 }
 
 func (this_ *Service) Databases() (databases []*DatabaseModel, err error) {

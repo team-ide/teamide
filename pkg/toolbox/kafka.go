@@ -2,7 +2,9 @@ package toolbox
 
 import (
 	"encoding/json"
+	"go.uber.org/zap"
 	"teamide/pkg/kafka"
+	"teamide/pkg/util"
 )
 
 func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {
@@ -12,10 +14,18 @@ func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err er
 		var s *kafka.SaramaService
 		s, err = kafka.CreateKafkaService(kafkaConfig)
 		if err != nil {
+			util.Logger.Error("getKafkaService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		_, err = s.GetTopics()
 		if err != nil {
+			util.Logger.Error("getKafkaService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
 			return
 		}
 		res = s

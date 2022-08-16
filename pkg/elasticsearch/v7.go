@@ -119,6 +119,7 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 	}
 	client, err = elastic.NewClient(options...)
 	if err != nil {
+		client.Stop()
 		return
 	}
 	this_.client = client
