@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - dev*
 jobs:
   push:
     runs-on: ubuntu-20.04
