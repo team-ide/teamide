@@ -5,52 +5,6 @@ import (
 	"teamide/pkg/util"
 )
 
-func (this_ *Worker) findNode(id string) (find *Info) {
-	var list = this_.cache.nodeList
-	for _, one := range list {
-		if one.Id == id {
-			find = one
-		}
-	}
-	return
-}
-
-func (this_ *Worker) findNodeList(idList []string) (findList []*Info) {
-	var list = this_.cache.nodeList
-	for _, one := range list {
-		if util.ContainsString(idList, one.Id) >= 0 {
-			findList = append(findList, one)
-		}
-	}
-	return
-}
-
-func (this_ *Worker) findParents(id string) (parents []*Info) {
-	var list = this_.cache.nodeList
-	for _, one := range list {
-		if util.ContainsString(one.ConnNodeIdList, id) >= 0 {
-			parents = append(parents, one)
-		}
-	}
-	return
-}
-
-func (this_ *Worker) updateNodeConnNodeIdList(id string, connNodeIdList []string) (err error) {
-	var find = this_.findNode(id)
-
-	if find == nil {
-		return
-	}
-	var newOne = &Info{
-		Id: id,
-	}
-	_ = copyNode(find, newOne)
-	newOne.ConnNodeIdList = connNodeIdList
-	_ = this_.addNodeList([]*Info{newOne})
-
-	return
-}
-
 func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
 	if len(nodeList) == 0 {
 		return

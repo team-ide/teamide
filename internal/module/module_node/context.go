@@ -9,6 +9,19 @@ import (
 	"teamide/pkg/util"
 )
 
+type Workspace struct {
+	workspaceId     string
+	serverCache     map[string]*node.Server
+	serverCacheLock sync.Mutex
+}
+
+func NewWorkspace(workspaceId string) (workspace *Workspace) {
+	workspace = &Workspace{
+		workspaceId: workspaceId,
+	}
+	return
+}
+
 func (this_ *NodeService) InitContext() {
 	if this_.nodeContext == nil {
 		this_.nodeContext = &NodeContext{
@@ -117,7 +130,7 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 
 		nodeIdConnNodeIdListCache[id] = connNodeIdList
 	}
-	lineIdList = this_.server.GetNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
+	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
 
 	this_.lineNodeIdListCache[key] = lineIdList
 	return
@@ -169,6 +182,77 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 		return
 	}
 
+	return
+}
+
+func appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine []string, nodeIdList []string, nodeIdConnNodeIdListCache map[string][]string) {
+
+	for _, nodeId := range nodeIdList {
+		var line []string
+		line = append(line, parentLine...)
+
+		if util.ContainsString(line, nodeId) >= 0 {
+			continue
+		}
+		line = append(line, nodeId)
+
+		*lineList = append(*lineList, line)
+
+		if util.ContainsString(*loadedIdList, nodeId) >= 0 {
+			continue
+		}
+		*loadedIdList = append(*loadedIdList, nodeId)
+
+		var connNodeIdList = nodeIdConnNodeIdListCache[nodeId]
+		appendNodeLineList(loadedIdList, lineList, line, connNodeIdList, nodeIdConnNodeIdListCache)
+
+		var parentIdList []string
+		for cacheNodeId, cacheConnNodeIdList := range nodeIdConnNodeIdListCache {
+			if util.ContainsString(cacheConnNodeIdList, nodeId) >= 0 {
+				parentIdList = append(parentIdList, cacheNodeId)
+			}
+		}
+		appendNodeLineList(loadedIdList, lineList, line, parentIdList, nodeIdConnNodeIdListCache)
+	}
+}
+
+func findNodeLineList(nodeId string, nodeIdConnNodeIdListCache map[string][]string) (lineList [][]string) {
+
+	var loadedIdList []string
+	loadedIdList = append(loadedIdList, nodeId)
+	var line []string
+	line = append(line, nodeId)
+
+	var connNodeIdList = nodeIdConnNodeIdListCache[nodeId]
+	appendNodeLineList(&loadedIdList, &lineList, line, connNodeIdList, nodeIdConnNodeIdListCache)
+
+	var parentIdList []string
+	for cacheNodeId, cacheConnNodeIdList := range nodeIdConnNodeIdListCache {
+		if util.ContainsString(cacheConnNodeIdList, nodeId) >= 0 {
+			parentIdList = append(parentIdList, cacheNodeId)
+		}
+	}
+	appendNodeLineList(&loadedIdList, &lineList, line, parentIdList, nodeIdConnNodeIdListCache)
+
+	return
+}
+
+func getNodeLineByFromTo(fromNodeId, toNodeId string, nodeIdConnNodeIdListCache map[string][]string) (lineIdList []string) {
+
+	if fromNodeId == toNodeId {
+		lineIdList = append(lineIdList, fromNodeId)
+		return
+	}
+
+	var lineList = findNodeLineList(fromNodeId, nodeIdConnNodeIdListCache)
+
+	for _, line := range lineList {
+		if util.ContainsString(line, toNodeId) >= 0 {
+			if len(lineIdList) == 0 || len(line) < len(lineIdList) {
+				lineIdList = line
+			}
+		}
+	}
 	return
 }
 

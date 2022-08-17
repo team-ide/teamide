@@ -7,7 +7,7 @@ import (
 
 type Worker struct {
 	server      *Server
-	cache       *Cache
+	space       *Space
 	MonitorData *MonitorData
 }
 

@@ -17,101 +17,15 @@ type Server struct {
 	ConnToken                     string
 	ConnSize                      int
 	serverListener                net.Listener
-	cache                         *Cache
-	worker                        *Worker
-	OnNodeListChange              func([]*Info)
-	OnNetProxyListChange          func([]*NetProxy)
-	rootNode                      *Info
+	workerCache                   map[string]*Worker
+	workerCacheLock               sync.Mutex
+	OnNodeStatusChange            func(id string, status int8)
+	OnNetProxyInnerChange         func(id string, status int8)
+	OnNetProxyOuterChange         func(id string, status int8)
 	connNodeListenerKeepAliveLock sync.Mutex
 }
 
-func (this_ *Server) GetNode(lineNodeIdList []string, nodeId string) (node *Info) {
-	node = this_.worker.getNode(lineNodeIdList, nodeId)
-	return
-}
-
-func (this_ *Server) SystemGetInfo(lineNodeIdList []string, nodeId string) (info *system.Info) {
-	res := this_.worker.systemGetInfo(lineNodeIdList, nodeId)
-	if res != nil {
-		info = res.Info
-	}
-	return
-}
-
-func (this_ *Server) SystemQueryMonitorData(lineNodeIdList []string, nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
-	res := this_.worker.systemQueryMonitorData(lineNodeIdList, nodeId, &SystemData{
-		QueryRequest: request,
-	})
-	if res != nil {
-		response = res.QueryResponse
-	}
-	return
-}
-
-func (this_ *Server) SystemCleanMonitorData(lineNodeIdList []string, nodeId string) {
-	_ = this_.worker.systemCleanMonitorData(lineNodeIdList, nodeId)
-	return
-}
-
-func (this_ *Server) GetNodeMonitorData(lineNodeIdList []string, nodeId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNodeMonitorData(lineNodeIdList, nodeId)
-	return
-}
-
-func (this_ *Server) GetNetProxyInnerMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNetProxyInnerMonitorData(lineNodeIdList, netProxyId)
-	return
-}
-
-func (this_ *Server) GetNetProxyOuterMonitorData(lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
-	monitorData = this_.worker.getNetProxyOuterMonitorData(lineNodeIdList, netProxyId)
-	return
-}
-
-func (this_ *Server) AddNodeList(nodeList []*Info) (err error) {
-	err = this_.worker.addNodeList(nodeList)
-	return
-}
-
-func (this_ *Server) UpdateNodeConnNodeIdList(id string, connNodeIdList []string) (err error) {
-	err = this_.worker.updateNodeConnNodeIdList(id, connNodeIdList)
-	return
-}
-
-func (this_ *Server) RemoveNodeList(nodeIdList []string) (err error) {
-	err = this_.worker.removeNodeList(nodeIdList)
-	return
-}
-
-func (this_ *Server) GetNodeLineByFromTo(fromNodeId, toNodeId string, nodeIdConnNodeIdListCache map[string][]string) (lineIdList []string) {
-
-	return this_.worker.getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
-}
-
-func (this_ *Server) AddNetProxyList(netProxyList []*NetProxy) (err error) {
-	err = this_.worker.addNetProxyList(netProxyList)
-	return
-}
-
-func (this_ *Server) RemoveNetProxyList(netProxyIdList []string) (err error) {
-	err = this_.worker.removeNetProxyList(netProxyIdList)
-	return
-}
-
 func (this_ *Server) Start() (err error) {
-	this_.rootNode = &Info{
-		Id:          this_.Id,
-		BindAddress: this_.BindAddress,
-		BindToken:   this_.BindToken,
-	}
-	this_.cache = newCache()
-	this_.worker = &Worker{
-		server:      this_,
-		cache:       this_.cache,
-		MonitorData: &MonitorData{},
-	}
-	_ = this_.worker.doAddNodeList([]*Info{this_.rootNode})
-
 	if this_.BindAddress != "" {
 		go this_.serverListenerKeepAlive()
 	}
@@ -132,6 +46,147 @@ func (this_ *Server) Stop() {
 
 }
 
+func (this_ *Server) getWorkerIfAbsentCreate(spaceId string) (worker *Worker) {
+	this_.workerCacheLock.Lock()
+	defer this_.workerCacheLock.Unlock()
+
+	worker, ok := this_.workerCache[spaceId]
+	if !ok {
+		worker = &Worker{
+			server:      this_,
+			space:       newSpace(spaceId),
+			MonitorData: &MonitorData{},
+		}
+		this_.workerCache[spaceId] = worker
+	}
+	return
+}
+
+func (this_ *Server) getWorker(spaceId string) (worker *Worker) {
+	this_.workerCacheLock.Lock()
+	defer this_.workerCacheLock.Unlock()
+
+	worker, _ = this_.workerCache[spaceId]
+	return
+}
+
 func (this_ *Server) GetServerInfo() (str string) {
 	return fmt.Sprintf("节点服务[%s][%s]", this_.Id, this_.BindAddress)
+}
+
+func (this_ *Server) GetNode(spaceId string, lineNodeIdList []string, nodeId string) (node *Info) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	node = worker.getNode(lineNodeIdList, nodeId)
+	return
+}
+
+func (this_ *Server) SystemGetInfo(spaceId string, lineNodeIdList []string, nodeId string) (info *system.Info) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+
+	res := worker.systemGetInfo(lineNodeIdList, nodeId)
+	if res != nil {
+		info = res.Info
+	}
+	return
+}
+
+func (this_ *Server) SystemQueryMonitorData(spaceId string, lineNodeIdList []string, nodeId string, request *system.QueryRequest) (response *system.QueryResponse) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	res := worker.systemQueryMonitorData(lineNodeIdList, nodeId, &SystemData{
+		QueryRequest: request,
+	})
+	if res != nil {
+		response = res.QueryResponse
+	}
+	return
+}
+
+func (this_ *Server) SystemCleanMonitorData(spaceId string, lineNodeIdList []string, nodeId string) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	_ = worker.systemCleanMonitorData(lineNodeIdList, nodeId)
+	return
+}
+
+func (this_ *Server) GetNodeMonitorData(spaceId string, lineNodeIdList []string, nodeId string) (monitorData *MonitorData) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	monitorData = worker.getNodeMonitorData(lineNodeIdList, nodeId)
+	return
+}
+
+func (this_ *Server) GetNetProxyInnerMonitorData(spaceId string, lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	monitorData = worker.getNetProxyInnerMonitorData(lineNodeIdList, netProxyId)
+	return
+}
+
+func (this_ *Server) GetNetProxyOuterMonitorData(spaceId string, lineNodeIdList []string, netProxyId string) (monitorData *MonitorData) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	monitorData = worker.getNetProxyOuterMonitorData(lineNodeIdList, netProxyId)
+	return
+}
+
+func (this_ *Server) AddNodeList(spaceId string, nodeList []*Info) (err error) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	err = worker.addNodeList(nodeList)
+	return
+}
+
+func (this_ *Server) UpdateNodeConnNodeIdList(spaceId string, id string, connNodeIdList []string) (err error) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	err = worker.updateNodeConnNodeIdList(id, connNodeIdList)
+	return
+}
+
+func (this_ *Server) RemoveNodeList(spaceId string, nodeIdList []string) (err error) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	err = worker.removeNodeList(nodeIdList)
+	return
+}
+
+func (this_ *Server) AddNetProxyList(spaceId string, netProxyList []*NetProxy) (err error) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	err = worker.addNetProxyList(netProxyList)
+	return
+}
+
+func (this_ *Server) RemoveNetProxyList(spaceId string, netProxyIdList []string) (err error) {
+	worker := this_.getWorker(spaceId)
+	if worker == nil {
+		return
+	}
+	err = worker.removeNetProxyList(netProxyIdList)
+	return
 }

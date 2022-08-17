@@ -24,7 +24,7 @@ type Message struct {
 	NotifiedNodeIdList []string          `json:"notifiedNodeIdList,omitempty"`
 	LineNodeIdList     []string          `json:"lineNodeIdList,omitempty"`
 	ClientData         *ClientData       `json:"clientData,omitempty"`
-	NodeWorkData       *NodeWorkData     `json:"nodeWorkData,omitempty"`
+	NodeWorkData       *WorkData         `json:"nodeWorkData,omitempty"`
 	NetProxyWorkData   *NetProxyWorkData `json:"netProxyWorkData,omitempty"`
 	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
 	NotifyChange       *NotifyChange     `json:"notifyChange,omitempty"`
@@ -48,7 +48,7 @@ type SystemData struct {
 	Info          *system.Info          `json:"info,omitempty"`
 }
 
-type NodeWorkData struct {
+type WorkData struct {
 	NodeId      string       `json:"nodeId,omitempty"`
 	Node        *Info        `json:"node,omitempty"`
 	Version     string       `json:"version,omitempty"`
