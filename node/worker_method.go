@@ -12,38 +12,43 @@ var (
 	methodOK         = 1
 	methodGetVersion = 2
 
-	methodGetNode            = 11
-	methodGetNodeMonitorData = 12
+	methodNodeAddToNodeList      = 101
+	methodNodeRemoveToNodeList   = 102
+	methodNodeGetNodeMonitorData = 103
 
-	methodNetProxyNewConn             = 21
-	methodNetProxyCloseConn           = 22
-	methodNetProxySend                = 23
-	methodNetProxyGetInnerMonitorData = 24
-	methodNetProxyGetOuterMonitorData = 25
+	methodNetProxyNewConn                 = 201
+	methodNetProxyCloseConn               = 202
+	methodNetProxySend                    = 203
+	methodNetProxyGetInnerMonitorData     = 204
+	methodNetProxyGetOuterMonitorData     = 205
+	methodNetProxyAddNetProxyInnerList    = 206
+	methodNetProxyAddNetProxyOuterList    = 207
+	methodNetProxyRemoveNetProxyInnerList = 208
+	methodNetProxyRemoveNetProxyOuterList = 209
 
-	methodFileFiles         = 31
-	methodFileCopy          = 32
-	methodFileRemove        = 33
-	methodFileRename        = 34
-	methodFileUpload        = 35
-	methodFileConfirmResult = 36
-	methodFileProgress      = 37
-	methodFileRead          = 38
+	methodFileFiles         = 301
+	methodFileCopy          = 302
+	methodFileRemove        = 303
+	methodFileRename        = 304
+	methodFileUpload        = 305
+	methodFileConfirmResult = 306
+	methodFileProgress      = 307
+	methodFileRead          = 308
 
-	methodShellNewConn   = 41
-	methodShellCloseConn = 42
-	methodShellSend      = 43
+	methodShellNewConn   = 401
+	methodShellCloseConn = 402
+	methodShellSend      = 403
 
-	methodSystemGetInfo          = 51
-	methodSystemQueryMonitorData = 52
-	methodSystemCleanMonitorData = 53
+	methodSystemGetInfo          = 501
+	methodSystemQueryMonitorData = 502
+	methodSystemCleanMonitorData = 503
 )
 
 func (this_ *Worker) onMessage(msg *Message) {
 	if msg == nil {
 		return
 	}
-	callback, ok := this_.cache.getCallback(msg.Id)
+	callback, ok := this_.getCallback(msg.Id)
 	if ok {
 		callback(msg)
 	} else {
@@ -72,11 +77,11 @@ func (this_ *Worker) Call(listener *MessageListener, method int, msg *Message) (
 	msg.Method = method
 
 	defer func() {
-		this_.cache.removeCallback(msg.Id)
+		this_.removeCallback(msg.Id)
 	}()
 
 	waitResult := make(chan *Message, 1)
-	this_.cache.setCallback(msg.Id, func(msg *Message) {
+	this_.setCallback(msg.Id, func(msg *Message) {
 		waitResult <- msg
 	})
 	err = listener.Send(msg, this_.MonitorData)
@@ -108,72 +113,44 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 		return
 	}
 	res = &Message{}
-	if msg.NotifyChange != nil {
-		if msg.NotifyChange.NotifyAll {
-			this_.notifyAll(msg)
-		} else {
-			if msg.NotifyChange.NotifyChildren {
-				this_.notifyChildren(msg)
-			}
-			if msg.NotifyChange.NotifyParent {
-				this_.notifyParent(msg)
-			}
-		}
-	}
 	switch method {
 	case methodOK:
 		return
 	case methodGetVersion:
 		if msg.NodeWorkData != nil {
-			version := this_.getVersion(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
+			version := this_.getVersion(msg.LineNodeIdList)
 			if version != "" {
-				res.NodeWorkData = &NodeWorkData{
+				res.NodeWorkData = &WorkData{
 					Version: version,
 				}
 			}
 		}
 		return
 	case methodSystemGetInfo:
-		if msg.SystemData != nil {
-			response := this_.systemGetInfo(msg.LineNodeIdList, msg.SystemData.NodeId)
-			if response != nil {
-				res.SystemData = response
-			}
+		response := this_.systemGetInfo(msg.LineNodeIdList)
+		if response != nil {
+			res.SystemData = response
 		}
 		return
 	case methodSystemQueryMonitorData:
 		if msg.SystemData != nil {
-			response := this_.systemQueryMonitorData(msg.LineNodeIdList, msg.SystemData.NodeId, msg.SystemData)
+			response := this_.systemQueryMonitorData(msg.LineNodeIdList, msg.SystemData)
 			if response != nil {
 				res.SystemData = response
 			}
 		}
 		return
 	case methodSystemCleanMonitorData:
-		if msg.SystemData != nil {
-			response := this_.systemCleanMonitorData(msg.LineNodeIdList, msg.SystemData.NodeId)
-			if response != nil {
-				res.SystemData = response
-			}
+		response := this_.systemCleanMonitorData(msg.LineNodeIdList)
+		if response != nil {
+			res.SystemData = response
 		}
 		return
-	case methodGetNode:
-		if msg.NodeWorkData != nil {
-			node := this_.getNode(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
-			if node != nil {
-				res.NodeWorkData = &NodeWorkData{
-					Node: node,
-				}
-			}
-		}
-		return
-	case methodGetNodeMonitorData:
-		if msg.NodeWorkData != nil {
-			monitorData := this_.getNodeMonitorData(msg.LineNodeIdList, msg.NodeWorkData.NodeId)
-			if monitorData != nil {
-				res.NodeWorkData = &NodeWorkData{
-					MonitorData: monitorData,
-				}
+	case methodNodeGetNodeMonitorData:
+		monitorData := this_.getNodeMonitorData(msg.LineNodeIdList)
+		if monitorData != nil {
+			res.NodeWorkData = &WorkData{
+				MonitorData: monitorData,
 			}
 		}
 		return

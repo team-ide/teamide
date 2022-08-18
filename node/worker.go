@@ -6,94 +6,22 @@ import (
 )
 
 type Worker struct {
-	server      *Server
-	space       *Space
+	server *Server
+	*Space
 	MonitorData *MonitorData
 }
 
 func (this_ *Worker) Stop() {
-	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
-	for _, pool := range list {
-		this_.cache.removeNodeListenerPool(pool.fromNodeId, pool.toNodeId)
-	}
-	list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
-	for _, pool := range list {
-		this_.cache.removeNodeListenerPool(pool.fromNodeId, pool.toNodeId)
-	}
+	this_.removeToNodeListenerPoolList()
+	this_.removeFromNodeListenerPoolList()
 }
 
-func (this_ *Worker) notifyDo(msg *NotifyChange) {
-	if msg == nil {
-		return
-	}
-	if len(msg.NodeStatusChangeList) > 0 {
-		_ = this_.doChangeNodeStatus(msg.NodeStatusChangeList)
-	}
-	if len(msg.NetProxyInnerStatusChangeList) > 0 || len(msg.NetProxyOuterStatusChangeList) > 0 {
-		_ = this_.doChangeNetProxyStatus(msg.NetProxyInnerStatusChangeList, msg.NetProxyOuterStatusChangeList)
-	}
-	if msg.NodeId != "" && len(msg.RemoveConnNodeIdList) > 0 {
-		_ = this_.doRemoveNodeConnNodeIdList(msg.NodeId, msg.RemoveConnNodeIdList)
-	}
-	if len(msg.RemoveNodeIdList) > 0 {
-		_ = this_.doRemoveNodeList(msg.RemoveNodeIdList)
-	}
-	if len(msg.RemoveNetProxyIdList) > 0 {
-		_ = this_.doRemoveNetProxyList(msg.RemoveNetProxyIdList)
-	}
-	if len(msg.NodeList) > 0 {
-		_ = this_.doAddNodeList(msg.NodeList)
-	}
-	if len(msg.NetProxyList) > 0 {
-		_ = this_.doAddNetProxyList(msg.NetProxyList)
-	}
-}
-func (this_ *Worker) notifyParent(msg *Message) {
-	if msg.NotifyChange == nil {
-		return
-	}
-	msg.NotifyChange.NotifyParent = true
-	this_.notifyDo(msg.NotifyChange)
-	this_.notifyAllFrom(msg)
-}
-
-func (this_ *Worker) notifyChildren(msg *Message) {
-	if msg.NotifyChange == nil {
-		return
-	}
-	msg.NotifyChange.NotifyChildren = true
-	this_.notifyDo(msg.NotifyChange)
-	this_.notifyAllTo(msg)
-}
-
-func (this_ *Worker) notifyAll(msg *Message) {
-	if msg.NotifyChange == nil {
-		return
-	}
-	msg.NotifyChange.NotifyAll = true
-	this_.notifyDo(msg.NotifyChange)
-	this_.notifyAllTo(msg)
-	this_.notifyAllFrom(msg)
-}
-
-func (this_ *Worker) notifyOther(msg *Message) {
-	if msg.NotifyChange == nil {
-		return
-	}
-	msg.NotifyChange.NotifyAll = true
-	this_.notifyAllTo(msg)
-	this_.notifyAllFrom(msg)
-}
-
-func (this_ *Worker) getVersion(lineNodeIdList []string, nodeId string) (version string) {
+func (this_ *Worker) getVersion(lineNodeIdList []string) (version string) {
 
 	var resMsg *Message
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
 		resMsg, e = this_.Call(listener, methodGetVersion, &Message{
 			LineNodeIdList: lineNodeIdList,
-			NodeWorkData: &NodeWorkData{
-				NodeId: nodeId,
-			},
 		})
 		return
 	})
@@ -106,24 +34,16 @@ func (this_ *Worker) getVersion(lineNodeIdList []string, nodeId string) (version
 		}
 		return
 	}
-
-	if nodeId == "" {
-		return ""
-	}
-	if this_.server.Id == nodeId {
-		return util.GetVersion()
-	}
-
+	version = util.GetVersion()
 	return
 }
 
-func (this_ *Worker) getNode(lineNodeIdList []string, nodeId string) (find *Info) {
-	var resMsg *Message
+func (this_ *Worker) addToNodeList(lineNodeIdList []string, toNodeList []*ToNode) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		resMsg, e = this_.Call(listener, methodGetNode, &Message{
+		_, e = this_.Call(listener, methodNodeAddToNodeList, &Message{
 			LineNodeIdList: lineNodeIdList,
-			NodeWorkData: &NodeWorkData{
-				NodeId: nodeId,
+			NodeWorkData: &WorkData{
+				ToNodeList: toNodeList,
 			},
 		})
 		return
@@ -132,55 +52,37 @@ func (this_ *Worker) getNode(lineNodeIdList []string, nodeId string) (find *Info
 		return
 	}
 	if send {
-		if resMsg != nil && resMsg.NodeWorkData != nil {
-			find = resMsg.NodeWorkData.Node
-		}
 		return
 	}
-
-	if nodeId == "" {
-		return
-	}
-	if this_.server.rootNode.Id == nodeId {
-		find = this_.server.rootNode
-		return
-	}
+	_ = this_.doAddToNodeList(toNodeList)
 	return
 }
 
-func (this_ *Worker) getOtherPool1(NotifiedNodeIdList *[]string) (callPools []*MessageListenerPool) {
-	if util.ContainsString(*NotifiedNodeIdList, this_.server.Id) < 0 {
-		*NotifiedNodeIdList = append(*NotifiedNodeIdList, this_.server.Id)
+func (this_ *Worker) removeToNodeList(lineNodeIdList []string, toNodeIdList []string) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNodeRemoveToNodeList, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NodeWorkData: &WorkData{
+				ToNodeIdList: toNodeIdList,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
 	}
-	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
-	for _, pool := range list {
-		if util.ContainsString(*NotifiedNodeIdList, pool.fromNodeId) >= 0 {
-			continue
-		}
-		*NotifiedNodeIdList = append(*NotifiedNodeIdList, pool.fromNodeId)
-		callPools = append(callPools, pool)
+	if send {
+		return
 	}
-
-	list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
-
-	for _, pool := range list {
-		if util.ContainsString(*NotifiedNodeIdList, pool.toNodeId) >= 0 {
-			continue
-		}
-		*NotifiedNodeIdList = append(*NotifiedNodeIdList, pool.toNodeId)
-		callPools = append(callPools, pool)
-	}
+	_ = this_.doRemoveToNodeList(toNodeIdList)
 	return
 }
 
-func (this_ *Worker) getNodeMonitorData(lineNodeIdList []string, nodeId string) (monitorData *MonitorData) {
+func (this_ *Worker) getNodeMonitorData(lineNodeIdList []string) (monitorData *MonitorData) {
 	var resMsg *Message
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		resMsg, e = this_.Call(listener, methodGetNodeMonitorData, &Message{
+		resMsg, e = this_.Call(listener, methodNodeGetNodeMonitorData, &Message{
 			LineNodeIdList: lineNodeIdList,
-			NodeWorkData: &NodeWorkData{
-				NodeId: nodeId,
-			},
 		})
 		return
 	})
@@ -194,14 +96,87 @@ func (this_ *Worker) getNodeMonitorData(lineNodeIdList []string, nodeId string) 
 		return
 	}
 
-	if nodeId == "" {
-		return
-	}
-	if this_.server.rootNode.Id == nodeId {
-		monitorData = this_.MonitorData
-		return
-	}
+	monitorData = this_.MonitorData
+	return
+}
 
+func (this_ *Worker) addNetProxyInnerList(lineNodeIdList []string, netProxyInnerList []*NetProxyInner) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyAddNetProxyInnerList, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyInnerList: netProxyInnerList,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+	_ = this_.doAddNetProxyInnerList(netProxyInnerList)
+	return
+}
+
+func (this_ *Worker) removeNetProxyInnerList(lineNodeIdList []string, netProxyIdList []string) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyRemoveNetProxyInnerList, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyIdList: netProxyIdList,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+	_ = this_.doRemoveNetProxyInnerList(netProxyIdList)
+	return
+}
+
+func (this_ *Worker) addNetProxyOuterList(lineNodeIdList []string, netProxyOuterList []*NetProxyOuter) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyAddNetProxyOuterList, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyOuterList: netProxyOuterList,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+	_ = this_.doAddNetProxyOuterList(netProxyOuterList)
+	return
+}
+
+func (this_ *Worker) removeNetProxyOuterList(lineNodeIdList []string, netProxyIdList []string) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodNetProxyRemoveNetProxyOuterList, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyIdList: netProxyIdList,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+	_ = this_.doRemoveNetProxyOuterList(netProxyIdList)
 	return
 }
 
@@ -234,7 +209,6 @@ func (this_ *Worker) getNetProxyInnerMonitorData(lineNodeIdList []string, netPro
 		monitorData = find.MonitorData
 		return
 	}
-
 	return
 }
 
@@ -271,13 +245,6 @@ func (this_ *Worker) getNetProxyOuterMonitorData(lineNodeIdList []string, netPro
 	return
 }
 
-func (this_ *Worker) refresh() {
-
-	this_.refreshNodeList()
-	this_.refreshNetProxy()
-	return
-}
-
 func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func(listener *MessageListener) (err error)) (send bool, err error) {
 	if len(lineNodeIdList) == 0 {
 		err = errors.New("节点线不存在")
@@ -287,9 +254,9 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 	if thisNodeIndex != len(lineNodeIdList)-1 {
 		nodeId := lineNodeIdList[thisNodeIndex+1]
 
-		var pool = this_.cache.getNodeListenerPool(this_.server.Id, nodeId)
+		var pool = this_.getToNodeListenerPool(nodeId)
 		if pool == nil {
-			pool = this_.cache.getNodeListenerPool(nodeId, this_.server.Id)
+			pool = this_.getFromNodeListenerPool(nodeId)
 		}
 		if pool == nil {
 			err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + nodeId + "] 暂无通讯渠道")

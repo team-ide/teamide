@@ -1,266 +1,196 @@
 package node
 
 import (
+	"fmt"
 	"go.uber.org/zap"
+	"net"
 	"teamide/pkg/util"
+	"time"
 )
 
-func (this_ *Worker) addNodeList(nodeList []*Info) (err error) {
-	if len(nodeList) == 0 {
+func (this_ *Worker) doAddToNodeList(toNodeList []*ToNode) (err error) {
+	if len(toNodeList) == 0 {
 		return
 	}
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			NodeList: nodeList,
-		},
-	})
+	this_.toNodeListLock.Lock()
+	defer this_.toNodeListLock.Unlock()
 
-	return
-}
+	Logger.Info(this_.server.GetServerInfo()+" 新增节点 ", zap.Any("toNodeList", toNodeList))
 
-func (this_ *Worker) doAddNodeList(nodeList []*Info) (err error) {
-	if len(nodeList) == 0 {
-		return
-	}
-	this_.cache.nodeLock.Lock()
-	defer this_.cache.nodeLock.Unlock()
-
-	var findChanged = false
-	for _, node := range nodeList {
-		var find = this_.findNode(node.Id)
+	for _, toNode := range toNodeList {
+		var find = this_.findToNode(toNode.Id)
 
 		if find == nil {
-			Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("node", node))
-			findChanged = true
-			this_.cache.nodeList = append(this_.cache.nodeList, node)
-		} else {
-			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("node", node))
+			Logger.Info(this_.server.GetServerInfo()+" 添加节点 ", zap.Any("toNode", toNode))
+			this_.toNodeList = append(this_.toNodeList, toNode)
 
-			if copyNode(node, find) {
-				findChanged = true
+			this_.toNodeListenerKeepAlive(toNode.Id, toNode.ConnAddress, toNode.ConnToken, toNode.ConnSize)
+		} else {
+			var hasChange bool
+			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("toNode", toNode))
+			if toNode.Enabled != 0 {
+				if toNode.IsEnabled() != find.IsEnabled() {
+					hasChange = true
+				}
+				find.Enabled = toNode.Enabled
 			}
-		}
-	}
-
-	if findChanged {
-		this_.refresh()
-
-		if this_.server.OnNodeListChange != nil {
-			go this_.server.OnNodeListChange(this_.cache.nodeList)
-		}
-	}
-	return
-}
-
-func (this_ *Worker) removeNodeList(removeNodeIdList []string) (err error) {
-	if len(removeNodeIdList) == 0 {
-		return
-	}
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			RemoveNodeIdList: removeNodeIdList,
-		},
-	})
-	err = this_.doRemoveNodeList(removeNodeIdList)
-
-	return
-}
-
-func (this_ *Worker) doRemoveNodeList(removeNodeIdList []string) (err error) {
-	if len(removeNodeIdList) == 0 {
-		return
-	}
-	this_.cache.nodeLock.Lock()
-	defer this_.cache.nodeLock.Unlock()
-
-	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("removeNodeIdList", removeNodeIdList))
-
-	var findChanged = false
-
-	var list = this_.cache.nodeList
-	var newList []*Info
-	for _, nodeId := range removeNodeIdList {
-		this_.cache.removeNodeListenerPool(this_.server.Id, nodeId)
-		this_.cache.removeNodeListenerPool(nodeId, this_.server.Id)
-	}
-	for _, one := range list {
-		if util.ContainsString(removeNodeIdList, one.Id) >= 0 {
-			findChanged = true
-		} else {
-			newList = append(newList, one)
-		}
-		var newConnNodeIdList []string
-		for _, nodeId := range one.ConnNodeIdList {
-			if util.ContainsString(removeNodeIdList, nodeId) >= 0 {
-				findChanged = true
-			} else {
-				newConnNodeIdList = append(newConnNodeIdList, nodeId)
+			if toNode.ConnAddress != find.ConnAddress {
+				find.ConnAddress = toNode.ConnAddress
+				hasChange = true
 			}
-		}
-		one.ConnNodeIdList = newConnNodeIdList
-	}
-	this_.cache.nodeList = newList
-
-	if findChanged {
-		this_.refresh()
-
-		if this_.server.OnNodeListChange != nil {
-			go this_.server.OnNodeListChange(this_.cache.nodeList)
-		}
-	}
-
-	return
-}
-
-func (this_ *Worker) removeNodeConnNodeIdList(id string, removeConnNodeIdList []string) (err error) {
-	if len(removeConnNodeIdList) == 0 {
-		return
-	}
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			NodeId:               id,
-			RemoveConnNodeIdList: removeConnNodeIdList,
-		},
-	})
-
-	_ = this_.doRemoveNodeConnNodeIdList(id, removeConnNodeIdList)
-
-	return
-}
-
-func (this_ *Worker) doRemoveNodeConnNodeIdList(id string, removeConnNodeIdList []string) (err error) {
-	if len(removeConnNodeIdList) == 0 {
-		return
-	}
-	var find = this_.findNode(id)
-	if find == nil {
-		return
-	}
-	var removeNetProxyIdList []string
-	for _, nodeId := range removeConnNodeIdList {
-		this_.cache.removeNodeListenerPool(find.Id, nodeId)
-		this_.cache.removeNodeListenerPool(nodeId, find.Id)
-		removeNetProxyIdList = append(removeNetProxyIdList, this_.findNetProxyIdListByNodeId(nodeId)...)
-	}
-	var newConnNodeIdList []string
-	var findChanged bool
-	for _, nodeId := range find.ConnNodeIdList {
-		if util.ContainsString(removeConnNodeIdList, nodeId) >= 0 {
-			findChanged = true
-		} else {
-			newConnNodeIdList = append(newConnNodeIdList, nodeId)
-		}
-	}
-	find.ConnNodeIdList = newConnNodeIdList
-
-	if findChanged {
-		this_.refresh()
-		if this_.server.OnNodeListChange != nil {
-			go this_.server.OnNodeListChange(this_.cache.nodeList)
-		}
-	}
-	_ = this_.doRemoveNetProxyList(removeNetProxyIdList)
-
-	return
-}
-
-func (this_ *Worker) doChangeNodeStatus(statusChangeList []*StatusChange) (err error) {
-	if len(statusChangeList) == 0 {
-		return
-	}
-
-	var findChanged = false
-	for _, one := range statusChangeList {
-		if one.Id == "" || one.Status == 0 {
-			continue
-		}
-		var find = this_.findNode(one.Id)
-		if find == nil {
-			continue
-		}
-		if copyNode(&Info{
-			Status:      one.Status,
-			StatusError: one.StatusError,
-		}, find) {
-			findChanged = true
-		}
-	}
-	if findChanged && this_.server.OnNodeListChange != nil {
-		go this_.server.OnNodeListChange(this_.cache.nodeList)
-	}
-	return
-}
-
-func (this_ *Worker) refreshNodeList() {
-
-	var connIdList = this_.server.rootNode.ConnNodeIdList
-	for _, connToId := range connIdList {
-		var find = this_.findNode(connToId)
-		if find == nil {
-			pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-			if pool != nil {
-				pool.Stop()
+			if toNode.ConnToken != find.ConnToken {
+				find.ConnToken = toNode.ConnToken
+				hasChange = true
 			}
-		} else {
-			pool := this_.cache.getNodeListenerPool(this_.server.Id, connToId)
-			if pool == nil { //  && find.IsEnabled()
-				if find != nil && find.ConnAddress != "" {
-					this_.server.connNodeListenerKeepAlive(find, find.ConnAddress, find.ConnToken, find.ConnSize)
+			if toNode.ConnSize != 0 && toNode.ConnSize != find.ConnSize {
+				find.ConnSize = toNode.ConnSize
+				hasChange = true
+			}
+			if hasChange {
+				this_.removeToNodeListenerPool(toNode.Id)
+				if find.IsEnabled() {
+					this_.toNodeListenerKeepAlive(find.Id, find.ConnAddress, find.ConnToken, find.ConnSize)
 				}
 			}
 		}
-
 	}
 
 	return
 }
 
-func (this_ *Worker) notifyAllTo(msg *Message) {
-	if util.ContainsString(msg.NotifiedNodeIdList, this_.server.Id) < 0 {
-		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, this_.server.Id)
+func (this_ *Worker) doRemoveToNodeList(removeToNodeIdList []string) (err error) {
+	if len(removeToNodeIdList) == 0 {
+		return
 	}
-	var list = this_.cache.getNodeListenerPoolListByFromNodeId(this_.server.Id)
-	var callPools []*MessageListenerPool
-	for _, pool := range list {
-		if util.ContainsString(msg.NotifiedNodeIdList, pool.toNodeId) >= 0 {
-			continue
-		}
-		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, pool.toNodeId)
-		callPools = append(callPools, pool)
+	this_.toNodeListLock.Lock()
+	defer this_.toNodeListLock.Unlock()
+
+	Logger.Info(this_.server.GetServerInfo()+" 移除节点 ", zap.Any("removeToNodeIdList", removeToNodeIdList))
+
+	var list = this_.toNodeList
+	var newList []*ToNode
+	for _, nodeId := range removeToNodeIdList {
+		this_.removeToNodeListenerPool(nodeId)
 	}
-	for _, pool := range callPools {
-		if pool.isStop {
-			continue
+	for _, one := range list {
+		if util.ContainsString(removeToNodeIdList, one.Id) >= 0 {
+		} else {
+			newList = append(newList, one)
 		}
-		listener, _ := pool.GetOne("")
-		if listener != nil {
-			_ = listener.Send(msg, this_.MonitorData)
-		}
+	}
+	this_.toNodeList = newList
+
+	return
+}
+
+func (this_ *Worker) toNodeListenerKeepAlive(toNodeId string, connAddress, connToken string, connSize int) {
+	if connAddress == "" {
+		Logger.Warn("连接 [" + toNodeId + "] [" + connAddress + "] 连接地址为空")
+		return
+	}
+
+	this_.toNodeListenerKeepAliveLock.Lock()
+	defer this_.toNodeListenerKeepAliveLock.Unlock()
+
+	var pool = this_.getToNodeListenerPool(toNodeId)
+	if pool != nil {
+		return
+	}
+	pool = this_.getToNodeListenerPoolIfAbsentCreate(toNodeId)
+	if connSize <= 0 {
+		connSize = 5
+	}
+	for connIndex := 0; connIndex < connSize; connIndex++ {
+		go this_.connNodeListener(pool, connAddress, connToken, connIndex)
 	}
 	return
 }
 
-func (this_ *Worker) notifyAllFrom(msg *Message) {
-	if util.ContainsString(msg.NotifiedNodeIdList, this_.server.Id) < 0 {
-		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, this_.server.Id)
+func (this_ *Worker) connNodeListener(pool *MessageListenerPool, connAddress, connToken string, connIndex int) {
+	if pool != nil && pool.isStop {
+		return
 	}
-	var list = this_.cache.getNodeListenerPoolListByToNodeId(this_.server.Id)
-	var callPools []*MessageListenerPool
-	for _, pool := range list {
-		if util.ContainsString(msg.NotifiedNodeIdList, pool.fromNodeId) >= 0 {
-			continue
+	var messageListener *MessageListener
+	defer func() {
+		if messageListener != nil {
+			return
 		}
-		msg.NotifiedNodeIdList = append(msg.NotifiedNodeIdList, pool.fromNodeId)
-		callPools = append(callPools, pool)
+		if pool != nil && pool.isStop {
+			return
+		}
+		time.Sleep(5 * time.Second)
+		go this_.connNodeListener(pool, connAddress, connToken, connIndex)
+	}()
+	var err error
+	var conn net.Conn
+	Logger.Info("连接 [" + connAddress + "] 开始")
+	conn, err = net.Dial("tcp", GetAddress(connAddress))
+	if err != nil {
+		Logger.Warn("连接 ["+connAddress+"] 异常", zap.Any("error", err.Error()))
+		return
 	}
-	for _, pool := range callPools {
-		if pool.isStop {
-			continue
-		}
-		listener, _ := pool.GetOne("")
-		if listener != nil {
-			_ = listener.Send(msg, this_.MonitorData)
+
+	var tokenBytes = []byte(connToken)
+	if len(tokenBytes) > tokenByteSize {
+		tokenBytes = tokenBytes[:tokenByteSize]
+	} else if len(tokenBytes) < tokenByteSize {
+		for i := len(tokenBytes); i < tokenByteSize; i++ {
+			tokenBytes = append(tokenBytes, []byte(" ")...)
 		}
 	}
+
+	_, err = conn.Write(tokenBytes)
+	if err != nil {
+		_ = conn.Close()
+		return
+	}
+
+	var msg = &Message{
+		Method: methodOK,
+		ConnData: &ConnData{
+			ConnIndex: connIndex,
+			NodeId:    this_.server.Id,
+		},
+	}
+
+	err = WriteMessage(conn, msg, this_.MonitorData)
+	if err != nil {
+		Logger.Warn("连接 [" + connAddress + "] 异常")
+		_ = conn.Close()
+		return
+	}
+	msg, err = ReadMessage(conn, this_.MonitorData)
+	if err != nil {
+		Logger.Warn("连接 [" + connAddress + "] 接口异常")
+		_ = conn.Close()
+		return
+	}
+	if msg.ConnData == nil || msg.ConnData.NodeId == "" {
+		Logger.Warn("连接 [" + connAddress + "] 接口异常")
+		_ = conn.Close()
+		return
+	}
+	toNodeId := msg.ConnData.NodeId
+	pool = this_.getToNodeListenerPoolIfAbsentCreate(toNodeId)
+	Logger.Info("连接 [" + toNodeId + "] [" + connAddress + "] 成功")
+
+	messageListener = &MessageListener{
+		conn:      conn,
+		onMessage: this_.onMessage,
+	}
+
+	messageListener.listen(func() {
+		messageListener.stop()
+		pool.Remove(messageListener)
+		Logger.Info("移除 连接至 [" + toNodeId + "] [" + connAddress + "] 节点的连接 现有连接 " + fmt.Sprint(len(pool.listeners)))
+
+		if !pool.isStop {
+			time.Sleep(5 * time.Second)
+			go this_.connNodeListener(pool, connAddress, connToken, connIndex)
+		}
+	}, this_.MonitorData)
+	size := pool.Put(messageListener)
+	Logger.Info("连接 [" + toNodeId + "] [" + connAddress + "] 成功 现有连接 " + fmt.Sprint(size))
+
 	return
 }

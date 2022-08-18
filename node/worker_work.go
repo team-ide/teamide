@@ -1,9 +1,5 @@
 package node
 
-import (
-	"errors"
-)
-
 func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string, connId string) (err error) {
 	send, err := this_.sendToNext(lineNodeIdList, connId, func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxyNewConn, &Message{
@@ -21,12 +17,7 @@ func (this_ *Worker) netProxyNewConn(lineNodeIdList []string, netProxyId string,
 	if send {
 		return
 	}
-	var netProxy = this_.findNetProxy(netProxyId)
-	if netProxy == nil {
-		err = errors.New("网络代理[" + netProxyId + "]不存在")
-		return
-	}
-	outer := this_.getNetProxyOuter(netProxy.Id)
+	outer := this_.getNetProxyOuter(netProxyId)
 	if outer != nil {
 		err = outer.newConn(connId)
 	}
@@ -54,18 +45,13 @@ func (this_ *Worker) netProxyCloseConn(isReverse bool, lineNodeIdList []string, 
 	if send {
 		return
 	}
-	var netProxy = this_.findNetProxy(netProxyId)
-	if netProxy == nil {
-		err = errors.New("网络代理[" + netProxyId + "]不存在")
-		return
-	}
 	if isReverse {
-		inner := this_.getNetProxyInner(netProxy.Id)
+		inner := this_.getNetProxyInner(netProxyId)
 		if inner != nil {
 			err = inner.closeConn(connId)
 		}
 	} else {
-		outer := this_.getNetProxyOuter(netProxy.Id)
+		outer := this_.getNetProxyOuter(netProxyId)
 		if outer != nil {
 			err = outer.closeConn(connId)
 		}
@@ -96,18 +82,13 @@ func (this_ *Worker) netProxySend(isReverse bool, lineNodeIdList []string, netPr
 	if send {
 		return
 	}
-	var netProxy = this_.findNetProxy(netProxyId)
-	if netProxy == nil {
-		err = errors.New("网络代理[" + netProxyId + "]不存在")
-		return
-	}
 	if isReverse {
-		inner := this_.getNetProxyInner(netProxy.Id)
+		inner := this_.getNetProxyInner(netProxyId)
 		if inner != nil {
 			err = inner.send(connId, bytes)
 		}
 	} else {
-		outer := this_.getNetProxyOuter(netProxy.Id)
+		outer := this_.getNetProxyOuter(netProxyId)
 		if outer != nil {
 			err = outer.send(connId, bytes)
 		}

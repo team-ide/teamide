@@ -8,7 +8,7 @@ import (
 )
 
 type OuterListener struct {
-	netProxy *NetProxy
+	netProxy *NetProxyOuter
 	isStop   bool
 	*Worker
 	*connCache
@@ -19,17 +19,6 @@ func (this_ *OuterListener) Start() {
 	this_.MonitorData = &MonitorData{}
 	this_.connCache = newConnCache(this_.MonitorData)
 
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			NetProxyOuterStatusChangeList: []*StatusChange{
-				{
-					Id:          this_.netProxy.Id,
-					Status:      StatusStarted,
-					StatusError: "",
-				},
-			},
-		},
-	})
 	return
 }
 
@@ -38,17 +27,6 @@ func (this_ *OuterListener) Stop() {
 
 	this_.connCache.clean()
 
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			NetProxyOuterStatusChangeList: []*StatusChange{
-				{
-					Id:          this_.netProxy.Id,
-					Status:      StatusStopped,
-					StatusError: "",
-				},
-			},
-		},
-	})
 	return
 }
 
@@ -63,9 +41,9 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 
 	//Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
 
-	conn, err := net.Dial(this_.netProxy.Outer.GetType(), this_.netProxy.Outer.GetAddress())
+	conn, err := net.Dial(this_.netProxy.GetType(), this_.netProxy.GetAddress())
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
+		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
 		return
 	}
 	//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
@@ -101,7 +79,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 
 			err = this_.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, bytes)
 			if err != nil {
-				Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.Outer.GetInfoStr()+" 连接 发送异常", zap.Error(err))
+				Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.GetInfoStr()+" 连接 发送异常", zap.Error(err))
 				break
 			}
 		}

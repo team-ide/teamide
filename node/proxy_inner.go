@@ -9,12 +9,12 @@ import (
 )
 
 type InnerServer struct {
-	netProxy *NetProxy
+	netProxy *NetProxyInner
 	isStop   bool
-	*Worker
 	*connCache
 	serverListener net.Listener
 	MonitorData    *MonitorData
+	*Worker
 }
 
 func (this_ *InnerServer) Start() {
@@ -42,17 +42,6 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		return
 	}
 	defer func() {
-		this_.notifyAll(&Message{
-			NotifyChange: &NotifyChange{
-				NetProxyInnerStatusChangeList: []*StatusChange{
-					{
-						Id:          this_.netProxy.Id,
-						Status:      StatusStopped,
-						StatusError: "",
-					},
-				},
-			},
-		})
 		if !this_.isStopped() {
 			return
 		}
@@ -60,37 +49,15 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		go this_.serverListenerKeepAlive()
 	}()
 	var err error
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动")
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.GetInfoStr() + " 启动")
 
-	this_.serverListener, err = net.Listen(this_.netProxy.Inner.GetType(), this_.netProxy.Inner.GetAddress())
+	this_.serverListener, err = net.Listen(this_.netProxy.GetType(), this_.netProxy.GetAddress())
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 监听异常", zap.Error(err))
-
-		this_.notifyAll(&Message{
-			NotifyChange: &NotifyChange{
-				NetProxyInnerStatusChangeList: []*StatusChange{
-					{
-						Id:          this_.netProxy.Id,
-						Status:      StatusError,
-						StatusError: err.Error(),
-					},
-				},
-			},
-		})
+		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 监听异常", zap.Error(err))
 		return
 	}
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 启动成功")
-	this_.notifyAll(&Message{
-		NotifyChange: &NotifyChange{
-			NetProxyInnerStatusChangeList: []*StatusChange{
-				{
-					Id:          this_.netProxy.Id,
-					Status:      StatusStarted,
-					StatusError: "",
-				},
-			},
-		},
-	})
+	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.GetInfoStr() + " 启动成功")
+
 	for {
 		if this_.isStopped() {
 			break
@@ -101,7 +68,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 			if this_.isStopped() {
 				break
 			}
-			Logger.Error(this_.netProxy.Inner.GetInfoStr()+" listen accept error", zap.Error(err))
+			Logger.Error(this_.netProxy.GetInfoStr()+" listen accept error", zap.Error(err))
 			break
 		}
 		go this_.onConn(conn)
@@ -128,7 +95,7 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 	err = this_.netProxyNewConn(this_.netProxy.LineNodeIdList, netProxyId, connId)
 
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
+		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
 		return
 	}
 	for {
@@ -154,7 +121,7 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 
 		err = this_.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
 		if err != nil {
-			Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
+			Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
 			break
 		}
 	}
