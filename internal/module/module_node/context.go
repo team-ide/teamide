@@ -1,7 +1,6 @@
 package module_node
 
 import (
-	"encoding/json"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
@@ -9,23 +8,10 @@ import (
 	"teamide/pkg/util"
 )
 
-type Workspace struct {
-	workspaceId     string
-	serverCache     map[string]*node.Server
-	serverCacheLock sync.Mutex
-}
-
-func NewWorkspace(workspaceId string) (workspace *Workspace) {
-	workspace = &Workspace{
-		workspaceId: workspaceId,
-	}
-	return
-}
-
 func (this_ *NodeService) InitContext() {
 	if this_.nodeContext == nil {
 		this_.nodeContext = &NodeContext{
-			nodeService: this_,
+			NodeService: this_,
 
 			nodeIdModelCache:   make(map[int64]*NodeModel),
 			serverIdModelCache: make(map[string]*NodeModel),
@@ -45,12 +31,11 @@ func (this_ *NodeService) InitContext() {
 }
 
 type NodeContext struct {
-	server      *node.Server
-	nodeService *NodeService
-	root        *NodeModel
+	server *node.Server
+	*NodeService
+	root *NodeModel
 
-	nodeList               []*NodeInfo
-	nodeListLock           sync.Mutex
+	nodeModelList          []*NodeModel
 	nodeIdModelCache       map[int64]*NodeModel
 	nodeIdModelCacheLock   sync.Mutex
 	serverIdModelCache     map[string]*NodeModel
@@ -59,8 +44,7 @@ type NodeContext struct {
 	lineNodeIdListCache     map[string][]string
 	lineNodeIdListCacheLock sync.Mutex
 
-	netProxyList             []*NetProxyInfo
-	netProxyListLock         sync.Mutex
+	netProxyModelList        []*NetProxyModel
 	netProxyIdModelCache     map[int64]*NetProxyModel
 	netProxyIdModelCacheLock sync.Mutex
 	codeModelCache           map[string]*NetProxyModel
@@ -95,40 +79,9 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 	}
 
 	var nodeIdConnNodeIdListCache = make(map[string][]string)
-	var list = this_.nodeList
+	var list = this_.nodeModelList
 	for _, one := range list {
-		var id string
-		if one.Info != nil {
-			id = one.Info.Id
-		} else if one.Model != nil {
-			id = one.Model.ServerId
-		}
-		var connNodeIdList []string
-		if one.Info != nil {
-			connNodeIdList = append(connNodeIdList, one.Info.ConnNodeIdList...)
-		}
-		if one.Model != nil {
-			if one.Model.ConnServerIds != "" {
-				var connServerIdList []string
-				_ = json.Unmarshal([]byte(one.Model.ConnServerIds), &connServerIdList)
-				for _, connNodeId := range connServerIdList {
-					if util.ContainsString(connNodeIdList, connNodeId) < 0 {
-						connNodeIdList = append(connNodeIdList, connNodeId)
-					}
-				}
-			}
-			if one.Model.HistoryConnServerIds != "" {
-				var historyConnServerIdList []string
-				_ = json.Unmarshal([]byte(one.Model.HistoryConnServerIds), &historyConnServerIdList)
-				for _, connNodeId := range historyConnServerIdList {
-					if util.ContainsString(connNodeIdList, connNodeId) < 0 {
-						connNodeIdList = append(connNodeIdList, connNodeId)
-					}
-				}
-			}
-		}
-
-		nodeIdConnNodeIdListCache[id] = connNodeIdList
+		nodeIdConnNodeIdListCache[one.ServerId] = one.ConnServerIdList
 	}
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
 
@@ -138,7 +91,7 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 
 func (this_ *NodeContext) initContext() (err error) {
 	var list []*NodeModel
-	list, _ = this_.nodeService.Query(&NodeModel{})
+	list, _ = this_.Query(&NodeModel{})
 	for _, one := range list {
 		this_.setNodeModel(one.NodeId, one)
 		this_.setNodeModelByServerId(one.ServerId, one)
@@ -157,7 +110,7 @@ func (this_ *NodeContext) initContext() (err error) {
 	}
 
 	var netProxyList []*NetProxyModel
-	netProxyList, _ = this_.nodeService.QueryNetProxy(&NetProxyModel{})
+	netProxyList, _ = this_.QueryNetProxy(&NetProxyModel{})
 	for _, one := range netProxyList {
 		this_.onAddNetProxyModel(one)
 	}
@@ -171,11 +124,9 @@ func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
 	}
 	this_.root = root
 	this_.server = &node.Server{
-		Id:                   this_.root.ServerId,
-		BindToken:            this_.root.BindToken,
-		BindAddress:          this_.root.BindAddress,
-		OnNodeListChange:     this_.onNodeListChange,
-		OnNetProxyListChange: this_.onNetProxyListChange,
+		Id:          this_.root.ServerId,
+		BindToken:   this_.root.BindToken,
+		BindAddress: this_.root.BindAddress,
 	}
 	err = this_.server.Start()
 	if err != nil {

@@ -43,6 +43,8 @@ func (this_ *NodeService) Get(nodeId int64) (res *NodeModel, err error) {
 	if !find {
 		res = nil
 	}
+	res.ConnServerIdList = GetStringList(res.ConnServerIds)
+	res.HistoryConnServerIdList = GetStringList(res.HistoryConnServerIds)
 	return
 }
 
@@ -65,6 +67,10 @@ func (this_ *NodeService) Query(node *NodeModel) (res []*NodeModel, err error) {
 	if err != nil {
 		this_.Logger.Error("Query Error", zap.Error(err))
 		return
+	}
+	for _, one := range res {
+		one.ConnServerIdList = GetStringList(one.ConnServerIds)
+		one.HistoryConnServerIdList = GetStringList(one.HistoryConnServerIds)
 	}
 
 	return

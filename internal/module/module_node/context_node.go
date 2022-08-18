@@ -1,34 +1,11 @@
 package module_node
 
 import (
-	"encoding/json"
 	"go.uber.org/zap"
 	"teamide/node"
 	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
-
-type NodeInfo struct {
-	Info        *node.Info         `json:"info,omitempty"`
-	Model       *NodeModel         `json:"model,omitempty"`
-	IsStarted   bool               `json:"isStarted,omitempty"`
-	MonitorData *MonitorDataFormat `json:"monitorData,omitempty"`
-	IsLocal     bool               `json:"isLocal,omitempty"`
-}
-
-func (this_ *NodeContext) getNodeInfo(id string) (res *NodeInfo) {
-	this_.nodeListLock.Lock()
-	defer this_.nodeListLock.Unlock()
-
-	var list = this_.nodeList
-	for _, one := range list {
-		if one.Info != nil && id == one.Info.Id {
-			res = one
-			return
-		}
-	}
-	return
-}
 
 func (this_ *NodeContext) getNodeModel(id int64) (res *NodeModel) {
 	this_.nodeIdModelCacheLock.Lock()
@@ -43,12 +20,32 @@ func (this_ *NodeContext) setNodeModel(id int64, nodeModel *NodeModel) {
 	defer this_.nodeIdModelCacheLock.Unlock()
 
 	this_.nodeIdModelCache[id] = nodeModel
+
+	var find bool
+	var list = this_.nodeModelList
+	for _, one := range list {
+		if one.NodeId == id {
+			find = true
+		}
+	}
+	if find {
+		this_.nodeModelList = append(this_.nodeModelList, nodeModel)
+	}
 }
 
 func (this_ *NodeContext) removeNodeModel(id int64) {
 	this_.nodeIdModelCacheLock.Lock()
 	defer this_.nodeIdModelCacheLock.Unlock()
 	delete(this_.nodeIdModelCache, id)
+
+	var list = this_.nodeModelList
+	var newList []*NodeModel
+	for _, one := range list {
+		if one.NodeId != id {
+			newList = append(newList, one)
+		}
+	}
+	this_.nodeModelList = newList
 }
 
 func (this_ *NodeContext) getNodeModelByServerId(id string) (res *NodeModel) {
@@ -81,24 +78,12 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	if nodeModel.IsROOT() {
 		err = this_.initRoot(nodeModel)
 		if err != nil {
-			this_.nodeService.Logger.Error("node context init root error", zap.Error(err))
+			this_.Logger.Error("node context init root error", zap.Error(err))
 		}
 	}
-	var connNodeIdList []string
-	if nodeModel.ConnServerIds != "" {
-		_ = json.Unmarshal([]byte(nodeModel.ConnServerIds), &connNodeIdList)
-	}
 
-	_ = this_.server.AddNodeList([]*node.Info{
-		{
-			Id:             nodeModel.ServerId,
-			BindToken:      nodeModel.BindToken,
-			BindAddress:    nodeModel.BindAddress,
-			ConnAddress:    nodeModel.ConnAddress,
-			ConnToken:      nodeModel.ConnToken,
-			ConnNodeIdList: connNodeIdList,
-		},
-	})
+	this_.cleanNodeLine()
+	this_.toAddNodeModel(nodeModel)
 }
 
 func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
@@ -109,11 +94,14 @@ func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 	if nodeModel.IsROOT() {
 		err = this_.initRoot(nodeModel)
 		if err != nil {
-			this_.nodeService.Logger.Error("node context init root error", zap.Error(err))
+			this_.Logger.Error("node context init root error", zap.Error(err))
 		}
 	}
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
+
+	this_.cleanNodeLine()
+	this_.toAddNodeModel(nodeModel)
 }
 
 func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds string) {
@@ -121,13 +109,35 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 	if nodeModel == nil {
 		return
 	}
+	var oldConnServerIdList = nodeModel.ConnServerIdList
 	nodeModel.ConnServerIds = connServerIds
+	nodeModel.ConnServerIdList = GetStringList(connServerIds)
 
-	var connNodeIdList []string
-	if connServerIds != "" {
-		_ = json.Unmarshal([]byte(connServerIds), &connNodeIdList)
+	var newConnServerIdList = nodeModel.ConnServerIdList
+	for _, oldConnServerId := range oldConnServerIdList {
+		if util.ContainsString(newConnServerIdList, oldConnServerId) < 0 {
+			lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
+			_ = this_.server.RemoveToNodeList(lineNodeIdList, []string{
+				oldConnServerId,
+			})
+		}
 	}
-	_ = this_.server.UpdateNodeConnNodeIdList(nodeModel.ServerId, connNodeIdList)
+
+	var toNodeList []*node.ToNode
+	for _, newConnServerId := range newConnServerIdList {
+		var toNodeModel = this_.getNodeModelByServerId(newConnServerId)
+		if toNodeModel == nil {
+			continue
+		}
+		toNodeList = append(toNodeList, &node.ToNode{
+			Id:          nodeModel.ServerId,
+			ConnAddress: nodeModel.ConnAddress,
+			ConnToken:   nodeModel.ConnToken,
+			Enabled:     nodeModel.Enabled,
+		})
+	}
+	lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
+	_ = this_.server.AddToNodeList(lineNodeIdList, toNodeList)
 }
 
 func (this_ *NodeContext) onUpdateNodeHistoryConnServerIds(nodeId int64, historyConnServerIds string) {
@@ -146,7 +156,21 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 	}
 	this_.removeNodeModel(nodeModel.NodeId)
 	this_.removeNodeModelByServerId(nodeModel.ServerId)
-	_ = this_.server.RemoveNodeList([]string{nodeModel.ServerId})
+
+	var list = this_.nodeModelList
+	for _, one := range list {
+		if util.ContainsString(one.ConnServerIdList, nodeModel.ServerId) < 0 {
+			continue
+		}
+
+		lineNodeIdList := this_.GetNodeLineTo(one.ServerId)
+
+		_ = this_.server.RemoveToNodeList(lineNodeIdList, []string{
+			nodeModel.ServerId,
+		})
+	}
+	this_.cleanNodeLine()
+
 }
 
 func (this_ *NodeContext) onEnableNodeModel(id int64) {
@@ -157,16 +181,8 @@ func (this_ *NodeContext) onEnableNodeModel(id int64) {
 	nodeModel.Enabled = 1
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
-	_ = this_.server.AddNodeList([]*node.Info{
-		{
-			Id:          nodeModel.ServerId,
-			BindToken:   nodeModel.BindToken,
-			BindAddress: nodeModel.BindAddress,
-			ConnAddress: nodeModel.ConnAddress,
-			ConnToken:   nodeModel.ConnToken,
-			Enabled:     nodeModel.Enabled,
-		},
-	})
+
+	this_.toAddNodeModel(nodeModel)
 }
 
 func (this_ *NodeContext) onDisableNodeModel(id int64) {
@@ -177,106 +193,44 @@ func (this_ *NodeContext) onDisableNodeModel(id int64) {
 	nodeModel.Enabled = 2
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
-	_ = this_.server.AddNodeList([]*node.Info{
-		{
-			Id:          nodeModel.ServerId,
-			BindToken:   nodeModel.BindToken,
-			BindAddress: nodeModel.BindAddress,
-			ConnAddress: nodeModel.ConnAddress,
-			ConnToken:   nodeModel.ConnToken,
-			Enabled:     nodeModel.Enabled,
-		},
-	})
+
+	this_.toAddNodeModel(nodeModel)
 }
 
-func (this_ *NodeContext) onNodeListChange(nodeList []*node.Info) {
-
-	this_.nodeListLock.Lock()
-	defer this_.nodeListLock.Unlock()
-
-	this_.onNodeListChangeIng = true
-	defer func() { this_.onNodeListChangeIng = false }()
-
-	var nodeInfoList []*NodeInfo
-	for _, one := range nodeList {
-		var find = this_.getNodeModelByServerId(one.Id)
-		var historyConnServerIdList []string
-		if find != nil && find.HistoryConnServerIds != "" {
-			_ = json.Unmarshal([]byte(find.HistoryConnServerIds), &historyConnServerIdList)
-		}
-		for _, one := range one.ConnNodeIdList {
-			if util.ContainsString(historyConnServerIdList, one) < 0 {
-				historyConnServerIdList = append(historyConnServerIdList, one)
-			}
-		}
-		var historyConnServerIds string
-		bs, _ := json.Marshal(historyConnServerIdList)
-		if bs != nil {
-			historyConnServerIds = string(bs)
-		}
-		if find == nil {
-			find = &NodeModel{
-				ServerId:             one.Id,
-				Name:                 one.Id,
-				BindToken:            one.BindToken,
-				BindAddress:          one.BindAddress,
-				ConnToken:            one.ConnToken,
-				ConnAddress:          one.ConnAddress,
-				HistoryConnServerIds: historyConnServerIds,
-			}
-			_, err := this_.nodeService.Insert(find)
-			if err != nil {
-				find = nil
-			} else {
-				find, _ = this_.nodeService.Get(find.NodeId)
-				if find != nil {
-					this_.setNodeModel(find.NodeId, find)
-					this_.setNodeModelByServerId(one.Id, find)
-				}
-			}
-		} else {
-			_, _ = this_.nodeService.UpdateHistoryConnServerIds(find.NodeId, historyConnServerIds)
-		}
-
-		lineNodeIdList := this_.GetNodeLineTo(one.Id)
-		nodeMonitorData := this_.server.GetNodeMonitorData(lineNodeIdList, one.Id)
-		IsStarted := nodeMonitorData != nil
-
-		nodeInfo := &NodeInfo{
-			Info:        one,
-			IsStarted:   IsStarted,
-			Model:       this_.getNodeModelByServerId(one.Id),
-			MonitorData: ToMonitorDataFormat(nodeMonitorData),
-		}
-
-		if nodeInfo.Model != nil && this_.root != nil && nodeInfo.Model.NodeId == this_.root.NodeId {
-			nodeInfo.IsLocal = true
-		}
-		nodeInfoList = append(nodeInfoList, nodeInfo)
+func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {
+	if nodeModel == nil {
+		return
 	}
-	this_.nodeList = nodeInfoList
-	this_.cleanNodeLine()
-	this_.refreshNodeList(this_.nodeList)
-}
+	var list = this_.nodeModelList
+	for _, one := range list {
+		if util.ContainsString(one.ConnServerIdList, nodeModel.ServerId) < 0 {
+			continue
+		}
 
-func (this_ *NodeContext) refreshNodeList(nodeList []*NodeInfo) {
-	this_.callNodeDataChange(&NodeDataChange{
-		Type:     "nodeList",
-		NodeList: nodeList,
-	})
+		lineNodeIdList := this_.GetNodeLineTo(one.ServerId)
+
+		_ = this_.server.AddToNodeList(lineNodeIdList, []*node.ToNode{
+			{
+				Id:          nodeModel.ServerId,
+				ConnAddress: nodeModel.ConnAddress,
+				ConnToken:   nodeModel.ConnToken,
+				Enabled:     nodeModel.Enabled,
+			},
+		})
+	}
 }
 
 func (this_ *NodeContext) SystemGetInfo(nodeId string) (info *system.Info) {
 	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	return this_.server.SystemGetInfo(lineNodeIdList, nodeId)
+	return this_.server.SystemGetInfo(lineNodeIdList)
 }
 
 func (this_ *NodeContext) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (info *system.QueryResponse) {
 	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	return this_.server.SystemQueryMonitorData(lineNodeIdList, nodeId, request)
+	return this_.server.SystemQueryMonitorData(lineNodeIdList, request)
 }
 
 func (this_ *NodeContext) SystemCleanMonitorData(nodeId string) {
 	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	this_.server.SystemCleanMonitorData(lineNodeIdList, nodeId)
+	this_.server.SystemCleanMonitorData(lineNodeIdList)
 }

@@ -1,6 +1,9 @@
 package module_node
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 const (
 	// ModuleNode 节点模块
@@ -34,6 +37,18 @@ type NodeModel struct {
 	CreateTime           time.Time `json:"createTime,omitempty"`
 	UpdateTime           time.Time `json:"updateTime,omitempty"`
 	DeleteTime           time.Time `json:"deleteTime,omitempty"`
+
+	ConnServerIdList        []string `json:"connServerIdList,omitempty"`
+	HistoryConnServerIdList []string `json:"historyConnServerIdList,omitempty"`
+	IsStarted               bool     `json:"isStarted,omitempty"`
+}
+
+func GetStringList(str string) []string {
+	var list []string
+	if str != "" {
+		_ = json.Unmarshal([]byte(str), &list)
+	}
+	return list
 }
 
 func (entity *NodeModel) IsROOT() bool {
@@ -69,6 +84,9 @@ type NetProxyModel struct {
 	CreateTime    time.Time `json:"createTime,omitempty"`
 	UpdateTime    time.Time `json:"updateTime,omitempty"`
 	DeleteTime    time.Time `json:"deleteTime,omitempty"`
+
+	LineNodeIdList        []string `json:"lineNodeIdList,omitempty"`
+	ReverseLineNodeIdList []string `json:"reverseLineNodeIdList,omitempty"`
 }
 
 func (entity *NetProxyModel) GetTableName() string {

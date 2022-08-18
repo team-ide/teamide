@@ -6,29 +6,6 @@ import (
 	"teamide/node"
 )
 
-type NetProxyInfo struct {
-	Info             *node.NetProxy     `json:"info,omitempty"`
-	Model            *NetProxyModel     `json:"model,omitempty"`
-	InnerIsStarted   bool               `json:"innerIsStarted,omitempty"`
-	OuterIsStarted   bool               `json:"outerIsStarted,omitempty"`
-	InnerMonitorData *MonitorDataFormat `json:"innerMonitorData,omitempty"`
-	OuterMonitorData *MonitorDataFormat `json:"outerMonitorData,omitempty"`
-}
-
-func (this_ *NodeContext) getNetProxyInfo(id string) (res *NetProxyInfo) {
-	this_.netProxyListLock.Lock()
-	defer this_.netProxyListLock.Unlock()
-
-	var list = this_.netProxyList
-	for _, one := range list {
-		if one.Info != nil && id == one.Info.Id {
-			res = one
-			return
-		}
-	}
-	return
-}
-
 func (this_ *NodeContext) getNetProxyModel(id int64) (res *NetProxyModel) {
 	this_.netProxyIdModelCacheLock.Lock()
 	defer this_.netProxyIdModelCacheLock.Unlock()
@@ -42,12 +19,32 @@ func (this_ *NodeContext) setNetProxyModel(id int64, netProxyModel *NetProxyMode
 	defer this_.netProxyIdModelCacheLock.Unlock()
 
 	this_.netProxyIdModelCache[id] = netProxyModel
+
+	var find bool
+	var list = this_.netProxyModelList
+	for _, one := range list {
+		if one.NetProxyId == id {
+			find = true
+		}
+	}
+	if find {
+		this_.netProxyModelList = append(this_.netProxyModelList, netProxyModel)
+	}
 }
 
 func (this_ *NodeContext) removeNetProxyModel(id int64) {
 	this_.netProxyIdModelCacheLock.Lock()
 	defer this_.netProxyIdModelCacheLock.Unlock()
 	delete(this_.netProxyIdModelCache, id)
+
+	var list = this_.netProxyModelList
+	var newList []*NetProxyModel
+	for _, one := range list {
+		if one.NetProxyId != id {
+			newList = append(newList, one)
+		}
+	}
+	this_.netProxyModelList = newList
 }
 
 func (this_ *NodeContext) getNetProxyModelByCode(id string) (res *NetProxyModel) {
@@ -70,57 +67,34 @@ func (this_ *NodeContext) removeNetProxyModelByCode(id string) {
 	delete(this_.codeModelCache, id)
 }
 
-func (this_ *NodeContext) formatNetProxy(netProxyModel *NetProxyModel) (netProxy *node.NetProxy, err error) {
-	netProxy = &node.NetProxy{
-		Id: netProxyModel.Code,
-		Inner: &node.NetConfig{
-			NodeId:  netProxyModel.InnerServerId,
-			Type:    netProxyModel.InnerType,
-			Address: netProxyModel.InnerAddress,
-		},
-		Outer: &node.NetConfig{
-			NodeId:  netProxyModel.OuterServerId,
-			Type:    netProxyModel.OuterType,
-			Address: netProxyModel.OuterAddress,
-		},
-		Enabled: netProxyModel.Enabled,
-	}
-	if netProxyModel.LineServerIds != "" {
-		_ = json.Unmarshal([]byte(netProxyModel.LineServerIds), &netProxy.LineNodeIdList)
-	}
-	if netProxy.Id == "" {
+func (this_ *NodeContext) formatNetProxy(netProxyModel *NetProxyModel) (err error) {
+
+	netProxyModel.LineNodeIdList = GetStringList(netProxyModel.LineServerIds)
+	if netProxyModel.Code == "" {
 		err = errors.New("网络代理编号不能为空")
 		return
 	}
-	if netProxy.Inner == nil {
-		err = errors.New("网络代理输入配置不能为空")
-		return
-	}
-	if netProxy.Inner.GetAddress() == "" {
+	if netProxyModel.InnerAddress == "" {
 		err = errors.New("网络代理输入地址不能为空")
 		return
 	}
-	if netProxy.Outer == nil {
-		err = errors.New("网络代理输出配置不能为空")
-		return
-	}
-	if netProxy.Outer.GetAddress() == "" {
+	if netProxyModel.OuterAddress == "" {
 		err = errors.New("网络代理输出地址不能为空")
 		return
 	}
-	if len(netProxy.LineNodeIdList) == 0 {
-		netProxy.LineNodeIdList = this_.GetNodeLineByFromTo(netProxy.Inner.NodeId, netProxy.Outer.NodeId)
-		if len(netProxy.LineNodeIdList) == 0 {
+	if len(netProxyModel.LineNodeIdList) == 0 {
+		netProxyModel.LineNodeIdList = this_.GetNodeLineByFromTo(netProxyModel.InnerServerId, netProxyModel.OuterServerId)
+		if len(netProxyModel.LineNodeIdList) == 0 {
 			err = errors.New("无法正确解析输入输出节点关系")
 			return
 		}
 	}
-	netProxy.ReverseLineNodeIdList = []string{}
-	for i := len(netProxy.LineNodeIdList) - 1; i >= 0; i-- {
-		netProxy.ReverseLineNodeIdList = append(netProxy.ReverseLineNodeIdList, netProxy.LineNodeIdList[i])
+	netProxyModel.ReverseLineNodeIdList = []string{}
+	for i := len(netProxyModel.LineNodeIdList) - 1; i >= 0; i-- {
+		netProxyModel.ReverseLineNodeIdList = append(netProxyModel.ReverseLineNodeIdList, netProxyModel.LineNodeIdList[i])
 	}
 
-	bs, _ := json.Marshal(&netProxy.LineNodeIdList)
+	bs, _ := json.Marshal(&netProxyModel.LineNodeIdList)
 	if len(bs) > 0 {
 		netProxyModel.LineServerIds = string(bs)
 	}
@@ -134,7 +108,7 @@ func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
-	one, err := this_.formatNetProxy(netProxyModel)
+	err := this_.formatNetProxy(netProxyModel)
 	if err == nil {
 		_ = this_.server.AddNetProxyList([]*node.NetProxy{
 			one,
@@ -169,7 +143,7 @@ func (this_ *NodeContext) onEnableNetProxyModel(id int64) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
-	one, err := this_.formatNetProxy(netProxyModel)
+	err := this_.formatNetProxy(netProxyModel)
 	if err == nil {
 		_ = this_.server.AddNetProxyList([]*node.NetProxy{
 			one,
@@ -186,70 +160,10 @@ func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
-	one, err := this_.formatNetProxy(netProxyModel)
+	err := this_.formatNetProxy(netProxyModel)
 	if err == nil {
 		_ = this_.server.AddNetProxyList([]*node.NetProxy{
 			one,
 		})
 	}
-}
-
-func (this_ *NodeContext) onNetProxyListChange(netProxyList []*node.NetProxy) {
-
-	this_.netProxyListLock.Lock()
-	defer this_.netProxyListLock.Unlock()
-
-	this_.onNetProxyListChangeIng = true
-	defer func() { this_.onNetProxyListChangeIng = false }()
-
-	var netProxyInfoList []*NetProxyInfo
-	for _, one := range netProxyList {
-		var find = this_.getNetProxyModelByCode(one.Id)
-		if find == nil {
-			continue
-			//find = &NetProxyModel{
-			//	Code:          one.Id,
-			//	Name:          one.Id,
-			//	InnerServerId: one.Inner.NodeId,
-			//	InnerType:     one.Inner.Type,
-			//	InnerAddress:  one.Inner.Address,
-			//	OuterServerId: one.Outer.NodeId,
-			//	OuterType:     one.Outer.Type,
-			//	OuterAddress:  one.Outer.Address,
-			//}
-			//_, err := this_.nodeService.InsertNetProxy(find)
-			//if err != nil {
-			//	find = nil
-			//} else {
-			//	this_.setNetProxyModel(find.NetProxyId, find)
-			//	this_.setNetProxyModelByCode(one.Id, find)
-			//}
-		}
-
-		innerLineNodeIdList := this_.GetNodeLineTo(one.Inner.NodeId)
-		outerLineNodeIdList := this_.GetNodeLineTo(one.Outer.NodeId)
-
-		innerMonitorData := this_.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, one.Id)
-		outerMonitorData := this_.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, one.Id)
-		InnerIsStarted := innerMonitorData != nil
-		OuterIsStarted := outerMonitorData != nil
-		netProxyInfo := &NetProxyInfo{
-			Info:             one,
-			InnerIsStarted:   InnerIsStarted,
-			OuterIsStarted:   OuterIsStarted,
-			Model:            this_.getNetProxyModelByCode(one.Id),
-			InnerMonitorData: ToMonitorDataFormat(innerMonitorData),
-			OuterMonitorData: ToMonitorDataFormat(outerMonitorData),
-		}
-		netProxyInfoList = append(netProxyInfoList, netProxyInfo)
-	}
-	this_.netProxyList = netProxyInfoList
-	this_.refreshNetProxyList(this_.netProxyList)
-}
-
-func (this_ *NodeContext) refreshNetProxyList(netProxyList []*NetProxyInfo) {
-	this_.callNodeDataChange(&NodeDataChange{
-		Type:         "netProxyList",
-		NetProxyList: netProxyList,
-	})
 }
