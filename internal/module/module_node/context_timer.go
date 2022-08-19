@@ -50,7 +50,8 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 		lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
 		if len(lineNodeIdList) > 0 {
 			status := this_.server.GetNodeStatus(lineNodeIdList)
-			if status == node.StatusStarted {
+			nodeModel.IsStarted = status == node.StatusStarted
+			if nodeModel.IsStarted {
 				countData.NodeSuccessCount++
 			}
 		}
@@ -65,7 +66,9 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 		lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
 		if len(lineNodeIdList) > 0 {
 			status := this_.server.GetNetProxyInnerStatus(lineNodeIdList, netProxyModel.Code)
-			if status == node.StatusStarted {
+
+			netProxyModel.InnerIsStarted = status == node.StatusStarted
+			if netProxyModel.InnerIsStarted {
 				countData.NodeNetProxyInnerSuccessCount++
 			}
 		}
@@ -73,7 +76,8 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 		lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
 		if len(lineNodeIdList) > 0 {
 			status := this_.server.GetNetProxyOuterStatus(lineNodeIdList, netProxyModel.Code)
-			if status == node.StatusStarted {
+			netProxyModel.OuterIsStarted = status == node.StatusStarted
+			if netProxyModel.OuterIsStarted {
 				countData.NodeNetProxyOuterSuccessCount++
 			}
 		}

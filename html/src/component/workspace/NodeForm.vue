@@ -144,18 +144,18 @@ export default {
     },
     toDelete(data) {
       this.tool.stopEvent();
-      if (!data || !data.model || !data.model.nodeId) {
+      if (!data || !data.nodeId) {
         this.tool.warn("节点ID丢失");
         return;
       }
       this.tool
         .confirm(
           "删除[" +
-            data.model.name +
+            data.name +
             "]节点，将删除所有关联数据且无法恢复，确定删除？"
         )
         .then(async () => {
-          return this.doDelete(data.model.nodeId);
+          return this.doDelete(data.nodeId);
         })
         .catch((e) => {});
     },
@@ -180,22 +180,22 @@ export default {
       }
     },
     onNodeMoved(node, position) {
-      if (node.model == null) {
+      if (node.nodeId == null) {
         return;
       }
-      let option = this.tool.getOptionJSON(node.model.option);
+      let option = this.tool.getOptionJSON(node.option);
       option.x = position.x;
       option.y = position.y;
       let optionStr = JSON.stringify(option);
       if (this.source.nodeList) {
         this.source.nodeList.forEach((one) => {
-          if (one.model && one.model.nodeId == node.model.nodeId) {
-            one.model.option = optionStr;
+          if (one && one.nodeId == node.nodeId) {
+            one.option = optionStr;
           }
         });
       }
       this.server.node.updateOption({
-        nodeId: node.model.nodeId,
+        nodeId: node.nodeId,
         option: optionStr,
       });
     },

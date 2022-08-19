@@ -66,58 +66,30 @@ export default {
       let lastX = 0;
       let lastY = 0;
       nodeList.forEach((one) => {
-        let info = one.info;
-        let model = one.model;
-        let nodeWrap = { info, model };
+        let nodeWrap = { data: one };
         nodeWrap.isLocal = false;
-        var connServerIdList = [];
-        var historyConnServerIdList = [];
-        if (model) {
-          if (model.isLocal == 1) {
-            nodeWrap.isLocal = true;
-          }
-          nodeWrap.nodeId = model.nodeId;
-          nodeWrap.id = model.serverId;
-          nodeWrap.text = model.name;
-          nodeWrap.serverId = model.serverId;
-          if (this.tool.isNotEmpty(model.connServerIds)) {
-            try {
-              connServerIdList = JSON.parse(model.connServerIds);
-            } catch (e) {}
-          }
-          if (this.tool.isNotEmpty(model.historyConnServerIds)) {
-            try {
-              historyConnServerIdList = JSON.parse(model.historyConnServerIds);
-            } catch (e) {}
-          }
-        } else {
-          nodeWrap.id = info.id;
-          nodeWrap.text = info.id;
-          nodeWrap.serverId = info.id;
+        if (one.isLocal == 1) {
+          nodeWrap.isLocal = true;
         }
-        nodeWrap.connServerIdList = connServerIdList;
-        nodeWrap.historyConnServerIdList = historyConnServerIdList;
+        nodeWrap.nodeId = one.nodeId;
+        nodeWrap.id = one.serverId;
+        nodeWrap.text = one.name;
+        nodeWrap.serverId = one.serverId;
+        nodeWrap.connServerIdList = one.connServerIdList;
         nodeWrap.status = 2;
         nodeWrap.statusError = null;
-        if (info) {
-          nodeWrap.status = info.status;
-          nodeWrap.statusError = info.statusError;
-          nodeWrap.connIdList = info.connNodeIdList || [];
-        }
         let compute = this.tool.computeFontSize(nodeWrap.text, "15px", "600");
 
         let width = compute.width + 40;
         if (width < 120) {
           width = 120;
         }
-        if (model) {
-          let option = this.tool.getOptionJSON(model.option);
-          if (option.x) {
-            nodeWrap.x = option.x;
-          }
-          if (option.y) {
-            nodeWrap.y = option.y;
-          }
+        let option = this.tool.getOptionJSON(one.option);
+        if (option.x) {
+          nodeWrap.x = option.x;
+        }
+        if (option.y) {
+          nodeWrap.y = option.y;
         }
         if (nodeWrap.x == null || nodeWrap.y == null) {
           lastX += 50;
@@ -197,45 +169,18 @@ export default {
             }
           });
         }
-        if (one.historyConnServerIdList) {
-          one.historyConnServerIdList.forEach((one) => {
-            if (allConnIdList.indexOf(one) < 0) {
-              allConnIdList.push(one);
-            }
-          });
-        }
-        if (one.connIdList) {
-          one.connIdList.forEach((one) => {
-            if (allConnIdList.indexOf(one) < 0) {
-              allConnIdList.push(one);
-            }
-          });
-        }
         allConnIdList.forEach((connId) => {
           let targetId = connId;
           let target = nodeMap[targetId];
           if (target == null) {
             return;
           }
-          var isConn = one.connIdList && one.connIdList.indexOf(connId) >= 0;
-          var isConfig =
-            one.connServerIdList && one.connServerIdList.indexOf(connId) >= 0;
-          var isHistory =
-            one.historyConnServerIdList &&
-            one.historyConnServerIdList.indexOf(connId) >= 0;
           target.isConn = true;
           target.isConfig = true;
           target.isHistory = true;
 
-          var stroke = "#8b8b8b";
+          var stroke = "#a5a5a5";
           var strokeWidth = 1;
-          if (isConn) {
-            stroke = "#a5a5a5";
-          } else if (isConfig) {
-            stroke = "#626262";
-          } else if (isHistory) {
-            stroke = "#4a4a4a";
-          }
           // 渲染边
           graph.addEdge({
             source: sourceId,
@@ -257,7 +202,6 @@ export default {
       });
       graph.on("node:contextmenu", ({ e, node, view }) => {
         let data = node.data;
-        let targetNode = nodeMap[data.id] || {};
         let menus = [];
         menus.push({
           header: data.text,
@@ -268,22 +212,22 @@ export default {
             this.tool.toInsertConnNode(data);
           },
         });
-        if (this.tool.openByExtend && data.model) {
+        if (this.tool.openByExtend) {
           menus.push({
             text: "查看",
             onClick: () => {
               this.tool.openByExtend({
                 toolboxType: "node",
                 type: "node-info",
-                title: "查看节点-" + data.model.name,
-                serverId: data.model.serverId,
+                title: "查看节点-" + data.name,
+                serverId: data.serverId,
               });
             },
           });
         }
 
-        if (data.model && !data.isLocal) {
-          if (data.model.enabled == 1) {
+        if (!data.isLocal) {
+          if (data.enabled == 1) {
             menus.push({
               text: "停用",
               onClick: () => {
@@ -299,10 +243,7 @@ export default {
             });
           }
         }
-        if (
-          (!data.isLocal && (targetNode.isConfig || targetNode.isHistory)) ||
-          !targetNode.isConn
-        ) {
+        if (!data.isLocal) {
           menus.push({
             text: "删除",
             onClick: () => {

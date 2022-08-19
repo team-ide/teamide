@@ -3,14 +3,12 @@
     <tm-layout height="100%">
       <tm-layout height="150px">
         <div class="toolbox-node-info-editor-header pd-10 color-grey">
-          <template v-if="node != null && node.model != null">
+          <template v-if="node != null">
             <div>
               节点:
-              <span class="pdlr-5 color-grey-3"> {{ node.model.name }}</span>
+              <span class="pdlr-5 color-grey-3"> {{ node.name }}</span>
               ID:
-              <span class="pdlr-5 color-grey-3">
-                {{ node.model.serverId }}</span
-              >
+              <span class="pdlr-5 color-grey-3"> {{ node.serverId }}</span>
             </div>
           </template>
           <template v-if="hostInfoStat != null">

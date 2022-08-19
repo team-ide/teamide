@@ -116,11 +116,7 @@ export default {
 
       let localNodeConnList = [];
       nodeLocalList.forEach((one) => {
-        let model = one.model;
-        if (model == null) {
-          return;
-        }
-        let address = model.bindAddress;
+        let address = one.bindAddress;
         if (this.tool.isNotEmpty(address) && address.indexOf(":") >= 0) {
           let lastIndex = address.lastIndexOf(":");
           let ip = address.substring(0, lastIndex);
@@ -129,13 +125,13 @@ export default {
             this.source.localIpList.forEach((localIp) => {
               localNodeConnList.push({
                 address: localIp + ":" + port,
-                bindToken: model.bindToken,
+                bindToken: one.bindToken,
               });
             });
           } else {
             localNodeConnList.push({
               address: address,
-              bindToken: model.bindToken,
+              bindToken: one.bindToken,
             });
           }
         }

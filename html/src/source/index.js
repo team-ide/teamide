@@ -407,80 +407,24 @@ source.initNodeContext = async () => {
         tool.error(res.msg);
     } else {
         let data = res.data || {};
-        let localIpList = data.localIpList || [];
-        let nodeList = data.nodeList || [];
-        let nodeNetProxyList = data.netProxyList || [];
-        source.localIpList = localIpList;
-        source.initNodeList(nodeList)
-        source.initNodeNetProxyList(nodeNetProxyList)
+        source.localIpList = data.localIpList || [];
+        source.initNodeDataCount(data.dataCount)
+        source.initNodeList(data.nodeList)
+        source.initNodeNetProxyList(data.netProxyList)
     }
 }
-source.nodeEquals = (data1, data2) => {
-    if (data1.isStarted != data2.isStarted) {
-        return false
-    }
-    if ((data1.monitorData == null && data2.monitorData != null) || (data2.monitorData == null && data1.monitorData != null)) {
-        return false
-    }
-    if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
-        return false
-    }
-    if (JSON.stringify(data1.model) != JSON.stringify(data2.model)) {
-        return false
-    }
-    return true
-};
-source.nodeListEquals = (list1, list2) => {
-    if (list1.length != list2.length) {
-        return false
-    }
-    for (var i = 0; i < list1.length; i++) {
-        if (!source.nodeEquals(list1[i], list2[i])) {
-            return false
-        }
-    }
-    return true
-};
-source.nodeNetProxyEquals = (data1, data2) => {
-    if (data1.innerIsStarted != data2.innerIsStarted || data1.outerIsStarted != data2.outerIsStarted) {
-        return false
-    }
-    if ((data1.innerMonitorData == null && data2.innerMonitorData != null) || (data2.innerMonitorData == null && data1.innerMonitorData != null)) {
-        return false
-    }
-    if ((data1.outerMonitorData == null && data2.outerMonitorData != null) || (data2.outerMonitorData == null && data1.outerMonitorData != null)) {
-        return false
-    }
-    if (JSON.stringify(data1.info) != JSON.stringify(data2.info)) {
-        return false
-    }
-    if (JSON.stringify(data1.model) != JSON.stringify(data2.model)) {
-        return false
-    }
-    return true
-};
-source.nodeNetProxyListEquals = (list1, list2) => {
-    if (list1.length != list2.length) {
-        return false
-    }
-    for (var i = 0; i < list1.length; i++) {
-        if (!source.nodeNetProxyEquals(list1[i], list2[i])) {
-            return false
-        }
-    }
-    return true
-};
+source.initNodeDataCount = (dataCount) => {
+    dataCount = dataCount || {};
+    source.nodeCount = dataCount.nodeCount || 0;
+    source.nodeSuccessCount = dataCount.nodeSuccessCount || 0;
+    source.nodeNetProxyCount = dataCount.nodeNetProxyCount || 0;
+    source.nodeNetProxyInnerSuccessCount = dataCount.nodeNetProxyInnerSuccessCount || 0;
+    source.nodeNetProxyOuterSuccessCount = dataCount.nodeNetProxyOuterSuccessCount || 0;
+}
 source.initNodeList = (nodeList) => {
     nodeList = nodeList || []
-    if (source.nodeListEquals(source.nodeList, nodeList)) {
-        for (var i = 0; i < source.nodeList.length; i++) {
-            source.nodeList[i].monitorData = nodeList[i].monitorData;
-        }
-        return
-    }
     form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
     let nodeOptionMap = {};
-    let nodeSuccessCount = 0
     var nodeLocalList = [];
     nodeList.forEach(one => {
         let option = {};
@@ -488,49 +432,22 @@ source.initNodeList = (nodeList) => {
         if (one.isStarted) {
             nodeSuccessCount++;
         }
-        if (one.model) {
-            option.value = one.model.serverId;
-            option.text = one.model.name;
-        } else if (one.info) {
-            option.value = one.info.id;
-            option.text = one.info.id;
-        }
+        option.value = one.serverId;
+        option.text = one.name;
 
         form.node.nodeOptions.push(option);
         nodeOptionMap[option.value] = option;
-        if (one.isLocal) {
+        if (one.isLocal == 1) {
             nodeLocalList.push(one);
         }
     });
     source.nodeLocalList = nodeLocalList;
     source.nodeList = nodeList;
-    source.nodeCount = nodeList.length;
-    source.nodeSuccessCount = nodeSuccessCount;
     source.nodeOptionMap = nodeOptionMap;
 }
 source.initNodeNetProxyList = (nodeNetProxyList) => {
     nodeNetProxyList = nodeNetProxyList || []
-    if (source.nodeNetProxyListEquals(source.nodeNetProxyList, nodeNetProxyList)) {
-        for (var i = 0; i < source.nodeNetProxyList.length; i++) {
-            source.nodeNetProxyList[i].innerMonitorData = nodeNetProxyList[i].innerMonitorData
-            source.nodeNetProxyList[i].outerMonitorData = nodeNetProxyList[i].outerMonitorData
-        }
-        return
-    }
-    let nodeNetProxyInnerSuccessCount = 0
-    let nodeNetProxyOuterSuccessCount = 0
-    nodeNetProxyList.forEach(one => {
-        if (one.innerIsStarted) {
-            nodeNetProxyInnerSuccessCount++;
-        }
-        if (one.outerIsStarted) {
-            nodeNetProxyOuterSuccessCount++;
-        }
-    });
     source.nodeNetProxyList = nodeNetProxyList;
-    source.nodeNetProxyCount = nodeNetProxyList.length;
-    source.nodeNetProxyInnerSuccessCount = nodeNetProxyInnerSuccessCount;
-    source.nodeNetProxyOuterSuccessCount = nodeNetProxyOuterSuccessCount;
 }
 
 let refreshPowers = function () {

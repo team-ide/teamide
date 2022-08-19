@@ -31,38 +31,35 @@
             </el-table-column>
             <el-table-column label="名称" width="200">
               <template slot-scope="scope">
-                <div class="" v-if="scope.row.model != null">
-                  {{ scope.row.model.name }}
+                <div class="">
+                  {{ scope.row.name }}
                 </div>
               </template>
             </el-table-column>
             <el-table-column label="输入端">
               <template slot-scope="scope">
-                <div class="text-left pd-5" v-if="scope.row.model != null">
+                <div class="text-left pd-5">
                   <div class="">
                     节点:
                     <span
                       v-if="
-                        source.nodeOptionMap[scope.row.model.innerServerId] !=
-                        null
+                        source.nodeOptionMap[scope.row.innerServerId] != null
                       "
                       class="pdl-10"
                       :class="{
                         'color-green':
-                          source.nodeOptionMap[scope.row.model.innerServerId]
+                          source.nodeOptionMap[scope.row.innerServerId]
                             .isStarted,
 
                         'color-red':
-                          !source.nodeOptionMap[scope.row.model.innerServerId]
+                          !source.nodeOptionMap[scope.row.innerServerId]
                             .isStarted,
                       }"
                     >
-                      {{
-                        source.nodeOptionMap[scope.row.model.innerServerId].text
-                      }}
+                      {{ source.nodeOptionMap[scope.row.innerServerId].text }}
                     </span>
                     <span v-else class="pdl-10">
-                      {{ scope.row.model.innerServerId }}
+                      {{ scope.row.innerServerId }}
                     </span>
                   </div>
                   <div class="">
@@ -76,10 +73,10 @@
                   </div>
                   <div class="">
                     类型:<span class="pdlr-10 color-blue">
-                      {{ scope.row.model.innerType }}
+                      {{ scope.row.innerType }}
                     </span>
                     地址:<span class="pdl-10 color-blue">
-                      {{ scope.row.model.innerAddress }}
+                      {{ scope.row.innerAddress }}
                     </span>
                   </div>
                   <div class="">
@@ -121,30 +118,27 @@
             </el-table-column>
             <el-table-column label="输出端">
               <template slot-scope="scope">
-                <div class="text-left pd-5" v-if="scope.row.model != null">
+                <div class="text-left pd-5">
                   <div class="">
                     节点:<span
                       v-if="
-                        source.nodeOptionMap[scope.row.model.outerServerId] !=
-                        null
+                        source.nodeOptionMap[scope.row.outerServerId] != null
                       "
                       class="pdl-10"
                       :class="{
                         'color-green':
-                          source.nodeOptionMap[scope.row.model.outerServerId]
+                          source.nodeOptionMap[scope.row.outerServerId]
                             .isStarted,
 
                         'color-red':
-                          !source.nodeOptionMap[scope.row.model.outerServerId]
+                          !source.nodeOptionMap[scope.row.outerServerId]
                             .isStarted,
                       }"
                     >
-                      {{
-                        source.nodeOptionMap[scope.row.model.outerServerId].text
-                      }}
+                      {{ source.nodeOptionMap[scope.row.outerServerId].text }}
                     </span>
                     <span v-else class="pdl-10">
-                      {{ scope.row.model.outerServerId }}
+                      {{ scope.row.outerServerId }}
                     </span>
                   </div>
                   <div class="">
@@ -158,10 +152,10 @@
                   </div>
                   <div class="">
                     类型:<span class="pdlr-10 color-blue">
-                      {{ scope.row.model.outerType }}
+                      {{ scope.row.outerType }}
                     </span>
                     地址:<span class="pdl-10 color-blue">
-                      {{ scope.row.model.outerAddress }}
+                      {{ scope.row.outerAddress }}
                     </span>
                   </div>
                   <div class="ft-12">
@@ -203,9 +197,9 @@
             </el-table-column>
             <el-table-column label="状态" width="60">
               <template slot-scope="scope">
-                <div class="pd-5" v-if="scope.row.model != null">
+                <div class="pd-5">
                   <div class="">
-                    <template v-if="scope.row.model.enabled == 1">
+                    <template v-if="scope.row.enabled == 1">
                       <span class="color-green"> 启用 </span>
                     </template>
                     <template v-else>
@@ -216,17 +210,17 @@
               </template>
             </el-table-column>
             <el-table-column label="操作" width="150">
-              <template slot-scope="scope" v-if="scope.row.model != null">
+              <template slot-scope="scope">
                 <div
                   class="tm-link color-orange mgl-5"
-                  v-if="scope.row.model.enabled == 1"
+                  v-if="scope.row.enabled == 1"
                   @click="tool.toDisableNodeNetProxy(scope.row)"
                 >
                   停用
                 </div>
                 <div
                   class="tm-link color-green mgl-5"
-                  v-if="scope.row.model.enabled != 1"
+                  v-if="scope.row.enabled != 1"
                   @click="tool.toEnableNodeNetProxy(scope.row)"
                 >
                   启用
@@ -288,21 +282,19 @@ export default {
       let idList = [];
       let list = this.source.nodeNetProxyList || [];
       list.forEach((one) => {
-        if (one.info) {
-          idList.push(one.info.id);
-        }
+        idList.push(one.code);
       });
       if (idList.length > 0) {
         let res = await this.server.node.netProxy.monitorData({
           idList: idList,
         });
         res.data = res.data || {};
-        let netProxyList = res.data.netProxyList || [];
-        netProxyList.forEach((netProxy) => {
+        let netProxyMonitorDataList = res.data.netProxyMonitorDataList || [];
+        netProxyMonitorDataList.forEach((netProxyMonitorData) => {
           list.forEach((one) => {
-            if (one.info && one.info.id == netProxy.info.id) {
-              one.innerMonitorData = netProxy.innerMonitorData;
-              one.outerMonitorData = netProxy.outerMonitorData;
+            if (one.code == netProxyMonitorData.id) {
+              one.innerMonitorData = netProxyMonitorData.innerMonitorData;
+              one.outerMonitorData = netProxyMonitorData.outerMonitorData;
             }
           });
         });

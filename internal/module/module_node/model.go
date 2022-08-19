@@ -40,7 +40,7 @@ type NodeModel struct {
 
 	ConnServerIdList        []string `json:"connServerIdList,omitempty"`
 	HistoryConnServerIdList []string `json:"historyConnServerIdList,omitempty"`
-	IsStarted               bool     `json:"isStarted,omitempty"`
+	IsStarted               bool     `json:"isStarted"`
 }
 
 func GetStringList(str string) []string {
@@ -85,6 +85,8 @@ type NetProxyModel struct {
 	UpdateTime    time.Time `json:"updateTime,omitempty"`
 	DeleteTime    time.Time `json:"deleteTime,omitempty"`
 
+	InnerIsStarted        bool     `json:"innerIsStarted"`
+	OuterIsStarted        bool     `json:"outerIsStarted"`
 	LineNodeIdList        []string `json:"lineNodeIdList,omitempty"`
 	ReverseLineNodeIdList []string `json:"reverseLineNodeIdList,omitempty"`
 }

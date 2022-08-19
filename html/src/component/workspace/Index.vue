@@ -151,10 +151,8 @@ export default {
       });
       this.server.addServerSocketOnEvent("node-data-change", (data) => {
         try {
-          if (data.type == "nodeList") {
-            this.source.initNodeList(data.nodeList);
-          } else if (data.type == "netProxyList") {
-            this.source.initNodeNetProxyList(data.netProxyList);
+          if (data.type == "count") {
+            this.source.initNodeDataCount(data);
           }
         } catch (error) {}
       });

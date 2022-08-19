@@ -30,7 +30,7 @@ export default {
       this.$refs.InsertNodeNetProxy.show({
         title: `设置网络代理`,
         form: [this.form.node.netProxy],
-        data: [data.model],
+        data: [data],
       });
     },
     toInsert() {
@@ -77,11 +77,11 @@ export default {
     },
     toEnable(data) {
       this.tool.stopEvent();
-      if (!data || !data.model || !data.model.netProxyId) {
+      if (!data || !data.netProxyId) {
         this.tool.warn("代理ID丢失");
         return;
       }
-      return this.doEnable(data.model.netProxyId);
+      return this.doEnable(data.netProxyId);
     },
     async doEnable(netProxyId) {
       let res = await this.server.node.netProxy.enable({
@@ -97,16 +97,14 @@ export default {
     },
     toDisable(data) {
       this.tool.stopEvent();
-      if (!data || !data.model || !data.model.netProxyId) {
+      if (!data || !data.netProxyId) {
         this.tool.warn("代理ID丢失");
         return;
       }
       this.tool
-        .confirm(
-          "禁用[" + data.model.name + "]代理，相关功能将无法使用，确定禁用？"
-        )
+        .confirm("禁用[" + data.name + "]代理，相关功能将无法使用，确定禁用？")
         .then(async () => {
-          return this.doDisable(data.model.netProxyId);
+          return this.doDisable(data.netProxyId);
         })
         .catch((e) => {});
     },
@@ -124,18 +122,16 @@ export default {
     },
     toDelete(data) {
       this.tool.stopEvent();
-      if (!data || !data.model || !data.model.netProxyId) {
+      if (!data || !data.netProxyId) {
         this.tool.warn("代理ID丢失");
         return;
       }
       this.tool
         .confirm(
-          "删除[" +
-            data.model.name +
-            "]代理，将删除关联数据且无法恢复，确定删除？"
+          "删除[" + data.name + "]代理，将删除关联数据且无法恢复，确定删除？"
         )
         .then(async () => {
-          return this.doDelete(data.model.netProxyId);
+          return this.doDelete(data.netProxyId);
         })
         .catch((e) => {});
     },
