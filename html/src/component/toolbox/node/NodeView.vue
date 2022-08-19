@@ -66,7 +66,7 @@ export default {
       let lastX = 0;
       let lastY = 0;
       nodeList.forEach((one) => {
-        let nodeWrap = { data: one };
+        let nodeWrap = {};
         nodeWrap.isLocal = false;
         if (one.isLocal == 1) {
           nodeWrap.isLocal = true;
