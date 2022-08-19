@@ -38,6 +38,28 @@ func (this_ *Worker) getVersion(lineNodeIdList []string) (version string) {
 	return
 }
 
+func (this_ *Worker) getNodeStatus(lineNodeIdList []string) (status int8) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodNodeGetStatus, &Message{
+			LineNodeIdList: lineNodeIdList,
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NodeWorkData != nil {
+			status = resMsg.NodeWorkData.Status
+		}
+		return
+	}
+	status = StatusStarted
+	return
+}
+
 func (this_ *Worker) addToNodeList(lineNodeIdList []string, toNodeList []*ToNode) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNodeAddToNodeList, &Message{
@@ -100,6 +122,35 @@ func (this_ *Worker) getNodeMonitorData(lineNodeIdList []string) (monitorData *M
 	return
 }
 
+func (this_ *Worker) getNetProxyInnerStatus(lineNodeIdList []string, netProxyId string) (status int8) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodNetProxyGetInnerStatus, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyId: netProxyId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NetProxyWorkData != nil {
+			status = resMsg.NetProxyWorkData.Status
+		}
+		return
+	}
+
+	inner := this_.getNetProxyInner(netProxyId)
+	if inner != nil {
+		status = inner.status
+	}
+	return
+}
+
 func (this_ *Worker) addNetProxyInnerList(lineNodeIdList []string, netProxyInnerList []*NetProxyInner) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
 		_, e = this_.Call(listener, methodNetProxyAddNetProxyInnerList, &Message{
@@ -137,6 +188,35 @@ func (this_ *Worker) removeNetProxyInnerList(lineNodeIdList []string, netProxyId
 		return
 	}
 	_ = this_.doRemoveNetProxyInnerList(netProxyIdList)
+	return
+}
+
+func (this_ *Worker) getNetProxyOuterStatus(lineNodeIdList []string, netProxyId string) (status int8) {
+
+	var resMsg *Message
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		resMsg, e = this_.Call(listener, methodNetProxyGetOuterStatus, &Message{
+			LineNodeIdList: lineNodeIdList,
+			NetProxyWorkData: &NetProxyWorkData{
+				NetProxyId: netProxyId,
+			},
+		})
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		if resMsg != nil && resMsg.NetProxyWorkData != nil {
+			status = resMsg.NetProxyWorkData.Status
+		}
+		return
+	}
+
+	outer := this_.getNetProxyOuter(netProxyId)
+	if outer != nil {
+		status = StatusStarted
+	}
 	return
 }
 

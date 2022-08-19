@@ -20,6 +20,8 @@ func (this_ *NodeService) InitContext() {
 			codeModelCache:       make(map[string]*NetProxyModel),
 
 			lineNodeIdListCache: make(map[string][]string),
+
+			countData: newNodeCountData(),
 		}
 	}
 	err := this_.nodeContext.initContext()
@@ -53,6 +55,7 @@ type NodeContext struct {
 	runTimerRunning          bool
 	onNetProxyListChangeIng  bool
 	onNodeListChangeIng      bool
+	countData                *NodeCountData
 }
 
 func (this_ *NodeContext) cleanNodeLine() {
@@ -105,16 +108,17 @@ func (this_ *NodeContext) initContext() (err error) {
 	}
 	for _, one := range list {
 		if !one.IsROOT() {
-			this_.onAddNodeModel(one)
+			this_.addNodeModel(one)
 		}
 	}
 
 	var netProxyList []*NetProxyModel
 	netProxyList, _ = this_.QueryNetProxy(&NetProxyModel{})
 	for _, one := range netProxyList {
-		this_.onAddNetProxyModel(one)
+		this_.addNetProxyModel(one)
 	}
 
+	this_.doAlive()
 	return
 }
 

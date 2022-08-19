@@ -53,6 +53,7 @@ type WorkData struct {
 
 	Version     string       `json:"version,omitempty"`
 	MonitorData *MonitorData `json:"monitorData,omitempty"`
+	Status      int8         `json:"status,omitempty"`
 }
 
 type NetProxyWorkData struct {
@@ -63,6 +64,7 @@ type NetProxyWorkData struct {
 	NetProxyInnerList []*NetProxyInner `json:"netProxyInnerList,omitempty"`
 	NetProxyOuterList []*NetProxyOuter `json:"netProxyOuterList,omitempty"`
 	NetProxyIdList    []string         `json:"netProxyIdList,omitempty"`
+	Status            int8             `json:"status,omitempty"`
 }
 
 type FileWorkData struct {

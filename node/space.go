@@ -70,6 +70,7 @@ func (this_ *FromNode) IsEnabled() bool {
 
 type NetProxyInner struct {
 	Id             string   `json:"id,omitempty"`
+	NodeId         string   `json:"nodeId,omitempty"`
 	Type           string   `json:"type,omitempty"`
 	Address        string   `json:"address,omitempty"`
 	LineNodeIdList []string `json:"lineNodeIdList,omitempty"`
@@ -98,6 +99,7 @@ func (this_ *NetProxyInner) GetAddress() (str string) {
 
 type NetProxyOuter struct {
 	Id                    string   `json:"id,omitempty"`
+	NodeId                string   `json:"nodeId,omitempty"`
 	Type                  string   `json:"type,omitempty"`
 	Address               string   `json:"address,omitempty"`
 	ReverseLineNodeIdList []string `json:"reverseLineNodeIdList,omitempty"`

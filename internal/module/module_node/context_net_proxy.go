@@ -101,18 +101,55 @@ func (this_ *NodeContext) formatNetProxy(netProxyModel *NetProxyModel) (err erro
 	return
 }
 
-func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
+func (this_ *NodeContext) addNetProxyModel(netProxyModel *NetProxyModel) {
 	if netProxyModel == nil {
 		return
 	}
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
+}
+
+func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
+	if netProxyModel == nil {
+		return
+	}
+	this_.addNetProxyModel(netProxyModel)
+
+	this_.toAddNetProxyModel(netProxyModel)
+
+}
+
+func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
+	if netProxyModel == nil {
+		return
+	}
 	err := this_.formatNetProxy(netProxyModel)
 	if err == nil {
-		_ = this_.server.AddNetProxyList([]*node.NetProxy{
-			one,
-		})
+		lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+		if len(lineNodeIdList) > 0 {
+			_ = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
+				{
+					Id:      netProxyModel.Code,
+					NodeId:  netProxyModel.InnerServerId,
+					Type:    netProxyModel.InnerType,
+					Address: netProxyModel.InnerAddress,
+					Enabled: netProxyModel.Enabled,
+				},
+			})
+		}
+		lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+		if len(lineNodeIdList) > 0 {
+			_ = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
+				{
+					Id:      netProxyModel.Code,
+					NodeId:  netProxyModel.OuterServerId,
+					Type:    netProxyModel.OuterType,
+					Address: netProxyModel.OuterAddress,
+					Enabled: netProxyModel.Enabled,
+				},
+			})
+		}
 	}
 }
 
@@ -122,6 +159,8 @@ func (this_ *NodeContext) onUpdateNetProxyModel(netProxyModel *NetProxyModel) {
 	}
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
+
+	this_.toAddNetProxyModel(netProxyModel)
 }
 
 func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
@@ -131,7 +170,38 @@ func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
 	}
 	this_.removeNetProxyModel(netProxyModel.NetProxyId)
 	this_.removeNetProxyModelByCode(netProxyModel.Code)
-	_ = this_.server.RemoveNetProxyList([]string{netProxyModel.Code})
+
+	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.RemoveNetProxyInnerList(lineNodeIdList, []string{
+			netProxyModel.Code,
+		})
+	}
+	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.RemoveNetProxyOuterList(lineNodeIdList, []string{
+			netProxyModel.Code,
+		})
+	}
+}
+
+func (this_ *NodeContext) toRemoveNetProxyModel(netProxyModel *NetProxyModel) {
+	if netProxyModel == nil {
+		return
+	}
+
+	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.RemoveNetProxyInnerList(lineNodeIdList, []string{
+			netProxyModel.Code,
+		})
+	}
+	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.RemoveNetProxyOuterList(lineNodeIdList, []string{
+			netProxyModel.Code,
+		})
+	}
 }
 
 func (this_ *NodeContext) onEnableNetProxyModel(id int64) {
@@ -143,12 +213,7 @@ func (this_ *NodeContext) onEnableNetProxyModel(id int64) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
-	err := this_.formatNetProxy(netProxyModel)
-	if err == nil {
-		_ = this_.server.AddNetProxyList([]*node.NetProxy{
-			one,
-		})
-	}
+	this_.toAddNetProxyModel(netProxyModel)
 }
 
 func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
@@ -160,10 +225,5 @@ func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
-	err := this_.formatNetProxy(netProxyModel)
-	if err == nil {
-		_ = this_.server.AddNetProxyList([]*node.NetProxy{
-			one,
-		})
-	}
+	this_.toAddNetProxyModel(netProxyModel)
 }

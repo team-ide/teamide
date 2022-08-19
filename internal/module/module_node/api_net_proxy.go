@@ -12,7 +12,13 @@ type netProxyMonitorDataRequest struct {
 }
 
 type netProxyMonitorDataResponse struct {
-	NetProxyList []*NetProxyInfo `json:"netProxyList,omitempty"`
+	NetProxyMonitorDataList []*NetProxyMonitorData `json:"netProxyMonitorDataList,omitempty"`
+}
+
+type NetProxyMonitorData struct {
+	Id               string             `json:"id,omitempty"`
+	InnerMonitorData *MonitorDataFormat `json:"innerMonitorData,omitempty"`
+	OuterMonitorData *MonitorDataFormat `json:"outerMonitorData,omitempty"`
 }
 
 func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -24,16 +30,19 @@ func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (
 	response := &netProxyMonitorDataResponse{}
 
 	for _, id := range request.IdList {
-		netProxyInfo := this_.NodeService.nodeContext.getNetProxyInfo(id)
-		if netProxyInfo == nil || netProxyInfo.Info == nil {
+		netProxyInfo := this_.NodeService.nodeContext.getNetProxyModelByCode(id)
+		if netProxyInfo == nil {
 			continue
 		}
-		innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.Info.Inner.NodeId)
-		outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.Info.Outer.NodeId)
+		innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.InnerServerId)
+		outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.OuterServerId)
 
-		netProxyInfo.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
-		netProxyInfo.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
-		response.NetProxyList = append(response.NetProxyList, netProxyInfo)
+		one := &NetProxyMonitorData{
+			Id: id,
+		}
+		one.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
+		one.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
+		response.NetProxyMonitorDataList = append(response.NetProxyMonitorDataList, one)
 	}
 
 	res = response
@@ -55,10 +64,7 @@ func (this_ *NodeApi) netProxyList(_ *base.RequestBean, c *gin.Context) (res int
 	}
 	response := &NetProxyListResponse{}
 
-	response.NetProxyList, err = this_.NodeService.QueryNetProxy(&NetProxyModel{})
-	if err != nil {
-		return
-	}
+	response.NetProxyList = this_.NodeService.nodeContext.netProxyModelList
 
 	res = response
 	return
@@ -83,7 +89,7 @@ func (this_ *NodeApi) netProxyInsert(requestBean *base.RequestBean, c *gin.Conte
 	netProxy.UserId = requestBean.JWT.UserId
 	netProxy.Code = util.UUID()
 
-	_, err = this_.NodeService.nodeContext.formatNetProxy(netProxy)
+	err = this_.NodeService.nodeContext.formatNetProxy(netProxy)
 	if err != nil {
 		return
 	}

@@ -15,6 +15,7 @@ var (
 	methodNodeAddToNodeList      = 101
 	methodNodeRemoveToNodeList   = 102
 	methodNodeGetNodeMonitorData = 103
+	methodNodeGetStatus          = 104
 
 	methodNetProxyNewConn                 = 201
 	methodNetProxyCloseConn               = 202
@@ -25,6 +26,8 @@ var (
 	methodNetProxyAddNetProxyOuterList    = 207
 	methodNetProxyRemoveNetProxyInnerList = 208
 	methodNetProxyRemoveNetProxyOuterList = 209
+	methodNetProxyGetInnerStatus          = 210
+	methodNetProxyGetOuterStatus          = 211
 
 	methodFileFiles         = 301
 	methodFileCopy          = 302

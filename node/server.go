@@ -81,7 +81,12 @@ func (this_ *Server) SystemCleanMonitorData(lineNodeIdList []string) {
 }
 
 func (this_ *Server) GetNodeVersion(lineNodeIdList []string) (version string) {
-	version = this_.GetNodeVersion(lineNodeIdList)
+	version = this_.getVersion(lineNodeIdList)
+	return
+}
+
+func (this_ *Server) GetNodeStatus(lineNodeIdList []string) (status int8) {
+	status = this_.getNodeStatus(lineNodeIdList)
 	return
 }
 
@@ -110,6 +115,11 @@ func (this_ *Server) RemoveToNodeList(lineNodeIdList []string, toNodeIdList []st
 	return
 }
 
+func (this_ *Server) GetNetProxyInnerStatus(lineNodeIdList []string, netProxyId string) (status int8) {
+	status = this_.getNetProxyInnerStatus(lineNodeIdList, netProxyId)
+	return
+}
+
 func (this_ *Server) AddNetProxyInnerList(lineNodeIdList []string, netProxyList []*NetProxyInner) (err error) {
 	this_.addNetProxyInnerList(lineNodeIdList, netProxyList)
 	return
@@ -117,6 +127,11 @@ func (this_ *Server) AddNetProxyInnerList(lineNodeIdList []string, netProxyList 
 
 func (this_ *Server) RemoveNetProxyInnerList(lineNodeIdList []string, netProxyIdList []string) (err error) {
 	this_.removeNetProxyInnerList(lineNodeIdList, netProxyIdList)
+	return
+}
+
+func (this_ *Server) GetNetProxyOuterStatus(lineNodeIdList []string, netProxyId string) (status int8) {
+	status = this_.getNetProxyOuterStatus(lineNodeIdList, netProxyId)
 	return
 }
 

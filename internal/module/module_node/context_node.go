@@ -68,7 +68,7 @@ func (this_ *NodeContext) removeNodeModelByServerId(id string) {
 	delete(this_.serverIdModelCache, id)
 }
 
-func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
+func (this_ *NodeContext) addNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
 		return
 	}
@@ -82,6 +82,21 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 		}
 	}
 
+	this_.cleanNodeLine()
+	this_.toAddNodeModel(nodeModel)
+}
+func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
+	if nodeModel == nil {
+		return
+	}
+	this_.addNodeModel(nodeModel)
+	var err error
+	if nodeModel.IsROOT() {
+		err = this_.initRoot(nodeModel)
+		if err != nil {
+			this_.Logger.Error("node context init root error", zap.Error(err))
+		}
+	}
 	this_.cleanNodeLine()
 	this_.toAddNodeModel(nodeModel)
 }

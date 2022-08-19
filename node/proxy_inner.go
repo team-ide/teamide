@@ -15,6 +15,7 @@ type InnerServer struct {
 	serverListener net.Listener
 	MonitorData    *MonitorData
 	*Worker
+	status int8
 }
 
 func (this_ *InnerServer) Start() {
@@ -42,6 +43,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		return
 	}
 	defer func() {
+		this_.status = StatusStopped
 		if !this_.isStopped() {
 			return
 		}
@@ -58,6 +60,7 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 	}
 	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.GetInfoStr() + " 启动成功")
 
+	this_.status = StatusStarted
 	for {
 		if this_.isStopped() {
 			break

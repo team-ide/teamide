@@ -23,7 +23,7 @@ func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 	response := &ListResponse{}
 
-	response.NodeList, err = this_.NodeService.Query(&NodeModel{})
+	response.NodeList = this_.NodeService.nodeContext.nodeModelList
 	if err != nil {
 		return
 	}
@@ -51,23 +51,15 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 	node := request.NodeModel
 	node.UserId = requestBean.JWT.UserId
 
-	var nodeInfo *NodeInfo
+	var parentNodeModel *NodeModel
 	if !node.IsROOT() {
 		if request.ParentServerId == "" {
 			err = errors.New("父节点ID丢失")
 			return
 		}
-		nodeInfo = this_.NodeService.nodeContext.getNodeInfo(request.ParentServerId)
-		if nodeInfo == nil {
+		parentNodeModel = this_.NodeService.nodeContext.getNodeModelByServerId(request.ParentServerId)
+		if parentNodeModel == nil {
 			err = errors.New("父节点[" + request.ParentServerId + "]不存在")
-			return
-		}
-		if nodeInfo.Info == nil {
-			err = errors.New("父节点[" + request.ParentServerId + "]节点服务不存在")
-			return
-		}
-		if nodeInfo.Model == nil {
-			err = errors.New("父节点[" + request.ParentServerId + "]节点数据不存在")
 			return
 		}
 	}
@@ -85,17 +77,17 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 		return
 	}
 	this_.NodeService.nodeContext.onAddNodeModel(node)
-	if nodeInfo != nil && nodeInfo.Info != nil && nodeInfo.Model != nil {
+	if parentNodeModel != nil {
 		var connNodeIdList []string
-		if nodeInfo.Model.ConnServerIds != "" {
-			_ = json.Unmarshal([]byte(nodeInfo.Model.ConnServerIds), &connNodeIdList)
+		if parentNodeModel.ConnServerIds != "" {
+			_ = json.Unmarshal([]byte(parentNodeModel.ConnServerIds), &connNodeIdList)
 		}
 		if util.ContainsString(connNodeIdList, node.ServerId) < 0 {
 			connNodeIdList = append(connNodeIdList, node.ServerId)
 		}
 		bs, _ := json.Marshal(connNodeIdList)
 		if bs != nil {
-			_, err = this_.NodeService.UpdateConnServerIds(nodeInfo.Model.NodeId, string(bs))
+			_, err = this_.NodeService.UpdateConnServerIds(parentNodeModel.NodeId, string(bs))
 			if err != nil {
 				return
 			}
