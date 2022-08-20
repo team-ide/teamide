@@ -320,12 +320,12 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
+  user-select: text;
 }
 .node-net-proxy-box-header {
   position: relative;
   width: 100%;
   height: 100%;
-  user-select: text;
 }
 .node-net-proxy-body {
   position: relative;

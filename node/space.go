@@ -309,7 +309,7 @@ func (this_ *Space) getNetProxyInnerIfAbsentCreate(netProxy *NetProxyInner, work
 	if !ok {
 		inner = &InnerServer{
 			netProxy: netProxy,
-			Worker:   worker,
+			worker:   worker,
 		}
 		inner.Start()
 		this_.netProxyInnerCache[netProxy.Id] = inner
@@ -344,7 +344,7 @@ func (this_ *Space) getNetProxyOuterIfAbsentCreate(netProxy *NetProxyOuter, work
 	if !ok {
 		outer = &OuterListener{
 			netProxy: netProxy,
-			Worker:   worker,
+			worker:   worker,
 		}
 		outer.Start()
 		this_.netProxyOuterCache[netProxy.Id] = outer

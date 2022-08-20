@@ -40,8 +40,12 @@ func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (
 		one := &NetProxyMonitorData{
 			Id: id,
 		}
-		one.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
-		one.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
+		if len(innerLineNodeIdList) > 0 {
+			one.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
+		}
+		if len(outerLineNodeIdList) > 0 {
+			one.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
+		}
 		response.NetProxyMonitorDataList = append(response.NetProxyMonitorDataList, one)
 	}
 
@@ -64,7 +68,8 @@ func (this_ *NodeApi) netProxyList(_ *base.RequestBean, c *gin.Context) (res int
 	}
 	response := &NetProxyListResponse{}
 
-	response.NetProxyList = this_.NodeService.nodeContext.netProxyModelList
+	var netProxyModelList = this_.NodeService.nodeContext.getNetProxyModelList()
+	response.NetProxyList = netProxyModelList
 
 	res = response
 	return

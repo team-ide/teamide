@@ -66,6 +66,22 @@ func (this_ *NodeService) CheckNetProxyNameExist(name string) (res bool, err err
 	return
 }
 
+// CheckNetProxyServerIdExist 查询
+func (this_ *NodeService) CheckNetProxyServerIdExist(serverId string) (res bool, err error) {
+
+	sql := `SELECT COUNT(1) FROM ` + TableNodeNetProxy + ` WHERE deleted=2 AND (innerServerId = ? OR outerServerId = ?)`
+
+	count, err := this_.DatabaseWorker.Count(sql, []interface{}{serverId, serverId})
+	if err != nil {
+		this_.Logger.Error("CheckNetProxyServerIdExist Error", zap.Error(err))
+		return
+	}
+
+	res = count > 0
+
+	return
+}
+
 // CheckServerBindAddressExist 查询
 func (this_ *NodeService) CheckServerBindAddressExist(serverId string, bindAddress string) (res bool, err error) {
 	lastIndex := strings.LastIndex(bindAddress, ":")

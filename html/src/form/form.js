@@ -191,7 +191,7 @@ let node = {
             },
         ],
     },
-    connNode: {
+    toNode: {
         fields: [
             {
                 label: "名称",
@@ -239,6 +239,38 @@ let node = {
                     {
                         required: true,
                         message: `目标节点Token不能为空!`
+                    },
+
+                ],
+            },
+        ],
+    },
+    fromNode: {
+        fields: [
+            {
+                label: "名称",
+                name: "name",
+                rules: [
+                    {
+                        required: true,
+                        message: `名称不能为空!`
+                    },
+
+                ],
+            },
+            {
+                label: "说明",
+                name: "comment",
+                rules: [
+                ],
+            },
+            {
+                label: "节点ID",
+                name: "serverId",
+                rules: [
+                    {
+                        required: true,
+                        message: `节点ID不能为空!`
                     },
 
                 ],

@@ -10,7 +10,7 @@ import (
 type OuterListener struct {
 	netProxy *NetProxyOuter
 	isStop   bool
-	*Worker
+	worker   *Worker
 	*connCache
 	MonitorData *MonitorData
 }
@@ -43,7 +43,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 
 	conn, err := net.Dial(this_.netProxy.GetType(), this_.netProxy.GetAddress())
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
+		Logger.Error(this_.netProxy.GetInfoStr()+" 连接 ["+connId+"] 异常", zap.Error(err))
 		return
 	}
 	//Logger.Info(this_.server.GetServerInfo() + " 至 " + this_.netProxy.Outer.GetInfoStr() + " 连接 [" + connId + "] 成功")
@@ -52,7 +52,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 		var netProxyId = this_.netProxy.Id
 		defer func() {
 			_ = this_.closeConn(connId)
-			_ = this_.netProxyCloseConn(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId)
+			_ = this_.worker.netProxyCloseConn(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId)
 		}()
 
 		for {
@@ -77,9 +77,9 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 			end := util.Now().UnixNano()
 			this_.MonitorData.monitorRead(int64(n), end-start)
 
-			err = this_.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, bytes)
+			err = this_.worker.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, bytes)
 			if err != nil {
-				Logger.Error(this_.server.GetServerInfo()+" 至 "+this_.netProxy.GetInfoStr()+" 连接 发送异常", zap.Error(err))
+				Logger.Error(this_.netProxy.GetInfoStr()+" 连接 发送异常", zap.Error(err))
 				break
 			}
 		}

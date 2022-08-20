@@ -157,6 +157,58 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 			}
 		}
 		return
+	case methodNodeGetStatus:
+		status := this_.getNodeStatus(msg.LineNodeIdList)
+		res.NodeWorkData = &WorkData{
+			Status: status,
+		}
+		return
+	case methodNodeAddToNodeList:
+		if msg.NodeWorkData != nil {
+			this_.addToNodeList(msg.LineNodeIdList, msg.NodeWorkData.ToNodeList)
+		}
+		return
+	case methodNodeRemoveToNodeList:
+		if msg.NodeWorkData != nil {
+			this_.removeToNodeList(msg.LineNodeIdList, msg.NodeWorkData.ToNodeIdList)
+		}
+		return
+	case methodNetProxyAddNetProxyInnerList:
+		if msg.NetProxyWorkData != nil {
+			this_.addNetProxyInnerList(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyInnerList)
+		}
+		return
+	case methodNetProxyRemoveNetProxyInnerList:
+		if msg.NetProxyWorkData != nil {
+			this_.removeNetProxyInnerList(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyIdList)
+		}
+		return
+	case methodNetProxyAddNetProxyOuterList:
+		if msg.NetProxyWorkData != nil {
+			this_.addNetProxyOuterList(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyOuterList)
+		}
+		return
+	case methodNetProxyRemoveNetProxyOuterList:
+		if msg.NetProxyWorkData != nil {
+			this_.removeNetProxyOuterList(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyIdList)
+		}
+		return
+	case methodNetProxyGetInnerStatus:
+		if msg.NetProxyWorkData != nil {
+			status := this_.getNetProxyInnerStatus(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId)
+			res.NetProxyWorkData = &NetProxyWorkData{
+				Status: status,
+			}
+		}
+		return
+	case methodNetProxyGetOuterStatus:
+		if msg.NetProxyWorkData != nil {
+			status := this_.getNetProxyOuterStatus(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId)
+			res.NetProxyWorkData = &NetProxyWorkData{
+				Status: status,
+			}
+		}
+		return
 	case methodNetProxyNewConn:
 		if msg.NetProxyWorkData != nil {
 			err = this_.netProxyNewConn(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyId, msg.NetProxyWorkData.ConnId)

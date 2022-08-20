@@ -408,18 +408,18 @@ source.initNodeContext = async () => {
     } else {
         let data = res.data || {};
         source.localIpList = data.localIpList || [];
-        source.initNodeDataCount(data.dataCount)
+        source.initNodeDataCount(data.countData)
         source.initNodeList(data.nodeList)
         source.initNodeNetProxyList(data.netProxyList)
     }
 }
-source.initNodeDataCount = (dataCount) => {
-    dataCount = dataCount || {};
-    source.nodeCount = dataCount.nodeCount || 0;
-    source.nodeSuccessCount = dataCount.nodeSuccessCount || 0;
-    source.nodeNetProxyCount = dataCount.nodeNetProxyCount || 0;
-    source.nodeNetProxyInnerSuccessCount = dataCount.nodeNetProxyInnerSuccessCount || 0;
-    source.nodeNetProxyOuterSuccessCount = dataCount.nodeNetProxyOuterSuccessCount || 0;
+source.initNodeDataCount = (countData) => {
+    countData = countData || {};
+    source.nodeCount = countData.nodeCount || 0;
+    source.nodeSuccessCount = countData.nodeSuccessCount || 0;
+    source.nodeNetProxyCount = countData.nodeNetProxyCount || 0;
+    source.nodeNetProxyInnerSuccessCount = countData.nodeNetProxyInnerSuccessCount || 0;
+    source.nodeNetProxyOuterSuccessCount = countData.nodeNetProxyOuterSuccessCount || 0;
 }
 source.initNodeList = (nodeList) => {
     nodeList = nodeList || []
@@ -429,9 +429,6 @@ source.initNodeList = (nodeList) => {
     nodeList.forEach(one => {
         let option = {};
         option.isStarted = one.isStarted
-        if (one.isStarted) {
-            nodeSuccessCount++;
-        }
         option.value = one.serverId;
         option.text = one.name;
 
@@ -447,6 +444,10 @@ source.initNodeList = (nodeList) => {
 }
 source.initNodeNetProxyList = (nodeNetProxyList) => {
     nodeNetProxyList = nodeNetProxyList || []
+    nodeNetProxyList.forEach(one => {
+        one.innerMonitorData = one.innerMonitorData || null
+        one.outerMonitorData = one.outerMonitorData || null
+    });
     source.nodeNetProxyList = nodeNetProxyList;
 }
 

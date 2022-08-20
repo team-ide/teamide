@@ -16,72 +16,158 @@ func (this_ *NodeContext) doAlive() {
 	if this_.root == nil || this_.server == nil {
 		return
 	}
+	//this_.Logger.Info("node do alive")
 
-	var nodeModelList = this_.nodeModelList
-	for _, nodeModel := range nodeModelList {
-		this_.toAddNodeModel(nodeModel)
+	var nodeModelIdList = this_.nodeModelIdList
+
+	for _, id := range nodeModelIdList {
+		find := this_.getNodeModel(id)
+		if find == nil {
+			continue
+		}
+		this_.toAddNodeModel(find)
 	}
 
-	var netProxyModelList = this_.netProxyModelList
-	for _, netProxyModel := range netProxyModelList {
-		this_.toAddNetProxyModel(netProxyModel)
+	var netProxyModelIdList = this_.netProxyModelIdList
+	for _, id := range netProxyModelIdList {
+		find := this_.getNetProxyModel(id)
+		if find == nil {
+			continue
+		}
+		this_.toAddNetProxyModel(find)
 	}
 
 	var countData = newNodeCountData()
 	this_.doCountData(countData)
+	this_.countData = countData
 
-	oldBs, _ := json.Marshal(countData)
-	newBs, _ := json.Marshal(this_.countData)
-	if string(oldBs) != string(newBs) {
-		this_.countData = countData
-		this_.callNodeCountDataChange(countData)
-	}
-
+	this_.checkChangeOut()
 	return
 }
 
 func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 	countData.NodeCount = 0
 	countData.NodeSuccessCount = 0
-	var nodeModelList = this_.nodeModelList
-	for _, nodeModel := range nodeModelList {
+	var nodeModelIdList = this_.nodeModelIdList
+	for _, id := range nodeModelIdList {
+		find := this_.getNodeModel(id)
+		if find == nil {
+			continue
+		}
 		countData.NodeCount++
 
-		lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
+		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
 		if len(lineNodeIdList) > 0 {
+			//this_.Logger.Info("toAddNodeModel", zap.Any("to node", nodeModel.ServerId), zap.Any("lineNodeIdList", lineNodeIdList))
 			status := this_.server.GetNodeStatus(lineNodeIdList)
-			nodeModel.IsStarted = status == node.StatusStarted
-			if nodeModel.IsStarted {
+			find.Status = status
+			find.IsStarted = status == node.StatusStarted
+			if find.IsStarted {
 				countData.NodeSuccessCount++
 			}
+		} else {
+			find.Status = 0
 		}
 	}
 	countData.NodeNetProxyCount = 0
 	countData.NodeNetProxyInnerSuccessCount = 0
 	countData.NodeNetProxyOuterSuccessCount = 0
 
-	var netProxyModelList = this_.netProxyModelList
-	for _, netProxyModel := range netProxyModelList {
-
-		lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
-		if len(lineNodeIdList) > 0 {
-			status := this_.server.GetNetProxyInnerStatus(lineNodeIdList, netProxyModel.Code)
-
-			netProxyModel.InnerIsStarted = status == node.StatusStarted
-			if netProxyModel.InnerIsStarted {
-				countData.NodeNetProxyInnerSuccessCount++
-			}
+	var netProxyModelIdList = this_.netProxyModelIdList
+	for _, id := range netProxyModelIdList {
+		find := this_.getNetProxyModel(id)
+		if find == nil {
+			continue
 		}
 
-		lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+		lineNodeIdList := this_.GetNodeLineTo(find.InnerServerId)
 		if len(lineNodeIdList) > 0 {
-			status := this_.server.GetNetProxyOuterStatus(lineNodeIdList, netProxyModel.Code)
-			netProxyModel.OuterIsStarted = status == node.StatusStarted
-			if netProxyModel.OuterIsStarted {
+			status := this_.server.GetNetProxyInnerStatus(lineNodeIdList, find.Code)
+
+			find.InnerStatus = status
+			find.InnerIsStarted = status == node.StatusStarted
+			if find.InnerIsStarted {
+				countData.NodeNetProxyInnerSuccessCount++
+			}
+		} else {
+			find.InnerStatus = 0
+		}
+
+		lineNodeIdList = this_.GetNodeLineTo(find.OuterServerId)
+		if len(lineNodeIdList) > 0 {
+			status := this_.server.GetNetProxyOuterStatus(lineNodeIdList, find.Code)
+			find.OuterStatus = status
+			find.OuterIsStarted = status == node.StatusStarted
+			if find.OuterIsStarted {
 				countData.NodeNetProxyOuterSuccessCount++
 			}
+		} else {
+			find.OuterStatus = 0
 		}
 	}
 
+	return
+}
+
+func (this_ *NodeContext) getNodeModelList() []*NodeModel {
+	var nodeModelList []*NodeModel
+
+	var nodeModelIdList = this_.nodeModelIdList
+
+	for _, id := range nodeModelIdList {
+		find := this_.getNodeModel(id)
+		if find == nil {
+			continue
+		}
+		nodeModelList = append(nodeModelList, find)
+	}
+	return nodeModelList
+}
+
+func (this_ *NodeContext) getNetProxyModelList() []*NetProxyModel {
+	var netProxyModelList []*NetProxyModel
+
+	var netProxyModelIdList = this_.netProxyModelIdList
+	for _, id := range netProxyModelIdList {
+		find := this_.getNetProxyModel(id)
+		if find == nil {
+			continue
+		}
+		netProxyModelList = append(netProxyModelList, find)
+	}
+	return netProxyModelList
+}
+
+func (this_ *NodeContext) checkChangeOut() {
+
+	var nodeModelList = this_.getNodeModelList()
+	var netProxyModelList = this_.getNetProxyModelList()
+
+	var countData = this_.countData
+
+	newBs, _ := json.Marshal(countData)
+	newCountDataStr := string(newBs)
+	//this_.Logger.Info("count data validate", zap.Any("old", string(oldCountBs)), zap.Any("new", string(newBs)))
+	if this_.oldCountDataStr != newCountDataStr {
+		this_.oldCountDataStr = newCountDataStr
+		this_.countData = countData
+		this_.callNodeCountDataChange(countData)
+	}
+
+	newBs, _ = json.Marshal(nodeModelList)
+	newNodeListStr := string(newBs)
+	//this_.Logger.Info("node list validate", zap.Any("old", string(oldNodeBs)), zap.Any("new", string(newBs)))
+	if this_.oldNodeListStr != newNodeListStr {
+		this_.oldNodeListStr = newNodeListStr
+		this_.callNodeListChange(nodeModelList)
+	}
+
+	newBs, _ = json.Marshal(netProxyModelList)
+	newNetProxyListStr := string(newBs)
+	//this_.Logger.Info("net proxy list validate", zap.Any("old", string(netProxyBs)), zap.Any("new", string(newBs)))
+	if this_.oldNetProxyListStr != newNetProxyListStr {
+		this_.oldNetProxyListStr = newNetProxyListStr
+		this_.callNetProxyListChange(netProxyModelList)
+	}
 	return
 }

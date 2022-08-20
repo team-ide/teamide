@@ -106,9 +106,12 @@ func (this_ *NodeApi) context(_ *base.RequestBean, _ *gin.Context) (res interfac
 		response.LocalIpList = append(response.LocalIpList, ip.String())
 	}
 
+	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
+	var netProxyModelList = this_.NodeService.nodeContext.getNetProxyModelList()
+
 	response.CountData = this_.NodeService.nodeContext.countData
-	response.NodeList = this_.NodeService.nodeContext.nodeModelList
-	response.NetProxyList = this_.NodeService.nodeContext.netProxyModelList
+	response.NodeList = nodeModelList
+	response.NetProxyList = netProxyModelList
 	res = response
 	return
 }

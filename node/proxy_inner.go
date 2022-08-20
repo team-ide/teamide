@@ -14,8 +14,8 @@ type InnerServer struct {
 	*connCache
 	serverListener net.Listener
 	MonitorData    *MonitorData
-	*Worker
-	status int8
+	worker         *Worker
+	status         int8
 }
 
 func (this_ *InnerServer) Start() {
@@ -51,14 +51,14 @@ func (this_ *InnerServer) serverListenerKeepAlive() {
 		go this_.serverListenerKeepAlive()
 	}()
 	var err error
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.GetInfoStr() + " 启动")
+	Logger.Info("代理服务 " + this_.netProxy.GetInfoStr() + " 启动")
 
 	this_.serverListener, err = net.Listen(this_.netProxy.GetType(), this_.netProxy.GetAddress())
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 监听异常", zap.Error(err))
+		Logger.Error("代理服务 "+this_.netProxy.GetInfoStr()+" 监听异常", zap.Error(err))
 		return
 	}
-	Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.GetInfoStr() + " 启动成功")
+	Logger.Info("代理服务 " + this_.netProxy.GetInfoStr() + " 启动成功")
 
 	this_.status = StatusStarted
 	for {
@@ -91,14 +91,14 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 
 	defer func() {
 		_ = this_.closeConn(connId)
-		_ = this_.netProxyCloseConn(false, this_.netProxy.LineNodeIdList, netProxyId, connId)
+		_ = this_.worker.netProxyCloseConn(false, this_.netProxy.LineNodeIdList, netProxyId, connId)
 	}()
 	var err error
 
-	err = this_.netProxyNewConn(this_.netProxy.LineNodeIdList, netProxyId, connId)
+	err = this_.worker.netProxyNewConn(this_.netProxy.LineNodeIdList, netProxyId, connId)
 
 	if err != nil {
-		Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
+		Logger.Error("代理服务 "+this_.netProxy.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
 		return
 	}
 	for {
@@ -122,9 +122,9 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		end := util.Now().UnixNano()
 		this_.MonitorData.monitorRead(int64(n), end-start)
 
-		err = this_.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
+		err = this_.worker.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
 		if err != nil {
-			Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
+			Logger.Error("代理服务 "+this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
 			break
 		}
 	}

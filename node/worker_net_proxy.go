@@ -19,11 +19,10 @@ func (this_ *Worker) doAddNetProxyInnerList(netProxyList []*NetProxyInner) (err 
 			Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
 			this_.netProxyInnerList = append(this_.netProxyInnerList, netProxy)
 
-			if find.IsEnabled() {
+			if netProxy.IsEnabled() {
 				_ = this_.getNetProxyInnerIfAbsentCreate(netProxy, this_)
 			}
 		} else {
-			Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
 
 			var hasChange bool
 			if netProxy.Enabled != 0 {
@@ -42,6 +41,7 @@ func (this_ *Worker) doAddNetProxyInnerList(netProxyList []*NetProxyInner) (err 
 			}
 
 			if hasChange {
+				Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
 				_ = this_.removeNetProxyInner(netProxy.Id)
 				if find.IsEnabled() {
 					_ = this_.getNetProxyInnerIfAbsentCreate(netProxy, this_)
@@ -68,11 +68,10 @@ func (this_ *Worker) doAddNetProxyOuterList(netProxyList []*NetProxyOuter) (err 
 			Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
 			this_.netProxyOuterList = append(this_.netProxyOuterList, netProxy)
 
-			if find.IsEnabled() {
+			if netProxy.IsEnabled() {
 				_ = this_.getNetProxyOuterIfAbsentCreate(netProxy, this_)
 			}
 		} else {
-			Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
 
 			var hasChange bool
 			if netProxy.Enabled != 0 {
@@ -91,6 +90,7 @@ func (this_ *Worker) doAddNetProxyOuterList(netProxyList []*NetProxyOuter) (err 
 			}
 
 			if hasChange {
+				Logger.Info(this_.server.GetServerInfo()+" 更新网络代理 ", zap.Any("netProxy", netProxy))
 				_ = this_.removeNetProxyOuter(netProxy.Id)
 				if find.IsEnabled() {
 					_ = this_.getNetProxyOuterIfAbsentCreate(netProxy, this_)

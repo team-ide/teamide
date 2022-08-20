@@ -37,7 +37,8 @@ type NodeContext struct {
 	*NodeService
 	root *NodeModel
 
-	nodeModelList          []*NodeModel
+	oldNodeListStr         string
+	nodeModelIdList        []int64
 	nodeIdModelCache       map[int64]*NodeModel
 	nodeIdModelCacheLock   sync.Mutex
 	serverIdModelCache     map[string]*NodeModel
@@ -46,7 +47,8 @@ type NodeContext struct {
 	lineNodeIdListCache     map[string][]string
 	lineNodeIdListCacheLock sync.Mutex
 
-	netProxyModelList        []*NetProxyModel
+	oldNetProxyListStr       string
+	netProxyModelIdList      []int64
 	netProxyIdModelCache     map[int64]*NetProxyModel
 	netProxyIdModelCacheLock sync.Mutex
 	codeModelCache           map[string]*NetProxyModel
@@ -55,7 +57,9 @@ type NodeContext struct {
 	runTimerRunning          bool
 	onNetProxyListChangeIng  bool
 	onNodeListChangeIng      bool
-	countData                *NodeCountData
+
+	oldCountDataStr string
+	countData       *NodeCountData
 }
 
 func (this_ *NodeContext) cleanNodeLine() {
@@ -82,9 +86,13 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 	}
 
 	var nodeIdConnNodeIdListCache = make(map[string][]string)
-	var list = this_.nodeModelList
+	var list = this_.nodeModelIdList
 	for _, one := range list {
-		nodeIdConnNodeIdListCache[one.ServerId] = one.ConnServerIdList
+		find := this_.getNodeModel(one)
+		if find == nil {
+			continue
+		}
+		nodeIdConnNodeIdListCache[find.ServerId] = find.ConnServerIdList
 	}
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
 
@@ -118,7 +126,7 @@ func (this_ *NodeContext) initContext() (err error) {
 		this_.addNetProxyModel(one)
 	}
 
-	this_.doAlive()
+	go this_.doAlive()
 	return
 }
 

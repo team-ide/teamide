@@ -20,17 +20,6 @@ func (this_ *NodeContext) setNodeModel(id int64, nodeModel *NodeModel) {
 	defer this_.nodeIdModelCacheLock.Unlock()
 
 	this_.nodeIdModelCache[id] = nodeModel
-
-	var find bool
-	var list = this_.nodeModelList
-	for _, one := range list {
-		if one.NodeId == id {
-			find = true
-		}
-	}
-	if find {
-		this_.nodeModelList = append(this_.nodeModelList, nodeModel)
-	}
 }
 
 func (this_ *NodeContext) removeNodeModel(id int64) {
@@ -38,14 +27,14 @@ func (this_ *NodeContext) removeNodeModel(id int64) {
 	defer this_.nodeIdModelCacheLock.Unlock()
 	delete(this_.nodeIdModelCache, id)
 
-	var list = this_.nodeModelList
-	var newList []*NodeModel
+	var list = this_.nodeModelIdList
+	var newList []int64
 	for _, one := range list {
-		if one.NodeId != id {
+		if one != id {
 			newList = append(newList, one)
 		}
 	}
-	this_.nodeModelList = newList
+	this_.nodeModelIdList = newList
 }
 
 func (this_ *NodeContext) getNodeModelByServerId(id string) (res *NodeModel) {
@@ -72,18 +61,26 @@ func (this_ *NodeContext) addNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
 		return
 	}
+
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
-	var err error
-	if nodeModel.IsROOT() {
-		err = this_.initRoot(nodeModel)
-		if err != nil {
-			this_.Logger.Error("node context init root error", zap.Error(err))
+
+	var list = this_.nodeModelIdList
+	var newList []int64
+	var find bool
+	for _, one := range list {
+		if one == nodeModel.NodeId {
+			find = true
+			newList = append(newList, one)
+		} else {
+			newList = append(newList, one)
 		}
 	}
+	if !find {
+		newList = append(newList, nodeModel.NodeId)
+	}
 
-	this_.cleanNodeLine()
-	this_.toAddNodeModel(nodeModel)
+	this_.nodeModelIdList = newList
 }
 func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
@@ -99,12 +96,14 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	}
 	this_.cleanNodeLine()
 	this_.toAddNodeModel(nodeModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
 		return
 	}
+	this_.addNodeModel(nodeModel)
 	var err error
 	if nodeModel.IsROOT() {
 		err = this_.initRoot(nodeModel)
@@ -112,11 +111,10 @@ func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 			this_.Logger.Error("node context init root error", zap.Error(err))
 		}
 	}
-	this_.setNodeModel(nodeModel.NodeId, nodeModel)
-	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
 	this_.cleanNodeLine()
 	this_.toAddNodeModel(nodeModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds string) {
@@ -153,6 +151,7 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 	}
 	lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
 	_ = this_.server.AddToNodeList(lineNodeIdList, toNodeList)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onUpdateNodeHistoryConnServerIds(nodeId int64, historyConnServerIds string) {
@@ -172,19 +171,32 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 	this_.removeNodeModel(nodeModel.NodeId)
 	this_.removeNodeModelByServerId(nodeModel.ServerId)
 
-	var list = this_.nodeModelList
+	var list = this_.nodeModelIdList
 	for _, one := range list {
-		if util.ContainsString(one.ConnServerIdList, nodeModel.ServerId) < 0 {
+		var find = this_.getNodeModel(one)
+		if find == nil {
 			continue
 		}
+		if util.ContainsString(find.ConnServerIdList, nodeModel.ServerId) < 0 {
+			continue
+		}
+		var connServerIdList []string
+		for _, serverId := range find.ConnServerIdList {
+			if serverId != nodeModel.ServerId {
+				connServerIdList = append(connServerIdList, serverId)
+			}
+		}
+		find.ConnServerIds = GetListToString(connServerIdList)
+		find.ConnServerIdList = connServerIdList
 
-		lineNodeIdList := this_.GetNodeLineTo(one.ServerId)
+		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
 
 		_ = this_.server.RemoveToNodeList(lineNodeIdList, []string{
 			nodeModel.ServerId,
 		})
 	}
 	this_.cleanNodeLine()
+	this_.checkChangeOut()
 
 }
 
@@ -194,10 +206,9 @@ func (this_ *NodeContext) onEnableNodeModel(id int64) {
 		return
 	}
 	nodeModel.Enabled = 1
-	this_.setNodeModel(nodeModel.NodeId, nodeModel)
-	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
 	this_.toAddNodeModel(nodeModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onDisableNodeModel(id int64) {
@@ -206,24 +217,26 @@ func (this_ *NodeContext) onDisableNodeModel(id int64) {
 		return
 	}
 	nodeModel.Enabled = 2
-	this_.setNodeModel(nodeModel.NodeId, nodeModel)
-	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
 	this_.toAddNodeModel(nodeModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
 		return
 	}
-	var list = this_.nodeModelList
+	var list = this_.nodeModelIdList
 	for _, one := range list {
-		if util.ContainsString(one.ConnServerIdList, nodeModel.ServerId) < 0 {
+		var find = this_.getNodeModel(one)
+		if find == nil {
+			continue
+		}
+		if util.ContainsString(find.ConnServerIdList, nodeModel.ServerId) < 0 {
 			continue
 		}
 
-		lineNodeIdList := this_.GetNodeLineTo(one.ServerId)
-
+		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
 		_ = this_.server.AddToNodeList(lineNodeIdList, []*node.ToNode{
 			{
 				Id:          nodeModel.ServerId,

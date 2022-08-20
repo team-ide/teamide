@@ -153,6 +153,10 @@ export default {
         try {
           if (data.type == "count") {
             this.source.initNodeDataCount(data);
+          } else if (data.type == "node-list") {
+            this.source.initNodeList(data.nodeList);
+          } else if (data.type == "net-proxy-list") {
+            this.source.initNodeNetProxyList(data.netProxyList);
           }
         } catch (error) {}
       });

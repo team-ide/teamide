@@ -73,11 +73,12 @@ export default {
         }
         nodeWrap.nodeId = one.nodeId;
         nodeWrap.id = one.serverId;
+        nodeWrap.name = one.name;
         nodeWrap.text = one.name;
         nodeWrap.serverId = one.serverId;
         nodeWrap.connServerIdList = one.connServerIdList;
-        nodeWrap.status = 2;
-        nodeWrap.statusError = null;
+        nodeWrap.status = one.status;
+        nodeWrap.enabled = one.enabled;
         let compute = this.tool.computeFontSize(nodeWrap.text, "15px", "600");
 
         let width = compute.width + 40;
@@ -175,9 +176,6 @@ export default {
           if (target == null) {
             return;
           }
-          target.isConn = true;
-          target.isConfig = true;
-          target.isHistory = true;
 
           var stroke = "#a5a5a5";
           var strokeWidth = 1;
@@ -207,9 +205,15 @@ export default {
           header: data.text,
         });
         menus.push({
-          text: "连接节点",
+          text: "添加子节点",
           onClick: () => {
-            this.tool.toInsertConnNode(data);
+            this.tool.toInsertToNode(data);
+          },
+        });
+        menus.push({
+          text: "添加父节点",
+          onClick: () => {
+            this.tool.toInsertFromNode(data);
           },
         });
         if (this.tool.openByExtend) {
@@ -226,23 +230,23 @@ export default {
           });
         }
 
-        if (!data.isLocal) {
-          if (data.enabled == 1) {
-            menus.push({
-              text: "停用",
-              onClick: () => {
-                this.tool.toDisableNode(data);
-              },
-            });
-          } else {
-            menus.push({
-              text: "启用",
-              onClick: () => {
-                this.tool.toEnableNode(data);
-              },
-            });
-          }
-        }
+        // if (!data.isLocal) {
+        //   if (data.enabled == 1) {
+        //     menus.push({
+        //       text: "停用",
+        //       onClick: () => {
+        //         this.tool.toDisableNode(data);
+        //       },
+        //     });
+        //   } else {
+        //     menus.push({
+        //       text: "启用",
+        //       onClick: () => {
+        //         this.tool.toEnableNode(data);
+        //       },
+        //     });
+        //   }
+        // }
         if (!data.isLocal) {
           menus.push({
             text: "删除",

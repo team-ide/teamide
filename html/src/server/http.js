@@ -19,7 +19,8 @@ axiosInstance.interceptors.request.use(function (config) {
 	return config;
 }, function (error) {
 	// 对请求错误做些什么
-	return Promise.reject(error);
+	// return Promise.reject(error);
+	return Promise.resolve({ code: "-1", msg: error.message })
 });
 
 // 添加响应拦截器
@@ -55,7 +56,8 @@ axiosInstance.interceptors.response.use(function (response) {
 	return response.data;
 }, function (error) {
 	// 对响应错误做点什么
-	return Promise.reject(error);
+	// return Promise.reject(error);
+	return Promise.resolve({ code: "-1", msg: error.message })
 });
 
 export default axiosInstance;

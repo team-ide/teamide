@@ -15,7 +15,7 @@ func (this_ *Worker) doAddToNodeList(toNodeList []*ToNode) (err error) {
 	this_.toNodeListLock.Lock()
 	defer this_.toNodeListLock.Unlock()
 
-	Logger.Info(this_.server.GetServerInfo()+" 新增节点 ", zap.Any("toNodeList", toNodeList))
+	//Logger.Info(this_.server.GetServerInfo()+" 新增节点 ", zap.Any("toNodeList", toNodeList))
 
 	for _, toNode := range toNodeList {
 		var find = this_.findToNode(toNode.Id)
@@ -27,7 +27,6 @@ func (this_ *Worker) doAddToNodeList(toNodeList []*ToNode) (err error) {
 			this_.toNodeListenerKeepAlive(toNode.Id, toNode.ConnAddress, toNode.ConnToken, toNode.ConnSize)
 		} else {
 			var hasChange bool
-			Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("toNode", toNode))
 			if toNode.Enabled != 0 {
 				if toNode.IsEnabled() != find.IsEnabled() {
 					hasChange = true
@@ -47,6 +46,7 @@ func (this_ *Worker) doAddToNodeList(toNodeList []*ToNode) (err error) {
 				hasChange = true
 			}
 			if hasChange {
+				Logger.Info(this_.server.GetServerInfo()+" 更新节点 ", zap.Any("toNode", toNode))
 				this_.removeToNodeListenerPool(toNode.Id)
 				if find.IsEnabled() {
 					this_.toNodeListenerKeepAlive(find.Id, find.ConnAddress, find.ConnToken, find.ConnSize)

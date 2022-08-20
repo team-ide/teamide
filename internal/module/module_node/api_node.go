@@ -23,7 +23,8 @@ func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 	response := &ListResponse{}
 
-	response.NodeList = this_.NodeService.nodeContext.nodeModelList
+	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
+	response.NodeList = nodeModelList
 	if err != nil {
 		return
 	}
@@ -35,6 +36,7 @@ func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}
 type InsertRequest struct {
 	*NodeModel
 	ParentServerId string `json:"parentServerId,omitempty"`
+	ToServerId     string `json:"toServerId,omitempty"`
 }
 
 type InsertResponse struct {
@@ -52,14 +54,24 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 	node.UserId = requestBean.JWT.UserId
 
 	var parentNodeModel *NodeModel
+	var toNodeModel *NodeModel
 	if !node.IsROOT() {
-		if request.ParentServerId == "" {
-			err = errors.New("父节点ID丢失")
-			return
+		if request.ParentServerId != "" {
+			parentNodeModel = this_.NodeService.nodeContext.getNodeModelByServerId(request.ParentServerId)
+			if parentNodeModel == nil {
+				err = errors.New("父节点[" + request.ParentServerId + "]不存在")
+				return
+			}
+		} else if request.ToServerId != "" {
+			toNodeModel = this_.NodeService.nodeContext.getNodeModelByServerId(request.ToServerId)
+			if toNodeModel == nil {
+				err = errors.New("连接节点[" + request.ToServerId + "]不存在")
+				return
+			}
+			request.ConnServerIds = GetListToString([]string{request.ToServerId})
 		}
-		parentNodeModel = this_.NodeService.nodeContext.getNodeModelByServerId(request.ParentServerId)
-		if parentNodeModel == nil {
-			err = errors.New("父节点[" + request.ParentServerId + "]不存在")
+		if parentNodeModel == nil && toNodeModel == nil {
+			err = errors.New("需要关联节点")
 			return
 		}
 	}
@@ -192,7 +204,36 @@ func (this_ *NodeApi) delete(requestBean *base.RequestBean, c *gin.Context) (res
 	}
 	response := &DeleteResponse{}
 
-	_, err = this_.NodeService.Delete(request.NodeModel.NodeId, requestBean.JWT.UserId)
+	find := this_.NodeService.nodeContext.getNodeModel(request.NodeId)
+	if find == nil {
+		err = errors.New("节点不存在")
+		return
+	}
+	checkNetProxy, err := this_.NodeService.CheckNetProxyServerIdExist(find.ServerId)
+	if err != nil {
+		return
+	}
+
+	if checkNetProxy {
+		err = errors.New("节点存在网络配置，无法删除")
+		return
+	}
+
+	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
+
+	for _, one := range nodeModelList {
+		if util.ContainsString(one.ConnServerIdList, find.ServerId) >= 0 {
+			var connServerIdList []string
+			for _, id := range one.ConnServerIdList {
+				if id != find.ServerId {
+					connServerIdList = append(connServerIdList, id)
+				}
+			}
+			_, _ = this_.NodeService.doUpdateConnServerIds(one.NodeId, GetListToString(connServerIdList))
+		}
+	}
+
+	_, err = this_.NodeService.Delete(request.NodeId, requestBean.JWT.UserId)
 	if err != nil {
 		return
 	}

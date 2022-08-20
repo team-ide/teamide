@@ -12,7 +12,7 @@ func (this_ *Server) connNodeListenerKeepAlive(connAddress, connToken string, co
 		connSize = 5
 	}
 	for connIndex := 0; connIndex < connSize; connIndex++ {
-		go this_.connNodeListener(nil, "", connAddress, connToken, connIndex)
+		go this_.connNodeListener(nil, connAddress, connToken, connIndex)
 	}
 	return
 }

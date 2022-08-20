@@ -19,17 +19,6 @@ func (this_ *NodeContext) setNetProxyModel(id int64, netProxyModel *NetProxyMode
 	defer this_.netProxyIdModelCacheLock.Unlock()
 
 	this_.netProxyIdModelCache[id] = netProxyModel
-
-	var find bool
-	var list = this_.netProxyModelList
-	for _, one := range list {
-		if one.NetProxyId == id {
-			find = true
-		}
-	}
-	if find {
-		this_.netProxyModelList = append(this_.netProxyModelList, netProxyModel)
-	}
 }
 
 func (this_ *NodeContext) removeNetProxyModel(id int64) {
@@ -37,14 +26,14 @@ func (this_ *NodeContext) removeNetProxyModel(id int64) {
 	defer this_.netProxyIdModelCacheLock.Unlock()
 	delete(this_.netProxyIdModelCache, id)
 
-	var list = this_.netProxyModelList
-	var newList []*NetProxyModel
+	var list = this_.netProxyModelIdList
+	var newList []int64
 	for _, one := range list {
-		if one.NetProxyId != id {
+		if one != id {
 			newList = append(newList, one)
 		}
 	}
-	this_.netProxyModelList = newList
+	this_.netProxyModelIdList = newList
 }
 
 func (this_ *NodeContext) getNetProxyModelByCode(id string) (res *NetProxyModel) {
@@ -108,6 +97,22 @@ func (this_ *NodeContext) addNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
+	var list = this_.netProxyModelIdList
+	var newList []int64
+	var find bool
+	for _, one := range list {
+		if one == netProxyModel.NetProxyId {
+			find = true
+			newList = append(newList, one)
+		} else {
+			newList = append(newList, one)
+		}
+	}
+	if !find {
+		newList = append(newList, netProxyModel.NetProxyId)
+	}
+
+	this_.netProxyModelIdList = newList
 }
 
 func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
@@ -117,6 +122,7 @@ func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.addNetProxyModel(netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
+	this_.checkChangeOut()
 
 }
 
@@ -130,11 +136,12 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 		if len(lineNodeIdList) > 0 {
 			_ = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
 				{
-					Id:      netProxyModel.Code,
-					NodeId:  netProxyModel.InnerServerId,
-					Type:    netProxyModel.InnerType,
-					Address: netProxyModel.InnerAddress,
-					Enabled: netProxyModel.Enabled,
+					Id:             netProxyModel.Code,
+					NodeId:         netProxyModel.InnerServerId,
+					Type:           netProxyModel.InnerType,
+					Address:        netProxyModel.InnerAddress,
+					Enabled:        netProxyModel.Enabled,
+					LineNodeIdList: netProxyModel.LineNodeIdList,
 				},
 			})
 		}
@@ -142,11 +149,12 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 		if len(lineNodeIdList) > 0 {
 			_ = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
 				{
-					Id:      netProxyModel.Code,
-					NodeId:  netProxyModel.OuterServerId,
-					Type:    netProxyModel.OuterType,
-					Address: netProxyModel.OuterAddress,
-					Enabled: netProxyModel.Enabled,
+					Id:                    netProxyModel.Code,
+					NodeId:                netProxyModel.OuterServerId,
+					Type:                  netProxyModel.OuterType,
+					Address:               netProxyModel.OuterAddress,
+					Enabled:               netProxyModel.Enabled,
+					ReverseLineNodeIdList: netProxyModel.ReverseLineNodeIdList,
 				},
 			})
 		}
@@ -161,6 +169,7 @@ func (this_ *NodeContext) onUpdateNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
@@ -171,18 +180,8 @@ func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
 	this_.removeNetProxyModel(netProxyModel.NetProxyId)
 	this_.removeNetProxyModelByCode(netProxyModel.Code)
 
-	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
-	if len(lineNodeIdList) > 0 {
-		_ = this_.server.RemoveNetProxyInnerList(lineNodeIdList, []string{
-			netProxyModel.Code,
-		})
-	}
-	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
-	if len(lineNodeIdList) > 0 {
-		_ = this_.server.RemoveNetProxyOuterList(lineNodeIdList, []string{
-			netProxyModel.Code,
-		})
-	}
+	this_.toRemoveNetProxyModel(netProxyModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) toRemoveNetProxyModel(netProxyModel *NetProxyModel) {
@@ -210,10 +209,9 @@ func (this_ *NodeContext) onEnableNetProxyModel(id int64) {
 		return
 	}
 	netProxyModel.Enabled = 1
-	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
-	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
+	this_.checkChangeOut()
 }
 
 func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
@@ -222,8 +220,7 @@ func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
 		return
 	}
 	netProxyModel.Enabled = 2
-	this_.setNetProxyModel(netProxyModel.NetProxyId, netProxyModel)
-	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
+	this_.checkChangeOut()
 }

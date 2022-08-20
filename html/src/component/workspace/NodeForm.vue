@@ -42,7 +42,7 @@ export default {
         data: [data],
       });
     },
-    toInsertConnNode(parentNode) {
+    toInsertToNode(parentNode) {
       this.tool.stopEvent();
       let data = {};
       let parentServerId = null;
@@ -53,15 +53,33 @@ export default {
         return;
       }
       this.$refs.InsertNode.show({
-        title: `连接节点`,
-        form: [this.form.node.connNode],
+        title: `子节点`,
+        form: [this.form.node.toNode],
         data: [data],
         parentServerId: parentServerId,
+      });
+    },
+    toInsertFromNode(toNode) {
+      this.tool.stopEvent();
+      let data = {};
+      let toServerId = null;
+      if (toNode && toNode.serverId) {
+        toServerId = toNode.serverId;
+      } else {
+        this.tool.warn("子节点ID丢失");
+        return;
+      }
+      this.$refs.InsertNode.show({
+        title: `父节点`,
+        form: [this.form.node.fromNode],
+        data: [data],
+        toServerId: toServerId,
       });
     },
     async doInsert(dataList, config) {
       let data = dataList[0];
       data.parentServerId = config.parentServerId;
+      data.toServerId = config.toServerId;
       if (config.isLocal) {
         data.isLocal = 1;
         data.serverId = config.serverId;
@@ -85,7 +103,7 @@ export default {
       this.$refs.InsertNode.show({
         title: `编辑[${data.name}]`,
         nodeId: data.nodeId,
-        form: [this.form.node.connNode],
+        form: [this.form.node.toNode],
         data: [data],
       });
     },
@@ -202,7 +220,8 @@ export default {
   },
   created() {},
   updated() {
-    this.tool.toInsertConnNode = this.toInsertConnNode;
+    this.tool.toInsertToNode = this.toInsertToNode;
+    this.tool.toInsertFromNode = this.toInsertFromNode;
     this.tool.toInsertLocalNode = this.toInsertLocal;
     this.tool.toDeleteNode = this.toDelete;
     this.tool.doDeleteNode = this.doDelete;
@@ -212,7 +231,8 @@ export default {
   },
   mounted() {
     this.init();
-    this.tool.toInsertConnNode = this.toInsertConnNode;
+    this.tool.toInsertToNode = this.toInsertToNode;
+    this.tool.toInsertFromNode = this.toInsertFromNode;
     this.tool.toInsertLocalNode = this.toInsertLocal;
     this.tool.toDeleteNode = this.toDelete;
     this.tool.doDeleteNode = this.doDelete;

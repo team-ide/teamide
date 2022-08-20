@@ -79,7 +79,7 @@ func (this_ *NodeService) Query(node *NodeModel) (res []*NodeModel, err error) {
 // CheckNodeNameExist 查询
 func (this_ *NodeService) CheckNodeNameExist(name string) (res bool, err error) {
 
-	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (name = ?)`
+	sql := selectCountFrom + TableNode + ` WHERE deleted=2 AND (name = ?)`
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{name})
 	if err != nil {
@@ -92,10 +92,14 @@ func (this_ *NodeService) CheckNodeNameExist(name string) (res bool, err error) 
 	return
 }
 
+const (
+	selectCountFrom = "SELECT COUNT(1) FROM "
+)
+
 // CheckNodeServerIdExist 查询
 func (this_ *NodeService) CheckNodeServerIdExist(nodeServerId string) (res bool, err error) {
 
-	sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (serverId = ?)`
+	sql := selectCountFrom + TableNode + ` WHERE deleted=2 AND (serverId = ?)`
 
 	count, err := this_.DatabaseWorker.Count(sql, []interface{}{nodeServerId})
 	if err != nil {
@@ -170,7 +174,7 @@ func (this_ *NodeService) Insert(node *NodeModel) (rowsAffected int64, err error
 func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error) {
 	if node.Name != "" || node.ServerId != "" {
 		if node.Name != "" {
-			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND name = ?)`
+			sql := selectCountFrom + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND name = ?)`
 			var count int64
 			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, node.Name})
 			if err != nil {
@@ -183,7 +187,7 @@ func (this_ *NodeService) Update(node *NodeModel) (rowsAffected int64, err error
 		}
 
 		if node.ServerId != "" {
-			sql := `SELECT COUNT(1) FROM ` + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND serverId = ?)`
+			sql := selectCountFrom + TableNode + ` WHERE deleted=2 AND (nodeId != ? AND serverId = ?)`
 
 			var count int64
 			count, err = this_.DatabaseWorker.Count(sql, []interface{}{node.NodeId, node.ServerId})
@@ -320,6 +324,32 @@ func (this_ *NodeService) UpdateConnServerIds(nodeId int64, connServerIds string
 	}
 
 	this_.nodeContext.onUpdateNodeConnServerIds(nodeId, connServerIds)
+	return
+}
+
+func (this_ *NodeService) doUpdateConnServerIds(nodeId int64, connServerIds string) (rowsAffected int64, err error) {
+
+	var values []interface{}
+
+	sql := `UPDATE ` + TableNode + ` SET `
+
+	sql += "updateTime=?,"
+	values = append(values, time.Now())
+
+	sql += "connServerIds=?,"
+	values = append(values, connServerIds)
+
+	sql = strings.TrimSuffix(sql, ",")
+
+	sql += " WHERE nodeId=? "
+	values = append(values, nodeId)
+
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, values)
+	if err != nil {
+		this_.Logger.Error("UpdateConnServerIds Error", zap.Error(err))
+		return
+	}
+
 	return
 }
 

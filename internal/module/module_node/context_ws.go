@@ -20,3 +20,27 @@ func newNodeCountData() *NodeCountData {
 func (this_ *NodeContext) callNodeCountDataChange(data *NodeCountData) {
 	context.ServerWebsocketOutEvent("node-data-change", data)
 }
+
+type NodeListChange struct {
+	Type     string       `json:"type,omitempty"`
+	NodeList []*NodeModel `json:"nodeList,omitempty"`
+}
+
+func (this_ *NodeContext) callNodeListChange(nodeList []*NodeModel) {
+	context.ServerWebsocketOutEvent("node-data-change", &NodeListChange{
+		Type:     "node-list",
+		NodeList: nodeList,
+	})
+}
+
+type NetProxyListChange struct {
+	Type         string           `json:"type,omitempty"`
+	NetProxyList []*NetProxyModel `json:"netProxyList,omitempty"`
+}
+
+func (this_ *NodeContext) callNetProxyListChange(netProxyList []*NetProxyModel) {
+	context.ServerWebsocketOutEvent("node-data-change", &NetProxyListChange{
+		Type:         "net-proxy-list",
+		NetProxyList: netProxyList,
+	})
+}

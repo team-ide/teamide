@@ -41,6 +41,7 @@ type NodeModel struct {
 	ConnServerIdList        []string `json:"connServerIdList,omitempty"`
 	HistoryConnServerIdList []string `json:"historyConnServerIdList,omitempty"`
 	IsStarted               bool     `json:"isStarted"`
+	Status                  int8     `json:"status"`
 }
 
 func GetStringList(str string) []string {
@@ -49,6 +50,14 @@ func GetStringList(str string) []string {
 		_ = json.Unmarshal([]byte(str), &list)
 	}
 	return list
+}
+
+func GetListToString(list []string) string {
+	if len(list) > 0 {
+		bs, _ := json.Marshal(list)
+		return string(bs)
+	}
+	return ""
 }
 
 func (entity *NodeModel) IsROOT() bool {
@@ -85,7 +94,9 @@ type NetProxyModel struct {
 	UpdateTime    time.Time `json:"updateTime,omitempty"`
 	DeleteTime    time.Time `json:"deleteTime,omitempty"`
 
+	InnerStatus           int8     `json:"innerStatus"`
 	InnerIsStarted        bool     `json:"innerIsStarted"`
+	OuterStatus           int8     `json:"outerStatus"`
 	OuterIsStarted        bool     `json:"outerIsStarted"`
 	LineNodeIdList        []string `json:"lineNodeIdList,omitempty"`
 	ReverseLineNodeIdList []string `json:"reverseLineNodeIdList,omitempty"`

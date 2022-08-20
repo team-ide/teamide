@@ -281,10 +281,8 @@ func (this_ *Worker) getNetProxyInnerMonitorData(lineNodeIdList []string, netPro
 		return
 	}
 
-	if netProxyId == "" {
-		return
-	}
 	var find = this_.getNetProxyInner(netProxyId)
+	//Logger.Info("getNetProxyInnerMonitorData", zap.Any("netProxyId", netProxyId), zap.Any("find", find))
 	if find != nil {
 		monitorData = find.MonitorData
 		return
@@ -313,9 +311,6 @@ func (this_ *Worker) getNetProxyOuterMonitorData(lineNodeIdList []string, netPro
 		return
 	}
 
-	if netProxyId == "" {
-		return
-	}
 	var find = this_.getNetProxyOuter(netProxyId)
 	if find != nil {
 		monitorData = find.MonitorData
@@ -331,6 +326,10 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 		return
 	}
 	var thisNodeIndex = util.ContainsString(lineNodeIdList, this_.server.Id)
+	if thisNodeIndex < 0 {
+		err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + util.ToJSON(lineNodeIdList) + "] 暂无通讯渠道")
+		return
+	}
 	if thisNodeIndex != len(lineNodeIdList)-1 {
 		nodeId := lineNodeIdList[thisNodeIndex+1]
 
