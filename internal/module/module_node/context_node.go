@@ -2,7 +2,7 @@ package module_node
 
 import (
 	"go.uber.org/zap"
-	"teamide/node"
+	"teamide/pkg/node"
 	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
@@ -96,7 +96,7 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	}
 	this_.cleanNodeLine()
 	this_.toAddNodeModel(nodeModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
@@ -114,7 +114,7 @@ func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 
 	this_.cleanNodeLine()
 	this_.toAddNodeModel(nodeModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds string) {
@@ -151,7 +151,7 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 	}
 	lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
 	_ = this_.server.AddToNodeList(lineNodeIdList, toNodeList)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onUpdateNodeHistoryConnServerIds(nodeId int64, historyConnServerIds string) {
@@ -168,8 +168,6 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 	if nodeModel == nil {
 		return
 	}
-	this_.removeNodeModel(nodeModel.NodeId)
-	this_.removeNodeModelByServerId(nodeModel.ServerId)
 
 	var list = this_.nodeModelIdList
 	for _, one := range list {
@@ -195,8 +193,10 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 			nodeModel.ServerId,
 		})
 	}
+	this_.removeNodeModel(nodeModel.NodeId)
+	this_.removeNodeModelByServerId(nodeModel.ServerId)
 	this_.cleanNodeLine()
-	this_.checkChangeOut()
+	this_.doAlive()
 
 }
 
@@ -208,7 +208,7 @@ func (this_ *NodeContext) onEnableNodeModel(id int64) {
 	nodeModel.Enabled = 1
 
 	this_.toAddNodeModel(nodeModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onDisableNodeModel(id int64) {
@@ -219,7 +219,7 @@ func (this_ *NodeContext) onDisableNodeModel(id int64) {
 	nodeModel.Enabled = 2
 
 	this_.toAddNodeModel(nodeModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {

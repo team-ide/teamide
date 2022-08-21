@@ -3,7 +3,7 @@ package module_node
 import (
 	"encoding/json"
 	"errors"
-	"teamide/node"
+	"teamide/pkg/node"
 )
 
 func (this_ *NodeContext) getNetProxyModel(id int64) (res *NetProxyModel) {
@@ -122,7 +122,7 @@ func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.addNetProxyModel(netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 
 }
 
@@ -169,7 +169,7 @@ func (this_ *NodeContext) onUpdateNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	this_.toAddNetProxyModel(netProxyModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
@@ -181,7 +181,7 @@ func (this_ *NodeContext) onRemoveNetProxyModel(id int64) {
 	this_.removeNetProxyModelByCode(netProxyModel.Code)
 
 	this_.toRemoveNetProxyModel(netProxyModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) toRemoveNetProxyModel(netProxyModel *NetProxyModel) {
@@ -211,7 +211,7 @@ func (this_ *NodeContext) onEnableNetProxyModel(id int64) {
 	netProxyModel.Enabled = 1
 
 	this_.toAddNetProxyModel(netProxyModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }
 
 func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
@@ -222,5 +222,5 @@ func (this_ *NodeContext) onDisableNetProxyModel(id int64) {
 	netProxyModel.Enabled = 2
 
 	this_.toAddNetProxyModel(netProxyModel)
-	this_.checkChangeOut()
+	this_.doAlive()
 }

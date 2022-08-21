@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 	"teamide/internal/config"
-	"teamide/node"
 	"teamide/pkg/db"
+	"teamide/pkg/node"
 	"teamide/pkg/util"
 )
 

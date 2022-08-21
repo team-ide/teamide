@@ -1,6 +1,6 @@
 @echo off
 
-cd ../node/main
+cd ../pkg/node/main
 
 go run . -id node4 -address :21094 -token x -connAddress 127.0.0.1:21090 -connToken x
 

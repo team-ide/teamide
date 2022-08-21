@@ -4,7 +4,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
-	"teamide/node"
+	"teamide/pkg/node"
 	"teamide/pkg/util"
 )
 
@@ -57,6 +57,9 @@ type NodeContext struct {
 	runTimerRunning          bool
 	onNetProxyListChangeIng  bool
 	onNodeListChangeIng      bool
+
+	doAliveIng  bool
+	doAliveLock sync.Mutex
 
 	oldCountDataStr string
 	countData       *NodeCountData

@@ -2,13 +2,20 @@ package module_node
 
 import (
 	"encoding/json"
-	"teamide/node"
+	"teamide/pkg/node"
 	"time"
 )
 
 func (this_ *NodeContext) doAlive() {
+	if this_.doAliveIng {
+		return
+	}
 
+	this_.doAliveLock.Lock()
+	defer this_.doAliveLock.Unlock()
+	this_.doAliveIng = true
 	defer func() {
+		this_.doAliveIng = false
 		time.Sleep(time.Second * 5)
 		this_.doAlive()
 	}()

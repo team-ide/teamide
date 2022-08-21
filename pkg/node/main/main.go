@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 	"sync"
-	"teamide/node"
+	"teamide/pkg/node"
 	"teamide/pkg/util"
 )
 
