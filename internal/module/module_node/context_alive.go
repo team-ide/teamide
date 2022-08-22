@@ -13,11 +13,14 @@ func (this_ *NodeContext) doAlive() {
 
 	this_.doAliveLock.Lock()
 	defer this_.doAliveLock.Unlock()
+
 	this_.doAliveIng = true
 	defer func() {
 		this_.doAliveIng = false
-		time.Sleep(time.Second * 5)
-		this_.doAlive()
+		go func() {
+			time.Sleep(time.Second * 5)
+			this_.doAlive()
+		}()
 	}()
 
 	if this_.root == nil || this_.server == nil {

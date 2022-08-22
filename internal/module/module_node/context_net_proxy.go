@@ -131,33 +131,34 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 		return
 	}
 	err := this_.formatNetProxy(netProxyModel)
-	if err == nil {
-		lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
-		if len(lineNodeIdList) > 0 {
-			_ = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
-				{
-					Id:             netProxyModel.Code,
-					NodeId:         netProxyModel.InnerServerId,
-					Type:           netProxyModel.InnerType,
-					Address:        netProxyModel.InnerAddress,
-					Enabled:        netProxyModel.Enabled,
-					LineNodeIdList: netProxyModel.LineNodeIdList,
-				},
-			})
-		}
-		lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
-		if len(lineNodeIdList) > 0 {
-			_ = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
-				{
-					Id:                    netProxyModel.Code,
-					NodeId:                netProxyModel.OuterServerId,
-					Type:                  netProxyModel.OuterType,
-					Address:               netProxyModel.OuterAddress,
-					Enabled:               netProxyModel.Enabled,
-					ReverseLineNodeIdList: netProxyModel.ReverseLineNodeIdList,
-				},
-			})
-		}
+	if err != nil {
+		return
+	}
+	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
+			{
+				Id:             netProxyModel.Code,
+				NodeId:         netProxyModel.InnerServerId,
+				Type:           netProxyModel.InnerType,
+				Address:        netProxyModel.InnerAddress,
+				Enabled:        netProxyModel.Enabled,
+				LineNodeIdList: netProxyModel.LineNodeIdList,
+			},
+		})
+	}
+	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+	if len(lineNodeIdList) > 0 {
+		_ = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
+			{
+				Id:                    netProxyModel.Code,
+				NodeId:                netProxyModel.OuterServerId,
+				Type:                  netProxyModel.OuterType,
+				Address:               netProxyModel.OuterAddress,
+				Enabled:               netProxyModel.Enabled,
+				ReverseLineNodeIdList: netProxyModel.ReverseLineNodeIdList,
+			},
+		})
 	}
 }
 

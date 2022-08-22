@@ -62,6 +62,7 @@ func (this_ *NodeContext) addNodeModel(nodeModel *NodeModel) {
 		return
 	}
 
+	this_.Logger.Info("addNodeModel", zap.Any("serverId", nodeModel.NodeId))
 	this_.setNodeModel(nodeModel.NodeId, nodeModel)
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
@@ -89,6 +90,7 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	this_.addNodeModel(nodeModel)
 	var err error
 	if nodeModel.IsROOT() {
+		this_.Logger.Info("onAddNodeModel init root")
 		err = this_.initRoot(nodeModel)
 		if err != nil {
 			this_.Logger.Error("node context init root error", zap.Error(err))
@@ -226,6 +228,7 @@ func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {
 		return
 	}
+	//this_.Logger.Info("toAddNodeModel", zap.Any("serverId", nodeModel.ServerId))
 	var list = this_.nodeModelIdList
 	for _, one := range list {
 		var find = this_.getNodeModel(one)

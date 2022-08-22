@@ -9,43 +9,45 @@ import (
 )
 
 var (
-	methodOK         = 1
-	methodGetVersion = 2
+	methodOK         MethodType = 1
+	methodGetVersion MethodType = 2
 
-	methodNodeAddToNodeList      = 101
-	methodNodeRemoveToNodeList   = 102
-	methodNodeGetNodeMonitorData = 103
-	methodNodeGetStatus          = 104
+	methodNodeAddToNodeList      MethodType = 101
+	methodNodeRemoveToNodeList   MethodType = 102
+	methodNodeGetNodeMonitorData MethodType = 103
+	methodNodeGetStatus          MethodType = 104
 
-	methodNetProxyNewConn                 = 201
-	methodNetProxyCloseConn               = 202
-	methodNetProxySend                    = 203
-	methodNetProxyGetInnerMonitorData     = 204
-	methodNetProxyGetOuterMonitorData     = 205
-	methodNetProxyAddNetProxyInnerList    = 206
-	methodNetProxyAddNetProxyOuterList    = 207
-	methodNetProxyRemoveNetProxyInnerList = 208
-	methodNetProxyRemoveNetProxyOuterList = 209
-	methodNetProxyGetInnerStatus          = 210
-	methodNetProxyGetOuterStatus          = 211
+	methodNetProxyNewConn                 MethodType = 201
+	methodNetProxyCloseConn               MethodType = 202
+	methodNetProxySend                    MethodType = 203
+	methodNetProxyGetInnerMonitorData     MethodType = 204
+	methodNetProxyGetOuterMonitorData     MethodType = 205
+	methodNetProxyAddNetProxyInnerList    MethodType = 206
+	methodNetProxyAddNetProxyOuterList    MethodType = 207
+	methodNetProxyRemoveNetProxyInnerList MethodType = 208
+	methodNetProxyRemoveNetProxyOuterList MethodType = 209
+	methodNetProxyGetInnerStatus          MethodType = 210
+	methodNetProxyGetOuterStatus          MethodType = 211
 
-	methodFileFiles         = 301
-	methodFileCopy          = 302
-	methodFileRemove        = 303
-	methodFileRename        = 304
-	methodFileUpload        = 305
-	methodFileConfirmResult = 306
-	methodFileProgress      = 307
-	methodFileRead          = 308
+	methodFileFiles         MethodType = 301
+	methodFileCopy          MethodType = 302
+	methodFileRemove        MethodType = 303
+	methodFileRename        MethodType = 304
+	methodFileUpload        MethodType = 305
+	methodFileConfirmResult MethodType = 306
+	methodFileProgress      MethodType = 307
+	methodFileRead          MethodType = 308
 
-	methodShellNewConn   = 401
-	methodShellCloseConn = 402
-	methodShellSend      = 403
+	methodTerminalNewConn   MethodType = 401
+	methodTerminalCloseConn MethodType = 402
+	methodTerminalSend      MethodType = 403
 
-	methodSystemGetInfo          = 501
-	methodSystemQueryMonitorData = 502
-	methodSystemCleanMonitorData = 503
+	methodSystemGetInfo          MethodType = 501
+	methodSystemQueryMonitorData MethodType = 502
+	methodSystemCleanMonitorData MethodType = 503
 )
+
+type MethodType int
 
 func (this_ *Worker) onMessage(msg *Message) {
 	if msg == nil {
@@ -75,7 +77,7 @@ func (this_ *Worker) onMessage(msg *Message) {
 
 }
 
-func (this_ *Worker) Call(listener *MessageListener, method int, msg *Message) (result *Message, err error) {
+func (this_ *Worker) Call(listener *MessageListener, method MethodType, msg *Message) (result *Message, err error) {
 	msg.Id = uuid.NewString()
 	msg.Method = method
 
@@ -111,7 +113,7 @@ func (this_ *Worker) Call(listener *MessageListener, method int, msg *Message) (
 	return
 }
 
-func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error) {
+func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, err error) {
 	if msg == nil {
 		return
 	}
@@ -129,26 +131,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 			}
 		}
 		return
-	case methodSystemGetInfo:
-		response := this_.systemGetInfo(msg.LineNodeIdList)
-		if response != nil {
-			res.SystemData = response
-		}
-		return
-	case methodSystemQueryMonitorData:
-		if msg.SystemData != nil {
-			response := this_.systemQueryMonitorData(msg.LineNodeIdList, msg.SystemData)
-			if response != nil {
-				res.SystemData = response
-			}
-		}
-		return
-	case methodSystemCleanMonitorData:
-		response := this_.systemCleanMonitorData(msg.LineNodeIdList)
-		if response != nil {
-			res.SystemData = response
-		}
-		return
+
 	case methodNodeGetNodeMonitorData:
 		monitorData := this_.getNodeMonitorData(msg.LineNodeIdList)
 		if monitorData != nil {
@@ -173,6 +156,7 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 			this_.removeToNodeList(msg.LineNodeIdList, msg.NodeWorkData.ToNodeIdList)
 		}
 		return
+
 	case methodNetProxyAddNetProxyInnerList:
 		if msg.NetProxyWorkData != nil {
 			this_.addNetProxyInnerList(msg.LineNodeIdList, msg.NetProxyWorkData.NetProxyInnerList)
@@ -242,6 +226,51 @@ func (this_ *Worker) doMethod(method int, msg *Message) (res *Message, err error
 				}
 			}
 		}
+		return
+
+	case methodSystemGetInfo:
+		response := this_.systemGetInfo(msg.LineNodeIdList)
+		if response != nil {
+			res.SystemData = response
+		}
+		return
+	case methodSystemQueryMonitorData:
+		if msg.SystemData != nil {
+			response := this_.systemQueryMonitorData(msg.LineNodeIdList, msg.SystemData)
+			if response != nil {
+				res.SystemData = response
+			}
+		}
+		return
+	case methodSystemCleanMonitorData:
+		response := this_.systemCleanMonitorData(msg.LineNodeIdList)
+		if response != nil {
+			res.SystemData = response
+		}
+		return
+
+	case methodFileFiles:
+		return
+	case methodFileCopy:
+		return
+	case methodFileProgress:
+		return
+	case methodFileRemove:
+		return
+	case methodFileRead:
+		return
+	case methodFileConfirmResult:
+		return
+	case methodFileRename:
+		return
+	case methodFileUpload:
+		return
+
+	case methodTerminalNewConn:
+		return
+	case methodTerminalCloseConn:
+		return
+	case methodTerminalSend:
 		return
 	}
 

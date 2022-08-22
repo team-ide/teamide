@@ -19,7 +19,7 @@ var (
 
 type Message struct {
 	Id                 string            `json:"id,omitempty"`
-	Method             int               `json:"method,omitempty"`
+	Method             MethodType        `json:"method,omitempty"`
 	Error              string            `json:"error,omitempty"`
 	NotifiedNodeIdList []string          `json:"notifiedNodeIdList,omitempty"`
 	LineNodeIdList     []string          `json:"lineNodeIdList,omitempty"`

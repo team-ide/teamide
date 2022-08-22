@@ -69,6 +69,7 @@ func (this_ *NodeContext) cleanNodeLine() {
 	this_.lineNodeIdListCacheLock.Lock()
 	defer this_.lineNodeIdListCacheLock.Unlock()
 
+	this_.Logger.Info("cleanNodeLine")
 	this_.lineNodeIdListCache = make(map[string][]string)
 
 }
