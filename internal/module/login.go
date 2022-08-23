@@ -99,13 +99,16 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 		return nil
 	}
 	res := &base.JWTBean{}
-	json.Unmarshal([]byte(jwt), res)
+	_ = json.Unmarshal([]byte(jwt), res)
 	if res.Time == 0 {
 		return nil
 	}
-	// 超过两小时
-	if res.Time < (util.GetNowTime() - 1000*60*60*2) {
-		return nil
+	if this_.IsServer {
+		// 超过两小时
+		if res.Time < (util.GetNowTime() - 1000*60*60*2) {
+
+			return nil
+		}
 	}
 	return res
 }
