@@ -50,11 +50,38 @@ export default {
   watch: {},
   methods: {
     show(zsession, term, callback) {
+      this.unbindSSHRZUpload();
+      this.bindSSHRZUpload();
       this.isSuccess = false;
       this.zsession = zsession;
       this.term = term;
       this.callback = callback;
       this.showDialog = true;
+    },
+    bindSSHRZUpload() {
+      this.lastRZUploadFileName = null;
+      this.lastRZUploadFileSize = null;
+      this.lastRZUploadedSize = null;
+      this.server.addServerSocketOnEvent("ssh-rz-upload", this.onSSHRZUpload);
+    },
+    unbindSSHRZUpload() {
+      this.server.removeServerSocketOnEvent(
+        "ssh-rz-upload",
+        this.onSSHRZUpload
+      );
+    },
+    onSSHRZUpload(data) {
+      try {
+        if (data.isEnd) {
+          this.lastRZUploadFileName = null;
+          this.lastRZUploadFileSize = null;
+          this.lastRZUploadedSize = null;
+        } else {
+          this.lastRZUploadFileName = data.fileName;
+          this.lastRZUploadFileSize = data.fileSize;
+          this.lastRZUploadedSize = data.uploadedSize;
+        }
+      } catch (error) {}
     },
     hide() {
       if (!this.isSuccess) {
@@ -230,7 +257,16 @@ export default {
       let total = detail.size;
       let offset = xfer.get_offset();
       let percent;
-      if (total === 0 || total === offset) {
+
+      if (
+        this.lastRZUploadedSize != null &&
+        this.lastRZUploadFileSize == total &&
+        offset > this.lastRZUploadedSize
+      ) {
+        offset = this.lastRZUploadedSize;
+      }
+
+      if (total === 0 || total <= offset) {
         percent = 100;
       } else {
         percent = Math.round((offset / total) * 100);
@@ -244,9 +280,9 @@ export default {
           ") " +
           name +
           " " +
-          this.bytesHuman(offset) +
-          " " +
           this.bytesHuman(total) +
+          " " +
+          this.bytesHuman(offset) +
           " " +
           percent +
           "% "
@@ -363,6 +399,10 @@ export default {
   mounted() {
     this.toolboxWorker.showSSHUpload = this.show;
     this.toolboxWorker.hideSSHUpload = this.show;
+  },
+  destroyed() {
+    this.isDestroyed = true;
+    this.unbindSSHRZUpload();
   },
 };
 </script>

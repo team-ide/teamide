@@ -1,12 +1,15 @@
 package ssh
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"strconv"
 	"strings"
+	"teamide/internal/context"
 	"teamide/pkg/util"
 	"time"
 )
@@ -18,6 +21,9 @@ type ShellClient struct {
 	shellOK                          bool
 	DisableZModemSZ, DisableZModemRZ bool
 	ZModemSZ, ZModemRZ, ZModemSZOO   bool
+	rzFileName                       string
+	rzFileSize                       int64
+	rzFileUploadSize                 int64
 }
 
 type ptyRequestMsg struct {
@@ -263,11 +269,48 @@ func (this_ *ShellClient) onEvent(event string) {
 	}
 }
 
+var (
+	RZStartBS = []byte{42, 24, 65, 24, 68, 24, 64, 24, 64, 24, 64, 24, 64, 24, 201, 24, 70}
+)
+
 func (this_ *ShellClient) ONSSHMessage(bs []byte) {
-	this_.SSHWrite(bs)
+	if len(bs) > 17 {
+		var rzBS []byte
+		rzBS = append(rzBS, bs...)
+		if x, ok := ByteContains(rzBS, RZStartBS); ok {
+			index := bytes.Index(x, []byte{24, 64})
+
+			if index > 0 && index < len(x)-3 {
+				s := string(x[index+2:])
+				ss := strings.Split(s, ` `)
+				if len(ss) > 0 {
+					name := string(x[:index])
+					length := ss[0]
+					size, err := strconv.ParseInt(length, 10, 64)
+					if err == nil {
+						this_.rzFileName = name
+						this_.rzFileSize = size
+						this_.rzFileUploadSize = 0
+					}
+				}
+			}
+		}
+	}
+
+	writeSize := this_.SSHWrite(bs)
+	if this_.ZModemRZ && this_.rzFileName != "" {
+		this_.rzFileUploadSize += int64(writeSize)
+		out := map[string]interface{}{
+			"fileName":     this_.rzFileName,
+			"fileSize":     this_.rzFileSize,
+			"uploadedSize": this_.rzFileUploadSize,
+		}
+		context.ServerWebsocketOutEvent("ssh-rz-upload", out)
+		//fmt.Println("upload file:", this_.rzFileName, ",size:", this_.rzFileSize, ",uploaded size:", this_.rzFileUploadSize)
+	}
 }
 
-func (this_ *ShellClient) SSHWrite(bs []byte) {
+func (this_ *ShellClient) SSHWrite(bs []byte) (writeSize int) {
 	defer func() {
 		if x := recover(); x != nil {
 			util.Logger.Error("SSH Shell Write Error", zap.Any("err", x))
@@ -284,8 +327,9 @@ func (this_ *ShellClient) SSHWrite(bs []byte) {
 		util.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
 	}
 
-	_, err = writer.Write(bs)
+	writeSize, err = writer.Write(bs)
 	if err != nil {
 		this_.WSWriteError("SSH Shell Write失败:" + err.Error())
 	}
+	return
 }

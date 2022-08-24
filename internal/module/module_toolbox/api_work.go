@@ -129,7 +129,7 @@ func SFTPUpload(c *gin.Context) (res interface{}, err error) {
 			File:     file,
 			FullPath: c.PostForm("fullPath"),
 		}
-		client.UploadFile <- uploadFile
+		client.AddUpload(uploadFile)
 	}
 
 	return

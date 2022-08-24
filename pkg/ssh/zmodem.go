@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"bytes"
+	"teamide/internal/context"
 )
 
 var (
@@ -90,14 +91,36 @@ func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZMo
 			}
 		} else if this_.ZModemRZ {
 			if x, ok := ByteContains(buff[:n], ZModemRZEnd); ok {
+				out := map[string]interface{}{
+					"fileName": this_.rzFileName,
+					"fileSize": this_.rzFileSize,
+					"isEnd":    true,
+				}
+
+				this_.rzFileName = ""
+				this_.rzFileSize = 0
+				this_.rzFileUploadSize = 0
+
 				this_.ZModemRZ = false
 				this_.WSWriteBinary(ZModemRZEnd)
 				if len(x) != 0 {
 					this_.WSWriteConsole(string(x))
 				}
+				context.ServerWebsocketOutEvent("ssh-rz-upload", out)
 			} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
+				out := map[string]interface{}{
+					"fileName": this_.rzFileName,
+					"fileSize": this_.rzFileSize,
+					"isEnd":    true,
+				}
+				this_.rzFileName = ""
+				this_.rzFileSize = 0
+				this_.rzFileUploadSize = 0
+
 				this_.ZModemRZ = false
 				this_.WSWriteBinary(buff[:n])
+
+				context.ServerWebsocketOutEvent("ssh-rz-upload", out)
 			} else {
 				// rz 上传过程中服务器端还是会给客户端发送一些信息，比如心跳
 				//this_.ZModemWriteJSON(&message{Type: messageTypeConsole, Data: buff[:n]})

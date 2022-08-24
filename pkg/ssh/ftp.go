@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"mime/multipart"
+	"sync"
 	"teamide/pkg/util"
 )
 
@@ -18,40 +19,36 @@ type UploadFile struct {
 }
 
 type SftpClient struct {
-	WorkerId   string
-	Config     Config
-	sshClient  *ssh.Client
-	UploadFile chan *UploadFile
-	confirmMap map[string]chan *util.FileConfirmInfo
+	WorkerId    string
+	Config      Config
+	sshClient   *ssh.Client
+	confirmMap  map[string]chan *util.FileConfirmInfo
+	newSftpLock sync.Mutex
 }
 
 func (this_ *SftpClient) Start() {
-	this_.listenUpload()
 }
-func (this_ *SftpClient) listenUpload() {
-	if this_.UploadFile == nil {
-		this_.UploadFile = make(chan *UploadFile, 10)
 
-		go func() {
-			for {
-				select {
-				case uploadFile := <-this_.UploadFile:
-					_, _ = this_.Work(&SFTPRequest{
-						Work:     "upload",
-						WorkId:   uploadFile.WorkId,
-						Dir:      uploadFile.Dir,
-						Place:    uploadFile.Place,
-						File:     uploadFile.File,
-						FullPath: uploadFile.FullPath,
-					})
-				}
-			}
-
-		}()
+func (this_ *SftpClient) AddUpload(uploadFile *UploadFile) {
+	if uploadFile == nil {
+		return
 	}
+	go func() {
+		_, _ = this_.Work(&SFTPRequest{
+			Work:     "upload",
+			WorkId:   uploadFile.WorkId,
+			Dir:      uploadFile.Dir,
+			Place:    uploadFile.Place,
+			File:     uploadFile.File,
+			FullPath: uploadFile.FullPath,
+		})
+	}()
 	return
 }
 func (this_ *SftpClient) newSftp() (sftpClient *sftp.Client, err error) {
+	this_.newSftpLock.Lock()
+	defer this_.newSftpLock.Unlock()
+
 	err = this_.initClient()
 	if err != nil {
 		return
