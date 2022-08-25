@@ -92,12 +92,11 @@ func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZMo
 		} else if this_.ZModemRZ {
 			if x, ok := ByteContains(buff[:n], ZModemRZEnd); ok {
 				out := map[string]interface{}{
-					"fileName": this_.rzFileName,
+					"token":    this_.Token,
 					"fileSize": this_.rzFileSize,
 					"isEnd":    true,
 				}
 
-				this_.rzFileName = ""
 				this_.rzFileSize = 0
 				this_.rzFileUploadSize = 0
 
@@ -109,11 +108,10 @@ func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZMo
 				context.ServerWebsocketOutEvent("ssh-rz-upload", out)
 			} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
 				out := map[string]interface{}{
-					"fileName": this_.rzFileName,
+					"token":    this_.Token,
 					"fileSize": this_.rzFileSize,
 					"isEnd":    true,
 				}
-				this_.rzFileName = ""
 				this_.rzFileSize = 0
 				this_.rzFileUploadSize = 0
 

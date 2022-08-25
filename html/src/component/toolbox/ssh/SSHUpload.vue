@@ -59,7 +59,6 @@ export default {
       this.showDialog = true;
     },
     bindSSHRZUpload() {
-      this.lastRZUploadFileName = null;
       this.lastRZUploadFileSize = null;
       this.lastRZUploadedSize = null;
       this.server.addServerSocketOnEvent("ssh-rz-upload", this.onSSHRZUpload);
@@ -72,12 +71,13 @@ export default {
     },
     onSSHRZUpload(data) {
       try {
+        if (data.token != this.toolboxWorker.sshToken) {
+          return;
+        }
         if (data.isEnd) {
-          this.lastRZUploadFileName = null;
           this.lastRZUploadFileSize = null;
           this.lastRZUploadedSize = null;
         } else {
-          this.lastRZUploadFileName = data.fileName;
           this.lastRZUploadFileSize = data.fileSize;
           this.lastRZUploadedSize = data.uploadedSize;
         }

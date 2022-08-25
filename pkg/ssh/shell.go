@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/net/html/charset"
 	"io"
 	"strconv"
 	"strings"
@@ -23,7 +21,6 @@ type ShellClient struct {
 	shellOK                          bool
 	DisableZModemSZ, DisableZModemRZ bool
 	ZModemSZ, ZModemRZ, ZModemSZOO   bool
-	rzFileName                       string
 	rzFileSize                       int64
 	rzFileUploadSize                 int64
 }
@@ -288,12 +285,9 @@ func (this_ *ShellClient) ONSSHMessage(bs []byte) {
 				s := string(x[index+2:])
 				ss := strings.Split(s, ` `)
 				if len(ss) > 0 {
-					fmt.Println("name:", x[:index])
-					name := string(x[:index])
 					length := ss[0]
 					size, err := strconv.ParseInt(length, 10, 64)
 					if err == nil {
-						this_.rzFileName = name
 						this_.rzFileSize = size
 						this_.rzFileUploadSize = 0
 					}
@@ -303,22 +297,15 @@ func (this_ *ShellClient) ONSSHMessage(bs []byte) {
 	}
 
 	writeSize := this_.SSHWrite(bs)
-	if this_.ZModemRZ && this_.rzFileName != "" {
+	if this_.ZModemRZ {
 		if bytes.Index(bs, RZStartBS) == 0 ||
 			bytes.Index(bs, RZBytes1) == 0 ||
 			bytes.Index(bs, RZBytes2) == 0 {
 
 		} else {
-			a, _, _ := charset.DetermineEncoding(bs, "")
-			if a != nil {
-				fmt.Println("DetermineEncoding:", a)
-				newB, _ := a.NewDecoder().Bytes(bs)
-				fmt.Println("DetermineEncoding NewDecoder:", len(newB))
-			}
-			fmt.Println("upload:", this_.rzFileName, ",size:", writeSize, ",bs:", bs)
 			this_.rzFileUploadSize += int64(writeSize)
 			out := map[string]interface{}{
-				"fileName":     this_.rzFileName,
+				"token":        this_.Token,
 				"fileSize":     this_.rzFileSize,
 				"uploadedSize": this_.rzFileUploadSize,
 			}

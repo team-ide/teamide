@@ -24,6 +24,8 @@ type SftpClient struct {
 	sshClient   *ssh.Client
 	confirmMap  map[string]chan *util.FileConfirmInfo
 	newSftpLock sync.Mutex
+
+	sftpClient *sftp.Client
 }
 
 func (this_ *SftpClient) Start() {
@@ -45,19 +47,47 @@ func (this_ *SftpClient) AddUpload(uploadFile *UploadFile) {
 	}()
 	return
 }
-func (this_ *SftpClient) newSftp() (sftpClient *sftp.Client, err error) {
+
+//func (this_ *SftpClient) newSftp() (sftpClient *sftp.Client, err error) {
+//	this_.newSftpLock.Lock()
+//	defer this_.newSftpLock.Unlock()
+//
+//	err = this_.initClient()
+//	if err != nil {
+//		return
+//	}
+//
+//	sftpClient, err = sftp.NewClient(this_.sshClient)
+//	if err != nil {
+//		return
+//	}
+//
+//	return
+//}
+
+func (this_ *SftpClient) getSftp() (sftpClient *sftp.Client, err error) {
 	this_.newSftpLock.Lock()
 	defer this_.newSftpLock.Unlock()
 
-	err = this_.initClient()
-	if err != nil {
-		return
+	if this_.sshClient == nil {
+		this_.sftpClient = nil
+		err = this_.createClient()
+		if err != nil {
+			this_.sshClient = nil
+			this_.sftpClient = nil
+			return
+		}
+	}
+	if this_.sftpClient == nil {
+		this_.sftpClient, err = sftp.NewClient(this_.sshClient)
+		if err != nil {
+			this_.sshClient = nil
+			this_.sftpClient = nil
+			return
+		}
 	}
 
-	sftpClient, err = sftp.NewClient(this_.sshClient)
-	if err != nil {
-		return
-	}
+	sftpClient = this_.sftpClient
 
 	return
 }
@@ -71,12 +101,6 @@ func (this_ *SftpClient) closeClient() {
 	if this_.sshClient != nil {
 		_ = this_.sshClient.Close()
 		this_.sshClient = nil
-	}
-	return
-}
-func (this_ *SftpClient) initClient() (err error) {
-	if this_.sshClient == nil {
-		err = this_.createClient()
 	}
 	return
 }

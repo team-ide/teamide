@@ -282,11 +282,11 @@ func (this_ *SftpClient) remoteUpdate(request *SFTPRequest, progress *util.FileU
 	}
 
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	util.FileUpload(sftpClient.Lstat, sftpClient.MkdirAll,
 		func() (io.Reader, error) {
@@ -357,11 +357,11 @@ func (this_ *SftpClient) RemoteDownload(c *gin.Context, workId string, path stri
 	go this_.callProgress(&SFTPRequest{WorkId: workId, Work: "download"}, progress)
 
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	var fileName string
 	var fileSize int64
@@ -410,11 +410,11 @@ func (this_ *SftpClient) copy(request *SFTPRequest, progress *util.FileCopyProgr
 
 	var sftpClient *sftp.Client
 	if request.FromFilePlace == "remote" || request.ToFilePlace == "remote" {
-		sftpClient, err = this_.newSftp()
+		sftpClient, err = this_.getSftp()
 		if err != nil {
 			return
 		}
-		defer func() { _ = sftpClient.Close() }()
+		//defer func() { _ = sftpClient.Close() }()
 	}
 
 	var fromLstat func(string) (os.FileInfo, error)
@@ -503,11 +503,11 @@ func (this_ *SftpClient) remoteRemove(request *SFTPRequest, progress *util.FileR
 	}()
 	progress.StartTime = util.GetNowTime()
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	util.FileRemove(sftpClient.Lstat, sftpClient.ReadDir, sftpClient.Remove, request.Path, progress)
 
@@ -564,11 +564,11 @@ func (this_ *SftpClient) remoteRename(request *SFTPRequest, progress *util.FileR
 	progress.Count = 1
 
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	if request.IsNew {
 		if request.IsDir {
@@ -625,11 +625,11 @@ func (this_ *SftpClient) localFiles(request *SFTPRequest) (response *SFTPRespons
 func (this_ *SftpClient) remoteFiles(request *SFTPRequest) (response *SFTPResponse, err error) {
 	response = &SFTPResponse{}
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	dir := request.Dir
 	if dir == "" {
@@ -669,11 +669,11 @@ func (this_ *SftpClient) RemoteReadText(request *SFTPRequest) (response *SFTPRes
 		Path: request.Path,
 	}
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	response.Size, response.Text, err = util.FileRead(sftpClient.Lstat, func(s string) (io.Reader, error) {
 		return sftpClient.Open(s)
@@ -701,11 +701,11 @@ func (this_ *SftpClient) RemoteSaveText(request *SFTPRequest) (response *SFTPRes
 		Path: request.Path,
 	}
 	var sftpClient *sftp.Client
-	sftpClient, err = this_.newSftp()
+	sftpClient, err = this_.getSftp()
 	if err != nil {
 		return
 	}
-	defer func() { _ = sftpClient.Close() }()
+	//defer func() { _ = sftpClient.Close() }()
 
 	err = util.FileWrite(sftpClient.Lstat, func(s string) (io.Writer, error) {
 		return sftpClient.Create(s)

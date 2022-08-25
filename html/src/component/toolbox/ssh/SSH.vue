@@ -476,6 +476,7 @@ export default {
         this.term.dispose();
       }
       await this.initToken(this);
+      this.toolboxWorker.sshToken = this.token;
       this.initSocket(this);
       if (this.term != null) {
         this.term.dispose();

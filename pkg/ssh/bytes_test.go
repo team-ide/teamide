@@ -1,13 +1,9 @@
 package ssh
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
-	"io/ioutil"
 	"teamide/pkg/util"
 	"testing"
 )
@@ -18,12 +14,16 @@ import (
 
 func TestBytes(t *testing.T) {
 	bs := []byte{230, 24, 214, 176, 229, 187, 186, 32, 230, 24, 214, 24, 199, 230, 24, 220, 172, 230, 24, 214, 24, 199, 230, 161, 163, 46, 116, 120, 116}
+	var packet []string
+	json.Unmarshal(bs, &packet)
+	fmt.Println("packet:", packet)
 
 	name := "新建 文本文档.txt"
 	nameBS := []byte(name)
 
 	tb := Utf8ArrayToStr(bs)
 
+	fmt.Println("bs string:", string(bs))
 	fmt.Println("bs:", bs)
 	fmt.Println("name:", name)
 	fmt.Println("nameBS:", nameBS)
@@ -73,24 +73,4 @@ func Utf8ArrayToStr(array []byte) []byte {
 		}
 	}
 	return bs
-}
-
-//GBK -> UTF-8
-func GbkToUtf8(s []byte) ([]byte, error) {
-	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.HZGB2312.NewEncoder())
-	all, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return all, err
-	}
-	return all, nil
-}
-
-//UTF-8 -> GBK
-func Utf8ToGbk(s []byte) ([]byte, error) {
-	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewEncoder())
-	all, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return all, err
-	}
-	return all, nil
 }
