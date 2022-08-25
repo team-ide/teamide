@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/net/html/charset"
 	"io"
 	"strconv"
 	"strings"
@@ -271,6 +273,8 @@ func (this_ *ShellClient) onEvent(event string) {
 
 var (
 	RZStartBS = []byte{42, 24, 65, 24, 68, 24, 64, 24, 64, 24, 64, 24, 64, 24, 201, 24, 70}
+	RZBytes1  = []byte{42, 24, 65, 24, 74, 24, 64, 24, 64, 24, 64, 24, 64, 70, 174}
+	RZBytes2  = []byte{42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 10}
 )
 
 func (this_ *ShellClient) ONSSHMessage(bs []byte) {
@@ -284,6 +288,7 @@ func (this_ *ShellClient) ONSSHMessage(bs []byte) {
 				s := string(x[index+2:])
 				ss := strings.Split(s, ` `)
 				if len(ss) > 0 {
+					fmt.Println("name:", x[:index])
 					name := string(x[:index])
 					length := ss[0]
 					size, err := strconv.ParseInt(length, 10, 64)
@@ -299,14 +304,27 @@ func (this_ *ShellClient) ONSSHMessage(bs []byte) {
 
 	writeSize := this_.SSHWrite(bs)
 	if this_.ZModemRZ && this_.rzFileName != "" {
-		this_.rzFileUploadSize += int64(writeSize)
-		out := map[string]interface{}{
-			"fileName":     this_.rzFileName,
-			"fileSize":     this_.rzFileSize,
-			"uploadedSize": this_.rzFileUploadSize,
+		if bytes.Index(bs, RZStartBS) == 0 ||
+			bytes.Index(bs, RZBytes1) == 0 ||
+			bytes.Index(bs, RZBytes2) == 0 {
+
+		} else {
+			a, _, _ := charset.DetermineEncoding(bs, "")
+			if a != nil {
+				fmt.Println("DetermineEncoding:", a)
+				newB, _ := a.NewDecoder().Bytes(bs)
+				fmt.Println("DetermineEncoding NewDecoder:", len(newB))
+			}
+			fmt.Println("upload:", this_.rzFileName, ",size:", writeSize, ",bs:", bs)
+			this_.rzFileUploadSize += int64(writeSize)
+			out := map[string]interface{}{
+				"fileName":     this_.rzFileName,
+				"fileSize":     this_.rzFileSize,
+				"uploadedSize": this_.rzFileUploadSize,
+			}
+			context.ServerWebsocketOutEvent("ssh-rz-upload", out)
+			//fmt.Println("upload file:", this_.rzFileName, ",size:", this_.rzFileSize, ",uploaded size:", this_.rzFileUploadSize)
 		}
-		context.ServerWebsocketOutEvent("ssh-rz-upload", out)
-		//fmt.Println("upload file:", this_.rzFileName, ",size:", this_.rzFileSize, ",uploaded size:", this_.rzFileUploadSize)
 	}
 }
 

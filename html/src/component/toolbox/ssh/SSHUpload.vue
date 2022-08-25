@@ -252,6 +252,10 @@ export default {
       return `${value} ${units[num]}`;
     },
     updateProgress(xfer) {
+      if (this.updateProgressing) {
+        return;
+      }
+      this.updateProgressing = true;
       let detail = xfer.get_details();
       let name = detail.name;
       let total = detail.size;
@@ -287,6 +291,15 @@ export default {
           percent +
           "% "
       );
+
+      if (percent < 100) {
+        window.setTimeout(() => {
+          this.updateProgressing = false;
+          this.updateProgress(xfer);
+        }, 100);
+      } else {
+        this.updateProgressing = false;
+      }
     },
     send_block_files(session, files, options) {
       if (!options) options = {};
@@ -399,10 +412,6 @@ export default {
   mounted() {
     this.toolboxWorker.showSSHUpload = this.show;
     this.toolboxWorker.hideSSHUpload = this.show;
-  },
-  destroyed() {
-    this.isDestroyed = true;
-    this.unbindSSHRZUpload();
   },
 };
 </script>
