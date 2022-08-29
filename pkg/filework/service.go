@@ -15,13 +15,13 @@ type ConfirmInfo struct {
 }
 
 type Service interface {
-	InitClient() (err error)
+	Exist(path string) (exist bool, err error)
 	Write(path string, reader io.Reader, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error)
 	Read(path string, writer io.Writer, onDo func(fileCount *int, fileSize *int64)) (err error)
 	Rename(oldName string, newName string) (err error)
-	Move(fromPath string, fromService Service, toPath string, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error)
-	Copy(fromPath string, fromService Service, toPath string, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error)
-	Remove(path string, onDo func(fileCount *int)) (err error)
-	Count(path string, onDo func(fileCount *int)) (err error)
-	CountSize(path string, onDo func(fileCount *int, fileSize *int64)) (err error)
+	Move(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64), confirmInfo *ConfirmInfo) (err error)
+	Copy(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64), confirmInfo *ConfirmInfo) (err error)
+	Remove(path string, onDo func(fileCount int)) (err error)
+	Count(path string, onDo func(fileCount int)) (fileCount int, err error)
+	CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error)
 }
