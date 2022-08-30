@@ -40,3 +40,7 @@ func (this_ *LocalService) Count(path string, onDo func(fileCount int)) (fileCou
 func (this_ *LocalService) CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error) {
 	return
 }
+
+func (this_ *LocalService) Files(path string) (files []*FileInfo, err error) {
+	return
+}

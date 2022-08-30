@@ -40,3 +40,7 @@ func (this_ *NodeService) Count(path string, onDo func(fileCount int)) (fileCoun
 func (this_ *NodeService) CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error) {
 	return
 }
+
+func (this_ *NodeService) Files(path string) (files []*FileInfo, err error) {
+	return
+}
