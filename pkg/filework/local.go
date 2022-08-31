@@ -1,6 +1,11 @@
 package filework
 
-import "io"
+import (
+	"io"
+	"os"
+	"path/filepath"
+	"teamide/pkg/util"
+)
 
 type LocalService struct {
 }
@@ -42,5 +47,26 @@ func (this_ *LocalService) CountSize(path string, onDo func(fileCount int, fileS
 }
 
 func (this_ *LocalService) Files(path string) (files []*FileInfo, err error) {
+	return
+}
+
+func getFileInfo(path string) (fileInfo *FileInfo, err error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+			return
+		}
+		return
+	}
+
+	fileInfo = &FileInfo{
+		Name:     filepath.VolumeName(path),
+		Path:     path,
+		IsDir:    true,
+		ModTime:  util.GetTimeTime(stat.ModTime()),
+		FileMode: stat.Mode().String(),
+		Size:     stat.Size(),
+	}
 	return
 }
