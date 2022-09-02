@@ -1,7 +1,5 @@
 package filework
 
-import "io"
-
 type NodeService struct {
 }
 
@@ -9,11 +7,11 @@ func (this_ *NodeService) Exist(path string) (exist bool, err error) {
 	return
 }
 
-func (this_ *NodeService) Write(path string, reader io.Reader, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error) {
+func (this_ *NodeService) Write(path string, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error) {
 	return
 }
 
-func (this_ *NodeService) Read(path string, writer io.Writer, onDo func(fileCount *int, fileSize *int64)) (err error) {
+func (this_ *NodeService) Read(path string) (bytes []byte, err error) {
 	return
 }
 
@@ -42,5 +40,9 @@ func (this_ *NodeService) CountSize(path string, onDo func(fileCount int, fileSi
 }
 
 func (this_ *NodeService) Files(path string) (files []*FileInfo, err error) {
+	return
+}
+
+func (this_ *NodeService) File(path string) (file *FileInfo, err error) {
 	return
 }

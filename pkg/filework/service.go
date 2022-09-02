@@ -1,7 +1,5 @@
 package filework
 
-import "io"
-
 type ConfirmInfo struct {
 	ConfirmId   string `json:"confirmId,omitempty"`
 	IsConfirm   bool   `json:"isConfirm,omitempty"`
@@ -25,8 +23,8 @@ type FileInfo struct {
 
 type Service interface {
 	Exist(path string) (exist bool, err error)
-	Write(path string, reader io.Reader, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error)
-	Read(path string, writer io.Writer, onDo func(fileCount *int, fileSize *int64)) (err error)
+	Write(path string, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error)
+	Read(path string) (bytes []byte, err error)
 	Rename(oldName string, newName string) (err error)
 	Move(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64), confirmInfo *ConfirmInfo) (err error)
 	Copy(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64), confirmInfo *ConfirmInfo) (err error)
@@ -34,4 +32,5 @@ type Service interface {
 	Count(path string, onDo func(fileCount int)) (fileCount int, err error)
 	CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error)
 	Files(path string) (files []*FileInfo, err error)
+	File(path string) (file *FileInfo, err error)
 }

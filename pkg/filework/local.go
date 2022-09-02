@@ -1,7 +1,6 @@
 package filework
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"teamide/pkg/util"
@@ -14,11 +13,11 @@ func (this_ *LocalService) Exist(path string) (exist bool, err error) {
 	return
 }
 
-func (this_ *LocalService) Write(path string, reader io.Reader, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error) {
+func (this_ *LocalService) Write(path string, onDo func(fileCount *int, fileSize *int64), confirmInfo *ConfirmInfo) (err error) {
 	return
 }
 
-func (this_ *LocalService) Read(path string, writer io.Writer, onDo func(fileCount *int, fileSize *int64)) (err error) {
+func (this_ *LocalService) Read(path string) (bytes []byte, err error) {
 	return
 }
 
@@ -47,6 +46,10 @@ func (this_ *LocalService) CountSize(path string, onDo func(fileCount int, fileS
 }
 
 func (this_ *LocalService) Files(path string) (files []*FileInfo, err error) {
+	return
+}
+
+func (this_ *LocalService) File(path string) (file *FileInfo, err error) {
 	return
 }
 
