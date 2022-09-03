@@ -2,11 +2,14 @@ import http from '@/server/http';
 
 import toolbox from "./toolbox.js";
 import node from "./node.js";
+import fileManager from "./fileManager.js";
+
 import tool from '../tool/index.js';
 import source from '../source/index.js';
 let server = {
     toolbox,
     node,
+    fileManager,
     data(param) {
         param = param || {};
         param.origin = location.origin;

@@ -9,6 +9,7 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/config"
 	"teamide/internal/context"
+	"teamide/internal/module/module_file_manager"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_register"
@@ -113,6 +114,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
+	apis = append(apis, module_file_manager.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }

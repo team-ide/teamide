@@ -39,6 +39,21 @@
             )
           </span>
         </div>
+        <div class="workspace-header-nav">
+          <el-dropdown trigger="click" class="file-manager-dropdown">
+            <span class="el-dropdown-link">
+              文件管理器<i class="el-icon-arrow-down el-icon--right"></i>
+            </span>
+            <el-dropdown-menu
+              slot="dropdown"
+              class="file-manager-dropdown-menu"
+            >
+              <MenuBox>
+                <MenuItem @click="openFileManager('local')">本地</MenuItem>
+              </MenuBox>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
         <div style="flex: 1"></div>
         <template v-if="source.login.user == null">
           <div
@@ -173,6 +188,14 @@ export default {
         toolboxType: "node",
         type: "net-proxy-context",
         title: "网络透传",
+      });
+    },
+    openFileManager(place, placeId) {
+      this.tool.openByExtend({
+        toolboxType: "file-manager",
+        title: "文件管理器-本地",
+        place: place,
+        placeId: placeId,
       });
     },
     addMainItem(item, fromItem) {
@@ -426,6 +449,25 @@ export default {
 }
 .workspace-header-nav:hover {
   background-color: #505050;
+}
+.file-manager-dropdown.el-dropdown {
+  color: unset;
+  font-size: unset;
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+}
+.file-manager-dropdown-menu.el-dropdown-menu {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0;
+  background: transparent;
+  top: 35px !important;
+}
+.file-manager-dropdown-menu .menu-box a {
+  cursor: pointer;
 }
 .default-tabs-container {
   width: 100%;

@@ -58,8 +58,20 @@
         </ToolboxOtherEditor>
       </template>
       <template v-else-if="toolboxType == 'node'">
-        <Node :source="source" :extend="extend" :toolboxWorker="toolboxWorker">
-        </Node>
+        <NodeEditor
+          :source="source"
+          :extend="extend"
+          :toolboxWorker="toolboxWorker"
+        >
+        </NodeEditor>
+      </template>
+      <template v-else-if="toolboxType == 'file-manager'">
+        <FileManagerEditor
+          :source="source"
+          :extend="extend"
+          :toolboxWorker="toolboxWorker"
+        >
+        </FileManagerEditor>
       </template>
     </template>
     <QuickCommand :source="source" :toolboxWorker="toolboxWorker">
@@ -74,10 +86,16 @@
 import "./toolbox.css";
 import QuickCommand from "./QuickCommand";
 import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
-import Node from "./node/Index.vue";
+import NodeEditor from "./node/Index.vue";
+import FileManagerEditor from "./file-manager/Index.vue";
 
 export default {
-  components: { Node, QuickCommand, QuickCommandSSHCommandForm },
+  components: {
+    NodeEditor,
+    QuickCommand,
+    QuickCommandSSHCommandForm,
+    FileManagerEditor,
+  },
   props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {
     let toolboxWorker = this.tool.newToolboxWorker({
