@@ -1,5 +1,7 @@
 package filework
 
+import "io"
+
 type NodeService struct {
 }
 
@@ -15,6 +17,10 @@ func (this_ *NodeService) Write(path string, bytes []byte) (err error) {
 	return
 }
 
+func (this_ *NodeService) WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *FileInfo, err error) {
+	return
+}
+
 func (this_ *NodeService) Read(path string) (bytes []byte, err error) {
 	return
 }
@@ -23,11 +29,11 @@ func (this_ *NodeService) Rename(oldPath string, newPath string) (file *FileInfo
 	return
 }
 
-func (this_ *NodeService) Move(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64)) (err error) {
+func (this_ *NodeService) Move(oldPath string, newPath string) (err error) {
 	return
 }
 
-func (this_ *NodeService) Copy(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64)) (err error) {
+func (this_ *NodeService) Copy(path string, fromService Service, fromPath string, onDo func(fileCount int, fileSize int64)) (err error) {
 	return
 }
 

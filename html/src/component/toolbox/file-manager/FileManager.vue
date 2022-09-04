@@ -276,7 +276,8 @@ export default {
         e.dataTransfer.setData("files", "");
       }
       e.dataTransfer.setData("place", this.place);
-      e.dataTransfer.setData("dir", this.dir);
+      e.dataTransfer.setData("placeId", this.placeId);
+      e.dataTransfer.setData("dir", this.fileWorker.dir);
     },
     ondragend(e) {
       // e.preventDefault();
@@ -299,29 +300,26 @@ export default {
       if (putFile != null && putFile.isDir) {
         putDir = putFile.path;
       } else {
-        putDir = this.dir;
+        putDir = this.fileWorker.dir;
       }
       // console.log("ondrop", e);
       let files = e.dataTransfer.getData("files");
       if (this.tool.isNotEmpty(files)) {
         let place = e.dataTransfer.getData("place");
+        let placeId = e.dataTransfer.getData("placeId");
         let dir = e.dataTransfer.getData("dir");
-        if (place == this.place && dir == putDir) {
+        if (place == this.place && placeId == this.placeId && dir == putDir) {
           return;
         }
         let files = e.dataTransfer.getData("files");
         files = JSON.parse(files);
-        if (place != this.place) {
+        if (place != this.place || placeId != this.placeId) {
           files.forEach((one) => {
-            this.$emit(
-              "copy",
-              { dir: dir, path: one.path },
+            this.fileWorker.copy(
+              putDir + "/" + one.name,
               place,
-              {
-                dir: putDir,
-                path: putDir + "/" + one.name,
-              },
-              this.place
+              placeId,
+              one.path
             );
           });
         } else {
@@ -340,13 +338,7 @@ export default {
             )
             .then(async () => {
               files.forEach((one) => {
-                this.$emit(
-                  "rename",
-                  this.place,
-                  dir,
-                  one.path,
-                  putDir + "/" + one.name
-                );
+                this.fileWorker.move(one.path, putDir + "/" + one.name);
               });
             })
             .catch((e) => {});
@@ -364,7 +356,7 @@ export default {
           }
           let file = one.getAsFile();
           if (file != null) {
-            this.$emit("upload", this.place, putDir, file);
+            this.fileWorker.uploadFile(putDir, file);
           } else {
             console.log(one);
           }
@@ -375,7 +367,7 @@ export default {
       if (entry.isFile) {
         entry.file(
           (file) => {
-            this.uploadFile(putDir, file, entry.fullPath);
+            this.fileWorker.uploadFile(putDir, file, entry.fullPath);
           },
           (e) => {
             console.log(e);
@@ -393,24 +385,10 @@ export default {
         );
       }
     },
-    uploadFile(putDir, file, fullPath) {
-      let dir = putDir;
-      this.$emit("upload", this.place, dir, file, fullPath);
-    },
     toRemove(files) {
       files.forEach((one) => {
-        this.toRemoveByPath(one.path);
+        this.fileWorker.remove(one.path);
       });
-    },
-    async toRemoveByPath(path) {
-      let flag = await this.fileWorker.remove(path);
-      if (flag) {
-        let fileIndex = this.fileWorker.getFileIndex(path);
-        if (fileIndex < 0) {
-          return;
-        }
-        this.fileWorker.fileList.splice(fileIndex, 1);
-      }
     },
     toDownload(file) {
       this.$emit("download", this.place, this.dir, file);

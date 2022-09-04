@@ -1,20 +1,26 @@
 <template>
   <div class="toolbox-file-manager-editor">
     <tm-layout height="100%">
-      <template v-for="one in list">
-        <tm-layout ref="layout" :key="`layout-${one.id}`" :width="one.width">
-          <FileManager
-            :source="source"
-            :toolboxWorker="toolboxWorker"
-            :place="one.place"
-            :placeId="one.placeId"
-            :changeDir="changeDir"
-          ></FileManager>
-        </tm-layout>
-        <template v-if="one.hasBar">
-          <tm-layout-bar :key="`layout-bar-${one.id}`" right></tm-layout-bar>
+      <tm-layout height="auto">
+        <template v-for="one in list">
+          <tm-layout ref="layout" :key="`layout-${one.id}`" :width="one.width">
+            <FileManager
+              :source="source"
+              :toolboxWorker="toolboxWorker"
+              :place="one.place"
+              :placeId="one.placeId"
+              :changeDir="changeDir"
+            ></FileManager>
+          </tm-layout>
+          <template v-if="one.hasBar">
+            <tm-layout-bar :key="`layout-bar-${one.id}`" right></tm-layout-bar>
+          </template>
         </template>
-      </template>
+      </tm-layout>
+      <tm-layout-bar top></tm-layout-bar>
+      <tm-layout height="200px">
+        <Progress :source="source" :toolboxWorker="toolboxWorker"></Progress>
+      </tm-layout>
     </tm-layout>
   </div>
 </template>
@@ -22,9 +28,10 @@
 
 <script>
 import FileManager from "./FileManager.vue";
+import Progress from "./Progress.vue";
 
 export default {
-  components: { FileManager },
+  components: { FileManager, Progress },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {

@@ -2,6 +2,7 @@ package filework
 
 import (
 	"errors"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -12,6 +13,9 @@ type LocalService struct {
 }
 
 func (this_ *LocalService) Exist(path string) (exist bool, err error) {
+
+	exist, err = util.PathExists(path)
+
 	return
 }
 
@@ -44,6 +48,59 @@ func (this_ *LocalService) Create(path string, isDir bool) (file *FileInfo, err 
 }
 
 func (this_ *LocalService) Write(path string, bytes []byte) (err error) {
+	return
+}
+
+func (this_ *LocalService) WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *FileInfo, err error) {
+	path = util.FormatPath(path)
+
+	pathDir := path[0:strings.LastIndex(path, "/")]
+
+	_, err = os.Stat(pathDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(pathDir, os.ModePerm)
+			if err != nil {
+				return
+			}
+		} else {
+			return
+		}
+	}
+
+	var f *os.File
+	f, err = os.Create(path)
+	if err != nil {
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	var readSize int64
+	var writeSize int64
+	for {
+		bs := make([]byte, 1024)
+		var n int
+		n, err = reader.Read(bs)
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+		}
+		readSize += int64(n)
+		onDo(readSize, writeSize)
+		n, err = f.Write(bs[:n])
+		if err != nil {
+			break
+		}
+		writeSize += int64(n)
+		onDo(readSize, writeSize)
+	}
+
+	if err != nil {
+		return
+	}
+	file, err = this_.File(path)
 	return
 }
 
@@ -81,11 +138,36 @@ func (this_ *LocalService) Rename(oldPath string, newPath string) (file *FileInf
 	return
 }
 
-func (this_ *LocalService) Move(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64)) (err error) {
+func (this_ *LocalService) Move(oldPath string, newPath string) (err error) {
+	oldPath = util.FormatPath(oldPath)
+	newPath = util.FormatPath(newPath)
+
+	exist, err := util.PathExists(oldPath)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = errors.New("路径[" + oldPath + "]不存在")
+		return
+	}
+
+	exist, err = util.PathExists(newPath)
+	if err != nil {
+		return
+	}
+	if exist {
+		err = errors.New("路径[" + newPath + "]已存在")
+		return
+	}
+
+	err = os.Rename(oldPath, newPath)
+	if err != nil {
+		return
+	}
 	return
 }
 
-func (this_ *LocalService) Copy(fromPath string, fromService Service, toPath string, onDo func(fileCount int, fileSize int64)) (err error) {
+func (this_ *LocalService) Copy(path string, fromService Service, fromPath string, onDo func(fileCount int, fileSize int64)) (err error) {
 	return
 }
 

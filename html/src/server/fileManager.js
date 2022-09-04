@@ -19,17 +19,20 @@ let fileManager = {
     rename(param) {
         return http.post('api/file_manager/rename', param);
     },
+    move(param) {
+        return http.post('api/file_manager/move', param);
+    },
     remove(param) {
         return http.post('api/file_manager/remove', param);
     },
     copy(param) {
         return http.post('api/file_manager/copy', param);
     },
-    upload(param) {
-        return http.post('api/file_manager/upload', param);
-    },
     callAction(param) {
         return http.post('api/file_manager/callAction', param);
+    },
+    upload(param) {
+        return http.post('api/file_manager/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
 };
 

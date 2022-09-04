@@ -14,17 +14,16 @@ func GetService(place string, placeId string) (service Service, err error) {
 }
 
 func Create(workerId string, place string, placeId string, path string, isDir bool) (file *FileInfo, err error) {
-	progress := newProgress(workerId, "create")
-	progress.Data["place"] = place
-	progress.Data["placeId"] = placeId
+	progress := newProgress(workerId, place, placeId, "create")
 	progress.Data["path"] = path
 	progress.Data["isDir"] = isDir
-	defer progress.end(err)
+	defer func() { progress.end(err) }()
 
 	service, err := GetService(place, placeId)
 	if err != nil {
 		return
 	}
+
 	file, err = service.Create(path, isDir)
 	return
 }
@@ -68,11 +67,9 @@ func Read(workerId string, place string, placeId string, path string) (bytes []b
 }
 
 func Write(workerId string, place string, placeId string, path string, bytes []byte) (err error) {
-	progress := newProgress(workerId, "write")
-	progress.Data["place"] = place
-	progress.Data["placeId"] = placeId
+	progress := newProgress(workerId, place, placeId, "write")
 	progress.Data["path"] = path
-	defer progress.end(err)
+	defer func() { progress.end(err) }()
 
 	service, err := GetService(place, placeId)
 	if err != nil {
@@ -83,12 +80,11 @@ func Write(workerId string, place string, placeId string, path string, bytes []b
 }
 
 func Rename(workerId string, place string, placeId string, oldPath string, newPath string) (file *FileInfo, err error) {
-	progress := newProgress(workerId, "rename")
-	progress.Data["place"] = place
-	progress.Data["placeId"] = placeId
+	progress := newProgress(workerId, place, placeId, "rename")
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
-	defer progress.end(err)
+
+	defer func() { progress.end(err) }()
 
 	service, err := GetService(place, placeId)
 	if err != nil {
@@ -99,13 +95,11 @@ func Rename(workerId string, place string, placeId string, oldPath string, newPa
 }
 
 func Remove(workerId string, place string, placeId string, path string) (err error) {
-	progress := newProgress(workerId, "remove")
-	progress.Data["place"] = place
-	progress.Data["placeId"] = placeId
+	progress := newProgress(workerId, place, placeId, "remove")
 	progress.Data["path"] = path
 	progress.Data["fileCount"] = 0
 	progress.Data["removeCount"] = 0
-	defer progress.end(err)
+	defer func() { progress.end(err) }()
 
 	service, err := GetService(place, placeId)
 	if err != nil {
@@ -118,60 +112,113 @@ func Remove(workerId string, place string, placeId string, path string) (err err
 	return
 }
 
-func Copy(workerId string, fromPlace string, fromPlaceId string, fromPath string, toPlace string, toPlaceId string, toPath string) {
+func Move(workerId string, place string, placeId string, oldPath string, newPath string) (err error) {
+	progress := newProgress(workerId, place, placeId, "move")
+	progress.Data["oldPath"] = oldPath
+	progress.Data["newPath"] = newPath
+	defer func() { progress.end(err) }()
+
+	toService, err := GetService(place, placeId)
+	if err != nil {
+		return
+	}
+
+	err = toService.Move(oldPath, newPath)
+	return
+}
+
+func Copy(workerId string, place string, placeId string, path string, fromPlace string, fromPlaceId string, fromPath string) {
 	var err error
-	progress := newProgress(workerId, "copy")
+	progress := newProgress(workerId, place, placeId, "copy")
+	progress.Data["path"] = path
 	progress.Data["fromPlace"] = fromPlace
 	progress.Data["fromPlaceId"] = fromPlaceId
 	progress.Data["fromPath"] = fromPath
-	progress.Data["toPlace"] = toPlace
-	progress.Data["toPlaceId"] = toPlaceId
-	progress.Data["toPath"] = toPath
-	defer progress.end(err)
+
+	defer func() { progress.end(err) }()
+
+	toService, err := GetService(place, placeId)
+	if err != nil {
+		return
+	}
 
 	fromService, err := GetService(fromPlace, fromPlaceId)
 	if err != nil {
 		return
 	}
 
-	toService, err := GetService(toPlace, toPlaceId)
-	if err != nil {
-		return
-	}
-	err = toService.Copy(fromPath, fromService, toPath, func(fileCount int, fileSize int64) {
+	err = toService.Copy(path, fromService, fromPath, func(fileCount int, fileSize int64) {
 
 	})
 	return
 }
 
-func Upload(workerId string, place string, placeId string, dir string, fullPath string, fileList []*multipart.FileHeader) {
-	var err error
-	progress := newProgress(workerId, "copy")
-	progress.Data["place"] = place
-	progress.Data["placeId"] = placeId
-	progress.Data["dir"] = dir
-	progress.Data["fullPath"] = fullPath
-	defer progress.end(err)
+func Upload(workerId string, place string, placeId string, dir string, fullPath string, fileList []*multipart.FileHeader) (fileInfoList []*FileInfo, err error) {
 
 	service, err := GetService(place, placeId)
 	if err != nil {
 		return
 	}
 
-	if len(fullPath) > 0 {
-		dir += fullPath
-	}
 	if !strings.HasSuffix(dir, "/") {
 		dir += "/"
 	}
-	for _, one := range fileList {
-		path := dir + "/" + one.Filename
+
+	if strings.HasPrefix(fullPath, "/") {
+		fullPath = fullPath[1:]
+	}
+
+	upload := func(one *multipart.FileHeader) (fileInfo *FileInfo, err error) {
+
+		path := dir + one.Filename
+		if len(fullPath) > 0 {
+			path = dir + fullPath
+		}
+
+		progress := newProgress(workerId, place, placeId, "upload")
+		progress.Data["dir"] = dir
+		progress.Data["fullPath"] = fullPath
+		progress.Data["filename"] = one.Filename
+		progress.Data["path"] = path
+		progress.Data["size"] = one.Size
+		progress.Data["successSize"] = 0
+
+		defer func() { progress.end(err) }()
 
 		var exist bool
 		exist, err = service.Exist(path)
 
 		if exist {
+			action := progress.waitAction("文件["+path+"]已存在，是否覆盖？",
+				[]*Action{
+					newAction("是", "yes", "color-green"),
+					newAction("否", "no", "color-orange"),
+				})
+			if action == "no" {
+				return
+			}
+		}
+		var openF multipart.File
+		openF, err = one.Open()
+		if err != nil {
+			return
+		}
 
+		fileInfo, err = service.WriteByReader(path, openF, func(readSize int64, writeSize int64) {
+			progress.Data["successSize"] = writeSize
+		})
+
+		return
+	}
+
+	for _, one := range fileList {
+		var fileInfo *FileInfo
+		fileInfo, err = upload(one)
+		if err != nil {
+			return
+		}
+		if fileInfo != nil {
+			fileInfoList = append(fileInfoList, fileInfo)
 		}
 	}
 

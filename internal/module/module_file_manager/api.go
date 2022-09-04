@@ -34,6 +34,7 @@ var (
 	PowerRename     = base.AppendPower(&base.PowerAction{Action: "file_manager_rename", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerRemove     = base.AppendPower(&base.PowerAction{Action: "file_manager_remove", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerCopy       = base.AppendPower(&base.PowerAction{Action: "file_manager_copy", Text: "工具", ShouldLogin: false, StandAlone: true})
+	PowerMove       = base.AppendPower(&base.PowerAction{Action: "file_manager_move", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerUpload     = base.AppendPower(&base.PowerAction{Action: "file_manager_upload", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: false, StandAlone: true})
 )
@@ -47,7 +48,8 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/write"}, Power: PowerWrite, Do: this_.write})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/rename"}, Power: PowerRename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/remove"}, Power: PowerRemove, Do: this_.remove})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/copy"}, Power: PowerCopy, Do: this_.copy})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/move"}, Power: PowerCopy, Do: this_.move})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/copy"}, Power: PowerMove, Do: this_.copy})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/upload"}, Power: PowerUpload, Do: this_.upload})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
 	return
@@ -65,9 +67,6 @@ type FileRequest struct {
 	FromPlace   string `json:"fromPlace,omitempty"`
 	FromPlaceId string `json:"fromPlaceId,omitempty"`
 	FromPath    string `json:"fromPath,omitempty"`
-	ToPlace     string `json:"toPlace,omitempty"`
-	ToPlaceId   string `json:"toPlaceId,omitempty"`
-	ToPath      string `json:"toPath,omitempty"`
 	Text        string `json:"text,omitempty"`
 	ProgressId  string `json:"progressId,omitempty"`
 	Action      string `json:"action,omitempty"`
@@ -154,12 +153,21 @@ func (this_ *Api) remove(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	return
 }
 
+func (this_ *Api) move(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &FileRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	err = filework.Move(request.WorkerId, request.Place, request.PlaceId, request.OldPath, request.NewPath)
+	return
+}
+
 func (this_ *Api) copy(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	go filework.Copy(request.WorkerId, request.FromPlace, request.FromPlaceId, request.FromPath, request.Place, request.PlaceId, request.ToPath)
+	go filework.Copy(request.WorkerId, request.Place, request.PlaceId, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
 	return
 }
 
@@ -197,6 +205,6 @@ func (this_ *Api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	}
 	fileList := mF.File["file"]
 
-	go filework.Upload(workerId, place, placeId, dir, fullPath, fileList)
+	res, err = filework.Upload(workerId, place, placeId, dir, fullPath, fileList)
 	return
 }

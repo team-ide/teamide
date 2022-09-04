@@ -282,15 +282,65 @@ const newWorker = function (workerOption) {
                 tool.error(res.msg);
                 return false;
             } else {
+                let fileIndex = this.getFileIndex(path);
+                if (fileIndex >= 0) {
+                    this.fileList.splice(fileIndex, 1);
+                }
                 return true;
             }
         },
-        async copy(fromPlace, fromPlaceId, fromPath, toPath) {
+        async move(oldPath, newPath) {
             let param = worker.getParam();
+            param.oldPath = oldPath;
+            param.newPath = newPath;
+            let res = await server.fileManager.move(param);
+            if (res.code != 0) {
+                tool.error(res.msg);
+            } else {
+                let fileIndex = this.getFileIndex(oldPath);
+                if (fileIndex >= 0) {
+                    this.fileList.splice(fileIndex, 1);
+                }
+            }
+            return res.data;
+        },
+        async uploadFile(dir, file, fullPath) {
+            let param = {
+                workerId: this.workerId,
+                place: this.place,
+                placeId: this.placeId,
+                dir: dir,
+                fullPath: fullPath,
+            };
+            let form = new FormData();
+            for (let key in param) {
+                form.append(key, param[key]);
+            }
+            form.append("file", file);
+            let res = await server.fileManager.upload(form);
+            if (res.code != 0) {
+                tool.error(res.msg);
+                return false;
+            } else {
+                let files = res.data || [];
+                files.forEach(one => {
+                    this.formatFile(one);
+                    let index = this.getFileIndex(one.path);
+                    if (index >= 0) {
+                        this.fileList.splice(index, 1, one)
+                    } else {
+                        this.fileList.push(one)
+                    }
+                })
+            }
+            return true;
+        },
+        async copy(path, fromPlace, fromPlaceId, fromPath) {
+            let param = worker.getParam();
+            param.path = path;
             param.fromPlace = fromPlace;
             param.fromPlaceId = fromPlaceId;
             param.fromPath = fromPath;
-            param.toPath = toPath;
             let res = await server.fileManager.copy(param);
             if (res.code != 0) {
                 tool.error(res.msg);
