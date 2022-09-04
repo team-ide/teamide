@@ -61,6 +61,14 @@
               <span class="pdr-5">上传</span>
               <span class="pdr-5">文件：{{ one.data.path }}</span>
             </template>
+            <template v-else-if="one.work == 'write'">
+              <span class="pdr-5">写入</span>
+              <span class="pdr-5">{{ one.data.path }}</span>
+            </template>
+            <template v-else-if="one.work == 'read'">
+              <span class="pdr-5">读取</span>
+              <span class="pdr-5">{{ one.data.path }}</span>
+            </template>
             <template v-else-if="one.work == 'download'">
               <span class="pdr-5">下载</span>
               <span class="pdr-5">{{ one.data.path }}</span>
@@ -259,7 +267,7 @@ export default {
     cleanAll() {
       let list = [];
       this.progressList.forEach((one) => {
-        if (!one.waitActionIng) {
+        if (one.waitActionIng) {
           list.push(one);
         }
       });

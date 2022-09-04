@@ -2,11 +2,15 @@ package module_file_manager
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"net/url"
+	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/internal/module/module_toolbox"
-	"teamide/pkg/filework"
+	"teamide/pkg/vitess/bytes2"
 )
 
 type Api struct {
@@ -36,6 +40,7 @@ var (
 	PowerCopy       = base.AppendPower(&base.PowerAction{Action: "file_manager_copy", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerMove       = base.AppendPower(&base.PowerAction{Action: "file_manager_move", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerUpload     = base.AppendPower(&base.PowerAction{Action: "file_manager_upload", Text: "工具", ShouldLogin: false, StandAlone: true})
+	PowerDownload   = base.AppendPower(&base.PowerAction{Action: "file_manager_download", Text: "工具", ShouldLogin: false, StandAlone: true})
 	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: false, StandAlone: true})
 )
 
@@ -51,6 +56,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/move"}, Power: PowerCopy, Do: this_.move})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/copy"}, Power: PowerMove, Do: this_.copy})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/upload"}, Power: PowerUpload, Do: this_.upload})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/download"}, Power: PowerDownload, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
 	return
 }
@@ -81,7 +87,7 @@ func (this_ *Api) create(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = filework.Create(request.WorkerId, request.Place, request.PlaceId, request.Path, request.IsDir)
+	res, err = Create(request.WorkerId, request.Place, request.PlaceId, request.Path, request.IsDir)
 	return
 }
 
@@ -90,7 +96,7 @@ func (this_ *Api) file(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = filework.File(request.WorkerId, request.Place, request.PlaceId, request.Path)
+	res, err = File(request.WorkerId, request.Place, request.PlaceId, request.Path)
 	return
 }
 
@@ -101,7 +107,7 @@ func (this_ *Api) files(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	}
 
 	var data = map[string]interface{}{}
-	data["dir"], data["files"], err = filework.Files(request.WorkerId, request.Place, request.PlaceId, request.Dir)
+	data["dir"], data["files"], err = Files(request.WorkerId, request.Place, request.PlaceId, request.Dir)
 
 	res = data
 	return
@@ -112,13 +118,14 @@ func (this_ *Api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	var bytes []byte
-	bytes, err = filework.Read(request.WorkerId, request.Place, request.PlaceId, request.Path)
+
+	writer := &bytes2.Buffer{}
+	_, err = Read(request.WorkerId, request.Place, request.PlaceId, request.Path, writer)
 	if err != nil {
 		return
 	}
-	if len(bytes) > 0 {
-		res = string(bytes)
+	if writer.Len() > 0 {
+		res = writer.String()
 	}
 	return
 }
@@ -128,7 +135,9 @@ func (this_ *Api) write(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = filework.Write(request.WorkerId, request.Place, request.PlaceId, request.Path, []byte(request.Text))
+
+	reader := strings.NewReader(request.Text)
+	err = Write(request.WorkerId, request.Place, request.PlaceId, request.Path, reader)
 	if err != nil {
 		return
 	}
@@ -140,7 +149,7 @@ func (this_ *Api) rename(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = filework.Rename(request.WorkerId, request.Place, request.PlaceId, request.OldPath, request.NewPath)
+	res, err = Rename(request.WorkerId, request.Place, request.PlaceId, request.OldPath, request.NewPath)
 	return
 }
 
@@ -149,7 +158,7 @@ func (this_ *Api) remove(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = filework.Remove(request.WorkerId, request.Place, request.PlaceId, request.Path)
+	err = Remove(request.WorkerId, request.Place, request.PlaceId, request.Path)
 	return
 }
 
@@ -158,7 +167,7 @@ func (this_ *Api) move(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = filework.Move(request.WorkerId, request.Place, request.PlaceId, request.OldPath, request.NewPath)
+	err = Move(request.WorkerId, request.Place, request.PlaceId, request.OldPath, request.NewPath)
 	return
 }
 
@@ -167,7 +176,7 @@ func (this_ *Api) copy(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	go filework.Copy(request.WorkerId, request.Place, request.PlaceId, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
+	go Copy(request.WorkerId, request.Place, request.PlaceId, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
 	return
 }
 
@@ -176,7 +185,7 @@ func (this_ *Api) callAction(_ *base.RequestBean, c *gin.Context) (res interface
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = filework.CallAction(request.ProgressId, request.Action)
+	err = CallAction(request.ProgressId, request.Action)
 	return
 }
 
@@ -205,6 +214,46 @@ func (this_ *Api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	}
 	fileList := mF.File["file"]
 
-	res, err = filework.Upload(workerId, place, placeId, dir, fullPath, fileList)
+	res, err = Upload(workerId, place, placeId, dir, fullPath, fileList)
+	return
+}
+
+func (this_ *Api) download(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	res = base.HttpNotResponse
+	defer func() {
+		if err != nil {
+			_, _ = c.Writer.WriteString(err.Error())
+		}
+	}()
+
+	data := map[string]string{}
+
+	err = c.Bind(&data)
+	if err != nil {
+		return
+	}
+
+	workerId := data["workerId"]
+	place := data["place"]
+	placeId := data["placeId"]
+	path := data["path"]
+
+	fileInfo, err := File(workerId, place, placeId, path)
+	if err != nil {
+		return
+	}
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename*=utf-8''%s", url.QueryEscape(fileInfo.Name)))
+	c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
+	c.Header("download-file-name", fileInfo.Name)
+
+	_, err = Read(workerId, place, placeId, path, c.Writer)
+	if err != nil {
+		return
+	}
+	c.Status(http.StatusOK)
 	return
 }

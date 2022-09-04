@@ -26,15 +26,13 @@ type FileInfo struct {
 type Service interface {
 	Exist(path string) (exist bool, err error)
 	Create(path string, isDir bool) (file *FileInfo, err error)
-	Write(path string, bytes []byte) (err error)
-	Read(path string) (bytes []byte, err error)
+	Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error)
+	Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error)
 	Rename(oldPath string, newPath string) (file *FileInfo, err error)
 	Move(oldPath string, newPath string) (err error)
-	Copy(path string, fromService Service, fromPath string, onDo func(fileCount int, fileSize int64)) (err error)
 	Remove(path string, onDo func(fileCount int, removeCount int)) (err error)
 	Count(path string, onDo func(fileCount int)) (fileCount int, err error)
 	CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error)
 	Files(dir string) (parentPath string, files []*FileInfo, err error)
 	File(path string) (file *FileInfo, err error)
-	WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *FileInfo, err error)
 }

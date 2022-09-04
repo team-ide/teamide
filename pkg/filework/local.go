@@ -47,11 +47,7 @@ func (this_ *LocalService) Create(path string, isDir bool) (file *FileInfo, err 
 	return
 }
 
-func (this_ *LocalService) Write(path string, bytes []byte) (err error) {
-	return
-}
-
-func (this_ *LocalService) WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *FileInfo, err error) {
+func (this_ *LocalService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
 	path = util.FormatPath(path)
 
 	pathDir := path[0:strings.LastIndex(path, "/")]
@@ -100,11 +96,56 @@ func (this_ *LocalService) WriteByReader(path string, reader io.Reader, onDo fun
 	if err != nil {
 		return
 	}
-	file, err = this_.File(path)
 	return
 }
 
-func (this_ *LocalService) Read(path string) (bytes []byte, err error) {
+func (this_ *LocalService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+	path = util.FormatPath(path)
+	exist, err := util.PathExists(path)
+	if err != nil {
+		return
+	}
+	if !exist {
+		err = errors.New("路径[" + path + "]不存在")
+		return
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	var readSize int64
+	var writeSize int64
+	for {
+		bs := make([]byte, 1024)
+		var n int
+		n, err = f.Read(bs)
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+		}
+		readSize += int64(n)
+		onDo(readSize, writeSize)
+		n, err = writer.Write(bs[:n])
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			break
+		}
+		writeSize += int64(n)
+		onDo(readSize, writeSize)
+	}
+
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -167,10 +208,6 @@ func (this_ *LocalService) Move(oldPath string, newPath string) (err error) {
 	return
 }
 
-func (this_ *LocalService) Copy(path string, fromService Service, fromPath string, onDo func(fileCount int, fileSize int64)) (err error) {
-	return
-}
-
 func (this_ *LocalService) Remove(path string, onDo func(fileCount int, removeCount int)) (err error) {
 	var fileCount int
 	var removeCount int
@@ -185,6 +222,7 @@ func (this_ *LocalService) Remove(path string, onDo func(fileCount int, removeCo
 
 	return
 }
+
 func removeFile(path string, onLoad func(), onRemove func()) (err error) {
 	var isDir bool
 
@@ -217,6 +255,7 @@ func removeFile(path string, onLoad func(), onRemove func()) (err error) {
 	onRemove()
 	return
 }
+
 func (this_ *LocalService) Count(path string, onDo func(fileCount int)) (fileCount int, err error) {
 	return
 }

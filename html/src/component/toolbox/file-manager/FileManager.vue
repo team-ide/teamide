@@ -228,7 +228,7 @@ export default {
           menus.push({
             text: "下载",
             onClick: () => {
-              this.toDownload(files[0]);
+              this.fileWorker.download(files[0].path);
             },
           });
         }
@@ -389,9 +389,6 @@ export default {
       files.forEach((one) => {
         this.fileWorker.remove(one.path);
       });
-    },
-    toDownload(file) {
-      this.$emit("download", this.place, this.dir, file);
     },
     toInsertFile(isDir, afterFile) {
       let index = this.fileWorker.getFileIndex(afterFile);

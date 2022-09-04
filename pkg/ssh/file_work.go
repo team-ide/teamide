@@ -1,6 +1,9 @@
-package filework
+package ssh
 
-import "io"
+import (
+	"io"
+	"teamide/pkg/filework"
+)
 
 type FTPService struct {
 }
@@ -9,7 +12,7 @@ func (this_ *FTPService) Exist(path string) (exist bool, err error) {
 	return
 }
 
-func (this_ *FTPService) Create(path string, isDir bool) (file *FileInfo, err error) {
+func (this_ *FTPService) Create(path string, isDir bool) (file *filework.FileInfo, err error) {
 	return
 }
 
@@ -17,7 +20,7 @@ func (this_ *FTPService) Write(path string, bytes []byte) (err error) {
 	return
 }
 
-func (this_ *FTPService) WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *FileInfo, err error) {
+func (this_ *FTPService) WriteByReader(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (file *filework.FileInfo, err error) {
 	return
 }
 
@@ -25,15 +28,11 @@ func (this_ *FTPService) Read(path string) (bytes []byte, err error) {
 	return
 }
 
-func (this_ *FTPService) Rename(oldPath string, newPath string) (file *FileInfo, err error) {
+func (this_ *FTPService) Rename(oldPath string, newPath string) (file *filework.FileInfo, err error) {
 	return
 }
 
 func (this_ *FTPService) Move(oldPath string, newPath string) (err error) {
-	return
-}
-
-func (this_ *FTPService) Copy(path string, fromService Service, fromPath string, onDo func(fileCount int, fileSize int64)) (err error) {
 	return
 }
 
@@ -49,10 +48,10 @@ func (this_ *FTPService) CountSize(path string, onDo func(fileCount int, fileSiz
 	return
 }
 
-func (this_ *FTPService) Files(path string) (parentPath string, files []*FileInfo, err error) {
+func (this_ *FTPService) Files(path string) (parentPath string, files []*filework.FileInfo, err error) {
 	return
 }
 
-func (this_ *FTPService) File(path string) (file *FileInfo, err error) {
+func (this_ *FTPService) File(path string) (file *filework.FileInfo, err error) {
 	return
 }

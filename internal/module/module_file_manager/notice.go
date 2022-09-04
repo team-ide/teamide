@@ -1,4 +1,4 @@
-package filework
+package module_file_manager
 
 import (
 	"sync"

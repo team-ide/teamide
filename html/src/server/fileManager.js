@@ -34,6 +34,9 @@ let fileManager = {
     upload(param) {
         return http.post('api/file_manager/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
+    download(param) {
+        return http.post('api/file_manager/download', param, { responseType: "blob" });
+    },
 };
 
 

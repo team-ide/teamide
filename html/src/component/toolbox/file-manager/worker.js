@@ -1,5 +1,7 @@
 import server from "@/server/index.js";
 import tool from "@/tool/index.js";
+import source from "@/source/index.js";
+
 const newWorker = function (workerOption) {
     workerOption = workerOption || {};
     const worker = {
@@ -332,8 +334,16 @@ const newWorker = function (workerOption) {
                         this.fileList.push(one)
                     }
                 })
+                return true;
             }
-            return true;
+        },
+        async download(path) {
+            let url = source.api + "file_manager/download?";
+            url += "workerId=" + (this.workerId || "");
+            url += "&place=" + (this.place || "");
+            url += "&placeId=" + (this.placeId || "");
+            url += "&path=" + encodeURIComponent(path);
+            window.location.href = url;
         },
         async copy(path, fromPlace, fromPlaceId, fromPath) {
             let param = worker.getParam();
