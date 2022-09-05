@@ -17,14 +17,13 @@ import (
 
 type Api struct {
 	*context.ServerContext
-	ToolboxService *module_toolbox.ToolboxService
 }
 
-func NewApi(ToolboxService *module_toolbox.ToolboxService, NodeContext *module_node.NodeContext) *Api {
-	toolboxService = ToolboxService
-	nodeContext = NodeContext
+func NewApi(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *Api {
+	toolboxService = toolboxService_
+	nodeService = nodeService_
 	return &Api{
-		ServerContext: ToolboxService.ServerContext,
+		ServerContext: toolboxService_.ServerContext,
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"teamide/pkg/filework"
 	"teamide/pkg/system"
 	"teamide/pkg/util"
 )
@@ -68,14 +69,14 @@ type NetProxyWorkData struct {
 }
 
 type FileWorkData struct {
-	FileList []*FileInfo `json:"fileList,omitempty"`
-	Dir      string      `json:"dir,omitempty"`
-	Path     string      `json:"path,omitempty"`
-	OldPath  string      `json:"oldPath,omitempty"`
-	NewPath  string      `json:"newPath,omitempty"`
-	Text     string      `json:"text,omitempty"`
-	IsNew    bool        `json:"isNew,omitempty"`
-	IsDir    bool        `json:"isDir,omitempty"`
+	File     *filework.FileInfo   `json:"file,omitempty"`
+	FileList []*filework.FileInfo `json:"fileList,omitempty"`
+	Dir      string               `json:"dir,omitempty"`
+	Path     string               `json:"path,omitempty"`
+	OldPath  string               `json:"oldPath,omitempty"`
+	NewPath  string               `json:"newPath,omitempty"`
+	IsDir    bool                 `json:"isDir,omitempty"`
+	Exist    bool                 `json:"exist,omitempty"`
 }
 
 type StatusChange struct {

@@ -31,9 +31,6 @@ func (this_ *NodeService) InitContext() {
 	}
 	return
 }
-func (this_ *NodeService) GetContext() *NodeContext {
-	return this_.nodeContext
-}
 
 type NodeContext struct {
 	server *node.Server

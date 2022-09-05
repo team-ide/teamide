@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"teamide/pkg/filework"
 	"time"
 )
 
@@ -29,14 +30,17 @@ var (
 	methodNetProxyGetInnerStatus          MethodType = 210
 	methodNetProxyGetOuterStatus          MethodType = 211
 
-	methodFileFiles         MethodType = 301
-	methodFileCopy          MethodType = 302
-	methodFileRemove        MethodType = 303
-	methodFileRename        MethodType = 304
-	methodFileUpload        MethodType = 305
-	methodFileConfirmResult MethodType = 306
-	methodFileProgress      MethodType = 307
-	methodFileRead          MethodType = 308
+	methodFileExist     MethodType = 301
+	methodFileFile      MethodType = 302
+	methodFileFiles     MethodType = 303
+	methodFileCreate    MethodType = 304
+	methodFileRemove    MethodType = 305
+	methodFileRename    MethodType = 306
+	methodFileMove      MethodType = 307
+	methodFileWrite     MethodType = 308
+	methodFileRead      MethodType = 309
+	methodFileCount     MethodType = 310
+	methodFileCountSize MethodType = 311
 
 	methodTerminalNewConn   MethodType = 401
 	methodTerminalCloseConn MethodType = 402
@@ -261,21 +265,83 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 		}
 		return
 
+	case methodFileExist:
+		if msg.FileWorkData != nil {
+			var exist bool
+			exist, err = this_.workExist(msg.LineNodeIdList, msg.FileWorkData.Path)
+			if err != nil {
+				return
+			}
+			res.FileWorkData = &FileWorkData{
+				Exist: exist,
+			}
+		}
+		return
+	case methodFileFile:
+		if msg.FileWorkData != nil {
+			var file *filework.FileInfo
+			file, err = this_.workFile(msg.LineNodeIdList, msg.FileWorkData.Path)
+			if err != nil {
+				return
+			}
+			res.FileWorkData = &FileWorkData{
+				File: file,
+			}
+		}
+		return
 	case methodFileFiles:
+		if msg.FileWorkData != nil {
+			var fileList []*filework.FileInfo
+			var path string
+			path, fileList, err = this_.workFiles(msg.LineNodeIdList, msg.FileWorkData.Dir)
+			if err != nil {
+				return
+			}
+			res.FileWorkData = &FileWorkData{
+				FileList: fileList,
+				Path:     path,
+			}
+		}
 		return
-	case methodFileCopy:
+	case methodFileCreate:
+		if msg.FileWorkData != nil {
+			err = this_.workFileCreate(msg.LineNodeIdList, msg.FileWorkData.Path, msg.FileWorkData.IsDir)
+			if err != nil {
+				return
+			}
+		}
 		return
-	case methodFileProgress:
+	case methodFileRename:
+		if msg.FileWorkData != nil {
+			err = this_.workFileRename(msg.LineNodeIdList, msg.FileWorkData.OldPath, msg.FileWorkData.NewPath)
+			if err != nil {
+				return
+			}
+		}
+		return
+	case methodFileMove:
+		if msg.FileWorkData != nil {
+			err = this_.workFileMove(msg.LineNodeIdList, msg.FileWorkData.OldPath, msg.FileWorkData.NewPath)
+			if err != nil {
+				return
+			}
+		}
 		return
 	case methodFileRemove:
+		if msg.FileWorkData != nil {
+			err = this_.workFileRemove(msg.LineNodeIdList, msg.FileWorkData.Path)
+			if err != nil {
+				return
+			}
+		}
 		return
 	case methodFileRead:
 		return
-	case methodFileConfirmResult:
+	case methodFileWrite:
 		return
-	case methodFileRename:
+	case methodFileCount:
 		return
-	case methodFileUpload:
+	case methodFileCountSize:
 		return
 
 	case methodTerminalNewConn:

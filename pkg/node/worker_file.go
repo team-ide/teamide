@@ -1,10 +1,7 @@
 package node
 
 import (
-	"errors"
-	"os"
-	"sort"
-	"teamide/pkg/util"
+	"teamide/pkg/filework"
 )
 
 type FileInfo struct {
@@ -17,233 +14,9 @@ type FileInfo struct {
 	FileMode string `json:"fileMode,omitempty"`
 }
 
-func (this_ *Worker) workFiles(lineNodeIdList []string, dir string) (resDir string, fileList []*FileInfo, err error) {
+func (this_ *Worker) workExist(lineNodeIdList []string, path string) (exist bool, err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodNetProxyNewConn, &Message{
-			LineNodeIdList: lineNodeIdList,
-			FileWorkData: &FileWorkData{
-				Dir: dir,
-			},
-		})
-		if e != nil {
-			return
-		}
-
-		if res != nil && res.FileWorkData != nil {
-			fileList = res.FileWorkData.FileList
-		}
-		return
-	})
-	if err != nil {
-		return
-	}
-	if send {
-		return
-	}
-
-	fileList = append(fileList, &FileInfo{
-		Name:  "..",
-		IsDir: true,
-		Place: "local",
-	})
-	if dir == "" {
-		dir, err = os.UserHomeDir()
-		if err != nil {
-			return
-		}
-	}
-
-	dir = util.FormatPath(dir)
-	if err != nil {
-		return
-	}
-	resDir = dir
-
-	fileInfo, err := os.Lstat(dir)
-	if err != nil {
-		if err == os.ErrNotExist {
-			err = nil
-			return
-		}
-		return
-	}
-
-	if !fileInfo.IsDir() {
-		err = errors.New("路径[" + dir + "]不是目录")
-		return
-	}
-
-	dirFiles, err := os.ReadDir(dir)
-	if err != nil {
-		return
-	}
-	var dirNames []string
-	var fileNames []string
-
-	fMap := map[string]os.DirEntry{}
-	for _, f := range dirFiles {
-		fName := f.Name()
-		fMap[fName] = f
-		if f.IsDir() {
-			dirNames = append(dirNames, fName)
-		} else {
-			fileNames = append(fileNames, fName)
-		}
-	}
-
-	sort.Strings(dirNames)
-	sort.Strings(fileNames)
-
-	for _, one := range dirNames {
-		f := fMap[one]
-		var fi os.FileInfo
-		fi, err = f.Info()
-		if err != nil {
-			return
-		}
-		ModTime := fi.ModTime()
-		fileList = append(fileList, &FileInfo{
-			Name:     one,
-			IsDir:    true,
-			Place:    "local",
-			ModTime:  util.GetTimeTime(ModTime),
-			FileMode: fi.Mode().String(),
-		})
-	}
-	for _, one := range fileNames {
-		f := fMap[one]
-		var fi os.FileInfo
-		fi, err = f.Info()
-		if err != nil {
-			return
-		}
-		ModTime := fi.ModTime()
-		fileList = append(fileList, &FileInfo{
-			Name:     one,
-			Size:     fi.Size(),
-			Place:    "local",
-			ModTime:  util.GetTimeTime(ModTime),
-			FileMode: fi.Mode().String(),
-		})
-	}
-	return
-}
-
-func (this_ *Worker) workFileRemove(lineNodeIdList []string, dir string) (resDir string, fileList []*FileInfo, err error) {
-	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodNetProxyNewConn, &Message{
-			LineNodeIdList: lineNodeIdList,
-			FileWorkData: &FileWorkData{
-				Dir: dir,
-			},
-		})
-		if e != nil {
-			return
-		}
-
-		if res != nil && res.FileWorkData != nil {
-			fileList = res.FileWorkData.FileList
-		}
-		return
-	})
-	if err != nil {
-		return
-	}
-	if send {
-		return
-	}
-
-	fileList = append(fileList, &FileInfo{
-		Name:  "..",
-		IsDir: true,
-		Place: "local",
-	})
-	if dir == "" {
-		dir, err = os.UserHomeDir()
-		if err != nil {
-			return
-		}
-	}
-
-	dir = util.FormatPath(dir)
-	if err != nil {
-		return
-	}
-	resDir = dir
-
-	fileInfo, err := os.Lstat(dir)
-	if err != nil {
-		if err == os.ErrNotExist {
-			err = nil
-			return
-		}
-		return
-	}
-
-	if !fileInfo.IsDir() {
-		err = errors.New("路径[" + dir + "]不是目录")
-		return
-	}
-
-	dirFiles, err := os.ReadDir(dir)
-	if err != nil {
-		return
-	}
-	var dirNames []string
-	var fileNames []string
-
-	fMap := map[string]os.DirEntry{}
-	for _, f := range dirFiles {
-		fName := f.Name()
-		fMap[fName] = f
-		if f.IsDir() {
-			dirNames = append(dirNames, fName)
-		} else {
-			fileNames = append(fileNames, fName)
-		}
-	}
-
-	sort.Strings(dirNames)
-	sort.Strings(fileNames)
-
-	for _, one := range dirNames {
-		f := fMap[one]
-		var fi os.FileInfo
-		fi, err = f.Info()
-		if err != nil {
-			return
-		}
-		ModTime := fi.ModTime()
-		fileList = append(fileList, &FileInfo{
-			Name:     one,
-			IsDir:    true,
-			Place:    "local",
-			ModTime:  util.GetTimeTime(ModTime),
-			FileMode: fi.Mode().String(),
-		})
-	}
-	for _, one := range fileNames {
-		f := fMap[one]
-		var fi os.FileInfo
-		fi, err = f.Info()
-		if err != nil {
-			return
-		}
-		ModTime := fi.ModTime()
-		fileList = append(fileList, &FileInfo{
-			Name:     one,
-			Size:     fi.Size(),
-			Place:    "local",
-			ModTime:  util.GetTimeTime(ModTime),
-			FileMode: fi.Mode().String(),
-		})
-	}
-	return
-}
-
-func (this_ *Worker) workFileRead(lineNodeIdList []string, path string) (size int64, text string, err error) {
-	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileRead, &Message{
+		res, e := this_.Call(listener, methodFileExist, &Message{
 			LineNodeIdList: lineNodeIdList,
 			FileWorkData: &FileWorkData{
 				Path: path,
@@ -254,7 +27,7 @@ func (this_ *Worker) workFileRead(lineNodeIdList []string, path string) (size in
 		}
 
 		if res != nil && res.FileWorkData != nil {
-			text = res.FileWorkData.Text
+			exist = res.FileWorkData.Exist
 		}
 		return
 	})
@@ -265,11 +38,99 @@ func (this_ *Worker) workFileRead(lineNodeIdList []string, path string) (size in
 		return
 	}
 
-	size, text, err = util.FileRead(os.Lstat, util.LocalFileOpen, path, 1024*1024*10)
+	exist, err = filework.NewLocalService().Exist(path)
+
 	return
 }
 
-func (this_ *Worker) workFileRename(lineNodeIdList []string, isNew bool, isDir bool, oldPath string, newPath string) (path string, err error) {
+func (this_ *Worker) workFile(lineNodeIdList []string, path string) (file *filework.FileInfo, err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileFile, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Path: path,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		if res != nil && res.FileWorkData != nil {
+			file = res.FileWorkData.File
+		}
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+
+	file, err = filework.NewLocalService().File(path)
+
+	return
+}
+
+func (this_ *Worker) workFiles(lineNodeIdList []string, dir string) (path string, fileList []*filework.FileInfo, err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileFiles, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Dir: dir,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		if res != nil && res.FileWorkData != nil {
+			fileList = res.FileWorkData.FileList
+			path = res.FileWorkData.Path
+		}
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+
+	path, fileList, err = filework.NewLocalService().Files(dir)
+
+	return
+}
+
+func (this_ *Worker) workFileCreate(lineNodeIdList []string, path string, isDir bool) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileCreate, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Path:  path,
+				IsDir: isDir,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		if res != nil && res.FileWorkData != nil {
+		}
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
+		return
+	}
+
+	err = filework.NewLocalService().Create(path, isDir)
+	return
+}
+
+func (this_ *Worker) workFileRename(lineNodeIdList []string, oldPath string, newPath string) (err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
 		res, e := this_.Call(listener, methodFileRename, &Message{
 			LineNodeIdList: lineNodeIdList,
@@ -283,7 +144,6 @@ func (this_ *Worker) workFileRename(lineNodeIdList []string, isNew bool, isDir b
 		}
 
 		if res != nil && res.FileWorkData != nil {
-			path = res.FileWorkData.Path
 		}
 		return
 	})
@@ -293,30 +153,87 @@ func (this_ *Worker) workFileRename(lineNodeIdList []string, isNew bool, isDir b
 	if send {
 		return
 	}
-	if isNew {
-		if isDir {
-			err = os.MkdirAll(newPath, os.ModePerm)
-		} else {
-			var f *os.File
-			f, err = os.Create(newPath)
-			defer func() {
-				_ = f.Close()
-			}()
-		}
-		if err != nil {
+
+	err = filework.NewLocalService().Rename(oldPath, newPath)
+	return
+}
+
+func (this_ *Worker) workFileMove(lineNodeIdList []string, oldPath string, newPath string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileMove, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				OldPath: oldPath,
+				NewPath: newPath,
+			},
+		})
+		if e != nil {
 			return
 		}
 
+		if res != nil && res.FileWorkData != nil {
+		}
+		return
+	})
+	if err != nil {
+		return
+	}
+	if send {
 		return
 	}
 
-	_, err = os.Lstat(oldPath)
+	err = filework.NewLocalService().Move(oldPath, newPath)
+	return
+}
+
+func (this_ *Worker) workFileRemove(lineNodeIdList []string, path string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileRemove, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Path: path,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		if res != nil && res.FileWorkData != nil {
+		}
+		return
+	})
 	if err != nil {
 		return
 	}
-	err = os.Rename(oldPath, newPath)
+	if send {
+		return
+	}
+
+	return
+}
+
+func (this_ *Worker) workFileRead(lineNodeIdList []string, path string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileRead, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Path: path,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		if res != nil && res.FileWorkData != nil {
+		}
+		return
+	})
 	if err != nil {
 		return
 	}
+	if send {
+		return
+	}
+
 	return
 }

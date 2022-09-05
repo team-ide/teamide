@@ -73,6 +73,21 @@
                     </MenuSubBox>
                   </MenuItem>
                 </template>
+                <template v-if="source.nodeList && source.nodeList.length > 0">
+                  <MenuItem>
+                    节点
+                    <MenuSubBox slot="MenuSubBox">
+                      <template v-for="(one, index) in source.nodeList">
+                        <MenuItem
+                          :key="index"
+                          @click="openFileManager('node', one)"
+                        >
+                          {{ one.name }}
+                        </MenuItem>
+                      </template>
+                    </MenuSubBox>
+                  </MenuItem>
+                </template>
               </MenuBox>
             </el-dropdown-menu>
           </el-dropdown>
@@ -225,6 +240,9 @@ export default {
       } else if (place == "ssh") {
         extend.title = "文件管理器-" + placeData.name;
         extend.placeId = "" + placeData.toolboxId;
+      } else if (place == "node") {
+        extend.title = "文件管理器-" + placeData.name;
+        extend.placeId = "" + placeData.serverId;
       } else {
         this.tool.error("暂不支持该配置作为文件管理器");
         return;

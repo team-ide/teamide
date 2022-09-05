@@ -29,6 +29,10 @@ type NodeService struct {
 	nodeContext *NodeContext
 }
 
+func (this_ *NodeService) GetContext() *NodeContext {
+	return this_.nodeContext
+}
+
 // Get 查询单个
 func (this_ *NodeService) Get(nodeId int64) (res *NodeModel, err error) {
 	res = &NodeModel{}

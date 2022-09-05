@@ -14,13 +14,13 @@ import (
 
 var (
 	toolboxService *module_toolbox.ToolboxService
-	nodeContext    *module_node.NodeContext
+	nodeService    *module_node.NodeService
 )
 
 func GetService(fileWorkerKey string, place string, placeId string) (service filework.Service, err error) {
 	switch place {
 	case "local":
-		service = &filework.LocalService{}
+		service = filework.NewLocalService()
 	case "ssh":
 		if placeId == "" {
 			err = errors.New("SSH配置不能为空")
@@ -50,7 +50,7 @@ func GetService(fileWorkerKey string, place string, placeId string) (service fil
 			err = errors.New("node配置不能为空")
 			return
 		}
-		service = module_node.NewFileService(placeId, nodeContext)
+		service = module_node.NewFileService(placeId, nodeService)
 	}
 	if service == nil {
 		err = errors.New("[" + place + "]文件服务不存在")

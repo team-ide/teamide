@@ -9,17 +9,21 @@ import (
 	"teamide/pkg/util"
 )
 
-type LocalService struct {
+func NewLocalService() *localService {
+	return &localService{}
 }
 
-func (this_ *LocalService) Exist(path string) (exist bool, err error) {
+type localService struct {
+}
+
+func (this_ *localService) Exist(path string) (exist bool, err error) {
 
 	exist, err = util.PathExists(path)
 
 	return
 }
 
-func (this_ *LocalService) Create(path string, isDir bool) (err error) {
+func (this_ *localService) Create(path string, isDir bool) (err error) {
 	path = util.FormatPath(path)
 	exist, err := util.PathExists(path)
 	if err != nil {
@@ -46,7 +50,7 @@ func (this_ *LocalService) Create(path string, isDir bool) (err error) {
 	return
 }
 
-func (this_ *LocalService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
 	path = util.FormatPath(path)
 
 	pathDir := path[0:strings.LastIndex(path, "/")]
@@ -105,7 +109,7 @@ func (this_ *LocalService) Write(path string, reader io.Reader, onDo func(readSi
 	return
 }
 
-func (this_ *LocalService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
 	path = util.FormatPath(path)
 	exist, err := this_.Exist(path)
 	if err != nil {
@@ -159,7 +163,7 @@ func (this_ *LocalService) Read(path string, writer io.Writer, onDo func(readSiz
 	return
 }
 
-func (this_ *LocalService) Rename(oldPath string, newPath string) (err error) {
+func (this_ *localService) Rename(oldPath string, newPath string) (err error) {
 	oldPath = util.FormatPath(oldPath)
 	newPath = util.FormatPath(newPath)
 
@@ -188,7 +192,7 @@ func (this_ *LocalService) Rename(oldPath string, newPath string) (err error) {
 	return
 }
 
-func (this_ *LocalService) Move(oldPath string, newPath string) (err error) {
+func (this_ *localService) Move(oldPath string, newPath string) (err error) {
 	oldPath = util.FormatPath(oldPath)
 	newPath = util.FormatPath(newPath)
 
@@ -217,7 +221,7 @@ func (this_ *LocalService) Move(oldPath string, newPath string) (err error) {
 	return
 }
 
-func (this_ *LocalService) Remove(path string, onDo func(fileCount int, removeCount int)) (err error) {
+func (this_ *localService) Remove(path string, onDo func(fileCount int, removeCount int)) (err error) {
 	var fileCount int
 	var removeCount int
 
@@ -265,15 +269,15 @@ func removeFile(path string, onLoad func(), onRemove func()) (err error) {
 	return
 }
 
-func (this_ *LocalService) Count(path string, onDo func(fileCount int)) (fileCount int, err error) {
+func (this_ *localService) Count(path string, onDo func(fileCount int)) (fileCount int, err error) {
 	return
 }
 
-func (this_ *LocalService) CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error) {
+func (this_ *localService) CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error) {
 	return
 }
 
-func (this_ *LocalService) Files(dir string) (parentPath string, files []*FileInfo, err error) {
+func (this_ *localService) Files(dir string) (parentPath string, files []*FileInfo, err error) {
 	parentPath = dir
 	if parentPath == "" {
 		parentPath, err = os.UserHomeDir()
@@ -341,7 +345,7 @@ func (this_ *LocalService) Files(dir string) (parentPath string, files []*FileIn
 	return
 }
 
-func (this_ *LocalService) File(path string) (file *FileInfo, err error) {
+func (this_ *localService) File(path string) (file *FileInfo, err error) {
 	path = util.FormatPath(path)
 	stat, err := os.Stat(path)
 	if err != nil {

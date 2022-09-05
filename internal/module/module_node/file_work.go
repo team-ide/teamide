@@ -7,30 +7,30 @@ import (
 	"teamide/pkg/node"
 )
 
-func NewFileService(nodeId string, nodeContext *NodeContext) *fileService {
+func NewFileService(nodeId string, nodeService *NodeService) *fileService {
 	return &fileService{
 		nodeId:      nodeId,
-		nodeContext: nodeContext,
+		nodeService: nodeService,
 	}
 }
 
 type fileService struct {
 	nodeId      string
 	nodeLine    []string
-	nodeContext *NodeContext
+	nodeService *NodeService
 }
 
 func (this_ *fileService) getServer() (server *node.Server, err error) {
-	if this_.nodeContext == nil {
+	if this_.nodeService.GetContext() == nil {
 		err = errors.New("node上下文未初始化")
 		return
 	}
-	server = this_.nodeContext.GetServer()
+	server = this_.nodeService.GetContext().GetServer()
 	if server == nil {
 		err = errors.New("node服务未初始化")
 		return
 	}
-	nodeLine := this_.nodeContext.GetNodeLineTo(this_.nodeId)
+	nodeLine := this_.nodeService.GetContext().GetNodeLineTo(this_.nodeId)
 	if len(nodeLine) == 0 {
 		err = errors.New("无法连接到节点[" + this_.nodeId + "]")
 		return
