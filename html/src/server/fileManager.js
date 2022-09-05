@@ -1,6 +1,9 @@
 import http from '@/server/http';
 
 let fileManager = {
+    close(param) {
+        return http.post('api/file_manager/close', param);
+    },
     file(param) {
         return http.post('api/file_manager/file', param);
     },

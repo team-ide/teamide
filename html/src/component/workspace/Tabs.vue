@@ -34,6 +34,9 @@
             <template v-if="tool.isNotEmpty(one.iconFont)">
               <IconFont class="mgr-5" :class="one.iconFont"> </IconFont>
             </template>
+            <template v-if="tool.isNotEmpty(one.icon)">
+              <Icon class="mgr-5" :class="one.icon"> </Icon>
+            </template>
             {{ one.name || one.title }}
           </span>
           <span

@@ -244,11 +244,16 @@ export default {
       }
 
       let context = {};
+      var sshToolboxList = [];
 
       toolboxList.forEach((one) => {
         context[one.toolboxType] = context[one.toolboxType] || [];
         context[one.toolboxType].push(one);
+        if (one.toolboxType == "ssh") {
+          sshToolboxList.push(one);
+        }
       });
+      this.source.sshToolboxList = sshToolboxList;
 
       let groups = this.source.toolboxGroups || [];
       groupList.push({

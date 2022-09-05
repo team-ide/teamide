@@ -59,7 +59,7 @@ func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 		var f *os.File
 		f, err = os.Open(configPath)
 		if err != nil {
-			panic(err)
+			return
 		}
 		var bs []byte
 		bs, err = io.ReadAll(f)
@@ -69,15 +69,18 @@ func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 		configMap := map[string]interface{}{}
 		err = yaml.Unmarshal(bs, &configMap)
 		if err != nil {
-			panic(err)
+			return
 		}
 		formatMap(configMap)
 
 		bs, err = json.Marshal(configMap)
 		if err != nil {
-			panic(err)
+			return
 		}
-		json.Unmarshal(bs, config)
+		err = json.Unmarshal(bs, config)
+		if err != nil {
+			return
+		}
 	}
 
 	if config.Server == nil {
@@ -102,6 +105,17 @@ func formatMap(mapValue map[string]interface{}) {
 		switch v := value.(type) {
 		case map[string]interface{}:
 			formatMap(v)
+		case []interface{}:
+			for i, one := range v {
+				switch oneV := one.(type) {
+				case map[string]interface{}:
+					formatMap(oneV)
+					v[i] = oneV
+				default:
+					res := formatValue(oneV)
+					v[i] = res
+				}
+			}
 		default:
 			res := formatValue(value)
 			mapValue[key] = res
@@ -109,16 +123,16 @@ func formatMap(mapValue map[string]interface{}) {
 	}
 
 }
-func formatValue(value interface{}) (res string) {
+func formatValue(value interface{}) (v interface{}) {
 	if value == nil {
 		return
 	}
 	stringValue, stringValueOk := value.(string)
-	if stringValueOk {
-		res = stringValue
+	if !stringValueOk {
+		v = stringValue
 		return
 	}
-	res = ""
+	res := ""
 	var re *regexp.Regexp
 	re, _ = regexp.Compile(`[$]+{(.+?)}`)
 	indexList := re.FindAllIndex([]byte(stringValue), -1)
@@ -128,15 +142,16 @@ func formatValue(value interface{}) (res string) {
 
 		lastIndex = indexes[1]
 
-		key := stringValue[indexes[0]+1 : indexes[1]-1]
-		value := GetFromSystem(key)
+		key := stringValue[indexes[0]+2 : indexes[1]-1]
+		envValue := GetFromSystem(key)
 		if value == "" {
 			return
 		}
-		res += value
+		res += envValue
 	}
 	res += stringValue[lastIndex:]
 
+	v = res
 	return
 }
 

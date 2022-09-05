@@ -9,7 +9,8 @@
               :toolboxWorker="toolboxWorker"
               :place="one.place"
               :placeId="one.placeId"
-              :changeDir="changeDir"
+              :openDir="one.openDir"
+              :onChangeOpenDir="one.onChangeOpenDir"
             ></FileManager>
           </tm-layout>
           <template v-if="one.hasBar">
@@ -45,11 +46,15 @@ export default {
       this.list.splice(0, this.list.length);
       this.$nextTick(() => {
         if (this.extend) {
-          this.addOne(this.extend.place, this.extend.placeId);
+          this.addOne(
+            this.extend.place,
+            this.extend.placeId,
+            this.extend.openDir
+          );
         }
       });
     },
-    addOne(place, placeId) {
+    addOne(place, placeId, openDir) {
       let list = [];
       if (this.list) {
         this.list.forEach((one) => {
@@ -57,13 +62,34 @@ export default {
           list.push(data);
         });
       }
-      list.push({
+      let data = {
         id: "ID-" + this.tool.getNumber(),
+        index: list.length,
         place: place,
         placeId: placeId,
+        openDir: openDir,
         width: "100%",
         hasBar: false,
-      });
+        onChangeOpenDir: (openDir) => {
+          if (this.tool.isEmpty(openDir)) {
+            openDir = "";
+          }
+          if (this.tool.isEmpty(openDir) && this.tool.isEmpty(data.openDir)) {
+            return;
+          }
+          if (openDir == data.openDir) {
+            return;
+          }
+          data.openDir = openDir;
+          if (data.index == 0) {
+            var keyValueMap = {};
+            keyValueMap["openDir"] = openDir;
+            this.toolboxWorker.updateExtend(keyValueMap);
+          }
+        },
+      };
+
+      list.push(data);
 
       if (list.length > 1) {
         list.forEach((one, index) => {
@@ -84,7 +110,6 @@ export default {
         }
       });
     },
-    changeDir() {},
     refresh() {
       console.log(this.list);
     },

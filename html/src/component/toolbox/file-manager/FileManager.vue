@@ -98,22 +98,41 @@
         </div>
       </tm-layout>
     </tm-layout>
+    <FileEdit
+      ref="FileEdit"
+      :source="source"
+      :toolboxWorker="toolboxWorker"
+      :fileWorker="fileWorker"
+    ></FileEdit>
   </div>
 </template>
 
 
 <script>
+import FileEdit from "./FileEdit";
+
 import _worker from "./worker.js";
 
 export default {
-  components: {},
-  props: ["source", "toolboxWorker", "place", "placeId"],
+  components: { FileEdit },
+  props: [
+    "source",
+    "toolboxWorker",
+    "place",
+    "placeId",
+    "openDir",
+    "onChangeOpenDir",
+  ],
   data() {
     let fileWorker = _worker.newWorker({
       workerId: this.toolboxWorker.workerId,
       place: this.place,
       placeId: this.placeId,
+      onChangeOpenDir: this.onChangeOpenDir,
     });
+    if (this.tool.isNotEmpty(this.openDir)) {
+      fileWorker.dir = this.openDir;
+    }
     return {
       fileWorker: fileWorker,
     };
@@ -126,7 +145,7 @@ export default {
   },
   methods: {
     init() {
-      this.fileWorker.loadFiles();
+      this.fileWorker.refresh();
     },
     onFocus() {
       this.$el.focus();
@@ -141,6 +160,7 @@ export default {
       if (file.isDir) {
         this.fileWorker.openDir(file.path);
       } else {
+        this.$refs.FileEdit.show(file);
       }
     },
     setIsInputDir(isInputDir) {
@@ -519,6 +539,10 @@ export default {
     // };
     this.init();
     this.bindEvent();
+  },
+  destroyed() {
+    this.isDestroyed = true;
+    this.fileWorker.close();
   },
 };
 </script>

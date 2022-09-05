@@ -34,6 +34,7 @@ func (this_ *ToolboxApi) count(requestBean *base.RequestBean, c *gin.Context) (r
 }
 
 type ListRequest struct {
+	ToolboxType string `json:"toolboxType,omitempty"`
 }
 
 type ListResponse struct {
@@ -49,7 +50,8 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 	response := &ListResponse{}
 
 	response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
-		UserId: requestBean.JWT.UserId,
+		UserId:      requestBean.JWT.UserId,
+		ToolboxType: request.ToolboxType,
 	})
 	if err != nil {
 		return

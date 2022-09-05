@@ -140,7 +140,6 @@
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
-            :isFromSSH="true"
           >
           </FTP>
         </div>

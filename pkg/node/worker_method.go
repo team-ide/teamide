@@ -83,6 +83,9 @@ func (this_ *Worker) Call(listener *MessageListener, method MethodType, msg *Mes
 
 	defer func() {
 		this_.removeCallback(msg.Id)
+		if e := recover(); e != nil {
+			Logger.Error("call error", zap.Any("error", e))
+		}
 	}()
 
 	waitResult := make(chan *Message, 1)
@@ -95,8 +98,13 @@ func (this_ *Worker) Call(listener *MessageListener, method MethodType, msg *Mes
 	}
 	var isEnd bool
 	go func() {
+		defer func() {
+			if e := recover(); e != nil {
+				Logger.Error("call wait result error", zap.Any("error", e))
+			}
+		}()
 		time.Sleep(time.Second * 60 * 1)
-		if isEnd {
+		if isEnd || waitResult == nil {
 			return
 		}
 		waitResult <- &Message{
@@ -104,6 +112,10 @@ func (this_ *Worker) Call(listener *MessageListener, method MethodType, msg *Mes
 		}
 	}()
 	res := <-waitResult
+
+	close(waitResult)
+	waitResult = nil
+
 	isEnd = true
 	if res.Error != "" {
 		err = errors.New(res.Error)

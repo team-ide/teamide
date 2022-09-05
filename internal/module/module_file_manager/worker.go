@@ -1,32 +1,79 @@
 package module_file_manager
 
 import (
+	"errors"
 	"io"
 	"mime/multipart"
+	"strconv"
 	"strings"
+	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/filework"
+	"teamide/pkg/ssh"
 )
 
-func GetService(place string, placeId string) (service filework.Service, err error) {
+var (
+	toolboxService *module_toolbox.ToolboxService
+)
+
+func GetService(fileWorkerKey string, place string, placeId string) (service filework.Service, err error) {
 	switch place {
 	case "local":
 		service = &filework.LocalService{}
+	case "ssh":
+		if placeId == "" {
+			err = errors.New("SSH配置不能为空")
+			return
+		}
+		var id int64
+		id, err = strconv.ParseInt(placeId, 10, 64)
+		if err != nil {
+			return
+		}
+		var tD *module_toolbox.ToolboxModel
+		tD, err = toolboxService.Get(id)
+		if err != nil {
+			return
+		}
+		if tD == nil || tD.Option == "" {
+			err = errors.New("SSH[" + placeId + "]配置不存在")
+			return
+		}
+
+		var config *ssh.Config
+		config, err = toolboxService.GetSSHConfig(tD.Option)
+
+		service = ssh.CreateOrGetClient(fileWorkerKey, config)
+	case "node":
+		if placeId == "" {
+			err = errors.New("node配置不能为空")
+			return
+		}
+	}
+	if service == nil {
+		err = errors.New("[" + place + "]文件服务不存在")
+		return
 	}
 	return
 }
 
-func Create(workerId string, place string, placeId string, path string, isDir bool) (file *filework.FileInfo, err error) {
+func Create(workerId string, fileWorkerKey string, place string, placeId string, path string, isDir bool) (file *filework.FileInfo, err error) {
 	progress := newProgress(workerId, place, placeId, "create")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["isDir"] = isDir
 	defer func() { progress.end(err) }()
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
 
-	file, err = service.Create(path, isDir)
+	err = service.Create(path, isDir)
+	if err != nil {
+		return
+	}
+
+	file, err = service.File(path)
 	return
 }
 
@@ -38,9 +85,9 @@ func CallAction(progressId string, action string) (err error) {
 	return
 }
 
-func File(workerId string, place string, placeId string, path string) (file *filework.FileInfo, err error) {
+func File(_ string, fileWorkerKey string, place string, placeId string, path string) (file *filework.FileInfo, err error) {
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -48,9 +95,9 @@ func File(workerId string, place string, placeId string, path string) (file *fil
 	return
 }
 
-func Files(workerId string, place string, placeId string, dir string) (parentPath string, files []*filework.FileInfo, err error) {
+func Files(_ string, fileWorkerKey string, place string, placeId string, dir string) (parentPath string, files []*filework.FileInfo, err error) {
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -58,15 +105,16 @@ func Files(workerId string, place string, placeId string, dir string) (parentPat
 	return
 }
 
-func Read(workerId string, place string, placeId string, path string, writer io.Writer) (file *filework.FileInfo, err error) {
+func Read(workerId string, fileWorkerKey string, place string, placeId string, path string, writer io.Writer) (file *filework.FileInfo, err error) {
 	progress := newProgress(workerId, place, placeId, "read")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["readSize"] = 0
 	progress.Data["writeSize"] = 0
 	progress.Data["successSize"] = 0
 	defer func() { progress.end(err) }()
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -85,14 +133,16 @@ func Read(workerId string, place string, placeId string, path string, writer io.
 	return
 }
 
-func Write(workerId string, place string, placeId string, path string, reader io.Reader) (err error) {
+func Write(workerId string, fileWorkerKey string, place string, placeId string, path string, reader io.Reader, size int) (file *filework.FileInfo, err error) {
 	progress := newProgress(workerId, place, placeId, "write")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["readSize"] = 0
 	progress.Data["writeSize"] = 0
+	progress.Data["size"] = size
 	defer func() { progress.end(err) }()
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -100,34 +150,46 @@ func Write(workerId string, place string, placeId string, path string, reader io
 	err = service.Write(path, reader, func(readSize int64, writeSize int64) {
 		progress.Data["readSize"] = readSize
 		progress.Data["writeSize"] = writeSize
+		progress.Data["successSize"] = writeSize
 	})
+	if err != nil {
+		return
+	}
+	file, err = service.File(path)
 
 	return
 }
 
-func Rename(workerId string, place string, placeId string, oldPath string, newPath string) (file *filework.FileInfo, err error) {
+func Rename(workerId string, fileWorkerKey string, place string, placeId string, oldPath string, newPath string) (file *filework.FileInfo, err error) {
 	progress := newProgress(workerId, place, placeId, "rename")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
 
 	defer func() { progress.end(err) }()
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
-	file, err = service.Rename(oldPath, newPath)
+	err = service.Rename(oldPath, newPath)
+	if err != nil {
+		return
+	}
+
+	file, err = service.File(newPath)
 	return
 }
 
-func Remove(workerId string, place string, placeId string, path string) (err error) {
+func Remove(workerId string, fileWorkerKey string, place string, placeId string, path string) (err error) {
 	progress := newProgress(workerId, place, placeId, "remove")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["fileCount"] = 0
 	progress.Data["removeCount"] = 0
 	defer func() { progress.end(err) }()
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -138,13 +200,14 @@ func Remove(workerId string, place string, placeId string, path string) (err err
 	return
 }
 
-func Move(workerId string, place string, placeId string, oldPath string, newPath string) (err error) {
+func Move(workerId string, fileWorkerKey string, place string, placeId string, oldPath string, newPath string) (err error) {
 	progress := newProgress(workerId, place, placeId, "move")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
 	defer func() { progress.end(err) }()
 
-	toService, err := GetService(place, placeId)
+	toService, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -153,9 +216,10 @@ func Move(workerId string, place string, placeId string, oldPath string, newPath
 	return
 }
 
-func Copy(workerId string, place string, placeId string, path string, fromPlace string, fromPlaceId string, fromPath string) {
+func Copy(workerId string, fileWorkerKey string, place string, placeId string, path string, fromPlace string, fromPlaceId string, fromPath string) {
 	var err error
 	progress := newProgress(workerId, place, placeId, "copy")
+	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["fromPlace"] = fromPlace
 	progress.Data["fromPlaceId"] = fromPlaceId
@@ -179,9 +243,9 @@ func Copy(workerId string, place string, placeId string, path string, fromPlace 
 	return
 }
 
-func Upload(workerId string, place string, placeId string, dir string, fullPath string, fileList []*multipart.FileHeader) (fileInfoList []*filework.FileInfo, err error) {
+func Upload(workerId string, fileWorkerKey string, place string, placeId string, dir string, fullPath string, fileList []*multipart.FileHeader) (fileInfoList []*filework.FileInfo, err error) {
 
-	service, err := GetService(place, placeId)
+	service, err := GetService(fileWorkerKey, place, placeId)
 	if err != nil {
 		return
 	}
@@ -202,6 +266,7 @@ func Upload(workerId string, place string, placeId string, dir string, fullPath 
 		}
 
 		progress := newProgress(workerId, place, placeId, "upload")
+		progress.Data["fileWorkerKey"] = fileWorkerKey
 		progress.Data["dir"] = dir
 		progress.Data["fullPath"] = fullPath
 		progress.Data["filename"] = one.Filename

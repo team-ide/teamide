@@ -331,9 +331,10 @@ source.initToolboxData = async () => {
 }
 source.initUserToolboxData = async () => {
 
-    source.initToolboxCount();
-    source.initToolboxGroups();
-    source.initToolboxQuickCommands();
+    await source.initToolboxCount();
+    await source.initToolboxGroups();
+    await source.initToolboxQuickCommands();
+    source.initToolboxSSHList();
 }
 source.toolboxCount = 0;
 source.initToolboxCount = async () => {
@@ -354,6 +355,24 @@ source.initToolboxGroups = async () => {
         let data = res.data || {};
         let groups = data.groupList || [];
         source.toolboxGroups = groups;
+    }
+}
+source.sshToolboxList = [];
+source.initToolboxSSHList = async () => {
+    let res = await server.toolbox.list({ toolboxType: "ssh" });
+    if (res.code != 0) {
+        tool.error(res.msg);
+    } else {
+        let data = res.data || {};
+        let toolboxList = data.toolboxList || [];
+
+        var sshToolboxList = [];
+        toolboxList.forEach((one) => {
+            if (one.toolboxType == "ssh") {
+                sshToolboxList.push(one);
+            }
+        });
+        source.sshToolboxList = sshToolboxList;
     }
 }
 

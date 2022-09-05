@@ -14,6 +14,8 @@ const newWorker = function (workerOption) {
         dirNames: [],
         isInputDir: false,
         filter: "",
+        fileWorkerKey: tool.generatekey(30),
+        onChangeOpenDir: workerOption.onChangeOpenDir,
         async init() {
 
         },
@@ -142,6 +144,11 @@ const newWorker = function (workerOption) {
             return file;
         },
         async loadFiles(dir) {
+            if (this.dir != dir) {
+                if (this.onChangeOpenDir) {
+                    this.onChangeOpenDir(dir)
+                }
+            }
             this.fileList = null;
             this.selectPaths = [];
             let data = await this.files(dir);
@@ -174,6 +181,7 @@ const newWorker = function (workerOption) {
                 workerId: worker.workerId,
                 place: worker.place,
                 placeId: worker.placeId,
+                fileWorkerKey: worker.fileWorkerKey,
             };
             return param;
         },
@@ -243,25 +251,6 @@ const newWorker = function (workerOption) {
             }
             return file;
         },
-        async read(path) {
-            let param = worker.getParam();
-            param.path = path;
-            let res = await server.fileManager.read(param);
-            if (res.code != 0) {
-                tool.error(res.msg);
-            }
-            return res.data;
-        },
-        async write(path, text) {
-            let param = worker.getParam();
-            param.path = path;
-            param.text = text;
-            let res = await server.fileManager.write(param);
-            if (res.code != 0) {
-                tool.error(res.msg);
-            }
-            return res.data;
-        },
         async rename(oldPath, newPath) {
             let param = worker.getParam();
             param.oldPath = oldPath;
@@ -309,6 +298,7 @@ const newWorker = function (workerOption) {
         async uploadFile(dir, file, fullPath) {
             let param = {
                 workerId: this.workerId,
+                fileWorkerKey: this.fileWorkerKey,
                 place: this.place,
                 placeId: this.placeId,
                 dir: dir,
@@ -340,6 +330,7 @@ const newWorker = function (workerOption) {
         async download(path) {
             let url = source.api + "file_manager/download?";
             url += "workerId=" + (this.workerId || "");
+            url += "&fileWorkerKey=" + (this.fileWorkerKey || "");
             url += "&place=" + (this.place || "");
             url += "&placeId=" + (this.placeId || "");
             url += "&path=" + encodeURIComponent(path);
@@ -356,6 +347,27 @@ const newWorker = function (workerOption) {
                 tool.error(res.msg);
             }
             return res.data;
+        },
+        async close() {
+            let param = worker.getParam();
+            let res = await server.fileManager.close(param);
+            if (res.code != 0) {
+                tool.error(res.msg);
+            }
+            return res.data;
+        },
+        async read(path) {
+            let param = worker.getParam();
+            param.path = path
+            let res = await server.fileManager.read(param);
+            return res;
+        },
+        async write(path, text) {
+            let param = worker.getParam();
+            param.path = path
+            param.text = text
+            let res = await server.fileManager.write(param);
+            return res;
         },
     };
 

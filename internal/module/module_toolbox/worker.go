@@ -108,6 +108,19 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	return
 }
 
+func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, err error) {
+	optionBytes := []byte(option)
+	err = json.Unmarshal(optionBytes, &config)
+	if err != nil {
+		return
+	}
+	config.Password = this_.DecryptOptionAttr(config.Password)
+	if config.PublicKey != "" {
+		config.PublicKey = this_.GetFilesFile(config.PublicKey)
+	}
+	return
+}
+
 // Work 执行
 func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
 
@@ -194,13 +207,9 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		break
 	case sshWorker_:
 		var config *ssh.Config
-		err = json.Unmarshal(optionBytes, &config)
+		config, err = this_.GetSSHConfig(option)
 		if err != nil {
 			return
-		}
-		config.Password = this_.DecryptOptionAttr(config.Password)
-		if config.PublicKey != "" {
-			config.PublicKey = this_.GetFilesFile(config.PublicKey)
 		}
 		res, err = toolbox.SSHWork(work, config, data)
 		break

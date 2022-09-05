@@ -40,7 +40,11 @@
           </span>
         </div>
         <div class="workspace-header-nav">
-          <el-dropdown trigger="click" class="file-manager-dropdown">
+          <el-dropdown
+            trigger="click"
+            class="file-manager-dropdown"
+            ref="fileManagerDropdown"
+          >
             <span class="el-dropdown-link">
               文件管理器<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
@@ -50,6 +54,25 @@
             >
               <MenuBox>
                 <MenuItem @click="openFileManager('local')">本地</MenuItem>
+                <template
+                  v-if="
+                    source.sshToolboxList && source.sshToolboxList.length > 0
+                  "
+                >
+                  <MenuItem>
+                    SSH
+                    <MenuSubBox slot="MenuSubBox">
+                      <template v-for="(one, index) in source.sshToolboxList">
+                        <MenuItem
+                          :key="index"
+                          @click="openFileManager('ssh', one)"
+                        >
+                          {{ one.name }}
+                        </MenuItem>
+                      </template>
+                    </MenuSubBox>
+                  </MenuItem>
+                </template>
               </MenuBox>
             </el-dropdown-menu>
           </el-dropdown>
@@ -159,10 +182,10 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.server.addServerSocketOnOpen(() => {
-        this.source.initUserToolboxData();
-        this.source.initNodeContext();
-        this.initOpens();
+      this.server.addServerSocketOnOpen(async () => {
+        await this.source.initUserToolboxData();
+        await this.source.initNodeContext();
+        await this.initOpens();
       });
       this.server.addServerSocketOnEvent("node-data-change", (data) => {
         try {
@@ -190,13 +213,25 @@ export default {
         title: "网络透传",
       });
     },
-    openFileManager(place, placeId) {
-      this.tool.openByExtend({
+    openFileManager(place, placeData) {
+      let extend = {
         toolboxType: "file-manager",
-        title: "文件管理器-本地",
         place: place,
-        placeId: placeId,
-      });
+        title: null,
+        placeId: null,
+      };
+      if (place == "local") {
+        extend.title = "文件管理器-本地";
+      } else if (place == "ssh") {
+        extend.title = "文件管理器-" + placeData.name;
+        extend.placeId = "" + placeData.toolboxId;
+      } else {
+        this.tool.error("暂不支持该配置作为文件管理器");
+        return;
+      }
+      this.tool.openByExtend(extend);
+      this.$refs.fileManagerDropdown && this.$refs.fileManagerDropdown.hide();
+      console.log(this.$refs.fileManagerDropdown);
     },
     addMainItem(item, fromItem) {
       this.mainItemsWorker.addItem(item, fromItem);
@@ -320,6 +355,12 @@ export default {
           break;
         case "other":
           break;
+        default:
+          if (item.extend) {
+            if (item.extend.toolboxType == "file-manager") {
+              item.icon = "mdi-folder";
+            }
+          }
       }
       this.addMainItem(item, fromItem);
       open.item = item;
