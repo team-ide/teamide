@@ -31,6 +31,9 @@ func (this_ *NodeService) InitContext() {
 	}
 	return
 }
+func (this_ *NodeService) GetContext() *NodeContext {
+	return this_.nodeContext
+}
 
 type NodeContext struct {
 	server *node.Server
@@ -63,6 +66,11 @@ type NodeContext struct {
 
 	oldCountDataStr string
 	countData       *NodeCountData
+}
+
+func (this_ *NodeContext) GetServer() *node.Server {
+	return this_.server
+
 }
 
 func (this_ *NodeContext) cleanNodeLine() {

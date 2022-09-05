@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"strconv"
 	"strings"
+	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/filework"
 	"teamide/pkg/ssh"
@@ -13,6 +14,7 @@ import (
 
 var (
 	toolboxService *module_toolbox.ToolboxService
+	nodeContext    *module_node.NodeContext
 )
 
 func GetService(fileWorkerKey string, place string, placeId string) (service filework.Service, err error) {
@@ -48,6 +50,7 @@ func GetService(fileWorkerKey string, place string, placeId string) (service fil
 			err = errors.New("node配置不能为空")
 			return
 		}
+		service = module_node.NewFileService(placeId, nodeContext)
 	}
 	if service == nil {
 		err = errors.New("[" + place + "]文件服务不存在")

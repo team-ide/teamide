@@ -9,6 +9,7 @@ import (
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/ssh"
 	"teamide/pkg/vitess/bytes2"
@@ -19,8 +20,9 @@ type Api struct {
 	ToolboxService *module_toolbox.ToolboxService
 }
 
-func NewApi(ToolboxService *module_toolbox.ToolboxService) *Api {
+func NewApi(ToolboxService *module_toolbox.ToolboxService, NodeContext *module_node.NodeContext) *Api {
 	toolboxService = ToolboxService
+	nodeContext = NodeContext
 	return &Api{
 		ServerContext: ToolboxService.ServerContext,
 	}
