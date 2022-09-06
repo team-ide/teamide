@@ -347,10 +347,6 @@ export default {
       this.openByToolboxId(toolboxData.toolboxId, extend);
       this.hide();
     },
-    toolboxDataOpenSfpt(toolboxData) {
-      this.openByToolboxId(toolboxData.toolboxId, { isFTP: true });
-      this.hide();
-    },
     dataContextmenu(toolboxType, toolboxData) {
       if (toolboxType.name == "other") {
         return;
@@ -365,14 +361,6 @@ export default {
           this.toolboxDataOpen(toolboxData);
         },
       });
-      if (toolboxType.name == "ssh") {
-        menus.push({
-          text: "打开FTP",
-          onClick: () => {
-            this.toolboxDataOpenSfpt(toolboxData);
-          },
-        });
-      }
       if (this.groupList.length > 0) {
         let moveGroupMenu = {
           text: "移动分组",

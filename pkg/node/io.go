@@ -30,6 +30,7 @@ type Message struct {
 	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
 	SystemData         *SystemData       `json:"systemData,omitempty"`
 	HasBytes           bool              `json:"hasBytes,omitempty"`
+	SendKey            string            `json:"sendKey,omitempty"`
 	Bytes              []byte            `json:"-"`
 	listener           *MessageListener
 }
@@ -69,14 +70,16 @@ type NetProxyWorkData struct {
 }
 
 type FileWorkData struct {
-	File     *filework.FileInfo   `json:"file,omitempty"`
-	FileList []*filework.FileInfo `json:"fileList,omitempty"`
-	Dir      string               `json:"dir,omitempty"`
-	Path     string               `json:"path,omitempty"`
-	OldPath  string               `json:"oldPath,omitempty"`
-	NewPath  string               `json:"newPath,omitempty"`
-	IsDir    bool                 `json:"isDir,omitempty"`
-	Exist    bool                 `json:"exist,omitempty"`
+	File        *filework.FileInfo   `json:"file,omitempty"`
+	FileList    []*filework.FileInfo `json:"fileList,omitempty"`
+	Dir         string               `json:"dir,omitempty"`
+	Path        string               `json:"path,omitempty"`
+	OldPath     string               `json:"oldPath,omitempty"`
+	NewPath     string               `json:"newPath,omitempty"`
+	IsDir       bool                 `json:"isDir,omitempty"`
+	Exist       bool                 `json:"exist,omitempty"`
+	FileCount   int                  `json:"fileCount,omitempty"`
+	RemoveCount int                  `json:"removeCount,omitempty"`
 }
 
 type StatusChange struct {
@@ -241,13 +244,16 @@ func ReadBytes(reader io.Reader, MonitorData *MonitorData) (bytes []byte, err er
 
 			bs := make([]byte, hasLen)
 			n, err = reader.Read(bs)
-			if err != nil {
+			if err != nil && err != io.EOF {
 				return
 			}
 			hasLen = hasLen - n
 			bytes = append(bytes, bs[0:n]...)
 			//Logger.Info("ReadBytes", zap.Any("should read", length), zap.Any("has size", hasLen))
 			if hasLen <= 0 {
+				break
+			}
+			if err == io.EOF {
 				break
 			}
 		}

@@ -1,7 +1,12 @@
 package node
 
 import (
+	"errors"
+	"go.uber.org/zap"
+	"io"
+	"os"
 	"teamide/pkg/filework"
+	"teamide/pkg/util"
 )
 
 type FileInfo struct {
@@ -31,10 +36,7 @@ func (this_ *Worker) workExist(lineNodeIdList []string, path string) (exist bool
 		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -60,10 +62,7 @@ func (this_ *Worker) workFile(lineNodeIdList []string, path string) (file *filew
 		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -90,10 +89,7 @@ func (this_ *Worker) workFiles(lineNodeIdList []string, dir string) (path string
 		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -104,7 +100,7 @@ func (this_ *Worker) workFiles(lineNodeIdList []string, dir string) (path string
 
 func (this_ *Worker) workFileCreate(lineNodeIdList []string, path string, isDir bool) (err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileCreate, &Message{
+		_, e = this_.Call(listener, methodFileCreate, &Message{
 			LineNodeIdList: lineNodeIdList,
 			FileWorkData: &FileWorkData{
 				Path:  path,
@@ -114,15 +110,9 @@ func (this_ *Worker) workFileCreate(lineNodeIdList []string, path string, isDir 
 		if e != nil {
 			return
 		}
-
-		if res != nil && res.FileWorkData != nil {
-		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -132,7 +122,7 @@ func (this_ *Worker) workFileCreate(lineNodeIdList []string, path string, isDir 
 
 func (this_ *Worker) workFileRename(lineNodeIdList []string, oldPath string, newPath string) (err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileRename, &Message{
+		_, e = this_.Call(listener, methodFileRename, &Message{
 			LineNodeIdList: lineNodeIdList,
 			FileWorkData: &FileWorkData{
 				OldPath: oldPath,
@@ -142,15 +132,9 @@ func (this_ *Worker) workFileRename(lineNodeIdList []string, oldPath string, new
 		if e != nil {
 			return
 		}
-
-		if res != nil && res.FileWorkData != nil {
-		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -160,7 +144,7 @@ func (this_ *Worker) workFileRename(lineNodeIdList []string, oldPath string, new
 
 func (this_ *Worker) workFileMove(lineNodeIdList []string, oldPath string, newPath string) (err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileMove, &Message{
+		_, e = this_.Call(listener, methodFileMove, &Message{
 			LineNodeIdList: lineNodeIdList,
 			FileWorkData: &FileWorkData{
 				OldPath: oldPath,
@@ -170,15 +154,9 @@ func (this_ *Worker) workFileMove(lineNodeIdList []string, oldPath string, newPa
 		if e != nil {
 			return
 		}
-
-		if res != nil && res.FileWorkData != nil {
-		}
 		return
 	})
-	if err != nil {
-		return
-	}
-	if send {
+	if err != nil || send {
 		return
 	}
 
@@ -186,9 +164,75 @@ func (this_ *Worker) workFileMove(lineNodeIdList []string, oldPath string, newPa
 	return
 }
 
-func (this_ *Worker) workFileRemove(lineNodeIdList []string, path string) (err error) {
+func (this_ *Worker) workFileRemove(lineNodeIdList []string, path string) (fileCount int, removeCount int, err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileRemove, &Message{
+		_, e = this_.Call(listener, methodFileRemove, &Message{
+			LineNodeIdList: lineNodeIdList,
+			FileWorkData: &FileWorkData{
+				Path: path,
+			},
+		})
+		if e != nil {
+			return
+		}
+		return
+	})
+	if err != nil || send {
+		return
+	}
+
+	err = filework.NewLocalService().Remove(path, func(fileCount_ int, removeCount_ int) {
+		fileCount = fileCount_
+		removeCount = removeCount_
+	})
+
+	return
+}
+
+func (this_ *Worker) workFileRead(lineNodeIdList []string, path string, sendKey string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodFileRead, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SendKey:        sendKey,
+			FileWorkData: &FileWorkData{
+				Path: path,
+			},
+		})
+		if e != nil {
+			return
+		}
+
+		return
+	})
+	if err != nil || send {
+		return
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+
+	go func() {
+		defer func() { _ = f.Close() }()
+
+		var line []string
+		for i := len(lineNodeIdList) - 1; i >= 0; i-- {
+			line = append(line, lineNodeIdList[i])
+		}
+
+		err = this_.workSend(line, sendKey, f)
+		if err != nil {
+			Logger.Error("file read send error", zap.Error(err))
+		}
+	}()
+
+	return
+}
+
+func (this_ *Worker) workFileWrite(lineNodeIdList []string, path string) (sendKey string, err error) {
+	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
+		res, e := this_.Call(listener, methodFileWrite, &Message{
 			LineNodeIdList: lineNodeIdList,
 			FileWorkData: &FileWorkData{
 				Path: path,
@@ -198,42 +242,146 @@ func (this_ *Worker) workFileRemove(lineNodeIdList []string, path string) (err e
 			return
 		}
 
-		if res != nil && res.FileWorkData != nil {
+		if res != nil {
+			sendKey = res.SendKey
 		}
+
+		return
+	})
+	if err != nil || send {
+		return
+	}
+
+	sendKey = util.UUID()
+
+	var file *os.File
+	this_.addOnBytesCache(sendKey, &OnBytes{
+		start: func() (err error) {
+			file, err = os.Create(path)
+			return
+		},
+		on: func(buf []byte) (err error) {
+			if file == nil {
+				err = errors.New("文件[" + path + "]未打开")
+				return
+			}
+			_, err = file.Write(buf)
+			return
+		},
+		end: func() (err error) {
+			if file != nil {
+				_ = file.Close()
+			}
+			return
+		},
+	})
+
+	return
+}
+
+func (this_ *Worker) workSend(lineNodeIdList []string, key string, reader io.Reader) (err error) {
+
+	err = this_.workSendBytesStart(lineNodeIdList, key)
+	if err != nil {
+		return
+	}
+
+	var buf = make([]byte, 1024*32)
+	err = util.Read(reader, buf, func(n int) (e error) {
+		e = this_.workSendBytes(lineNodeIdList, key, buf[:n])
 		return
 	})
 	if err != nil {
 		return
 	}
-	if send {
+
+	err = this_.workSendBytesEnd(lineNodeIdList, key)
+	if err != nil {
 		return
 	}
 
 	return
 }
 
-func (this_ *Worker) workFileRead(lineNodeIdList []string, path string) (err error) {
-	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
-		res, e := this_.Call(listener, methodFileRead, &Message{
+func (this_ *Worker) workSendBytesStart(lineNodeIdList []string, key string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, key, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodSendBytesStart, &Message{
 			LineNodeIdList: lineNodeIdList,
-			FileWorkData: &FileWorkData{
-				Path: path,
-			},
+			SendKey:        key,
 		})
 		if e != nil {
 			return
 		}
 
-		if res != nil && res.FileWorkData != nil {
-		}
 		return
 	})
-	if err != nil {
+	if err != nil || send {
 		return
 	}
-	if send {
+
+	onBytes := this_.getOnBytesCache(key)
+	if onBytes == nil {
+		err = errors.New("流读取器[" + key + "]不存在")
 		return
 	}
+
+	err = onBytes.start()
+
+	return
+}
+
+func (this_ *Worker) workSendBytesEnd(lineNodeIdList []string, key string) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, key, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodSendBytesEnd, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SendKey:        key,
+		})
+		if e != nil {
+			return
+		}
+
+		return
+	})
+	if err != nil || send {
+		return
+	}
+
+	onBytes := this_.getOnBytesCache(key)
+	if onBytes == nil {
+		err = errors.New("流读取器[" + key + "]不存在")
+		return
+	}
+
+	err = onBytes.end()
+	this_.removeOnBytesCache(key)
+
+	return
+}
+
+func (this_ *Worker) workSendBytes(lineNodeIdList []string, key string, buf []byte) (err error) {
+	send, err := this_.sendToNext(lineNodeIdList, key, func(listener *MessageListener) (e error) {
+		_, e = this_.Call(listener, methodSendBytes, &Message{
+			LineNodeIdList: lineNodeIdList,
+			SendKey:        key,
+			Bytes:          buf,
+		})
+		if e != nil {
+			return
+		}
+
+		return
+	})
+	if err != nil || send {
+		return
+	}
+
+	onBytes := this_.getOnBytesCache(key)
+	if onBytes == nil {
+		err = errors.New("流读取器[" + key + "]不存在")
+		return
+	}
+
+	err = onBytes.on(buf)
 
 	return
 }

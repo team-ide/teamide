@@ -79,11 +79,14 @@ func (this_ *ExecuteSQLTask) do(ctx context.Context, tokens *sqlparser.Tokenizer
 
 		if err == io.EOF {
 			err = nil
-			break
 		}
 
 		if err != nil {
 			return
+		}
+		if stmt == nil {
+			return
+
 		}
 		// 如果已经开启过事务，则不用再次开启
 		if this_.GenerateParam.OpenTransaction {

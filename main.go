@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
-	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -140,19 +139,18 @@ func main() {
 	// 如果是  Electron 打开该程序，则监听控制台
 	if isElectron {
 		_, _ = os.Stdout.Write([]byte("TeamIDE:event:serverUrl:" + serverUrl))
-
 		go func() {
-			for {
-				var bs = make([]byte, 1024)
-				_, err := os.Stdin.Read(bs)
-				if err != nil {
-					if err == io.EOF {
-						err = errors.New("electron window closed")
-					}
-					panic(err)
-				}
-				util.Logger.Info("On Electron：", zap.Any("msg", string(bs)))
+			var buf = make([]byte, 1024)
+			err = util.Read(os.Stdin, buf, func(n int) (err error) {
+
+				util.Logger.Info("On Electron：", zap.Any("msg", string(buf[:n])))
+				return
+			})
+			if err != nil {
+				err = errors.New("electron window closed")
 			}
+			waitGroupForStop.Done()
+			panic(err)
 		}()
 	} else {
 		if !serverContext.IsServer {

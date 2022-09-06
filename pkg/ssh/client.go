@@ -14,11 +14,36 @@ import (
 )
 
 var (
-	TokenCache = map[string]*Config{}
+	tokenCache     = map[string]*Config{}
+	tokenCacheLock sync.Mutex
 )
 
+func AddTokenCache(key string, config *Config) {
+	tokenCacheLock.Lock()
+	defer tokenCacheLock.Unlock()
+
+	tokenCache[key] = config
+	return
+}
+
+func GetTokenCache(key string) (config *Config) {
+	tokenCacheLock.Lock()
+	defer tokenCacheLock.Unlock()
+
+	config = tokenCache[key]
+	return
+}
+
+func RemoveTokenCache(key string) {
+	tokenCacheLock.Lock()
+	defer tokenCacheLock.Unlock()
+
+	delete(tokenCache, key)
+	return
+}
+
 func WSSSHConnection(token string, ws *websocket.Conn) (err error) {
-	var sshConfig = TokenCache[token]
+	var sshConfig = GetTokenCache(token)
 
 	shellClient := &ShellClient{
 		Client: Client{

@@ -171,6 +171,8 @@ func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
 
 func (this_ *ShellClient) startRead(reader io.Reader, isError bool) (err error) {
 
+	var buffSize = 1024 * 32
+	var buf = make([]byte, buffSize)
 	for {
 		if !this_.startReadChannel {
 			time.Sleep(100 * time.Millisecond)
@@ -178,37 +180,37 @@ func (this_ *ShellClient) startRead(reader io.Reader, isError bool) (err error) 
 		}
 		if err != nil {
 			util.Logger.Error("SSH Shell Stderr Pipe Error", zap.Error(err))
-			continue
+			return
 		}
-		var buffSize = 1024 * 8
-		var bs = make([]byte, buffSize)
 		var n int
-		n, err = reader.Read(bs)
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
+		n, err = reader.Read(buf)
+		if err != nil && err != io.EOF {
 			util.Logger.Error("SSH Shell 消息读取异常", zap.Error(err))
 			//this_.WSWriteError("SSH Shell 消息读取失败:" + err.Error())
-			continue
+			return
 		}
 		if isError {
 
 		}
 
 		var isZModem bool
-		isZModem, _ = this_.processZModem(bs, n, buffSize)
+		isZModem, _ = this_.processZModem(buf[:n], n, buffSize)
 		if !isZModem {
 			out := TeamIDEBinaryStartBytes
 			if n == buffSize {
-				out = append(out, bs...)
+				out = append(out, buf...)
 			} else {
-				out = append(out, bs[0:n]...)
+				out = append(out, buf[:n]...)
 			}
 			this_.WSWriteBinary(out)
 		}
 
+		if err == io.EOF {
+			err = nil
+			return
+		}
 	}
+	return
 }
 
 func (this_ *ShellClient) start() {

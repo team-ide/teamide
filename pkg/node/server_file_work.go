@@ -2,8 +2,9 @@ package node
 
 import (
 	"io"
-	"os"
+	"sync"
 	"teamide/pkg/filework"
+	"teamide/pkg/util"
 )
 
 func (this_ *Server) FileWorkExist(lineNodeIdList []string, path string) (exist bool, err error) {
@@ -37,62 +38,82 @@ func (this_ *Server) FileWorkFile(lineNodeIdList []string, path string) (file *f
 }
 
 func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+
+	sendKey, err := this_.workFileWrite(lineNodeIdList, path)
+	if err != nil {
+		return
+	}
+
+	err = this_.workSendBytesStart(lineNodeIdList, sendKey)
+
+	if err != nil {
+		return
+	}
+
+	var readSize int64
+	var writeSize int64
+	var buf = make([]byte, 1024*32)
+	err = util.Read(reader, buf, func(n int) (e error) {
+		readSize += int64(n)
+		onDo(readSize, writeSize)
+		e = this_.workSendBytes(lineNodeIdList, sendKey, buf[:n])
+		writeSize += int64(n)
+		onDo(readSize, writeSize)
+		return
+	})
+	err = this_.workSendBytesEnd(lineNodeIdList, sendKey)
+
+	if err != nil {
+		return
+	}
+
 	return
 }
 
 func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+
+	sendKey := util.UUID()
+
+	var waitGroupForStop sync.WaitGroup
+	waitGroupForStop.Add(1)
+	var readSize int64
+	var writeSize int64
+	this_.addOnBytesCache(sendKey, &OnBytes{
+		start: func() (err error) {
+			return
+		},
+		on: func(buf []byte) (err error) {
+			n := len(buf)
+			readSize += int64(n)
+			onDo(readSize, writeSize)
+			err = util.Write(writer, buf, func(n int) (e error) {
+				writeSize += int64(n)
+				onDo(readSize, writeSize)
+				return
+			})
+			return
+		},
+		end: func() (err error) {
+			waitGroupForStop.Done()
+			return
+		},
+	})
+	err = this_.workFileRead(lineNodeIdList, path, sendKey)
+	if err != nil {
+		this_.removeOnBytesCache(sendKey)
+		return
+	}
+
+	waitGroupForStop.Wait()
 	return
 }
 
 func (this_ *Server) FileWorkRemove(lineNodeIdList []string, path string, onDo func(fileCount int, removeCount int)) (err error) {
-	var fileCount int
-	var removeCount int
-
-	err = this_.fileRemove(lineNodeIdList, path, func() {
-		fileCount++
-		onDo(fileCount, removeCount)
-	}, func() {
-		removeCount++
-		onDo(fileCount, removeCount)
-	})
-
-	return
-}
-
-func (this_ *Server) fileRemove(lineNodeIdList []string, path string, onLoad func(), onRemove func()) (err error) {
-	var isDir bool
-
-	var info *filework.FileInfo
-	info, err = this_.FileWorkFile(lineNodeIdList, path)
+	fileCount, removeCount, err := this_.workFileRemove(lineNodeIdList, path)
+	onDo(fileCount, removeCount)
 	if err != nil {
 		return
 	}
-	isDir = info.IsDir
-
-	onLoad()
-	if isDir {
-		var ds []*filework.FileInfo
-		_, ds, err = this_.FileWorkFiles(lineNodeIdList, path)
-		if err != nil {
-			return
-		}
-
-		for _, d := range ds {
-			if d.Name == ".." {
-				continue
-			}
-			err = this_.fileRemove(lineNodeIdList, path+"/"+d.Name, onLoad, onRemove)
-			if err != nil {
-				return
-			}
-		}
-	}
-	err = os.Remove(path)
-	if err != nil {
-		return
-	}
-	onRemove()
-
 	return
 }
 

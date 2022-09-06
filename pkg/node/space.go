@@ -34,6 +34,39 @@ type Space struct {
 	callbackCacheLock sync.Mutex
 
 	toNodeListenerKeepAliveLock sync.Mutex
+
+	onBytesCache     map[string]*OnBytes
+	onBytesCacheLock sync.Mutex
+}
+
+type OnBytes struct {
+	start func() (err error)
+	end   func() (err error)
+	on    func(buf []byte) (err error)
+}
+
+func (this_ *Space) addOnBytesCache(key string, onBytes *OnBytes) {
+	this_.onBytesCacheLock.Lock()
+	defer this_.onBytesCacheLock.Unlock()
+
+	this_.onBytesCache[key] = onBytes
+	return
+}
+
+func (this_ *Space) getOnBytesCache(key string) (onBytes *OnBytes) {
+	this_.onBytesCacheLock.Lock()
+	defer this_.onBytesCacheLock.Unlock()
+
+	onBytes = this_.onBytesCache[key]
+	return
+}
+
+func (this_ *Space) removeOnBytesCache(key string) {
+	this_.onBytesCacheLock.Lock()
+	defer this_.onBytesCacheLock.Unlock()
+
+	delete(this_.onBytesCache, key)
+	return
 }
 
 func newSpace() *Space {
@@ -43,6 +76,7 @@ func newSpace() *Space {
 		callbackCache:             make(map[string]func(msg *Message)),
 		netProxyInnerCache:        make(map[string]*InnerServer),
 		netProxyOuterCache:        make(map[string]*OuterListener),
+		onBytesCache:              make(map[string]*OnBytes),
 	}
 }
 

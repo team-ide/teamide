@@ -50,7 +50,6 @@ func CloseFileService(key string) {
 type fileService struct {
 	config      *Config
 	sshClient   *ssh.Client
-	confirmMap  map[string]chan *util.FileConfirmInfo
 	newSftpLock sync.Mutex
 
 	sftpClient *sftp.Client
@@ -199,32 +198,17 @@ func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSiz
 	buf := make([]byte, 32*1024)
 	var readSize int64
 	var writeSize int64
-	for {
-		var n int
-		n, err = reader.Read(buf)
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			} else {
-				break
-			}
-		}
-		if n == 0 {
-			break
-		}
+
+	err = util.Read(reader, buf, func(n int) (e error) {
 		readSize += int64(n)
 		onDo(readSize, writeSize)
-		n, err = f.Write(buf[:n])
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			} else {
-				break
-			}
-		}
-		writeSize += int64(n)
-		onDo(readSize, writeSize)
-	}
+		e = util.Write(f, buf[:n], func(n int) (e error) {
+			writeSize += int64(n)
+			onDo(readSize, writeSize)
+			return
+		})
+		return
+	})
 
 	if err != nil {
 		return
@@ -263,32 +247,17 @@ func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize
 
 	var readSize int64
 	var writeSize int64
-	for {
-		var n int
-		n, err = f.Read(buf)
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			} else {
-				break
-			}
-		}
-		if n == 0 {
-			break
-		}
+
+	err = util.Read(f, buf, func(n int) (e error) {
 		readSize += int64(n)
 		onDo(readSize, writeSize)
-		n, err = writer.Write(buf[:n])
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			} else {
-				break
-			}
-		}
-		writeSize += int64(n)
-		onDo(readSize, writeSize)
-	}
+		e = util.Write(writer, buf[:n], func(n int) (e error) {
+			writeSize += int64(n)
+			onDo(readSize, writeSize)
+			return
+		})
+		return
+	})
 
 	if err != nil {
 		return

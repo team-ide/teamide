@@ -6,6 +6,7 @@ import (
 	"gitee.com/teamide/zorm"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -119,8 +120,7 @@ func DatabaseExportDownload(data map[string]string, c *gin.Context) (err error) 
 	c.Header("Content-Length", fmt.Sprint(fileSize))
 	c.Header("download-file-name", fileName)
 
-	err = util.CopyBytes(c.Writer, fileInfo, func(readSize int64, writeSize int64) {
-	})
+	_, err = io.Copy(c.Writer, fileInfo)
 	if err != nil {
 		return
 	}

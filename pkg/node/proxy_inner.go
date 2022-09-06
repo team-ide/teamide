@@ -1,8 +1,8 @@
 package node
 
 import (
+	"errors"
 	"go.uber.org/zap"
-	"io"
 	"net"
 	"teamide/pkg/util"
 	"time"
@@ -101,32 +101,26 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		Logger.Error("代理服务 "+this_.netProxy.GetInfoStr()+" 节点线连接创建异常", zap.Error(err))
 		return
 	}
-	for {
-		if this_.isStopped() {
-			break
-		}
-		start := util.Now().UnixNano()
 
-		var n int
-		var bytes = make([]byte, 1024*8)
-		n, err = conn.Read(bytes)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			//Logger.Error(this_.server.GetServerInfo()+" 代理服务 "+this_.netProxy.Inner.GetInfoStr()+" 读取异常", zap.Error(err))
-			break
+	var buf = make([]byte, 1024*32)
+
+	start := util.Now().UnixNano()
+	err = util.Read(conn, buf, func(n int) (e error) {
+		if this_.isStopped() {
+			e = errors.New("proxy outer is stopped")
+			return
 		}
-		bytes = bytes[:n]
 
 		end := util.Now().UnixNano()
 		this_.MonitorData.monitorRead(int64(n), end-start)
 
-		err = this_.worker.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, bytes)
-		if err != nil {
-			Logger.Error("代理服务 "+this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(err))
-			break
+		e = this_.worker.netProxySend(true, this_.netProxy.LineNodeIdList, netProxyId, connId, buf[:n])
+		if e != nil {
+			Logger.Error(this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(e))
+			return
 		}
-	}
+		start = util.Now().UnixNano()
+		return
+	})
 
 }

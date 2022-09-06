@@ -49,6 +49,10 @@ var (
 	methodSystemGetInfo          MethodType = 501
 	methodSystemQueryMonitorData MethodType = 502
 	methodSystemCleanMonitorData MethodType = 503
+
+	methodSendBytesStart MethodType = 601
+	methodSendBytes      MethodType = 602
+	methodSendBytesEnd   MethodType = 603
 )
 
 type MethodType int
@@ -329,15 +333,35 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 		return
 	case methodFileRemove:
 		if msg.FileWorkData != nil {
-			err = this_.workFileRemove(msg.LineNodeIdList, msg.FileWorkData.Path)
+			var fileCount int
+			var removeCount int
+			fileCount, removeCount, err = this_.workFileRemove(msg.LineNodeIdList, msg.FileWorkData.Path)
+			if err != nil {
+				return
+			}
+			res.FileWorkData = &FileWorkData{
+				FileCount:   fileCount,
+				RemoveCount: removeCount,
+			}
+		}
+		return
+	case methodFileRead:
+		if msg.FileWorkData != nil {
+			err = this_.workFileRead(msg.LineNodeIdList, msg.FileWorkData.Path, msg.SendKey)
 			if err != nil {
 				return
 			}
 		}
 		return
-	case methodFileRead:
-		return
 	case methodFileWrite:
+		if msg.FileWorkData != nil {
+			var sendKey string
+			sendKey, err = this_.workFileWrite(msg.LineNodeIdList, msg.FileWorkData.Path)
+			if err != nil {
+				return
+			}
+			res.SendKey = sendKey
+		}
 		return
 	case methodFileCount:
 		return
@@ -349,6 +373,25 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 	case methodTerminalCloseConn:
 		return
 	case methodTerminalSend:
+		return
+
+	case methodSendBytesStart:
+		err = this_.workSendBytesStart(msg.LineNodeIdList, msg.SendKey)
+		if err != nil {
+			return
+		}
+		return
+	case methodSendBytes:
+		err = this_.workSendBytes(msg.LineNodeIdList, msg.SendKey, msg.Bytes)
+		if err != nil {
+			return
+		}
+		return
+	case methodSendBytesEnd:
+		err = this_.workSendBytesEnd(msg.LineNodeIdList, msg.SendKey)
+		if err != nil {
+			return
+		}
 		return
 	}
 

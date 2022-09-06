@@ -3,7 +3,6 @@ package util
 import (
 	"crypto/md5"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -40,41 +39,6 @@ func GetTempDir() (dir string, err error) {
 		return
 	}
 	dir, err = ioutil.TempDir("toolbox/temp", "temp")
-	return
-}
-
-func CopyBytes(dst io.Writer, src io.Reader, call func(readSize int64, writeSize int64)) (err error) {
-	var buf = make([]byte, 32*1024)
-	var errInvalidWrite = errors.New("invalid write result")
-	var ErrShortWrite = errors.New("short write")
-	for {
-		nr, er := src.Read(buf)
-		if nr > 0 {
-			call(int64(nr), 0)
-			nw, ew := dst.Write(buf[0:nr])
-			if nw < 0 || nr < nw {
-				nw = 0
-				if ew == nil {
-					ew = errInvalidWrite
-				}
-			}
-			call(0, int64(nw))
-			if ew != nil {
-				err = ew
-				break
-			}
-			if nr != nw {
-				err = ErrShortWrite
-				break
-			}
-		}
-		if er != nil {
-			if er != io.EOF {
-				err = er
-			}
-			break
-		}
-	}
 	return
 }
 

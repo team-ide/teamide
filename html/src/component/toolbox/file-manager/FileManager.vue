@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-file-manager-box">
+  <div class="toolbox-file-manager-box" tabindex="-1">
     <tm-layout height="100%">
       <tm-layout height="70px">
         <div class="pdtb-5 pdlr-10">
@@ -192,6 +192,11 @@ export default {
         } else {
           this.fileWorker.selectFile(file);
         }
+      } else {
+        let selectFiles = this.fileWorker.getSelectFiles();
+        selectFiles.forEach((one) => {
+          this.fileWorker.setUnselect(one);
+        });
       }
     },
     fileContextmenu(e) {
@@ -406,9 +411,18 @@ export default {
       }
     },
     toRemove(files) {
+      let names = [];
       files.forEach((one) => {
-        this.fileWorker.remove(one.path);
+        names.push(one.name);
       });
+      this.tool
+        .confirm("删除[" + names.join(",") + "]后无法恢复，确定删除？")
+        .then(async () => {
+          files.forEach((one) => {
+            this.fileWorker.remove(one.path);
+          });
+        })
+        .catch((e) => {});
     },
     toInsertFile(isDir, afterFile) {
       let index = this.fileWorker.getFileIndex(afterFile);
