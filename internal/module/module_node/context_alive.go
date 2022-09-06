@@ -2,6 +2,7 @@ package module_node
 
 import (
 	"encoding/json"
+	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"time"
 )
@@ -16,6 +17,9 @@ func (this_ *NodeContext) doAlive() {
 
 	this_.doAliveIng = true
 	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("doAlive error", zap.Any("error", e))
+		}
 		this_.doAliveIng = false
 		go func() {
 			time.Sleep(time.Second * 5)
@@ -149,6 +153,9 @@ func (this_ *NodeContext) getNetProxyModelList() []*NetProxyModel {
 }
 
 func (this_ *NodeContext) checkChangeOut() {
+	var oldNodeListStr = this_.oldNodeListStr
+	var oldNetProxyListStr = this_.oldNetProxyListStr
+	var oldCountDataStr = this_.oldCountDataStr
 
 	var nodeModelList = this_.getNodeModelList()
 	var netProxyModelList = this_.getNetProxyModelList()
@@ -158,7 +165,7 @@ func (this_ *NodeContext) checkChangeOut() {
 	newBs, _ := json.Marshal(countData)
 	newCountDataStr := string(newBs)
 	//this_.Logger.Info("count data validate", zap.Any("old", string(oldCountBs)), zap.Any("new", string(newBs)))
-	if this_.oldCountDataStr != newCountDataStr {
+	if oldCountDataStr != newCountDataStr {
 		this_.oldCountDataStr = newCountDataStr
 		this_.countData = countData
 		this_.callNodeCountDataChange(countData)
@@ -167,7 +174,7 @@ func (this_ *NodeContext) checkChangeOut() {
 	newBs, _ = json.Marshal(nodeModelList)
 	newNodeListStr := string(newBs)
 	//this_.Logger.Info("node list validate", zap.Any("old", string(oldNodeBs)), zap.Any("new", string(newBs)))
-	if this_.oldNodeListStr != newNodeListStr {
+	if oldNodeListStr != newNodeListStr {
 		this_.oldNodeListStr = newNodeListStr
 		this_.callNodeListChange(nodeModelList)
 	}
@@ -175,7 +182,7 @@ func (this_ *NodeContext) checkChangeOut() {
 	newBs, _ = json.Marshal(netProxyModelList)
 	newNetProxyListStr := string(newBs)
 	//this_.Logger.Info("net proxy list validate", zap.Any("old", string(netProxyBs)), zap.Any("new", string(newBs)))
-	if this_.oldNetProxyListStr != newNetProxyListStr {
+	if oldNetProxyListStr != newNetProxyListStr {
 		this_.oldNetProxyListStr = newNetProxyListStr
 		this_.callNetProxyListChange(netProxyModelList)
 	}

@@ -363,6 +363,7 @@ func (this_ *Worker) workSendBytes(lineNodeIdList []string, key string, buf []by
 		_, e = this_.Call(listener, methodSendBytes, &Message{
 			LineNodeIdList: lineNodeIdList,
 			SendKey:        key,
+			HasBytes:       true,
 			Bytes:          buf,
 		})
 		if e != nil {

@@ -15,6 +15,17 @@ import (
 	"github.com/Chain-Zhang/pinyin"
 )
 
+func ContainsInt64(array []int64, val int64) (index int) {
+	index = -1
+	for i := 0; i < len(array); i++ {
+		if array[i] == val {
+			index = i
+			return
+		}
+	}
+	return
+}
+
 // ContainsInt Returns the index position of the int val in array
 func ContainsInt(array []int, val int) (index int) {
 	index = -1

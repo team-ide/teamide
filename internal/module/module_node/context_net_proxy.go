@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"teamide/pkg/node"
+	"teamide/pkg/util"
 )
 
 func (this_ *NodeContext) getNetProxyModel(id int64) (res *NetProxyModel) {
@@ -98,21 +99,11 @@ func (this_ *NodeContext) addNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	var list = this_.netProxyModelIdList
-	var newList []int64
-	var find bool
-	for _, one := range list {
-		if one == netProxyModel.NetProxyId {
-			find = true
-			newList = append(newList, one)
-		} else {
-			newList = append(newList, one)
-		}
+	if util.ContainsInt64(list, netProxyModel.NetProxyId) < 0 {
+		list = append(list, netProxyModel.NetProxyId)
 	}
-	if !find {
-		newList = append(newList, netProxyModel.NetProxyId)
-	}
+	this_.netProxyModelIdList = list
 
-	this_.netProxyModelIdList = newList
 }
 
 func (this_ *NodeContext) onAddNetProxyModel(netProxyModel *NetProxyModel) {

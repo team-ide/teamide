@@ -67,21 +67,10 @@ func (this_ *NodeContext) addNodeModel(nodeModel *NodeModel) {
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
 	var list = this_.nodeModelIdList
-	var newList []int64
-	var find bool
-	for _, one := range list {
-		if one == nodeModel.NodeId {
-			find = true
-			newList = append(newList, one)
-		} else {
-			newList = append(newList, one)
-		}
+	if util.ContainsInt64(list, nodeModel.NodeId) < 0 {
+		list = append(list, nodeModel.NodeId)
 	}
-	if !find {
-		newList = append(newList, nodeModel.NodeId)
-	}
-
-	this_.nodeModelIdList = newList
+	this_.nodeModelIdList = list
 }
 func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	if nodeModel == nil {

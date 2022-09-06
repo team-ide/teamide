@@ -136,11 +136,7 @@
           </div>
         </div>
         <div class="toolbox-ssh-editor-ftp-box-body">
-          <FTP
-            :source="source"
-            :toolboxWorker="toolboxWorker"
-            :extend="extend"
-          >
+          <FTP :source="source" :toolboxWorker="toolboxWorker" :extend="extend">
           </FTP>
         </div>
       </div>
@@ -432,6 +428,7 @@ export default {
     toPaste(text) {
       if (this.tool.isNotEmpty(text)) {
         if (text.indexOf("\n") >= 0) {
+          text = text.replace(/(\r\n|\n|\r|↵)/g, `\n`);
           let showText = text;
           let div = this.tool.jQuery("<div/>");
 
@@ -445,7 +442,7 @@ export default {
           this.tool
             .confirm(div.html())
             .then(() => {
-              this.writeData(showText);
+              this.writeData(text);
               this.tool.success("粘贴成功");
             })
             .catch(() => {});
