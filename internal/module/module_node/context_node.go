@@ -134,14 +134,15 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 			continue
 		}
 		toNodeList = append(toNodeList, &node.ToNode{
-			Id:          nodeModel.ServerId,
-			ConnAddress: nodeModel.ConnAddress,
-			ConnToken:   nodeModel.ConnToken,
-			Enabled:     nodeModel.Enabled,
+			Id:          toNodeModel.ServerId,
+			ConnAddress: toNodeModel.ConnAddress,
+			ConnToken:   toNodeModel.ConnToken,
+			Enabled:     toNodeModel.Enabled,
 		})
 	}
 	lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
 	_ = this_.server.AddToNodeList(lineNodeIdList, toNodeList)
+	this_.cleanNodeLine()
 	this_.doAlive()
 }
 
