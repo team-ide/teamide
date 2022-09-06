@@ -2,18 +2,6 @@ package filework
 
 import "io"
 
-type ConfirmInfo struct {
-	ConfirmId   string `json:"confirmId,omitempty"`
-	IsConfirm   bool   `json:"isConfirm,omitempty"`
-	Confirm     string `json:"confirm,omitempty"`
-	Path        string `json:"path,omitempty"`
-	Name        string `json:"name,omitempty"`
-	IsFileExist bool   `json:"isFileExist,omitempty"`
-	IsOk        bool   `json:"isOk,omitempty"`
-	IsCancel    bool   `json:"isCancel,omitempty"`
-	WorkerId    string `json:"workerId,omitempty"`
-}
-
 type FileInfo struct {
 	Name     string `json:"name,omitempty"`
 	IsDir    bool   `json:"isDir,omitempty"`
