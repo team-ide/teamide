@@ -103,9 +103,14 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 		}
 		nodeIdConnNodeIdListCache[find.ServerId] = find.ConnServerIdList
 	}
+	this_.Logger.Info("GetNodeLineByFromTo", zap.Any("nodeIdConnNodeIdListCache", nodeIdConnNodeIdListCache))
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
+	if len(lineIdList) > 0 &&
+		util.ContainsString(lineIdList, fromNodeId) >= 0 &&
+		util.ContainsString(lineIdList, toNodeId) >= 0 {
+		this_.lineNodeIdListCache[key] = lineIdList
+	}
 
-	this_.lineNodeIdListCache[key] = lineIdList
 	return
 }
 

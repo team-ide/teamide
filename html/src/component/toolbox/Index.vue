@@ -73,6 +73,14 @@
         >
         </FileManagerEditor>
       </template>
+      <template v-else-if="toolboxType == 'terminal'">
+        <TerminalEditor
+          :source="source"
+          :extend="extend"
+          :toolboxWorker="toolboxWorker"
+        >
+        </TerminalEditor>
+      </template>
     </template>
     <QuickCommand :source="source" :toolboxWorker="toolboxWorker">
     </QuickCommand>
@@ -88,6 +96,7 @@ import QuickCommand from "./QuickCommand";
 import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
 import NodeEditor from "./node/Index.vue";
 import FileManagerEditor from "./file-manager/Index.vue";
+import TerminalEditor from "./terminal/Index.vue";
 
 export default {
   components: {
@@ -95,6 +104,7 @@ export default {
     QuickCommand,
     QuickCommandSSHCommandForm,
     FileManagerEditor,
+    TerminalEditor,
   },
   props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {

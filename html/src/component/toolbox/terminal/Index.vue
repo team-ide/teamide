@@ -1,27 +1,34 @@
 <template>
   <div class="toolbox-terminal-editor">
-    <tm-layout height="100%"> </tm-layout>
+    <Terminal
+      :source="source"
+      :toolboxWorker="toolboxWorker"
+      :place="place"
+      :placeId="placeId"
+    >
+    </Terminal>
   </div>
 </template>
 
 
 <script>
+import Terminal from "./Terminal.vue";
+
 export default {
-  components: {},
+  components: { Terminal },
   props: ["source", "toolboxWorker", "extend"],
   data() {
+    let extend = this.extend || {};
     return {
-      place: null,
-      placeId: null,
+      ready: false,
+      place: extend.place,
+      placeId: extend.placeId,
     };
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
-      this.place = this.extend.place;
-      this.placeId = this.extend.placeId;
-    },
+    init() {},
     refresh() {},
   },
   created() {},

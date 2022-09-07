@@ -42,6 +42,56 @@
         <div class="workspace-header-nav">
           <el-dropdown
             trigger="click"
+            class="terminal-dropdown"
+            ref="terminalDropdown"
+          >
+            <span class="el-dropdown-link">
+              终端<i class="el-icon-arrow-down el-icon--right"></i>
+            </span>
+            <el-dropdown-menu slot="dropdown" class="terminal-dropdown-menu">
+              <MenuBox>
+                <MenuItem @click="openTerminal('local')">本地</MenuItem>
+                <template
+                  v-if="
+                    source.sshToolboxList && source.sshToolboxList.length > 0
+                  "
+                >
+                  <MenuItem>
+                    SSH
+                    <MenuSubBox slot="MenuSubBox">
+                      <template v-for="(one, index) in source.sshToolboxList">
+                        <MenuItem
+                          :key="index"
+                          @click="openTerminal('ssh', one)"
+                        >
+                          {{ one.name }}
+                        </MenuItem>
+                      </template>
+                    </MenuSubBox>
+                  </MenuItem>
+                </template>
+                <template v-if="source.nodeList && source.nodeList.length > 0">
+                  <MenuItem>
+                    节点
+                    <MenuSubBox slot="MenuSubBox">
+                      <template v-for="(one, index) in source.nodeList">
+                        <MenuItem
+                          :key="index"
+                          @click="openTerminal('node', one)"
+                        >
+                          {{ one.name }}
+                        </MenuItem>
+                      </template>
+                    </MenuSubBox>
+                  </MenuItem>
+                </template>
+              </MenuBox>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+        <div class="workspace-header-nav">
+          <el-dropdown
+            trigger="click"
             class="file-manager-dropdown"
             ref="fileManagerDropdown"
           >
@@ -228,6 +278,28 @@ export default {
         title: "网络透传",
       });
     },
+    openTerminal(place, placeData) {
+      let extend = {
+        toolboxType: "terminal",
+        place: place,
+        title: null,
+        placeId: null,
+      };
+      if (place == "local") {
+        extend.title = "终端-本地";
+      } else if (place == "ssh") {
+        extend.title = "终端-" + placeData.name;
+        extend.placeId = "" + placeData.toolboxId;
+      } else if (place == "node") {
+        extend.title = "终端-" + placeData.name;
+        extend.placeId = "" + placeData.serverId;
+      } else {
+        this.tool.error("暂不支持该配置作为终端");
+        return;
+      }
+      this.tool.openByExtend(extend);
+      this.$refs.terminalDropdown && this.$refs.terminalDropdown.hide();
+    },
     openFileManager(place, placeData) {
       let extend = {
         toolboxType: "file-manager",
@@ -249,7 +321,6 @@ export default {
       }
       this.tool.openByExtend(extend);
       this.$refs.fileManagerDropdown && this.$refs.fileManagerDropdown.hide();
-      console.log(this.$refs.fileManagerDropdown);
     },
     addMainItem(item, fromItem) {
       this.mainItemsWorker.addItem(item, fromItem);
@@ -509,6 +580,7 @@ export default {
 .workspace-header-nav:hover {
   background-color: #505050;
 }
+
 .file-manager-dropdown.el-dropdown {
   color: unset;
   font-size: unset;
@@ -528,6 +600,27 @@ export default {
 .file-manager-dropdown-menu .menu-box a {
   cursor: pointer;
 }
+
+.terminal-dropdown.el-dropdown {
+  color: unset;
+  font-size: unset;
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+}
+.terminal-dropdown-menu.el-dropdown-menu {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0;
+  background: transparent;
+  top: 35px !important;
+}
+.terminal-dropdown-menu .menu-box a {
+  cursor: pointer;
+}
+
 .default-tabs-container {
   width: 100%;
   height: 30px;
