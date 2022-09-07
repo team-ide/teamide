@@ -1,4 +1,4 @@
-package terminal
+package ssh
 
 import (
 	"go.uber.org/zap"
@@ -6,15 +6,19 @@ import (
 	"os/exec"
 	"runtime"
 	"syscall"
+	"teamide/pkg/terminal"
 	"teamide/pkg/util"
 )
 
-func NewLocalService() (res *localService) {
-	res = &localService{}
+func NewTerminalService(config *Config) (res *terminalService) {
+	res = &terminalService{
+		config: config,
+	}
 	return
 }
 
-type localService struct {
+type terminalService struct {
+	config  *Config
 	reader  io.Reader
 	writer  io.Writer
 	stdout  io.ReadCloser
@@ -22,7 +26,7 @@ type localService struct {
 	onClose func()
 }
 
-func (this_ *localService) getCmd() (cmd *exec.Cmd) {
+func (this_ *terminalService) getCmd() (cmd *exec.Cmd) {
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd.exe", "/c")
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
@@ -32,7 +36,7 @@ func (this_ *localService) getCmd() (cmd *exec.Cmd) {
 	return
 }
 
-func (this_ *localService) Stop() {
+func (this_ *terminalService) Stop() {
 	if this_.stdout != nil {
 		_ = this_.stdout.Close()
 	}
@@ -41,10 +45,11 @@ func (this_ *localService) Stop() {
 	}
 }
 
-func (this_ *localService) ChangeSize(size *Size) (err error) {
+func (this_ *terminalService) ChangeSize(size *terminal.Size) (err error) {
 	return
 }
-func (this_ *localService) Start(size *Size) (err error) {
+
+func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 
 	cmd := this_.getCmd()
 
@@ -73,17 +78,17 @@ func (this_ *localService) Start(size *Size) (err error) {
 	return
 }
 
-func (this_ *localService) Write(buf []byte) (n int, err error) {
+func (this_ *terminalService) Write(buf []byte) (n int, err error) {
 	n, err = this_.stdin.Write(buf)
 	return
 }
 
-func (this_ *localService) Read(buf []byte) (n int, err error) {
+func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	n, err = this_.stdout.Read(buf)
 	return
 }
 
-func (this_ *localService) readStdout() (err error) {
+func (this_ *terminalService) readStdout() (err error) {
 	defer func() { this_.onClose() }()
 	defer func() { _ = this_.stdout.Close() }() // 保证关闭输出流
 
@@ -97,7 +102,7 @@ func (this_ *localService) readStdout() (err error) {
 	return
 }
 
-func (this_ *localService) writeStdin() (err error) {
+func (this_ *terminalService) writeStdin() (err error) {
 	defer func() { _ = this_.stdin.Close() }() // 保证关闭输出流
 
 	var buf = make([]byte, 1024*32)

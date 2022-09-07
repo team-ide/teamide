@@ -111,7 +111,6 @@ export default {
       });
     },
     refresh() {
-      console.log(this.list);
     },
   },
   created() {},

@@ -33,10 +33,12 @@ func Write(writer io.Writer, buf []byte, onWrite func(n int) (err error)) (err e
 		if err != nil && err != io.EOF {
 			break
 		}
-		e := onWrite(n)
-		if e != nil {
-			err = e
-			break
+		if onWrite != nil {
+			e := onWrite(n)
+			if e != nil {
+				err = e
+				break
+			}
 		}
 		if n < len(bs) {
 			bs = bs[n:]
