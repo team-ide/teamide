@@ -12,7 +12,6 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/ssh"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
@@ -98,19 +97,23 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 	if err != nil {
 		return
 	}
+	isWindow, err := service.IsWindows()
+	if err != nil {
+		return
+	}
 	err = service.Start(size)
 	if err != nil {
 		return
 	}
-	go this_.startReadWS(key, ws, service)
-	go this_.startReadService(key, ws, service)
-	go this_.startReadErrService(key, ws, service)
+	go this_.startReadWS(key, isWindow, ws, service)
+	go this_.startReadService(key, isWindow, ws, service)
+	go this_.startReadErrService(key, isWindow, ws, service)
 
 	this_.serviceCache[key] = service
 	return
 }
 
-func (this_ *worker) startReadWS(key string, ws *websocket.Conn, service terminal.Service) {
+func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
 
 	defer func() { this_.stopAll(key, ws, service) }()
 
@@ -123,11 +126,11 @@ func (this_ *worker) startReadWS(key string, ws *websocket.Conn, service termina
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
-		if messageType == websocket.TextMessage {
+		if messageType == websocket.BinaryMessage {
 
 		}
 		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-		writeErr = util.Write(service, buf, nil)
+		_, writeErr = service.Write(buf)
 		if writeErr != nil {
 			break
 		}
@@ -146,6 +149,78 @@ func (this_ *worker) startReadWS(key string, ws *websocket.Conn, service termina
 	}
 
 	this_.Logger.Info("ws read is end")
+
+	return
+}
+
+func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
+
+	defer func() { this_.stopAll(key, ws, service) }()
+
+	var n int
+	var buf = make([]byte, 1024*32)
+	var readErr error
+	var writeErr error
+	for {
+		n, readErr = service.Read(buf)
+		if readErr != nil && readErr != io.EOF {
+			break
+		}
+		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
+
+		writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+		if writeErr != nil {
+			break
+		}
+		if readErr == io.EOF {
+			readErr = nil
+			break
+		}
+	}
+
+	if readErr != nil {
+		this_.Logger.Error("service read error", zap.Error(readErr))
+	}
+
+	if writeErr != nil {
+		this_.Logger.Error("ws write error", zap.Error(writeErr))
+	}
+
+	this_.Logger.Info("service read is end")
+
+	return
+}
+
+func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
+
+	var n int
+	var buf = make([]byte, 1024*32)
+	var readErr error
+	var writeErr error
+	for {
+		n, readErr = service.ReadError(buf)
+		if readErr != nil && readErr != io.EOF {
+			break
+		}
+		//this_.Logger.Info("service on read err", zap.Any("bs", string(buf[:n])))
+
+		writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+		if writeErr != nil {
+			break
+		}
+		if readErr == io.EOF {
+			readErr = nil
+			break
+		}
+	}
+
+	if readErr != nil {
+		this_.Logger.Error("service read err error", zap.Error(readErr))
+	}
+
+	if writeErr != nil {
+		this_.Logger.Error("ws write err error", zap.Error(writeErr))
+	}
 
 	return
 }
@@ -172,76 +247,4 @@ func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Se
 	if ws != nil {
 		_ = ws.Close()
 	}
-}
-
-func (this_ *worker) startReadService(key string, ws *websocket.Conn, service terminal.Service) {
-
-	defer func() { this_.stopAll(key, ws, service) }()
-
-	var n int
-	var buf = make([]byte, 1024*32)
-	var readErr error
-	var writeErr error
-	for {
-		n, readErr = service.Read(buf)
-		if readErr != nil && readErr != io.EOF {
-			break
-		}
-		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
-
-		writeErr = ws.WriteMessage(websocket.TextMessage, buf[:n])
-		if writeErr != nil {
-			break
-		}
-		if readErr == io.EOF {
-			readErr = nil
-			break
-		}
-	}
-
-	if readErr != nil {
-		this_.Logger.Error("service read error", zap.Error(readErr))
-	}
-
-	if writeErr != nil {
-		this_.Logger.Error("ws write error", zap.Error(writeErr))
-	}
-
-	this_.Logger.Info("service read is end")
-
-	return
-}
-
-func (this_ *worker) startReadErrService(key string, ws *websocket.Conn, service terminal.Service) {
-
-	var n int
-	var buf = make([]byte, 1024*32)
-	var readErr error
-	var writeErr error
-	for {
-		n, readErr = service.ReadError(buf)
-		if readErr != nil && readErr != io.EOF {
-			break
-		}
-		//this_.Logger.Info("service on read err", zap.Any("bs", string(buf[:n])))
-
-		writeErr = ws.WriteMessage(websocket.TextMessage, buf[:n])
-		if writeErr != nil {
-			break
-		}
-		if readErr == io.EOF {
-			readErr = nil
-			break
-		}
-	}
-
-	if readErr != nil {
-		this_.Logger.Error("service read err error", zap.Error(readErr))
-	}
-
-	if writeErr != nil {
-		this_.Logger.Error("ws write err error", zap.Error(writeErr))
-	}
-
-	return
 }

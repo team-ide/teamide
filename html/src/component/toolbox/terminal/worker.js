@@ -68,8 +68,13 @@ const newWorker = function (workerOption) {
             url += "&rows=" + worker.rows;
             let socket = new WebSocket(url);
             worker.socket = socket;
-            if (!this.worker.isWindows) {
-                worker.socket.binaryType = "arraybuffer";
+
+            socket.binaryType = "arraybuffer"
+            if (worker.isWindows) {
+                // socket.binaryType = "string"
+            } else {
+                // socket.binaryType = "blob"
+
             }
             worker.socket.onopen = () => {
                 worker.onSocketOpen();

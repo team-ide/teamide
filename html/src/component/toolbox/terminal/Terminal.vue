@@ -27,6 +27,8 @@ import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { AttachAddon } from "xterm-addon-attach";
 
+// https://juejin.cn/post/6918911964009725959
+
 export default {
   components: {},
   props: ["source", "toolboxWorker", "place", "placeId"],
@@ -58,11 +60,11 @@ export default {
       this.term && this.term.focus();
     },
     onSocketData(data) {
-      if (typeof data === "string") {
-        this.term.write(data);
-      } else {
-        this.term.write(new Uint8Array(data));
-      }
+      // if (typeof data === "string") {
+      //   this.term.write(data);
+      // } else {
+      //   this.term.write(new Uint8Array(data));
+      // }
     },
     initTerm() {
       if (this.term != null) {
@@ -72,16 +74,15 @@ export default {
       this.term = new Terminal({
         useStyle: true,
         cursorBlink: true, //光标闪烁
-        cursorStyle: "bar", // 光标样式 'block' | 'underline' | 'bar'
+        cursorStyle: "underline", // 光标样式 'block' | 'underline' | 'bar'
         rendererType: "canvas", //渲染类型
         width: 500,
         height: 400,
         windowsMode: true,
-        scrollback: 100000000,
+        scrollback: 100000000, //终端中的回滚量
         // rows: this.rows, //行数
         // cols: this.cols, // 不指定行数，自动回车后光标从下一行开始
-        // convertEol: true, //启用时，光标将设置为下一行的开头
-        // // scrollback: 50, //终端中的回滚量
+        convertEol: true, //启用时，光标将设置为下一行的开头
         // disableStdin: false, //是否应禁用输入
         // // cursorStyle: "underline", //光标样式
         // theme: {
@@ -102,15 +103,15 @@ export default {
       this.worker.rows = this.term.rows;
 
       this.term.onData((data) => {
-        this.worker.sendDataToWS(data);
+        // this.worker.sendDataToWS(data);
       });
       this.term.onBinary((data) => {
-        this.worker.sendDataToWS(data);
+        // this.worker.sendDataToWS(data);
       });
     },
     onSocketOpen() {
-      // const attachAddon = new AttachAddon(this.worker.socket);
-      // this.term.loadAddon(attachAddon);
+      const attachAddon = new AttachAddon(this.worker.socket);
+      this.term.loadAddon(attachAddon);
     },
     onSocketClose() {
       if (this.isDestroyed) {
