@@ -25,6 +25,7 @@ import _worker from "./worker.js";
 import "xterm/css/xterm.css";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
+import { AttachAddon } from "xterm-addon-attach";
 
 export default {
   components: {},
@@ -37,10 +38,9 @@ export default {
       onSocketOpen: this.onSocketOpen,
       onSocketClose: this.onSocketClose,
       onSocketError: this.onSocketError,
+      onSocketData: this.onSocketData,
     });
     return {
-      rows: 40,
-      cols: 100,
       worker: worker,
     };
   },
@@ -48,14 +48,27 @@ export default {
   watch: {},
   methods: {
     async init() {
-      this.worker.init();
-      this.initTerm();
+      this.$nextTick(() => {
+        this.initTerm();
+        this.worker.init();
+      });
     },
     refresh() {},
     onFocus() {
       this.term && this.term.focus();
     },
+    onSocketData(data) {
+      if (typeof data === "string") {
+        this.term.write(data);
+      } else {
+        this.term.write(new Uint8Array(data));
+      }
+    },
     initTerm() {
+      if (this.term != null) {
+        this.term.dispose();
+      }
+
       this.term = new Terminal({
         useStyle: true,
         cursorBlink: true, //光标闪烁
@@ -85,13 +98,25 @@ export default {
       this.fitAddon.fit();
 
       this.term.focus();
+      this.worker.cols = this.term.cols;
+      this.worker.rows = this.term.rows;
+
+      this.term.onData((data) => {
+        this.worker.sendDataToWS(data);
+      });
+      this.term.onBinary((data) => {
+        this.worker.sendDataToWS(data);
+      });
     },
-    onSocketOpen() {},
+    onSocketOpen() {
+      // const attachAddon = new AttachAddon(this.worker.socket);
+      // this.term.loadAddon(attachAddon);
+    },
     onSocketClose() {
       if (this.isDestroyed) {
         return;
       }
-      this.worker.refresh();
+      // this.worker.refresh();
     },
     onSocketError() {},
   },
@@ -99,9 +124,12 @@ export default {
   mounted() {
     this.init();
   },
-  destroyed() {
+  beforeDestroy() {
     this.isDestroyed = true;
     this.worker.close();
+    if (this.term != null) {
+      this.term.dispose();
+    }
   },
 };
 </script>
@@ -159,29 +187,29 @@ export default {
   width: 10px;
   height: 10px;
 }
-.toolbox-ssh-editor
-  .terminal-box
+.toolbox-terminal-box
+  .terminal-xterm-box
   .xterm
   .xterm-viewport:hover::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.toolbox-ssh-editor
-  .terminal-box
+.toolbox-terminal-box
+  .terminal-xterm-box
   .xterm
   .xterm-viewport::-webkit-scrollbar-thumb {
   border-radius: 0px;
   background: #6b6b6b;
 }
-.toolbox-ssh-editor
-  .terminal-box
+.toolbox-terminal-box
+  .terminal-xterm-box
   .xterm
   .xterm-viewport::-webkit-scrollbar-track {
   border-radius: 0;
   background: #383838;
 }
-.toolbox-ssh-editor
-  .terminal-box
+.toolbox-terminal-box
+  .terminal-xterm-box
   .xterm
   .xterm-viewport::-webkit-scrollbar-corner {
   background: #ddd;

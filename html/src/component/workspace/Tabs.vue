@@ -250,7 +250,7 @@ export default {
     this.init();
     window.addEventListener("resize", this.resize);
   },
-  destroyed() {
+  beforeDestroy() {
     window.removeEventListener("resize", this.resize);
   },
 };

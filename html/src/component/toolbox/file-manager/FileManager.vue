@@ -554,7 +554,7 @@ export default {
     this.init();
     this.bindEvent();
   },
-  destroyed() {
+  beforeDestroy() {
     this.isDestroyed = true;
     this.fileWorker.close();
   },

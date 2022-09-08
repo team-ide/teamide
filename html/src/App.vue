@@ -102,7 +102,7 @@ export default {
     this.bindEvent();
     this.init();
   },
-  destroyed() {},
+  beforeDestroy() {},
 };
 </script>
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 	"teamide/internal/base"
@@ -48,8 +49,25 @@ func (this_ *api) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, e
 	return
 }
 
-func (this_ *api) key(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
-	res = util.UUID()
+func (this_ *api) key(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	service, err := this_.createService(request.Place, request.PlaceId)
+	if err != nil {
+		return
+	}
+
+	data := make(map[string]interface{})
+
+	data["isWindows"], err = service.IsWindows()
+	if err != nil {
+		return
+	}
+	data["key"] = util.UUID()
+	res = data
 	return
 }
 
@@ -84,8 +102,6 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	}
 	cols, _ := strconv.Atoi(c.Query("cols"))
 	rows, _ := strconv.Atoi(c.Query("rows"))
-	width, _ := strconv.Atoi(c.Query("width"))
-	height, _ := strconv.Atoi(c.Query("height"))
 	//升级get请求为webSocket协议
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -99,12 +115,11 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	}
 
 	err = this_.Start(key, place, placeId, &terminal.Size{
-		Cols:   cols,
-		Rows:   rows,
-		Width:  width,
-		Height: height,
+		Cols: cols,
+		Rows: rows,
 	}, ws)
 	if err != nil {
+		this_.Logger.Error("websocket start error", zap.Error(err))
 		_ = ws.Close()
 		return
 	}
@@ -114,7 +129,9 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 }
 
 type Request struct {
-	Key string `json:"key,omitempty"`
+	Place   string `json:"place,omitempty"`
+	PlaceId string `json:"placeId,omitempty"`
+	Key     string `json:"key,omitempty"`
 	*terminal.Size
 }
 

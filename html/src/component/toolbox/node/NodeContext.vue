@@ -145,7 +145,7 @@ export default {
   mounted() {
     this.init();
   },
-  destroyed() {
+  beforeDestroy() {
     this.isDestroyed = true;
   },
 };

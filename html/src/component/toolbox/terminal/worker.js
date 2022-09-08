@@ -12,6 +12,10 @@ const newWorker = function (workerOption) {
         onSocketOpen: workerOption.onSocketOpen,
         onSocketClose: workerOption.onSocketClose,
         onSocketError: workerOption.onSocketError,
+        onSocketData: workerOption.onSocketData,
+        rows: 40,
+        cols: 100,
+        socket: null,
         init() {
             this.build()
         },
@@ -29,11 +33,24 @@ const newWorker = function (workerOption) {
                 }
                 await this.close();
             }
-            this.key = await this.newKey()
+            let keyData = await this.newKey()
+            if (keyData == null || tool.isEmpty(keyData.key)) {
+                this.building = false
+                return
+            }
+            this.key = keyData.key;
+            this.isWindows = keyData.isWindows;
             this.newSocket();
         },
-        writeData(data) {
-            worker.socket.send(data);
+        sendDataToWS(data) {
+            if (this.isWindows) {
+                // data = data.replace(/(\r\n|\n|\r|↵)/g, `\r\n`);
+            }
+            if (typeof data === "string") {
+                worker.socket.send(data);
+            } else {
+                worker.socket.send(new Uint8Array(data));
+            }
         },
         newSocket() {
             if (worker.socket != null) {
@@ -47,9 +64,13 @@ const newWorker = function (workerOption) {
             url += "&place=" + encodeURIComponent(worker.place);
             url += "&placeId=" + encodeURIComponent(worker.placeId);
             url += "&workerId=" + encodeURIComponent(worker.workerId);
+            url += "&cols=" + worker.cols;
+            url += "&rows=" + worker.rows;
             let socket = new WebSocket(url);
             worker.socket = socket;
-            worker.socket.binaryType = "arraybuffer";
+            if (!this.worker.isWindows) {
+                worker.socket.binaryType = "arraybuffer";
+            }
             worker.socket.onopen = () => {
                 worker.onSocketOpen();
                 this.building = false

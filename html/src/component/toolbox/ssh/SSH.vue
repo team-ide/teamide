@@ -583,10 +583,8 @@ export default {
     this.init();
   },
   beforeDestroy() {
-    this.dispose();
-  },
-  destroyed() {
     this.isDestroyed = true;
+    this.dispose();
   },
 };
 </script>

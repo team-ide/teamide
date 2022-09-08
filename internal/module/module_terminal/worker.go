@@ -40,9 +40,7 @@ func (this_ *worker) GetService(key string) (service terminal.Service) {
 	return
 }
 
-func (this_ *worker) createService(key string, place string, placeId string) (service terminal.Service, err error) {
-	this_.serviceCacheLock.Lock()
-	defer this_.serviceCacheLock.Unlock()
+func (this_ *worker) createService(place string, placeId string) (service terminal.Service, err error) {
 
 	switch place {
 	case "local":
@@ -83,7 +81,6 @@ func (this_ *worker) createService(key string, place string, placeId string) (se
 		return
 	}
 
-	this_.serviceCache[key] = service
 	return
 }
 
@@ -97,7 +94,7 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 		return
 	}
 
-	service, err = this_.createService(key, place, placeId)
+	service, err = this_.createService(place, placeId)
 	if err != nil {
 		return
 	}
@@ -107,6 +104,7 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 	}
 	go this_.startReadWS(key, ws, service)
 	go this_.startReadService(key, ws, service)
+	go this_.startReadErrService(key, ws, service)
 
 	this_.serviceCache[key] = service
 	return
@@ -128,12 +126,13 @@ func (this_ *worker) startReadWS(key string, ws *websocket.Conn, service termina
 		if messageType == websocket.TextMessage {
 
 		}
+		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
 		writeErr = util.Write(service, buf, nil)
-		if readErr == io.EOF {
-			readErr = nil
+		if writeErr != nil {
 			break
 		}
-		if writeErr != nil {
+		if readErr == io.EOF {
+			readErr = nil
 			break
 		}
 	}
@@ -145,6 +144,8 @@ func (this_ *worker) startReadWS(key string, ws *websocket.Conn, service termina
 	if writeErr != nil {
 		this_.Logger.Error("service write error", zap.Error(writeErr))
 	}
+
+	this_.Logger.Info("ws read is end")
 
 	return
 }
@@ -186,13 +187,14 @@ func (this_ *worker) startReadService(key string, ws *websocket.Conn, service te
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
+		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
 
-		writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
-		if readErr == io.EOF {
-			readErr = nil
+		writeErr = ws.WriteMessage(websocket.TextMessage, buf[:n])
+		if writeErr != nil {
 			break
 		}
-		if writeErr != nil {
+		if readErr == io.EOF {
+			readErr = nil
 			break
 		}
 	}
@@ -203,6 +205,42 @@ func (this_ *worker) startReadService(key string, ws *websocket.Conn, service te
 
 	if writeErr != nil {
 		this_.Logger.Error("ws write error", zap.Error(writeErr))
+	}
+
+	this_.Logger.Info("service read is end")
+
+	return
+}
+
+func (this_ *worker) startReadErrService(key string, ws *websocket.Conn, service terminal.Service) {
+
+	var n int
+	var buf = make([]byte, 1024*32)
+	var readErr error
+	var writeErr error
+	for {
+		n, readErr = service.ReadError(buf)
+		if readErr != nil && readErr != io.EOF {
+			break
+		}
+		//this_.Logger.Info("service on read err", zap.Any("bs", string(buf[:n])))
+
+		writeErr = ws.WriteMessage(websocket.TextMessage, buf[:n])
+		if writeErr != nil {
+			break
+		}
+		if readErr == io.EOF {
+			readErr = nil
+			break
+		}
+	}
+
+	if readErr != nil {
+		this_.Logger.Error("service read err error", zap.Error(readErr))
+	}
+
+	if writeErr != nil {
+		this_.Logger.Error("ws write err error", zap.Error(writeErr))
 	}
 
 	return

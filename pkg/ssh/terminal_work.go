@@ -26,6 +26,11 @@ type terminalService struct {
 	onClose func()
 }
 
+func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
+	isWindows = runtime.GOOS == "windows"
+	return
+}
+
 func (this_ *terminalService) getCmd() (cmd *exec.Cmd) {
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd.exe", "/c")
@@ -85,6 +90,10 @@ func (this_ *terminalService) Write(buf []byte) (n int, err error) {
 
 func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	n, err = this_.stdout.Read(buf)
+	return
+}
+
+func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
 	return
 }
 

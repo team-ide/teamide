@@ -121,7 +121,7 @@ export default {
   mounted() {
     this.init();
   },
-  destroyed() {
+  beforeDestroy() {
     if (this.monacoInstance != null) {
       this.monacoInstance.dispose(); //使用完成销毁实例
     }

@@ -110,6 +110,6 @@ export default {
   mounted() {
     this.init();
   },
-  destroyed() {},
+  beforeDestroy() {},
 };
 </script>
