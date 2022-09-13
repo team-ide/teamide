@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"teamide/internal/context"
+	"teamide/pkg/terminal"
 	"teamide/pkg/util"
 	"time"
 )
@@ -77,7 +78,7 @@ func (this_ *ShellClient) closeSession(session *ssh.Session) {
 	}
 }
 
-func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error) {
+func NewSSHShell(terminalSize *terminal.Size, sshSession *ssh.Session) (err error) {
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          1,
 		ssh.TTY_OP_ISPEED: 14400,
@@ -100,10 +101,6 @@ func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error)
 		req.Columns = uint32(terminalSize.Cols)
 		req.Rows = uint32(terminalSize.Rows)
 	}
-	if terminalSize.Width > 0 && terminalSize.Height > 0 {
-		req.Width = uint32(terminalSize.Width)
-		req.Height = uint32(terminalSize.Height)
-	}
 	_, err = sshSession.SendRequest("pty-req", true, ssh.Marshal(&req))
 	if err != nil {
 		return
@@ -119,7 +116,7 @@ func NewSSHShell(terminalSize TerminalSize, sshSession *ssh.Session) (err error)
 	}
 	return
 }
-func (this_ *ShellClient) startShell(terminalSize TerminalSize) (err error) {
+func (this_ *ShellClient) startShell(terminalSize *terminal.Size) (err error) {
 	this_.shellOK = false
 	this_.startReadChannel = false
 	defer func() {
@@ -225,12 +222,12 @@ func (this_ *ShellClient) onEvent(event string) {
 
 	if strings.HasPrefix(event, "shell start") {
 		jsonStr := event[len("shell start"):]
-		var terminalSize *TerminalSize
+		var terminalSize = &terminal.Size{}
 		if jsonStr != "" {
 			_ = json.Unmarshal([]byte(jsonStr), &terminalSize)
 		}
 		go func() {
-			err = this_.startShell(*terminalSize)
+			err = this_.startShell(terminalSize)
 			if err != nil {
 				util.Logger.Error("SSH Shell Start Shell error", zap.Error(err))
 			}

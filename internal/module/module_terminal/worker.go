@@ -41,6 +41,12 @@ func (this_ *worker) GetService(key string) (service terminal.Service) {
 
 func (this_ *worker) createService(place string, placeId string) (service terminal.Service, err error) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("createService error", zap.Any("error", e))
+		}
+	}()
+
 	switch place {
 	case "local":
 		service = terminal.NewLocalService()
@@ -84,6 +90,13 @@ func (this_ *worker) createService(place string, placeId string) (service termin
 }
 
 func (this_ *worker) Start(key string, place string, placeId string, size *terminal.Size, ws *websocket.Conn) (err error) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("Start error", zap.Any("error", e))
+		}
+	}()
+
 	this_.serviceCacheLock.Lock()
 	defer this_.serviceCacheLock.Unlock()
 
@@ -114,6 +127,12 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 }
 
 func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("startReadWS error", zap.Any("error", e))
+		}
+	}()
 
 	defer func() { this_.stopAll(key, ws, service) }()
 
@@ -155,6 +174,12 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 
 func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("startReadService error", zap.Any("error", e))
+		}
+	}()
+
 	defer func() { this_.stopAll(key, ws, service) }()
 
 	var n int
@@ -168,9 +193,11 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 		}
 		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
 
-		writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
-		if writeErr != nil {
-			break
+		if n > 0 {
+			writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+			if writeErr != nil {
+				break
+			}
 		}
 		if readErr == io.EOF {
 			readErr = nil
@@ -193,6 +220,12 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 
 func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("startReadErrService error", zap.Any("error", e))
+		}
+	}()
+
 	var n int
 	var buf = make([]byte, 1024*32)
 	var readErr error
@@ -204,9 +237,11 @@ func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocke
 		}
 		//this_.Logger.Info("service on read err", zap.Any("bs", string(buf[:n])))
 
-		writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
-		if writeErr != nil {
-			break
+		if n > 0 {
+			writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+			if writeErr != nil {
+				break
+			}
 		}
 		if readErr == io.EOF {
 			readErr = nil
@@ -227,6 +262,12 @@ func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocke
 
 func (this_ *worker) stopService(key string) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("stopService error", zap.Any("error", e))
+		}
+	}()
+
 	this_.serviceCacheLock.Lock()
 	defer this_.serviceCacheLock.Unlock()
 
@@ -239,6 +280,12 @@ func (this_ *worker) stopService(key string) {
 }
 
 func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Service) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			this_.Logger.Error("stopAll error", zap.Any("error", e))
+		}
+	}()
 
 	this_.stopService(key)
 	if service != nil {
