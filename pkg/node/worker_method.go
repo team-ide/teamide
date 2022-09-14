@@ -42,9 +42,11 @@ var (
 	methodFileCount     MethodType = 310
 	methodFileCountSize MethodType = 311
 
-	methodTerminalNewConn   MethodType = 401
-	methodTerminalCloseConn MethodType = 402
-	methodTerminalSend      MethodType = 403
+	methodTerminalStart      MethodType = 401
+	methodTerminalWrite      MethodType = 402
+	methodTerminalChangeSize MethodType = 403
+	methodTerminalStop       MethodType = 404
+	methodTerminalIsWindows  MethodType = 405
 
 	methodSystemGetInfo          MethodType = 501
 	methodSystemQueryMonitorData MethodType = 502
@@ -368,11 +370,53 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 	case methodFileCountSize:
 		return
 
-	case methodTerminalNewConn:
+	case methodTerminalStart:
+		if msg.TerminalWorkData != nil {
+			var key string
+			key, err = this_.workTerminalStart(msg.LineNodeIdList, msg.TerminalWorkData.Size, msg.TerminalWorkData.ReadKey, msg.TerminalWorkData.ReadErrorKey)
+			if err != nil {
+				return
+			}
+			res.TerminalWorkData = &TerminalWorkData{
+				Key: key,
+			}
+		}
 		return
-	case methodTerminalCloseConn:
+	case methodTerminalIsWindows:
+		if msg.TerminalWorkData != nil {
+			var isWindows bool
+			isWindows, err = this_.workTerminalIsWindows(msg.LineNodeIdList)
+			if err != nil {
+				return
+			}
+			res.TerminalWorkData = &TerminalWorkData{
+				IsWindows: isWindows,
+			}
+		}
 		return
-	case methodTerminalSend:
+	case methodTerminalStop:
+		if msg.TerminalWorkData != nil {
+			err = this_.workTerminalStop(msg.LineNodeIdList, msg.TerminalWorkData.Key)
+			if err != nil {
+				return
+			}
+		}
+		return
+	case methodTerminalWrite:
+		if msg.TerminalWorkData != nil {
+			err = this_.workTerminalWrite(msg.LineNodeIdList, msg.TerminalWorkData.Key, msg.Bytes)
+			if err != nil {
+				return
+			}
+		}
+		return
+	case methodTerminalChangeSize:
+		if msg.TerminalWorkData != nil {
+			err = this_.workTerminalChangeSize(msg.LineNodeIdList, msg.TerminalWorkData.Key, msg.TerminalWorkData.Size)
+			if err != nil {
+				return
+			}
+		}
 		return
 
 	case methodSendBytesStart:

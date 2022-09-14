@@ -3,9 +3,14 @@ package util
 import "io"
 
 func Read(reader io.Reader, buf []byte, onRead func(n int) (err error)) (err error) {
+	err = ReadByFunc(reader.Read, buf, onRead)
+	return
+}
+
+func ReadByFunc(read func(p []byte) (n int, err error), buf []byte, onRead func(n int) (err error)) (err error) {
 	for {
 		var n int
-		n, err = reader.Read(buf)
+		n, err = read(buf)
 		if err != nil && err != io.EOF {
 			break
 		}

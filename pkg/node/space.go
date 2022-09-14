@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"sync"
+	"teamide/pkg/terminal"
 )
 
 type Space struct {
@@ -32,6 +33,9 @@ type Space struct {
 
 	callbackCache     map[string]func(msg *Message)
 	callbackCacheLock sync.Mutex
+
+	terminalServiceCache     map[string]terminal.Service
+	terminalServiceCacheLock sync.Mutex
 
 	toNodeListenerKeepAliveLock sync.Mutex
 
@@ -69,6 +73,30 @@ func (this_ *Space) removeOnBytesCache(key string) {
 	return
 }
 
+func (this_ *Space) addTerminalService(key string, one terminal.Service) {
+	this_.terminalServiceCacheLock.Lock()
+	defer this_.terminalServiceCacheLock.Unlock()
+
+	this_.terminalServiceCache[key] = one
+	return
+}
+
+func (this_ *Space) getTerminalService(key string) (res terminal.Service) {
+	this_.terminalServiceCacheLock.Lock()
+	defer this_.terminalServiceCacheLock.Unlock()
+
+	res = this_.terminalServiceCache[key]
+	return
+}
+
+func (this_ *Space) removeTerminalService(key string) {
+	this_.terminalServiceCacheLock.Lock()
+	defer this_.terminalServiceCacheLock.Unlock()
+
+	delete(this_.terminalServiceCache, key)
+	return
+}
+
 func newSpace() *Space {
 	return &Space{
 		toNodeListenerPoolCache:   make(map[string]*MessageListenerPool),
@@ -77,6 +105,7 @@ func newSpace() *Space {
 		netProxyInnerCache:        make(map[string]*InnerServer),
 		netProxyOuterCache:        make(map[string]*OuterListener),
 		onBytesCache:              make(map[string]*OnBytes),
+		terminalServiceCache:      make(map[string]terminal.Service),
 	}
 }
 

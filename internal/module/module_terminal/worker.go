@@ -79,7 +79,7 @@ func (this_ *worker) createService(place string, placeId string) (service termin
 			err = errors.New("node配置不能为空")
 			return
 		}
-		service = module_node.NewTerminalService(placeId)
+		service = module_node.NewTerminalService(placeId, this_.nodeService)
 	}
 	if service == nil {
 		err = errors.New("[" + place + "]文件服务不存在")

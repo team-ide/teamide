@@ -10,6 +10,7 @@ import (
 	"sync"
 	"teamide/pkg/filework"
 	"teamide/pkg/system"
+	"teamide/pkg/terminal"
 	"teamide/pkg/util"
 )
 
@@ -28,6 +29,7 @@ type Message struct {
 	NodeWorkData       *WorkData         `json:"nodeWorkData,omitempty"`
 	NetProxyWorkData   *NetProxyWorkData `json:"netProxyWorkData,omitempty"`
 	FileWorkData       *FileWorkData     `json:"fileWorkData,omitempty"`
+	TerminalWorkData   *TerminalWorkData `json:"terminalWorkData,omitempty"`
 	SystemData         *SystemData       `json:"systemData,omitempty"`
 	HasBytes           bool              `json:"hasBytes,omitempty"`
 	SendKey            string            `json:"sendKey,omitempty"`
@@ -80,6 +82,14 @@ type FileWorkData struct {
 	Exist       bool                 `json:"exist,omitempty"`
 	FileCount   int                  `json:"fileCount,omitempty"`
 	RemoveCount int                  `json:"removeCount,omitempty"`
+}
+
+type TerminalWorkData struct {
+	Key          string         `json:"key,omitempty"`
+	ReadKey      string         `json:"readKey,omitempty"`
+	ReadErrorKey string         `json:"readErrorKey,omitempty"`
+	Size         *terminal.Size `json:"size,omitempty"`
+	IsWindows    bool           `json:"isWindows,omitempty"`
 }
 
 type StatusChange struct {

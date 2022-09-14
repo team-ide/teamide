@@ -3,7 +3,6 @@ package node
 import (
 	"errors"
 	"go.uber.org/zap"
-	"io"
 	"os"
 	"teamide/pkg/filework"
 	"teamide/pkg/util"
@@ -221,7 +220,7 @@ func (this_ *Worker) workFileRead(lineNodeIdList []string, path string, sendKey 
 			line = append(line, lineNodeIdList[i])
 		}
 
-		err = this_.workSend(line, sendKey, f)
+		err = this_.workSend(line, sendKey, f.Read)
 		if err != nil {
 			Logger.Error("file read send error", zap.Error(err))
 		}
@@ -279,7 +278,7 @@ func (this_ *Worker) workFileWrite(lineNodeIdList []string, path string) (sendKe
 	return
 }
 
-func (this_ *Worker) workSend(lineNodeIdList []string, key string, reader io.Reader) (err error) {
+func (this_ *Worker) workSend(lineNodeIdList []string, key string, read func(p []byte) (n int, err error)) (err error) {
 
 	err = this_.workSendBytesStart(lineNodeIdList, key)
 	if err != nil {
@@ -287,8 +286,10 @@ func (this_ *Worker) workSend(lineNodeIdList []string, key string, reader io.Rea
 	}
 
 	var buf = make([]byte, 1024*32)
-	err = util.Read(reader, buf, func(n int) (e error) {
-		e = this_.workSendBytes(lineNodeIdList, key, buf[:n])
+	err = util.ReadByFunc(read, buf, func(n int) (e error) {
+		if n > 0 {
+			e = this_.workSendBytes(lineNodeIdList, key, buf[:n])
+		}
 		return
 	})
 	if err != nil {
