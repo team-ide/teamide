@@ -37,7 +37,7 @@ var (
 	ZModemCancel = []byte{24, 24, 24, 24, 24, 8, 8, 8, 8, 8}
 )
 
-func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZModem bool, err error) {
+func (this_ *ShellClient) processZModem(buff []byte, n int) (isZModem bool, err error) {
 	isZModem = true
 	if this_.ZModemSZOO {
 		this_.ZModemSZOO = false
@@ -70,24 +70,19 @@ func (this_ *ShellClient) processZModem(buff []byte, n int, buffSize int) (isZMo
 		}
 	} else {
 		if this_.ZModemSZ {
-			if (n) == buffSize {
-				// 如果读取的长度为 buffsize，则认为是在传输数据，
-				// 这样可以提高 sz 下载速率，很低概率会误判 zmodem 取消操作
+
+			if x, ok := ByteContains(buff[:n], ZModemSZEnd); ok {
+				this_.ZModemSZ = false
+				this_.ZModemSZOO = true
+				this_.WSWriteBinary(ZModemSZEnd)
+				if len(x) != 0 {
+					this_.WSWriteConsole(string(x))
+				}
+			} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
+				this_.ZModemSZ = false
 				this_.WSWriteBinary(buff[:n])
 			} else {
-				if x, ok := ByteContains(buff[:n], ZModemSZEnd); ok {
-					this_.ZModemSZ = false
-					this_.ZModemSZOO = true
-					this_.WSWriteBinary(ZModemSZEnd)
-					if len(x) != 0 {
-						this_.WSWriteConsole(string(x))
-					}
-				} else if _, ok := ByteContains(buff[:n], ZModemCancel); ok {
-					this_.ZModemSZ = false
-					this_.WSWriteBinary(buff[:n])
-				} else {
-					this_.WSWriteBinary(buff[:n])
-				}
+				this_.WSWriteBinary(buff[:n])
 			}
 		} else if this_.ZModemRZ {
 			if x, ok := ByteContains(buff[:n], ZModemRZEnd); ok {

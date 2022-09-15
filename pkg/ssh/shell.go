@@ -191,7 +191,7 @@ func (this_ *ShellClient) startRead(reader io.Reader, isError bool) (err error) 
 		}
 
 		var isZModem bool
-		isZModem, _ = this_.processZModem(buf[:n], n, buffSize)
+		isZModem, _ = this_.processZModem(buf[:n], n)
 		if !isZModem {
 			out := TeamIDEBinaryStartBytes
 			if n == buffSize {

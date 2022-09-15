@@ -3,8 +3,6 @@ package terminal
 import (
 	"go.uber.org/zap"
 	"io"
-	"os/exec"
-	"runtime"
 	"teamide/pkg/util"
 )
 
@@ -23,18 +21,7 @@ type localService struct {
 }
 
 func (this_ *localService) IsWindows() (isWindows bool, err error) {
-	isWindows = runtime.GOOS == "windows"
-	return
-}
-
-func (this_ *localService) getCmd() (cmd *exec.Cmd) {
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("powershell", "-NoProfile", "-NonInteractive")
-		//cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	} else {
-		cmd = exec.Command("bash")
-	}
-	return
+	return IsWindows(), nil
 }
 
 func (this_ *localService) Stop() {
@@ -49,9 +36,10 @@ func (this_ *localService) Stop() {
 func (this_ *localService) ChangeSize(size *Size) (err error) {
 	return
 }
+
 func (this_ *localService) Start(size *Size) (err error) {
 
-	cmd := this_.getCmd()
+	cmd := getCmd()
 
 	this_.stdout, err = cmd.StdoutPipe()
 	if err != nil {

@@ -159,6 +159,10 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 		}
 	}
 
+	if this_.GetService(key) == nil {
+		return
+	}
+
 	if readErr != nil {
 		this_.Logger.Error("ws read error", zap.Error(readErr))
 	}
@@ -205,6 +209,10 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 		}
 	}
 
+	if this_.GetService(key) == nil {
+		return
+	}
+
 	if readErr != nil {
 		this_.Logger.Error("service read error", zap.Error(readErr))
 	}
@@ -247,6 +255,10 @@ func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocke
 			readErr = nil
 			break
 		}
+	}
+
+	if this_.GetService(key) == nil {
+		return
 	}
 
 	if readErr != nil {

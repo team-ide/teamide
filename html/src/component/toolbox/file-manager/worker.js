@@ -295,6 +295,19 @@ const newWorker = function (workerOption) {
             }
             return res.data;
         },
+        pathIsSubfile(path) {
+            if (tool.isEmpty(path) || path.indexOf('/') < 0) {
+                return false;
+            }
+            let dir = this.dir;
+            if (dir.endsWith('/')) {
+                dir = dir.substring(0, dir.length - 1);
+            }
+            if (dir == path.substring(0, path.lastIndexOf('/'))) {
+                return true;
+            }
+            return false;
+        },
         async uploadFile(dir, file, fullPath) {
             let param = {
                 workerId: this.workerId,
@@ -316,6 +329,9 @@ const newWorker = function (workerOption) {
             } else {
                 let files = res.data || [];
                 files.forEach(one => {
+                    if (!this.pathIsSubfile(one.path)) {
+                        return
+                    }
                     this.formatFile(one);
                     let index = this.getFileIndex(one.path);
                     if (index >= 0) {
@@ -330,6 +346,7 @@ const newWorker = function (workerOption) {
         async download(path) {
             let url = source.api + "file_manager/download?";
             url += "workerId=" + (this.workerId || "");
+            url += "&jwt=" + encodeURIComponent(tool.getJWT());
             url += "&fileWorkerKey=" + (this.fileWorkerKey || "");
             url += "&place=" + (this.place || "");
             url += "&placeId=" + (this.placeId || "");

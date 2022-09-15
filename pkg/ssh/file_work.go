@@ -172,14 +172,10 @@ func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSiz
 		return
 	}
 
-	path, err = sftpClient.RealPath(path)
-	if err != nil {
-		return
-	}
-
 	pathDir := path[0:strings.LastIndex(path, "/")]
 	exist, err := this_.Exist(pathDir)
 	if err != nil {
+		util.Logger.Error("Write Exist path error", zap.Any("path", pathDir), zap.Error(err))
 		return
 	}
 	if !exist {
