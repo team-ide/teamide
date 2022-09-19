@@ -179,11 +179,7 @@ func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 		err = errors.New("upload file is not defined")
 		return
 	}
-	reader, err := fileList[0].Open()
-	if err != nil {
-		return
-	}
-	err = this_.SetReaderChan(key, reader)
+	err = this_.SetFileHeadersChan(key, fileList)
 
 	return
 }

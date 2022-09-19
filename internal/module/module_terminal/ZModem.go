@@ -3,42 +3,43 @@ package module_terminal
 import (
 	"errors"
 	"io"
+	"mime/multipart"
 	"teamide/pkg/util"
 )
 
-func (this_ *worker) GetReaderChan(key string) (reader io.Reader) {
-	this_.readerChanCacheLock.Lock()
-	defer this_.readerChanCacheLock.Unlock()
+func (this_ *worker) GetFileHeadersChan(key string) (fileHeaders []*multipart.FileHeader) {
+	this_.fileHeadersChanCacheLock.Lock()
+	defer this_.fileHeadersChanCacheLock.Unlock()
 
-	if this_.readerChanCache[key] == nil {
+	if this_.fileHeadersChanCache[key] == nil {
 		return
 	}
-	chan_ := this_.readerChanCache[key]
-	reader = <-chan_
-	delete(this_.readerChanCache, key)
+	chan_ := this_.fileHeadersChanCache[key]
+	fileHeaders = <-chan_
+	delete(this_.fileHeadersChanCache, key)
 	close(chan_)
 	return
 }
 
-func (this_ *worker) NewReaderChan() (key string) {
-	this_.readerChanCacheLock.Lock()
-	defer this_.readerChanCacheLock.Unlock()
+func (this_ *worker) NewFileHeadersChan() (key string) {
+	this_.fileHeadersChanCacheLock.Lock()
+	defer this_.fileHeadersChanCacheLock.Unlock()
 
 	key = util.UUID()
-	this_.readerChanCache[key] = make(chan io.Reader)
+	this_.fileHeadersChanCache[key] = make(chan []*multipart.FileHeader)
 	return
 }
 
-func (this_ *worker) SetReaderChan(key string, reader io.Reader) (err error) {
-	this_.readerChanCacheLock.Lock()
-	defer this_.readerChanCacheLock.Unlock()
+func (this_ *worker) SetFileHeadersChan(key string, fileHeaders []*multipart.FileHeader) (err error) {
+	this_.fileHeadersChanCacheLock.Lock()
+	defer this_.fileHeadersChanCacheLock.Unlock()
 
-	if this_.readerChanCache[key] == nil {
-		err = errors.New("reader chan is null")
+	if this_.fileHeadersChanCache[key] == nil {
+		err = errors.New("fileHeaders chan is null")
 		return
 	}
-	chan_ := this_.readerChanCache[key]
-	chan_ <- reader
+	chan_ := this_.fileHeadersChanCache[key]
+	chan_ <- fileHeaders
 	return
 }
 

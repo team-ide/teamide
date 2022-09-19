@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"io"
+	"mime/multipart"
 	"strconv"
 	"sync"
 	"teamide/internal/context"
@@ -16,25 +17,25 @@ import (
 
 func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
 	return &worker{
-		ServerContext:   toolboxService_.ServerContext,
-		toolboxService:  toolboxService_,
-		nodeService:     nodeService_,
-		serviceCache:    make(map[string]terminal.Service),
-		readerChanCache: make(map[string]chan io.Reader),
-		writerChanCache: make(map[string]chan io.Writer),
+		ServerContext:        toolboxService_.ServerContext,
+		toolboxService:       toolboxService_,
+		nodeService:          nodeService_,
+		serviceCache:         make(map[string]terminal.Service),
+		fileHeadersChanCache: make(map[string]chan []*multipart.FileHeader),
+		writerChanCache:      make(map[string]chan io.Writer),
 	}
 }
 
 type worker struct {
 	*context.ServerContext
-	toolboxService      *module_toolbox.ToolboxService
-	nodeService         *module_node.NodeService
-	serviceCache        map[string]terminal.Service
-	serviceCacheLock    sync.Mutex
-	readerChanCache     map[string]chan io.Reader
-	readerChanCacheLock sync.Mutex
-	writerChanCache     map[string]chan io.Writer
-	writerChanCacheLock sync.Mutex
+	toolboxService           *module_toolbox.ToolboxService
+	nodeService              *module_node.NodeService
+	serviceCache             map[string]terminal.Service
+	serviceCacheLock         sync.Mutex
+	fileHeadersChanCache     map[string]chan []*multipart.FileHeader
+	fileHeadersChanCacheLock sync.Mutex
+	writerChanCache          map[string]chan io.Writer
+	writerChanCacheLock      sync.Mutex
 }
 
 func (this_ *worker) GetService(key string) (service terminal.Service) {
