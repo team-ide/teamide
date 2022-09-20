@@ -183,34 +183,6 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 	return
 }
 
-func (this_ *worker) startSZ(key string, service terminal.Service) (err error) {
-	progress := newProgress(key)
-	progress.Data["readSize"] = 0
-	progress.Data["writeSize"] = 0
-	progress.Data["successSize"] = 0
-	defer func() { progress.end(err) }()
-
-	action, err := progress.waitAction("download")
-	if err != nil {
-		return
-	}
-
-	if action == nil {
-		return
-	}
-	writer, ok := action.(io.Writer)
-	if !ok {
-		err = errors.New("action can not to io.Writer")
-		return
-	}
-
-	_, err = writer.Write([]byte{})
-	if err != nil {
-		return
-	}
-	return
-}
-
 func (this_ *worker) startRZ(key string, service terminal.Service) (err error) {
 	progress := newProgress(key)
 	progress.Data["readSize"] = 0
@@ -258,6 +230,15 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 			break
 		}
 		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
+
+		if x, ok := ByteContains(buf[:n], ZModemSZStart); ok {
+			var rsErr error
+			n, rsErr = this_.startSZ(key, x, buf, service)
+			if rsErr != nil {
+				writeErr = rsErr
+				break
+			}
+		}
 
 		if n > 0 {
 			writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
