@@ -164,9 +164,9 @@ func (this_ *api) changeSize(_ *base.RequestBean, c *gin.Context) (res interface
 
 func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	key := c.PostForm("key")
-	if key == "" {
-		err = errors.New("key获取失败")
+	progressId := c.PostForm("progressId")
+	if progressId == "" {
+		err = errors.New("progressId获取失败")
 		return
 	}
 	mF, err := c.MultipartForm()
@@ -179,7 +179,7 @@ func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 		err = errors.New("upload file is not defined")
 		return
 	}
-	err = this_.SetFileHeadersChan(key, fileList)
+	err = this_.CallAction(progressId, fileList)
 
 	return
 }
@@ -202,9 +202,9 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 		return
 	}
 
-	key := data["key"]
-	if key == "" {
-		err = errors.New("key获取失败")
+	progressId := data["progressId"]
+	if progressId == "" {
+		err = errors.New("progressId获取失败")
 		return
 	}
 	name := data["name"]
@@ -222,7 +222,7 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	c.Header("Content-Length", size)
 	c.Header("download-file-name", name)
 
-	err = this_.SetWriterChan(key, c.Writer)
+	err = this_.CallAction(progressId, c.Writer)
 	if err != nil {
 		return
 	}

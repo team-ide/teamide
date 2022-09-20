@@ -69,6 +69,15 @@ func (this_ *worker) GetService(fileWorkerKey string, place string, placeId stri
 	return
 }
 
+func (this_ *worker) Close(workerId string) {
+	progressList := getProgressList(workerId)
+	for _, one := range progressList {
+		one.closeCallAction()
+	}
+
+	return
+}
+
 func (this_ *worker) Create(workerId string, fileWorkerKey string, place string, placeId string, path string, isDir bool) (file *filework.FileInfo, err error) {
 	progress := newProgress(workerId, place, placeId, "create")
 	progress.Data["fileWorkerKey"] = fileWorkerKey
@@ -293,12 +302,16 @@ func (this_ *worker) Upload(workerId string, fileWorkerKey string, place string,
 		exist, err = service.Exist(path)
 
 		if exist {
-			action := progress.waitAction("文件["+path+"]已存在，是否覆盖？",
+			var action string
+			action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
 				[]*Action{
 					newAction("是", "yes", "color-green"),
 					newAction("否", "no", "color-orange"),
 				})
-			if action == "no" {
+			if err != nil {
+				return
+			}
+			if action != "yes" {
 				return
 			}
 		}

@@ -89,6 +89,7 @@ func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	if !base.RequestJSON(request, c) {
 		return
 	}
+	this_.Close(request.WorkerId)
 	ssh.CloseFileService(request.WorkerId)
 	return
 }

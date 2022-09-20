@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-file-manager-progress-box">
+  <div class="toolbox-terminal-progress-box">
     <div
       class="progress-list-box scrollbar"
       @contextmenu.prevent="workContextmenu"
@@ -158,19 +158,19 @@ export default {
   watch: {},
   methods: {
     init() {
-      this.unbindFileWorkProgress();
-      this.bindFileWorkProgress();
+      this.unbindTerminalWorkProgress();
+      this.bindTerminalWorkProgress();
     },
-    bindFileWorkProgress() {
+    bindTerminalWorkProgress() {
       this.server.addServerSocketOnEvent(
-        "file-work-progress",
+        "terminal-work-progress",
         this.onFileWorkProgress
       );
     },
-    unbindFileWorkProgress() {
+    unbindTerminalWorkProgress() {
       this.server.removeServerSocketOnEvent(
-        "file-work-progress",
-        this.onFileWorkProgress
+        "terminal-work-progress",
+        this.onTerminalWorkProgress
       );
     },
     async doCallAction(progress, action) {
@@ -192,7 +192,7 @@ export default {
       });
       return res;
     },
-    onFileWorkProgress(data) {
+    onTerminalWorkProgress(data) {
       if (this.isDestroyed) {
         return;
       }
@@ -300,35 +300,35 @@ export default {
   },
   beforeDestroy() {
     this.isDestroyed = true;
-    this.unbindFileWorkProgress();
+    this.unbindTerminalWorkProgress();
   },
 };
 </script>
 
 <style>
-.toolbox-file-manager-progress-box {
+.toolbox-terminal-progress-box {
   width: 100%;
   height: 100%;
 }
-.toolbox-file-manager-progress-box .progress-list-box {
+.toolbox-terminal-progress-box .progress-list-box {
   width: 100%;
   height: 100%;
   user-select: text;
 }
-.toolbox-file-manager-progress-box .progress-box {
+.toolbox-terminal-progress-box .progress-box {
   display: flex;
   line-height: 20px;
   font-size: 12px;
   padding: 0px 5px;
 }
-.toolbox-file-manager-progress-box .progress-box .progress-icon {
+.toolbox-terminal-progress-box .progress-box .progress-icon {
   padding: 0px 5px;
 }
-.toolbox-file-manager-progress-box .progress-box .progress-text {
+.toolbox-terminal-progress-box .progress-box .progress-text {
   padding: 0px 5px;
   flex: 1;
 }
-.toolbox-file-manager-progress-box .progress-box .progress-size {
+.toolbox-terminal-progress-box .progress-box .progress-size {
   padding: 0px 5px;
   font-size: 12px;
 }

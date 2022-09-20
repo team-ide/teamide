@@ -524,7 +524,11 @@ source.initSession = (data) => {
         }
     }
     if (data != null) {
-        source.login.user = data.user;
+        if (data.user == null || source.login.user == null) {
+            source.login.user = data.user;
+        } else if (data.user.userId != source.login.user.userId) {
+            source.login.user = data.user;
+        }
         source.powers = data.powers || [];
         tool.setJWT(data.JWT);
     } else {

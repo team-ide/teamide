@@ -1,4 +1,4 @@
-package module_file_manager
+package module_terminal
 
 import (
 	"go.uber.org/zap"
@@ -9,50 +9,31 @@ import (
 )
 
 type Progress struct {
-	Place             string                 `json:"place"`
-	PlaceId           string                 `json:"placeId"`
-	WorkerId          string                 `json:"workerId"`
-	ProgressId        string                 `json:"progressId"`
-	StartTime         int64                  `json:"startTime"`
-	EndTime           int64                  `json:"endTime"`
-	Timestamp         int64                  `json:"timestamp"`
-	IsEnd             bool                   `json:"isEnd"`
-	Error             string                 `json:"error"`
-	Work              string                 `json:"work"`
-	Data              map[string]interface{} `json:"data"`
-	WaitActionMessage string                 `json:"waitActionMessage"`
-	WaitActionList    []*Action              `json:"waitActionList"`
-	WaitActionIng     bool                   `json:"waitActionIng"`
-	waitActionChan    chan string
+	Key            string                 `json:"key"`
+	ProgressId     string                 `json:"progressId"`
+	StartTime      int64                  `json:"startTime"`
+	EndTime        int64                  `json:"endTime"`
+	Timestamp      int64                  `json:"timestamp"`
+	IsEnd          bool                   `json:"isEnd"`
+	Error          string                 `json:"error"`
+	Work           string                 `json:"work"`
+	Data           map[string]interface{} `json:"data"`
+	WaitActionType string                 `json:"waitActionType"`
+	WaitActionIng  bool                   `json:"waitActionIng"`
+	waitActionChan chan interface{}
 }
 
-type Action struct {
-	Text  string `json:"text"`
-	Value string `json:"value"`
-	Color string `json:"color"`
-}
-
-func newAction(text, value, color string) *Action {
-	return &Action{
-		Text:  text,
-		Value: value,
-		Color: color,
-	}
-}
-
-func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Action) (action string, err error) {
-
+func (this_ *Progress) waitAction(waitActionType string) (action interface{}, err error) {
 	defer func() {
 		if err := recover(); err != nil {
 			util.Logger.Error("waitAction error", zap.Any("error", err))
 		}
 	}()
 
-	this_.waitActionChan = make(chan string)
+	this_.waitActionChan = make(chan interface{})
 	this_.WaitActionIng = true
-	this_.WaitActionMessage = waitActionMessage
-	this_.WaitActionList = waitActionList
-	context.ServerWebsocketOutEvent("file-work-progress", this_)
+	this_.WaitActionType = waitActionType
+	context.ServerWebsocketOutEvent("terminal-work-progress", this_)
 
 	action = <-this_.waitActionChan
 
@@ -68,7 +49,7 @@ func (this_ *Progress) closeCallAction() {
 	}
 }
 
-func (this_ *Progress) callAction(action string) {
+func (this_ *Progress) callAction(action interface{}) {
 	if this_.waitActionChan != nil {
 		this_.waitActionChan <- action
 	}
@@ -96,11 +77,11 @@ func getProgress(progressId string) (progress *Progress) {
 	return
 }
 
-func getProgressList(workerId string) (progressList []*Progress) {
+func getProgressList(key string) (progressList []*Progress) {
 	progressCacheLock.Lock()
 	defer progressCacheLock.Unlock()
 	for _, one := range progressCache {
-		if one.WorkerId == workerId {
+		if one.Key == key {
 			progressList = append(progressList, one)
 		}
 	}
@@ -123,13 +104,10 @@ func removeProgress(progressId string) {
 	return
 }
 
-func newProgress(workerId string, place string, placeId string, work string) (progress *Progress) {
+func newProgress(key string) (progress *Progress) {
 	var ProgressId = util.UUID()
 	progress = &Progress{}
-	progress.Place = place
-	progress.PlaceId = placeId
-	progress.WorkerId = workerId
-	progress.Work = work
+	progress.Key = key
 	progress.ProgressId = ProgressId
 	progress.StartTime = util.GetNowTime()
 	progress.Data = map[string]interface{}{}
@@ -147,11 +125,11 @@ func newProgress(workerId string, place string, placeId string, work string) (pr
 			time.Sleep(200 * time.Millisecond)
 			if progress.IsEnd {
 				progress.Timestamp = util.GetNowTime()
-				context.ServerWebsocketOutEvent("file-work-progress", progress)
+				context.ServerWebsocketOutEvent("terminal-work-progress", progress)
 				break
 			}
 			progress.Timestamp = util.GetNowTime()
-			context.ServerWebsocketOutEvent("file-work-progress", progress)
+			context.ServerWebsocketOutEvent("terminal-work-progress", progress)
 		}
 	}()
 

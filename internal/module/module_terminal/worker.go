@@ -183,6 +183,61 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 	return
 }
 
+func (this_ *worker) startSZ(key string, service terminal.Service) (err error) {
+	progress := newProgress(key)
+	progress.Data["readSize"] = 0
+	progress.Data["writeSize"] = 0
+	progress.Data["successSize"] = 0
+	defer func() { progress.end(err) }()
+
+	action, err := progress.waitAction("download")
+	if err != nil {
+		return
+	}
+
+	if action == nil {
+		return
+	}
+	writer, ok := action.(io.Writer)
+	if !ok {
+		err = errors.New("action can not to io.Writer")
+		return
+	}
+
+	_, err = writer.Write([]byte{})
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *worker) startRZ(key string, service terminal.Service) (err error) {
+	progress := newProgress(key)
+	progress.Data["readSize"] = 0
+	progress.Data["writeSize"] = 0
+	progress.Data["successSize"] = 0
+	defer func() { progress.end(err) }()
+
+	action, err := progress.waitAction("upload")
+	if err != nil {
+		return
+	}
+
+	if action == nil {
+		return
+	}
+	fileHeaders, ok := action.([]*multipart.FileHeader)
+	if !ok {
+		err = errors.New("action can not to []*multipart.FileHeader")
+		return
+	}
+	if len(fileHeaders) == 0 {
+		return
+	}
+
+	return
+}
+
 func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
 
 	defer func() {
@@ -290,6 +345,11 @@ func (this_ *worker) stopService(key string) {
 	this_.serviceCacheLock.Lock()
 	defer this_.serviceCacheLock.Unlock()
 
+	progressList := getProgressList(key)
+	for _, one := range progressList {
+		one.closeCallAction()
+	}
+
 	service := this_.serviceCache[key]
 	if service == nil {
 		return
@@ -313,4 +373,12 @@ func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Se
 	if ws != nil {
 		_ = ws.Close()
 	}
+}
+
+func (this_ *worker) CallAction(progressId string, action interface{}) (err error) {
+	progress := getProgress(progressId)
+	if progress != nil {
+		progress.callAction(action)
+	}
+	return
 }
