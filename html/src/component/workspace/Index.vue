@@ -292,12 +292,12 @@ export default {
         placeId: null,
       };
       if (place == "local") {
-        extend.title = "终端-本地";
+        extend.title = "本地";
       } else if (place == "ssh") {
-        extend.title = "终端-" + placeData.name;
+        extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.toolboxId;
       } else if (place == "node") {
-        extend.title = "终端-" + placeData.name;
+        extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.serverId;
       } else {
         this.tool.error("暂不支持该配置作为终端");
@@ -314,12 +314,12 @@ export default {
         placeId: null,
       };
       if (place == "local") {
-        extend.title = "文件管理器-本地";
+        extend.title = "本地";
       } else if (place == "ssh") {
-        extend.title = "文件管理器-" + placeData.name;
+        extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.toolboxId;
       } else if (place == "node") {
-        extend.title = "文件管理器-" + placeData.name;
+        extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.serverId;
       } else {
         this.tool.error("暂不支持该配置作为文件管理器");
@@ -419,12 +419,6 @@ export default {
         item.toolboxType = item.extend.toolboxType;
       }
 
-      if (item.toolboxType == "ssh" || item.extend.isFTP) {
-        item.extend.local = item.extend.local || {};
-        item.extend.remote = item.extend.remote || {};
-        item.extend.local.dir = item.extend.local.dir || "";
-        item.extend.remote.dir = item.extend.remote.dir || "";
-      }
       item.openId = open.openId;
       switch (item.toolboxType) {
         case "database":
@@ -443,9 +437,9 @@ export default {
           item.iconFont = "teamide-kafka";
           break;
         case "ssh":
-          item.iconFont = "teamide-ssh";
+          item.icon = "mdi-console";
           if (item.extend && item.extend.isFTP) {
-            item.iconFont = "teamide-ftp";
+            item.icon = "mdi-folder";
           }
           break;
         case "other":
@@ -454,6 +448,8 @@ export default {
           if (item.extend) {
             if (item.extend.toolboxType == "file-manager") {
               item.icon = "mdi-folder";
+            } else if (item.extend.toolboxType == "terminal") {
+              item.icon = "mdi-console";
             }
           }
       }

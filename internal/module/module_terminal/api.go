@@ -119,6 +119,7 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		Rows: rows,
 	}, ws)
 	if err != nil {
+		_ = ws.WriteMessage(websocket.BinaryMessage, []byte("start error:"+err.Error()))
 		this_.Logger.Error("websocket start error", zap.Error(err))
 		_ = ws.Close()
 		return

@@ -1,6 +1,8 @@
 package util
 
-import "io"
+import (
+	"io"
+)
 
 func Read(reader io.Reader, buf []byte, onRead func(n int) (err error)) (err error) {
 	err = ReadByFunc(reader.Read, buf, onRead)

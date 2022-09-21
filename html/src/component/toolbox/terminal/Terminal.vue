@@ -138,6 +138,9 @@ export default {
         this.worker.init();
       });
     },
+    onFocus() {
+      this.term && this.term.focus();
+    },
     refresh() {},
     onChangeOpenDir(openDir) {
       let data = this.extend || {};
@@ -204,9 +207,6 @@ export default {
     },
     hideFTP() {
       this.isShowFTP = false;
-    },
-    onFocus() {
-      this.term && this.term.focus();
     },
     onSocketData(data) {
       this.zsentry.consume(data);
@@ -332,6 +332,7 @@ export default {
       if (this.isDestroyed) {
         return;
       }
+      this.term.write("\r\n终端会话已关闭，输入回车重新连接！\r\n");
       // this.worker.refresh();
     },
     onSocketError() {},
@@ -346,11 +347,11 @@ export default {
           return;
         }
         if (this.tool.keyIsEnter(e)) {
-          this.tool.warn("终端会话连接中，输稍后！");
+          this.term.write("\r\n终端会话连接中，请稍后！\r\n");
           this.worker.refresh();
           return;
         }
-        this.term.write("终端会话已关闭，输入回车重新连接！\r\n");
+        this.term.write("\r\n终端会话已关闭，输入回车重新连接！\r\n");
 
         return;
       }

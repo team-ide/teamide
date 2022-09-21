@@ -54,6 +54,16 @@ export default {
         }
       });
     },
+    onFocus() {
+      this.$children.forEach((one) => {
+        one.onFocus && one.onFocus();
+      });
+    },
+    refresh() {
+      this.$children.forEach((one) => {
+        one.refresh && one.refresh();
+      });
+    },
     addOne(place, placeId, openDir) {
       let list = [];
       if (this.list) {
@@ -109,8 +119,6 @@ export default {
           });
         }
       });
-    },
-    refresh() {
     },
   },
   created() {},

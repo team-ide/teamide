@@ -268,10 +268,21 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
 	c.Header("download-file-name", fileInfo.Name)
 
-	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, c.Writer)
+	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, &cWriter{
+		c: c,
+	})
 	if err != nil {
 		return
 	}
 	c.Status(http.StatusOK)
+	return
+}
+
+type cWriter struct {
+	c *gin.Context
+}
+
+func (this_ *cWriter) Write(buf []byte) (n int, err error) {
+	n, err = this_.c.Writer.Write(buf)
 	return
 }

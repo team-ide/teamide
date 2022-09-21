@@ -126,5 +126,6 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 }
 
 func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
+	n, err = this_.stderr.Read(buf)
 	return
 }

@@ -30,7 +30,16 @@ export default {
   watch: {},
   methods: {
     init() {},
-    refresh() {},
+    onFocus() {
+      this.$children.forEach((one) => {
+        one.onFocus && one.onFocus();
+      });
+    },
+    refresh() {
+      this.$children.forEach((one) => {
+        one.refresh && one.refresh();
+      });
+    },
   },
   created() {},
   mounted() {
