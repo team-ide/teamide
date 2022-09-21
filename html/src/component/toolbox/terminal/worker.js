@@ -13,6 +13,7 @@ const newWorker = function (workerOption) {
         onSocketClose: workerOption.onSocketClose,
         onSocketError: workerOption.onSocketError,
         onSocketData: workerOption.onSocketData,
+        building: false,
         rows: 40,
         cols: 100,
         socket: null,
@@ -104,6 +105,16 @@ const newWorker = function (workerOption) {
         async newKey() {
             let param = worker.getParam();
             let res = await server.terminal.key(param);
+            if (res.code != 0) {
+                tool.error(res.msg);
+            }
+            return res.data;
+        },
+        async changeSize() {
+            let param = worker.getParam();
+            param.cols = Number(worker.cols)
+            param.rows = Number(worker.rows)
+            let res = await server.terminal.changeSize(param);
             if (res.code != 0) {
                 tool.error(res.msg);
             }

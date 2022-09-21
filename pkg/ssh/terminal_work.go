@@ -19,8 +19,6 @@ type terminalService struct {
 	config     *Config
 	sshClient  *ssh.Client
 	sshSession *ssh.Session
-	reader     io.Reader
-	writer     io.Writer
 	stdout     io.Reader
 	stderr     io.Reader
 	stdin      io.Writer
@@ -39,9 +37,35 @@ func (this_ *terminalService) Stop() {
 	if this_.sshClient != nil {
 		_ = this_.sshClient.Close()
 	}
+	if this_.stdout != nil {
+		if readerCloser, ok := this_.stdout.(io.ReadCloser); ok {
+			_ = readerCloser.Close()
+		}
+	}
+	if this_.stderr != nil {
+		if readerCloser, ok := this_.stderr.(io.ReadCloser); ok {
+			_ = readerCloser.Close()
+		}
+	}
+	if this_.stdin != nil {
+		if writeCloser, ok := this_.stdin.(io.WriteCloser); ok {
+			_ = writeCloser.Close()
+		}
+	}
 }
 
 func (this_ *terminalService) ChangeSize(size *terminal.Size) (err error) {
+
+	if this_.sshSession == nil {
+		return
+	}
+	if size.Cols > 0 && size.Rows > 0 {
+		err = this_.sshSession.WindowChange(size.Rows, size.Cols)
+		if err != nil {
+			util.Logger.Error("SSH Session Window Change error", zap.Error(err))
+			return
+		}
+	}
 	return
 }
 
@@ -49,13 +73,14 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 
 	this_.sshClient, err = NewClient(*this_.config)
 	if err != nil {
-		util.Logger.Error("NewClient error", zap.Error(err))
+		util.Logger.Error("SSH NewClient error", zap.Error(err))
 		return
 	}
 	util.Logger.Info("SSH NewClient success", zap.Any("address", this_.config.Address))
 	go func() {
 		err = this_.sshClient.Wait()
 		this_.Stop()
+		util.Logger.Info("SSH Client end", zap.Any("address", this_.config.Address))
 	}()
 
 	this_.sshSession, err = this_.sshClient.NewSession()

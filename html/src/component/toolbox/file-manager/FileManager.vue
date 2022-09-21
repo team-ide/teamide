@@ -292,7 +292,7 @@ export default {
       // e.preventDefault();
       if (file != null) {
         if (!file.select) {
-          this.selectFile(file);
+          this.fileWorker.selectFile(file);
         }
         let files = this.fileWorker.getSelectFiles();
 

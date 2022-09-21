@@ -340,11 +340,16 @@ export default {
       }
     },
     toolboxDataOpen(toolboxData) {
-      let extend = {};
-      if (toolboxData.toolboxType == "other") {
-        extend = this.tool.getOptionJSON(toolboxData.option);
+      if (toolboxData.toolboxType == "ssh") {
+        this.tool.openTerminal("ssh", toolboxData);
+      } else {
+        let extend = {};
+        if (toolboxData.toolboxType == "other") {
+          extend = this.tool.getOptionJSON(toolboxData.option);
+        }
+        this.openByToolboxId(toolboxData.toolboxId, extend);
       }
-      this.openByToolboxId(toolboxData.toolboxId, extend);
+
       this.hide();
     },
     dataContextmenu(toolboxType, toolboxData) {
@@ -361,6 +366,14 @@ export default {
           this.toolboxDataOpen(toolboxData);
         },
       });
+      if (toolboxData.toolboxType == "ssh") {
+        menus.push({
+          text: "文件管理器",
+          onClick: () => {
+            this.tool.openFileManager("ssh", toolboxData);
+          },
+        });
+      }
       if (this.groupList.length > 0) {
         let moveGroupMenu = {
           text: "移动分组",
@@ -426,6 +439,7 @@ export default {
         form: [this.form.toolbox, toolboxType.configForm],
         data: [toolboxData, optionsJSON],
         toolboxType,
+        groupId: copy.groupId,
       });
     },
     toUpdate(toolboxType, toolboxData) {
@@ -491,6 +505,8 @@ export default {
       toolboxData.toolboxType = toolboxType.name;
       if (config.selectGroup) {
         toolboxData.groupId = config.selectGroup.groupId;
+      } else if (config.groupId) {
+        toolboxData.groupId = config.groupId;
       }
       toolboxData.option = JSON.stringify(optionJSON);
       let res = await this.server.toolbox.insert(toolboxData);

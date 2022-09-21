@@ -5,6 +5,7 @@
       :toolboxWorker="toolboxWorker"
       :place="place"
       :placeId="placeId"
+      :extend="extend"
     >
     </Terminal>
   </div>

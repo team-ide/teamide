@@ -183,39 +183,13 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 	return
 }
 
-func (this_ *worker) startRZ(key string, service terminal.Service) (err error) {
-	progress := newProgress(key)
-	progress.Data["readSize"] = 0
-	progress.Data["writeSize"] = 0
-	progress.Data["successSize"] = 0
-	defer func() { progress.end(err) }()
-
-	action, err := progress.waitAction("upload")
-	if err != nil {
-		return
-	}
-
-	if action == nil {
-		return
-	}
-	fileHeaders, ok := action.([]*multipart.FileHeader)
-	if !ok {
-		err = errors.New("action can not to []*multipart.FileHeader")
-		return
-	}
-	if len(fileHeaders) == 0 {
-		return
-	}
-
-	return
-}
-
 func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
 
 	defer func() {
 		if e := recover(); e != nil {
 			this_.Logger.Error("startReadService error", zap.Any("error", e))
 		}
+		this_.Logger.Info("service read end", zap.Any("key", key))
 	}()
 
 	defer func() { this_.stopAll(key, ws, service) }()
@@ -231,14 +205,10 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 		}
 		//this_.Logger.Info("service on read", zap.Any("bs", string(buf[:n])))
 
-		if x, ok := ByteContains(buf[:n], ZModemSZStart); ok {
-			var rsErr error
-			n, rsErr = this_.startSZ(key, x, buf, service)
-			if rsErr != nil {
-				writeErr = rsErr
-				break
-			}
-		}
+		//n, readErr, writeErr = this_.doSZ(key, n, buf, service)
+		//if readErr != nil || writeErr != nil {
+		//	break
+		//}
 
 		if n > 0 {
 			writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
@@ -275,6 +245,7 @@ func (this_ *worker) startReadErrService(key string, isWindow bool, ws *websocke
 		if e := recover(); e != nil {
 			this_.Logger.Error("startReadErrService error", zap.Any("error", e))
 		}
+		this_.Logger.Info("service err read end", zap.Any("key", key))
 	}()
 
 	var n int
@@ -326,16 +297,12 @@ func (this_ *worker) stopService(key string) {
 	this_.serviceCacheLock.Lock()
 	defer this_.serviceCacheLock.Unlock()
 
-	progressList := getProgressList(key)
-	for _, one := range progressList {
-		one.closeCallAction()
-	}
-
 	service := this_.serviceCache[key]
 	if service == nil {
 		return
 	}
 	delete(this_.serviceCache, key)
+	this_.Logger.Info("stop service", zap.Any("key", key))
 	service.Stop()
 }
 
@@ -347,6 +314,7 @@ func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Se
 		}
 	}()
 
+	this_.Logger.Info("stopAll", zap.Any("key", key))
 	this_.stopService(key)
 	if service != nil {
 		service.Stop()
@@ -354,12 +322,4 @@ func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Se
 	if ws != nil {
 		_ = ws.Close()
 	}
-}
-
-func (this_ *worker) CallAction(progressId string, action interface{}) (err error) {
-	progress := getProgress(progressId)
-	if progress != nil {
-		progress.callAction(action)
-	}
-	return
 }

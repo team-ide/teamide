@@ -58,7 +58,10 @@
                 >
                   <MenuItem>
                     SSH
-                    <MenuSubBox slot="MenuSubBox">
+                    <MenuSubBox
+                      slot="MenuSubBox"
+                      style="max-height: 500px; overflow-y: scroll"
+                    >
                       <template v-for="(one, index) in source.sshToolboxList">
                         <MenuItem
                           :key="index"
@@ -111,7 +114,10 @@
                 >
                   <MenuItem>
                     SSH
-                    <MenuSubBox slot="MenuSubBox">
+                    <MenuSubBox
+                      slot="MenuSubBox"
+                      style="max-height: 500px; overflow-y: scroll"
+                    >
                       <template v-for="(one, index) in source.sshToolboxList">
                         <MenuItem
                           :key="index"
@@ -516,9 +522,14 @@ export default {
   created() {},
   updated() {
     this.tool.openByExtend = this.openByExtend;
+    this.tool.openTerminal = this.openTerminal;
+    this.tool.openFileManager = this.openFileManager;
   },
   mounted() {
     this.tool.openByExtend = this.openByExtend;
+    this.tool.openTerminal = this.openTerminal;
+    this.tool.openFileManager = this.openFileManager;
+
     this.init();
   },
 };
