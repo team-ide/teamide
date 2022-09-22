@@ -1,7 +1,6 @@
 import server from "@/server/index.js";
 import tool from "@/tool/index.js";
 import source from "@/source/index.js";
-import { async } from "@antv/x6/lib/registry/marker/async";
 
 const newWorker = function (workerOption) {
     workerOption = workerOption || {};
@@ -107,24 +106,28 @@ const newWorker = function (workerOption) {
                 setTimeout(() => { resolve() }, timeout)
             });
         },
-        async waitUploading() {
-            if (worker.uploadSocketSending) {
-                await this.wait(100);
-            }
-        },
-        uploadSocketSend(data) {
+        async uploadSocketSend(data) {
             if (worker.uploadSocket == null) {
-                throw new Error("uploadSocket is null.")
+                return;
             }
-            return new Promise(async (resolve, reject) => {
-                await this.waitUploading();
-                worker.uploadSocketSending = true;
-                worker.uploadSocketSendCallback = () => {
-                    delete worker.uploadSocketSendCallback
-                    delete worker.uploadSocketSending;
-                    resolve();
-                }
+            if (data.length < 200) {
                 worker.uploadSocket.send(new Uint8Array(data));
+                return;
+            }
+            console.log("send start ", data.length)
+            worker.uploadSocket.send(new Uint8Array(data));
+            let res = await this.receiveUploadMessage();
+            console.log("send end ", res)
+        },
+        receiveUploadMessage() {
+            return new Promise((resolve, reject) => {
+                if (worker.uploadSocket == null) {
+                    resolve()
+                } else {
+                    worker.uploadSocket.onmessage = (event) => {
+                        resolve(event.data)
+                    };
+                }
             });
         },
         newUploadSocket() {
@@ -137,11 +140,6 @@ const newWorker = function (workerOption) {
             worker.uploadSocket = uploadSocket;
             uploadSocket.binaryType = "arraybuffer"
             uploadSocket.onopen = () => {
-            };
-            uploadSocket.onmessage = (event) => {
-                if (worker.uploadSocketSendCallback) {
-                    worker.uploadSocketSendCallback();
-                }
             };
             uploadSocket.onclose = () => {
                 worker.uploadSocket = null;

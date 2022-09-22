@@ -303,7 +303,7 @@ export default {
           }
 
           return new Promise(function (res) {
-            var block = 1 * 1024;
+            var block = 32 * 1024;
             var fileSize = cur_b.size;
             var fileLoaded = 0;
             var reader = new FileReader();

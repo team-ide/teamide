@@ -110,7 +110,6 @@ import Progress from "../file-manager/Progress.vue";
 import Download from "./Download.vue";
 import Upload from "./Upload.vue";
 import ConfirmPaste from "./ConfirmPaste.vue";
-import { async } from "@antv/x6/lib/registry/marker/async";
 
 export default {
   components: { FileManager, Progress, Download, Upload, ConfirmPaste },

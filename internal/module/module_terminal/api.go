@@ -2,6 +2,7 @@ package module_terminal
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -172,19 +173,22 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 		var buf []byte
 		var readErr error
 		var writeErr error
+		var n int
 		for {
 			_, buf, readErr = ws.ReadMessage()
 			if readErr != nil && readErr != io.EOF {
 				break
 			}
 			//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-			_, writeErr = service.Write(buf)
+			n, writeErr = service.Write(buf)
 			if writeErr != nil {
 				break
 			}
-			writeErr = ws.WriteMessage(websocket.BinaryMessage, []byte{0})
-			if writeErr != nil {
-				break
+			if n >= 200 {
+				writeErr = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%d", n)))
+				if writeErr != nil {
+					break
+				}
 			}
 			if readErr == io.EOF {
 				readErr = nil
