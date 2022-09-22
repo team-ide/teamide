@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"sync"
 	"teamide/pkg/terminal"
 	"teamide/pkg/util"
 )
@@ -16,13 +17,16 @@ func NewTerminalService(config *Config) (res *terminalService) {
 }
 
 type terminalService struct {
-	config     *Config
-	sshClient  *ssh.Client
-	sshSession *ssh.Session
-	stdout     io.Reader
-	stderr     io.Reader
-	stdin      io.Writer
-	onClose    func()
+	config       *Config
+	sshClient    *ssh.Client
+	sshSession   *ssh.Session
+	stdout       io.Reader
+	stderr       io.Reader
+	stdin        io.Writer
+	onClose      func()
+	readeLock    sync.Mutex
+	readeErrLock sync.Mutex
+	writeLock    sync.Mutex
 }
 
 func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
@@ -116,16 +120,26 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 }
 
 func (this_ *terminalService) Write(buf []byte) (n int, err error) {
-	n, err = this_.stdin.Write(buf)
+	this_.writeLock.Lock()
+	defer this_.writeLock.Unlock()
+
+	n = len(buf)
+	err = util.Write(this_.stdin, buf, nil)
 	return
 }
 
 func (this_ *terminalService) Read(buf []byte) (n int, err error) {
+	this_.readeLock.Lock()
+	defer this_.readeLock.Unlock()
+
 	n, err = this_.stdout.Read(buf)
 	return
 }
 
 func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
+	this_.readeErrLock.Lock()
+	defer this_.readeErrLock.Unlock()
+
 	n, err = this_.stderr.Read(buf)
 	return
 }

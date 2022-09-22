@@ -39,25 +39,25 @@
 import Zmodem from "zmodem.js";
 export default {
   components: {},
-  props: ["source", "toolboxWorker"],
+  props: ["source", "toolboxWorker", "worker"],
   data() {
     return {
       showDialog: false,
-      isSuccess: false,
+      isFileSelect: false,
     };
   },
   computed: {},
   watch: {},
   methods: {
     show(zsession, term, callback) {
-      this.isSuccess = false;
+      this.isFileSelect = false;
       this.zsession = zsession;
       this.term = term;
       this.callback = callback;
       this.showDialog = true;
     },
     hide() {
-      if (!this.isSuccess) {
+      if (!this.isFileSelect) {
         // this.tool
         //   .confirm("是否取消上传？")
         //   .then(async () => {
@@ -75,6 +75,7 @@ export default {
       this.callback && this.callback();
     },
     onCancel() {
+      this.term.write("\r\n取消上传\r\n");
       this.tool.warn("取消上传");
       // zsession 每 5s 发送一个 ZACK 包，5s 后会出现提示最后一个包是 ”ZACK“ 无法正常关闭
       // 这里直接设置 _last_header_name 为 ZRINIT，就可以强制关闭了
@@ -92,7 +93,7 @@ export default {
       this.doUpload(upload.files);
     },
     doUpload(files) {
-      this.isSuccess = true;
+      this.isFileSelect = true;
       this.showDialog = false;
 
       this.send_block_files(this.zsession, files, {
@@ -132,10 +133,7 @@ export default {
           }
         },
       })
-        .then(
-          this.zsession.close.bind(this.zsession),
-          console.error.bind(console)
-        )
+        .then(this.zsession.close.bind(this.zsession))
         .then(() => {
           // res();
         });
@@ -222,13 +220,14 @@ export default {
       const value = (bytes / Math.pow(1024, Math.floor(num))).toFixed(
         precision
       );
-      return `${value} ${units[num]}`;
+      let res = `${value} ${units[num]}`;
+      let fSize = 10 - res.length;
+      for (let i = 0; i < fSize; i++) {
+        res = " " + res;
+      }
+      return res;
     },
     updateProgress(xfer) {
-      if (this.updateProgressing) {
-        return;
-      }
-      this.updateProgressing = true;
       let detail = xfer.get_details();
       let name = detail.name;
       let total = detail.size;
@@ -238,7 +237,12 @@ export default {
       if (total === 0 || total <= offset) {
         percent = 100;
       } else {
-        percent = Math.round((offset / total) * 100);
+        percent = ((offset / total) * 100).toFixed(2);
+      }
+      let percentStr = "" + percent;
+      let fSize = 10 - percentStr.length;
+      for (let i = 0; i < fSize; i++) {
+        percentStr = " " + percentStr;
       }
       this.term.write(
         "\r" +
@@ -253,18 +257,9 @@ export default {
           " " +
           this.bytesHuman(offset) +
           " " +
-          percent +
-          "% "
+          percentStr +
+          "%"
       );
-
-      if (percent < 100) {
-        window.setTimeout(() => {
-          this.updateProgressing = false;
-          this.updateProgress(xfer);
-        }, 100);
-      } else {
-        this.updateProgressing = false;
-      }
     },
     send_block_files(session, files, options) {
       if (!options) options = {};
@@ -298,7 +293,7 @@ export default {
 
         file_idx++;
 
-        return session.send_offer(cur_b).then(function after_send_offer(xfer) {
+        return session.send_offer(cur_b).then((xfer) => {
           if (options.on_offer_response) {
             options.on_offer_response(cur_b.obj, xfer);
           }
@@ -308,7 +303,7 @@ export default {
           }
 
           return new Promise(function (res) {
-            var block = 1024 * 1024;
+            var block = 1 * 1024;
             var fileSize = cur_b.size;
             var fileLoaded = 0;
             var reader = new FileReader();
@@ -336,12 +331,12 @@ export default {
               fileLoaded += e.total;
               if (fileLoaded < fileSize) {
                 if (e.target.result) {
-                  piece = new Uint8Array(e.target.result);
                   if (session.aborted()) {
                     throw new Zmodem.Error("aborted");
                   }
+                  piece = new Uint8Array(e.target.result);
                   xfer.send(piece);
-                  if (options.on_progress) {
+                  if (options.on_progress && piece.length) {
                     options.on_progress(cur_b.obj, xfer, piece);
                   }
                 }

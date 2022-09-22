@@ -1,6 +1,7 @@
 import server from "@/server/index.js";
 import tool from "@/tool/index.js";
 import source from "@/source/index.js";
+import { async } from "@antv/x6/lib/registry/marker/async";
 
 const newWorker = function (workerOption) {
     workerOption = workerOption || {};
@@ -17,6 +18,7 @@ const newWorker = function (workerOption) {
         rows: 40,
         cols: 100,
         socket: null,
+        uploadSocket: null,
         init() {
             this.build()
         },
@@ -30,7 +32,7 @@ const newWorker = function (workerOption) {
             this.building = true
             if (tool.isNotEmpty(this.key)) {
                 if (worker.socket != null) {
-                    worker.socket.close();
+                    worker.closeSocket();
                 }
                 await this.close();
             }
@@ -53,10 +55,16 @@ const newWorker = function (workerOption) {
                 worker.socket.send(new Uint8Array(data));
             }
         },
-        newSocket() {
+        closeSocket() {
             if (worker.socket != null) {
                 worker.socket.close();
             }
+            if (worker.uploadSocket != null) {
+                worker.uploadSocket.close();
+            }
+        },
+        newSocket() {
+            this.closeSocket();
             let url = source.api;
             url = url.substring(url.indexOf(":"));
             url = "ws" + url + "api/terminal/websocket";
@@ -77,7 +85,7 @@ const newWorker = function (workerOption) {
                 // socket.binaryType = "blob"
 
             }
-            worker.socket.onopen = () => {
+            socket.onopen = () => {
                 worker.onSocketOpen();
                 this.building = false
             };
@@ -91,6 +99,54 @@ const newWorker = function (workerOption) {
             };
             socket.onerror = () => {
                 worker.onSocketError();
+            };
+            this.newUploadSocket();
+        },
+        wait(timeout) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => { resolve() }, timeout)
+            });
+        },
+        async waitUploading() {
+            if (worker.uploadSocketSending) {
+                await this.wait(100);
+            }
+        },
+        uploadSocketSend(data) {
+            if (worker.uploadSocket == null) {
+                throw new Error("uploadSocket is null.")
+            }
+            return new Promise(async (resolve, reject) => {
+                await this.waitUploading();
+                worker.uploadSocketSending = true;
+                worker.uploadSocketSendCallback = () => {
+                    delete worker.uploadSocketSendCallback
+                    delete worker.uploadSocketSending;
+                    resolve();
+                }
+                worker.uploadSocket.send(new Uint8Array(data));
+            });
+        },
+        newUploadSocket() {
+            let url = source.api;
+            url = url.substring(url.indexOf(":"));
+            url = "ws" + url + "api/terminal/uploadWebsocket";
+            url += "?key=" + encodeURIComponent(worker.key);
+            url += "&jwt=" + encodeURIComponent(tool.getJWT());
+            let uploadSocket = new WebSocket(url);
+            worker.uploadSocket = uploadSocket;
+            uploadSocket.binaryType = "arraybuffer"
+            uploadSocket.onopen = () => {
+            };
+            uploadSocket.onmessage = (event) => {
+                if (worker.uploadSocketSendCallback) {
+                    worker.uploadSocketSendCallback();
+                }
+            };
+            uploadSocket.onclose = () => {
+                worker.uploadSocket = null;
+            };
+            uploadSocket.onerror = () => {
             };
         },
         getParam() {

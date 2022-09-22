@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"io"
-	"mime/multipart"
 	"strconv"
 	"sync"
 	"teamide/internal/context"
@@ -17,32 +16,26 @@ import (
 
 func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
 	return &worker{
-		ServerContext:        toolboxService_.ServerContext,
-		toolboxService:       toolboxService_,
-		nodeService:          nodeService_,
-		serviceCache:         make(map[string]terminal.Service),
-		fileHeadersChanCache: make(map[string]chan []*multipart.FileHeader),
-		writerChanCache:      make(map[string]chan io.Writer),
+		ServerContext:  toolboxService_.ServerContext,
+		toolboxService: toolboxService_,
+		nodeService:    nodeService_,
+		serviceCache:   make(map[string]terminal.Service),
 	}
 }
 
 type worker struct {
 	*context.ServerContext
-	toolboxService           *module_toolbox.ToolboxService
-	nodeService              *module_node.NodeService
-	serviceCache             map[string]terminal.Service
-	serviceCacheLock         sync.Mutex
-	fileHeadersChanCache     map[string]chan []*multipart.FileHeader
-	fileHeadersChanCacheLock sync.Mutex
-	writerChanCache          map[string]chan io.Writer
-	writerChanCacheLock      sync.Mutex
+	toolboxService   *module_toolbox.ToolboxService
+	nodeService      *module_node.NodeService
+	serviceCache     map[string]terminal.Service
+	serviceCacheLock sync.Mutex
 }
 
-func (this_ *worker) GetService(key string) (service terminal.Service) {
+func (this_ *worker) GetService(key string) (res terminal.Service) {
 	this_.serviceCacheLock.Lock()
 	defer this_.serviceCacheLock.Unlock()
 
-	service = this_.serviceCache[key]
+	res = this_.serviceCache[key]
 	return
 }
 
@@ -143,20 +136,18 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 
 	defer func() { this_.stopAll(key, ws, service) }()
 
-	var messageType int
 	var buf []byte
 	var readErr error
 	var writeErr error
 	for {
-		messageType, buf, readErr = ws.ReadMessage()
+		_, buf, readErr = ws.ReadMessage()
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
-		if messageType == websocket.BinaryMessage {
-
-		}
 		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
+
 		_, writeErr = service.Write(buf)
+
 		if writeErr != nil {
 			break
 		}

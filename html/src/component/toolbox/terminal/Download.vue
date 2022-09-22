@@ -60,7 +60,12 @@ export default {
       const value = (bytes / Math.pow(1024, Math.floor(num))).toFixed(
         precision
       );
-      return `${value} ${units[num]}`;
+      let res = `${value} ${units[num]}`;
+      let fSize = 10 - res.length;
+      for (let i = 0; i < fSize; i++) {
+        res = " " + res;
+      }
+      return res;
     },
     updateProgress(xfer) {
       let detail = xfer.get_details();
@@ -71,19 +76,24 @@ export default {
       if (total === 0 || total === offset) {
         percent = 100;
       } else {
-        percent = Math.round((offset / total) * 100);
+        percent = ((offset / total) * 100).toFixed(2);
+      }
+      let percentStr = "" + percent;
+      let fSize = 10 - percentStr.length;
+      for (let i = 0; i < fSize; i++) {
+        percentStr = " " + percentStr;
       }
       this.term.write(
         "\r" +
           "下载文件" +
           name +
           " " +
-          this.bytesHuman(offset) +
-          " " +
           this.bytesHuman(total) +
           " " +
-          percent +
-          "% "
+          this.bytesHuman(offset) +
+          " " +
+          percentStr +
+          "%"
       );
     },
     saveFile(xfer, buffer) {

@@ -82,7 +82,11 @@
       </div>
     </template>
     <Download :source="source" :toolboxWorker="toolboxWorker"></Download>
-    <Upload :source="source" :toolboxWorker="toolboxWorker"></Upload>
+    <Upload
+      :source="source"
+      :toolboxWorker="toolboxWorker"
+      :worker="worker"
+    ></Upload>
     <ConfirmPaste
       :source="source"
       :toolboxWorker="toolboxWorker"
@@ -106,6 +110,7 @@ import Progress from "../file-manager/Progress.vue";
 import Download from "./Download.vue";
 import Upload from "./Upload.vue";
 import ConfirmPaste from "./ConfirmPaste.vue";
+import { async } from "@antv/x6/lib/registry/marker/async";
 
 export default {
   components: { FileManager, Progress, Download, Upload, ConfirmPaste },
@@ -209,7 +214,14 @@ export default {
       this.isShowFTP = false;
     },
     onSocketData(data) {
-      this.zsentry.consume(data);
+      try {
+        this.zsentry.consume(data);
+      } catch (e) {
+        this.term.write("\r\nzsentry consume error:" + e);
+        this.term.write("\r\n关闭当前会话");
+        this.zsentry = this.NewSentry();
+        this.worker.closeSocket();
+      }
       // if (typeof data === "string") {
       //   this.term.write(data);
       // } else {
@@ -263,30 +275,7 @@ export default {
         }
       });
 
-      this.zsentry = new Zmodem.Sentry({
-        //发送终端
-        to_terminal: (octets) => {
-          this.term.write(new Uint8Array(octets));
-        },
-        // 属于 Zmodem 相关流
-        on_detect: (detection) => {
-          let zsession = detection.confirm();
-          if (zsession.type === "receive") {
-            this.toolboxWorker.showDownload(zsession, this.term, () => {
-              this.onFocus();
-            });
-          } else {
-            this.toolboxWorker.showUpload(zsession, this.term, () => {
-              this.onFocus();
-            });
-          }
-        },
-        // 撤回
-        on_retract: () => {},
-        sender: (octets) => {
-          this.worker.socket.send(new Uint8Array(octets));
-        },
-      });
+      this.zsentry = this.NewSentry();
 
       this.terminal_back_width = this.tool
         .jQuery(this.$refs.terminalXtermBoxBack)
@@ -317,6 +306,33 @@ export default {
       );
 
       this.changeSizeTimer();
+    },
+    NewSentry() {
+      let worker = this.worker;
+      return new Zmodem.Sentry({
+        //发送终端
+        to_terminal: (octets) => {
+          this.term.write(octets);
+        },
+        // 属于 Zmodem 相关流
+        on_detect: (detection) => {
+          let zsession = detection.confirm();
+          if (zsession.type === "receive") {
+            this.toolboxWorker.showDownload(zsession, this.term, () => {
+              this.onFocus();
+            });
+          } else {
+            this.toolboxWorker.showUpload(zsession, this.term, () => {
+              this.onFocus();
+            });
+          }
+        },
+        // 撤回
+        on_retract: () => {},
+        sender: async (octets) => {
+          await worker.uploadSocketSend(octets);
+        },
+      });
     },
     checkIsExit(data) {
       if (this.worker.socket == null) {
