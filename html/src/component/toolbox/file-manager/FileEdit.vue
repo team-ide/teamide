@@ -1,42 +1,59 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="`编辑文件：${path}`"
+    :title="`文件：${path}`"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
     :append-to-body="true"
     :visible="showDialog"
     :before-close="hide"
-    width="1200px"
+    :fullscreen="true"
+    width="96%"
+    custom-class="toolbox-file-manager-edit-file-dialog"
+    :destroy-on-close="true"
   >
-    <div class="mgt--20 toolbox-file-manager-edit-file">
-      <template v-if="error != null">
-        <div class="bg-red ft-12 pd-5">{{ error }}</div>
+    <div class="toolbox-file-manager-edit-file" v-loading="loading">
+      <template v-if="isImage">
+        <el-image
+          style="width: 100%; height: 100%"
+          :src="openUrl"
+          fit="scale-down"
+        ></el-image>
       </template>
+      <template v-else-if="isVideo">
+        <video :src="openUrl" controls width="100%">
+          您的浏览器不支持 video 标签。 Internet Explorer 9+, Firefox, Opera,
+          Chrome 以及 Safari 支持 video 标签。
+        </video>
+      </template>
+
       <template v-else>
-        <textarea
-          v-model="text"
-          class="toolbox-file-manager-edit-file-textarea"
-        >
-        </textarea>
+        <div class="teamide-editor-box">
+          <Editor
+            ref="Editor"
+            :source="source"
+            :value="text"
+            :language="language"
+          ></Editor>
+        </div>
+        <div class="pdt-10 pdl-10">
+          <div
+            class="tm-btn bg-green ft-13"
+            @click="toSave"
+            :class="{ 'tm-disabled': saveIng }"
+          >
+            保存
+          </div>
+          <div
+            class="tm-btn bg-grey ft-13"
+            @click="hide"
+            :class="{ 'tm-disabled': saveIng }"
+          >
+            关闭
+          </div>
+        </div>
       </template>
-      <div class="pdtb-10">
-        <div
-          class="tm-btn bg-green ft-13"
-          @click="toSave"
-          :class="{ 'tm-disabled': saveIng }"
-        >
-          保存
-        </div>
-        <div
-          class="tm-btn bg-grey ft-13"
-          @click="hide"
-          :class="{ 'tm-disabled': saveIng }"
-        >
-          关闭
-        </div>
-      </div>
     </div>
   </el-dialog>
 </template>
@@ -49,36 +66,92 @@ export default {
     return {
       showDialog: false,
       path: null,
-      text: null,
-      error: null,
       saveIng: false,
+      loading: false,
+      isImage: false,
+      isVideo: false,
+      language: "txt",
+      openUrl: null,
+      text: null,
     };
   },
   computed: {},
   watch: {},
   methods: {
-    async show(file) {
-      this.file = file;
-      this.path = file.path;
-      await this.toLoad();
-      this.showDialog = true;
-    },
-    hide() {
-      this.showDialog = false;
-    },
-    async toLoad() {
-      this.error = null;
-      this.text = null;
-      let res = await this.fileWorker.read(this.path);
-      if (res.code != 0) {
-        this.error = res.msg || res.error;
+    show(file) {
+      if (file == null || file.name == null) {
+        this.tool.error("文件不存在");
         return;
       }
-      this.text = res.data;
+      let name = file.name;
+      this.type = null;
+      if (name.lastIndexOf(".") > 0 && name.lastIndexOf(".") < name.length) {
+        this.type = name.substring(name.lastIndexOf(".") + 1);
+      }
+      this.language = this.type;
+      this.isImage = this.tool.isImageByType(this.type);
+      this.isVideo = this.tool.isVideoByType(this.type);
+      this.file = file;
+      this.path = file.path;
+
+      if (this.isImage) {
+        this.openUrl = this.getFileOpenUrl();
+        this.showDialog = true;
+      } else if (this.isVideo) {
+        this.openUrl = this.getFileOpenUrl();
+        this.showDialog = true;
+      } else {
+        this.toLoad();
+      }
+    },
+    getFileOpenUrl() {
+      let url = this.source.api + "file_manager/open?";
+      url += "workerId=" + (this.fileWorker.workerId || "");
+      url += "&jwt=" + encodeURIComponent(this.tool.getJWT());
+      url += "&fileWorkerKey=" + (this.fileWorker.fileWorkerKey || "");
+      url += "&place=" + (this.fileWorker.place || "");
+      url += "&placeId=" + (this.fileWorker.placeId || "");
+      url += "&path=" + encodeURIComponent(this.path);
+      return url;
+    },
+    hide() {
+      this.openUrl = null;
+      this.showDialog = false;
+    },
+    async toLoad(force) {
+      try {
+        this.loading = true;
+        let res = await this.fileWorker.read(this.path, force);
+        if (res.code != 0) {
+          if (res.code == 5001) {
+            this.tool
+              .confirm("文件过大，是否打开？")
+              .then(() => {
+                this.toLoad(true);
+              })
+              .catch((e) => {
+                this.showDialog = false;
+              });
+          } else {
+            this.tool.error(res.msg || res.error);
+          }
+        } else {
+          this.showDialog = true;
+          let data = res.data || {};
+          this.$nextTick(() => {
+            this.$refs.Editor && this.$refs.Editor.setValue(data.text);
+          });
+        }
+      } catch (e) {}
+      this.loading = false;
     },
     async toSave() {
+      if (this.$refs.Editor == null) {
+        return;
+      }
       this.saveIng = true;
-      let res = await this.fileWorker.write(this.path, this.text);
+      let text = this.$refs.Editor.getValue();
+      let res = await this.fileWorker.write(this.path, text);
       if (res.code == 0) {
         this.tool.success("保存成功!");
       } else {
@@ -96,17 +169,34 @@ export default {
 </script>
 
 <style>
-.toolbox-file-manager-edit-file-textarea {
+.toolbox-file-manager-edit-file-dialog {
+  background-color: #3c3c3c;
+  color: white;
+  user-select: text;
+}
+.toolbox-file-manager-edit-file-dialog .el-dialog__header {
+  padding: 10px 20px 10px;
+}
+.toolbox-file-manager-edit-file-dialog .el-dialog__header .el-dialog__title {
+  color: white;
+}
+.toolbox-file-manager-edit-file-dialog
+  .el-dialog__header
+  .el-dialog__headerbtn {
+  top: 15px;
+  right: 15px;
+}
+.toolbox-file-manager-edit-file-dialog .el-dialog__body {
+  height: calc(100% - 44px);
+  padding: 0px;
+  overflow: hidden;
+}
+.toolbox-file-manager-edit-file {
+  height: 100%;
   width: 100%;
-  height: 500px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  padding: 0px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
+}
+.toolbox-file-manager-edit-file .teamide-editor-box {
+  height: calc(100% - 50px);
+  width: 100%;
 }
 </style>

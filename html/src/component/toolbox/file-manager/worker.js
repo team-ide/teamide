@@ -373,9 +373,10 @@ const newWorker = function (workerOption) {
             }
             return res.data;
         },
-        async read(path) {
+        async read(path, force) {
             let param = worker.getParam();
             param.path = path
+            param.force = force
             let res = await server.fileManager.read(param);
             return res;
         },

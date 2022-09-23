@@ -17,7 +17,7 @@
       <tm-layout height="30px">
         <div class="pdt-2 pdlr-10">
           <div class="ft-12 tm-link color-grey mglr-5" @click="openFtpWindow()">
-            FTP
+            文件管理器
           </div>
         </div>
       </tm-layout>

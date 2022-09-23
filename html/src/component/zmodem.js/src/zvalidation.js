@@ -7,7 +7,7 @@ Object.assign(
     require("./zerror")
 );
 
-const LOOKS_LIKE_ZMODEM_HEADER = /\*\x18[AC]|\*\*\x18B/;
+const LOOKS_LIKE_ZMODEM_HEADER = /\*\x18[AC]|\*\*\x18B/;// eslint-disable-line
 
 function _validate_number(key, value) {
     if (value < 0) {

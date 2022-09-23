@@ -245,7 +245,7 @@ export default {
         });
         if (!files[0].isDir) {
           menus.push({
-            text: "在线编辑",
+            text: "打开",
             onClick: () => {
               this.openFile(files[0]);
             },

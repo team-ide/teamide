@@ -51,7 +51,8 @@
     },
     "rules": {
       "no-unused-vars": "off",
-      "no-empty": "off"
+      "no-empty": "off",
+      "semi": 0
     }
   },
   "browserslist": [

@@ -42,6 +42,7 @@ var (
 	PowerDownload   = base.AppendPower(&base.PowerAction{Action: "file_manager_download", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerClose      = base.AppendPower(&base.PowerAction{Action: "file_manager_close", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "工具", ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -59,6 +60,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/download"}, Power: PowerDownload, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/close"}, Power: PowerClose, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/open"}, Power: PowerDownload, Do: this_.open, IsGet: true})
 	return
 }
 
@@ -78,6 +80,7 @@ type FileRequest struct {
 	Text          string `json:"text,omitempty"`
 	ProgressId    string `json:"progressId,omitempty"`
 	Action        string `json:"action,omitempty"`
+	Force         bool   `json:"force,omitempty"`
 }
 
 func (this_ *api) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
@@ -131,13 +134,34 @@ func (this_ *api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 		return
 	}
 
+	response := map[string]interface{}{}
+	res = response
+
+	fileInfo, err := this_.File(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path)
+	if err != nil {
+		return
+	}
+	response["path"] = request.Path
+	response["file"] = fileInfo
+	if fileInfo.IsDir {
+		err = errors.New("路径[" + request.Path + "]为目录，无法打开!")
+		return
+	}
+	if !request.Force {
+		if fileInfo.Size > 10*1024*1024 {
+			err = base.NewBaseError(base.FileSizeOversizeErrCode, "文件过大[", fileInfo.Size, "]，无法打开!")
+			return
+		}
+	}
+
 	writer := &bytes2.Buffer{}
 	_, err = this_.Read(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path, writer)
 	if err != nil {
 		return
 	}
 	if writer.Len() > 0 {
-		res = writer.String()
+		bytes := writer.Bytes()
+		response["text"] = string(bytes)
 	}
 	return
 }
@@ -284,5 +308,39 @@ type cWriter struct {
 
 func (this_ *cWriter) Write(buf []byte) (n int, err error) {
 	n, err = this_.c.Writer.Write(buf)
+	return
+}
+
+func (this_ *api) open(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	res = base.HttpNotResponse
+	defer func() {
+		if err != nil {
+			_, _ = c.Writer.WriteString(err.Error())
+		}
+	}()
+
+	data := map[string]string{}
+
+	err = c.Bind(&data)
+	if err != nil {
+		return
+	}
+
+	workerId := data["workerId"]
+	fileWorkerKey := data["fileWorkerKey"]
+	place := data["place"]
+	placeId := data["placeId"]
+	path := data["path"]
+
+	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, &cWriter{
+		c: c,
+	})
+	if err != nil {
+		return
+	}
+	c.Status(http.StatusOK)
 	return
 }

@@ -116,6 +116,20 @@ tool.isWorkspacePage = function (path) {
     }
     return false;
 };
+var imageTypes = ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'psd', 'svg', 'tiff'];
+tool.isImageByType = function (type) {
+    if (tool.isEmpty(type)) {
+        return false;
+    }
+    return imageTypes.indexOf(type.toLowerCase()) !== -1;
+};
+var videoTypes = ["avi", "wmv", "mpg", "mpeg", "mov", "rm", "ram", "swf", "flv", "mp4", "mp3", "wma", "avi", "rm", "rmvb", "flv", "mpg", "mkv"];
+tool.isVideoByType = function (type) {
+    if (tool.isEmpty(type)) {
+        return false;
+    }
+    return videoTypes.indexOf(type.toLowerCase()) !== -1;
+};
 tool.toLogin = function () {
     tool.hideRegister();
     source.login.remove = false;

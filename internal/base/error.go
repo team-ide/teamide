@@ -19,9 +19,10 @@ var (
 )
 
 const (
-	shouldLoginErrCode = "100"
-	noPowerErrCode     = "101"
-	validateErrCode    = "200"
+	shouldLoginErrCode      = "100"
+	noPowerErrCode          = "101"
+	validateErrCode         = "200"
+	FileSizeOversizeErrCode = "5001"
 )
 
 var (

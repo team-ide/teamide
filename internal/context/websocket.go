@@ -3,7 +3,9 @@ package context
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 	"sync"
+	"teamide/pkg/util"
 )
 
 var (
@@ -45,10 +47,19 @@ func initServerWebsocket() {
 				} else {
 					list = GetServerWebsocketList()
 				}
-				bs, _ := json.Marshal(msg)
-				for _, one := range list {
-					one.WSWriteText(bs)
-				}
+				go func() {
+
+					defer func() {
+						if e := recover(); e != nil {
+							util.Logger.Error("WSWriteText error", zap.Any("error", e))
+						}
+					}()
+
+					bs, _ := json.Marshal(msg)
+					for _, one := range list {
+						one.WSWriteText(bs)
+					}
+				}()
 			}
 
 		}
