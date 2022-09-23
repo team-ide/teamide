@@ -98,7 +98,7 @@
 <script>
 import _worker from "./worker.js";
 import "xterm/css/xterm.css";
-import Zmodem from "zmodem.js";
+import Zmodem from "@/component/zmodem.js";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 // import { AttachAddon } from "xterm-addon-attach";
@@ -216,6 +216,11 @@ export default {
       try {
         this.zsentry.consume(data);
       } catch (e) {
+        try {
+          if (this.last_session) {
+            this.last_session.close();
+          }
+        } catch (e) {}
         this.term.write("\r\nzsentry consume error:" + e);
         this.term.write("\r\n关闭当前会话");
         this.zsentry = this.NewSentry();
@@ -316,15 +321,25 @@ export default {
         // 属于 Zmodem 相关流
         on_detect: (detection) => {
           let zsession = detection.confirm();
+          this.last_session = zsession;
+          this.worker.isUploading = false;
+          this.worker.isDownloading = false;
           if (zsession.type === "receive") {
+            this.worker.isDownloading = true;
             this.toolboxWorker.showDownload(zsession, this.term, () => {
               this.onFocus();
             });
           } else {
+            this.worker.isUploading = true;
             this.toolboxWorker.showUpload(zsession, this.term, () => {
               this.onFocus();
             });
           }
+          zsession.on("session_end", () => {
+            this.worker.isUploading = false;
+            this.worker.isDownloading = false;
+            delete this.last_session;
+          });
         },
         // 撤回
         on_retract: () => {},
@@ -375,6 +390,15 @@ export default {
       } else if (this.tool.keyIsCtrlV(e)) {
         this.doEventPaste();
       }
+    },
+    initNextHeaderHandler(session) {
+      // session._next_header_handler = session._next_header_handler || {};
+      // session._next_header_handler["ZRPOS"] = () => {
+      //   this.initNextHeaderHandler(session);
+      // };
+      // session._next_header_handler["ZRPOS_HEADER"] = () => {
+      //   this.initNextHeaderHandler(session);
+      // };
     },
     async doEventCopy() {
       let copiedText = this.term.getSelection();

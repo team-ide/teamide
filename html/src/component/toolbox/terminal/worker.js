@@ -18,6 +18,8 @@ const newWorker = function (workerOption) {
         cols: 100,
         socket: null,
         uploadSocket: null,
+        isUploading: false,
+        isDownloading: false,
         init() {
             this.build()
         },
@@ -63,6 +65,9 @@ const newWorker = function (workerOption) {
             }
         },
         newSocket() {
+
+            this.isUploading = false;
+            this.isDownloading = false;
             this.closeSocket();
             let url = source.api;
             url = url.substring(url.indexOf(":"));
@@ -114,10 +119,10 @@ const newWorker = function (workerOption) {
                 worker.uploadSocket.send(new Uint8Array(data));
                 return;
             }
-            console.log("send start ", data.length)
+            // console.log("send start ", data.length)
             worker.uploadSocket.send(new Uint8Array(data));
             let res = await this.receiveUploadMessage();
-            console.log("send end ", res)
+            // console.log("send end ", res)
         },
         receiveUploadMessage() {
             return new Promise((resolve, reject) => {

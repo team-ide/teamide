@@ -23,15 +23,19 @@ export default {
       let that = this;
       that.zsession.on("offer", function (xfer) {
         function on_form_submit() {
-          if (xfer.get_details().size > 20 * 1024 * 1024 * 1024) {
-            xfer.skip();
-            that.tool.warn(`${xfer.get_details().name} 超过 20 G, 无法下载`);
-            return;
-          }
+          // if (xfer.get_details().size > 20 * 1024 * 1024 * 1024) {
+          //   xfer.skip();
+          //   that.tool.warn(`${xfer.get_details().name} 超过 20 G, 无法下载`);
+          //   return;
+          // }
+          xfer.startTime = new Date().getTime();
           let FILE_BUFFER = [];
-          xfer.on("input", (payload) => {
+          xfer.on("input", async (payload) => {
             that.updateProgress(xfer);
-            FILE_BUFFER.push(new Uint8Array(payload));
+            await new Promise((resolve, reject) => {
+              FILE_BUFFER.push(new Uint8Array(payload));
+              resolve();
+            });
           });
 
           xfer.accept().then(() => {
@@ -83,6 +87,14 @@ export default {
       for (let i = 0; i < fSize; i++) {
         percentStr = " " + percentStr;
       }
+
+      let sleep = 0;
+      let nowTime = new Date().getTime();
+      let startTime = xfer.startTime;
+      if (nowTime - startTime > 0) {
+        sleep = ((offset * 1000) / (nowTime - startTime)).toFixed(2);
+      }
+
       this.term.write(
         "\r" +
           "下载文件" +
@@ -92,22 +104,28 @@ export default {
           " " +
           this.bytesHuman(offset) +
           " " +
+          this.bytesHuman(sleep) +
+          "/s " +
           percentStr +
           "%"
       );
     },
     saveFile(xfer, buffer) {
       let name = xfer.get_details().name;
-
-      let blob = new Blob(buffer, { type: "application/octet-stream" });
-      let downloadElement = document.createElement("a");
-      let href = window.URL.createObjectURL(blob); //创建下载的链接
-      downloadElement.href = href;
-      downloadElement.download = name; //下载后文件名
-      document.body.appendChild(downloadElement);
-      downloadElement.click(); //点击下载
-      document.body.removeChild(downloadElement); //下载完成移除元素
-      window.URL.revokeObjectURL(href); //释放blob对象
+      let href = null;
+      try {
+        let blob = new Blob(buffer, { type: "application/octet-stream" });
+        let downloadElement = document.createElement("a");
+        href = window.URL.createObjectURL(blob); //创建下载的链接
+        downloadElement.href = href;
+        downloadElement.download = name; //下载后文件名
+        document.body.appendChild(downloadElement);
+        downloadElement.click(); //点击下载
+        document.body.removeChild(downloadElement); //下载完成移除元素
+      } catch (e) {}
+      if (href != null) {
+        window.URL.revokeObjectURL(href); //释放blob对象
+      }
       this.callback && this.callback();
     },
   },

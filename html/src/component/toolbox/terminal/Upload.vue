@@ -244,6 +244,12 @@ export default {
       for (let i = 0; i < fSize; i++) {
         percentStr = " " + percentStr;
       }
+      let sleep = 0;
+      let nowTime = new Date().getTime();
+      let startTime = xfer._file_info.startTime;
+      if (nowTime - startTime > 0) {
+        sleep = ((offset * 1000) / (nowTime - startTime)).toFixed(2);
+      }
       this.term.write(
         "\r" +
           "上传文件(" +
@@ -257,6 +263,8 @@ export default {
           " " +
           this.bytesHuman(offset) +
           " " +
+          this.bytesHuman(sleep) +
+          "/s " +
           percentStr +
           "%"
       );
@@ -280,6 +288,7 @@ export default {
           mtime: new Date(fobj.lastModified),
           files_remaining: files.length - f,
           bytes_remaining: total_size,
+          startTime: new Date().getTime(),
         };
       }
 
@@ -303,7 +312,7 @@ export default {
           }
 
           return new Promise(function (res) {
-            var block = 32 * 1024;
+            var block = 1024 * 1024;
             var fileSize = cur_b.size;
             var fileLoaded = 0;
             var reader = new FileReader();
@@ -327,7 +336,7 @@ export default {
               reader.readAsArrayBuffer(blob);
             }
             var piece;
-            reader.onload = function reader_onload(e) {
+            reader.onload = async function reader_onload(e) {
               fileLoaded += e.total;
               if (fileLoaded < fileSize) {
                 if (e.target.result) {
@@ -335,7 +344,7 @@ export default {
                     throw new Zmodem.Error("aborted");
                   }
                   piece = new Uint8Array(e.target.result);
-                  xfer.send(piece);
+                  await xfer.send(piece);
                   if (options.on_progress && piece.length) {
                     options.on_progress(cur_b.obj, xfer, piece);
                   }
