@@ -7,7 +7,7 @@ Object.assign(
     require("./zerror")
 );
 
-const LOOKS_LIKE_ZMODEM_HEADER = /\*\x18[AC]|\*\*\x18B/;// eslint-disable-line
+// const LOOKS_LIKE_ZMODEM_HEADER = /\*\x18[AC]|\*\*\x18B/;// eslint-disable-line
 
 function _validate_number(key, value) {
     if (value < 0) {
@@ -50,9 +50,9 @@ Zmodem.Validation = {
         //without affecting the passed-in object.
         params = Object.assign({}, params);
 
-        if (LOOKS_LIKE_ZMODEM_HEADER.test(params.name)) {
-            console.warn("The filename " + JSON.stringify(name) + " contains characters that look like a ZMODEM header. This could corrupt the ZMODEM session; consider renaming it so that the filename doesn’t contain control characters.");
-        }
+        // if (LOOKS_LIKE_ZMODEM_HEADER.test(params.name)) {
+        //     console.warn("The filename " + JSON.stringify(name) + " contains characters that look like a ZMODEM header. This could corrupt the ZMODEM session; consider renaming it so that the filename doesn’t contain control characters.");
+        // }
 
         if (params.serial !== null && params.serial !== undefined) {
             throw new Zmodem.Error("validation", "“serial” is meaningless.");

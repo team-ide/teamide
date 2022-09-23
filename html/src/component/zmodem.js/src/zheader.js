@@ -258,7 +258,7 @@ Zmodem.Header = class ZmodemHeader {
 }
 Zmodem.Header.prototype._hex_header_ending = HEX_HEADER_CRLF_XON;
 
-class ZRQINIT_HEADER extends Zmodem.Header {};
+class ZRQINIT_HEADER extends Zmodem.Header {}
 
 //----------------------------------------------------------------------
 
@@ -341,7 +341,7 @@ class ZRINIT_HEADER extends Zmodem.Header {
     escape_8th_bit() {
         return !!( this._bytes4[3] & ZRINIT_FLAG.ESC8 );
     }
-};
+}
 
 //----------------------------------------------------------------------
 
@@ -509,9 +509,9 @@ class ZOffsetHeader extends Zmodem.Header {
     }
 }
 
-class ZRPOS_HEADER extends ZOffsetHeader {};
-class ZDATA_HEADER extends ZOffsetHeader {};
-class ZEOF_HEADER extends ZOffsetHeader {};
+class ZRPOS_HEADER extends ZOffsetHeader {}
+class ZDATA_HEADER extends ZOffsetHeader {}
+class ZEOF_HEADER extends ZOffsetHeader {}
 
 //As request, receiver creates.
 /* UNIMPLEMENTED FOR NOW
