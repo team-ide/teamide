@@ -37,7 +37,7 @@
         </el-form>
       </tm-layout>
       <tm-layout-bar right></tm-layout-bar>
-      <tm-layout width="auto" class="scrollbar">
+      <tm-layout width="auto" class="app-scroll-bar">
         <el-form class="pdt-10 pdlr-10" size="mini" @submit.native.prevent>
           <el-form-item label="格式" class="mgb-5">
             <el-checkbox-group v-model="toTypes" @change="change">

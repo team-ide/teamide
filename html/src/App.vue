@@ -135,67 +135,67 @@ body {
 }
 
 /* 滚动条样式*/
-.scrollbar {
+.app-scroll-bar {
   overflow: scroll;
 }
 
-.scrollbar:hover::-webkit-scrollbar-thumb {
+.app-scroll-bar:hover::-webkit-scrollbar-thumb {
   box-shadow: inset 0 0 10px #333333;
   background: #333333;
 }
-.scrollbar:hover::-webkit-scrollbar-track {
+.app-scroll-bar:hover::-webkit-scrollbar-track {
   box-shadow: inset 0 0 10px #262626;
   background: #262626;
 }
-.scrollbar:hover::-webkit-scrollbar-corner {
+.app-scroll-bar:hover::-webkit-scrollbar-corner {
   background: #262626;
 }
 
-.scrollbar::-webkit-scrollbar {
+.app-scroll-bar::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.scrollbar:hover::-webkit-scrollbar {
+.app-scroll-bar:hover::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.scrollbar::-webkit-scrollbar-thumb {
+.app-scroll-bar::-webkit-scrollbar-thumb {
   border-radius: 0px;
 }
-.scrollbar::-webkit-scrollbar-track {
+.app-scroll-bar::-webkit-scrollbar-track {
   border-radius: 0;
 }
-.scrollbar::-webkit-scrollbar-corner {
+.app-scroll-bar::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-.scrollbar-textarea textarea::-webkit-scrollbar-thumb {
+.app-scroll-bar-textarea textarea::-webkit-scrollbar-thumb {
   box-shadow: inset 0 0 10px #333333;
   background: #333333;
 }
-.scrollbar-textarea textarea:hover::-webkit-scrollbar-track {
+.app-scroll-bar-textarea textarea:hover::-webkit-scrollbar-track {
   box-shadow: inset 0 0 10px #262626;
   background: #262626;
 }
-.scrollbar-textarea textarea:hover::-webkit-scrollbar-corner {
+.app-scroll-bar-textarea textarea:hover::-webkit-scrollbar-corner {
   background: #262626;
 }
 
-.scrollbar-textarea textarea::-webkit-scrollbar {
+.app-scroll-bar-textarea textarea::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.scrollbar-textarea textarea:hover::-webkit-scrollbar {
+.app-scroll-bar-textarea textarea:hover::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.scrollbar-textarea textarea::-webkit-scrollbar-thumb {
+.app-scroll-bar-textarea textarea::-webkit-scrollbar-thumb {
   border-radius: 0px;
 }
-.scrollbar-textarea textarea::-webkit-scrollbar-track {
+.app-scroll-bar-textarea textarea::-webkit-scrollbar-track {
   border-radius: 0;
 }
-.scrollbar-textarea textarea::-webkit-scrollbar-corner {
+.app-scroll-bar-textarea textarea::-webkit-scrollbar-corner {
   background: transparent;
 }
 

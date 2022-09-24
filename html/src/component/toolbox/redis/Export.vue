@@ -1,6 +1,6 @@
 <template>
   <div class="toolbox-redis-export">
-    <div class="scrollbar pd-10" style="height: calc(100% - 120px)">
+    <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
       <el-form ref="form" :model="form" size="mini" inline>
         <el-form-item label="导出类型">
           <el-select v-model="form.exportType" style="width: 100px">

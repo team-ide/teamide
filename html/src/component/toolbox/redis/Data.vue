@@ -83,7 +83,7 @@
         </el-form>
         <el-form
           v-if="form.valueType != 'string'"
-          class="toolbox-redis-value-box scrollbar"
+          class="toolbox-redis-value-box app-scroll-bar"
           size="mini"
           @submit.native.prevent
         >

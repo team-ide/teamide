@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-box scrollbar-textarea" :style="boxStyleObject">
+  <div class="toolbox-box app-scroll-bar-textarea" :style="boxStyleObject">
     <template v-if="ready">
       <tm-layout height="100%">
         <Main

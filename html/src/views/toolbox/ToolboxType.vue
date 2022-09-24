@@ -37,7 +37,7 @@
             />
           </div>
         </div>
-        <div class="toolbox-group-body scrollbar">
+        <div class="toolbox-group-body app-scroll-bar">
           <template v-for="group in groupList">
             <div
               :key="group.groupId"
@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <div class="toolbox-type-box scrollbar" v-if="searchMap != null">
+      <div class="toolbox-type-box app-scroll-bar" v-if="searchMap != null">
         <template v-for="toolboxType in toolboxTypes">
           <div :key="toolboxType.name" class="toolbox-type-one">
             <div class="toolbox-type-title">
@@ -104,7 +104,7 @@
                 />
               </div>
             </div>
-            <div class="toolbox-type-data-box scrollbar">
+            <div class="toolbox-type-data-box app-scroll-bar">
               <template
                 v-if="
                   selectGroup.context[toolboxType.name] == null ||

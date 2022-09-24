@@ -25,7 +25,7 @@
               </div>
             </div>
           </tm-layout>
-          <tm-layout height="auto" class="scrollbar">
+          <tm-layout height="auto" class="app-scroll-bar">
             <div class="pd-10">
               <el-tree
                 ref="tree"

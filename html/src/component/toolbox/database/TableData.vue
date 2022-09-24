@@ -4,7 +4,7 @@
       <tm-layout height="100%">
         <tm-layout height="120px" style="overflow: hidden">
           <tm-layout width="400px">
-            <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
+            <ul class="part-box app-scroll-bar mg-0" v-if="tableDetail != null">
               <template v-for="(one, index) in form.wheres">
                 <li :key="index">
                   <input v-model="one.checked" type="checkbox" />
@@ -122,7 +122,7 @@
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout width="400px">
-            <ul class="part-box scrollbar mg-0">
+            <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in form.orders">
                 <li :key="index">
                   <input v-model="one.checked" type="checkbox" />
@@ -170,7 +170,7 @@
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout>
-            <ul class="part-box scrollbar mg-0" v-if="tableDetail != null">
+            <ul class="part-box app-scroll-bar mg-0" v-if="tableDetail != null">
               <li></li>
             </ul>
           </tm-layout>
@@ -288,7 +288,7 @@
           </div>
         </tm-layout>
         <!-- <tm-layout-bar top></tm-layout-bar> -->
-        <tm-layout height="50px" class="scrollbar">
+        <tm-layout height="50px" class="app-scroll-bar">
           <div class="ft-12 pdlr-10" v-if="tableDetail != null && sql != null">
             <div style="line-height: 20px">
               <span style="word-break: break-all; user-select: text">{{

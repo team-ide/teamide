@@ -56,7 +56,7 @@
         </div>
       </tm-layout>
       <tm-layout height="auto" class="" style="overflow: auto">
-        <div class="toolbox-node-info-editor-body scrollbar">
+        <div class="toolbox-node-info-editor-body app-scroll-bar">
           <div class="pd-10">
             <div
               class="tm-btn tm-btn-xs bg-grey-6"

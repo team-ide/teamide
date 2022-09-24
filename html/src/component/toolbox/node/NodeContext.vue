@@ -1,7 +1,7 @@
 <template>
   <div class="node-context-box">
     <tm-layout height="100%">
-      <tm-layout height="150px" class="scrollbar">
+      <tm-layout height="150px" class="app-scroll-bar">
         <div class="node-context-box-header">
           <div class="pdlr-20 ft-12 pdtb-10">
             <div class="color-grey">

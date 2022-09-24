@@ -16,7 +16,7 @@
         </div>
       </tm-layout>
       <tm-layout height="auto" class="">
-        <div class="node-net-proxy-body scrollbar toolbox-editor" v-if="ready">
+        <div class="node-net-proxy-body app-scroll-bar toolbox-editor" v-if="ready">
           <el-table
             :data="source.nodeNetProxyList"
             :border="true"

@@ -26,7 +26,7 @@
       <div class="mglr-10 mgt-10">
         <div class="tm-link color-grey" @click="addStrategyData">添加</div>
       </div>
-      <div class="mglr-10 mgt-10 scrollbar" style="height: calc(100% - 380px)">
+      <div class="mglr-10 mgt-10 app-scroll-bar" style="height: calc(100% - 380px)">
         <template v-for="(strategyData, index) in strategyDataList">
           <div :key="index" class="mgb-10">
             <div class="ft-12 mgb-5">数据策略[ {{ index + 1 }} ]</div>

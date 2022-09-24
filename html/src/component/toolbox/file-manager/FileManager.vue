@@ -42,7 +42,7 @@
       </tm-layout>
       <tm-layout height="auto">
         <div
-          class="toolbox-file-manager-files-box scrollbar"
+          class="toolbox-file-manager-files-box app-scroll-bar"
           @contextmenu.prevent="fileContextmenu"
           ref="filesBox"
           @click="filesBoxClick"

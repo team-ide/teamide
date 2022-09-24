@@ -1,7 +1,7 @@
 <template>
   <div class="toolbox-terminal-progress-box">
     <div
-      class="progress-list-box scrollbar"
+      class="progress-list-box app-scroll-bar"
       @contextmenu.prevent="workContextmenu"
     >
       <template v-for="one in progressList">

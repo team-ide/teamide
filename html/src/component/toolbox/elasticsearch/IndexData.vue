@@ -4,7 +4,7 @@
       <tm-layout height="100%">
         <tm-layout height="120px" style="overflow: hidden">
           <tm-layout width="400px">
-            <ul class="part-box scrollbar mg-0">
+            <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in searchForm.whereList">
                 <li :key="index">
                   <input v-model="one.checked" type="checkbox" />
@@ -113,7 +113,7 @@
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout width="400px">
-            <ul class="part-box scrollbar mg-0">
+            <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in searchForm.orderList">
                 <li :key="index">
                   <input v-model="one.checked" type="checkbox" />
@@ -161,7 +161,7 @@
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
           <tm-layout>
-            <ul class="part-box scrollbar mg-0">
+            <ul class="part-box app-scroll-bar mg-0">
               <li></li>
             </ul>
           </tm-layout>

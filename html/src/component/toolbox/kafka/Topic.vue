@@ -36,7 +36,7 @@
               <span class="color-orange">双击查看Topic数据</span>
             </div>
             <div
-              class="data-list-box scrollbar"
+              class="data-list-box app-scroll-bar"
               style="height: calc(100% - 40px); user-select: text"
             >
               <template v-for="(one, index) in topics">

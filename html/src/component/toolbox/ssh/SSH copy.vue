@@ -35,7 +35,7 @@
               添加
             </div>
           </div>
-          <div class="toolbox-ssh-quickCommand-list scrollbar">
+          <div class="toolbox-ssh-quickCommand-list app-scroll-bar">
             <template
               v-if="
                 source.quickCommandSSHCommands != null &&

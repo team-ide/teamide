@@ -1,6 +1,6 @@
 <template>
   <div class="toolbox-database-table">
-    <div class="scrollbar" style="height: calc(100% - 90px)">
+    <div class="app-scroll-bar" style="height: calc(100% - 90px)">
       <TableDetail
         class="pd-10"
         ref="TableDetail"
