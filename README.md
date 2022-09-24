@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Release Latest](https://img.shields.io/badge/Release-V1.6.7-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![Release Latest](https://img.shields.io/badge/Release-V1.7.3-brightgreen)](https://github.com/team-ide/teamide/releases)
 [![Download Window](https://img.shields.io/badge/Download-Window-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-windows-x64.zip)
 [![Download Linux](https://img.shields.io/badge/Download-Linux-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-linux-x64.zip)
 [![Download MAC](https://img.shields.io/badge/Download-MAC-orange)](https://github.com/team-ide/teamide/releases/latest/download/teamide-darwin-x64.zip)
@@ -124,11 +124,6 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td >SSH 管道功能</td>
-        <td>配置SSH连接信息，使用127.0.0.1等连接服务器资源</td>
-        <td>进行中</td>
-    </tr>
-    <tr>
         <td rowspan="2">HTTP</td>
         <td>配置HTTP的GET，POST，DELETE，PUT等REST接口</td>
         <td>进行中</td>
@@ -242,14 +237,6 @@ go mod tidy
 go build -ldflags "-X main.buildFlags=--isServer" .
 ```
 
-## Node 模块
-
-节点服务，用于不同网段通信，借助节点模块的网络代理实现内外网透传等
-
-![avatar](doc/toolbox-node.png)
-
-![avatar](doc/toolbox-node-net-proxy.png)
-
 ## Toolbox 模块
 
 工具箱，用于连接Redis、Zookeeper、Database、SSH、SFTP、Kafka、Elasticsearch等
@@ -341,3 +328,11 @@ SSH模块可以点击FTP，进行本地和远程文件管理 FTP：上传、下�
 #### Toolbox 其它
 
 ![avatar](doc/toolbox-other-format.png)
+
+## Node 模块
+
+节点服务，用于不同网段通信，借助节点模块的网络代理实现内外网透传等
+
+![avatar](doc/toolbox-node.png)
+
+![avatar](doc/toolbox-node-net-proxy.png)
