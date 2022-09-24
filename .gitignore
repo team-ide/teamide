@@ -3,5 +3,7 @@
 .idea
 data/
 log/
+cpu.pprof
+mem.pprof
 teamide
 teamide.exe

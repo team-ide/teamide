@@ -2,8 +2,10 @@ package module_node
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"teamide/pkg/terminal"
+	"teamide/pkg/util"
 )
 
 func NewTerminalService(nodeId string, nodeService *NodeService) (res *terminalService) {
@@ -56,6 +58,12 @@ func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
 }
 
 func (this_ *terminalService) Stop() {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("Stop err", zap.Any("err", e))
+		}
+	}()
+
 	var err error
 	var server *node.Server
 	server, err = this_.getServer()
@@ -64,7 +72,9 @@ func (this_ *terminalService) Stop() {
 	}
 
 	close(this_.bytesChan)
+	this_.bytesChan = nil
 	close(this_.errorBytesChan)
+	this_.errorBytesChan = nil
 
 	err = server.TerminalStop(this_.nodeLine, this_.key)
 
@@ -102,6 +112,12 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 }
 
 func (this_ *terminalService) Write(buf []byte) (n int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("Write err", zap.Any("err", e))
+		}
+	}()
+
 	var server *node.Server
 	server, err = this_.getServer()
 	if err != nil {
@@ -113,6 +129,16 @@ func (this_ *terminalService) Write(buf []byte) (n int, err error) {
 }
 
 func (this_ *terminalService) Read(buf []byte) (n int, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("Read err", zap.Any("err", e))
+		}
+	}()
+	if this_.bytesChan == nil {
+		err = errors.New("bytesChan is close")
+		return
+	}
+
 	bs := <-this_.bytesChan
 	n = len(bs)
 	for i, b := range bs {
@@ -122,6 +148,17 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 }
 
 func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
+
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("ReadError err", zap.Any("err", e))
+		}
+	}()
+	if this_.errorBytesChan == nil {
+		err = errors.New("errorBytesChan is close")
+		return
+	}
+
 	bs := <-this_.errorBytesChan
 	n = len(bs)
 	for i, b := range bs {

@@ -96,6 +96,15 @@ const newWorker = function (workerOption) {
             }
             file.select = false;
         },
+        toSelectAll() {
+            this.fileList.forEach((one, i) => {
+                if (one.name == "..") {
+                    this.setUnselect(one);
+                } else {
+                    this.setSelect(one);
+                }
+            });
+        },
         selectFile(file) {
             if (this.fileList) {
                 let fileIndex = this.getFileIndex(file);

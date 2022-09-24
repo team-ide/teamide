@@ -73,7 +73,7 @@
                     </MenuSubBox>
                   </MenuItem>
                 </template>
-                <template v-if="source.nodeList && source.nodeList.length > 0">
+                <!-- <template v-if="source.nodeList && source.nodeList.length > 0">
                   <MenuItem>
                     节点
                     <MenuSubBox slot="MenuSubBox">
@@ -87,7 +87,7 @@
                       </template>
                     </MenuSubBox>
                   </MenuItem>
-                </template>
+                </template> -->
               </MenuBox>
             </el-dropdown-menu>
           </el-dropdown>

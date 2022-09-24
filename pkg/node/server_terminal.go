@@ -1,6 +1,7 @@
 package node
 
 import (
+	"go.uber.org/zap"
 	"teamide/pkg/terminal"
 	"teamide/pkg/util"
 )
@@ -10,6 +11,7 @@ func (this_ *Server) TerminalStart(lineNodeIdList []string, size *terminal.Size,
 	readErrorKey := util.UUID()
 	this_.addOnBytesCache(readKey, &OnBytes{
 		start: func() (err error) {
+			Logger.Info("terminal start read byte start", zap.Any("readKey", readKey), zap.Any("lineNodeIdList", lineNodeIdList))
 			return
 		},
 		on: func(buf []byte) (err error) {
@@ -17,12 +19,15 @@ func (this_ *Server) TerminalStart(lineNodeIdList []string, size *terminal.Size,
 			return
 		},
 		end: func() (err error) {
+			Logger.Info("terminal start read byte end", zap.Any("readKey", readKey), zap.Any("lineNodeIdList", lineNodeIdList))
 			return
 		},
 	})
+	Logger.Info("terminal start add byte cache on ready", zap.Any("readKey", readKey), zap.Any("lineNodeIdList", lineNodeIdList))
 
 	this_.addOnBytesCache(readErrorKey, &OnBytes{
 		start: func() (err error) {
+			Logger.Info("terminal start read error byte start", zap.Any("readErrorKey", readErrorKey), zap.Any("lineNodeIdList", lineNodeIdList))
 			return
 		},
 		on: func(buf []byte) (err error) {
@@ -30,9 +35,11 @@ func (this_ *Server) TerminalStart(lineNodeIdList []string, size *terminal.Size,
 			return
 		},
 		end: func() (err error) {
+			Logger.Info("terminal start read error byte end", zap.Any("readErrorKey", readErrorKey), zap.Any("lineNodeIdList", lineNodeIdList))
 			return
 		},
 	})
+	Logger.Info("terminal start add error byte cache on ready", zap.Any("readErrorKey", readErrorKey), zap.Any("lineNodeIdList", lineNodeIdList))
 
 	key, err = this_.workTerminalStart(lineNodeIdList, size, readKey, readErrorKey)
 	if err != nil {

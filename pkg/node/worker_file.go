@@ -287,6 +287,7 @@ func (this_ *Worker) workSend(lineNodeIdList []string, key string, read func(p [
 
 	var buf = make([]byte, 1024*32)
 	err = util.ReadByFunc(read, buf, func(n int) (e error) {
+		//Logger.Info("workSend read", zap.Any("key", key), zap.Any("n", n), zap.Any("str", string(buf[:n])))
 		if n > 0 {
 			e = this_.workSendBytes(lineNodeIdList, key, buf[:n])
 		}

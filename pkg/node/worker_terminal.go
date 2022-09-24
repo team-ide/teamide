@@ -37,6 +37,8 @@ func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.S
 		return
 	}
 
+	Logger.Info("local service start success")
+
 	key = util.UUID()
 
 	this_.addTerminalService(key, service)
@@ -49,6 +51,7 @@ func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.S
 		defer func() {
 			this_.removeTerminalService(key)
 			service.Stop()
+			Logger.Info("local service stopped")
 		}()
 		err = this_.workSend(line, readKey, service.Read)
 		if err != nil {
@@ -60,6 +63,7 @@ func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.S
 		defer func() {
 			this_.removeTerminalService(key)
 			service.Stop()
+			Logger.Info("local service stopped")
 		}()
 		err = this_.workSend(line, readErrorKey, service.ReadError)
 		if err != nil {

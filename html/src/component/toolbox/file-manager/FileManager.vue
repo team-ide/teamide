@@ -515,6 +515,11 @@ export default {
       }
     },
     onKeyDown() {
+      if (this.tool.keyIsCtrlA()) {
+        this.tool.stopEvent();
+        this.fileWorker.toSelectAll();
+        return;
+      }
       let files = this.fileWorker.getSelectFiles();
       if (files == null || files.length == 0) {
         return;
