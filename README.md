@@ -257,13 +257,7 @@ go build -ldflags "-X main.buildFlags=--isServer" .
 
 ![avatar](doc/toolbox-redis-hash.png)
 
-![avatar](doc/toolbox-redis-import-1.png)
-
-![avatar](doc/toolbox-redis-import-2.png)
-
-![avatar](doc/toolbox-redis-import-3.png)
-
-![avatar](doc/toolbox-redis-import-4.png)
+![avatar](doc/toolbox-redis-import.png)
 
 #### Toolbox Zookeeper（完成）
 
