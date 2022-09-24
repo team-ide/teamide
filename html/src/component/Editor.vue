@@ -47,24 +47,34 @@ export default {
     init() {
       let monaco = window.monaco;
       let languageList = monaco.languages.getLanguages();
-      let yamlLanguage = null;
-      let htmlLanguage = null;
-      let jsLanguage = null;
+      let plaintextLanguage = null;
+      let iniLanguage = null;
       let language = null;
       languageList.forEach((one) => {
-        if (one.id == "javascript") {
-          jsLanguage = one;
-        } else if (one.id == "html") {
-          htmlLanguage = one;
-        } else if (one.id == "yaml") {
-          yamlLanguage = one;
+        if (one.id == "plaintext") {
+          plaintextLanguage = one;
+        } else if (one.id == "ini") {
+          iniLanguage = one;
         }
-        if (one.id == this.language) {
+        if (
+          one.extensions &&
+          one.extensions.indexOf("." + this.language) >= 0
+        ) {
+          language = one;
+        } else if (one.id == this.language) {
           language = one;
         }
       });
       if (language == null) {
-        language = htmlLanguage;
+        if (
+          this.language == "conf" ||
+          this.language == "cfg" ||
+          this.language == "cnf"
+        ) {
+          language = iniLanguage;
+        } else {
+          language = iniLanguage;
+        }
       }
       this.monacoInstance = monaco.editor.create(this.$refs.editor, {
         theme: "vs-dark", //官方自带三种主题vs, hc-black, or vs-dark
@@ -76,12 +86,12 @@ export default {
         readOnly: this.readonly, // 只读
         cursorStyle: "line", //光标样式
         automaticLayout: true, //自动布局
-        glyphMargin: true, //字形边缘
+        glyphMargin: false, //字形边缘
         useTabStops: false,
-        fontSize: 16, //字体大小
+        fontSize: 13, //字体大小
         autoIndent: true, //自动布局
         // quickSuggestionsDelay: 500, //代码提示延时
-        contextmenu: false,
+        contextmenu: true,
       });
       this.monacoInstance.onDidChangeModelContent((e) => {
         if (this.isSetValue) {

@@ -14,8 +14,8 @@ type FileInfo struct {
 type Service interface {
 	Exist(path string) (exist bool, err error)
 	Create(path string, isDir bool) (err error)
-	Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error)
-	Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error)
+	Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error)
+	Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error)
 	Rename(oldPath string, newPath string) (err error)
 	Move(oldPath string, newPath string) (err error)
 	Remove(path string, onDo func(fileCount int, removeCount int)) (err error)

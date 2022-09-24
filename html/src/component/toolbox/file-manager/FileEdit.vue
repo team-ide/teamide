@@ -30,12 +30,14 @@
 
       <template v-else>
         <div class="teamide-editor-box">
-          <Editor
-            ref="Editor"
-            :source="source"
-            :value="text"
-            :language="language"
-          ></Editor>
+          <template v-if="textReady">
+            <Editor
+              ref="Editor"
+              :source="source"
+              :value="text"
+              :language="language"
+            ></Editor>
+          </template>
         </div>
         <div class="pdt-10 pdl-10">
           <div
@@ -71,12 +73,19 @@ export default {
       isImage: false,
       isVideo: false,
       language: "txt",
+      textReady: false,
       openUrl: null,
       text: null,
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    showDialog() {
+      if (!this.showDialog) {
+        this.textReady = false;
+      }
+    },
+  },
   methods: {
     show(file) {
       if (file == null || file.name == null) {
@@ -138,9 +147,8 @@ export default {
         } else {
           this.showDialog = true;
           let data = res.data || {};
-          this.$nextTick(() => {
-            this.$refs.Editor && this.$refs.Editor.setValue(data.text);
-          });
+          this.text = data.text;
+          this.textReady = true;
         }
       } catch (e) {}
       this.loading = false;

@@ -27,6 +27,8 @@
           </tm-layout>
           <tm-layout height="auto" class="app-scroll-bar">
             <div class="pd-10">
+              <el-input placeholder="输入关键字进行过滤" v-model="filterText">
+              </el-input>
               <el-tree
                 ref="tree"
                 :load="loadNode"
@@ -39,6 +41,7 @@
                 :expand-on-click-node="false"
                 @node-expand="nodeExpand"
                 @node-collapse="nodeCollapse"
+                :filter-node-method="filterNode"
               >
                 <span
                   class="toolbox-editor-tree-span"
@@ -211,6 +214,7 @@ export default {
         label: "name",
         isLeaf: "leaf",
       },
+      filterText: "",
     };
   },
   computed: {},
@@ -247,8 +251,17 @@ export default {
         }
       }
     },
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    },
   },
   methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return (
+        data.name && data.name.toLowerCase().indexOf(value.toLowerCase()) !== -1
+      );
+    },
     dirChange() {
       this.form.dir = this.form.dir || "";
       if (!this.form.dir.endsWith("/")) {

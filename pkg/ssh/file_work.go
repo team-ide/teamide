@@ -165,7 +165,7 @@ func (this_ *fileService) Create(path string, isDir bool) (err error) {
 	return
 }
 
-func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.getSftp()
 	if err != nil {
@@ -196,6 +196,10 @@ func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSiz
 	var writeSize int64
 
 	err = util.Read(reader, buf, func(n int) (e error) {
+		if *callStop {
+			e = errors.New("is call stopped")
+			return
+		}
 		readSize += int64(n)
 		onDo(readSize, writeSize)
 		e = util.Write(f, buf[:n], func(n int) (e error) {
@@ -212,7 +216,7 @@ func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSiz
 	return
 }
 
-func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.getSftp()
 	if err != nil {
@@ -245,6 +249,10 @@ func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize
 	var writeSize int64
 
 	err = util.Read(f, buf, func(n int) (e error) {
+		if *callStop {
+			e = errors.New("is call stopped")
+			return
+		}
 		readSize += int64(n)
 		onDo(readSize, writeSize)
 		e = util.Write(writer, buf[:n], func(n int) (e error) {

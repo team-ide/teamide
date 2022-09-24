@@ -61,25 +61,25 @@ func (this_ *fileService) Create(path string, isDir bool) (err error) {
 	return
 }
 
-func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	var server *node.Server
 	server, err = this_.getServer()
 	if err != nil {
 		return
 	}
 
-	err = server.FileWorkWrite(this_.nodeLine, path, reader, onDo)
+	err = server.FileWorkWrite(this_.nodeLine, path, reader, onDo, callStop)
 	return
 }
 
-func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	var server *node.Server
 	server, err = this_.getServer()
 	if err != nil {
 		return
 	}
 
-	err = server.FileWorkRead(this_.nodeLine, path, writer, onDo)
+	err = server.FileWorkRead(this_.nodeLine, path, writer, onDo, callStop)
 	return
 }
 

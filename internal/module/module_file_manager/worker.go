@@ -79,7 +79,9 @@ func (this_ *worker) Close(workerId string) {
 }
 
 func (this_ *worker) Create(workerId string, fileWorkerKey string, place string, placeId string, path string, isDir bool) (file *filework.FileInfo, err error) {
-	progress := newProgress(workerId, place, placeId, "create")
+	progress := newProgress(workerId, place, placeId, "create", func() {
+
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["isDir"] = isDir
@@ -107,6 +109,14 @@ func (this_ *worker) CallAction(progressId string, action string) (err error) {
 	return
 }
 
+func (this_ *worker) CallStop(progressId string) (err error) {
+	progress := getProgress(progressId)
+	if progress != nil {
+		progress.callStopped = true
+	}
+	return
+}
+
 func (this_ *worker) File(_ string, fileWorkerKey string, place string, placeId string, path string) (file *filework.FileInfo, err error) {
 
 	service, err := this_.GetService(fileWorkerKey, place, placeId)
@@ -128,7 +138,11 @@ func (this_ *worker) Files(_ string, fileWorkerKey string, place string, placeId
 }
 
 func (this_ *worker) Read(workerId string, fileWorkerKey string, place string, placeId string, path string, writer io.Writer) (file *filework.FileInfo, err error) {
-	progress := newProgress(workerId, place, placeId, "read")
+	var false_ = false
+	var callStop *bool = &false_
+	progress := newProgress(workerId, place, placeId, "read", func() {
+		*callStop = true
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["readSize"] = 0
@@ -151,12 +165,16 @@ func (this_ *worker) Read(workerId string, fileWorkerKey string, place string, p
 		progress.Data["readSize"] = readSize
 		progress.Data["writeSize"] = writeSize
 		progress.Data["successSize"] = writeSize
-	})
+	}, callStop)
 	return
 }
 
 func (this_ *worker) Write(workerId string, fileWorkerKey string, place string, placeId string, path string, reader io.Reader, size int) (file *filework.FileInfo, err error) {
-	progress := newProgress(workerId, place, placeId, "write")
+	var false_ = false
+	var callStop *bool = &false_
+	progress := newProgress(workerId, place, placeId, "write", func() {
+		*callStop = true
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["readSize"] = 0
@@ -173,7 +191,7 @@ func (this_ *worker) Write(workerId string, fileWorkerKey string, place string, 
 		progress.Data["readSize"] = readSize
 		progress.Data["writeSize"] = writeSize
 		progress.Data["successSize"] = writeSize
-	})
+	}, callStop)
 	if err != nil {
 		return
 	}
@@ -183,7 +201,9 @@ func (this_ *worker) Write(workerId string, fileWorkerKey string, place string, 
 }
 
 func (this_ *worker) Rename(workerId string, fileWorkerKey string, place string, placeId string, oldPath string, newPath string) (file *filework.FileInfo, err error) {
-	progress := newProgress(workerId, place, placeId, "rename")
+	progress := newProgress(workerId, place, placeId, "rename", func() {
+
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
@@ -204,7 +224,9 @@ func (this_ *worker) Rename(workerId string, fileWorkerKey string, place string,
 }
 
 func (this_ *worker) Remove(workerId string, fileWorkerKey string, place string, placeId string, path string) (err error) {
-	progress := newProgress(workerId, place, placeId, "remove")
+	progress := newProgress(workerId, place, placeId, "remove", func() {
+
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["fileCount"] = 0
@@ -223,7 +245,9 @@ func (this_ *worker) Remove(workerId string, fileWorkerKey string, place string,
 }
 
 func (this_ *worker) Move(workerId string, fileWorkerKey string, place string, placeId string, oldPath string, newPath string) (err error) {
-	progress := newProgress(workerId, place, placeId, "move")
+	progress := newProgress(workerId, place, placeId, "move", func() {
+
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
@@ -240,7 +264,9 @@ func (this_ *worker) Move(workerId string, fileWorkerKey string, place string, p
 
 func (this_ *worker) Copy(workerId string, fileWorkerKey string, place string, placeId string, path string, fromPlace string, fromPlaceId string, fromPath string) {
 	var err error
-	progress := newProgress(workerId, place, placeId, "copy")
+	progress := newProgress(workerId, place, placeId, "copy", func() {
+
+	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["fromPlace"] = fromPlace
@@ -286,8 +312,15 @@ func (this_ *worker) Upload(workerId string, fileWorkerKey string, place string,
 		if len(fullPath) > 0 {
 			path = dir + fullPath
 		}
-
-		progress := newProgress(workerId, place, placeId, "upload")
+		var false_ = false
+		var callStop *bool = &false_
+		var openF multipart.File
+		progress := newProgress(workerId, place, placeId, "upload", func() {
+			if openF != nil {
+				_ = openF.Close()
+			}
+			*callStop = true
+		})
 		progress.Data["fileWorkerKey"] = fileWorkerKey
 		progress.Data["dir"] = dir
 		progress.Data["fullPath"] = fullPath
@@ -315,7 +348,6 @@ func (this_ *worker) Upload(workerId string, fileWorkerKey string, place string,
 				return
 			}
 		}
-		var openF multipart.File
 		openF, err = one.Open()
 		if err != nil {
 			return
@@ -323,7 +355,7 @@ func (this_ *worker) Upload(workerId string, fileWorkerKey string, place string,
 
 		err = service.Write(path, openF, func(readSize int64, writeSize int64) {
 			progress.Data["successSize"] = writeSize
-		})
+		}, callStop)
 		if err != nil {
 			return
 		}

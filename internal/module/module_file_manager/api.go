@@ -41,6 +41,7 @@ var (
 	PowerUpload     = base.AppendPower(&base.PowerAction{Action: "file_manager_upload", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerDownload   = base.AppendPower(&base.PowerAction{Action: "file_manager_download", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: true, StandAlone: true})
+	PowerCallStop   = base.AppendPower(&base.PowerAction{Action: "file_manager_call_stop", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerClose      = base.AppendPower(&base.PowerAction{Action: "file_manager_close", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "工具", ShouldLogin: true, StandAlone: true})
 )
@@ -59,6 +60,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/upload"}, Power: PowerUpload, Do: this_.upload})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/download"}, Power: PowerDownload, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callStop"}, Power: PowerCallStop, Do: this_.callStop})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/close"}, Power: PowerClose, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/open"}, Power: PowerDownload, Do: this_.open, IsGet: true})
 	return
@@ -222,6 +224,15 @@ func (this_ *api) callAction(_ *base.RequestBean, c *gin.Context) (res interface
 		return
 	}
 	err = this_.CallAction(request.ProgressId, request.Action)
+	return
+}
+
+func (this_ *api) callStop(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &FileRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	err = this_.CallStop(request.ProgressId)
 	return
 }
 

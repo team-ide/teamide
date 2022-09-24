@@ -8,6 +8,7 @@
     :append-to-body="true"
     :visible="showDialog"
     :before-close="hide"
+    top="20px"
     width="900px"
   >
     <div class="mgt--20" style="user-select: text">
@@ -39,6 +40,7 @@ export default {
       currentVersion: `检测中...`,
       githubReleasesURL: `https://github.com/team-ide/teamide/releases`,
       releaseHistory: ``,
+      currentVersionNumber: 0,
     };
   },
   computed: {},
@@ -50,26 +52,41 @@ export default {
     hide() {
       this.showDialog = false;
     },
+    getVersionNumberByVersion(version) {
+      let number = 0;
+      if (this.tool.isEmpty(version)) {
+        return number;
+      }
+      version = ("" + version).trim();
+      let rule = /([1-9]\d|[0-9])(.([1-9]\d|\d)){1,}/;
+      let res = version.match(rule);
+      if (res && res[0]) {
+        let str = res[0];
+        let ss = str.split(".");
+        ss.forEach((s, i) => {
+          let sN = Number(s);
+          for (let n = ss.length - i - 1; n > 0; n--) {
+            sN = sN * 100;
+          }
+          number = Number(number) + Number(sN);
+        });
+      }
+      return number;
+    },
     getHTML(releaseHistory) {
       try {
         let div = this.tool.jQuery("<div>" + releaseHistory + "</div>");
-        let find = false;
         div.find("h2").each((index, one) => {
           one = this.tool.jQuery(one);
           one.find("a").remove();
-          if (
-            one
-              .text()
-              .toLowerCase()
-              .indexOf((" " + this.currentVersion).toLowerCase()) >= 0
-          ) {
-            find = true;
-            one.addClass("color-orange");
-            one.append('<span class="mgl-5 ft-12">当前版本</span>');
-          }
-          if (!find) {
-            this.source.hasNewVersion = true;
+          let version = one.text().toLowerCase();
+          let versionNumber = this.getVersionNumberByVersion(version);
+          if (versionNumber == this.currentVersionNumber) {
             one.addClass("color-green");
+            one.append('<span class="mgl-5 ft-12">当前版本</span>');
+          } else if (versionNumber > this.currentVersionNumber) {
+            this.source.hasNewVersion = true;
+            one.addClass("color-orange");
             one.append('<span class="mgl-5 ft-12">新版本</span>');
           }
         });
@@ -88,6 +105,12 @@ export default {
           if (res.code == 0 && res.data != null) {
             if (this.tool.isNotEmpty(res.data.currentVersion)) {
               this.currentVersion = res.data.currentVersion;
+              this.currentVersionNumber = this.getVersionNumberByVersion(
+                this.currentVersion
+              );
+            } else {
+              this.currentVersion = "未检测到版本";
+              this.currentVersionNumber = this.getVersionNumberByVersion("");
             }
             if (this.tool.isNotEmpty(res.data.githubReleasesURL)) {
               this.githubReleasesURL = res.data.githubReleasesURL;

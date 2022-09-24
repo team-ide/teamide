@@ -50,7 +50,7 @@ func (this_ *localService) Create(path string, isDir bool) (err error) {
 	return
 }
 
-func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	path = util.FormatPath(path)
 
 	pathDir := path[0:strings.LastIndex(path, "/")]
@@ -78,6 +78,10 @@ func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSi
 	var writeSize int64
 
 	err = util.Read(reader, buf, func(n int) (e error) {
+		if *callStop {
+			e = errors.New("is call stopped")
+			return
+		}
 		readSize += int64(n)
 		onDo(readSize, writeSize)
 		e = util.Write(f, buf[:n], func(n int) (e error) {
@@ -94,7 +98,7 @@ func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSi
 	return
 }
 
-func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 	path = util.FormatPath(path)
 	exist, err := this_.Exist(path)
 	if err != nil {
@@ -116,6 +120,10 @@ func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSiz
 	var writeSize int64
 
 	err = util.Read(f, buf, func(n int) (e error) {
+		if *callStop {
+			e = errors.New("is call stopped")
+			return
+		}
 		readSize += int64(n)
 		onDo(readSize, writeSize)
 		e = util.Write(writer, buf[:n], func(n int) (e error) {

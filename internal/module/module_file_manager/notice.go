@@ -24,6 +24,7 @@ type Progress struct {
 	WaitActionList    []*Action              `json:"waitActionList"`
 	WaitActionIng     bool                   `json:"waitActionIng"`
 	waitActionChan    chan string
+	callStopped       bool
 }
 
 type Action struct {
@@ -123,7 +124,7 @@ func removeProgress(progressId string) {
 	return
 }
 
-func newProgress(workerId string, place string, placeId string, work string) (progress *Progress) {
+func newProgress(workerId string, place string, placeId string, work string, callStop func()) (progress *Progress) {
 	var ProgressId = util.UUID()
 	progress = &Progress{}
 	progress.Place = place
@@ -139,6 +140,9 @@ func newProgress(workerId string, place string, placeId string, work string) (pr
 	go func() {
 		defer removeProgress(ProgressId)
 		for {
+			if progress.callStopped && callStop != nil {
+				callStop()
+			}
 			if progress.WaitActionIng {
 				time.Sleep(500 * time.Millisecond)
 				continue

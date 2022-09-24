@@ -34,6 +34,9 @@ let fileManager = {
     callAction(param) {
         return http.post('api/file_manager/callAction', param);
     },
+    callStop(param) {
+        return http.post('api/file_manager/callStop', param);
+    },
     upload(param) {
         return http.post('api/file_manager/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
     },

@@ -1,6 +1,7 @@
 package node
 
 import (
+	"errors"
 	"io"
 	"sync"
 	"teamide/pkg/filework"
@@ -37,7 +38,7 @@ func (this_ *Server) FileWorkFile(lineNodeIdList []string, path string) (file *f
 	return
 }
 
-func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader io.Reader, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 
 	sendKey, err := this_.workFileWrite(lineNodeIdList, path)
 	if err != nil {
@@ -54,6 +55,10 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 	var writeSize int64
 	var buf = make([]byte, 1024*32)
 	err = util.Read(reader, buf, func(n int) (e error) {
+		if *callStop {
+			e = errors.New("is call stopped")
+			return
+		}
 		readSize += int64(n)
 		onDo(readSize, writeSize)
 		e = this_.workSendBytes(lineNodeIdList, sendKey, buf[:n])
@@ -70,7 +75,7 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 	return
 }
 
-func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer io.Writer, onDo func(readSize int64, writeSize int64)) (err error) {
+func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 
 	sendKey := util.UUID()
 
@@ -83,6 +88,11 @@ func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer i
 			return
 		},
 		on: func(buf []byte) (err error) {
+
+			if *callStop {
+				err = errors.New("is call stopped")
+				return
+			}
 			n := len(buf)
 			readSize += int64(n)
 			onDo(readSize, writeSize)

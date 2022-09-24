@@ -21,6 +21,8 @@
         </tm-layout>
         <tm-layout height="auto" class="app-scroll-bar">
           <div class="pd-10">
+            <el-input placeholder="输入关键字进行过滤" v-model="filterText">
+            </el-input>
             <el-tree
               ref="tree"
               :load="loadNode"
@@ -33,6 +35,7 @@
               @node-contextmenu="nodeContextmenu"
               @node-expand="nodeExpand"
               @node-collapse="nodeCollapse"
+              :filter-node-method="filterNode"
             >
               <span
                 class="toolbox-editor-tree-span"
@@ -97,16 +100,27 @@ export default {
         label: "name",
         isLeaf: "leaf",
       },
+      filterText: "",
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    },
+  },
   methods: {
     init() {
       if (this.extend && this.extend.expands) {
         this.expands = this.extend.expands;
       }
       this.ready = true;
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return (
+        data.name && data.name.toLowerCase().indexOf(value.toLowerCase()) !== -1
+      );
     },
     nodeExpand(data) {
       let index = this.expands.indexOf(data.key);
@@ -118,9 +132,34 @@ export default {
       }
     },
     nodeCollapse(data) {
-      let index = this.expands.indexOf(data.key);
-      if (index >= 0) {
-        this.expands.splice(index, 1);
+      let needDeletes = [];
+      needDeletes.push(data.key);
+      if (data.isDatabase) {
+        this.expands.forEach((one) => {
+          if (one == "database:tables:" + data.name) {
+            needDeletes.push(one);
+          } else if (("" + one).startsWith("database:" + data.name + ":")) {
+            needDeletes.push(one);
+          }
+        });
+      } else if (data.isDatabaseTables) {
+        this.expands.forEach((one) => {
+          if (one == "database:tables:" + data.database.name) {
+            needDeletes.push(one);
+          } else if (
+            ("" + one).startsWith("database:" + data.database.name + ":")
+          ) {
+            needDeletes.push(one);
+          }
+        });
+      }
+      if (needDeletes.length > 0) {
+        needDeletes.forEach((one) => {
+          let index = this.expands.indexOf(one);
+          if (index >= 0) {
+            this.expands.splice(index, 1);
+          }
+        });
         this.toolboxWorker.updateExtend({
           expands: this.expands,
         });

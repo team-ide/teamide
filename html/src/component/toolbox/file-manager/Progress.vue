@@ -135,7 +135,14 @@
               <span class="color-green">完成</span>
             </template>
             <template v-else>
-              <span class="color-orange">执行中</span>
+              <span
+                :key="index"
+                class="tm-link mgl-5 color-orange"
+                @click="doCallStop(one)"
+              >
+                终止
+              </span>
+              <span class="mgl-5 color-orange">执行中</span>
             </template>
           </div>
         </div>
@@ -173,12 +180,22 @@ export default {
         this.onFileWorkProgress
       );
     },
+
     async doCallAction(progress, action) {
       let param = {
         progressId: progress.progressId,
         action: action.value,
       };
       let res = await this.server.fileManager.callAction(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+    },
+    async doCallStop(progress) {
+      let param = {
+        progressId: progress.progressId,
+      };
+      let res = await this.server.fileManager.callStop(param);
       if (res.code != 0) {
         this.tool.error(res.msg);
       }
