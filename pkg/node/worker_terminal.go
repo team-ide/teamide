@@ -7,14 +7,13 @@ import (
 	"teamide/pkg/util"
 )
 
-func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.Size, readKey string, readErrorKey string) (key string, err error) {
+func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.Size, readKey string) (key string, err error) {
 	send, err := this_.sendToNext(lineNodeIdList, "", func(listener *MessageListener) (e error) {
 		res, e := this_.Call(listener, methodTerminalStart, &Message{
 			LineNodeIdList: lineNodeIdList,
 			TerminalWorkData: &TerminalWorkData{
-				Size:         size,
-				ReadKey:      readKey,
-				ReadErrorKey: readErrorKey,
+				Size:    size,
+				ReadKey: readKey,
 			},
 		})
 		if e != nil {
@@ -56,18 +55,6 @@ func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.S
 		err = this_.workSend(line, readKey, service.Read)
 		if err != nil {
 			Logger.Error("terminal read send error", zap.Error(err))
-		}
-	}()
-
-	go func() {
-		defer func() {
-			this_.removeTerminalService(key)
-			service.Stop()
-			Logger.Info("local service stopped")
-		}()
-		err = this_.workSend(line, readErrorKey, service.ReadError)
-		if err != nil {
-			Logger.Error("terminal read error send error", zap.Error(err))
 		}
 	}()
 

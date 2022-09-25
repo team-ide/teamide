@@ -21,7 +21,6 @@ type terminalService struct {
 	sshClient    *ssh.Client
 	sshSession   *ssh.Session
 	stdout       io.Reader
-	stderr       io.Reader
 	stdin        io.Writer
 	onClose      func()
 	readeLock    sync.Mutex
@@ -43,11 +42,6 @@ func (this_ *terminalService) Stop() {
 	}
 	if this_.stdout != nil {
 		if readerCloser, ok := this_.stdout.(io.ReadCloser); ok {
-			_ = readerCloser.Close()
-		}
-	}
-	if this_.stderr != nil {
-		if readerCloser, ok := this_.stderr.(io.ReadCloser); ok {
 			_ = readerCloser.Close()
 		}
 	}
@@ -105,11 +99,6 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 		util.Logger.Error("ssh session StdoutPipe error", zap.Error(err))
 		return
 	}
-	this_.stderr, err = this_.sshSession.StderrPipe()
-	if err != nil {
-		util.Logger.Error("ssh session StderrPipe error", zap.Error(err))
-		return
-	}
 	this_.stdin, err = this_.sshSession.StdinPipe()
 	if err != nil {
 		util.Logger.Error("ssh session StdinPipe error", zap.Error(err))
@@ -133,13 +122,5 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	defer this_.readeLock.Unlock()
 
 	n, err = this_.stdout.Read(buf)
-	return
-}
-
-func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
-	this_.readeErrLock.Lock()
-	defer this_.readeErrLock.Unlock()
-
-	n, err = this_.stderr.Read(buf)
 	return
 }

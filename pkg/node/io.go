@@ -85,11 +85,10 @@ type FileWorkData struct {
 }
 
 type TerminalWorkData struct {
-	Key          string         `json:"key,omitempty"`
-	ReadKey      string         `json:"readKey,omitempty"`
-	ReadErrorKey string         `json:"readErrorKey,omitempty"`
-	Size         *terminal.Size `json:"size,omitempty"`
-	IsWindows    bool           `json:"isWindows,omitempty"`
+	Key       string         `json:"key,omitempty"`
+	ReadKey   string         `json:"readKey,omitempty"`
+	Size      *terminal.Size `json:"size,omitempty"`
+	IsWindows bool           `json:"isWindows,omitempty"`
 }
 
 type StatusChange struct {

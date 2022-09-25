@@ -10,21 +10,19 @@ import (
 
 func NewTerminalService(nodeId string, nodeService *NodeService) (res *terminalService) {
 	res = &terminalService{
-		nodeId:         nodeId,
-		nodeService:    nodeService,
-		bytesChan:      make(chan []byte),
-		errorBytesChan: make(chan []byte),
+		nodeId:      nodeId,
+		nodeService: nodeService,
+		bytesChan:   make(chan []byte),
 	}
 	return
 }
 
 type terminalService struct {
-	nodeId         string
-	key            string
-	nodeLine       []string
-	nodeService    *NodeService
-	bytesChan      chan []byte
-	errorBytesChan chan []byte
+	nodeId      string
+	key         string
+	nodeLine    []string
+	nodeService *NodeService
+	bytesChan   chan []byte
 }
 
 func (this_ *terminalService) getServer() (server *node.Server, err error) {
@@ -71,10 +69,10 @@ func (this_ *terminalService) Stop() {
 		return
 	}
 
-	close(this_.bytesChan)
-	this_.bytesChan = nil
-	close(this_.errorBytesChan)
-	this_.errorBytesChan = nil
+	if this_.bytesChan != nil {
+		close(this_.bytesChan)
+		this_.bytesChan = nil
+	}
 
 	err = server.TerminalStop(this_.nodeLine, this_.key)
 
@@ -102,9 +100,6 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 	this_.key, err = server.TerminalStart(this_.nodeLine, size,
 		func(buf []byte) (err error) {
 			this_.bytesChan <- buf
-			return
-		}, func(buf []byte) (err error) {
-			this_.errorBytesChan <- buf
 			return
 		})
 	return
@@ -140,26 +135,6 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	}
 
 	bs := <-this_.bytesChan
-	n = len(bs)
-	for i, b := range bs {
-		buf[i] = b
-	}
-	return
-}
-
-func (this_ *terminalService) ReadError(buf []byte) (n int, err error) {
-
-	defer func() {
-		if e := recover(); e != nil {
-			util.Logger.Error("ReadError err", zap.Any("err", e))
-		}
-	}()
-	if this_.errorBytesChan == nil {
-		err = errors.New("errorBytesChan is close")
-		return
-	}
-
-	bs := <-this_.errorBytesChan
 	n = len(bs)
 	for i, b := range bs {
 		buf[i] = b

@@ -34,7 +34,11 @@
               label="Filter"
               class="mgb-0 toolbox-file-manager-filter-input"
             >
-              <el-input v-model="fileWorker.filter" style="width: 150px">
+              <el-input
+                ref="filterInput"
+                v-model="fileWorker.filter"
+                style="width: 150px"
+              >
               </el-input>
             </el-form-item>
           </el-form>
@@ -45,6 +49,7 @@
           class="toolbox-file-manager-files-box app-scroll-bar"
           @contextmenu.prevent="fileContextmenu"
           ref="filesBox"
+          tabindex="0"
           @click="filesBoxClick"
         >
           <template v-if="fileWorker.fileList == null">
@@ -514,31 +519,35 @@ export default {
         this.toBlurFile(file);
       }
     },
-    onKeyDown() {
-      if (this.tool.keyIsCtrlA()) {
-        this.tool.stopEvent();
-        this.fileWorker.toSelectAll();
-        return;
-      }
-      let files = this.fileWorker.getSelectFiles();
-      if (files == null || files.length == 0) {
-        return;
-      }
-      if (this.tool.keyIsF2()) {
-        this.tool.stopEvent();
-        this.toRename(files[0]);
-      } else if (this.tool.keyIsDelete()) {
-        this.tool.stopEvent();
-        this.toRemove(files);
-      }
-    },
     bindEvent() {
       if (this.bindEvented) {
         return;
       }
       this.bindEvented = true;
-      this.$el.addEventListener("keydown", (e) => {
-        this.onKeyDown(e);
+      this.$refs["filesBox"].addEventListener("keydown", (e) => {
+        if (this.tool.keyIsCtrlA()) {
+          this.tool.stopEvent();
+          this.fileWorker.toSelectAll();
+          return;
+        } else if (this.tool.keyIsCtrlF()) {
+          this.tool.stopEvent();
+          this.$refs["filterInput"].focus();
+          return;
+        } else if (this.tool.keyIsCtrlD() || this.tool.keyIsDelete()) {
+          this.tool.stopEvent();
+          let files = this.fileWorker.getSelectFiles();
+          if (files != null && files.length > 0) {
+            this.toRemove(files);
+          }
+          return;
+        } else if (this.tool.keyIsF2()) {
+          this.tool.stopEvent();
+          let files = this.fileWorker.getSelectFiles();
+          if (files != null && files.length > 0) {
+            this.toRename(files[0]);
+          }
+          return;
+        }
       });
       this.$nextTick(() => {
         this.$refs.filesBox.ondragover = this.ondragover;

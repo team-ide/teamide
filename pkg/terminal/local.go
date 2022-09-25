@@ -3,8 +3,6 @@ package terminal
 import (
 	"errors"
 	"go.uber.org/zap"
-	"io"
-	"os/exec"
 	"sync"
 	"teamide/pkg/util"
 )
@@ -14,17 +12,26 @@ func NewLocalService() (res *localService) {
 	return
 }
 
+type terminalStart struct {
+	Stop       func()
+	Write_     func(p []byte) (n int, err error)
+	Read_      func(b []byte) (int, error)
+	ChangeSize func(size *Size) (err error)
+}
+
+func (this_ *terminalStart) Write(p []byte) (n int, err error) {
+	return this_.Write_(p)
+}
+
+func (this_ *terminalStart) Read(p []byte) (n int, err error) {
+	return this_.Read_(p)
+}
+
 type localService struct {
-	reader       io.Reader
-	writer       io.Writer
-	stdout       io.ReadCloser
-	stderr       io.ReadCloser
-	stdin        io.WriteCloser
-	onClose      func()
-	readeLock    sync.Mutex
-	readeErrLock sync.Mutex
-	writeLock    sync.Mutex
-	cmd          *exec.Cmd
+	terminalStart *terminalStart
+	onClose       func()
+	readeLock     sync.Mutex
+	writeLock     sync.Mutex
 }
 
 func (this_ *localService) IsWindows() (isWindows bool, err error) {
@@ -32,53 +39,32 @@ func (this_ *localService) IsWindows() (isWindows bool, err error) {
 }
 
 func (this_ *localService) Stop() {
-	if this_.stdout != nil {
-		_ = this_.stdout.Close()
-		this_.stdout = nil
-	}
-	if this_.stderr != nil {
-		_ = this_.stderr.Close()
-		this_.stderr = nil
-	}
-	if this_.stdin != nil {
-		_ = this_.stdin.Close()
-		this_.stdin = nil
+	if this_.terminalStart != nil {
+		this_.terminalStart.Stop()
+		this_.terminalStart = nil
 	}
 }
 
 func (this_ *localService) ChangeSize(size *Size) (err error) {
+	if this_.terminalStart == nil {
+		return
+	}
+	if this_.terminalStart.ChangeSize != nil {
+		err = this_.terminalStart.ChangeSize(size)
+	}
 	return
 }
 
 func (this_ *localService) Start(size *Size) (err error) {
 
-	this_.cmd = getCmd()
+	this_.terminalStart, err = start(size)
 
-	this_.stdout, err = this_.cmd.StdoutPipe()
 	if err != nil {
-		util.Logger.Error("cmd StdoutPipe error", zap.Error(err))
+		util.Logger.Error("terminal local start error", zap.Error(err))
 		return
 	}
 
-	this_.stderr, err = this_.cmd.StderrPipe()
-	if err != nil {
-		util.Logger.Error("cmd StderrPipe error", zap.Error(err))
-		return
-	}
-
-	this_.stdin, err = this_.cmd.StdinPipe()
-	if err != nil {
-		util.Logger.Error("cmd StdinPipe error", zap.Error(err))
-		return
-	}
-
-	err = this_.cmd.Start()
-	if err != nil {
-		util.Logger.Error("cmd Start error", zap.Error(err))
-		return
-	}
-
-	util.Logger.Info("terminal local start success", zap.Any("path", this_.cmd.Path), zap.Any("args", this_.cmd.Args), zap.Any("env", this_.cmd.Env))
+	util.Logger.Info("terminal local start success")
 
 	return
 }
@@ -90,7 +76,7 @@ func (this_ *localService) Write(buf []byte) (n int, err error) {
 			util.Logger.Error("Write err", zap.Any("err", e))
 		}
 	}()
-	if this_.stdin == nil {
+	if this_.terminalStart == nil {
 		err = errors.New("stdin is close")
 		return
 	}
@@ -101,7 +87,7 @@ func (this_ *localService) Write(buf []byte) (n int, err error) {
 	//util.Logger.Info("local terminal write start")
 
 	n = len(buf)
-	err = util.Write(this_.stdin, buf, nil)
+	err = util.Write(this_.terminalStart, buf, nil)
 	return
 }
 
@@ -112,7 +98,7 @@ func (this_ *localService) Read(buf []byte) (n int, err error) {
 			util.Logger.Error("Read err", zap.Any("err", e))
 		}
 	}()
-	if this_.stdout == nil {
+	if this_.terminalStart == nil {
 		err = errors.New("stdout is close")
 		return
 	}
@@ -121,26 +107,6 @@ func (this_ *localService) Read(buf []byte) (n int, err error) {
 	defer this_.readeLock.Unlock()
 
 	//util.Logger.Info("local terminal read start")
-	n, err = this_.stdout.Read(buf)
-	return
-}
-
-func (this_ *localService) ReadError(buf []byte) (n int, err error) {
-
-	defer func() {
-		if e := recover(); e != nil {
-			util.Logger.Error("ReadError err", zap.Any("err", e))
-		}
-	}()
-	if this_.stderr == nil {
-		err = errors.New("stderr is close")
-		return
-	}
-
-	this_.readeErrLock.Lock()
-	defer this_.readeErrLock.Unlock()
-
-	//util.Logger.Info("local terminal read error start")
-	n, err = this_.stderr.Read(buf)
+	n, err = this_.terminalStart.Read(buf)
 	return
 }

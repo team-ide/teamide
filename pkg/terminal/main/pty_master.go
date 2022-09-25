@@ -1,33 +1,14 @@
-package terminal
+package main
 
 import (
-	"github.com/creack/pty"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/creack/pty"
 )
-
-func IsWindows() bool {
-	return false
-}
-
-func start(size *Size) (starter *terminalStart, err error) {
-	obj := ptyMasterNew()
-
-	err = obj.Start("bash", nil, nil, size.Cols, size.Rows)
-	if err != nil {
-		return
-	}
-	starter = &terminalStart{
-		Stop: func() {
-			_ = obj.Stop()
-		},
-		Write_: obj.Write,
-		Read_:  obj.Read,
-	}
-	return
-}
 
 // This defines a PTY Master whih will encapsulate the command we want to run, and provide simple
 // access to the command, to write and read IO, but also to control the window size.
@@ -43,7 +24,7 @@ func ptyMasterNew() *ptyMaster {
 func (this_ *ptyMaster) Start(command string, args []string, envVars []string, cols int, rows int) (err error) {
 	this_.command = exec.Command(command, args...)
 	this_.command.Env = envVars
-	this_.ptyFile, err = pty.Start(this_.command)
+	this_.ptyFile, err = pty.Start(this_.command, nil, nil)
 
 	if err != nil {
 		return
@@ -66,6 +47,23 @@ func (this_ *ptyMaster) SetWinSize(rows, cols int) {
 		Rows: uint16(rows),
 		Cols: uint16(cols),
 	})
+}
+
+func (this_ *ptyMaster) Refresh() {
+	// We wanna force the app to re-draw itself, but there doesn't seem to be a way to do that
+	// so we fake it by resizing the window quickly, making it smaller and then back big
+	cols, rows, err := this_.GetWinSize()
+
+	if err != nil {
+		return
+	}
+
+	this_.SetWinSize(rows-1, cols)
+
+	go func() {
+		time.Sleep(time.Millisecond * 50)
+		this_.SetWinSize(rows, cols)
+	}()
 }
 
 func (this_ *ptyMaster) Wait() (err error) {

@@ -373,7 +373,7 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 	case methodTerminalStart:
 		if msg.TerminalWorkData != nil {
 			var key string
-			key, err = this_.workTerminalStart(msg.LineNodeIdList, msg.TerminalWorkData.Size, msg.TerminalWorkData.ReadKey, msg.TerminalWorkData.ReadErrorKey)
+			key, err = this_.workTerminalStart(msg.LineNodeIdList, msg.TerminalWorkData.Size, msg.TerminalWorkData.ReadKey)
 			if err != nil {
 				return
 			}

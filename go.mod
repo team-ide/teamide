@@ -7,6 +7,7 @@ require (
 	github.com/Chain-Zhang/pinyin v0.1.3
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Shopify/sarama v1.33.0
+	github.com/creack/pty v1.1.11
 	github.com/dop251/goja v0.0.0-20220516123900-4418d4575a41
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.5
