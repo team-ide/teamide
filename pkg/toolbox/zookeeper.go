@@ -9,6 +9,12 @@ import (
 
 func getZKService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
 	key := "zookeeper-" + zkConfig.Address
+	if zkConfig.Username != "" {
+		key += "-" + util.GetMd5String(key+zkConfig.Username)
+	}
+	if zkConfig.Password != "" {
+		key += "-" + util.GetMd5String(key+zkConfig.Password)
+	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *zookeeper.ZKService

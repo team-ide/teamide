@@ -2,16 +2,22 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"github.com/go-redis/redis/v8"
+	"io/ioutil"
 	"sort"
 	"teamide/pkg/util"
 	"time"
 )
 
-func CreateClusterService(servers []string, auth string) (service *ClusterService, err error) {
+func CreateClusterService(servers []string, username string, auth string, certPath string) (service *ClusterService, err error) {
 	service = &ClusterService{
-		servers: servers,
-		auth:    auth,
+		servers:  servers,
+		username: username,
+		auth:     auth,
+		certPath: certPath,
 	}
 	err = service.init()
 	return
@@ -20,18 +26,41 @@ func CreateClusterService(servers []string, auth string) (service *ClusterServic
 type ClusterService struct {
 	servers      []string
 	auth         string
+	username     string
+	certPath     string
 	redisCluster *redis.ClusterClient
 	lastUseTime  int64
 }
 
 func (this_ *ClusterService) init() (err error) {
-	redisCluster := redis.NewClusterClient(&redis.ClusterOptions{
+	options := &redis.ClusterOptions{
 		Addrs:        this_.servers,
 		DialTimeout:  100 * time.Second,
 		ReadTimeout:  100 * time.Second,
 		WriteTimeout: 100 * time.Second,
+		Username:     this_.username,
 		Password:     this_.auth,
-	})
+	}
+	if this_.certPath != "" {
+		certPool := x509.NewCertPool()
+		var pemCerts []byte
+		pemCerts, err = ioutil.ReadFile(this_.certPath)
+		if err != nil {
+			return
+		}
+
+		if !certPool.AppendCertsFromPEM(pemCerts) {
+			err = errors.New("证书[" + this_.certPath + "]解析失败")
+			return
+		}
+		TLSClientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		TLSClientConfig.RootCAs = certPool
+		options.TLSConfig = TLSClientConfig
+	}
+
+	redisCluster := redis.NewClusterClient(options)
 	this_.redisCluster = redisCluster
 	return
 }

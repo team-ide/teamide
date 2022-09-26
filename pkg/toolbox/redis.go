@@ -143,8 +143,14 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 
 func getRedisService(redisConfig redis.Config) (res redis.Service, err error) {
 	key := "redis-" + redisConfig.Address
+	if redisConfig.Username != "" {
+		key += "-" + util.GetMd5String(key+redisConfig.Username)
+	}
 	if redisConfig.Auth != "" {
 		key += "-" + util.GetMd5String(key+redisConfig.Auth)
+	}
+	if redisConfig.CertPath != "" {
+		key += "-" + util.GetMd5String(key+redisConfig.CertPath)
 	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {

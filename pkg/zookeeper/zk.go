@@ -11,12 +11,16 @@ import (
 )
 
 type Config struct {
-	Address string `json:"address"`
+	Address  string `json:"address"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 func CreateZKService(config Config) (service *ZKService, err error) {
 	service = &ZKService{
-		Address: config.Address,
+		address:  config.Address,
+		username: config.Username,
+		password: config.Password,
 	}
 	err = service.init()
 	return
@@ -24,20 +28,31 @@ func CreateZKService(config Config) (service *ZKService, err error) {
 
 //ZKService 注册处理器在线信息等
 type ZKService struct {
-	Address     string
+	address     string
+	username    string
+	password    string
 	zkConn      *zk.Conn        //zk连接
 	zkConnEvent <-chan zk.Event // zk事件通知管道
 	lastUseTime int64
 }
 
 func (this_ *ZKService) init() (err error) {
-	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*60, func(c *zk.Conn) {
+	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*10, func(c *zk.Conn) {
 		c.SetLogger(defaultLogger{})
 	})
 	if err != nil {
 		util.Logger.Error("zk.Connect error", zap.Any("servers", this_.GetServers()), zap.Error(err))
 		if this_.zkConn != nil {
 			this_.zkConn.Close()
+		}
+		return
+	}
+	if this_.username != "" || this_.password != "" {
+		err = this_.zkConn.AddAuth(this_.username, []byte(this_.password))
+		if err != nil {
+			util.Logger.Error("zk.Connect AddAuth error", zap.Any("servers", this_.GetServers()), zap.Error(err))
+			this_.zkConn.Close()
+			return
 		}
 	}
 	return
@@ -51,12 +66,12 @@ func (defaultLogger) Printf(format string, args ...interface{}) {
 
 func (this_ *ZKService) GetServers() []string {
 	var servers []string
-	if strings.Contains(this_.Address, ",") {
-		servers = strings.Split(this_.Address, ",")
-	} else if strings.Contains(this_.Address, ";") {
-		servers = strings.Split(this_.Address, ";")
+	if strings.Contains(this_.address, ",") {
+		servers = strings.Split(this_.address, ",")
+	} else if strings.Contains(this_.address, ";") {
+		servers = strings.Split(this_.address, ";")
 	} else {
-		servers = []string{this_.Address}
+		servers = []string{this_.address}
 	}
 	return servers
 }

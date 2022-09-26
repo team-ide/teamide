@@ -67,35 +67,65 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 
 	switch toolboxWorker {
 	case databaseWorker_:
-		str, ok := optionMap["password"].(string)
-		if ok {
-			optionMap["password"] = this_.EncryptOptionAttr(str)
-		} else {
-			delete(optionMap, "password")
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
 		}
 		break
 	case redisWorker_:
-		str, ok := optionMap["auth"].(string)
-		if ok {
-			optionMap["auth"] = this_.EncryptOptionAttr(str)
-		} else {
-			delete(optionMap, "auth")
+		if optionMap["auth"] != nil {
+			str, ok := optionMap["auth"].(string)
+			if ok {
+				optionMap["auth"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "auth")
+			}
 		}
 		break
 	case zookeeperWorker_:
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
+		}
 		break
 	case elasticsearchWorker_:
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
+		}
 		break
 	case kafkaWorker_:
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
+		}
 		break
 	case otherWorker_:
 		break
 	case sshWorker_:
-		str, ok := optionMap["password"].(string)
-		if ok {
-			optionMap["password"] = this_.EncryptOptionAttr(str)
-		} else {
-			delete(optionMap, "password")
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
 		}
 		break
 	}
@@ -167,6 +197,9 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		if err != nil {
 			return
 		}
+		if config.CertPath != "" {
+			config.CertPath = this_.GetFilesFile(config.CertPath)
+		}
 		config.Auth = this_.DecryptOptionAttr(config.Auth)
 		res, err = toolbox.RedisWork(work, config, data)
 		break
@@ -176,6 +209,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		if err != nil {
 			return
 		}
+		config.Password = this_.DecryptOptionAttr(config.Password)
 		res, err = toolbox.ZKWork(work, config, data)
 		break
 	case elasticsearchWorker_:
@@ -187,6 +221,7 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		if config.CertPath != "" {
 			config.CertPath = this_.GetFilesFile(config.CertPath)
 		}
+		config.Password = this_.DecryptOptionAttr(config.Password)
 		res, err = toolbox.ESWork(work, config, data)
 		break
 	case kafkaWorker_:
@@ -195,6 +230,10 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		if err != nil {
 			return
 		}
+		if config.CertPath != "" {
+			config.CertPath = this_.GetFilesFile(config.CertPath)
+		}
+		config.Password = this_.DecryptOptionAttr(config.Password)
 		res, err = toolbox.KafkaWork(work, config, data)
 		break
 	case otherWorker_:
@@ -368,6 +407,9 @@ func kafkaWorker() *Worker {
 						{Required: true, Message: "连接地址不能为空"},
 					},
 				},
+				{Label: "用户名", Name: "username"},
+				{Label: "密码", Name: "password"},
+				{Label: "Cert", Name: "certPath", Type: "file", Placeholder: "请上传Cert"},
 			},
 		},
 		OtherForm: map[string]*form.Form{
@@ -483,7 +525,9 @@ func redisWorker() *Worker {
 						{Required: true, Message: "连接地址不能为空"},
 					},
 				},
+				{Label: "用户名", Name: "username"},
 				{Label: "密码", Name: "auth", Type: "password"},
+				{Label: "Cert", Name: "certPath", Type: "file", Placeholder: "请上传Cert"},
 			},
 		},
 	}
@@ -503,6 +547,8 @@ func zookeeperWorker() *Worker {
 						{Required: true, Message: "连接地址不能为空"},
 					},
 				},
+				{Label: "Username", Name: "username"},
+				{Label: "Password", Name: "password", Type: "password"},
 			},
 		},
 	}

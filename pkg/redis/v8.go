@@ -2,15 +2,21 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"github.com/go-redis/redis/v8"
+	"io/ioutil"
 	"teamide/pkg/util"
 	"time"
 )
 
-func CreateRedisService(address string, auth string) (service *V8Service, err error) {
+func CreateRedisService(address string, username string, auth string, certPath string) (service *V8Service, err error) {
 	service = &V8Service{
-		address: address,
-		auth:    auth,
+		address:  address,
+		username: username,
+		auth:     auth,
+		certPath: certPath,
 	}
 	err = service.init()
 	return
@@ -29,18 +35,41 @@ type ValueInfo struct {
 type V8Service struct {
 	address     string
 	auth        string
+	username    string
 	client      *redis.Client
 	lastUseTime int64
+	certPath    string
 }
 
 func (this_ *V8Service) init() (err error) {
-	client := redis.NewClient(&redis.Options{
+	options := &redis.Options{
 		Addr:         this_.address,
 		DialTimeout:  100 * time.Second,
 		ReadTimeout:  100 * time.Second,
 		WriteTimeout: 100 * time.Second,
 		Password:     this_.auth,
-	})
+		Username:     this_.username,
+	}
+	if this_.certPath != "" {
+		certPool := x509.NewCertPool()
+		var pemCerts []byte
+		pemCerts, err = ioutil.ReadFile(this_.certPath)
+		if err != nil {
+			return
+		}
+
+		if !certPool.AppendCertsFromPEM(pemCerts) {
+			err = errors.New("证书[" + this_.certPath + "]解析失败")
+			return
+		}
+		TLSClientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		TLSClientConfig.RootCAs = certPool
+		options.TLSConfig = TLSClientConfig
+	}
+
+	client := redis.NewClient(options)
 	this_.client = client
 	return
 }

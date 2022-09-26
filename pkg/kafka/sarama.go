@@ -2,9 +2,13 @@ package kafka
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/Shopify/sarama"
+	"io/ioutil"
 	"sort"
 	"strconv"
 	"strings"
@@ -14,13 +18,19 @@ import (
 
 // Config kafka配置
 type Config struct {
-	Address string `json:"address"`
+	Address  string `json:"address"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	CertPath string `json:"certPath,omitempty"`
 }
 
 // CreateKafkaService 创建kafka服务
 func CreateKafkaService(config Config) (*SaramaService, error) {
 	service := &SaramaService{
-		Address: config.Address,
+		address:  config.Address,
+		username: config.Username,
+		password: config.Password,
+		certPath: config.CertPath,
 	}
 	err := service.Init()
 	return service, err
@@ -28,7 +38,10 @@ func CreateKafkaService(config Config) (*SaramaService, error) {
 
 // SaramaService 注册处理器在线信息等
 type SaramaService struct {
-	Address     string
+	address     string
+	username    string
+	password    string
+	certPath    string
 	lastUseTime int64
 }
 
@@ -50,23 +63,50 @@ func (this_ *SaramaService) Stop() {
 
 func (this_ *SaramaService) GetServers() []string {
 	var servers []string
-	if strings.Contains(this_.Address, ",") {
-		servers = strings.Split(this_.Address, ",")
-	} else if strings.Contains(this_.Address, ";") {
-		servers = strings.Split(this_.Address, ";")
+	if strings.Contains(this_.address, ",") {
+		servers = strings.Split(this_.address, ",")
+	} else if strings.Contains(this_.address, ";") {
+		servers = strings.Split(this_.address, ";")
 	} else {
-		servers = []string{this_.Address}
+		servers = []string{this_.address}
 	}
 	return servers
 }
 
 func (this_ *SaramaService) getClient() (saramaClient sarama.Client, err error) {
-	SaramaConfig := sarama.NewConfig()
-	SaramaConfig.Consumer.Return.Errors = true
-	SaramaConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
-	SaramaConfig.Consumer.MaxWaitTime = time.Second * 1
-	adders := strings.Split(this_.Address, ",")
-	saramaClient, err = sarama.NewClient(adders, SaramaConfig)
+	config := sarama.NewConfig()
+	config.Consumer.Return.Errors = true
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	config.Consumer.MaxWaitTime = time.Second * 1
+
+	if this_.username != "" || this_.password != "" {
+		// sasl认证
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = this_.username
+		config.Net.SASL.Password = this_.password
+	}
+
+	if this_.certPath != "" {
+		certPool := x509.NewCertPool()
+		var pemCerts []byte
+		pemCerts, err = ioutil.ReadFile(this_.certPath)
+		if err != nil {
+			return
+		}
+
+		if !certPool.AppendCertsFromPEM(pemCerts) {
+			err = errors.New("证书[" + this_.certPath + "]解析失败")
+			return
+		}
+		TLSClientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		TLSClientConfig.RootCAs = certPool
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = TLSClientConfig
+	}
+
+	saramaClient, err = sarama.NewClient(this_.GetServers(), config)
 	if err != nil {
 		_ = saramaClient.Close()
 		return
@@ -318,18 +358,45 @@ func (this_ *SaramaService) DeleteRecords(topic string, partitionOffsets map[int
 }
 
 //NewSyncProducer 创建生产者
-func (this_ *SaramaService) NewSyncProducer() (sarama.SyncProducer, error) {
+func (this_ *SaramaService) NewSyncProducer() (syncProducer sarama.SyncProducer, err error) {
 
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.Timeout = 3
-	var err error
-	syncProducer, err := sarama.NewSyncProducer(this_.GetServers(), config)
+
+	if this_.username != "" || this_.password != "" {
+		// sasl认证
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = this_.username
+		config.Net.SASL.Password = this_.password
+	}
+
+	if this_.certPath != "" {
+		certPool := x509.NewCertPool()
+		var pemCerts []byte
+		pemCerts, err = ioutil.ReadFile(this_.certPath)
+		if err != nil {
+			return
+		}
+
+		if !certPool.AppendCertsFromPEM(pemCerts) {
+			err = errors.New("证书[" + this_.certPath + "]解析失败")
+			return
+		}
+		TLSClientConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		TLSClientConfig.RootCAs = certPool
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = TLSClientConfig
+	}
+
+	syncProducer, err = sarama.NewSyncProducer(this_.GetServers(), config)
 	if err != nil {
 		_ = syncProducer.Close()
-		return nil, err
+		return
 	}
-	return syncProducer, nil
+	return
 }
 
 type ProducerMessage struct {

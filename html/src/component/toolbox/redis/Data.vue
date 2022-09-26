@@ -300,7 +300,7 @@ var JSONbigString = JSONbig({});
 
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "extend"],
+  props: ["source", "toolboxWorker", "extend", ""],
   data() {
     return {
       ready: false,
@@ -500,6 +500,7 @@ export default {
         this.tool.success("操作成功");
 
         this.initForm();
+        this.toolboxWorker.loadKeys();
       }
     },
     async doSave() {
@@ -510,8 +511,8 @@ export default {
       let res = await this.toolboxWorker.work("do", param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
-
         this.initForm();
+        this.toolboxWorker.loadKeys();
       }
     },
   },

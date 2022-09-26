@@ -25,10 +25,10 @@ type Config struct {
 
 func CreateESService(config Config) (*V7Service, error) {
 	service := &V7Service{
-		Url:      config.Url,
-		Username: config.Username,
-		Password: config.Password,
-		CertPath: config.CertPath,
+		url:      config.Url,
+		username: config.Username,
+		password: config.Password,
+		certPath: config.CertPath,
 	}
 	err := service.Init()
 	return service, err
@@ -36,10 +36,10 @@ func CreateESService(config Config) (*V7Service, error) {
 
 //V7Service 注册处理器在线信息等
 type V7Service struct {
-	Url         string
-	Username    string
-	Password    string
-	CertPath    string
+	url         string
+	username    string
+	password    string
+	certPath    string
 	lastUseTime int64
 	client      *elastic.Client
 	clientLock  sync.Mutex
@@ -69,12 +69,12 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 		return
 	}
 	var urls []string
-	if strings.Contains(this_.Url, ",") {
-		urls = strings.Split(this_.Url, ",")
-	} else if strings.Contains(this_.Url, ";") {
-		urls = strings.Split(this_.Url, ";")
+	if strings.Contains(this_.url, ",") {
+		urls = strings.Split(this_.url, ",")
+	} else if strings.Contains(this_.url, ";") {
+		urls = strings.Split(this_.url, ";")
 	} else {
-		urls = []string{this_.Url}
+		urls = []string{this_.url}
 	}
 	var isHttps bool
 	for _, one := range urls {
@@ -92,16 +92,16 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 		TLSClientConfig := &tls.Config{
 			InsecureSkipVerify: true,
 		}
-		if this_.CertPath != "" {
+		if this_.certPath != "" {
 			certPool := x509.NewCertPool()
 			var pemCerts []byte
-			pemCerts, err = ioutil.ReadFile(this_.CertPath)
+			pemCerts, err = ioutil.ReadFile(this_.certPath)
 			if err != nil {
 				return
 			}
 
 			if !certPool.AppendCertsFromPEM(pemCerts) {
-				err = errors.New("证书[" + this_.CertPath + "]解析失败")
+				err = errors.New("证书[" + this_.certPath + "]解析失败")
 				return
 			}
 			TLSClientConfig.RootCAs = certPool
@@ -114,8 +114,8 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 		}
 		options = append(options, elastic.SetHttpClient(httpClient))
 	}
-	if this_.Username != "" {
-		options = append(options, elastic.SetBasicAuth(this_.Username, this_.Password))
+	if this_.username != "" {
+		options = append(options, elastic.SetBasicAuth(this_.username, this_.password))
 	}
 	client, err = elastic.NewClient(options...)
 	if err != nil {

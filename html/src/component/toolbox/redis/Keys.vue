@@ -112,6 +112,7 @@ export default {
           this.searchForm.database = this.extend.search.database;
         }
       }
+      this.toolboxWorker.loadKeys = this.loadKeys;
       this.loadKeys();
     },
     refresh() {

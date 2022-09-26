@@ -9,6 +9,15 @@ import (
 
 func getKafkaService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {
 	key := "kafka-" + kafkaConfig.Address
+	if kafkaConfig.Username != "" {
+		key += "-" + util.GetMd5String(key+kafkaConfig.Username)
+	}
+	if kafkaConfig.Password != "" {
+		key += "-" + util.GetMd5String(key+kafkaConfig.Password)
+	}
+	if kafkaConfig.CertPath != "" {
+		key += "-" + util.GetMd5String(key+kafkaConfig.CertPath)
+	}
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *kafka.SaramaService

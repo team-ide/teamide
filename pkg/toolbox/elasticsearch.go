@@ -10,6 +10,16 @@ import (
 
 func getESService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
 	key := "elasticsearch-" + esConfig.Url
+	if esConfig.Username != "" {
+		key += "-" + util.GetMd5String(key+esConfig.Username)
+	}
+	if esConfig.Password != "" {
+		key += "-" + util.GetMd5String(key+esConfig.Password)
+	}
+	if esConfig.CertPath != "" {
+		key += "-" + util.GetMd5String(key+esConfig.CertPath)
+	}
+
 	var service Service
 	service, err = GetService(key, func() (res Service, err error) {
 		var s *elasticsearch.V7Service

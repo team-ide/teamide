@@ -7,13 +7,15 @@ import (
 )
 
 type Config struct {
-	Address string `json:"address"`
-	Auth    string `json:"auth"`
+	Address  string `json:"address"`
+	Auth     string `json:"auth"`
+	Username string `json:"username"`
+	CertPath string `json:"certPath"`
 }
 
 func CreateService(config Config) (service Service, err error) {
 	if !strings.Contains(config.Address, ",") && !strings.Contains(config.Address, ";") {
-		service, err = CreateRedisService(config.Address, config.Auth)
+		service, err = CreateRedisService(config.Address, config.Username, config.Auth, config.CertPath)
 	} else {
 		var servers []string
 		if strings.Contains(config.Address, ",") {
@@ -23,7 +25,7 @@ func CreateService(config Config) (service Service, err error) {
 		} else {
 			servers = []string{config.Address}
 		}
-		service, err = CreateClusterService(servers, config.Auth)
+		service, err = CreateClusterService(servers, config.Username, config.Auth, config.CertPath)
 	}
 	return
 }
