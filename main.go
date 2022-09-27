@@ -26,18 +26,11 @@ var (
 	isServer    = false
 	isHtmlDev   = false
 	isServerDev = false
-	rootDir     string
-	userHomeDir string
+	rootDir     = ""
+	userHomeDir = ""
 	isElectron  = false
 )
 
-func getUserHome() string {
-	current, err := user.Current()
-	if nil == err {
-		return current.HomeDir
-	}
-	return ""
-}
 func init() {
 	var err error
 	if strings.Contains(buildFlags, "--isServer") {
@@ -49,53 +42,8 @@ func init() {
 	if strings.Contains(buildFlags, "--isDev") || strings.Contains(buildFlags, "--isServerDev") {
 		isServerDev = true
 	}
-	rootDir, err = os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	rootDir, err = filepath.Abs(rootDir)
-	if err != nil {
-		panic(err)
-	}
-	rootDir = filepath.ToSlash(rootDir)
-	if !strings.HasSuffix(rootDir, "/") {
-		rootDir += "/"
-	}
-
-	userHome := getUserHome()
-	if userHome != "" {
-		userHome, err = filepath.Abs(userHome)
-		if err != nil {
-			panic(err)
-		}
-		userHomeDir = filepath.ToSlash(userHome)
-		if !strings.HasSuffix(userHomeDir, "/") {
-			userHomeDir += "/"
-		}
-
-	}
-}
-
-func main() {
-	var err error
-	var serverContext *context.ServerContext
-
-	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println("启动失败:", e)
-			if serverContext != nil {
-				serverContext.Logger.Error("启动失败", zap.Any("error", e))
-			}
-			waitGroupForStop.Done()
-		}
-	}()
 
 	for _, v := range os.Args {
-		if v == "-version" || v == "-v" {
-			println(util.GetVersion())
-			return
-		}
 		if v == "--isServer" {
 			isServer = true
 		}
@@ -110,6 +58,62 @@ func main() {
 		}
 
 	}
+
+	rootDir, err = os.Getwd()
+	if err != nil {
+		util.Logger.Error("os get wd error", zap.Error(err))
+		panic(err)
+	}
+
+	rootDir, err = filepath.Abs(rootDir)
+	if err != nil {
+		util.Logger.Error("filepath abs error", zap.Error(err))
+		panic(err)
+	}
+	rootDir = filepath.ToSlash(rootDir)
+	if !strings.HasSuffix(rootDir, "/") {
+		rootDir += "/"
+	}
+	current, err := user.Current()
+	if err != nil {
+		util.Logger.Error("user current error", zap.Error(err))
+		panic(err)
+	}
+
+	userHomeDir = current.HomeDir
+	if userHomeDir != "" {
+		userHomeDir, err = filepath.Abs(userHomeDir)
+		if err != nil {
+			util.Logger.Error("filepath abs error", zap.Error(err))
+			panic(err)
+		}
+		userHomeDir = filepath.ToSlash(userHomeDir)
+		if !strings.HasSuffix(userHomeDir, "/") {
+			userHomeDir += "/"
+		}
+
+	}
+}
+
+func main() {
+	for _, v := range os.Args {
+		if v == "-version" || v == "-v" {
+			println(util.GetVersion())
+			return
+		}
+	}
+	var err error
+	var serverContext *context.ServerContext
+
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Println("启动失败:", e)
+			if serverContext != nil {
+				serverContext.Logger.Error("启动失败", zap.Any("error", e))
+			}
+			waitGroupForStop.Done()
+		}
+	}()
 
 	// 开启 cpu 采集分析：
 	if isServerDev {
@@ -182,7 +186,6 @@ func main() {
 		go func() {
 			var buf = make([]byte, 1024)
 			err = util.Read(os.Stdin, buf, func(n int) (err error) {
-
 				util.Logger.Info("On Electron：", zap.Any("msg", string(buf[:n])))
 				return
 			})
@@ -214,7 +217,7 @@ func main() {
 func formatServerConf(serverConf *context.ServerConf) (err error) {
 	if serverConf.IsServer {
 
-		serverConf.Server = serverConf.RootDir + "conf/sqlite.yaml"
+		serverConf.Server = serverConf.RootDir + "conf/config.yaml"
 		serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
 		serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
 

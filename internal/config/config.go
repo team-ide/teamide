@@ -44,7 +44,6 @@ type log struct {
 
 func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 
-	//filePath := base.RootDir + "conf/sqlite.yaml"
 	config = &ServerConfig{}
 	if configPath != "" {
 		var exists bool
