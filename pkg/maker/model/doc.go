@@ -6,44 +6,65 @@ import (
 	"teamide/pkg/util"
 )
 
-type modelDocStruct struct {
-	Name         string                 `json:"name"`
-	Comment      string                 `json:"comment"`
-	Abbreviation string                 `json:"abbreviation"`
-	Fields       []*modelDocFieldStruct `json:"fields"`
+type modelNodeStruct struct {
+	Name         string                  `json:"name"`
+	Comment      string                  `json:"comment"`
+	Abbreviation string                  `json:"abbreviation"`
+	Fields       []*modelNodeFieldStruct `json:"fields"`
 }
 
-type modelDocFieldStruct struct {
-	Name    string          `json:"name"`
-	Comment string          `json:"comment"`
-	IsList  bool            `json:"isList"`
-	Struct  *modelDocStruct `json:"struct"`
+type modelNodeFieldStruct struct {
+	Name    string           `json:"name"`
+	Comment string           `json:"comment"`
+	IsList  bool             `json:"isList"`
+	Struct  *modelNodeStruct `json:"struct"`
 }
 
-func toText(data map[string]interface{}, docStruct *modelDocStruct) (text string, err error) {
+type docOptions struct {
+	omitEmpty  bool
+	outComment bool
+}
+
+func toText(data map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (text string, err error) {
 	if data == nil {
 		data = map[string]interface{}{}
 	}
+	if options == nil {
+		options = &docOptions{}
+	}
 
-	doc, err := toDoc(data, docStruct)
+	node := &yaml.Node{
+		Kind: yaml.DocumentNode,
+	}
+	err = appendNode(node, data, docStruct, options)
 	if err != nil {
 		return
 	}
 
-	text, err = docToText(doc, false)
+	bytes, err := yaml.Marshal(node)
 	if err != nil {
+		util.Logger.Error("node to json error", zap.Any("node", node), zap.Error(err))
 		return
 	}
+
+	text = string(bytes)
 
 	return
 }
 
-func toDoc(data map[string]interface{}, docStruct *modelDocStruct) (doc *modelDoc, err error) {
-	doc = newModelDoc()
-	doc.comment = docStruct.Comment
+func appendNode(node *yaml.Node, data map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (err error) {
+
+	var mapNode = &yaml.Node{
+		Kind: 4,
+	}
+
+	if options.outComment {
+		mapNode.HeadComment = docStruct.Comment
+	}
+	node.Content = append(node.Content, mapNode)
 
 	for _, docFieldStruct := range docStruct.Fields {
-		err = appendDocField(doc, data[docFieldStruct.Name], docFieldStruct)
+		err = appendNodeField(mapNode, data[docFieldStruct.Name], docFieldStruct, options)
 		if err != nil {
 			return
 		}
@@ -51,222 +72,154 @@ func toDoc(data map[string]interface{}, docStruct *modelDocStruct) (doc *modelDo
 	return
 }
 
-func appendDocField(doc *modelDoc, value interface{}, docFieldStruct *modelDocFieldStruct) (err error) {
-	field := &modelDocField{}
-	doc.addField(field)
+func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
 
-	field.name = docFieldStruct.Name
-	field.comment = docFieldStruct.Comment
-	field.isValues = docFieldStruct.IsList
-
-	list, listOk := value.([]interface{})
-	if docFieldStruct.Struct != nil {
-		if field.isValues {
-			if listOk {
-				field.values = list
-			} else {
-				field.values = []interface{}{value}
-			}
-		} else {
-			field.value = value
+	if !options.omitEmpty {
+		if canNotOut(value) {
+			return
 		}
-	} else {
-		if field.isValues {
-			if listOk {
-				field.values = list
-			} else {
-				field.values = []interface{}{value}
-			}
+	}
+	fieldNode := &yaml.Node{
+		Value: docFieldStruct.Name,
+		Kind:  8,
+	}
+	if options.outComment {
+		if docFieldStruct.Struct != nil || docFieldStruct.IsList {
+			fieldNode.HeadComment = docFieldStruct.Comment
 		} else {
-			field.value = value
+			fieldNode.LineComment = docFieldStruct.Comment
 		}
 	}
 
-	return
-}
+	node.Content = append(node.Content, fieldNode)
 
-func getDocFieldValue(doc *modelDoc, value interface{}, docFieldStruct *modelDocFieldStruct) (err error) {
-	field := &modelDocField{}
-	doc.addField(field)
-
-	field.name = docFieldStruct.Name
-	field.comment = docFieldStruct.Comment
-	field.isValues = docFieldStruct.IsList
-
-	list, listOk := value.([]interface{})
-	if docFieldStruct.Struct != nil {
-		if field.isValues {
-			if listOk {
-				field.values = list
-			} else {
-				field.values = []interface{}{value}
-			}
-		} else {
-			field.value = value
+	if docFieldStruct.IsList {
+		list, listOk := value.([]interface{})
+		if !listOk {
+			list = []interface{}{value}
 		}
-	} else {
-		if field.isValues {
-			if listOk {
-				field.values = list
-			} else {
-				field.values = []interface{}{value}
-			}
-		} else {
-			field.value = value
-		}
-	}
-
-	return
-}
-
-type modelDoc struct {
-	comment string
-	fields  []*modelDocField
-}
-
-func (this_ *modelDoc) addField(field *modelDocField) (res *modelDoc) {
-	if field == nil {
-		return
-	}
-	res = this_
-	this_.fields = append(this_.fields, field)
-
-	return
-}
-
-type modelDocField struct {
-	name     string
-	value    interface{}
-	comment  string
-	values   []interface{}
-	isValue  bool
-	isValues bool
-}
-
-type modelDocFieldValue struct {
-	value   interface{}
-	comment string
-}
-
-func newModelDoc() (doc *modelDoc) {
-	doc = &modelDoc{}
-	return
-}
-
-func newModelDocFieldByValue(name string, value interface{}, comment string) (field *modelDocField) {
-	field = &modelDocField{
-		name:    name,
-		value:   value,
-		comment: comment,
-		isValue: true,
-	}
-	return
-}
-
-func newModelDocFieldByValues(name string, comment string) (field *modelDocField) {
-	field = &modelDocField{
-		name:     name,
-		comment:  comment,
-		isValues: true,
-	}
-	return
-}
-
-func docToText(doc *modelDoc, omitEmpty bool) (text string, err error) {
-	if doc == nil {
-		return
-	}
-
-	documentNode := &yaml.Node{
-		Kind:    yaml.DocumentNode,
-		Content: []*yaml.Node{},
-	}
-
-	appendDocContent(documentNode, doc, omitEmpty)
-
-	data, err := yaml.Marshal(documentNode)
-	if err != nil {
-		util.Logger.Error("docToText error", zap.Any("node", documentNode), zap.Error(err))
-		return
-	}
-
-	text = string(data)
-
-	return
-}
-
-func appendDocContent(node *yaml.Node, doc *modelDoc, omitEmpty bool) {
-	if doc == nil {
-		return
-	}
-
-	var mapNode = &yaml.Node{
-		Content:     []*yaml.Node{},
-		Kind:        4,
-		HeadComment: doc.comment,
-	}
-	node.Content = append(node.Content, mapNode)
-
-	for _, field := range doc.fields {
-		appendFieldContent(mapNode, field, omitEmpty)
-	}
-}
-
-func appendFieldContent(node *yaml.Node, field *modelDocField, omitEmpty bool) {
-	if field == nil {
-		return
-	}
-	if field.isValue {
-		if omitEmpty {
-			if field.value == "" || field.value == 0 || field.value == false || util.IsZero(field.value) {
+		if len(list) > 0 {
+			err = appendNodeFieldValues(node, list, docFieldStruct, options)
+			if err != nil {
 				return
 			}
 		}
+	} else {
+		err = appendNodeFieldValue(node, value, docFieldStruct, options)
+		if err != nil {
+			return
+		}
 	}
+
+	return
+}
+
+func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
+
+	if docFieldStruct.Struct != nil {
+		mapV, mapVOk := value.(map[string]interface{})
+		if mapVOk {
+			err = appendNodeValue(node, mapV, docFieldStruct.Struct, options)
+			if err != nil {
+				return
+			}
+			return
+		}
+	}
+
+	str, _ := util.GetStringValue(value)
 	node.Content = append(node.Content, &yaml.Node{
-		Value:       field.name,
-		Kind:        8,
-		LineComment: field.comment,
+		Kind:  8,
+		Value: str,
 	})
 
-	if field.isValues {
-		if len(field.values) > 0 {
-			var listNode = &yaml.Node{
-				Content: []*yaml.Node{},
-				Kind:    2,
-			}
-			node.Content = append(node.Content, listNode)
+	return
+}
 
-			for _, value := range field.values {
-				appendFieldValue(listNode, value, omitEmpty)
+func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
+	if len(values) == 0 {
+		return
+	}
+
+	var listNode = &yaml.Node{
+		Kind: 2,
+	}
+	node.Content = append(node.Content, listNode)
+
+	if docFieldStruct.Struct != nil {
+		for _, value := range values {
+			mapV, mapVOk := value.(map[string]interface{})
+			if mapVOk {
+				err = appendNodeValue(listNode, mapV, docFieldStruct.Struct, options)
+				if err != nil {
+					return
+				}
+			} else {
+				str, _ := util.GetStringValue(value)
+				listNode.Content = append(listNode.Content, &yaml.Node{
+					Kind:  8,
+					Value: str,
+				})
 			}
 		}
 	} else {
-		appendFieldValue(node, field.value, omitEmpty)
-	}
-}
-
-func appendFieldValue(node *yaml.Node, value interface{}, omitEmpty bool) {
-
-	docV, docVOk := value.(*modelDoc)
-
-	if docVOk {
-		appendDocContent(node, docV, omitEmpty)
-	} else {
-		vValue, vValueOk := value.(*modelDocFieldValue)
-		if vValueOk {
-			str, _ := util.GetStringValue(vValue.value)
-			node.Content = append(node.Content, &yaml.Node{
-				Kind:        8,
-				Value:       str,
-				LineComment: vValue.comment,
-			})
-		} else {
+		for _, value := range values {
 			str, _ := util.GetStringValue(value)
-			node.Content = append(node.Content, &yaml.Node{
+			listNode.Content = append(listNode.Content, &yaml.Node{
 				Kind:  8,
 				Value: str,
 			})
 		}
 	}
+
+	return
+}
+
+func appendNodeValue(node *yaml.Node, value map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (err error) {
+	if value == nil || len(value) == 0 {
+		node.Content = append(node.Content, &yaml.Node{
+			Kind: 8,
+		})
+		return
+	}
+	if docStruct.Abbreviation != "" {
+		var canNotOutCount = 0
+		for _, docFieldStruct := range docStruct.Fields {
+			if docFieldStruct.Name != docStruct.Abbreviation && canNotOut(value[docFieldStruct.Name]) {
+				canNotOutCount++
+			}
+		}
+		if canNotOutCount == len(docStruct.Fields)-1 {
+			str, _ := util.GetStringValue(value[docStruct.Abbreviation])
+			node.Content = append(node.Content, &yaml.Node{
+				Kind:  8,
+				Value: str,
+			})
+			return
+		}
+
+	}
+
+	var mapNode = &yaml.Node{
+		Kind: 4,
+	}
+	if options.outComment {
+		mapNode.HeadComment = docStruct.Comment
+	}
+	node.Content = append(node.Content, mapNode)
+
+	for _, docFieldStruct := range docStruct.Fields {
+		err = appendNodeField(mapNode, value[docFieldStruct.Name], docFieldStruct, options)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func canNotOut(value interface{}) bool {
+	if value == nil || value == "" || value == 0 || value == false || util.IsZero(value) {
+		return true
+	}
+	return false
 }

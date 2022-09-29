@@ -26,25 +26,11 @@ type StructField struct {
 	Default       string `json:"default,omitempty"`       // 默认值
 }
 
-func (this_ *StructField) otherEmpty() (res bool) {
-	res = true
-	if this_.Comment != "" ||
-		this_.Note != "" ||
-		(this_.JsonName != "" && this_.JsonName != this_.Name) ||
-		this_.JsonOmitempty ||
-		this_.IsList ||
-		this_.DataType != "" ||
-		this_.Default != "" {
-		res = false
-	}
-	return
-}
-
 var (
-	DocStructStruct = &modelDocStruct{
+	DocStructStruct = &modelNodeStruct{
 		Name:    "struct",
 		Comment: "结构体文件，该文件用于入参、出参、函数调用、数据存储等地方",
-		Fields: []*modelDocFieldStruct{
+		Fields: []*modelNodeFieldStruct{
 			{
 				Name:    "name",
 				Comment: "结构体名称",
@@ -65,17 +51,37 @@ var (
 				Name:    "fields",
 				Comment: "这是结构体字段",
 				IsList:  true,
-				Struct: &modelDocStruct{
+				Struct: &modelNodeStruct{
 					Comment:      "结构体字段",
 					Abbreviation: "name",
-					Fields: []*modelDocFieldStruct{
+					Fields: []*modelNodeFieldStruct{
 						{
 							Name:    "name",
 							Comment: "字段名称",
 						},
 						{
-							Name:    "name",
-							Comment: "字段名称",
+							Name:    "comment",
+							Comment: "字段说明",
+						},
+						{
+							Name:    "note",
+							Comment: "字段源码注释",
+						},
+						{
+							Name:    "jsonName",
+							Comment: "序列化JSON名称",
+						},
+						{
+							Name:    "jsonOmitempty",
+							Comment: "序列化JSON，省略空值",
+						},
+						{
+							Name:    "isList",
+							Comment: "是集合",
+						},
+						{
+							Name:    "default",
+							Comment: "创建对象该字段默认的值",
 						},
 					},
 				},
@@ -90,37 +96,6 @@ func StructToText(model *StructModel) (text string, err error) {
 		return
 	}
 
-	//doc := newModelDoc()
-	//doc.comment = "结构体文件，该文件用于入参、出参、函数调用、数据存储等地方"
-	//doc.addField(newModelDocFieldByValue("name", model.Name, "结构体名称"))
-	//doc.addField(newModelDocFieldByValue("comment", model.Comment, "结构体说明"))
-	//doc.addField(newModelDocFieldByValue("note", model.Note, "结构体源码注释"))
-	//doc.addField(newModelDocFieldByValue("parent", model.Parent, "父级结构体，源码将继承该结构体"))
-	//
-	//field := newModelDocFieldByValues("fields", "这是结构体字段")
-	//doc.addField(field)
-	//
-	//for _, one := range model.Fields {
-	//	if one.otherEmpty() {
-	//		field.values = append(field.values, &modelDocFieldValue{
-	//			value:   one.Name,
-	//			comment: "结构体字段，字段名称",
-	//		})
-	//	} else {
-	//		oneDoc := newModelDoc()
-	//		oneDoc.comment = "结构体字段"
-	//		oneDoc.addField(newModelDocFieldByValue("name", one.Name, "字段名称"))
-	//		oneDoc.addField(newModelDocFieldByValue("comment", one.Comment, "字段说明"))
-	//		oneDoc.addField(newModelDocFieldByValue("note", one.Note, "字段源码注释"))
-	//		oneDoc.addField(newModelDocFieldByValue("jsonName", one.JsonName, "序列化JSON名称"))
-	//		oneDoc.addField(newModelDocFieldByValue("jsonOmitempty", one.JsonOmitempty, "序列化JSON，省略空值"))
-	//		oneDoc.addField(newModelDocFieldByValue("isList", one.IsList, "是集合"))
-	//		oneDoc.addField(newModelDocFieldByValue("dataType", one.IsList, "数据类型，基础类型或结构体名称"))
-	//		oneDoc.addField(newModelDocFieldByValue("default", one.IsList, "创建对象该字段默认的值"))
-	//		field.values = append(field.values, oneDoc)
-	//	}
-	//}
-
 	bytes, err := json.Marshal(model)
 	if err != nil {
 		util.Logger.Error("model to bytes error", zap.Any("model", model), zap.Error(err))
@@ -132,7 +107,10 @@ func StructToText(model *StructModel) (text string, err error) {
 		util.Logger.Error("bytes to data error", zap.Any("bytes", bytes), zap.Error(err))
 		return
 	}
-	text, err = toText(data, DocStructStruct)
+	text, err = toText(data, DocStructStruct, &docOptions{
+		outComment: true,
+		omitEmpty:  true,
+	})
 	if err != nil {
 		util.Logger.Error("struct to text error", zap.Any("model", model), zap.Error(err))
 	}

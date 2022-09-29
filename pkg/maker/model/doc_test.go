@@ -71,7 +71,7 @@ func TestDoc(t *testing.T) {
 	//waitGroupForStop.Wait()
 }
 
-var nodeDemo = `
+var _ = `
 {
 	"node": {
 		"Kind": 1,
