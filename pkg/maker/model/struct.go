@@ -119,18 +119,21 @@ func StructToText(model *StructModel) (text string, err error) {
 
 func TextToStruct(text string) (model *StructModel, err error) {
 	var bs []byte
-	data := map[string]interface{}{}
+	source := map[string]interface{}{}
 
 	model = &StructModel{}
 
-	err = yaml.Unmarshal([]byte(text), data)
+	err = yaml.Unmarshal([]byte(text), source)
 	if err != nil {
-		util.Logger.Error("text to data error", zap.Any("text", text), zap.Error(err))
+		util.Logger.Error("text to source error", zap.Any("text", text), zap.Error(err))
 		return
 	}
 
-	fieldsData := data["fields"]
-	delete(data, "fields")
+	data, err := toData(source, DocStructStruct)
+	if err != nil {
+		util.Logger.Error("source to data error", zap.Any("source", source), zap.Error(err))
+		return
+	}
 
 	bs, err = json.Marshal(data)
 	if err != nil {
@@ -141,16 +144,6 @@ func TextToStruct(text string) (model *StructModel, err error) {
 	if err != nil {
 		util.Logger.Error("data to struct error", zap.Any("data", data), zap.Error(err))
 		return
-	}
-	if fieldsData != nil {
-		toList(
-			fieldsData,
-			func(str string) interface{} {
-				return &StructField{Name: str}
-			},
-			func(one interface{}) {
-				model.Fields = append(model.Fields, one.(*StructField))
-			})
 	}
 
 	//util.Logger.Info("text to model success", zap.Any("data", data), zap.Any("model", model))

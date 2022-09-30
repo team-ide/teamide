@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"teamide/pkg/util"
@@ -53,6 +54,20 @@ func TestDoc(t *testing.T) {
 	bs, _ := json.Marshal(model)
 
 	fmt.Println(string(bs))
+
+	newText, err := StructToText(model)
+	if err != nil {
+		util.Logger.Error("StructToText error", zap.Any("model", model), zap.Error(err))
+		return
+	}
+	if text != newText {
+		err = errors.New("text not eq new text")
+		fmt.Println("text")
+		fmt.Println(text)
+		fmt.Println("new text")
+		fmt.Println(newText)
+		util.Logger.Error("text eq new text error", zap.Any("model", model), zap.Error(err))
+	}
 	//data := map[string]interface{}{
 	//	"name": "这是名称",
 	//}
