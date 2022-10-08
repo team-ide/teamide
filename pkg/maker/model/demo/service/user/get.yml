@@ -1,0 +1,26 @@
+name: user/get
+inParams:
+  - name: userId
+    type: i64
+steps:
+  - redis: get
+    key: user-${userId}
+    var: user
+    varType: user
+  - if: user == null
+    db: selectOne
+    table: TB_USER
+    columns:
+      - userId
+      - name
+    wheres:
+      - name: userId
+        value: user.userId
+    var: user
+    steps:
+      - if: user != null
+        redis: set
+        key: user-${userId}
+        value: user
+        expire: USER_REDIS_EXPIRE
+return: user

@@ -1,9 +1,7 @@
 package model
 
 import (
-	"encoding/json"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
 	"teamide/pkg/util"
 )
 
@@ -27,10 +25,15 @@ type StructField struct {
 }
 
 var (
-	DocStructStruct = &modelNodeStruct{
-		Name:    "struct",
+	docTemplateStructName      = "struct"
+	docTemplateStructFieldName = "struct_field"
+)
+
+func init() {
+	addDocTemplate(&docTemplate{
+		Name:    docTemplateStructName,
 		Comment: "结构体文件，该文件用于入参、出参、函数调用、数据存储等地方",
-		Fields: []*modelNodeFieldStruct{
+		Fields: []*docTemplateField{
 			{
 				Name:    "name",
 				Comment: "结构体名称",
@@ -48,105 +51,68 @@ var (
 				Comment: "父级结构体，源码将继承该结构体",
 			},
 			{
-				Name:    "fields",
-				Comment: "这是结构体字段",
-				IsList:  true,
-				Struct: &modelNodeStruct{
-					Comment:      "结构体字段",
-					Abbreviation: "name",
-					Fields: []*modelNodeFieldStruct{
-						{
-							Name:    "name",
-							Comment: "字段名称",
-						},
-						{
-							Name:    "comment",
-							Comment: "字段说明",
-						},
-						{
-							Name:    "note",
-							Comment: "字段源码注释",
-						},
-						{
-							Name:    "jsonName",
-							Comment: "序列化JSON名称",
-						},
-						{
-							Name:    "jsonOmitempty",
-							Comment: "序列化JSON，省略空值",
-						},
-						{
-							Name:    "isList",
-							Comment: "是集合",
-						},
-						{
-							Name:    "default",
-							Comment: "创建对象该字段默认的值",
-						},
-					},
-				},
+				Name:       "fields",
+				Comment:    "这是结构体字段",
+				IsList:     true,
+				StructName: docTemplateStructFieldName,
 			},
 		},
-	}
-)
+	})
+	addDocTemplate(&docTemplate{
+		Comment:      "结构体字段",
+		Abbreviation: "name",
+		Name:         docTemplateStructFieldName,
+		Fields: []*docTemplateField{
+			{
+				Name:    "name",
+				Comment: "字段名称",
+			},
+			{
+				Name:    "comment",
+				Comment: "字段说明",
+			},
+			{
+				Name:    "note",
+				Comment: "字段源码注释",
+			},
+			{
+				Name:    "jsonName",
+				Comment: "序列化JSON名称",
+			},
+			{
+				Name:    "jsonOmitempty",
+				Comment: "序列化JSON，省略空值",
+			},
+			{
+				Name:    "isList",
+				Comment: "是集合",
+			},
+			{
+				Name:    "default",
+				Comment: "创建对象该字段默认的值",
+			},
+		},
+	})
+}
 
 func StructToText(model *StructModel) (text string, err error) {
-	if model == nil {
-		model = &StructModel{}
-		return
-	}
-
-	bytes, err := json.Marshal(model)
-	if err != nil {
-		util.Logger.Error("model to bytes error", zap.Any("model", model), zap.Error(err))
-		return
-	}
-	data := map[string]interface{}{}
-	err = yaml.Unmarshal(bytes, data)
-	if err != nil {
-		util.Logger.Error("bytes to data error", zap.Any("bytes", bytes), zap.Error(err))
-		return
-	}
-	text, err = toText(data, DocStructStruct, &docOptions{
+	text, err = toText(model, docTemplateStructName, &docOptions{
 		outComment: true,
-		omitEmpty:  true,
+		omitEmpty:  false,
 	})
 	if err != nil {
-		util.Logger.Error("struct to text error", zap.Any("model", model), zap.Error(err))
+		util.Logger.Error("struct model to text error", zap.Any("model", model), zap.Error(err))
+		return
 	}
 	return
 }
 
 func TextToStruct(text string) (model *StructModel, err error) {
-	var bs []byte
-	source := map[string]interface{}{}
-
 	model = &StructModel{}
-
-	err = yaml.Unmarshal([]byte(text), source)
+	err = toModel(text, docTemplateStructName, model)
 	if err != nil {
-		util.Logger.Error("text to source error", zap.Any("text", text), zap.Error(err))
+		util.Logger.Error("text to struct model error", zap.Any("text", text), zap.Error(err))
 		return
 	}
-
-	data, err := toData(source, DocStructStruct)
-	if err != nil {
-		util.Logger.Error("source to data error", zap.Any("source", source), zap.Error(err))
-		return
-	}
-
-	bs, err = json.Marshal(data)
-	if err != nil {
-		util.Logger.Error("data to bytes error", zap.Any("data", data), zap.Error(err))
-		return
-	}
-	err = yaml.Unmarshal(bs, model)
-	if err != nil {
-		util.Logger.Error("data to struct error", zap.Any("data", data), zap.Error(err))
-		return
-	}
-
-	//util.Logger.Info("text to model success", zap.Any("data", data), zap.Any("model", model))
-
 	return
 }

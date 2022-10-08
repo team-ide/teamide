@@ -1,0 +1,38 @@
+name: user/login
+inParams:
+  - name: account
+  - name: password
+steps:
+  # 验证参数合法性
+  - validates:
+      - rule: util.isEmpty(account)
+        error: USER_ACCOUNT_IS_EMPTY
+      - rule: util.isEmpty(password)
+        error: USER_PASSWORD_IS_EMPTY
+
+  # 查询账号
+  - db: selectOne
+    table: TB_USER
+    columns:
+      - *
+    wheres:
+      - name: account
+        value: account
+    var: user
+    varType: user
+
+  # 判断用户是否存在
+  - if: user == null
+    error: USER_LOGIN_ERROR
+
+  # 加密输入的密码
+  - vars:
+      # 生成 密码
+      - name: md5Password
+        value: util.md5(user.salt + password)
+
+  # 判断密码是否一致
+  - if: util.notEquals(md5Password, user.password)
+    error: USER_LOGIN_ERROR
+
+return: user

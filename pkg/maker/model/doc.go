@@ -1,25 +1,27 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
+	"sync"
 	"teamide/pkg/util"
 )
 
-type modelNodeStruct struct {
-	Name         string                  `json:"name"`
-	Comment      string                  `json:"comment"`
-	Abbreviation string                  `json:"abbreviation"`
-	Fields       []*modelNodeFieldStruct `json:"fields"`
+type docTemplate struct {
+	Name         string              `json:"name"`
+	Abbreviation string              `json:"abbreviation"`
+	Comment      string              `json:"comment"`
+	Fields       []*docTemplateField `json:"fields"`
 }
 
-type modelNodeFieldStruct struct {
-	Name    string           `json:"name"`
-	Comment string           `json:"comment"`
-	IsList  bool             `json:"isList"`
-	Struct  *modelNodeStruct `json:"struct"`
-	Default interface{}      `json:"default"` // 默认值
+type docTemplateField struct {
+	Name       string      `json:"name"`
+	Comment    string      `json:"comment"`
+	IsList     bool        `json:"isList"`
+	StructName string      `json:"structName"`
+	Default    interface{} `json:"default"` // 默认值
 }
 
 type docOptions struct {
@@ -27,23 +29,69 @@ type docOptions struct {
 	outComment bool
 }
 
-func toText(source map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (text string, err error) {
-	if source == nil {
-		source = map[string]interface{}{}
+var (
+	docTemplateCache     = map[string]*docTemplate{}
+	docTemplateCacheLock sync.Mutex
+)
+
+func addDocTemplate(template *docTemplate) {
+	docTemplateCacheLock.Lock()
+	defer docTemplateCacheLock.Unlock()
+
+	if docTemplateCache[template.Name] != nil {
+		print("doc template [" + template.Name + "] already exist")
+		return
 	}
+	docTemplateCache[template.Name] = template
+}
+
+func getDocTemplate(name string) (template *docTemplate) {
+	docTemplateCacheLock.Lock()
+	defer docTemplateCacheLock.Unlock()
+
+	template = docTemplateCache[name]
+	return
+}
+
+// GetDocTemplates 获取所有Doc模板
+func GetDocTemplates() (templates []*docTemplate) {
+	docTemplateCacheLock.Lock()
+	defer docTemplateCacheLock.Unlock()
+
+	for _, one := range docTemplateCache {
+		templates = append(templates, one)
+	}
+	return
+}
+
+func toText(model interface{}, docTemplateName string, options *docOptions) (text string, err error) {
+
 	if options == nil {
 		options = &docOptions{}
+	}
+
+	bytes, err := json.Marshal(model)
+	if err != nil {
+		util.Logger.Error("model to bytes error", zap.Any("model", model), zap.Error(err))
+		return
+	}
+	source := map[string]interface{}{}
+	err = yaml.Unmarshal(bytes, source)
+	if err != nil {
+		util.Logger.Error("bytes to data error", zap.Any("bytes", bytes), zap.Error(err))
+		return
 	}
 
 	node := &yaml.Node{
 		Kind: yaml.DocumentNode,
 	}
+	docStruct := getDocTemplate(docTemplateName)
 	err = appendNode(node, source, docStruct, options)
 	if err != nil {
 		return
 	}
 
-	bytes, err := yaml.Marshal(node)
+	bytes, err = yaml.Marshal(node)
 	if err != nil {
 		util.Logger.Error("node to json error", zap.Any("node", node), zap.Error(err))
 		return
@@ -54,7 +102,7 @@ func toText(source map[string]interface{}, docStruct *modelNodeStruct, options *
 	return
 }
 
-func appendNode(node *yaml.Node, source map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (err error) {
+func appendNode(node *yaml.Node, source map[string]interface{}, docStruct *docTemplate, options *docOptions) (err error) {
 
 	var mapNode = &yaml.Node{
 		Kind: 4,
@@ -74,7 +122,7 @@ func appendNode(node *yaml.Node, source map[string]interface{}, docStruct *model
 	return
 }
 
-func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
+func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *docTemplateField, options *docOptions) (err error) {
 
 	if !options.omitEmpty {
 		if canNotOut(value) {
@@ -86,7 +134,7 @@ func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *modelNo
 		Kind:  8,
 	}
 	if options.outComment {
-		if docFieldStruct.Struct != nil || docFieldStruct.IsList {
+		if docFieldStruct.StructName != "" || docFieldStruct.IsList {
 			fieldNode.HeadComment = docFieldStruct.Comment
 		} else {
 			fieldNode.LineComment = docFieldStruct.Comment
@@ -116,12 +164,12 @@ func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *modelNo
 	return
 }
 
-func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
+func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *docTemplateField, options *docOptions) (err error) {
 
-	if docFieldStruct.Struct != nil {
+	if docFieldStruct.StructName != "" {
 		mapV, mapVOk := value.(map[string]interface{})
 		if mapVOk {
-			err = appendNodeValue(node, mapV, docFieldStruct.Struct, options)
+			err = appendNodeValue(node, mapV, docFieldStruct.StructName, options)
 			if err != nil {
 				return
 			}
@@ -138,7 +186,7 @@ func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *mo
 	return
 }
 
-func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct *modelNodeFieldStruct, options *docOptions) (err error) {
+func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct *docTemplateField, options *docOptions) (err error) {
 	if len(values) == 0 {
 		return
 	}
@@ -148,11 +196,11 @@ func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct
 	}
 	node.Content = append(node.Content, listNode)
 
-	if docFieldStruct.Struct != nil {
+	if docFieldStruct.StructName != "" {
 		for _, value := range values {
 			mapV, mapVOk := value.(map[string]interface{})
 			if mapVOk {
-				err = appendNodeValue(listNode, mapV, docFieldStruct.Struct, options)
+				err = appendNodeValue(listNode, mapV, docFieldStruct.StructName, options)
 				if err != nil {
 					return
 				}
@@ -177,13 +225,14 @@ func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct
 	return
 }
 
-func appendNodeValue(node *yaml.Node, value map[string]interface{}, docStruct *modelNodeStruct, options *docOptions) (err error) {
+func appendNodeValue(node *yaml.Node, value map[string]interface{}, docTemplateName string, options *docOptions) (err error) {
 	if value == nil || len(value) == 0 {
 		node.Content = append(node.Content, &yaml.Node{
 			Kind: 8,
 		})
 		return
 	}
+	docStruct := getDocTemplate(docTemplateName)
 	if docStruct.Abbreviation != "" {
 		var canNotOutCount = 0
 		for _, docFieldStruct := range docStruct.Fields {
@@ -226,11 +275,42 @@ func canNotOut(value interface{}) bool {
 	return false
 }
 
-func toData(source map[string]interface{}, docStruct *modelNodeStruct) (data map[string]interface{}, err error) {
+func toModel(text string, docTemplateName string, model interface{}) (err error) {
+	var bs []byte
+	source := map[string]interface{}{}
+
+	err = yaml.Unmarshal([]byte(text), source)
+	if err != nil {
+		util.Logger.Error("text to source error", zap.Any("text", text), zap.Error(err))
+		return
+	}
+
+	data, err := toData(source, docTemplateName)
+	if err != nil {
+		util.Logger.Error("source to data error", zap.Any("source", source), zap.Error(err))
+		return
+	}
+
+	bs, err = json.Marshal(data)
+	if err != nil {
+		util.Logger.Error("data to bytes error", zap.Any("data", data), zap.Error(err))
+		return
+	}
+	err = yaml.Unmarshal(bs, model)
+	if err != nil {
+		util.Logger.Error("data to model error", zap.Any("data", data), zap.Error(err))
+		return
+	}
+
+	return
+}
+
+func toData(source map[string]interface{}, docTemplateName string) (data map[string]interface{}, err error) {
 	data = map[string]interface{}{}
 	if source == nil {
 		source = map[string]interface{}{}
 	}
+	docStruct := getDocTemplate(docTemplateName)
 	err = appendData(data, source, docStruct)
 	if err != nil {
 		return
@@ -239,7 +319,7 @@ func toData(source map[string]interface{}, docStruct *modelNodeStruct) (data map
 	return
 }
 
-func appendData(data map[string]interface{}, source map[string]interface{}, docStruct *modelNodeStruct) (err error) {
+func appendData(data map[string]interface{}, source map[string]interface{}, docStruct *docTemplate) (err error) {
 
 	for _, docFieldStruct := range docStruct.Fields {
 		data[docFieldStruct.Name], err = getFieldData(source[docFieldStruct.Name], docFieldStruct)
@@ -250,7 +330,7 @@ func appendData(data map[string]interface{}, source map[string]interface{}, docS
 	return
 }
 
-func getFieldData(sourceValue interface{}, docFieldStruct *modelNodeFieldStruct) (value interface{}, err error) {
+func getFieldData(sourceValue interface{}, docFieldStruct *docTemplateField) (value interface{}, err error) {
 
 	if docFieldStruct.IsList {
 		list, listOk := sourceValue.([]interface{})
@@ -273,10 +353,10 @@ func getFieldData(sourceValue interface{}, docFieldStruct *modelNodeFieldStruct)
 	return
 }
 
-func getFieldValue(sourceValue interface{}, docFieldStruct *modelNodeFieldStruct) (value interface{}, err error) {
+func getFieldValue(sourceValue interface{}, docFieldStruct *docTemplateField) (value interface{}, err error) {
 
-	if docFieldStruct.Struct != nil {
-		value, err = getDocValue(sourceValue, docFieldStruct.Struct)
+	if docFieldStruct.StructName != "" {
+		value, err = getDocValue(sourceValue, docFieldStruct.StructName)
 		if err != nil {
 			return
 		}
@@ -286,15 +366,15 @@ func getFieldValue(sourceValue interface{}, docFieldStruct *modelNodeFieldStruct
 	return
 }
 
-func getFieldValues(sourceValues []interface{}, docFieldStruct *modelNodeFieldStruct) (values []interface{}, err error) {
+func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField) (values []interface{}, err error) {
 	if len(sourceValues) == 0 {
 		return
 	}
 
-	if docFieldStruct.Struct != nil {
+	if docFieldStruct.StructName != "" {
 		for _, sourceValue := range sourceValues {
 			var value interface{}
-			value, err = getDocValue(sourceValue, docFieldStruct.Struct)
+			value, err = getDocValue(sourceValue, docFieldStruct.StructName)
 			if err != nil {
 				return
 			}
@@ -309,11 +389,13 @@ func getFieldValues(sourceValues []interface{}, docFieldStruct *modelNodeFieldSt
 	return
 }
 
-func getDocValue(sourceValue interface{}, docStruct *modelNodeStruct) (value map[string]interface{}, err error) {
+func getDocValue(sourceValue interface{}, docTemplateName string) (value map[string]interface{}, err error) {
 	if sourceValue == nil {
 		return
 	}
 	mapV, mapVOk := sourceValue.(map[string]interface{})
+
+	docStruct := getDocTemplate(docTemplateName)
 	if !mapVOk {
 		if docStruct.Abbreviation == "" {
 			err = errors.New("source value to struct error")

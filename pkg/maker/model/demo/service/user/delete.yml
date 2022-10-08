@@ -1,0 +1,20 @@
+name: user/delete
+inParams:
+  - name: userId
+    type: i64
+steps:
+  # 验证参数合法性
+  - validates:
+      - rule: util.isEmpty(userId)
+        error: USER_ID_IS_EMPTY
+
+  # 查询账号
+  - db: delete
+    table: TB_USER
+    wheres:
+      - name: userId
+        value: userId
+
+  - redis: del
+    key: user-${userId}
+return: user
