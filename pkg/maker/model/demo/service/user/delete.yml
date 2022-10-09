@@ -4,9 +4,8 @@ inParams:
     type: i64
 steps:
   # 验证参数合法性
-  - validates:
-      - rule: util.isEmpty(userId)
-        error: USER_ID_IS_EMPTY
+  - if: util.isEmpty(userId)
+    error: USER_ID_IS_EMPTY
 
   # 查询账号
   - db: delete

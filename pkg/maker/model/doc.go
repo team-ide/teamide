@@ -17,11 +17,12 @@ type docTemplate struct {
 }
 
 type docTemplateField struct {
-	Name       string      `json:"name"`
-	Comment    string      `json:"comment"`
-	IsList     bool        `json:"isList"`
-	StructName string      `json:"structName"`
-	Default    interface{} `json:"default"` // 默认值
+	Name         string      `json:"name"`
+	Comment      string      `json:"comment"`
+	IsList       bool        `json:"isList"`
+	StructName   string      `json:"structName"`
+	KeyStructMap string      `json:"keyStructMap"`
+	Default      interface{} `json:"default"` // 默认值
 }
 
 type docOptions struct {

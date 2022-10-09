@@ -4,11 +4,10 @@ inParams:
     type: user
 steps:
   # 验证参数合法性
-  - validates:
-      - rule: util.isNull(user)
-        error: USER_IS_NULL
-      - rule: util.isEmpty(user.userId)
-        error: USER_ID_IS_EMPTY
+  - if: util.isNull(user)
+    error: USER_IS_NULL
+  - if: util.isEmpty(user.userId)
+    error: USER_ID_IS_EMPTY
 
   # 查询账号
   - if: util.isNotEmpty(user.account)

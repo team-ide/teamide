@@ -4,11 +4,10 @@ inParams:
   - name: password
 steps:
   # 验证参数合法性
-  - validates:
-      - rule: util.isEmpty(account)
-        error: USER_ACCOUNT_IS_EMPTY
-      - rule: util.isEmpty(password)
-        error: USER_PASSWORD_IS_EMPTY
+  - if: util.isEmpty(account)
+    error: USER_ACCOUNT_IS_EMPTY
+  - if: util.isEmpty(password)
+    error: USER_PASSWORD_IS_EMPTY
 
   # 查询账号
   - db: selectOne
