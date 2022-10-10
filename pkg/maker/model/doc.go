@@ -17,12 +17,20 @@ type docTemplate struct {
 }
 
 type docTemplateField struct {
-	Name         string      `json:"name"`
-	Comment      string      `json:"comment"`
-	IsList       bool        `json:"isList"`
-	StructName   string      `json:"structName"`
-	KeyStructMap string      `json:"keyStructMap"`
-	Default      interface{} `json:"default"` // 默认值
+	Name            string            `json:"name"`
+	Comment         string            `json:"comment"`
+	IsList          bool              `json:"isList"`
+	StructName      string            `json:"structName"`
+	Default         interface{}       `json:"default"` // 默认值
+	Sons            []*docTemplateSon `json:"sons"`
+	DefaultNewModel func() interface{}
+}
+
+type docTemplateSon struct {
+	MatchKey   string      `json:"matchKey"`
+	MatchValue interface{} `json:"matchValue"`
+	StructName string      `json:"structName"`
+	NewModel   func() interface{}
 }
 
 type docOptions struct {
@@ -115,6 +123,13 @@ func appendNode(node *yaml.Node, source map[string]interface{}, docStruct *docTe
 	node.Content = append(node.Content, mapNode)
 
 	for _, docFieldStruct := range docStruct.Fields {
+		if len(docFieldStruct.Sons) > 0 {
+			err = appendNodeSonsFieldValue(mapNode, source, docFieldStruct.Sons, options)
+			if err != nil {
+				return
+			}
+			continue
+		}
 		err = appendNodeField(mapNode, source[docFieldStruct.Name], docFieldStruct, options)
 		if err != nil {
 			return
@@ -130,6 +145,7 @@ func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *docTemp
 			return
 		}
 	}
+
 	fieldNode := &yaml.Node{
 		Value: docFieldStruct.Name,
 		Kind:  8,
@@ -149,11 +165,9 @@ func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *docTemp
 		if !listOk {
 			list = []interface{}{value}
 		}
-		if len(list) > 0 {
-			err = appendNodeFieldValues(node, list, docFieldStruct, options)
-			if err != nil {
-				return
-			}
+		err = appendNodeFieldValues(node, list, docFieldStruct, options)
+		if err != nil {
+			return
 		}
 	} else {
 		err = appendNodeFieldValue(node, value, docFieldStruct, options)
@@ -166,9 +180,8 @@ func appendNodeField(node *yaml.Node, value interface{}, docFieldStruct *docTemp
 }
 
 func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *docTemplateField, options *docOptions) (err error) {
-
+	mapV, mapVOk := value.(map[string]interface{})
 	if docFieldStruct.StructName != "" {
-		mapV, mapVOk := value.(map[string]interface{})
 		if mapVOk {
 			err = appendNodeValue(node, mapV, docFieldStruct.StructName, options)
 			if err != nil {
@@ -184,6 +197,56 @@ func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *do
 		Value: str,
 	})
 
+	return
+}
+
+func getFieldSon(value map[string]interface{}, sons []*docTemplateSon) (son *docTemplateSon, err error) {
+	for _, one := range sons {
+		if one.StructName == "" {
+			continue
+		}
+		findValue, find := value[one.MatchKey]
+		if !find {
+			continue
+		}
+		if one.MatchValue != nil && one.MatchValue != findValue {
+			continue
+		}
+		docStruct := getDocTemplate(one.StructName)
+		if docStruct == nil {
+			err = errors.New("doc template [" + one.StructName + "] is not exist")
+			return
+		}
+		son = one
+		break
+	}
+	return
+}
+
+func appendNodeSonsFieldValue(node *yaml.Node, value map[string]interface{}, sons []*docTemplateSon, options *docOptions) (err error) {
+	//util.Logger.Info("append son field", zap.Any("value", value))
+	son, err := getFieldSon(value, sons)
+	if err != nil {
+		return
+	}
+	if son == nil {
+		return
+	}
+	docStruct := getDocTemplate(son.StructName)
+	for _, docFieldStruct := range docStruct.Fields {
+		//util.Logger.Info("append son field", zap.Any("key", docFieldStruct.Name))
+		if len(docFieldStruct.Sons) > 0 {
+			err = appendNodeSonsFieldValue(node, value, docFieldStruct.Sons, options)
+			if err != nil {
+				return
+			}
+			continue
+		}
+		err = appendNodeField(node, value[docFieldStruct.Name], docFieldStruct, options)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -261,6 +324,13 @@ func appendNodeValue(node *yaml.Node, value map[string]interface{}, docTemplateN
 	node.Content = append(node.Content, mapNode)
 
 	for _, docFieldStruct := range docStruct.Fields {
+		if len(docFieldStruct.Sons) > 0 {
+			err = appendNodeSonsFieldValue(mapNode, value, docFieldStruct.Sons, options)
+			if err != nil {
+				return
+			}
+			continue
+		}
 		err = appendNodeField(mapNode, value[docFieldStruct.Name], docFieldStruct, options)
 		if err != nil {
 			return
@@ -390,7 +460,7 @@ func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField
 	return
 }
 
-func getDocValue(sourceValue interface{}, docTemplateName string) (value map[string]interface{}, err error) {
+func getDocValue(sourceValue interface{}, docTemplateName string) (value interface{}, err error) {
 	if sourceValue == nil {
 		return
 	}
@@ -407,14 +477,79 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value map[str
 		mapV[docStruct.Abbreviation] = sourceValue
 	}
 
-	value = map[string]interface{}{}
+	valueMap := map[string]interface{}{}
 	for _, docFieldStruct := range docStruct.Fields {
 		var v interface{}
-		v, err = getFieldData(mapV[docFieldStruct.Name], docFieldStruct)
-		if err != nil {
+		if len(docFieldStruct.Sons) > 0 {
+			v, err = getSonValue(mapV, docFieldStruct.Sons, docFieldStruct.DefaultNewModel)
+			if err != nil {
+				return
+			}
+			value = v
 			return
+		} else {
+			v, err = getFieldData(mapV[docFieldStruct.Name], docFieldStruct)
+			if err != nil {
+				return
+			}
+			valueMap[docFieldStruct.Name] = v
+			value = valueMap
 		}
-		value[docFieldStruct.Name] = v
 	}
+	return
+}
+
+func getSonValue(sourceValue map[string]interface{}, sons []*docTemplateSon, defaultNewModel func() interface{}) (value interface{}, err error) {
+	var docStruct *docTemplate
+	var newModel func() interface{}
+	son, err := getFieldSon(sourceValue, sons)
+	if err != nil {
+		return
+	}
+	if son != nil {
+		docStruct = getDocTemplate(son.StructName)
+		newModel = son.NewModel
+	}
+	var sonValue = map[string]interface{}{}
+
+	for _, docFieldStruct := range docStruct.Fields {
+		var v interface{}
+		if len(docFieldStruct.Sons) > 0 {
+			v, err = getSonValue(sourceValue, docFieldStruct.Sons, docFieldStruct.DefaultNewModel)
+			if err != nil {
+				return
+			}
+			value = v
+			return
+		} else {
+			v, err = getFieldData(sourceValue[docFieldStruct.Name], docFieldStruct)
+			if err != nil {
+				return
+			}
+			sonValue[docFieldStruct.Name] = v
+		}
+	}
+	var model interface{}
+	if newModel != nil {
+		model = newModel()
+	} else if defaultNewModel != nil {
+		model = defaultNewModel()
+	}
+	if model == nil {
+		value = sonValue
+		return
+	}
+	value = model
+	bs, err := json.Marshal(sonValue)
+	if err != nil {
+		util.Logger.Error("son value to bytes error", zap.Any("sonValue", sonValue), zap.Error(err))
+		return
+	}
+	err = yaml.Unmarshal(bs, model)
+	if err != nil {
+		util.Logger.Error("son data to model error", zap.Any("sonValue", sonValue), zap.Error(err))
+		return
+	}
+
 	return
 }

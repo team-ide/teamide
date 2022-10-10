@@ -38,6 +38,20 @@ func init() {
 			},
 
 			// 此处添加各个阶段
+			{
+				Sons: []*docTemplateSon{
+					{
+						MatchKey:   "redis",
+						StructName: docTemplateStepRedisName,
+						NewModel: func() interface{} {
+							return &StepRedisModel{}
+						},
+					},
+				},
+				DefaultNewModel: func() interface{} {
+					return &StepModel{}
+				},
+			},
 
 			{
 				Name:       "steps",

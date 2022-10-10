@@ -10,3 +10,27 @@ type StepRedisModel struct {
 	ValueType string `json:"valueType,omitempty"` // 值类型
 	Expire    string `json:"expire,omitempty"`    // 过期时间
 }
+
+var (
+	docTemplateStepRedisName = "step_redis"
+)
+
+func init() {
+	addDocTemplate(&docTemplate{
+		Name: docTemplateStepRedisName,
+		Fields: []*docTemplateField{
+			{
+				Name:    "redis",
+				Comment: "redis操作",
+			},
+			{
+				Name:    "key",
+				Comment: "操作的Key",
+			},
+			{
+				Name:    "value",
+				Comment: "操作的Value",
+			},
+		},
+	})
+}

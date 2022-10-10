@@ -43,8 +43,8 @@ func init() {
 	})
 }
 
-func ServiceToText(model *StructModel) (text string, err error) {
-	text, err = toText(model, docTemplateStructName, &docOptions{
+func ServiceToText(model *ServiceModel) (text string, err error) {
+	text, err = toText(model, docTemplateServiceName, &docOptions{
 		outComment: true,
 		omitEmpty:  false,
 	})
@@ -55,9 +55,9 @@ func ServiceToText(model *StructModel) (text string, err error) {
 	return
 }
 
-func TextToService(text string) (model *StructModel, err error) {
-	model = &StructModel{}
-	err = toModel(text, docTemplateStructName, model)
+func TextToService(text string) (model *ServiceModel, err error) {
+	model = &ServiceModel{}
+	err = toModel(text, docTemplateServiceName, model)
 	if err != nil {
 		util.Logger.Error("text to service model error", zap.Any("text", text), zap.Error(err))
 		return

@@ -9,7 +9,60 @@ import (
 	"testing"
 )
 
-func TestDoc(t *testing.T) {
+func TestDocService(t *testing.T) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("TestDocService error", zap.Any("error", e))
+		}
+	}()
+
+	model := &ServiceModel{
+		Name: "user/insert",
+		Note: `用户结构体`,
+		Steps: []interface{}{
+			&StepRedisModel{
+				Redis: "get",
+				Key:   "user-1",
+			},
+		},
+	}
+
+	text, err := ServiceToText(model)
+	if err != nil {
+		util.Logger.Error("ServiceToText error", zap.Any("model", model), zap.Error(err))
+		return
+	}
+
+	util.Logger.Info("ServiceToText success")
+
+	fmt.Println(text)
+
+	model, err = TextToService(text)
+	if err != nil {
+		util.Logger.Error("TextToService error", zap.Any("text", text), zap.Error(err))
+		return
+	}
+	util.Logger.Info("TextToService success", zap.Any("model", model))
+	bs, _ := json.Marshal(model)
+
+	fmt.Println(string(bs))
+
+	newText, err := ServiceToText(model)
+	if err != nil {
+		util.Logger.Error("ServiceToText error", zap.Any("model", model), zap.Error(err))
+		return
+	}
+	if text != newText {
+		err = errors.New("text not eq new text")
+		fmt.Println("text")
+		fmt.Println(text)
+		fmt.Println("new text")
+		fmt.Println(newText)
+		util.Logger.Error("text eq new text error", zap.Any("model", model), zap.Error(err))
+	}
+}
+
+func TestDocStruct(t *testing.T) {
 
 	model := &StructModel{
 		Name: "user",
@@ -68,22 +121,6 @@ func TestDoc(t *testing.T) {
 		fmt.Println(newText)
 		util.Logger.Error("text eq new text error", zap.Any("model", model), zap.Error(err))
 	}
-	//data := map[string]interface{}{
-	//	"name": "这是名称",
-	//}
-	//
-	//bs, _ := yaml.Marshal(data)
-	//
-	//var node = &yaml.Node{}
-	//_ = yaml.Unmarshal(bs, node)
-	//
-	//util.Logger.Info("unmarshal to node", zap.Any("node", node))
-	//
-	//bs, _ = yaml.Marshal(node)
-	//util.Logger.Info("node marshal to data", zap.Any("data", string(bs)))
-	//var waitGroupForStop sync.WaitGroup
-	//waitGroupForStop.Add(1)
-	//waitGroupForStop.Wait()
 }
 
 var _ = `

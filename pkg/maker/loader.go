@@ -1,5 +1,5 @@
 package maker
 
-func ToText() {
+func Load(dir string) {
 
 }
