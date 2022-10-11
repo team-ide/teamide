@@ -10,6 +10,7 @@ type ServiceModel struct {
 	Comment string        `json:"comment,omitempty"` // 说明
 	Note    string        `json:"note,omitempty"`    // 注释
 	Steps   []interface{} `json:"steps,omitempty"`   // 阶段
+	Return  string        `json:"return,omitempty"`  // 返回
 }
 
 var (
@@ -38,6 +39,10 @@ func init() {
 				Comment:    "阶段",
 				IsList:     true,
 				StructName: docTemplateStepName,
+			},
+			{
+				Name:    "return",
+				Comment: "返回值",
 			},
 		},
 	})

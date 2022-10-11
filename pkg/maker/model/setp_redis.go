@@ -1,7 +1,7 @@
 package model
 
 type StepRedisModel struct {
-	*StepModel
+	*StepModel `json:",inline"`
 
 	Redis     string `json:"redis,omitempty"`     // redis操作
 	Key       string `json:"key,omitempty"`       // key，用于redis、cache、MQ等操作
@@ -17,7 +17,11 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name: docTemplateStepRedisName,
+		Name:   docTemplateStepRedisName,
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
 		Fields: []*docTemplateField{
 			{
 				Name:    "redis",

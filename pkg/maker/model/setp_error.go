@@ -1,7 +1,27 @@
 package model
 
 type StepErrorModel struct {
-	*StepModel
+	*StepModel `json:",inline"`
 
 	Error string `json:"error,omitempty"` // 异常
+}
+
+var (
+	docTemplateStepErrorName = "step_error"
+)
+
+func init() {
+	addDocTemplate(&docTemplate{
+		Name:   docTemplateStepErrorName,
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		Fields: []*docTemplateField{
+			{
+				Name:    "error",
+				Comment: "异常操作",
+			},
+		},
+	})
 }
