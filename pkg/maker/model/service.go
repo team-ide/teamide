@@ -43,7 +43,7 @@ func init() {
 	})
 }
 
-func ServiceToText(model *ServiceModel) (text string, err error) {
+func ServiceToText(model interface{}) (text string, err error) {
 	text, err = toText(model, docTemplateServiceName, &docOptions{
 		outComment: true,
 		omitEmpty:  false,

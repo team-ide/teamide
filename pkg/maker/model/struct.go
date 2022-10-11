@@ -95,7 +95,7 @@ func init() {
 	})
 }
 
-func StructToText(model *StructModel) (text string, err error) {
+func StructToText(model interface{}) (text string, err error) {
 	text, err = toText(model, docTemplateStructName, &docOptions{
 		outComment: true,
 		omitEmpty:  false,

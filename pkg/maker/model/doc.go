@@ -480,8 +480,20 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 	valueMap := map[string]interface{}{}
 	for _, docFieldStruct := range docStruct.Fields {
 		var v interface{}
-		if len(docFieldStruct.Sons) > 0 {
-			v, err = getSonValue(mapV, docFieldStruct.Sons, docFieldStruct.DefaultNewModel)
+
+		var sonDocStruct *docTemplate
+		var sonNewModel func() interface{}
+		sonDocStruct, sonNewModel, err = getSonInfo(mapV, docFieldStruct)
+		if err != nil {
+			return
+		}
+
+		if len(docFieldStruct.Sons) > 0 && sonDocStruct == nil {
+			continue
+		}
+
+		if sonDocStruct != nil {
+			v, err = getSonValue(mapV, sonDocStruct, sonNewModel)
 			if err != nil {
 				return
 			}
@@ -499,23 +511,43 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 	return
 }
 
-func getSonValue(sourceValue map[string]interface{}, sons []*docTemplateSon, defaultNewModel func() interface{}) (value interface{}, err error) {
-	var docStruct *docTemplate
-	var newModel func() interface{}
-	son, err := getFieldSon(sourceValue, sons)
-	if err != nil {
-		return
+func getSonInfo(sourceValue map[string]interface{}, docFieldStruct *docTemplateField) (sonDocStruct *docTemplate, sonNewModel func() interface{}, err error) {
+	if len(docFieldStruct.Sons) > 0 {
+		var son *docTemplateSon
+		son, err = getFieldSon(sourceValue, docFieldStruct.Sons)
+		if err != nil {
+			return
+		}
+		if son != nil {
+			sonDocStruct = getDocTemplate(son.StructName)
+			sonNewModel = son.NewModel
+		}
+		if sonNewModel == nil {
+			sonNewModel = docFieldStruct.DefaultNewModel
+		}
 	}
-	if son != nil {
-		docStruct = getDocTemplate(son.StructName)
-		newModel = son.NewModel
-	}
+	return
+}
+
+func getSonValue(sourceValue map[string]interface{}, docStruct *docTemplate, newModel func() interface{}) (value interface{}, err error) {
+
 	var sonValue = map[string]interface{}{}
 
 	for _, docFieldStruct := range docStruct.Fields {
 		var v interface{}
-		if len(docFieldStruct.Sons) > 0 {
-			v, err = getSonValue(sourceValue, docFieldStruct.Sons, docFieldStruct.DefaultNewModel)
+
+		var sonDocStruct *docTemplate
+		var sonNewModel func() interface{}
+		sonDocStruct, sonNewModel, err = getSonInfo(sourceValue, docFieldStruct)
+		if err != nil {
+			return
+		}
+
+		if len(docFieldStruct.Sons) > 0 && sonDocStruct == nil {
+			continue
+		}
+		if sonDocStruct != nil {
+			v, err = getSonValue(sourceValue, sonDocStruct, sonNewModel)
 			if err != nil {
 				return
 			}
@@ -532,8 +564,6 @@ func getSonValue(sourceValue map[string]interface{}, sons []*docTemplateSon, def
 	var model interface{}
 	if newModel != nil {
 		model = newModel()
-	} else if defaultNewModel != nil {
-		model = defaultNewModel()
 	}
 	if model == nil {
 		value = sonValue
@@ -550,6 +580,5 @@ func getSonValue(sourceValue map[string]interface{}, sons []*docTemplateSon, def
 		util.Logger.Error("son data to model error", zap.Any("sonValue", sonValue), zap.Error(err))
 		return
 	}
-
 	return
 }

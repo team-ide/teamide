@@ -12,8 +12,6 @@ steps:
   # 查询账号
   - db: selectOne
     table: TB_USER
-    columns:
-      - *
     wheres:
       - name: account
         value: account

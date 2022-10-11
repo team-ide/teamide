@@ -44,8 +44,6 @@ steps:
   # 查询用户
   - db: selectOne
     table: TB_USER
-    columns:
-      - *
     wheres:
       - name: userId
         value: user.userId
