@@ -21,6 +21,7 @@ type RedisBaseRequest struct {
 	Count      int64  `json:"count"`
 	Field      string `json:"field"`
 	TaskKey    string `json:"taskKey,omitempty"`
+	Expire     int64  `json:"expire"`
 }
 
 func RedisWork(work string, config *redis.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -63,6 +64,7 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		res["valueStart"] = valueInfo.ValueStart
 		res["valueEnd"] = valueInfo.ValueEnd
 		res["valueCount"] = valueInfo.ValueCount
+		res["ttl"] = valueInfo.TTL
 	case "keys":
 		var count int
 		var keys []string
@@ -84,6 +86,12 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		switch request.DoType {
 		case "set":
 			err = service.Set(ctx, request.Database, request.Key, request.Value)
+			if err != nil {
+				return
+			}
+			if request.Expire > 0 {
+				_, err = service.Expire(ctx, request.Database, request.Key, request.Expire)
+			}
 		case "SAdd":
 			err = service.SAdd(ctx, request.Database, request.Key, request.Value)
 		case "SRem":
@@ -113,6 +121,18 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		var count int
 		count, err = service.DelPattern(ctx, request.Database, request.Pattern)
 		res["count"] = count
+	case "expire":
+		var success bool
+		success, err = service.Expire(ctx, request.Database, request.Key, request.Expire)
+		res["success"] = success
+	case "ttl":
+		var ttl int64
+		ttl, err = service.TTL(ctx, request.Database, request.Key)
+		res["ttl"] = ttl
+	case "persist":
+		var success bool
+		success, err = service.Persist(ctx, request.Database, request.Key)
+		res["success"] = success
 
 	case "import":
 

@@ -30,6 +30,7 @@ type ValueInfo struct {
 	ValueEnd    int64       `json:"valueEnd"`
 	Cursor      uint64      `json:"cursor"`
 	MemoryUsage int64       `json:"memoryUsage"`
+	TTL         int64       `json:"ttl"`
 }
 
 type V8Service struct {
@@ -117,6 +118,36 @@ func (this_ *V8Service) Keys(ctx context.Context, database int, pattern string, 
 	}
 
 	return Keys(ctx, client, pattern, size)
+}
+
+func (this_ *V8Service) Expire(ctx context.Context, database int, key string, expire int64) (res bool, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return Expire(ctx, client, key, expire)
+}
+
+func (this_ *V8Service) TTL(ctx context.Context, database int, key string) (res int64, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return TTL(ctx, client, key)
+}
+
+func (this_ *V8Service) Persist(ctx context.Context, database int, key string) (res bool, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return Persist(ctx, client, key)
 }
 
 func (this_ *V8Service) Exists(ctx context.Context, database int, key string) (res int64, err error) {

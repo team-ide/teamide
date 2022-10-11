@@ -21,6 +21,9 @@
           <el-form-item label="Key">
             <el-input v-model="form.key"> </el-input>
           </el-form-item>
+          <el-form-item label="过期时间（秒）">
+            <el-input v-model="form.expire"> </el-input>
+          </el-form-item>
           <div
             class="ft-12 pdb-10"
             v-if="form.memoryUsage > 0 || form.valueCount > 0"
@@ -316,6 +319,7 @@ export default {
         unitMemoryUsage: null,
         unit: null,
         valueCount: 0,
+        expire: null,
       },
       setList: [],
       listList: [],
@@ -354,6 +358,7 @@ export default {
     async initForm() {
       this.loading = true;
       this.form.value = null;
+      this.form.expire = null;
       this.form.memoryUsage = 0;
       this.form.valueCount = 0;
 
@@ -386,7 +391,11 @@ export default {
       if (data.valueType != "none") {
         this.form.valueType = data.valueType || "string";
       }
-
+      if (data.ttl > 0) {
+        this.form.expire = data.ttl;
+      } else {
+        this.form.expire = null;
+      }
       this.form.value = null;
       this.form.memoryUsage = data.memoryUsage || 0;
       this.form.unitMemoryUsage = null;
@@ -506,6 +515,7 @@ export default {
     async doSave() {
       let param = {};
       this.form.valueSize = Number(this.form.valueSize);
+      this.form.expire = Number(this.form.expire);
       Object.assign(param, this.form);
       param.doType = "set";
       let res = await this.toolboxWorker.work("do", param);

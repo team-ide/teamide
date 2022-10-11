@@ -108,6 +108,36 @@ func (this_ *ClusterService) Keys(ctx context.Context, database int, pattern str
 	return ClusterKeys(ctx, client.(*redis.ClusterClient), pattern, size)
 }
 
+func (this_ *ClusterService) Expire(ctx context.Context, database int, key string, expire int64) (res bool, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return Expire(ctx, client, key, expire)
+}
+
+func (this_ *ClusterService) TTL(ctx context.Context, database int, key string) (res int64, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return TTL(ctx, client, key)
+}
+
+func (this_ *ClusterService) Persist(ctx context.Context, database int, key string) (res bool, err error) {
+
+	client, err := this_.GetClient(ctx, database)
+	if err != nil {
+		return
+	}
+
+	return Persist(ctx, client, key)
+}
+
 func (this_ *ClusterService) Exists(ctx context.Context, database int, key string) (res int64, err error) {
 
 	client, err := this_.GetClient(ctx, database)

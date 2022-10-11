@@ -48,6 +48,45 @@ func ValueType(ctx context.Context, client redis.Cmdable, key string) (ValueType
 	return
 }
 
+// Expire 让给定键在指定的秒数之后过期
+func Expire(ctx context.Context, client redis.Cmdable, key string, expire int64) (res bool, err error) {
+	cmd := client.Expire(ctx, key, time.Duration(expire)*time.Second)
+	res, err = cmd.Result()
+	if err == redis.Nil {
+		err = nil
+		return
+	}
+	return
+}
+
+// Persist 移除键的过期时间
+func Persist(ctx context.Context, client redis.Cmdable, key string) (res bool, err error) {
+	cmd := client.Persist(ctx, key)
+	res, err = cmd.Result()
+	if err == redis.Nil {
+		err = nil
+		return
+	}
+	return
+}
+
+// TTL 查看给定键距离过期还有多少秒
+func TTL(ctx context.Context, client redis.Cmdable, key string) (res int64, err error) {
+	cmd := client.TTL(ctx, key)
+	r, err := cmd.Result()
+	if err == redis.Nil {
+		err = nil
+		return
+	}
+	if err != nil {
+		return
+	}
+	if r > 0 {
+		res = int64(r / time.Second)
+	}
+	return
+}
+
 func Get(ctx context.Context, client redis.Cmdable, key string, valueStart, valueSize int64) (valueInfo *ValueInfo, err error) {
 	var valueType string
 	valueType, err = ValueType(ctx, client, key)
@@ -57,6 +96,7 @@ func Get(ctx context.Context, client redis.Cmdable, key string, valueStart, valu
 	valueInfo = &ValueInfo{}
 
 	valueInfo.MemoryUsage, _ = MemoryUsage(ctx, client, key)
+	valueInfo.TTL, _ = TTL(ctx, client, key)
 	var value interface{}
 
 	if valueType == "none" {
@@ -154,7 +194,7 @@ func Get(ctx context.Context, client redis.Cmdable, key string, valueStart, valu
 
 		value = keyValue
 	} else {
-		println(valueType)
+		util.Logger.Warn("valueType not support", zap.Any("valueType", valueType), zap.Any("key", key))
 	}
 	valueInfo.ValueType = valueType
 	valueInfo.Value = value

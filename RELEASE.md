@@ -1,8 +1,7 @@
-# 1.7.5
+# 1.7.6
 
-## Version 1.7.5 （2022/09/26）
+## Version 1.7.6 （2022/10/11）
 
 发布功能
 
-1. Kafka、Redis、Elasticsearch、zookeeper添加用户名、密码、证书等验证
-2. Redis新增、编辑后刷新Keys列表
+1. Redis添加过期时间的展示和设置
