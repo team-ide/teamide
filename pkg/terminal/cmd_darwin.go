@@ -19,7 +19,7 @@ func start(size *Size) (starter *terminalStart, err error) {
 	if os.IsNotExist(err) {
 		command = "sh"
 	}
-	err = obj.Start("bash", nil, nil, size.Cols, size.Rows)
+	err = obj.Start(command, nil, nil, size.Cols, size.Rows)
 	if err != nil {
 		return
 	}
