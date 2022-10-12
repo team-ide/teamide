@@ -6,28 +6,30 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"reflect"
+	"strings"
 	"sync"
 	"teamide/pkg/util"
 )
 
 type docTemplate struct {
-	Name            string `json:"name"`
-	Inline          string `json:"inline"`
-	inlineNewModel  func() interface{}
-	Abbreviation    string              `json:"abbreviation"`
-	Comment         string              `json:"comment"`
-	Fields          []*docTemplateField `json:"fields"`
-	defaultNewModel func() interface{}
+	Name           string `json:"name"`
+	Inline         string `json:"inline"`
+	inlineNewModel func() interface{}
+	Abbreviation   string              `json:"abbreviation"`
+	Comment        string              `json:"comment"`
+	Fields         []*docTemplateField `json:"fields"`
+	newModel       func() interface{}
+	newModels      func() interface{}
+	appendModel    func(values interface{}, value interface{})
 }
 
 type docTemplateField struct {
-	Name            string            `json:"name"`
-	Comment         string            `json:"comment"`
-	IsList          bool              `json:"isList"`
-	StructName      string            `json:"structName"`
-	Default         interface{}       `json:"default"` // 默认值
-	Sons            []*docTemplateSon `json:"sons"`
-	defaultNewModel func() interface{}
+	Name       string            `json:"name"`
+	Comment    string            `json:"comment"`
+	IsList     bool              `json:"isList"`
+	StructName string            `json:"structName"`
+	Default    interface{}       `json:"default"` // 默认值
+	Sons       []*docTemplateSon `json:"sons"`
 }
 
 type docTemplateSon struct {
@@ -351,7 +353,6 @@ func canNotOut(value interface{}) bool {
 }
 
 func toModel(text string, docTemplateName string, model interface{}) (err error) {
-	var bs []byte
 	source := map[string]interface{}{}
 
 	err = yaml.Unmarshal([]byte(text), source)
@@ -360,33 +361,21 @@ func toModel(text string, docTemplateName string, model interface{}) (err error)
 		return
 	}
 
-	data, err := toData(source, docTemplateName)
+	err = appendData(source, model, docTemplateName)
 	if err != nil {
-		util.Logger.Error("source to data error", zap.Any("source", source), zap.Error(err))
-		return
-	}
-
-	bs, err = json.Marshal(data)
-	if err != nil {
-		util.Logger.Error("data to bytes error", zap.Any("data", data), zap.Error(err))
-		return
-	}
-	err = yaml.Unmarshal(bs, model)
-	if err != nil {
-		util.Logger.Error("data to model error", zap.Any("data", data), zap.Error(err))
+		util.Logger.Error("append data error", zap.Any("source", source), zap.Error(err))
 		return
 	}
 
 	return
 }
 
-func toData(source map[string]interface{}, docTemplateName string) (data map[string]interface{}, err error) {
-	data = map[string]interface{}{}
+func appendData(source map[string]interface{}, data interface{}, docTemplateName string) (err error) {
 	if source == nil {
 		source = map[string]interface{}{}
 	}
 	docStruct := getDocTemplate(docTemplateName)
-	err = appendData(data, source, docStruct)
+	err = appendDataByStruct(source, data, docStruct)
 	if err != nil {
 		return
 	}
@@ -394,13 +383,48 @@ func toData(source map[string]interface{}, docTemplateName string) (data map[str
 	return
 }
 
-func appendData(data map[string]interface{}, source map[string]interface{}, docStruct *docTemplate) (err error) {
+func appendDataByStruct(source map[string]interface{}, data interface{}, docStruct *docTemplate) (err error) {
 
 	for _, docFieldStruct := range docStruct.Fields {
-		data[docFieldStruct.Name], err = getFieldData(source[docFieldStruct.Name], docFieldStruct)
+		var v interface{}
+		v, err = getFieldData(source[docFieldStruct.Name], docFieldStruct)
 		if err != nil {
 			return
 		}
+		setFieldValue(data, docFieldStruct.Name, v)
+	}
+	return
+}
+
+func setFieldValue(data interface{}, name string, value interface{}) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("set field error", zap.Any("name", name), zap.Any("data", data), zap.Any("value", value), zap.Any("error", e))
+		}
+	}()
+	var fV reflect.Value
+	dV := reflect.ValueOf(data) // 取得struct变量的指针
+	dT := reflect.TypeOf(data)
+	num := dT.Elem().NumField()
+	for i := 0; i < num; i++ {
+		field := dT.Elem().Field(i)
+		jsonKey := field.Tag.Get("json")
+		if jsonKey != "" {
+			if strings.Contains(jsonKey, ",") {
+				jsonKey = strings.Split(jsonKey, ",")[0]
+			}
+			if strings.EqualFold(jsonKey, name) {
+				fV = dV.Elem().Field(i)
+				break
+			}
+		}
+		if strings.EqualFold(field.Name, name) {
+			fV = dV.Elem().Field(i)
+			break
+		}
+	}
+	if !canNotOut(value) {
+		fV.Set(reflect.ValueOf(value))
 	}
 	return
 }
@@ -447,6 +471,13 @@ func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField
 	}
 
 	if docFieldStruct.StructName != "" {
+
+		docStruct := getDocTemplate(docFieldStruct.StructName)
+		var mList interface{}
+		if docStruct.newModels != nil {
+			mList = docStruct.newModels()
+		}
+
 		for _, sourceValue := range sourceValues {
 			var value interface{}
 			value, err = getDocValue(sourceValue, docFieldStruct.StructName)
@@ -454,7 +485,11 @@ func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField
 				return
 			}
 			if value != nil {
-				values = append(values, value)
+				if docStruct.newModels != nil {
+					docStruct.appendModel(mList, value)
+				} else {
+					values = append(values, value)
+				}
 			}
 		}
 	} else {
@@ -483,27 +518,47 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 		mapV[docStruct.Abbreviation] = sourceValue
 	}
 
-	valueMap := map[string]interface{}{}
 	var sonNewModel func() interface{}
 	var inline string
-	var inlineNewModel func() interface{}
+	var inlineValue interface{}
+	for _, docFieldStruct := range docStruct.Fields {
+		if len(docFieldStruct.Sons) > 0 {
+			var sonDocStruct *docTemplate
+			sonDocStruct, err = getSonInfo(mapV, docFieldStruct)
+			if err != nil {
+				return
+			}
+			if sonDocStruct == nil {
+				continue
+			}
+			if sonDocStruct.Inline != "" {
+				if sonDocStruct.inlineNewModel != nil {
+					inlineValue = sonDocStruct.inlineNewModel()
+				} else {
+					inlineValue = docStruct.inlineNewModel()
+				}
+			}
+			inline = sonDocStruct.Inline
+			sonNewModel = sonDocStruct.newModel
+		}
+	}
+	if sonNewModel != nil {
+		value = sonNewModel()
+	} else {
+		value = docStruct.newModel()
+	}
 	for _, docFieldStruct := range docStruct.Fields {
 		var v interface{}
 
 		var sonDocStruct *docTemplate
 		if len(docFieldStruct.Sons) > 0 {
-			sonDocStruct, sonNewModel, err = getSonInfo(mapV, docFieldStruct)
+			sonDocStruct, err = getSonInfo(mapV, docFieldStruct)
 			if err != nil {
 				return
-			}
-			if sonNewModel == nil {
-				sonNewModel = docFieldStruct.defaultNewModel
 			}
 			if sonDocStruct == nil {
 				continue
 			}
-			inline = sonDocStruct.Inline
-			inlineNewModel = sonDocStruct.inlineNewModel
 		}
 
 		if sonDocStruct != nil {
@@ -513,7 +568,7 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 					return
 				}
 				if !canNotOut(v) {
-					valueMap[sonDocFieldStruct.Name] = v
+					setFieldValue(value, sonDocFieldStruct.Name, v)
 				}
 			}
 		} else {
@@ -522,51 +577,23 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 				return
 			}
 			if !canNotOut(v) {
-				valueMap[docFieldStruct.Name] = v
+				if inlineValue != nil {
+					setFieldValue(inlineValue, docFieldStruct.Name, v)
+				} else {
+					setFieldValue(value, docFieldStruct.Name, v)
+				}
 			}
 		}
 	}
 
-	if len(valueMap) == 0 {
-		return
-	}
-	if sonNewModel == nil {
-		sonNewModel = docStruct.defaultNewModel
-	}
-	if sonNewModel != nil {
-		value = sonNewModel()
-		//util.Logger.Info("son model create", zap.Any("son", util.GetRefType(value).Name()), zap.Any("data", valueMap))
-		var bs []byte
-		bs, err = json.Marshal(valueMap)
-		if err != nil {
-			util.Logger.Error("map value to bytes error", zap.Any("map", valueMap), zap.Error(err))
-			return
-		}
-		err = yaml.Unmarshal(bs, value)
-		if err != nil {
-			util.Logger.Error("json to model error", zap.Any("json", string(bs)), zap.Error(err))
-			return
-		}
-
-		if inline != "" && inlineNewModel != nil {
-			inlineValue := inlineNewModel()
-			err = yaml.Unmarshal(bs, inlineValue)
-			if err != nil {
-				util.Logger.Error("json to inline value error", zap.Any("json", string(bs)), zap.Error(err))
-				return
-			}
-			pp := reflect.ValueOf(value)           // 取得struct变量的指针
-			field := pp.Elem().FieldByName(inline) //获取指定Field
-			field.Set(reflect.ValueOf(inlineValue))
-		}
-	} else {
-		value = valueMap
+	if inline != "" && inlineValue != nil {
+		setFieldValue(value, inline, inlineValue)
 	}
 
 	return
 }
 
-func getSonInfo(sourceValue map[string]interface{}, docFieldStruct *docTemplateField) (sonDocStruct *docTemplate, sonNewModel func() interface{}, err error) {
+func getSonInfo(sourceValue map[string]interface{}, docFieldStruct *docTemplateField) (sonDocStruct *docTemplate, err error) {
 	if len(docFieldStruct.Sons) > 0 {
 		var son *docTemplateSon
 		son, err = getFieldSon(sourceValue, docFieldStruct.Sons)
@@ -575,10 +602,6 @@ func getSonInfo(sourceValue map[string]interface{}, docFieldStruct *docTemplateF
 		}
 		if son != nil {
 			sonDocStruct = getDocTemplate(son.StructName)
-			sonNewModel = son.newModel
-		}
-		if sonNewModel == nil {
-			sonNewModel = docFieldStruct.defaultNewModel
 		}
 	}
 	return

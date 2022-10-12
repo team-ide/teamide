@@ -17,11 +17,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepRedisName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepRedisName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "redis",
@@ -35,6 +31,13 @@ func init() {
 				Name:    "value",
 				Comment: "操作的Value",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepRedisModel{}
 		},
 	})
 }

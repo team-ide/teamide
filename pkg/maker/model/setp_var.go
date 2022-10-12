@@ -3,9 +3,9 @@ package model
 type StepVarModel struct {
 	*StepModel `json:",inline"`
 
-	Var       string `json:"var,omitempty"`       // 定义变量
-	Value     string `json:"value,omitempty"`     // 值
-	ValueType string `json:"valueType,omitempty"` // 值类型
+	Var   string `json:"var,omitempty"`   // 定义变量
+	Value string `json:"value,omitempty"` // 值
+	Type  string `json:"type,omitempty"`  // 值类型
 }
 
 var (
@@ -14,11 +14,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepVarName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepVarName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "var",
@@ -29,9 +25,19 @@ func init() {
 				Comment: "变量值",
 			},
 			{
-				Name:    "valueType",
+				Name:    "type",
 				Comment: "变量值类型",
 			},
 		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepVarModel{}
+		},
 	})
+}
+
+type ValueType struct {
 }

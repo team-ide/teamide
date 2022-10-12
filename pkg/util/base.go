@@ -11,6 +11,36 @@ import (
 	"time"
 )
 
+func IsEmpty(obj interface{}) (res bool) { // 是否为空  null或空字符串
+	if obj == nil || obj == "" || obj == 0 {
+		res = true
+	}
+	return
+}
+
+func IsNotEmpty(obj interface{}) (res bool) { // 是否不为空  取 是否为空 反
+	return !IsEmpty(obj)
+}
+
+func IsTrue(obj interface{}) (res bool) { // 是否为真 入：true、"true"、1、"1"为真
+	if obj == true || obj == "true" || obj == 1 || obj == "1" {
+		res = true
+	}
+	return
+}
+
+func IsFalse(obj interface{}) (res bool) { // 是否为假  取 是否为真 反
+	return !IsTrue(obj)
+}
+
+func AppendLine(content *string, line string, tab int) {
+	for i := 0; i < tab; i++ {
+		*content += "    "
+	}
+	*content += line
+	*content += "\n"
+}
+
 //EncodePassword 加密密码
 func EncodePassword(salt string, password string) (res string) {
 	res = GetMd5String(salt + password)

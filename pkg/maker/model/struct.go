@@ -57,6 +57,9 @@ func init() {
 				StructName: docTemplateStructFieldName,
 			},
 		},
+		newModel: func() interface{} {
+			return &StructModel{}
+		},
 	})
 	addDocTemplate(&docTemplate{
 		Comment:      "结构体字段",
@@ -91,6 +94,17 @@ func init() {
 				Name:    "default",
 				Comment: "创建对象该字段默认的值",
 			},
+		},
+		newModel: func() interface{} {
+			return &StructField{}
+		},
+		newModels: func() interface{} {
+			var vs []*StructField
+			return vs
+		},
+		appendModel: func(values interface{}, value interface{}) {
+			vs := values.([]*StructField)
+			vs = append(vs, value.(*StructField))
 		},
 	})
 }

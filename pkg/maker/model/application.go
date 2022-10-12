@@ -7,6 +7,8 @@ type Application struct {
 	structCache  map[string]*StructModel
 	ServiceList  []*ServiceModel `json:"serviceList"`
 	serviceCache map[string]*ServiceModel
+	ErrorList    []*ErrorModel `json:"errorList"`
+	errorCache   map[string]*ErrorModel
 	LoadErrors   []*LoadError `json:"loadErrors"`
 }
 
@@ -52,6 +54,26 @@ func (this_ *Application) AppendService(model *ServiceModel) (err error) {
 func (this_ *Application) GetService(name string) (model *ServiceModel) {
 	if this_.serviceCache != nil {
 		model = this_.serviceCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendError(model *ErrorModel) (err error) {
+	if this_.errorCache == nil {
+		this_.errorCache = make(map[string]*ErrorModel)
+	}
+	if this_.errorCache[model.Name] != nil {
+		err = errors.New("error model [" + model.Name + "] already exist")
+		return
+	}
+	this_.ErrorList = append(this_.ErrorList, model)
+	this_.errorCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetError(name string) (model *ErrorModel) {
+	if this_.errorCache != nil {
+		model = this_.errorCache[name]
 	}
 	return
 }

@@ -43,104 +43,59 @@ func init() {
 					{
 						MatchKey:   "cache",
 						StructName: docTemplateStepCacheName,
-						newModel: func() interface{} {
-							return &StepCacheModel{}
-						},
 					},
 					{
 						MatchKey:   "command",
 						StructName: docTemplateStepCommandName,
-						newModel: func() interface{} {
-							return &StepCommandModel{}
-						},
 					},
 					{
 						MatchKey:   "db",
 						StructName: docTemplateStepDbName,
-						newModel: func() interface{} {
-							return &StepDbModel{}
-						},
 					},
 					{
 						MatchKey:   "error",
 						StructName: docTemplateStepErrorName,
-						newModel: func() interface{} {
-							return &StepErrorModel{}
-						},
 					},
 					{
 						MatchKey:   "es",
 						StructName: docTemplateStepEsName,
-						newModel: func() interface{} {
-							return &StepEsModel{}
-						},
 					},
 					{
 						MatchKey:   "file",
 						StructName: docTemplateStepFileName,
-						newModel: func() interface{} {
-							return &StepFileModel{}
-						},
 					},
 					{
 						MatchKey:   "http",
 						StructName: docTemplateStepHttpName,
-						newModel: func() interface{} {
-							return &StepHttpModel{}
-						},
 					},
 					{
 						MatchKey:   "lock",
 						StructName: docTemplateStepLockName,
-						newModel: func() interface{} {
-							return &StepLockModel{}
-						},
 					},
 					{
 						MatchKey:   "mq",
 						StructName: docTemplateStepMqName,
-						newModel: func() interface{} {
-							return &StepMqModel{}
-						},
 					},
 					{
 						MatchKey:   "redis",
 						StructName: docTemplateStepRedisName,
-						newModel: func() interface{} {
-							return &StepRedisModel{}
-						},
 					},
 					{
 						MatchKey:   "script",
 						StructName: docTemplateStepScriptName,
-						newModel: func() interface{} {
-							return &StepScriptModel{}
-						},
 					},
 					{
 						MatchKey:   "service",
 						StructName: docTemplateStepServiceName,
-						newModel: func() interface{} {
-							return &StepServiceModel{}
-						},
 					},
 					{
 						MatchKey:   "var",
 						StructName: docTemplateStepVarName,
-						newModel: func() interface{} {
-							return &StepVarModel{}
-						},
 					},
 					{
 						MatchKey:   "zk",
 						StructName: docTemplateStepZkName,
-						newModel: func() interface{} {
-							return &StepZkModel{}
-						},
 					},
-				},
-				defaultNewModel: func() interface{} {
-					return &StepModel{}
 				},
 			},
 
@@ -155,7 +110,7 @@ func init() {
 				Comment: "返回值",
 			},
 		},
-		defaultNewModel: func() interface{} {
+		newModel: func() interface{} {
 			return &StepModel{}
 		},
 	})

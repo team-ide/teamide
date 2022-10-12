@@ -12,11 +12,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepCacheName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepCacheName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "cache",
@@ -30,6 +26,13 @@ func init() {
 				Name:    "value",
 				Comment: "操作的Value",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepCacheModel{}
 		},
 	})
 }

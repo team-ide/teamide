@@ -12,16 +12,19 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepCommandName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepCommandName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "command",
 				Comment: "命令操作",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepCommandModel{}
 		},
 	})
 }

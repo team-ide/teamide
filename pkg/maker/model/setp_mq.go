@@ -14,11 +14,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepMqName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepMqName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "mq",
@@ -28,6 +24,13 @@ func init() {
 				Name:    "topic",
 				Comment: "MQ主题",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepMqModel{}
 		},
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"teamide/pkg/maker/code/javascript"
 	"teamide/pkg/maker/model"
 	"teamide/pkg/util"
 	"testing"
@@ -22,7 +23,7 @@ func LoadDemoApp() (app *model.Application, err error) {
 		util.Logger.Error("filepath abs error", zap.Error(err))
 		return
 	}
-	dir := rootDir + "/demo"
+	dir := rootDir + "/model/demo"
 	app = model.Load(dir)
 	return
 }
@@ -40,4 +41,17 @@ func TestLoader(t *testing.T) {
 		return
 	}
 	println(string(bs))
+
+	println("service list start")
+	for _, one := range app.ServiceList {
+		println("service [" + one.Name + "] start")
+		js, err := javascript.GetServiceJavascript(app, one)
+		if err != nil {
+			util.Logger.Error("get service javascript error", zap.Error(err))
+			return
+		}
+		println(js)
+		println("service [" + one.Name + "] end")
+	}
+	println("service list end")
 }

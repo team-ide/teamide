@@ -40,12 +40,13 @@ func appendModelByType(dir string, app *Application, modelType *Type) {
 
 func appendModel(dir string, app *Application, modelType *Type, fullName string) {
 
+	path := strings.TrimLeft(fullName, dir)
 	var err error
 	defer func() {
 		if err != nil {
 			loadError := &LoadError{}
 			loadError.Type = modelType
-			loadError.Path = strings.TrimLeft(fullName, dir)
+			loadError.Path = path
 			loadError.Error = err.Error()
 			app.LoadErrors = append(app.LoadErrors, loadError)
 		}
@@ -58,17 +59,17 @@ func appendModel(dir string, app *Application, modelType *Type, fullName string)
 	}
 	bs, err := ioutil.ReadFile(fullName)
 	if err != nil {
-		util.Logger.Error("appendModelByType ReadFile error", zap.Any("fullName", fullName), zap.Any("modelType", modelType), zap.Error(err))
+		util.Logger.Error("appendModelByType ReadFile error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Error(err))
 		return
 	}
 	one, err := modelType.toModel(string(bs))
 	if err != nil {
-		util.Logger.Error("appendModelByType ToModel error", zap.Any("fullName", fullName), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
+		util.Logger.Error("appendModelByType ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
 		return
 	}
 	err = modelType.append(app, one)
 	if err != nil {
-		util.Logger.Error("appendModelByType Append error", zap.Any("fullName", fullName), zap.Any("modelType", modelType), zap.Any("model", one), zap.Error(err))
+		util.Logger.Error("appendModelByType Append error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("model", one), zap.Error(err))
 		return
 	}
 	return

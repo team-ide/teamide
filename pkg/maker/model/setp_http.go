@@ -13,11 +13,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepHttpName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepHttpName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "http",
@@ -27,6 +23,13 @@ func init() {
 				Name:    "url",
 				Comment: "地址",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepHttpModel{}
 		},
 	})
 }

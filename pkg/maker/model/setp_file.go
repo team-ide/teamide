@@ -14,11 +14,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepFileName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepFileName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "file",
@@ -28,6 +24,13 @@ func init() {
 				Name:    "path",
 				Comment: "文件路径",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepFileModel{}
 		},
 	})
 }

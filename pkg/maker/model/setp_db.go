@@ -18,11 +18,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepDbName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepDbName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "db",
@@ -32,6 +28,13 @@ func init() {
 				Name:    "table",
 				Comment: "表",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepDbModel{}
 		},
 	})
 }

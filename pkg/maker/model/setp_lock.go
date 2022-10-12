@@ -13,11 +13,7 @@ var (
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:   docTemplateStepLockName,
-		Inline: "StepModel",
-		inlineNewModel: func() interface{} {
-			return &StepModel{}
-		},
+		Name: docTemplateStepLockName,
 		Fields: []*docTemplateField{
 			{
 				Name:    "lock",
@@ -27,6 +23,13 @@ func init() {
 				Name:    "lockType",
 				Comment: "锁类型",
 			},
+		},
+		Inline: "StepModel",
+		inlineNewModel: func() interface{} {
+			return &StepModel{}
+		},
+		newModel: func() interface{} {
+			return &StepLockModel{}
 		},
 	})
 }

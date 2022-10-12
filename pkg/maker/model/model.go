@@ -44,9 +44,29 @@ var (
 			return
 		},
 	}
+
+	TypeError = &Type{
+		Name:    "error",
+		Comment: "错误码",
+		Dir:     "error",
+		toModel: func(text string) (model interface{}, err error) {
+			return TextToErrors(text)
+		},
+		toText: func(model interface{}) (text string, err error) {
+			return ErrorsToText(model.([]*ErrorModel))
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			errorList := model.([]*ErrorModel)
+			for _, one := range errorList {
+				err = app.AppendError(one)
+			}
+			return
+		},
+	}
 )
 
 func init() {
 	Types = append(Types, TypeStruct)
 	Types = append(Types, TypeService)
+	Types = append(Types, TypeError)
 }
