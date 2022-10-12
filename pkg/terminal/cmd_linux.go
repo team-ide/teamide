@@ -15,7 +15,12 @@ func IsWindows() bool {
 func start(size *Size) (starter *terminalStart, err error) {
 	obj := ptyMasterNew()
 
-	err = obj.Start("bash", nil, nil, size.Cols, size.Rows)
+	command := "bash"
+	_, err = os.Stat("/bin/bash")
+	if os.IsNotExist(err) {
+		command = "sh"
+	}
+	err = obj.Start(command, nil, nil, size.Cols, size.Rows)
 	if err != nil {
 		return
 	}

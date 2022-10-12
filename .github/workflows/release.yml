@@ -89,10 +89,11 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 将静态资源打包html.go
       - run: |
+          go env -w CGO_ENABLED=0
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide .
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
@@ -154,10 +155,11 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 将静态资源打包html.go
       - run: |
+          go env -w CGO_ENABLED=0
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide .
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
@@ -221,11 +223,12 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "^1.17"
+          go-version: "^1.18"
 
       # 将静态资源打包html.go
       # -H=windowsgui
       - run: |
+          go env -w CGO_ENABLED=0
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe . 
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main 

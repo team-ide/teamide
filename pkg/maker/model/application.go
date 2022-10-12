@@ -7,6 +7,13 @@ type Application struct {
 	structCache  map[string]*StructModel
 	ServiceList  []*ServiceModel `json:"serviceList"`
 	serviceCache map[string]*ServiceModel
+	LoadErrors   []*LoadError `json:"loadErrors"`
+}
+
+type LoadError struct {
+	Type  *Type  `json:"type"`
+	Path  string `json:"path"`
+	Error string `json:"error"`
 }
 
 func (this_ *Application) AppendStruct(model *StructModel) (err error) {

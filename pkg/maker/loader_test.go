@@ -5,11 +5,12 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"teamide/pkg/maker/model"
 	"teamide/pkg/util"
 	"testing"
 )
 
-func TestLoader(t *testing.T) {
+func LoadDemoApp() (app *model.Application, err error) {
 	rootDir, err := os.Getwd()
 	if err != nil {
 		util.Logger.Error("os get wd error", zap.Error(err))
@@ -21,8 +22,17 @@ func TestLoader(t *testing.T) {
 		util.Logger.Error("filepath abs error", zap.Error(err))
 		return
 	}
-	dir := rootDir + "/model/demo"
-	app := Load(dir)
+	dir := rootDir + "/demo"
+	app = model.Load(dir)
+	return
+}
+
+func TestLoader(t *testing.T) {
+	app, err := LoadDemoApp()
+	if err != nil {
+		util.Logger.Error("load demo app error", zap.Error(err))
+		return
+	}
 
 	bs, err := json.Marshal(app)
 	if err != nil {
