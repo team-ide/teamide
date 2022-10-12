@@ -10,6 +10,8 @@ type StepDbModel struct {
 	LeftJoins string `json:"leftJoins,omitempty"` // 左连接查询
 	Orders    string `json:"orders,omitempty"`    // 排序
 	Groups    string `json:"groups,omitempty"`    // 分组
+	ValueType string `json:"valueType,omitempty"` // 值类型
+	Var       string `json:"var,omitempty"`       //
 }
 
 var (
@@ -27,6 +29,14 @@ func init() {
 			{
 				Name:    "table",
 				Comment: "表",
+			},
+			{
+				Name:    "valueType",
+				Comment: "值类型",
+			},
+			{
+				Name:    "var",
+				Comment: "接收值变量",
 			},
 		},
 		Inline: "StepModel",

@@ -2,6 +2,7 @@ package javascript
 
 import (
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"strings"
 	"teamide/pkg/maker/model"
@@ -246,12 +247,61 @@ func getJavascriptByStepLock(app *model.Application, step *model.StepLockModel, 
 func getJavascriptByStepDb(app *model.Application, step *model.StepDbModel, tab int) (javascript string, err error) {
 	util.AppendLine(&javascript, "// DB "+step.Db+" 操作", tab)
 
+	util.AppendLine(&javascript, "sql = \"\"", tab)
+	util.AppendLine(&javascript, "sqlParams = []", tab)
+
+	var isSelect bool
+	var isInsert bool
+	var isUpdate bool
+	var isDelete bool
+	switch step.Db {
+	case "select":
+		isSelect = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		break
+	case "selectOne":
+		isSelect = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		break
+	case "selectPage":
+		isSelect = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		break
+	case "insert":
+		isInsert = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "INSERT %s"`, step.Table), tab)
+		break
+	case "update":
+		isUpdate = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "UPDATE %s"`, step.Table), tab)
+		break
+	case "delete":
+		isDelete = true
+		util.AppendLine(&javascript, fmt.Sprintf(`sql += "DELETE %s"`, step.Table), tab)
+		break
+	}
+	if isSelect {
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.select(sql, sqlParams)`, step.Var), tab)
+	} else if isInsert {
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.insert(sql, sqlParams)`, step.Var), tab)
+	} else if isUpdate {
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.update(sql, sqlParams)`, step.Var), tab)
+	} else if isDelete {
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.delete(sql, sqlParams)`, step.Var), tab)
+	}
 	return
 }
 
 func getJavascriptByStepRedis(app *model.Application, step *model.StepRedisModel, tab int) (javascript string, err error) {
 	util.AppendLine(&javascript, "// Redis "+step.Redis+" 操作", tab)
-
+	switch strings.ToLower(step.Redis) {
+	case "get":
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = redisHandler.get("%s")`, step.Var, step.Key), tab)
+		break
+	case "set":
+		util.AppendLine(&javascript, fmt.Sprintf(`redisHandler.set("%s", "%s")`, step.Key, step.Value), tab)
+		break
+	}
 	return
 }
 

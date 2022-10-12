@@ -6,7 +6,7 @@ steps:
   - redis: get
     key: user-${userId}
     var: user
-    varType: user
+    valueType: user
 
   - if: user == null
     db: selectOne
