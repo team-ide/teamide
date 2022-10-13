@@ -15,14 +15,8 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepHttpName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "http",
-				Comment: "HTTP操作",
-			},
-			{
-				Name:    "url",
-				Comment: "地址",
-			},
+			{Name: "http", Comment: "HTTP操作"},
+			{Name: "url", Comment: "地址"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

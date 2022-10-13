@@ -20,30 +20,11 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepRedisName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "redis",
-				Comment: "redis操作",
-			},
-			{
-				Name:    "key",
-				Comment: "操作的Key",
-			},
-			{
-				Name:    "field",
-				Comment: "Hash的Key",
-			},
-			{
-				Name:    "value",
-				Comment: "操作的Value",
-			},
-			{
-				Name:    "setVar",
-				Comment: "设置变量",
-			},
-			{
-				Name:    "setVarType",
-				Comment: "设置变量类型",
-			},
+			{Name: "redis", Comment: "redis操作"},
+			{Name: "key", Comment: "操作的Key"}, {Name: "field", Comment: "Hash的Key"},
+			{Name: "value", Comment: "操作的Value"},
+			{Name: "setVar", Comment: "设置变量"},
+			{Name: "setVarType", Comment: "设置变量类型"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

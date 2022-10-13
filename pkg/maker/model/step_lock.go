@@ -15,14 +15,8 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepLockName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "lock",
-				Comment: "锁操作",
-			},
-			{
-				Name:    "lockType",
-				Comment: "锁类型",
-			},
+			{Name: "lock", Comment: "锁操作"},
+			{Name: "lockType", Comment: "锁类型"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

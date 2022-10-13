@@ -42,6 +42,19 @@ func TestLoader(t *testing.T) {
 	}
 	println(string(bs))
 
+	println("dao list start")
+	for _, one := range app.DaoList {
+		println("dao [" + one.Name + "] start")
+		js, err := javascript.GetDaoJavascript(app, one)
+		if err != nil {
+			util.Logger.Error("get dao javascript error", zap.Error(err))
+			return
+		}
+		println(js)
+		println("dao [" + one.Name + "] end")
+	}
+	println("dao list end")
+
 	println("service list start")
 	for _, one := range app.ServiceList {
 		println("service [" + one.Name + "] start")

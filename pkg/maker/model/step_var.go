@@ -16,18 +16,9 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepVarName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "var",
-				Comment: "定义变量操作",
-			},
-			{
-				Name:    "value",
-				Comment: "变量值",
-			},
-			{
-				Name:    "type",
-				Comment: "变量值类型",
-			},
+			{Name: "var", Comment: "定义变量操作"},
+			{Name: "value", Comment: "变量值"},
+			{Name: "type", Comment: "变量值类型"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

@@ -3,21 +3,45 @@ package model
 import "errors"
 
 type Application struct {
-	StructList   []*StructModel `json:"structList"`
-	structCache  map[string]*StructModel
-	ServiceList  []*ServiceModel `json:"serviceList"`
-	serviceCache map[string]*ServiceModel
-	DaoList      []*DaoModel `json:"daoList"`
-	daoCache     map[string]*DaoModel
-	ErrorList    []*ErrorModel `json:"errorList"`
-	errorCache   map[string]*ErrorModel
-	LoadErrors   []*LoadError `json:"loadErrors"`
+	ConstantList  []*ConstantModel `json:"constantList"`
+	constantCache map[string]*ConstantModel
+	StructList    []*StructModel `json:"structList"`
+	structCache   map[string]*StructModel
+	ServiceList   []*ServiceModel `json:"serviceList"`
+	serviceCache  map[string]*ServiceModel
+	DaoList       []*DaoModel `json:"daoList"`
+	daoCache      map[string]*DaoModel
+	ErrorList     []*ErrorModel `json:"errorList"`
+	errorCache    map[string]*ErrorModel
+	FuncList      []*FuncModel `json:"funcList"`
+	funcCache     map[string]*FuncModel
+	LoadErrors    []*LoadError `json:"loadErrors"`
 }
 
 type LoadError struct {
 	Type  *Type  `json:"type"`
 	Path  string `json:"path"`
 	Error string `json:"error"`
+}
+
+func (this_ *Application) AppendConstant(model *ConstantModel) (err error) {
+	if this_.constantCache == nil {
+		this_.constantCache = make(map[string]*ConstantModel)
+	}
+	if this_.constantCache[model.Name] != nil {
+		err = errors.New("constant model [" + model.Name + "] already exist")
+		return
+	}
+	this_.ConstantList = append(this_.ConstantList, model)
+	this_.constantCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetConstant(name string) (model *ConstantModel) {
+	if this_.constantCache != nil {
+		model = this_.constantCache[name]
+	}
+	return
 }
 
 func (this_ *Application) AppendStruct(model *StructModel) (err error) {
@@ -96,6 +120,26 @@ func (this_ *Application) AppendError(model *ErrorModel) (err error) {
 func (this_ *Application) GetError(name string) (model *ErrorModel) {
 	if this_.errorCache != nil {
 		model = this_.errorCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendFunc(model *FuncModel) (err error) {
+	if this_.funcCache == nil {
+		this_.funcCache = make(map[string]*FuncModel)
+	}
+	if this_.funcCache[model.Name] != nil {
+		err = errors.New("func model [" + model.Name + "] already exist")
+		return
+	}
+	this_.FuncList = append(this_.FuncList, model)
+	this_.funcCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetFunc(name string) (model *FuncModel) {
+	if this_.funcCache != nil {
+		model = this_.funcCache[name]
 	}
 	return
 }

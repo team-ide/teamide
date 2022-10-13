@@ -14,10 +14,7 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepScriptName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "script",
-				Comment: "script操作",
-			},
+			{Name: "script", Comment: "script操作"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

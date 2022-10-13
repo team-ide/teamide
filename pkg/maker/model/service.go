@@ -9,12 +9,12 @@ type ServiceModel struct {
 	Name    string        `json:"name,omitempty"`    // 名称，同一个应用中唯一
 	Comment string        `json:"comment,omitempty"` // 说明
 	Note    string        `json:"note,omitempty"`    // 注释
-	Args    []*ServiceArg `json:"args,omitempty"`    //入参
+	Args    []*ArgModel   `json:"args,omitempty"`    //入参
 	Steps   []interface{} `json:"steps,omitempty"`   // 阶段
 	Return  string        `json:"return,omitempty"`  // 返回
 }
 
-type ServiceArg struct {
+type ArgModel struct {
 	Name    string `json:"name,omitempty"`    // 名称，同一个应用中唯一
 	Comment string `json:"comment,omitempty"` // 说明
 	Note    string `json:"note,omitempty"`    // 注释
@@ -52,15 +52,15 @@ func init() {
 			{Name: "type", Comment: "参数类型"},
 		},
 		newModel: func() interface{} {
-			return &ServiceArg{}
+			return &ArgModel{}
 		},
 		newModels: func() interface{} {
-			var vs []*ServiceArg
+			var vs []*ArgModel
 			return vs
 		},
 		appendModel: func(values interface{}, value interface{}) (res interface{}) {
-			vs := values.([]*ServiceArg)
-			vs = append(vs, value.(*ServiceArg))
+			vs := values.([]*ArgModel)
+			vs = append(vs, value.(*ArgModel))
 			return vs
 		},
 	})

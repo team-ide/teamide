@@ -14,10 +14,7 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepErrorName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "error",
-				Comment: "异常操作",
-			},
+			{Name: "error", Comment: "异常操作"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

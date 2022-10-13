@@ -16,14 +16,8 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepFileName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "file",
-				Comment: "文件操作",
-			},
-			{
-				Name:    "path",
-				Comment: "文件路径",
-			},
+			{Name: "file", Comment: "文件操作"},
+			{Name: "path", Comment: "文件路径"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

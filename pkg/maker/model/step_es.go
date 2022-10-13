@@ -15,10 +15,7 @@ func init() {
 	addDocTemplate(&docTemplate{
 		Name: docTemplateStepEsName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "es",
-				Comment: "ES操作",
-			},
+			{Name: "es", Comment: "ES操作"},
 		},
 		Inline: "StepModel",
 		inlineNewModel: func() interface{} {

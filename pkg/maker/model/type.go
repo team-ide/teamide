@@ -13,6 +13,25 @@ type Type struct {
 var (
 	Types []*Type
 
+	TypeConstant = &Type{
+		Name:    "constant",
+		Comment: "常量",
+		Dir:     "constant",
+		toModel: func(text string) (model interface{}, err error) {
+			return TextToConstants(text)
+		},
+		toText: func(model interface{}) (text string, err error) {
+			return ConstantsToText(model.([]*ConstantModel))
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			list := model.([]*ConstantModel)
+			for _, one := range list {
+				err = app.AppendConstant(one)
+			}
+			return
+		},
+	}
+
 	TypeStruct = &Type{
 		Name:    "struct",
 		Comment: "结构体",
@@ -61,6 +80,22 @@ var (
 		},
 	}
 
+	TypeFunc = &Type{
+		Name:    "func",
+		Comment: "函数",
+		Dir:     "func",
+		toModel: func(text string) (model interface{}, err error) {
+			return TextToFunc(text)
+		},
+		toText: func(model interface{}) (text string, err error) {
+			return FuncToText(model)
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			err = app.AppendFunc(model.(*FuncModel))
+			return
+		},
+	}
+
 	TypeError = &Type{
 		Name:    "error",
 		Comment: "错误码",
@@ -72,8 +107,8 @@ var (
 			return ErrorsToText(model.([]*ErrorModel))
 		},
 		append: func(app *Application, model interface{}) (err error) {
-			errorList := model.([]*ErrorModel)
-			for _, one := range errorList {
+			list := model.([]*ErrorModel)
+			for _, one := range list {
 				err = app.AppendError(one)
 			}
 			return
@@ -82,8 +117,10 @@ var (
 )
 
 func init() {
+	Types = append(Types, TypeConstant)
 	Types = append(Types, TypeStruct)
 	Types = append(Types, TypeService)
 	Types = append(Types, TypeDao)
 	Types = append(Types, TypeError)
+	Types = append(Types, TypeFunc)
 }
