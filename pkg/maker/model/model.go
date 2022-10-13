@@ -45,6 +45,22 @@ var (
 		},
 	}
 
+	TypeDao = &Type{
+		Name:    "dao",
+		Comment: "数据层",
+		Dir:     "dao",
+		toModel: func(text string) (model interface{}, err error) {
+			return TextToDao(text)
+		},
+		toText: func(model interface{}) (text string, err error) {
+			return DaoToText(model)
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			err = app.AppendDao(model.(*DaoModel))
+			return
+		},
+	}
+
 	TypeError = &Type{
 		Name:    "error",
 		Comment: "错误码",
@@ -68,5 +84,6 @@ var (
 func init() {
 	Types = append(Types, TypeStruct)
 	Types = append(Types, TypeService)
+	Types = append(Types, TypeDao)
 	Types = append(Types, TypeError)
 }

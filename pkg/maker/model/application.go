@@ -7,6 +7,8 @@ type Application struct {
 	structCache  map[string]*StructModel
 	ServiceList  []*ServiceModel `json:"serviceList"`
 	serviceCache map[string]*ServiceModel
+	DaoList      []*DaoModel `json:"daoList"`
+	daoCache     map[string]*DaoModel
 	ErrorList    []*ErrorModel `json:"errorList"`
 	errorCache   map[string]*ErrorModel
 	LoadErrors   []*LoadError `json:"loadErrors"`
@@ -54,6 +56,26 @@ func (this_ *Application) AppendService(model *ServiceModel) (err error) {
 func (this_ *Application) GetService(name string) (model *ServiceModel) {
 	if this_.serviceCache != nil {
 		model = this_.serviceCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendDao(model *DaoModel) (err error) {
+	if this_.daoCache == nil {
+		this_.daoCache = make(map[string]*DaoModel)
+	}
+	if this_.daoCache[model.Name] != nil {
+		err = errors.New("dao model [" + model.Name + "] already exist")
+		return
+	}
+	this_.DaoList = append(this_.DaoList, model)
+	this_.daoCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetDao(name string) (model *DaoModel) {
+	if this_.daoCache != nil {
+		model = this_.daoCache[name]
 	}
 	return
 }

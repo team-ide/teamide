@@ -1,5 +1,5 @@
 name: user/update
-inParams:
+args:
   - name: user
     type: user
 steps:
@@ -11,49 +11,39 @@ steps:
 
   # 查询账号
   - if: util.isNotEmpty(user.account)
-    db: count
-    table: TB_USER
-    wheres:
-      - name: account
-        value: user.account
-    var: countAccount
+    dao: user/userExist
+    args:
+      - user.account
+    setVar: userExist
+
     steps:
       # 账号存在则抛出相应异常
-      - if: countAccount > 0
+      - if: userExist
         error: USER_ACCOUNT_ALREADY_EXIST
 
   # 更新
-  - db: update
+  - dao: user/update
     table: TB_USER
-    columns:
-      - if: util.isNotEmpty(user.name)
-        name: name
-        value: user.name
-      - if: util.isNotEmpty(user.account)
-        name: account
-        value: user.account
-    wheres:
-      - name: userId
-        value: user.userId
-    var: updateCount
+    args:
+      - user
+    setVar: updateCount
 
   # 账号存在则抛出相应异常
-  - if: countAccount == 0
+  - if: updateCount == 0
     error: USER_IS_NOT_EXIST
 
   # 查询用户
-  - db: selectOne
-    table: TB_USER
-    wheres:
-      - name: userId
-        value: user.userId
-    var: selectUser
-    varType: user
+  - dao: user/get
+    args:
+      - userId
+    setVar: selectUser
+    setVarType: user
     steps:
       # 插入redis
-      - redis: set
-        key: user-${user.userId}
+      - if: util.isNotNull(selectUser)
+        redis: set
+        key: user-${selectUser.userId}
         value: selectUser
         expire: USER_REDIS_EXPIRE
 
-return: user
+return: selectUser

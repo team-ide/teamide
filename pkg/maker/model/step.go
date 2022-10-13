@@ -89,6 +89,10 @@ func init() {
 						StructName: docTemplateStepServiceName,
 					},
 					{
+						MatchKey:   "dao",
+						StructName: docTemplateStepDaoName,
+					},
+					{
 						MatchKey:   "var",
 						StructName: docTemplateStepVarName,
 					},

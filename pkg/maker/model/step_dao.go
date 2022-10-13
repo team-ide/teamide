@@ -1,22 +1,22 @@
 package model
 
-type StepZkModel struct {
+type StepDaoModel struct {
 	*StepModel `json:",inline"`
 
-	Zk string `json:"zk,omitempty"` // ZK操作
+	Dao string `json:"dao,omitempty"` // 调用数据层
 }
 
 var (
-	docTemplateStepZkName = "step_zk"
+	docTemplateStepDaoName = "step_dao"
 )
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name: docTemplateStepZkName,
+		Name: docTemplateStepDaoName,
 		Fields: []*docTemplateField{
 			{
-				Name:    "zk",
-				Comment: "ZK操作",
+				Name:    "dao",
+				Comment: "数据层操作",
 			},
 		},
 		Inline: "StepModel",
@@ -24,7 +24,7 @@ func init() {
 			return &StepModel{}
 		},
 		newModel: func() interface{} {
-			return &StepZkModel{}
+			return &StepDaoModel{}
 		},
 	})
 }

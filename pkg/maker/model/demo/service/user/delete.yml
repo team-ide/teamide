@@ -1,5 +1,5 @@
 name: user/delete
-inParams:
+args:
   - name: userId
     type: i64
 steps:
@@ -7,13 +7,10 @@ steps:
   - if: util.isEmpty(userId)
     error: USER_ID_IS_EMPTY
 
-  # 查询账号
-  - db: delete
-    table: TB_USER
-    wheres:
-      - name: userId
-        value: userId
+  # 删除
+  - dao: user/delete
+    args:
+      - userId
 
   - redis: del
     key: user-${userId}
-return: user

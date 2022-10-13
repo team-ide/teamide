@@ -34,31 +34,23 @@ func init() {
 		Name:    docTemplateStructName,
 		Comment: "结构体文件，该文件用于入参、出参、函数调用、数据存储等地方",
 		Fields: []*docTemplateField{
-			{
-				Name:    "name",
-				Comment: "结构体名称",
-			},
-			{
-				Name:    "comment",
-				Comment: "结构体说明",
-			},
-			{
-				Name:    "note",
-				Comment: "结构体源码注释",
-			},
-			{
-				Name:    "parent",
-				Comment: "父级结构体，源码将继承该结构体",
-			},
-			{
-				Name:       "fields",
-				Comment:    "这是结构体字段",
-				IsList:     true,
-				StructName: docTemplateStructFieldName,
-			},
+			{Name: "name", Comment: "结构体名称"},
+			{Name: "comment", Comment: "结构体说明"},
+			{Name: "note", Comment: "结构体源码注释"},
+			{Name: "parent", Comment: "父级结构体，源码将继承该结构体"},
+			{Name: "fields", Comment: "这是结构体字段", IsList: true, StructName: docTemplateStructFieldName},
 		},
 		newModel: func() interface{} {
 			return &StructModel{}
+		},
+		newModels: func() interface{} {
+			var vs []*StructModel
+			return vs
+		},
+		appendModel: func(values interface{}, value interface{}) (res interface{}) {
+			vs := values.([]*StructModel)
+			vs = append(vs, value.(*StructModel))
+			return vs
 		},
 	})
 	addDocTemplate(&docTemplate{
@@ -66,34 +58,13 @@ func init() {
 		Abbreviation: "name",
 		Name:         docTemplateStructFieldName,
 		Fields: []*docTemplateField{
-			{
-				Name:    "name",
-				Comment: "字段名称",
-			},
-			{
-				Name:    "comment",
-				Comment: "字段说明",
-			},
-			{
-				Name:    "note",
-				Comment: "字段源码注释",
-			},
-			{
-				Name:    "jsonName",
-				Comment: "序列化JSON名称",
-			},
-			{
-				Name:    "jsonOmitempty",
-				Comment: "序列化JSON，省略空值",
-			},
-			{
-				Name:    "isList",
-				Comment: "是集合",
-			},
-			{
-				Name:    "default",
-				Comment: "创建对象该字段默认的值",
-			},
+			{Name: "name", Comment: "字段名称"},
+			{Name: "comment", Comment: "字段说明"},
+			{Name: "note", Comment: "字段源码注释"},
+			{Name: "jsonName", Comment: "序列化JSON名称"},
+			{Name: "jsonOmitempty", Comment: "序列化JSON，省略空值"},
+			{Name: "isList", Comment: "是集合"},
+			{Name: "default", Comment: "创建对象该字段默认的值"},
 		},
 		newModel: func() interface{} {
 			return &StructField{}
@@ -102,9 +73,10 @@ func init() {
 			var vs []*StructField
 			return vs
 		},
-		appendModel: func(values interface{}, value interface{}) {
+		appendModel: func(values interface{}, value interface{}) (res interface{}) {
 			vs := values.([]*StructField)
 			vs = append(vs, value.(*StructField))
+			return vs
 		},
 	})
 }

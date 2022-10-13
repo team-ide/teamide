@@ -3,13 +3,13 @@ package model
 type StepRedisModel struct {
 	*StepModel `json:",inline"`
 
-	Redis     string `json:"redis,omitempty"`     // redis操作
-	Key       string `json:"key,omitempty"`       // key，用于redis、cache、MQ等操作
-	KeyType   string `json:"keyType,omitempty"`   // 值key类型
-	Value     string `json:"value,omitempty"`     // value，用于redis、cache、MQ等操作
-	ValueType string `json:"valueType,omitempty"` // 值类型
-	Var       string `json:"var,omitempty"`       //
-	Expire    string `json:"expire,omitempty"`    // 过期时间
+	Redis      string `json:"redis,omitempty"` // redis操作
+	Key        string `json:"key,omitempty"`
+	Field      string `json:"field,omitempty"`
+	Value      string `json:"value,omitempty"`
+	Expire     string `json:"expire,omitempty"`
+	SetVar     string `json:"setVar,omitempty"`
+	SetVarType string `json:"setVarType,omitempty"`
 }
 
 var (
@@ -29,16 +29,20 @@ func init() {
 				Comment: "操作的Key",
 			},
 			{
+				Name:    "field",
+				Comment: "Hash的Key",
+			},
+			{
 				Name:    "value",
 				Comment: "操作的Value",
 			},
 			{
-				Name:    "valueType",
-				Comment: "值类型",
+				Name:    "setVar",
+				Comment: "设置变量",
 			},
 			{
-				Name:    "var",
-				Comment: "接收值变量",
+				Name:    "setVarType",
+				Comment: "设置变量类型",
 			},
 		},
 		Inline: "StepModel",

@@ -1,0 +1,20 @@
+name: user/userExist
+args:
+  - name: account
+    type: user.account
+steps:
+
+  # 查询账号
+  - db: count
+    table: TB_USER
+    wheres:
+      - name: account
+        value: account
+    setVar: count
+    setVarType: i64
+
+  - var: exist
+    value: count > 0
+    varType: bool
+
+return: exist

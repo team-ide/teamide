@@ -164,6 +164,11 @@ func GetJavascriptByStep(app *model.Application, step interface{}, tab int) (jav
 		javascript, hasIf = getJavascriptByStep(app, stepModel, &tab)
 
 		stepJavascript, err = getJavascriptByStepService(app, step_, tab)
+	case *model.StepDaoModel:
+		stepModel = step_.StepModel
+		javascript, hasIf = getJavascriptByStep(app, stepModel, &tab)
+
+		stepJavascript, err = getJavascriptByStepDao(app, step_, tab)
 	case *model.StepScriptModel:
 		stepModel = step_.StepModel
 		javascript, hasIf = getJavascriptByStep(app, stepModel, &tab)
@@ -281,13 +286,13 @@ func getJavascriptByStepDb(app *model.Application, step *model.StepDbModel, tab 
 		break
 	}
 	if isSelect {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.select(sql, sqlParams)`, step.Var), tab)
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.select(sql, sqlParams)`, step.SetVar), tab)
 	} else if isInsert {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.insert(sql, sqlParams)`, step.Var), tab)
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.insert(sql, sqlParams)`, step.SetVar), tab)
 	} else if isUpdate {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.update(sql, sqlParams)`, step.Var), tab)
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.update(sql, sqlParams)`, step.SetVar), tab)
 	} else if isDelete {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.delete(sql, sqlParams)`, step.Var), tab)
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.delete(sql, sqlParams)`, step.SetVar), tab)
 	}
 	return
 }
@@ -296,7 +301,7 @@ func getJavascriptByStepRedis(app *model.Application, step *model.StepRedisModel
 	util.AppendLine(&javascript, "// Redis "+step.Redis+" 操作", tab)
 	switch strings.ToLower(step.Redis) {
 	case "get":
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = redisHandler.get("%s")`, step.Var, step.Key), tab)
+		util.AppendLine(&javascript, fmt.Sprintf(`%s = redisHandler.get("%s")`, step.SetVar, step.Key), tab)
 		break
 	case "set":
 		util.AppendLine(&javascript, fmt.Sprintf(`redisHandler.set("%s", "%s")`, step.Key, step.Value), tab)
@@ -337,6 +342,12 @@ func getJavascriptByStepCommand(app *model.Application, step *model.StepCommandM
 
 func getJavascriptByStepService(app *model.Application, step *model.StepServiceModel, tab int) (javascript string, err error) {
 	util.AppendLine(&javascript, "// Service "+step.Service+" 操作", tab)
+
+	return
+}
+
+func getJavascriptByStepDao(app *model.Application, step *model.StepDaoModel, tab int) (javascript string, err error) {
+	util.AppendLine(&javascript, "// Dao "+step.Dao+" 操作", tab)
 
 	return
 }

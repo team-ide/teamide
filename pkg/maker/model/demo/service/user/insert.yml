@@ -1,5 +1,5 @@
 name: user/insert
-inParams:
+args:
   - name: user
     type: user
 steps:
@@ -14,43 +14,30 @@ steps:
     error: USER_PASSWORD_IS_EMPTY
 
   # 查询账号
-  - db: count
-    table: TB_USER
-    wheres:
-      - name: account
-        value: user.account
-    var: countAccount
+  - dao: user/userExist
+    args:
+      - user.account
+    serVar: userExist
 
   # 账号存在则抛出相应异常
-  - if: countAccount > 0
+  - if: userExist
     error: USER_ACCOUNT_ALREADY_EXIST
 
   # 生成盐 + 加密密码
-  - vars:
-      # 生成 userId
-      - name: user.userId
-        value: util.genID()
-      # 生成 盐
-      - name: salt
-        value: util.genStr(6, 6)
-      # 生成 密码
-      - name: md5Password
-        value: util.md5(salt + user.password)
+  # 生成 userId
+  - var: user.userId
+    value: util.genID()
+  # 生成 盐
+  - var: user.salt
+    value: util.genStr(6, 6)
+  # 生成 密码
+  - var: user.password
+    value: util.md5(salt + user.password)
 
   # 插入数据入库
-  - db: insert
-    table: TB_USER
-    columns:
-      - name: userId
-        value: user.userId
-      - name: name
-        value: user.name
-      - name: account
-        value: user.account
-      - name: salt
-        value: salt
-      - name: password
-        value: md5Password
+  - dao: user/insert
+    args:
+      - user
 
   # 插入redis
   - redis: set

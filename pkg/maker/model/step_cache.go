@@ -3,7 +3,11 @@ package model
 type StepCacheModel struct {
 	*StepModel `json:",inline"`
 
-	Cache string `json:"cache,omitempty"` // 本地缓存
+	Cache      string `json:"cache,omitempty"` // 本地缓存
+	Key        string `json:"key,omitempty"`
+	Value      string `json:"value,omitempty"`
+	SetVar     string `json:"setVar,omitempty"`
+	SetVarType string `json:"setVarType,omitempty"`
 }
 
 var (
@@ -25,6 +29,14 @@ func init() {
 			{
 				Name:    "value",
 				Comment: "操作的Value",
+			},
+			{
+				Name:    "setVar",
+				Comment: "设置变量",
+			},
+			{
+				Name:    "setVarType",
+				Comment: "设置变量类型",
 			},
 		},
 		Inline: "StepModel",

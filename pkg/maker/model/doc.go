@@ -20,7 +20,7 @@ type docTemplate struct {
 	Fields         []*docTemplateField `json:"fields"`
 	newModel       func() interface{}
 	newModels      func() interface{}
-	appendModel    func(values interface{}, value interface{})
+	appendModel    func(values interface{}, value interface{}) (res interface{})
 }
 
 type docTemplateField struct {
@@ -363,7 +363,7 @@ func toModel(text string, docTemplateName string, model interface{}) (err error)
 
 	err = appendData(source, model, docTemplateName)
 	if err != nil {
-		util.Logger.Error("append data error", zap.Any("source", source), zap.Error(err))
+		util.Logger.Error("append data error", zap.Any("docTemplateName", docTemplateName), zap.Any("source", source), zap.Error(err))
 		return
 	}
 
@@ -430,9 +430,12 @@ func setFieldValue(data interface{}, name string, value interface{}) {
 }
 
 func getFieldData(sourceValue interface{}, docFieldStruct *docTemplateField) (value interface{}, err error) {
-
+	if sourceValue == nil {
+		return
+	}
 	if docFieldStruct.IsList {
 		list, listOk := sourceValue.([]interface{})
+		//util.Logger.Info("field is list,value to list", zap.Any("listOk", listOk), zap.Any("sourceValue", sourceValue))
 		if !listOk {
 			list = []interface{}{sourceValue}
 		}
@@ -465,11 +468,12 @@ func getFieldValue(sourceValue interface{}, docFieldStruct *docTemplateField) (v
 	return
 }
 
-func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField) (values []interface{}, err error) {
+func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField) (res interface{}, err error) {
 	if len(sourceValues) == 0 {
 		return
 	}
 
+	var values []interface{}
 	if docFieldStruct.StructName != "" {
 
 		docStruct := getDocTemplate(docFieldStruct.StructName)
@@ -486,15 +490,18 @@ func getFieldValues(sourceValues []interface{}, docFieldStruct *docTemplateField
 			}
 			if value != nil {
 				if docStruct.newModels != nil {
-					docStruct.appendModel(mList, value)
+					mList = docStruct.appendModel(mList, value)
+					res = mList
 				} else {
 					values = append(values, value)
+					res = values
 				}
 			}
 		}
 	} else {
 		for _, sourceValue := range sourceValues {
 			values = append(values, sourceValue)
+			res = values
 		}
 	}
 
@@ -510,8 +517,8 @@ func getDocValue(sourceValue interface{}, docTemplateName string) (value interfa
 	docStruct := getDocTemplate(docTemplateName)
 	if !mapVOk {
 		if docStruct.Abbreviation == "" {
-			err = errors.New("source value to struct error")
-			util.Logger.Error("get struct error", zap.Any("sourceValue", sourceValue), zap.Any("struct", docStruct), zap.Error(err))
+			err = errors.New("source value is not map")
+			util.Logger.Error("get struct error", zap.Any("docTemplateName", docTemplateName), zap.Any("sourceValue", sourceValue), zap.Any("struct", docStruct), zap.Error(err))
 			return
 		}
 		mapV = map[string]interface{}{}
