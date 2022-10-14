@@ -1,10 +1,40 @@
 package model
 
+import "strings"
+
 type StepEsModel struct {
 	*StepModel `json:",inline"`
 
 	Es string `json:"es,omitempty"` // ES操作
 
+}
+
+func (this_ *StepEsModel) GetType() *StepEsType {
+	for _, one := range StepEsTypes {
+		if strings.EqualFold(one.Value, this_.Es) {
+			return one
+		}
+	}
+	return nil
+}
+
+type StepEsType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	StepEsTypes []*StepEsType
+	EsGet       = appendStepEsType("get", "")
+)
+
+func appendStepEsType(value string, text string) *StepEsType {
+	res := &StepEsType{
+		Value: value,
+		Text:  text,
+	}
+	StepEsTypes = append(StepEsTypes, res)
+	return res
 }
 
 var (

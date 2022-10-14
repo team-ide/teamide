@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type StepCacheModel struct {
 	*StepModel `json:",inline"`
 
@@ -8,6 +10,34 @@ type StepCacheModel struct {
 	Value      string `json:"value,omitempty"`
 	SetVar     string `json:"setVar,omitempty"`
 	SetVarType string `json:"setVarType,omitempty"`
+}
+
+func (this_ *StepCacheModel) GetType() *StepCacheType {
+	for _, one := range StepCacheTypes {
+		if strings.EqualFold(one.Value, this_.Cache) {
+			return one
+		}
+	}
+	return nil
+}
+
+type StepCacheType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	StepCacheTypes []*StepCacheType
+	CacheGet       = appendStepCacheType("get", "")
+)
+
+func appendStepCacheType(value string, text string) *StepCacheType {
+	res := &StepCacheType{
+		Value: value,
+		Text:  text,
+	}
+	StepCacheTypes = append(StepCacheTypes, res)
+	return res
 }
 
 var (

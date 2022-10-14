@@ -42,6 +42,34 @@ func (this_ *StepDbModel) IsSelectPage() bool {
 	return this_.Db == "selectPage"
 }
 
+func (this_ *StepDbModel) GetType() *StepDbType {
+	for _, one := range StepDbTypes {
+		if strings.EqualFold(one.Value, this_.Db) {
+			return one
+		}
+	}
+	return nil
+}
+
+type StepDbType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	StepDbTypes []*StepDbType
+	DbGet       = appendStepDbType("get", "")
+)
+
+func appendStepDbType(value string, text string) *StepDbType {
+	res := &StepDbType{
+		Value: value,
+		Text:  text,
+	}
+	StepDbTypes = append(StepDbTypes, res)
+	return res
+}
+
 var (
 	docTemplateStepDbName          = "step_db"
 	docTemplateStepDbColumnName    = "step_db_column"

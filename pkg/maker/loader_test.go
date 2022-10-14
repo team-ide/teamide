@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
-	"teamide/pkg/maker/code/javascript"
+	"teamide/pkg/maker/coder/javascript"
 	"teamide/pkg/maker/model"
 	"teamide/pkg/util"
 	"testing"

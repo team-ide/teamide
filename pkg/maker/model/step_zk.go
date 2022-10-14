@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type StepZkModel struct {
 	*StepModel `json:",inline"`
 
@@ -9,6 +11,42 @@ type StepZkModel struct {
 	Ephemeral  bool   `json:"ephemeral,omitempty"`
 	SetVar     string `json:"setVar,omitempty"`
 	SetVarType string `json:"setVarType,omitempty"`
+}
+
+func (this_ *StepZkModel) GetType() *StepZKType {
+	for _, one := range StepZKTypes {
+		if strings.EqualFold(one.Value, this_.Zk) {
+			return one
+		}
+	}
+	return nil
+}
+
+type StepZKType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	StepZKTypes []*StepZKType
+	ZkGet       = appendStepZKType("get", "")
+	ZkCreate    = appendStepZKType("create", "")
+	ZkSet       = appendStepZKType("set", "")
+	ZkStat      = appendStepZKType("stat", "")
+	ZkChildren  = appendStepZKType("children", "")
+	ZkDelete    = appendStepZKType("delete", "")
+	ZkExists    = appendStepZKType("exists", "")
+	ZkGetW      = appendStepZKType("getW", "")
+	ZkChildrenW = appendStepZKType("childrenW", "")
+)
+
+func appendStepZKType(value string, text string) *StepZKType {
+	res := &StepZKType{
+		Value: value,
+		Text:  text,
+	}
+	StepZKTypes = append(StepZKTypes, res)
+	return res
 }
 
 var (

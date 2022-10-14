@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type StepRedisModel struct {
 	*StepModel `json:",inline"`
 
@@ -10,6 +12,34 @@ type StepRedisModel struct {
 	Expire     string `json:"expire,omitempty"`
 	SetVar     string `json:"setVar,omitempty"`
 	SetVarType string `json:"setVarType,omitempty"`
+}
+
+func (this_ *StepRedisModel) GetType() *StepRedisType {
+	for _, one := range StepRedisTypes {
+		if strings.EqualFold(one.Value, this_.Redis) {
+			return one
+		}
+	}
+	return nil
+}
+
+type StepRedisType struct {
+	Value string `json:"value,omitempty"`
+	Text  string `json:"text,omitempty"`
+}
+
+var (
+	StepRedisTypes []*StepRedisType
+	RedisGet       = appendStepRedisType("get", "")
+)
+
+func appendStepRedisType(value string, text string) *StepRedisType {
+	res := &StepRedisType{
+		Value: value,
+		Text:  text,
+	}
+	StepRedisTypes = append(StepRedisTypes, res)
+	return res
 }
 
 var (
