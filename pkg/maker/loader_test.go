@@ -5,13 +5,12 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
-	"teamide/pkg/maker/coder/javascript"
-	"teamide/pkg/maker/model"
+	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
 	"testing"
 )
 
-func LoadDemoApp() (app *model.Application, err error) {
+func LoadDemoApp() (app *modelers.Application, err error) {
 	rootDir, err := os.Getwd()
 	if err != nil {
 		util.Logger.Error("os get wd error", zap.Error(err))
@@ -23,8 +22,8 @@ func LoadDemoApp() (app *model.Application, err error) {
 		util.Logger.Error("filepath abs error", zap.Error(err))
 		return
 	}
-	dir := rootDir + "/model/demo"
-	app = model.Load(dir)
+	dir := rootDir + "/demo"
+	app = modelers.Load(dir)
 	return
 }
 
@@ -41,30 +40,4 @@ func TestLoader(t *testing.T) {
 		return
 	}
 	println(string(bs))
-
-	println("dao list start")
-	for _, one := range app.DaoList {
-		println("dao [" + one.Name + "] start")
-		js, err := javascript.GetDaoJavascript(app, one)
-		if err != nil {
-			util.Logger.Error("get dao javascript error", zap.Error(err))
-			return
-		}
-		println(js)
-		println("dao [" + one.Name + "] end")
-	}
-	println("dao list end")
-
-	println("service list start")
-	for _, one := range app.ServiceList {
-		println("service [" + one.Name + "] start")
-		js, err := javascript.GetServiceJavascript(app, one)
-		if err != nil {
-			util.Logger.Error("get service javascript error", zap.Error(err))
-			return
-		}
-		println(js)
-		println("service [" + one.Name + "] end")
-	}
-	println("service list end")
 }

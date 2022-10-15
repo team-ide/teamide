@@ -3,7 +3,7 @@ package maker
 import (
 	"encoding/json"
 	"go.uber.org/zap"
-	"teamide/pkg/maker/worker"
+	"teamide/pkg/maker/invokers"
 	"teamide/pkg/util"
 	"testing"
 )
@@ -15,9 +15,9 @@ func TestInvoker(t *testing.T) {
 		return
 	}
 
-	invoker := worker.NewInvoker(app)
+	invoker := invokers.NewInvoker(app)
 
-	invokeData := worker.NewInvokeData(app)
+	invokeData := invokers.NewInvokeData(app)
 
 	err = invokeData.AddArg("userId", 1, "i64")
 	if err != nil {
