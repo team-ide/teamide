@@ -3,9 +3,19 @@ package javascript
 import (
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
 )
+
+type serviceCoder struct {
+	*appCoder
+}
+
+func (this_ *serviceCoder) Gen(code *common.Code, model *modelers.ServiceModel) (err error) {
+
+	return
+}
 
 func GetFormatMethodName(name string) (methodName string) {
 	methodName = strings.ReplaceAll(name, ".", "_")

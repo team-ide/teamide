@@ -3,9 +3,19 @@ package javascript
 import (
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
 )
+
+type daoCoder struct {
+	*appCoder
+}
+
+func (this_ *daoCoder) Gen(code *common.Code, model *modelers.DaoModel) (err error) {
+
+	return
+}
 
 func GetDaoMethodName(name string) (methodName string) {
 	methodName = GetFormatMethodName(name)

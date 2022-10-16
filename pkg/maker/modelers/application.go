@@ -3,19 +3,20 @@ package modelers
 import "errors"
 
 type Application struct {
-	ConstantList  []*ConstantModel `json:"constantList"`
-	constantCache map[string]*ConstantModel
-	StructList    []*StructModel `json:"structList"`
-	structCache   map[string]*StructModel
-	ServiceList   []*ServiceModel `json:"serviceList"`
-	serviceCache  map[string]*ServiceModel
-	DaoList       []*DaoModel `json:"daoList"`
-	daoCache      map[string]*DaoModel
-	ErrorList     []*ErrorModel `json:"errorList"`
-	errorCache    map[string]*ErrorModel
-	FuncList      []*FuncModel `json:"funcList"`
-	funcCache     map[string]*FuncModel
-	LoadErrors    []*LoadError `json:"loadErrors"`
+	ConstantList       []*ConstantModel `json:"constantList"`
+	constantCache      map[string]*ConstantModel
+	StructList         []*StructModel `json:"structList"`
+	structCache        map[string]*StructModel
+	ServiceList        []*ServiceModel `json:"serviceList"`
+	serviceCache       map[string]*ServiceModel
+	DaoList            []*DaoModel `json:"daoList"`
+	daoCache           map[string]*DaoModel
+	ErrorList          []*ErrorModel `json:"errorList"`
+	errorCache         map[string]*ErrorModel
+	FuncList           []*FuncModel `json:"funcList"`
+	funcCache          map[string]*FuncModel
+	LoadErrors         []*LoadError             `json:"loadErrors"`
+	LanguageJavascript *LanguageJavascriptModel `json:"languageJavascript"`
 }
 
 type LoadError struct {
@@ -141,5 +142,21 @@ func (this_ *Application) GetFunc(name string) (model *FuncModel) {
 	if this_.funcCache != nil {
 		model = this_.funcCache[name]
 	}
+	return
+}
+
+func (this_ *Application) SetLanguageJavascript(model *LanguageJavascriptModel) {
+	if model == nil {
+		model = &LanguageJavascriptModel{}
+	}
+	this_.LanguageJavascript = model
+	return
+}
+
+func (this_ *Application) GetLanguageJavascript() (model *LanguageJavascriptModel) {
+	if this_.LanguageJavascript == nil {
+		this_.SetLanguageJavascript(nil)
+	}
+	model = this_.LanguageJavascript
 	return
 }

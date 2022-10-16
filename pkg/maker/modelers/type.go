@@ -7,9 +7,10 @@ import (
 )
 
 type Type struct {
-	Name    string `json:"name"`
-	Comment string `json:"comment"`
-	Dir     string `json:"dir"`
+	Name     string `json:"name"`
+	Comment  string `json:"comment"`
+	Dir      string `json:"dir"`
+	FileName string `json:"fileName"`
 
 	toModel func(text string) (model interface{}, err error)
 	toText  func(model interface{}) (text string, err error)
@@ -202,6 +203,35 @@ var (
 			return
 		},
 	}
+
+	TypeLanguageJavascript = &Type{
+		Name:     "languageJavascript",
+		Comment:  "JavaScript语言",
+		Dir:      "language",
+		FileName: "javascript",
+		toModel: func(text string) (model interface{}, err error) {
+			model = &LanguageJavascriptModel{}
+			err = yaml.Unmarshal([]byte(text), model)
+			if err != nil {
+				util.Logger.Error("yaml to language javascript error", zap.Any("yaml", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			bytes, err := yaml.Marshal(model)
+			if err != nil {
+				util.Logger.Error("language javascript to yaml error", zap.Any("errors", model), zap.Error(err))
+				return
+			}
+			text = string(bytes)
+			return
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			app.SetLanguageJavascript(model.(*LanguageJavascriptModel))
+			return
+		},
+	}
 )
 
 func init() {
@@ -211,4 +241,5 @@ func init() {
 	Types = append(Types, TypeDao)
 	Types = append(Types, TypeError)
 	Types = append(Types, TypeFunc)
+	Types = append(Types, TypeLanguageJavascript)
 }

@@ -1,7 +1,12 @@
 package javascript
 
-import "teamide/pkg/maker/modelers"
+import (
+	"teamide/pkg/maker/coders/common"
+	"teamide/pkg/maker/modelers"
+)
 
-type AppCoder struct {
-	app *modelers.Application
+type appCoder struct {
+	*modelers.Application
+	codeType common.CodeType
+	*modelers.LanguageJavascriptModel
 }

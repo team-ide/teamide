@@ -5,9 +5,19 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
 )
+
+type stepCoder struct {
+	*appCoder
+}
+
+func (this_ *stepCoder) Gen(code *common.Code, model *modelers.StepModel) (err error) {
+
+	return
+}
 
 func GetJavascriptBySteps(app *modelers.Application, steps []interface{}, tab int) (javascript string, err error) {
 	if len(steps) == 0 {

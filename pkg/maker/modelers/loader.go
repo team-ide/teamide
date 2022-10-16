@@ -32,14 +32,18 @@ func Load(dir string) (app *Application) {
 func appendModelByType(dir string, app *Application, modelType *Type) {
 
 	pathname := dir + "/" + modelType.Dir
-	loadFiles(pathname, func(fullName string) {
-		appendModel(dir, app, modelType, fullName)
+	loadFiles(pathname, func(fileName string, fullName string) {
+		appendModel(dir, app, modelType, fileName, fullName)
 	})
 	return
 }
 
-func appendModel(dir string, app *Application, modelType *Type, fullName string) {
-
+func appendModel(dir string, app *Application, modelType *Type, fileName string, fullName string) {
+	if modelType.FileName != "" {
+		if !strings.HasPrefix(fileName, modelType.FileName+".") {
+			return
+		}
+	}
 	path := strings.TrimLeft(fullName, dir)
 	var err error
 	defer func() {
@@ -74,14 +78,14 @@ func appendModel(dir string, app *Application, modelType *Type, fullName string)
 	}
 	return
 }
-func loadFiles(folder string, onLoad func(pathname string)) {
+func loadFiles(folder string, onLoad func(name string, pathname string)) {
 	files, _ := ioutil.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
 			loadFiles(folder+"/"+file.Name(), onLoad)
 		} else {
 			if onLoad != nil {
-				onLoad(folder + "/" + file.Name())
+				onLoad(file.Name(), folder+"/"+file.Name())
 			}
 		}
 	}
