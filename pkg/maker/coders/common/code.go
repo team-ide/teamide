@@ -39,6 +39,6 @@ func (this_ *Code) SetOther(key string, other *Code) {
 }
 
 func (this_ *Code) ToContent() (content string) {
-
+	content = this_.Body
 	return
 }

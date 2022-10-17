@@ -31,4 +31,55 @@ func init() {
 }
 
 type ValueType struct {
+	Name     string `json:"name"`
+	Comment  string `json:"comment"`
+	IsNumber bool   `json:"isNumber"`
+}
+
+var (
+	ValueTypes []*ValueType
+
+	ValueTypeString = &ValueType{
+		Name:    "string",
+		Comment: "string",
+	}
+
+	ValueTypeInt = &ValueType{
+		Name:     "i",
+		Comment:  "int",
+		IsNumber: true,
+	}
+
+	ValueTypeInt8 = &ValueType{
+		Name:     "i8",
+		Comment:  "int8",
+		IsNumber: true,
+	}
+
+	ValueTypeInt16 = &ValueType{
+		Name:     "i16",
+		Comment:  "int16",
+		IsNumber: true,
+	}
+
+	ValueTypeInt32 = &ValueType{
+		Name:     "i32",
+		Comment:  "int32",
+		IsNumber: true,
+	}
+
+	ValueTypeInt64 = &ValueType{
+		Name:     "i64",
+		Comment:  "int64",
+		IsNumber: true,
+	}
+)
+
+func init() {
+	ValueTypes = append(ValueTypes, ValueTypeString)
+	ValueTypes = append(ValueTypes, ValueTypeInt)
+	ValueTypes = append(ValueTypes, ValueTypeInt64)
+	ValueTypes = append(ValueTypes, ValueTypeInt8)
+	ValueTypes = append(ValueTypes, ValueTypeInt16)
+	ValueTypes = append(ValueTypes, ValueTypeInt32)
 }

@@ -1,6 +1,9 @@
 package modelers
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type Application struct {
 	ConstantList       []*ConstantModel `json:"constantList"`
@@ -158,5 +161,14 @@ func (this_ *Application) GetLanguageJavascript() (model *LanguageJavascriptMode
 		this_.SetLanguageJavascript(nil)
 	}
 	model = this_.LanguageJavascript
+	return
+}
+
+func (this_ *Application) GetValueType(name string) (valueType *ValueType) {
+	for _, one := range ValueTypes {
+		if strings.EqualFold(one.Name, name) {
+			return one
+		}
+	}
 	return
 }
