@@ -159,10 +159,9 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          go env -w CGO_ENABLED=0
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide .
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
+          CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
 
