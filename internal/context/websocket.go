@@ -30,37 +30,35 @@ func initServerWebsocket() {
 	websocketMessageOut = make(chan *WebsocketMessage, 10)
 
 	go func() {
-		for {
-			select {
-			case msg := <-websocketMessageOut:
-				if msg == nil {
-					continue
-				}
-				var list []*ServerWebsocket
-				if msg.id != "" {
-					find := GetServerWebsocket(msg.id)
-					if find != nil {
-						list = append(list, find)
-					}
-				} else if msg.userId != "" {
-					list = GetUserServerWebsocketList(msg.userId)
-				} else {
-					list = GetServerWebsocketList()
-				}
-				go func() {
+		for msg := range websocketMessageOut {
 
-					defer func() {
-						if e := recover(); e != nil {
-							util.Logger.Error("WSWriteText error", zap.Any("error", e))
-						}
-					}()
+			if msg == nil {
+				continue
+			}
+			var list []*ServerWebsocket
+			if msg.id != "" {
+				find := GetServerWebsocket(msg.id)
+				if find != nil {
+					list = append(list, find)
+				}
+			} else if msg.userId != "" {
+				list = GetUserServerWebsocketList(msg.userId)
+			} else {
+				list = GetServerWebsocketList()
+			}
+			go func() {
 
-					bs, _ := json.Marshal(msg)
-					for _, one := range list {
-						one.WSWriteText(bs)
+				defer func() {
+					if e := recover(); e != nil {
+						util.Logger.Error("WSWriteText error", zap.Any("error", e))
 					}
 				}()
-			}
+
+				bs, _ := json.Marshal(msg)
+				for _, one := range list {
+					one.WSWriteText(bs)
+				}
+			}()
 
 		}
 	}()

@@ -15,7 +15,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/mattn/go-sqlite3 v1.14.13
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/pkg/sftp v1.13.4
 	github.com/robfig/cron/v3 v3.0.1
