@@ -6,17 +6,22 @@ import (
 	"gitee.com/teamide/zorm"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/team-ide/go-driver/db_dm"
+	"github.com/team-ide/go-driver/db_kingbase_v8r6"
+	"github.com/team-ide/go-driver/db_mysql"
+	"github.com/team-ide/go-driver/db_oracle"
+	"github.com/team-ide/go-driver/db_shentong"
+	"github.com/team-ide/go-driver/db_sqlite3"
 	"go.uber.org/zap"
-	"strconv"
 	"strings"
 	"teamide/pkg/util"
 )
 
 type DatabaseType struct {
-	DSNFormat         string
 	DriverName        string
 	DBType            string
 	ColumnTypeInfoMap map[string]*ColumnTypeInfo
+	getDSN            func(config *DatabaseConfig) string
 }
 
 func (this_ *DatabaseType) GetColumnTypeInfo(name string) (c *ColumnTypeInfo) {
@@ -41,14 +46,48 @@ func (this_ *DatabaseType) GetColumnTypeInfos() (c []*ColumnTypeInfo) {
 }
 
 var (
-	DatabaseTypeMySql    = addDatabaseType(&DatabaseType{DSNFormat: "$username:$password@tcp($host:$port)/$database?charset=utf8mb4&parseTime=true", DriverName: "mysql", DBType: "mysql"})
-	DatabaseTypeSqlite   = addDatabaseType(&DatabaseType{DSNFormat: "$database", DriverName: "sqlite3", DBType: "sqlite"})
-	DatabaseTypeOracle   = addDatabaseType(&DatabaseType{})
-	DatabaseTypeShenTong = addDatabaseType(&DatabaseType{})
-	DatabaseTypeDM       = addDatabaseType(&DatabaseType{})
-	DatabaseTypeKingBase = addDatabaseType(&DatabaseType{})
-	DatabaseTypeKunLun   = addDatabaseType(&DatabaseType{})
-	DatabaseTypeGBase    = addDatabaseType(&DatabaseType{})
+	DatabaseTypeMySql = addDatabaseType(&DatabaseType{
+		getDSN: func(config *DatabaseConfig) string {
+			return db_mysql.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+		},
+		DriverName: db_mysql.GetDriverName(),
+		DBType:     db_mysql.GetDialect(),
+	})
+	DatabaseTypeSqlite = addDatabaseType(&DatabaseType{getDSN: func(config *DatabaseConfig) string {
+		return db_sqlite3.GetDSN(config.Database)
+	},
+		DriverName: db_sqlite3.GetDriverName(),
+		DBType:     db_sqlite3.GetDialect(),
+	})
+
+	DatabaseTypeOracle = addDatabaseType(&DatabaseType{
+		getDSN: func(config *DatabaseConfig) string {
+			return db_oracle.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Sid)
+		},
+		DriverName: db_oracle.GetDriverName(),
+		DBType:     db_oracle.GetDialect(),
+	})
+	DatabaseTypeShenTong = addDatabaseType(&DatabaseType{
+		getDSN: func(config *DatabaseConfig) string {
+			return db_shentong.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+		},
+		DriverName: db_shentong.GetDriverName(),
+		DBType:     db_shentong.GetDialect(),
+	})
+	DatabaseTypeDM = addDatabaseType(&DatabaseType{
+		getDSN: func(config *DatabaseConfig) string {
+			return db_dm.GetDSN(config.Username, config.Password, config.Host, config.Port)
+		},
+		DriverName: db_dm.GetDriverName(),
+		DBType:     db_dm.GetDialect(),
+	})
+	DatabaseTypeKingBase = addDatabaseType(&DatabaseType{
+		getDSN: func(config *DatabaseConfig) string {
+			return db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+		},
+		DriverName: db_kingbase_v8r6.GetDriverName(),
+		DBType:     db_kingbase_v8r6.GetDialect(),
+	})
 
 	DatabaseTypes []*DatabaseType
 )
@@ -75,10 +114,6 @@ func GetDatabaseType(databaseType string) *DatabaseType {
 		return DatabaseTypeDM
 	case "kingbase":
 		return DatabaseTypeKingBase
-	case "kunlun":
-		return DatabaseTypeKunLun
-	case "gbase":
-		return DatabaseTypeGBase
 	}
 	return nil
 }
@@ -91,10 +126,11 @@ type DatabaseConfig struct {
 	Database string `json:"database,omitempty"`
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
+	Sid      string `json:"sid,omitempty"`
 }
 
 // NewDatabaseWorker 根据数据库配置创建DatabaseWorker
-func NewDatabaseWorker(config DatabaseConfig) (databaseWorker *DatabaseWorker, err error) {
+func NewDatabaseWorker(config *DatabaseConfig) (databaseWorker *DatabaseWorker, err error) {
 	databaseWorker = &DatabaseWorker{config: config}
 	err = databaseWorker.init()
 	if err != nil {
@@ -105,7 +141,7 @@ func NewDatabaseWorker(config DatabaseConfig) (databaseWorker *DatabaseWorker, e
 
 // DatabaseWorker 基础操作
 type DatabaseWorker struct {
-	config       DatabaseConfig
+	config       *DatabaseConfig
 	databaseType *DatabaseType
 	dbDao        *zorm.DBDao
 	baseContext  context.Context
@@ -122,12 +158,7 @@ func (this_ *DatabaseWorker) init() (err error) {
 		return
 	}
 
-	dns := this_.databaseType.DSNFormat
-	dns = strings.ReplaceAll(dns, `$username`, this_.config.Username)
-	dns = strings.ReplaceAll(dns, `$password`, this_.config.Password)
-	dns = strings.ReplaceAll(dns, `$host`, this_.config.Host)
-	dns = strings.ReplaceAll(dns, `$port`, strconv.Itoa(this_.config.Port))
-	dns = strings.ReplaceAll(dns, `$database`, this_.config.Database)
+	dns := this_.databaseType.getDSN(this_.config)
 	// 自定义zorm日志输出
 	// zorm.LogCallDepth = 4 //日志调用的层级
 
@@ -184,7 +215,7 @@ func (this_ *DatabaseWorker) GetContext() (ctx context.Context) {
 	return ctx
 }
 
-func (this_ *DatabaseWorker) GetConfig() (config DatabaseConfig) {
+func (this_ *DatabaseWorker) GetConfig() (config *DatabaseConfig) {
 	config = this_.config
 	return
 }
