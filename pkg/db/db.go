@@ -52,7 +52,7 @@ func init() {
 	})
 
 	addDatabaseType(&DatabaseType{getDSN: func(config *DatabaseConfig) string {
-		return db_sqlite3.GetDSN(config.Database)
+		return db_sqlite3.GetDSN(config.DatabasePath)
 	},
 		DriverName:  db_sqlite3.GetDriverName(),
 		DialectName: db_sqlite3.GetDialect(),
@@ -125,6 +125,7 @@ type DatabaseConfig struct {
 	Sid          string `json:"sid,omitempty"`
 	MaxIdleConns int    `json:"maxIdleConns,omitempty"`
 	MaxOpenConns int    `json:"maxOpenConns,omitempty"`
+	DatabasePath string `json:"databasePath,omitempty"`
 }
 
 // NewDatabaseWorker 根据数据库配置创建DatabaseWorker

@@ -198,8 +198,8 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	var databaseConfig *db.DatabaseConfig
 	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
 		databaseConfig = &db.DatabaseConfig{
-			Type:     "sqlite",
-			Database: serverConfig.Server.Data + "database",
+			Type:         "sqlite",
+			DatabasePath: serverConfig.Server.Data + "database",
 		}
 		err = this_.backupSqlite(serverConfig, databaseConfig)
 		if err != nil {
@@ -230,7 +230,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 
 //backupSqlite 备份
 func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, databaseConfig *db.DatabaseConfig) (err error) {
-	databasePath := databaseConfig.Database
+	databasePath := databaseConfig.DatabasePath
 	exist, err := util.PathExists(databasePath)
 	if err != nil {
 		return

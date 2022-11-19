@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-database-database">
+  <div class="toolbox-database-owner">
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="50px">
@@ -90,14 +90,14 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "extend", "databasesChange"],
+  props: ["source", "toolboxWorker", "extend", "ownersChange"],
   data() {
     return {
       ready: false,
       expands: [],
       defaultProps: {
         children: "children",
-        label: "name",
+        label: "text",
         isLeaf: "leaf",
       },
       filterText: "",
@@ -136,18 +136,18 @@ export default {
       needDeletes.push(data.key);
       if (data.isDatabase) {
         this.expands.forEach((one) => {
-          if (one == "database:tables:" + data.name) {
+          if (one == "owner:tables:" + data.name) {
             needDeletes.push(one);
-          } else if (("" + one).startsWith("database:" + data.name + ":")) {
+          } else if (("" + one).startsWith("owner:" + data.name + ":")) {
             needDeletes.push(one);
           }
         });
       } else if (data.isDatabaseTables) {
         this.expands.forEach((one) => {
-          if (one == "database:tables:" + data.database.name) {
+          if (one == "owner:tables:" + data.owner.ownerName) {
             needDeletes.push(one);
           } else if (
-            ("" + one).startsWith("database:" + data.database.name + ":")
+            ("" + one).startsWith("owner:" + data.owner.ownerName + ":")
           ) {
             needDeletes.push(one);
           }
@@ -198,16 +198,16 @@ export default {
           name: data.name + ">DDL",
           title: data.name + ">DDL",
           type: "ddl",
-          database: data.name,
+          ownerName: data.name,
         };
         this.toolboxWorker.openTabByExtend(extend);
       } else if (data.isTable) {
         let extend = {
-          name: data.database.name + "." + data.name + ">DDL",
-          title: data.database.name + "." + data.name + ">DDL",
+          name: data.owner.ownerName + "." + data.tableName + ">DDL",
+          title: data.owner.ownerName + "." + data.tableName + ">DDL",
           type: "ddl",
-          database: data.database.name,
-          table: data.name,
+          ownerName: data.owner.ownerName,
+          tableName: data.tableName,
         };
         this.toolboxWorker.openTabByExtend(extend);
       }
@@ -260,10 +260,10 @@ export default {
           text: "新建SQL查询",
           onClick: () => {
             let extend = {
-              name: "查询[" + data.name + "]库SQL",
-              title: "查询[" + data.name + "]库SQL",
+              name: "查询[" + data.ownerName + "]库SQL",
+              title: "查询[" + data.ownerName + "]库SQL",
               type: "sql",
-              database: data.name,
+              ownerName: data.ownerName,
               executeSQL: "SHOW TABLES;",
             };
             this.toolboxWorker.openTabByExtend(extend);
@@ -282,16 +282,24 @@ export default {
           onClick: () => {
             let extend = {
               name:
-                "查询[" + data.database.name + "]库[" + data.name + "]表SQL",
+                "查询[" +
+                data.owner.ownerName +
+                "]库[" +
+                data.tableName +
+                "]表SQL",
               title:
-                "查询[" + data.database.name + "]库[" + data.name + "]表SQL",
+                "查询[" +
+                data.owner.ownerName +
+                "]库[" +
+                data.tableName +
+                "]表SQL",
               type: "sql",
-              database: data.database.name,
+              ownerName: data.owner.ownerName,
               executeSQL:
                 "SELECT * FROM `" +
-                data.database.name +
+                data.owner.ownerName +
                 "`.`" +
-                data.name +
+                data.tableName +
                 "`;",
             };
             this.toolboxWorker.openTabByExtend(extend);
@@ -356,11 +364,11 @@ export default {
     },
     toOpenTable(data) {
       let extend = {
-        name: data.database.name + "." + data.name,
-        title: data.database.name + "." + data.name,
+        name: data.owner.ownerName + "." + data.tableName,
+        title: data.owner.ownerName + "." + data.tableName,
         type: "data",
-        database: data.database.name,
-        table: data.name,
+        ownerName: data.owner.ownerName,
+        tableName: data.tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
@@ -377,58 +385,60 @@ export default {
         .confirm(msg)
         .then(async () => {
           if (data.isDatabase) {
-            await this.doDeleteDatabase(data.name);
+            await this.doDeleteDatabase(data.ownerName);
             this.refresh();
           } else if (data.isTable) {
-            await this.doDeleteTable(data.database.name, data.name);
-            this.reloadChildren(data.database);
+            await this.doDeleteTable(data.owner.ownerName, data.tableName);
+            this.reloadChildren(data.owner);
           }
         })
         .catch((e) => {});
     },
     async loadNode(node, resolve) {
       if (node.level === 0) {
-        let databases = await this.loadDatabases();
+        let owners = await this.loadOwners();
 
         let list = [];
-        databases.forEach((one) => {
-          let database = {};
-          database.name = one.name;
-          database.isDatabase = true;
-          database.key = "database:" + database.name;
-          database.leaf = false;
+        owners.forEach((one) => {
+          let owner = {};
+          owner.ownerName = one.ownerName;
+          owner.text = one.ownerName;
+          owner.isDatabase = true;
+          owner.key = "owner:" + owner.ownerName;
+          owner.leaf = false;
 
-          list.push(database);
+          list.push(owner);
         });
-        this.databasesChange(list);
+        this.ownersChange(list);
         resolve(list);
         this.initTreeWidth();
         return;
       }
       if (node.data.isDatabase) {
-        let database = node.data;
+        let owner = node.data;
         resolve([
           {
-            name: "Tables",
+            text: "Tables",
             isDatabaseTables: true,
-            key: "database:tables:" + database.name,
+            key: "owner:tables:" + owner.ownerName,
             leaf: false,
-            database: database,
+            owner: owner,
           },
         ]);
         this.initTreeWidth();
         return;
       }
       if (node.data.isDatabaseTables) {
-        let database = node.data.database;
-        let tables = await this.loadTables(database.name);
+        let owner = node.data.owner;
+        let tables = await this.loadTables(owner.ownerName);
         let list = [];
         tables.forEach((one) => {
           let table = {};
-          table.name = one.name;
-          table.database = database;
+          table.tableName = one.tableName;
+          table.text = one.tableName;
+          table.owner = owner;
           table.isTable = true;
-          table.key = "database:" + database.name + ":" + table.name;
+          table.key = "owner:" + owner.ownerName + ":" + table.tableName;
           table.leaf = true;
 
           list.push(table);
@@ -449,84 +459,84 @@ export default {
         this.refresh();
       });
     },
-    toCreateTable(database) {
-      if (database.isDatabaseTables) {
-        database = database.database;
+    toCreateTable(owner) {
+      if (owner.isDatabaseTables) {
+        owner = owner.owner;
       }
       let extend = {
-        name: "新建[" + database.name + "]库表",
-        title: "新建[" + database.name + "]库表",
+        name: "新建[" + owner.ownerName + "]库表",
+        title: "新建[" + owner.ownerName + "]库表",
         type: "table",
-        database: database.name,
+        ownerName: owner.ownerName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
     async toUpdateTable(table) {
-      let database = table.database.name;
+      let ownerName = table.owner.ownerName;
       let extend = {
-        name: "编辑[" + database + "]库表[" + table.name + "]",
-        title: "编辑[" + database + "]库表[" + table.name + "]",
+        name: "编辑[" + ownerName + "]库表[" + table.tableName + "]",
+        title: "编辑[" + ownerName + "]库表[" + table.tableName + "]",
         type: "table",
-        database: database,
-        table: table.name,
+        ownerName: ownerName,
+        tableName: table.tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
     async toExport(table) {
-      let database = table.database.name;
+      let ownerName = table.owner.ownerName;
       let extend = {
-        name: "导出[" + database + "]库表[" + table.name + "]数据",
-        title: "导出[" + database + "]库表[" + table.name + "]数据",
+        name: "导出[" + ownerName + "]库表[" + table.tableName + "]数据",
+        title: "导出[" + ownerName + "]库表[" + table.tableName + "]数据",
         type: "export",
-        database: database,
-        table: table.name,
+        ownerName: ownerName,
+        tableName: table.tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
     async toImport(table) {
-      let database = table.database.name;
+      let ownerName = table.owner.ownerName;
       let extend = {
-        name: "导入[" + database + "]库表[" + table.name + "]数据",
-        title: "导入[" + database + "]库表[" + table.name + "]数据",
+        name: "导入[" + ownerName + "]库表[" + table.tableName + "]数据",
+        title: "导入[" + ownerName + "]库表[" + table.tableName + "]数据",
         type: "import",
-        database: database,
-        table: table.name,
+        ownerName: ownerName,
+        tableName: table.tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
-    async loadDatabases() {
+    async loadOwners() {
       let param = {};
-      let res = await this.toolboxWorker.work("databases", param);
+      let res = await this.toolboxWorker.work("owners", param);
       res.data = res.data || {};
-      return res.data.databases || [];
+      return res.data.owners || [];
     },
-    async loadTables(database) {
+    async loadTables(ownerName) {
       let param = {
-        database: database,
+        ownerName: ownerName,
       };
       let res = await this.toolboxWorker.work("tables", param);
       res.data = res.data || {};
       return res.data.tables || [];
     },
-    async getTableDetail(database, table) {
-      let res = await this.loadTableDetail(database, table);
+    async getTableDetail(ownerName, tableName) {
+      let res = await this.loadTableDetail(ownerName, tableName);
       return res;
     },
-    async doDeleteDatabase(database) {
+    async doDeleteOwner(ownerName) {
       let param = {
-        database: database,
+        ownerName: ownerName,
       };
-      let res = await this.toolboxWorker.work("deleteDatabase", param);
+      let res = await this.toolboxWorker.work("deleteOwner", param);
       if (res.code != 0) {
         return false;
       }
       this.tool.success("删除成功");
       return true;
     },
-    async doDeleteTable(database, table) {
+    async doDeleteTable(ownerName, tableName) {
       let param = {
-        database: database,
-        table: table,
+        ownerName: ownerName,
+        tableName: tableName,
       };
       let res = await this.toolboxWorker.work("deleteTable", param);
       if (res.code != 0) {
@@ -535,10 +545,10 @@ export default {
       this.tool.success("删除成功");
       return true;
     },
-    async loadTableDetail(database, table) {
+    async loadTableDetail(ownerName, tableName) {
       let param = {
-        database: database,
-        table: table,
+        ownerName: ownerName,
+        tableName: tableName,
       };
       let res = await this.toolboxWorker.work("tableDetail", param);
       if (res.code != 0) {
@@ -562,7 +572,7 @@ export default {
 </script>
 
 <style>
-.toolbox-database-database {
+.toolbox-database-owner {
   width: 100%;
   height: 100%;
 }

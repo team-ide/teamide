@@ -323,21 +323,26 @@ func databaseWorker() *Worker {
 					},
 				},
 				{
-					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1",
+					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接地址不能为空"},
 					},
 				},
 				{
-					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306",
+					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306", VIf: `type != 'sqlite'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
 				},
-				{Label: "Username", Name: "username"},
-				{Label: "Password", Name: "password", Type: "password"},
+				{Label: "Username", Name: "username", VIf: `type != 'sqlite'`},
+				{Label: "Password", Name: "password", Type: "password", VIf: `type != 'sqlite'`},
 				{Label: "Database", Name: "database", VIf: `type == 'mysql' || type == 'kingbase' || type == 'shentong'`},
 				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`},
+				{Label: "数据库文件路径", Name: "databasePath", VIf: `type == 'sqlite'`,
+					Rules: []*form.Rule{
+						{Required: true, Message: "数据库文件路径不能为空"},
+					},
+				},
 			},
 		},
 	}

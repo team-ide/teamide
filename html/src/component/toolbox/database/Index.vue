@@ -8,7 +8,7 @@
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
-            :databasesChange="databasesChange"
+            :ownersChange="ownersChange"
           >
           </Database>
         </tm-layout>
@@ -17,7 +17,7 @@
           <Tabs
             :source="source"
             :toolboxWorker="toolboxWorker"
-            :databases="databases"
+            :owners="owners"
           >
           </Tabs>
         </tm-layout>
@@ -56,7 +56,7 @@ export default {
   data() {
     return {
       ready: false,
-      databases: [],
+      owners: [],
     };
   },
   computed: {},
@@ -68,8 +68,8 @@ export default {
       this.toolboxWorker.formatDateColumn = this.formatDateColumn;
       this.ready = true;
     },
-    databasesChange(databases) {
-      this.databases = databases;
+    ownersChange(owners) {
+      this.owners = owners;
     },
     columnIsNumber(column) {
       let type = ("" + column.type).toLowerCase();
