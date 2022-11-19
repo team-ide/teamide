@@ -182,11 +182,6 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	util.TempDir = serverConfig.Server.TempDir
 	node.Logger = this_.Logger
 
-	err = db.CheckColumnType()
-	if err != nil {
-		return
-	}
-
 	this_.ServerContext = serverConfig.Server.Context
 	if this_.ServerContext == "" || !strings.HasSuffix(this_.ServerContext, "/") {
 		this_.ServerContext = this_.ServerContext + "/"
@@ -222,7 +217,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	this_.DatabaseConfig = databaseConfig
-	this_.DatabaseWorker, err = db.NewDatabaseWorker(*databaseConfig)
+	this_.DatabaseWorker, err = db.NewDatabaseWorker(databaseConfig)
 	if err != nil {
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return

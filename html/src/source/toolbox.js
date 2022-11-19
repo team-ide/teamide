@@ -9,25 +9,8 @@ let toolbox = {
             tool.error(res.msg);
         } else {
             let data = res.data || {};
-
-            data.mysqlColumnTypeInfos.forEach((one) => {
-                one.name = one.name.toLowerCase();
-            });
-            data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
-            toolbox.sshTeamIDEBinaryStartBytes =
-                data.sshTeamIDEBinaryStartBytes.split(",");
-            toolbox.sshTeamIDEBinaryStartBytesLength =
-                toolbox.sshTeamIDEBinaryStartBytes.length;
-
-            toolbox.sshTeamIDEEvent = data.sshTeamIDEEvent;
-            toolbox.sshTeamIDEMessage = data.sshTeamIDEMessage;
-            toolbox.sshTeamIDEError = data.sshTeamIDEError;
-            toolbox.sshTeamIDEAlert = data.sshTeamIDEAlert;
-            toolbox.sshTeamIDEConsole = data.sshTeamIDEConsole;
-            toolbox.sshTeamIDEStdout = data.sshTeamIDEStdout;
-            toolbox.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
             toolbox.quickCommandTypes = data.quickCommandTypes;
-            toolbox.databaseTypes = data.databaseTypes;
+            toolbox.databaseTypes = data.databaseTypes||[];
             toolbox.types = data.types;
             data.types.forEach((one) => {
                 form.toolbox[one.name] = one.configForm;

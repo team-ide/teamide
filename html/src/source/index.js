@@ -299,24 +299,8 @@ source.initToolboxData = async () => {
     } else {
         let data = res.data || {};
 
-        data.mysqlColumnTypeInfos.forEach((one) => {
-            one.name = one.name.toLowerCase();
-        });
-        data.sshTeamIDEBinaryStartBytes = data.sshTeamIDEBinaryStartBytes || "";
-        source.sshTeamIDEBinaryStartBytes =
-            data.sshTeamIDEBinaryStartBytes.split(",");
-        source.sshTeamIDEBinaryStartBytesLength =
-            source.sshTeamIDEBinaryStartBytes.length;
-
-        source.sshTeamIDEEvent = data.sshTeamIDEEvent;
-        source.sshTeamIDEMessage = data.sshTeamIDEMessage;
-        source.sshTeamIDEError = data.sshTeamIDEError;
-        source.sshTeamIDEAlert = data.sshTeamIDEAlert;
-        source.sshTeamIDEConsole = data.sshTeamIDEConsole;
-        source.sshTeamIDEStdout = data.sshTeamIDEStdout;
-        source.mysqlColumnTypeInfos = data.mysqlColumnTypeInfos;
         source.quickCommandTypes = data.quickCommandTypes;
-        source.databaseTypes = data.databaseTypes;
+        source.databaseTypes = data.databaseTypes || [];
         source.sqlConditionalOperations = data.sqlConditionalOperations;
         source.toolboxTypes = data.types || [];
         source.toolboxTypes.forEach((one) => {

@@ -1,13 +1,10 @@
 package module_toolbox
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/pkg/db"
-	"teamide/pkg/ssh"
 	"teamide/pkg/toolbox"
 )
 
@@ -87,7 +84,6 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/openTab"}, Power: PowerToolboxOpenTab, Do: this_.openTab})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/closeTab"}, Power: PowerToolboxCloseTab, Do: this_.closeTab})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenTabExtend"}, Power: PowerToolboxUpdateOpenTabExtend, Do: this_.updateOpenTabExtend})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/ssh/shell"}, Power: PowerToolboxSSHShell, Do: this_.sshShell, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/database/export/download"}, Power: PowerToolboxDatabaseExportDownload, Do: this_.databaseExportDownload, IsGet: true})
 
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/query"}, Power: PowerToolboxQuickCommandQuery, Do: this_.queryQuickCommand})
@@ -113,18 +109,10 @@ func init() {
 }
 
 type IndexResponse struct {
-	Types                      []*Worker                          `json:"types,omitempty"`
-	SqlConditionalOperations   []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
-	MysqlColumnTypeInfos       []*db.ColumnTypeInfo               `json:"mysqlColumnTypeInfos,omitempty"`
-	DatabaseTypes              []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
-	QuickCommandTypes          []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
-	SSHTeamIDEEvent            string                             `json:"sshTeamIDEEvent,omitempty"`
-	SSHTeamIDEMessage          string                             `json:"sshTeamIDEMessage,omitempty"`
-	SSHTeamIDEError            string                             `json:"sshTeamIDEError,omitempty"`
-	SSHTeamIDEAlert            string                             `json:"sshTeamIDEAlert,omitempty"`
-	SSHTeamIDEConsole          string                             `json:"sshTeamIDEConsole,omitempty"`
-	SSHTeamIDEStdout           string                             `json:"sshTeamIDEStdout,omitempty"`
-	SSHTeamIDEBinaryStartBytes string                             `json:"sshTeamIDEBinaryStartBytes,omitempty"`
+	Types                    []*Worker                          `json:"types,omitempty"`
+	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
+	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
+	QuickCommandTypes        []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
 }
 
 func (this_ *ToolboxApi) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
@@ -133,20 +121,8 @@ func (this_ *ToolboxApi) index(_ *base.RequestBean, _ *gin.Context) (res interfa
 
 	response.Types = GetWorkers()
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
-	response.MysqlColumnTypeInfos = db.MySqlColumnTypeInfos
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = QuickCommandTypes
-	response.SSHTeamIDEEvent = ssh.TeamIDEEvent
-	response.SSHTeamIDEMessage = ssh.TeamIDEMessage
-	response.SSHTeamIDEError = ssh.TeamIDEError
-	response.SSHTeamIDEAlert = ssh.TeamIDEAlert
-	response.SSHTeamIDEConsole = ssh.TeamIDEConsole
-	response.SSHTeamIDEStdout = ssh.TeamIDEStdout
-	var bsStr []string
-	for _, b := range ssh.TeamIDEBinaryStartBytes {
-		bsStr = append(bsStr, fmt.Sprint(b))
-	}
-	response.SSHTeamIDEBinaryStartBytes = strings.Join(bsStr, ",")
 	res = response
 	return
 }

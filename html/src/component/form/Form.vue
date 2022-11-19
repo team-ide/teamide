@@ -14,103 +14,105 @@
       "
     >
       <template v-for="field in formBuild.fields">
-        <el-form-item :key="`key-${key}-${field.name}`" :label="field.label">
-          <template v-if="field.type == 'select'">
-            <el-select
-              v-model="formData[field.name]"
-              :placeholder="field.placeholder"
-              :required="field.required"
-              style="width: 100%"
-              clearable
-              filterable
-            >
-              <el-option
-                v-for="(one, index) in field.options"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
+        <template v-if="tool.isEmpty(field.vIf) || exec(field.vIf, formData)">
+          <el-form-item :key="`key-${key}-${field.name}`" :label="field.label">
+            <template v-if="field.type == 'select'">
+              <el-select
+                v-model="formData[field.name]"
+                :placeholder="field.placeholder"
+                :required="field.required"
+                style="width: 100%"
+                clearable
+                filterable
               >
-              </el-option>
-            </el-select>
-          </template>
-          <template v-else-if="field.type == 'switch'">
-            <el-switch v-model="form.name"> </el-switch>
-          </template>
-          <template v-else-if="field.type == 'file'">
-            <div
-              class="ft-12 pdb-5"
-              v-if="tool.isNotEmpty(formData[field.name])"
-            >
-              <span class="color-grey">文件：</span>
-              <a
-                class="tm-link color-green"
-                :href="source.filesUrl + formData[field.name]"
+                <el-option
+                  v-for="(one, index) in field.options"
+                  :key="index"
+                  :value="one.value"
+                  :label="one.text"
+                >
+                </el-option>
+              </el-select>
+            </template>
+            <template v-else-if="field.type == 'switch'">
+              <el-switch v-model="form.name"> </el-switch>
+            </template>
+            <template v-else-if="field.type == 'file'">
+              <div
+                class="ft-12 pdb-5"
+                v-if="tool.isNotEmpty(formData[field.name])"
               >
-                {{ formData[field.name] }}
-              </a>
+                <span class="color-grey">文件：</span>
+                <a
+                  class="tm-link color-green"
+                  :href="source.filesUrl + formData[field.name]"
+                >
+                  {{ formData[field.name] }}
+                </a>
+              </div>
+              <el-upload
+                class="upload-file"
+                :action="source.api + 'upload'"
+                :limit="1"
+                :data="{ place: 'other' }"
+                :headers="{ JWT: tool.getJWT() }"
+                name="file"
+                :on-success="fileObjectMap[field.name].success"
+                :show-file-list="false"
+              >
+                <div class="tm-link color-teal-8">点击上传</div>
+              </el-upload>
+            </template>
+            <template v-else-if="field.type == 'textarea'">
+              <el-input
+                type="textarea"
+                v-model="formData[field.name]"
+                :autosize="{ minRows: 5, maxRows: 10 }"
+                @input="valueChange(field)"
+                @change="valueChange(field)"
+              >
+              </el-input>
+            </template>
+            <template v-else-if="field.type == 'json'">
+              <el-input
+                type="textarea"
+                v-model="jsonStringMap[field.name].value"
+                :autosize="{ minRows: 5, maxRows: 20 }"
+                @input="
+                  valueChange(field) &&
+                    jsonStringChange(jsonStringMap[field.name])
+                "
+                @change="
+                  valueChange(field) &&
+                    jsonStringChange(jsonStringMap[field.name])
+                "
+              >
+              </el-input>
+            </template>
+            <template v-else-if="field.type == 'jsonView'">
+              <el-input
+                type="textarea"
+                v-model="jsonViewMap[field.bindName].value"
+                :autosize="{ minRows: 5, maxRows: 20 }"
+              >
+              </el-input>
+            </template>
+            <template v-else>
+              <el-input
+                v-model="formData[field.name]"
+                :type="field.type"
+                :placeholder="field.placeholder"
+                :required="field.required"
+                @input="valueChange(field)"
+                @change="valueChange(field)"
+              >
+              </el-input>
+            </template>
+            <div class="color-red" v-if="field.validMessage">
+              {{ field.validMessage }}
             </div>
-            <el-upload
-              class="upload-file"
-              :action="source.api + 'upload'"
-              :limit="1"
-              :data="{ place: 'other' }"
-              :headers="{ JWT: tool.getJWT() }"
-              name="file"
-              :on-success="fileObjectMap[field.name].success"
-              :show-file-list="false"
-            >
-              <div class="tm-link color-teal-8">点击上传</div>
-            </el-upload>
-          </template>
-          <template v-else-if="field.type == 'textarea'">
-            <el-input
-              type="textarea"
-              v-model="formData[field.name]"
-              :autosize="{ minRows: 5, maxRows: 10 }"
-              @input="valueChange(field)"
-              @change="valueChange(field)"
-            >
-            </el-input>
-          </template>
-          <template v-else-if="field.type == 'json'">
-            <el-input
-              type="textarea"
-              v-model="jsonStringMap[field.name].value"
-              :autosize="{ minRows: 5, maxRows: 20 }"
-              @input="
-                valueChange(field) &&
-                  jsonStringChange(jsonStringMap[field.name])
-              "
-              @change="
-                valueChange(field) &&
-                  jsonStringChange(jsonStringMap[field.name])
-              "
-            >
-            </el-input>
-          </template>
-          <template v-else-if="field.type == 'jsonView'">
-            <el-input
-              type="textarea"
-              v-model="jsonViewMap[field.bindName].value"
-              :autosize="{ minRows: 5, maxRows: 20 }"
-            >
-            </el-input>
-          </template>
-          <template v-else>
-            <el-input
-              v-model="formData[field.name]"
-              :type="field.type"
-              :placeholder="field.placeholder"
-              :required="field.required"
-              @input="valueChange(field)"
-              @change="valueChange(field)"
-            >
-            </el-input>
-          </template>
-          <div class="color-red" v-if="field.validMessage">
-            {{ field.validMessage }}
-          </div>
-        </el-form-item>
+          </el-form-item>
+        </template>
       </template>
     </template>
     <slot></slot>
@@ -207,6 +209,23 @@ export default {
       } catch (error) {
         field.validMessage = error;
       }
+    },
+    exec(vIf, data) {
+      if (this.tool.isEmpty(vIf)) {
+        return true;
+      }
+      try {
+        var script = ``;
+        for (let key in data) {
+          script += `var ` + key + `= data['` + key + `'];`;
+        }
+        script += vIf;
+        var res = eval("" + script + "");
+        return res;
+      } catch (error) {
+        console.log(error);
+      }
+      return false;
     },
     valueChange(field) {
       let value = this.formData[field.name];

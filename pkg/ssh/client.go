@@ -2,60 +2,14 @@ package ssh
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"os"
-	"strings"
 	"sync"
 	"teamide/pkg/util"
 	"time"
 )
-
-var (
-	tokenCache     = map[string]*Config{}
-	tokenCacheLock sync.Mutex
-)
-
-func AddTokenCache(key string, config *Config) {
-	tokenCacheLock.Lock()
-	defer tokenCacheLock.Unlock()
-
-	tokenCache[key] = config
-	return
-}
-
-func GetTokenCache(key string) (config *Config) {
-	tokenCacheLock.Lock()
-	defer tokenCacheLock.Unlock()
-
-	config = tokenCache[key]
-	return
-}
-
-func RemoveTokenCache(key string) {
-	tokenCacheLock.Lock()
-	defer tokenCacheLock.Unlock()
-
-	delete(tokenCache, key)
-	return
-}
-
-func WSSSHConnection(token string, ws *websocket.Conn) (err error) {
-	var sshConfig = GetTokenCache(token)
-
-	shellClient := &ShellClient{
-		Client: Client{
-			Token:  token,
-			Config: *sshConfig,
-			ws:     ws,
-		},
-	}
-	shellClient.start()
-
-	return
-}
 
 var (
 	ShellCache = map[string]*ShellClient{}
@@ -107,84 +61,6 @@ func (this_ *Client) CloseWS() {
 	}
 	this_.ws = nil
 }
-
-func (this_ *Client) initClient() (err error) {
-
-	if this_.isClosedWS || this_.sshClient == nil {
-		err = this_.createClient()
-	}
-	return
-}
-
-func (this_ *Client) createClient() (err error) {
-
-	if this_.Token == "" || this_.Config.Address == "" {
-		err = errors.New("令牌会话丢失")
-		util.Logger.Error("令牌验证失败", zap.Error(err))
-		this_.WSWriteError(err.Error())
-		return
-	}
-	if this_.sshClient, err = NewClient(this_.Config); err != nil {
-		util.Logger.Error("createClient error", zap.Error(err))
-		this_.WSWriteError("连接失败:" + err.Error())
-		return
-	}
-	go func() {
-		err = this_.sshClient.Wait()
-		this_.CloseClient()
-	}()
-	return
-}
-
-func (this_ *Client) ListenWS(onEvent func(event string), onMessage func(bs []byte), onClose func()) {
-	defer func() {
-		if x := recover(); x != nil {
-			util.Logger.Error("WebSocket信息监听异常", zap.Any("err", x))
-			this_.CloseWS()
-			return
-		}
-	}()
-	defer onClose()
-	// 第一个协程获取用户的输入
-	for {
-		if this_.isClosedWS {
-			return
-		}
-		messageType, bs, err := this_.ws.ReadMessage()
-		if err != nil {
-			this_.CloseWS()
-			return
-		}
-		if messageType == websocket.TextMessage {
-			if len(bs) > TeamIDEEventByteLength {
-				msg := string(bs[0:TeamIDEEventByteLength])
-				if strings.EqualFold(msg, TeamIDEEvent) {
-					onEvent(string(bs[TeamIDEEventByteLength:]))
-					continue
-				}
-			}
-		}
-		onMessage(bs)
-	}
-}
-
-const (
-	TeamIDEEvent       = "^^^^--Team--IDE--^^^^:event:"
-	TeamIDEMessage     = "^^^^--Team--IDE--^^^^:TeamIDE:message:"
-	TeamIDEError       = "^^^^--Team--IDE--^^^^:TeamIDE:error:"
-	TeamIDEAlert       = "^^^^--Team--IDE--^^^^:TeamIDE:alert:"
-	TeamIDEConsole     = "^^^^--Team--IDE--^^^^:TeamIDE:console:"
-	TeamIDEStdout      = "^^^^--Team--IDE--^^^^:TeamIDE:stdout:"
-	TeamIDEBinaryStart = "^^^^--Team--IDE--^^^^:TeamIDE:binary:"
-)
-
-var (
-	TeamIDEBinaryStartBytes = []byte(TeamIDEBinaryStart)
-)
-
-var (
-	TeamIDEEventByteLength = len([]byte(TeamIDEEvent))
-)
 
 func (this_ *Client) WSWriteText(bs []byte) {
 	this_.WSWriteByType(websocket.TextMessage, bs)
@@ -248,36 +124,6 @@ func (this_ *Client) WSWriteData(obj interface{}) {
 		return
 	}
 	this_.WSWriteText(bs)
-	return
-}
-
-func (this_ *Client) WSWriteError(message string) {
-	this_.WSWriteText([]byte(TeamIDEError + message))
-	return
-}
-
-func (this_ *Client) WSWriteMessage(message string) {
-	this_.WSWriteText([]byte(TeamIDEMessage + message))
-	return
-}
-
-func (this_ *Client) WSWriteEvent(event string) {
-	this_.WSWriteText([]byte(TeamIDEEvent + event))
-	return
-}
-
-func (this_ *Client) WSWriteAlert(alert string) {
-	this_.WSWriteText([]byte(TeamIDEAlert + alert))
-	return
-}
-
-func (this_ *Client) WSWriteConsole(console string) {
-	this_.WSWriteText([]byte(TeamIDEConsole + console))
-	return
-}
-
-func (this_ *Client) WSWriteStdout(stdout string) {
-	this_.WSWriteText([]byte(TeamIDEStdout + stdout))
 	return
 }
 

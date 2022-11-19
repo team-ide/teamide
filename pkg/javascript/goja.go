@@ -7,7 +7,10 @@ func Run(str string, context map[string]interface{}) (res interface{}, err error
 
 	if len(context) > 0 {
 		for key, value := range context {
-			vm.Set(key, value)
+			err = vm.Set(key, value)
+			if err != nil {
+				return
+			}
 		}
 	}
 	v, err := vm.RunString(str)

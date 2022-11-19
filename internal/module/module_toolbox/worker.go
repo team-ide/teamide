@@ -245,12 +245,6 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 		res, err = toolbox.OtherWork(work, config, data)
 		break
 	case sshWorker_:
-		var config *ssh.Config
-		config, err = this_.GetSSHConfig(option)
-		if err != nil {
-			return
-		}
-		res, err = toolbox.SSHWork(work, config, data)
 		break
 	}
 	if err != nil {
@@ -318,6 +312,11 @@ func databaseWorker() *Worker {
 					Label: "类型", Name: "type", Type: "select", DefaultValue: "mysql",
 					Options: []*form.Option{
 						{Text: "MySql", Value: "mysql"},
+						{Text: "Sqlite", Value: "sqlite"},
+						{Text: "达梦", Value: "dameng"},
+						{Text: "金仓", Value: "kingbase"},
+						{Text: "神通", Value: "shentong"},
+						{Text: "Oracle", Value: "oracle"},
 					},
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库类型不能为空"},
@@ -337,6 +336,8 @@ func databaseWorker() *Worker {
 				},
 				{Label: "Username", Name: "username"},
 				{Label: "Password", Name: "password", Type: "password"},
+				{Label: "Database", Name: "database", VIf: `type == 'mysql' || type == 'kingbase' || type == 'shentong'`},
+				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`},
 			},
 		},
 	}

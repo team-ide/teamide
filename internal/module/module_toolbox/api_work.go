@@ -1,13 +1,10 @@
 package module_toolbox
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"teamide/internal/base"
-	"teamide/pkg/db/task"
-	"teamide/pkg/ssh"
 )
 
 type WorkRequest struct {
@@ -40,28 +37,6 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-func (this_ *ToolboxApi) sshShell(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	token := c.Query("token")
-	//fmt.Println("token=" + token)
-	if token == "" {
-		err = errors.New("token获取失败")
-		return
-	}
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-	err = ssh.WSSSHConnection(token, ws)
-	if err != nil {
-		_ = ws.Close()
-		return
-	}
-	res = base.HttpNotResponse
-	return
-}
-
 func (this_ *ToolboxApi) databaseExportDownload(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	data := map[string]string{}
@@ -69,10 +44,10 @@ func (this_ *ToolboxApi) databaseExportDownload(_ *base.RequestBean, c *gin.Cont
 	if err != nil {
 		return
 	}
-	err = task.DatabaseExportDownload(data, c)
-	if err != nil {
-		return
-	}
+	//err = task.DatabaseExportDownload(data, c)
+	//if err != nil {
+	//	return
+	//}
 	res = base.HttpNotResponse
 	return
 }
