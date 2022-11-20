@@ -10,18 +10,19 @@
     :before-close="hide"
     width="700px"
   >
-    <el-form
-      class="mgt--20"
-      ref="form"
-      :model="form"
-      label-width="120px"
-      size="mini"
-    >
-      <el-form-item label="数据库|用户|模式名称">
+    <el-form class="mgt--20" ref="form" :model="form" size="mini">
+      <el-form-item label="数据库|用户|模式">
         <el-input v-model="form.ownerName" @change="toLoad"> </el-input>
       </el-form-item>
+      <el-form-item label="用户密码（如果是创建用户，则需要指定密码）">
+        <el-input v-model="form.ownerPassword" @change="toLoad"> </el-input>
+      </el-form-item>
       <el-form-item label="字符集">
-        <el-select v-model="form.characterSet" @change="toLoad">
+        <el-select
+          v-model="form.ownerCharacterSetName"
+          @change="toLoad"
+          style="width: 100%"
+        >
           <el-option
             v-for="(one, index) in characterSets"
             :key="index"
@@ -31,15 +32,19 @@
           </el-option>
         </el-select>
       </el-form-item>
-
-      <el-form-item label="SQL预览">
-        <textarea v-model="showSQL" class="owner-create-show-sql"> </textarea>
-      </el-form-item>
     </el-form>
-    <div class="tb-5" v-if="error != null">
+    <div style="height: 250px !important">
+      <Editor
+        ref="Editor"
+        :source="source"
+        :value="showSQL"
+        language="sql"
+      ></Editor>
+    </div>
+    <div class="mgt-5" v-if="error != null">
       <div class="bg-red ft-12">{{ error }}</div>
     </div>
-    <div class="tb-5">
+    <div class="mgt-5">
       <div
         class="tm-btn bg-green ft-13"
         @click="toExecuteSql"
@@ -65,7 +70,8 @@ export default {
       ],
       form: {
         ownerName: "XXX_DB",
-        characterSet: "utf8mb4",
+        ownerPassword: "",
+        ownerCharacterSetName: "utf8mb4",
       },
       error: null,
       executeSqlIng: false,
@@ -80,8 +86,8 @@ export default {
       this.callback = callback;
       this.executeSqlIng = false;
       this.error = null;
-      await this.toLoad();
       this.showDialog = true;
+      await this.toLoad();
     },
     hide() {
       this.showDialog = false;
@@ -89,7 +95,7 @@ export default {
     async toExecuteSql() {
       this.executeSqlIng = true;
       let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("createOwner", data);
+      let res = await this.toolboxWorker.work("ownerCreate", data);
       this.error = null;
       this.executeSqlIng = false;
       if (res.code != 0) {
@@ -108,10 +114,11 @@ export default {
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
+      this.$refs.Editor.setValue(this.showSQL);
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("createOwnerSql", data);
+      let res = await this.toolboxWorker.work("ownerCreateSql", data);
       this.error = null;
       if (res.code != 0) {
         this.error = res.msg;
@@ -132,17 +139,4 @@ export default {
 </script>
 
 <style>
-.owner-create-show-sql {
-  width: 100%;
-  height: 300px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  padding: 0px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
-}
 </style>

@@ -141,7 +141,7 @@ func (this_ *Service) TableDelete(param *Param, ownerName string, tableName stri
 	return
 }
 
-func (this_ *Service) TableTrim(param *Param, ownerName string, tableName string) (err error) {
+func (this_ *Service) TableDataTrim(param *Param, ownerName string, tableName string) (err error) {
 	sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerNamePack(param.ParamModel, ownerName) + "." + this_.DatabaseWorker.TableNamePack(param.ParamModel, tableName)
 	_, err = worker.DoExec(this_.DatabaseWorker.db, sqlInfo, nil)
 	return

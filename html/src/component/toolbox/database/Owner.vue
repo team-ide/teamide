@@ -318,6 +318,12 @@ export default {
             this.toImport(data);
           },
         });
+        menus.push({
+          text: "清空数据",
+          onClick: () => {
+            this.toTableDataTrim(data);
+          },
+        });
       }
       if (data.isOwner || data.isTable) {
         menus.push({
@@ -329,7 +335,9 @@ export default {
         menus.push({
           text: "复制名称",
           onClick: async () => {
-            let res = await this.tool.clipboardWrite(data.name);
+            let res = await this.tool.clipboardWrite(
+              data.tableName || data.ownerName
+            );
             if (res.success) {
               this.tool.success("复制成功");
             } else {
@@ -371,9 +379,10 @@ export default {
       this.tool.stopEvent();
       let msg = "确认删除";
       if (data.isOwner) {
-        msg += "库[" + data.name + "]";
+        msg += "库[" + data.ownerName + "]";
       } else if (data.isTable) {
-        msg += "表[" + data.name + "]";
+        msg +=
+          "库[" + data.owner.ownerName + "]" + "表[" + data.tableName + "]";
       }
       msg += "?";
       this.tool
@@ -386,6 +395,24 @@ export default {
             await this.doTableDelete(data.owner.ownerName, data.tableName);
             this.reloadChildren(data.owner);
           }
+        })
+        .catch((e) => {});
+    },
+    toTableDataTrim(data) {
+      this.tool.stopEvent();
+      let msg =
+        "清空" +
+        "库[" +
+        data.owner.ownerName +
+        "]" +
+        "表[" +
+        data.tableName +
+        "]";
+      msg += "数据，将无法恢复，确认清空?";
+      this.tool
+        .confirm(msg)
+        .then(async () => {
+          await this.doTableDataTrim(data.owner.ownerName, data.tableName);
         })
         .catch((e) => {});
     },
@@ -517,27 +544,39 @@ export default {
       let res = await this.loadTableDetail(ownerName, tableName);
       return res;
     },
-    async doDeleteOwner(ownerName) {
+    async doOwnerDelete(ownerName) {
       let param = {
         ownerName: ownerName,
       };
-      let res = await this.toolboxWorker.work("deleteOwner", param);
+      let res = await this.toolboxWorker.work("ownerDelete", param);
       if (res.code != 0) {
         return false;
       }
       this.tool.success("删除成功");
       return true;
     },
-    async doDeleteTable(ownerName, tableName) {
+    async doTableDelete(ownerName, tableName) {
       let param = {
         ownerName: ownerName,
         tableName: tableName,
       };
-      let res = await this.toolboxWorker.work("deleteTable", param);
+      let res = await this.toolboxWorker.work("tableDelete", param);
       if (res.code != 0) {
         return false;
       }
       this.tool.success("删除成功");
+      return true;
+    },
+    async doTableDataTrim(ownerName, tableName) {
+      let param = {
+        ownerName: ownerName,
+        tableName: tableName,
+      };
+      let res = await this.toolboxWorker.work("tableDataTrim", param);
+      if (res.code != 0) {
+        return false;
+      }
+      this.tool.success("清空成功");
       return true;
     },
     async loadTableDetail(ownerName, tableName) {

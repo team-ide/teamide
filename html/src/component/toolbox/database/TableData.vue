@@ -205,7 +205,7 @@
             </div>
             <div
               class="color-grey tm-link mgr-10"
-              @click="showSaveSql"
+              @click="showTableDataListExecSql"
               :class="{
                 'tm-disabled':
                   updates.length == 0 &&
@@ -218,7 +218,7 @@
               }}/删除:{{ selects.length }})
             </div>
             <div
-              @click="showExportSql"
+              @click="showTableDataListSql"
               class="color-grey tm-link mgr-10"
               :class="{ 'tm-disabled': selects.length == 0 }"
             >
@@ -778,12 +778,16 @@ export default {
       menus.push({
         text: "查看新增、修改、删除记录SQL",
         onClick: () => {
-          this.toolboxWorker.showSaveSql(this.ownerName, this.tableDetail, {
-            insertList,
-            updateList,
-            updateWhereList,
-            deleteList,
-          });
+          this.toolboxWorker.showTableDataListExecSql(
+            this.ownerName,
+            this.tableDetail,
+            {
+              insertList,
+              updateList,
+              updateWhereList,
+              deleteList,
+            }
+          );
         },
       });
       if (this.updates.indexOf(row) >= 0) {
@@ -1079,26 +1083,30 @@ export default {
         this.dataList.push(data);
       }
     },
-    showExportSql() {
-      this.toolboxWorker.showExportSql(
+    showTableDataListSql() {
+      this.toolboxWorker.showTableDataListSql(
         this.ownerName,
         this.tableDetail,
         this.selects
       );
     },
 
-    showSaveSql() {
+    showTableDataListExecSql() {
       let insertList = this.getInsertList();
       let updateList = this.getUpdateList();
       let updateWhereList = this.getUpdateWhereList();
       let deleteList = this.getDeleteList();
 
-      this.toolboxWorker.showSaveSql(this.ownerName, this.tableDetail, {
-        insertList,
-        updateList,
-        updateWhereList,
-        deleteList,
-      });
+      this.toolboxWorker.showTableDataListExecSql(
+        this.ownerName,
+        this.tableDetail,
+        {
+          insertList,
+          updateList,
+          updateWhereList,
+          deleteList,
+        }
+      );
     },
   },
   created() {},

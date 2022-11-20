@@ -24,10 +24,10 @@
           </Tabs>
         </tm-layout>
       </tm-layout>
-      <ShowExportSql :source="source" :toolboxWorker="toolboxWorker">
-      </ShowExportSql>
-      <ShowSaveSql :source="source" :toolboxWorker="toolboxWorker">
-      </ShowSaveSql>
+      <TableDataListExecSql :source="source" :toolboxWorker="toolboxWorker">
+      </TableDataListExecSql>
+      <TableDataListSql :source="source" :toolboxWorker="toolboxWorker">
+      </TableDataListSql>
       <OwnerCreate :source="source" :toolboxWorker="toolboxWorker">
       </OwnerCreate>
       <Table :source="source" :toolboxWorker="toolboxWorker"> </Table>
@@ -40,8 +40,8 @@
 <script>
 import Owner from "./Owner";
 import Tabs from "./Tabs";
-import ShowExportSql from "./ShowExportSql";
-import ShowSaveSql from "./ShowSaveSql";
+import TableDataListExecSql from "./TableDataListExecSql";
+import TableDataListSql from "./TableDataListSql";
 import OwnerCreate from "./OwnerCreate";
 import ShowInfo from "./ShowInfo";
 
@@ -49,8 +49,8 @@ export default {
   components: {
     Owner,
     Tabs,
-    ShowExportSql,
-    ShowSaveSql,
+    TableDataListExecSql,
+    TableDataListSql,
     OwnerCreate,
     ShowInfo,
   },

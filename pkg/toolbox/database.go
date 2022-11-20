@@ -189,8 +189,8 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 
 		break
-	case "tableTrim":
-		err = service.TableTrim(param, request.OwnerName, request.TableName)
+	case "tableDataTrim":
+		err = service.TableDataTrim(param, request.OwnerName, request.TableName)
 		if err != nil {
 			return
 		}

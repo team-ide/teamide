@@ -118,7 +118,7 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.toolboxWorker.showSaveSql = this.show;
+    this.toolboxWorker.showTableDataListExecSql = this.show;
     this.init();
   },
 };
