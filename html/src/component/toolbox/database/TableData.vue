@@ -275,7 +275,7 @@
                           @change="inputValueChange(scope.row, column, $event)"
                           @input="inputValueChange(scope.row, column, $event)"
                           :placeholder="
-                            scope.row[column.columnName] === null ? 'NULL' : ''
+                            scope.row[column.columnName] == null ? 'NULL' : ''
                           "
                           type="text"
                         />
