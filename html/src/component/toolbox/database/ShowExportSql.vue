@@ -5,7 +5,7 @@
       '导出：[' +
       ownerName +
       '].[' +
-      (tableDetail == null ? '' : tableDetail.name) +
+      (tableDetail == null ? '' : tableDetail.tableName) +
       '] 数据为SQL'
     "
     :close-on-click-modal="false"
@@ -33,75 +33,13 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="追加库名">
-          <el-switch v-model="form.appendDatabase" @change="toLoad">
-          </el-switch>
-        </el-form-item>
-        <template v-if="form.appendDatabase">
-          <el-form-item label="库名包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.databasePackingCharacter"
-              @change="toLoad"
-              style="width: 90px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item label="表名包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.tablePackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字段包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.columnPackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字符值包装">
-          <el-select
-            v-model="form.stringPackingCharacter"
-            @change="toLoad"
-            style="width: 60px"
-          >
-            <el-option
-              v-for="(one, index) in stringPackingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <Pack
+          :source="source"
+          :toolboxWorker="toolboxWorker"
+          :form="form"
+          :change="toLoad"
+        >
+        </Pack>
         <el-form-item label="日期函数">
           <el-select
             v-model="form.dateFunction"
@@ -118,16 +56,23 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div>
-        <textarea v-model="showSQL" class="toolbox-database-export-sql-textarea"> </textarea>
+      <div style="height: 480px !important">
+        <Editor
+          ref="Editor"
+          :source="source"
+          :value="showSQL"
+          language="sql"
+        ></Editor>
       </div>
     </div>
   </el-dialog>
 </template>
 
 <script>
+import Pack from "./Pack";
+
 export default {
-  components: {},
+  components: { Pack },
   props: ["source", "toolboxWorker"],
   data() {
     return {
@@ -139,16 +84,6 @@ export default {
         { value: "insert", text: "Insert" },
         { value: "update", text: "Update" },
         { value: "delete", text: "Delete" },
-      ],
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
-      stringPackingCharacters: [
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
       ],
       dateFunctions: [
         {
@@ -166,11 +101,12 @@ export default {
       ],
       form: {
         sqlType: "insert",
-        appendDatabase: true,
-        databasePackingCharacter: "`",
-        tablePackingCharacter: "`",
-        columnPackingCharacter: "`",
-        stringPackingCharacter: "'",
+        targetDatabaseType: "",
+        appendOwnerName: true,
+        ownerNamePackChar: "",
+        tableNamePackChar: "",
+        columnNamePackChar: "",
+        sqlValuePackChar: "",
         dateFunction: "",
       },
     };
@@ -178,14 +114,18 @@ export default {
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "form.targetDatabaseType"() {
+      this.toLoad();
+    },
+  },
   methods: {
     async show(ownerName, tableDetail, dataList) {
       this.ownerName = ownerName;
       this.dataList = dataList || [];
       this.tableDetail = tableDetail;
-      await this.toLoad();
       this.showDialog = true;
+      await this.toLoad();
     },
     hide() {
       this.showDialog = false;
@@ -198,9 +138,12 @@ export default {
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
+      this.$refs.Editor.setValue(this.showSQL);
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
+      this.toolboxWorker.formatParam(data);
+
       let insertList = [];
       let updateList = [];
       let updateWhereList = [];
@@ -209,7 +152,7 @@ export default {
       let keys = [];
       this.tableDetail.columnList.forEach((column) => {
         if (column.primaryKey) {
-          keys.push(column.name);
+          keys.push(column.columnName);
         }
       });
 
@@ -257,7 +200,7 @@ export default {
 
       data.appendSqlValue = true;
       data.ownerName = this.ownerName;
-      data.table = this.tableDetail.name;
+      data.tableName = this.tableDetail.tableName;
       data.columnList = this.tableDetail.columnList;
 
       data.insertList = insertList;
@@ -267,7 +210,7 @@ export default {
 
       let res = await this.toolboxWorker.work("dataListSql", data);
       if (res.code != 0) {
-        return;
+        return {};
       }
       return res.data || {};
     },
@@ -284,17 +227,4 @@ export default {
 </script>
 
 <style>
-.toolbox-database-export-sql-textarea {
-  width: 100%;
-  height: 400px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  padding: 0px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
-}
 </style>

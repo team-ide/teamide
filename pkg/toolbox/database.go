@@ -20,6 +20,11 @@ type DatabaseBaseRequest struct {
 	PageNo       int                    `json:"pageNo"`
 	PageSize     int                    `json:"pageSize"`
 	DatabaseType string                 `json:"databaseType"`
+
+	InsertList      []map[string]interface{} `json:"insertList"`
+	UpdateList      []map[string]interface{} `json:"updateList"`
+	UpdateWhereList []map[string]interface{} `json:"updateWhereList"`
+	DeleteList      []map[string]interface{} `json:"deleteList"`
 }
 
 func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interface{}) (res map[string]interface{}, err error) {
@@ -191,9 +196,9 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 
 		break
-	case "dataList":
+	case "tableData":
 		var dataListRequest db.DataListResult
-		dataListRequest, err = service.DataList(param, request.OwnerName, request.TableName, request.ColumnList, request.Wheres, request.Orders, request.PageSize, request.PageNo)
+		dataListRequest, err = service.TableData(param, request.OwnerName, request.TableName, request.ColumnList, request.Wheres, request.Orders, request.PageSize, request.PageNo)
 		if err != nil {
 			return
 		}
@@ -203,10 +208,26 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 
 		break
 	case "dataListSql":
-
+		var sqlList []string
+		sqlList, err = service.DataListSql(param, request.OwnerName, request.TableName, request.ColumnList,
+			request.InsertList,
+			request.UpdateList, request.UpdateWhereList,
+			request.DeleteList,
+		)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
 		break
 	case "dataListExec":
-
+		err = service.DataListExec(param, request.OwnerName, request.TableName, request.ColumnList,
+			request.InsertList,
+			request.UpdateList, request.UpdateWhereList,
+			request.DeleteList,
+		)
+		if err != nil {
+			return
+		}
 		break
 	case "executeSQL":
 

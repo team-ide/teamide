@@ -5,7 +5,7 @@
       '导出：[' +
       ownerName +
       '].[' +
-      (tableDetail == null ? '' : tableDetail.name) +
+      (tableDetail == null ? '' : tableDetail.tableName) +
       '] 数据为SQL'
     "
     :close-on-click-modal="false"
@@ -18,86 +18,31 @@
   >
     <div class="mgt--20 toolbox-database-save-sql">
       <el-form ref="form" :model="form" size="mini" :inline="true">
-        <el-form-item label="追加库名">
-          <el-switch v-model="form.appendDatabase" @change="toLoad">
-          </el-switch>
-        </el-form-item>
-        <template v-if="form.appendDatabase">
-          <el-form-item label="库名包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.databasePackingCharacter"
-              @change="toLoad"
-              style="width: 90px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item label="表名包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.tablePackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字段包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.columnPackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字符值包装">
-          <el-select
-            v-model="form.stringPackingCharacter"
-            @change="toLoad"
-            style="width: 60px"
-          >
-            <el-option
-              v-for="(one, index) in stringPackingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <Pack
+          :source="source"
+          :toolboxWorker="toolboxWorker"
+          :form="form"
+          :change="toLoad"
+        >
+        </Pack>
       </el-form>
-      <div>
-        <textarea v-model="showSQL" class="toolbox-database-save-sql-textarea"> </textarea>
+      <div style="height: 480px !important">
+        <Editor
+          ref="Editor"
+          :source="source"
+          :value="showSQL"
+          language="sql"
+        ></Editor>
       </div>
     </div>
   </el-dialog>
 </template>
 
 <script>
+import Pack from "./Pack";
+
 export default {
-  components: {},
+  components: { Pack },
   props: ["source", "toolboxWorker"],
   data() {
     return {
@@ -105,29 +50,24 @@ export default {
       showSQL: null,
       ownerName: null,
       tableDetail: null,
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
-      stringPackingCharacters: [
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-      ],
       form: {
-        appendDatabase: true,
-        databasePackingCharacter: "`",
-        tablePackingCharacter: "`",
-        columnPackingCharacter: "`",
-        stringPackingCharacter: "'",
+        targetDatabaseType: "",
+        appendOwnerName: true,
+        ownerNamePackChar: "",
+        tableNamePackChar: "",
+        columnNamePackChar: "",
+        sqlValuePackChar: "",
       },
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {},
+  watch: {
+    "form.targetDatabaseType"() {
+      this.toLoad();
+    },
+  },
   methods: {
     async show(ownerName, tableDetail, params) {
       this.ownerName = ownerName;
@@ -136,8 +76,8 @@ export default {
       this.updateList = params.updateList;
       this.updateWhereList = params.updateWhereList;
       this.deleteList = params.deleteList;
-      await this.toLoad();
       this.showDialog = true;
+      await this.toLoad();
     },
     hide() {
       this.showDialog = false;
@@ -150,13 +90,15 @@ export default {
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
+      this.$refs.Editor.setValue(this.showSQL);
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
+      this.toolboxWorker.formatParam(data);
 
       data.appendSqlValue = true;
       data.ownerName = this.ownerName;
-      data.table = this.tableDetail.name;
+      data.tableName = this.tableDetail.tableName;
       data.columnList = this.tableDetail.columnList;
 
       data.insertList = this.insertList;

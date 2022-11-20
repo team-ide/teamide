@@ -20,12 +20,12 @@
                       <template v-for="(one, index) in columnList">
                         <option
                           :key="index"
-                          :value="one.name"
-                          :text="one.name + '&nbsp;'"
+                          :value="one.columnName"
+                          :text="one.columnName + '&nbsp;'"
                         >
-                          {{ one.name }}
-                          <template v-if="tool.isNotEmpty(one.comment)">
-                            （{{ one.comment }}）
+                          {{ one.columnName }}
+                          <template v-if="tool.isNotEmpty(one.columnComment)">
+                            （{{ one.columnComment }}）
                           </template>
                         </option>
                       </template>
@@ -135,12 +135,12 @@
                     <template v-for="(one, index) in columnList">
                       <option
                         :key="index"
-                        :value="one.name"
-                        :text="one.name + '&nbsp;'"
+                        :value="one.columnName"
+                        :text="one.columnName + '&nbsp;'"
                       >
-                        {{ one.name }}
-                        <template v-if="tool.isNotEmpty(one.comment)">
-                          （{{ one.comment }}）
+                        {{ one.columnName }}
+                        <template v-if="tool.isNotEmpty(one.columnComment)">
+                          （{{ one.columnComment }}）
                         </template>
                       </option>
                     </template>
@@ -264,18 +264,18 @@
                 <template v-if="column.checked">
                   <el-table-column
                     :key="index"
-                    :prop="column.name"
-                    :label="column.name"
+                    :prop="column.columnName"
+                    :label="column.columnName"
                   >
                     <template slot-scope="scope">
                       <div class="">
                         <input
-                          v-model="scope.row[column.name]"
-                          :name="column.name"
+                          v-model="scope.row[column.columnName]"
+                          :name="column.columnName"
                           @change="inputValueChange(scope.row, column, $event)"
                           @input="inputValueChange(scope.row, column, $event)"
                           :placeholder="
-                            scope.row[column.name] == null ? 'NULL' : ''
+                            scope.row[column.columnName] === null ? 'NULL' : ''
                           "
                           type="text"
                         />
@@ -325,7 +325,14 @@
 <script>
 export default {
   components: {},
-  props: ["source", "ownerName", "table", "toolboxWorker", "extend", "tabId"],
+  props: [
+    "source",
+    "ownerName",
+    "tableName",
+    "toolboxWorker",
+    "extend",
+    "tabId",
+  ],
   data() {
     return {
       ready: false,
@@ -367,7 +374,7 @@ export default {
       if (this.tableDetail && this.tableDetail.columnList) {
         this.tableDetail.columnList.forEach((one, index) => {
           if (one.primaryKey) {
-            this.keys.push(one.name);
+            this.keys.push(one.columnName);
           }
           this.columnList.push(one);
           let column = Object.assign({}, one);
@@ -413,7 +420,7 @@ export default {
     async initTable() {
       this.tableDetail = await this.toolboxWorker.getTableDetail(
         this.ownerName,
-        this.table
+        this.tableName
       );
     },
     handleSizeChange(pageSize) {
@@ -462,7 +469,7 @@ export default {
             }
             let find = false;
             this.form.orders.forEach((w) => {
-              if (w.name == one.name) {
+              if (w.name == one.columnName) {
                 find = true;
               }
             });
@@ -474,7 +481,7 @@ export default {
         }
       }
       if (column != null) {
-        order.name = column.name;
+        order.name = column.columnName;
       }
 
       this.form.orders.push(order);
@@ -512,7 +519,7 @@ export default {
             }
             let find = false;
             this.form.wheres.forEach((w) => {
-              if (w.name == one.name) {
+              if (w.name == one.columnName) {
                 find = true;
               }
             });
@@ -524,7 +531,7 @@ export default {
         }
       }
       if (column != null) {
-        where.name = column.name;
+        where.name = column.columnName;
       }
 
       this.form.wheres.push(where);
@@ -569,7 +576,7 @@ export default {
       });
       let data = {};
       data.ownerName = this.ownerName;
-      data.table = this.table;
+      data.tableName = this.tableName;
       data.wheres = wheres;
       data.orders = orders;
       data.columnList = columnList;
@@ -586,7 +593,7 @@ export default {
       this.inserts = [];
       this.selects = [];
 
-      let res = await this.toolboxWorker.work("dataList", data);
+      let res = await this.toolboxWorker.work("tableData", data);
       res.data = res.data || {};
 
       let dataList = res.data.dataList || [];
@@ -594,13 +601,13 @@ export default {
       this.dataListCacheForIndex = [];
       dataList.forEach((data) => {
         this.tableDetail.columnList.forEach((column) => {
-          if (data[column.name] != null) {
-            data[column.name] = this.toolboxWorker.formatDateColumn(
+          if (data[column.columnName] != null) {
+            data[column.columnName] = this.toolboxWorker.formatDateColumn(
               column,
-              data[column.name]
+              data[column.columnName]
             );
           } else {
-            data[column.name] = null;
+            data[column.columnName] = null;
           }
         });
         this.dataListCache.push(Object.assign({}, data));
@@ -640,7 +647,7 @@ export default {
       let dataUpdated = false;
       let dataCache = this.getCacheData(data);
       this.columnList.forEach((column) => {
-        let name = column.name;
+        let name = column.columnName;
         if (data[name] !== dataCache[name]) {
           // if (typeof dataCache[name] == "number") {
           //   if (this.tool.isNotEmpty(data[name])) {
@@ -1003,13 +1010,13 @@ export default {
     async doSave(insertList, updateList, updateWhereList) {
       let data = {};
       data.ownerName = this.ownerName;
-      data.table = this.table;
+      data.tableName = this.tableName;
       data.columnList = this.tableDetail.columnList;
       data.insertList = insertList;
       data.updateList = updateList;
       data.updateWhereList = updateWhereList;
 
-      let res = await this.toolboxWorker.work("saveDataList", data);
+      let res = await this.toolboxWorker.work("dataListExec", data);
       if (res.code != 0) {
         return;
       }
@@ -1028,11 +1035,11 @@ export default {
     async doDelete(deleteList) {
       let data = {};
       data.ownerName = this.ownerName;
-      data.table = this.table;
+      data.tableName = this.tableName;
       data.columnList = this.tableDetail.columnList;
       data.deleteList = deleteList;
 
-      let res = await this.toolboxWorker.work("saveDataList", data);
+      let res = await this.toolboxWorker.work("dataListExec", data);
       if (res.code != 0) {
         return;
       }
@@ -1059,8 +1066,8 @@ export default {
     toInsert(data, row) {
       data = data || {};
       this.tableDetail.columnList.forEach((column) => {
-        if (data[column.name] == null) {
-          data[column.name] = null;
+        if (data[column.columnName] == null) {
+          data[column.columnName] = null;
         }
       });
       this.inserts.push(data);

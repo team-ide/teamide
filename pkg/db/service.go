@@ -174,6 +174,95 @@ func (this_ *Service) TableUpdate(param *Param, ownerName string, updateTablePar
 	return
 }
 
+func (this_ *Service) DataListSql(param *Param, ownerName string, tableName string, columnList []*dialect.ColumnModel,
+	insertDataList []map[string]interface{},
+	updateDataList []map[string]interface{}, updateWhereDataList []map[string]interface{},
+	deleteDataList []map[string]interface{},
+) (sqlList []string, err error) {
+	var appendOwnerName string
+	if param.AppendOwnerName {
+		appendOwnerName = ownerName
+	}
+
+	dia := this_.GetTargetDialect(param)
+	var sqlList_ []string
+	//var valuesList [][]interface{}
+	if len(insertDataList) > 0 {
+		param.ParamModel.AppendSqlValue = new(bool)
+		*param.ParamModel.AppendSqlValue = true
+		sqlList_, _, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
+	if len(insertDataList) > 0 {
+		param.ParamModel.AppendSqlValue = new(bool)
+		*param.ParamModel.AppendSqlValue = true
+		sqlList_, _, err = dia.DataListUpdateSql(param.ParamModel, appendOwnerName, tableName, columnList, updateDataList, updateWhereDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
+	if len(deleteDataList) > 0 {
+		param.ParamModel.AppendSqlValue = new(bool)
+		*param.ParamModel.AppendSqlValue = true
+		sqlList_, _, err = dia.DataListDeleteSql(param.ParamModel, appendOwnerName, tableName, columnList, deleteDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+	}
+	return
+}
+
+func (this_ *Service) DataListExec(param *Param, ownerName string, tableName string, columnList []*dialect.ColumnModel,
+	insertDataList []map[string]interface{},
+	updateDataList []map[string]interface{}, updateWhereDataList []map[string]interface{},
+	deleteDataList []map[string]interface{},
+) (err error) {
+	var appendOwnerName = ownerName
+
+	dia := this_.GetTargetDialect(param)
+	var sqlList []string
+	var valuesList [][]interface{}
+
+	var sqlList_ []string
+	var valuesList_ [][]interface{}
+	if len(insertDataList) > 0 {
+		sqlList_, valuesList_, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+		valuesList = append(valuesList, valuesList_...)
+	}
+	if len(insertDataList) > 0 {
+		sqlList_, valuesList_, err = dia.DataListUpdateSql(param.ParamModel, appendOwnerName, tableName, columnList, updateDataList, updateWhereDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+		valuesList = append(valuesList, valuesList_...)
+	}
+	if len(deleteDataList) > 0 {
+		sqlList_, valuesList_, err = dia.DataListDeleteSql(param.ParamModel, appendOwnerName, tableName, columnList, deleteDataList)
+		if err != nil {
+			return
+		}
+		sqlList = append(sqlList, sqlList_...)
+		valuesList = append(valuesList, valuesList_...)
+	}
+	_, errSql, errArgs, err := worker.DoExecs(this_.DatabaseWorker.db, sqlList, valuesList)
+	if err != nil {
+		util.Logger.Error("DataListExec error", zap.Any("errSql", errSql), zap.Any("errArgs", errArgs), zap.Error(err))
+		return
+	}
+
+	return
+}
+
 type UpdateTableParam struct {
 	TableName string `json:"tableName"`
 }
@@ -185,7 +274,7 @@ type DataListResult struct {
 	DataList []map[string]interface{} `json:"dataList"`
 }
 
-func (this_ *Service) DataList(param *Param, ownerName string, tableName string, columnList []*dialect.ColumnModel, whereList []*dialect.Where, orderList []*dialect.Order, pageSize int, pageNo int) (dataListResult DataListResult, err error) {
+func (this_ *Service) TableData(param *Param, ownerName string, tableName string, columnList []*dialect.ColumnModel, whereList []*dialect.Where, orderList []*dialect.Order, pageSize int, pageNo int) (dataListResult DataListResult, err error) {
 
 	sql, values, err := this_.DatabaseWorker.Dialect.DataListSelectSql(param.ParamModel, ownerName, tableName, columnList, whereList, orderList)
 	if err != nil {
