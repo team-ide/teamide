@@ -17,8 +17,8 @@
       label-width="120px"
       size="mini"
     >
-      <el-form-item label="数据库名称">
-        <el-input v-model="form.name" @change="toLoad"> </el-input>
+      <el-form-item label="数据库|用户|模式名称">
+        <el-input v-model="form.ownerName" @change="toLoad"> </el-input>
       </el-form-item>
       <el-form-item label="字符集">
         <el-select v-model="form.characterSet" @change="toLoad">
@@ -32,24 +32,8 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="库名包装">
-        <el-select
-          placeholder="不包装"
-          v-model="form.databasePackingCharacter"
-          @change="toLoad"
-          style="width: 90px"
-        >
-          <el-option
-            v-for="(one, index) in packingCharacters"
-            :key="index"
-            :value="one.value"
-            :label="one.text"
-          >
-          </el-option>
-        </el-select>
-      </el-form-item>
       <el-form-item label="SQL预览">
-        <textarea v-model="showSQL" class="database-show-sql"> </textarea>
+        <textarea v-model="showSQL" class="owner-create-show-sql"> </textarea>
       </el-form-item>
     </el-form>
     <div class="tb-5" v-if="error != null">
@@ -79,16 +63,9 @@ export default {
         { value: "utf8", text: "utf8" },
         { value: "utf8mb4", text: "utf8mb4" },
       ],
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
       form: {
-        name: "XXX_DB",
+        ownerName: "XXX_DB",
         characterSet: "utf8mb4",
-        databasePackingCharacter: "`",
       },
       error: null,
       executeSqlIng: false,
@@ -112,7 +89,7 @@ export default {
     async toExecuteSql() {
       this.executeSqlIng = true;
       let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("createDatabase", data);
+      let res = await this.toolboxWorker.work("createOwner", data);
       this.error = null;
       this.executeSqlIng = false;
       if (res.code != 0) {
@@ -134,7 +111,7 @@ export default {
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("createDatabaseSql", data);
+      let res = await this.toolboxWorker.work("createOwnerSql", data);
       this.error = null;
       if (res.code != 0) {
         this.error = res.msg;
@@ -148,14 +125,14 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.toolboxWorker.showCreateDatabase = this.show;
+    this.toolboxWorker.showOwnerCreate = this.show;
     this.init();
   },
 };
 </script>
 
 <style>
-.database-show-sql {
+.owner-create-show-sql {
   width: 100%;
   height: 300px;
   letter-spacing: 1px;

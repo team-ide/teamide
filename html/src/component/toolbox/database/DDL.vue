@@ -8,147 +8,57 @@
         size="mini"
         inline
       >
-        <el-form-item label="数据库类型">
-          <el-select
-            placeholder="当前库类型"
-            v-model="form.databaseType"
-            style="width: 120px"
-          >
-            <el-option label="MySql" value="mysql"> </el-option>
-            <el-option label="Sqlite" value="sqlite"> </el-option>
-            <el-option label="Oracle" value="oracle"> </el-option>
-            <el-option label="达梦" value="dameng"> </el-option>
-            <el-option label="神通" value="shentong"> </el-option>
-            <el-option label="金仓" value="kingbase"> </el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item label="生成建库">
-          <el-switch v-model="form.generateDatabase" @change="toLoad">
+          <el-switch v-model="form.appendOwnerCreateSql" @change="toLoad">
           </el-switch>
         </el-form-item>
-
-        <el-form-item label="追加库名">
-          <el-switch v-model="form.appendDatabase" @change="toLoad">
-          </el-switch>
-        </el-form-item>
-        <template v-if="form.appendDatabase">
-          <el-form-item label="库名包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.databasePackingCharacter"
-              @change="toLoad"
-              style="width: 90px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-              >
-                {{ one.text }}
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item label="表名包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.tablePackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-            >
-              {{ one.text }}
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字段包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.columnPackingCharacter"
-            @change="toLoad"
-            style="width: 90px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-            >
-              {{ one.text }}
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字符值包装">
-          <el-select
-            v-model="form.stringPackingCharacter"
-            @change="toLoad"
-            style="width: 60px"
-          >
-            <el-option
-              v-for="(one, index) in stringPackingCharacters"
-              :key="index"
-              :value="one.value"
-            >
-              {{ one.text }}
-            </el-option>
-          </el-select>
-        </el-form-item>
+        <Pack
+          :source="source"
+          :toolboxWorker="toolboxWorker"
+          :form="form"
+          :change="toLoad"
+        >
+        </Pack>
       </el-form>
-      <textarea v-model="showDDL" class="toolbox-database-ddl-textarea">
-      </textarea>
+      <div style="height: calc(100% - 140px) !important">
+        <Editor
+          ref="Editor"
+          :source="source"
+          :value="showDDL"
+          language="sql"
+        ></Editor>
+      </div>
     </template>
   </div>
 </template>
 
 
 <script>
+import Pack from "./Pack";
+
 export default {
-  components: {},
-  props: ["source", "toolboxWorker", "database", "table"],
+  components: { Pack },
+  props: ["source", "toolboxWorker", "ownerName", "tableName"],
   data() {
     return {
       ready: false,
       showDDL: null,
       loading: false,
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
-      stringPackingCharacters: [
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-      ],
       form: {
-        databaseType: "",
-        generateDatabase: false,
-        appendDatabase: false,
-        databasePackingCharacter: "`",
-        tablePackingCharacter: "`",
-        columnPackingCharacter: "`",
-        stringPackingCharacter: "'",
+        appendOwnerCreateSql: true,
+
+        targetDatabaseType: "",
+        appendOwnerName: true,
+        ownerNamePackChar: "",
+        tableNamePackChar: "",
+        columnNamePackChar: "",
+        sqlValuePackChar: "",
       },
     };
   },
   computed: {},
   watch: {
-    "form.databaseType"() {
-      if (
-        this.tool.isEmpty(this.form.databaseType) ||
-        this.form.databaseType == "mysql"
-      ) {
-        this.form.databasePackingCharacter = "`";
-        this.form.tablePackingCharacter = "`";
-        this.form.columnPackingCharacter = "`";
-      } else {
-        this.form.databasePackingCharacter = `"`;
-        this.form.tablePackingCharacter = `"`;
-        this.form.columnPackingCharacter = `"`;
-      }
+    "form.targetDatabaseType"() {
       this.toLoad();
     },
   },
@@ -163,7 +73,7 @@ export default {
       this.loading = false;
     },
     async load() {
-      let sqls = await this.loadDDL(this.database, this.table);
+      let sqls = await this.loadDDL(this.ownerName, this.tableName);
       let ddl = "";
       sqls.forEach((sql, index) => {
         if (index > 0) {
@@ -171,12 +81,13 @@ export default {
         }
         ddl += sql + ";";
       });
-      this.showDDL = ddl;
+      this.$refs.Editor.setValue(ddl);
     },
-    async loadDDL(database, table) {
+    async loadDDL(ownerName, tableName) {
       let param = Object.assign({}, this.form);
-      param.database = database;
-      param.table = table;
+      this.toolboxWorker.formatParam(param);
+      param.ownerName = ownerName;
+      param.tableName = tableName;
       let res = await this.toolboxWorker.work("ddl", param);
       res.data = res.data || {};
       return res.data.sqlList || [];
@@ -193,12 +104,5 @@ export default {
 .toolbox-database-ddl {
   width: 100%;
   height: 100%;
-}
-.toolbox-database-ddl-textarea {
-  width: 100%;
-  height: calc(100% - 140px) !important;
-  margin-top: 23px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
 }
 </style>

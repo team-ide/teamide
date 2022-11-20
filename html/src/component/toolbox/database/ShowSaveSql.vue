@@ -3,7 +3,7 @@
     ref="modal"
     :title="
       '导出：[' +
-      database +
+      ownerName +
       '].[' +
       (tableDetail == null ? '' : tableDetail.name) +
       '] 数据为SQL'
@@ -103,7 +103,7 @@ export default {
     return {
       showDialog: false,
       showSQL: null,
-      database: null,
+      ownerName: null,
       tableDetail: null,
       packingCharacters: [
         { value: "", text: "不包装" },
@@ -129,8 +129,8 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
-    async show(database, tableDetail, params) {
-      this.database = database;
+    async show(ownerName, tableDetail, params) {
+      this.ownerName = ownerName;
       this.tableDetail = tableDetail;
       this.insertList = params.insertList;
       this.updateList = params.updateList;
@@ -155,7 +155,7 @@ export default {
       let data = Object.assign({}, this.form);
 
       data.appendSqlValue = true;
-      data.database = this.database;
+      data.ownerName = this.ownerName;
       data.table = this.tableDetail.name;
       data.columnList = this.tableDetail.columnList;
 

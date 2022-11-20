@@ -40,7 +40,7 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		return
 	}
 
-	var param = &dialect.ParamModel{}
+	var param = &db.Param{}
 	err = json.Unmarshal(dataBS, param)
 	if err != nil {
 		return
@@ -48,6 +48,11 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 
 	res = map[string]interface{}{}
 	switch work {
+	case "data":
+		res["columnTypeInfoList"] = service.GetTargetDialect(param).GetColumnTypeInfos()
+		res["indexTypeInfoList"] = service.GetTargetDialect(param).GetIndexTypeInfos()
+
+		break
 	case "owners":
 		var owners []*dialect.OwnerModel
 		owners, err = service.OwnersSelect(param)
@@ -55,21 +60,9 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["owners"] = owners
-	case "tables":
-		var tables []*dialect.TableModel
-		tables, err = service.TablesSelect(param, request.OwnerName)
-		if err != nil {
-			return
-		}
-		res["tables"] = tables
-	case "tableDetail":
-		var table *dialect.TableModel
-		table, err = service.TableDetail(param, request.OwnerName, request.TableName)
-		if err != nil {
-			return
-		}
-		res["table"] = table
-	case "createOwner":
+
+		break
+	case "ownerCreate":
 		var owner = &dialect.OwnerModel{}
 		err = json.Unmarshal(dataBS, owner)
 		if err != nil {
@@ -81,26 +74,58 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["created"] = created
-	case "deleteOwner":
+
+		break
+	case "ownerDelete":
 		var deleted bool
 		deleted, err = service.OwnerDelete(param, request.OwnerName)
 		if err != nil {
 			return
 		}
 		res["deleted"] = deleted
-	case "createDatabaseSql":
+
+		break
+	case "ownerCreateSql":
 		var owner = &dialect.OwnerModel{}
 		err = json.Unmarshal(dataBS, owner)
 		if err != nil {
 			return
 		}
 		var sqlList []string
-		sqlList, err = service.DatabaseWorker.OwnerCreateSql(param, owner)
+		sqlList, err = service.DatabaseWorker.OwnerCreateSql(param.ParamModel, owner)
 		if err != nil {
 			return
 		}
 		res["sqlList"] = sqlList
-	case "createTable":
+
+		break
+	case "ddl":
+		var sqlList []string
+		sqlList, err = service.DDL(param, request.OwnerName, request.TableName)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
+		break
+	case "tables":
+		var tables []*dialect.TableModel
+		tables, err = service.TablesSelect(param, request.OwnerName)
+		if err != nil {
+			return
+		}
+		res["tables"] = tables
+
+		break
+	case "tableDetail":
+		var table *dialect.TableModel
+		table, err = service.TableDetail(param, request.OwnerName, request.TableName)
+		if err != nil {
+			return
+		}
+		res["table"] = table
+
+		break
+	case "tableCreate":
 		var table = &dialect.TableModel{}
 		err = json.Unmarshal(dataBS, table)
 		if err != nil {
@@ -110,31 +135,63 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		if err != nil {
 			return
 		}
-	case "createTableSql":
+
+		break
+	case "tableCreateSql":
 		var table = &dialect.TableModel{}
 		err = json.Unmarshal(dataBS, table)
 		if err != nil {
 			return
 		}
 		var sqlList []string
-		sqlList, err = service.DatabaseWorker.TableCreateSql(param, request.OwnerName, table)
+		sqlList, err = service.TableCreateSql(param, request.OwnerName, table)
 		if err != nil {
 			return
 		}
 		res["sqlList"] = sqlList
-	case "updateTable":
 
-	case "updateTableSql":
+		break
+	case "tableUpdate":
+		var updateTableParam = &db.UpdateTableParam{}
+		err = json.Unmarshal(dataBS, updateTableParam)
+		if err != nil {
+			return
+		}
+		err = service.TableUpdate(param, request.OwnerName, updateTableParam)
+		if err != nil {
+			return
+		}
 
-	case "deleteTable":
+		break
+	case "tableUpdateSql":
+		var updateTableParam = &db.UpdateTableParam{}
+		err = json.Unmarshal(dataBS, updateTableParam)
+		if err != nil {
+			return
+		}
+		var sqlList []string
+		sqlList, err = service.TableUpdateSql(param, request.OwnerName, updateTableParam)
+		if err != nil {
+			return
+		}
+		res["sqlList"] = sqlList
+
+		break
+	case "tableDelete":
 		err = service.TableDelete(param, request.OwnerName, request.TableName)
 		if err != nil {
 			return
 		}
-	case "ddl":
 
+		break
+	case "tableTrim":
+		err = service.TableTrim(param, request.OwnerName, request.TableName)
+		if err != nil {
+			return
+		}
+
+		break
 	case "dataList":
-
 		var dataListRequest db.DataListResult
 		dataListRequest, err = service.DataList(param, request.OwnerName, request.TableName, request.ColumnList, request.Wheres, request.Orders, request.PageSize, request.PageNo)
 		if err != nil {
@@ -143,29 +200,40 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		res["sql"] = dataListRequest.Sql
 		res["params"] = dataListRequest.Params
 		res["total"] = dataListRequest.Total
-		res["dataList"] = dataListRequest.DataList
-	case "executeSQL":
 
+		break
 	case "dataListSql":
 
-	case "saveDataList":
+		break
+	case "dataListExec":
 
+		break
+	case "executeSQL":
+
+		break
 	case "import":
 
+		break
 	case "importStatus":
 
+		break
 	case "importStop":
 
+		break
 	case "importClean":
 
+		break
 	case "export":
 
+		break
 	case "exportStatus":
 
+		break
 	case "exportStop":
 
+		break
 	case "exportClean":
-
+		break
 	}
 	return
 }

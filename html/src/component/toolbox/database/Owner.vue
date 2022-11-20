@@ -5,7 +5,7 @@
         <tm-layout height="50px">
           <div class="pdlr-10 pdt-10">
             <div class="tm-btn tm-btn-xs bg-grey-6" @click="refresh">刷新</div>
-            <div class="tm-btn tm-btn-xs bg-teal-8" @click="toCreateDatabase">
+            <div class="tm-btn tm-btn-xs bg-teal-8" @click="toOwnerCreate">
               新建库
             </div>
             <div class="tm-btn tm-btn-xs bg-green" @click="toOpenSql">
@@ -44,7 +44,7 @@
                 <span>{{ node.label }}</span>
                 <div class="toolbox-editor-tree-btn-group">
                   <div
-                    v-if="data.isDatabase || data.isDatabaseTables"
+                    v-if="data.isOwner || data.isOwnerTables"
                     class="tm-link color-grey ft-14 mgr-4"
                     @click="toReloadChildren(data)"
                   >
@@ -54,12 +54,12 @@
                     v-if="data.isTable"
                     class="tm-link color-grey ft-14 mgr-4"
                     title="表数据"
-                    @click="toOpenTable(data)"
+                    @click="toTableOpen(data)"
                   >
                     <i class="mdi mdi-database-outline"></i>
                   </div>
                   <div
-                    v-if="data.isDatabase || data.isTable"
+                    v-if="data.isOwner || data.isTable"
                     class="tm-link color-grey ft-13 mgr-4"
                     title="DDL"
                     @click="toShowDDL(data)"
@@ -70,7 +70,7 @@
                     ></IconFont>
                   </div>
                   <div
-                    v-if="data.isDatabase || data.isTable"
+                    v-if="data.isOwner || data.isTable"
                     class="tm-link color-orange ft-15 mgr-4"
                     @click="toDelete(data)"
                   >
@@ -119,7 +119,7 @@ export default {
     filterNode(value, data) {
       if (!value) return true;
       return (
-        data.name && data.name.toLowerCase().indexOf(value.toLowerCase()) !== -1
+        data.text && data.text.toLowerCase().indexOf(value.toLowerCase()) !== -1
       );
     },
     nodeExpand(data) {
@@ -134,15 +134,15 @@ export default {
     nodeCollapse(data) {
       let needDeletes = [];
       needDeletes.push(data.key);
-      if (data.isDatabase) {
+      if (data.isOwner) {
         this.expands.forEach((one) => {
-          if (one == "owner:tables:" + data.name) {
+          if (one == "owner:tables:" + data.ownerName) {
             needDeletes.push(one);
-          } else if (("" + one).startsWith("owner:" + data.name + ":")) {
+          } else if (("" + one).startsWith("owner:" + data.ownerName + ":")) {
             needDeletes.push(one);
           }
         });
-      } else if (data.isDatabaseTables) {
+      } else if (data.isOwnerTables) {
         this.expands.forEach((one) => {
           if (one == "owner:tables:" + data.owner.ownerName) {
             needDeletes.push(one);
@@ -176,12 +176,7 @@ export default {
       this.tool.stopEvent();
       let node = this.$refs.tree.getNode(key);
       if (node) {
-        if (
-          node.data &&
-          node.data.isDatabase &&
-          node.loaded &&
-          node.childNodes
-        ) {
+        if (node.data && node.data.isOwner && node.loaded && node.childNodes) {
           node.childNodes.forEach((one) => {
             one.loaded = false;
             one.expand();
@@ -193,12 +188,12 @@ export default {
       }
     },
     async toShowDDL(data) {
-      if (data.isDatabase) {
+      if (data.isOwner) {
         let extend = {
-          name: data.name + ">DDL",
-          title: data.name + ">DDL",
+          name: data.ownerName + ">DDL",
+          title: data.ownerName + ">DDL",
           type: "ddl",
-          ownerName: data.name,
+          ownerName: data.ownerName,
         };
         this.toolboxWorker.openTabByExtend(extend);
       } else if (data.isTable) {
@@ -225,25 +220,25 @@ export default {
       }
     },
     nodeDbClick(data, node, nodeView) {
-      if (data.isDatabase) {
+      if (data.isOwner) {
         if (node.expanded) {
           node.collapse();
         } else {
           node.expand();
         }
-      } else if (data.isDatabaseTables) {
+      } else if (data.isOwnerTables) {
         if (node.expanded) {
           node.collapse();
         } else {
           node.expand();
         }
       } else if (data.isTable) {
-        this.toOpenTable(data);
+        this.toTableOpen(data);
       }
     },
     nodeContextmenu(event, data, node, nodeView) {
       let menus = [];
-      if (data.isDatabase || data.isDatabaseTables) {
+      if (data.isOwner || data.isOwnerTables) {
         menus.push({
           text: "刷新",
           onClick: () => {
@@ -253,7 +248,7 @@ export default {
         menus.push({
           text: "新增表",
           onClick: () => {
-            this.toCreateTable(data);
+            this.toTableCreate(data);
           },
         });
         menus.push({
@@ -274,7 +269,7 @@ export default {
         menus.push({
           text: "查看数据",
           onClick: () => {
-            this.toOpenTable(data);
+            this.toTableOpen(data);
           },
         });
         menus.push({
@@ -308,7 +303,7 @@ export default {
         menus.push({
           text: "编辑表",
           onClick: () => {
-            this.toUpdateTable(data);
+            this.toTableUpdate(data);
           },
         });
         menus.push({
@@ -324,7 +319,7 @@ export default {
           },
         });
       }
-      if (data.isDatabase || data.isTable) {
+      if (data.isOwner || data.isTable) {
         menus.push({
           text: "查看DDL",
           onClick: () => {
@@ -362,7 +357,7 @@ export default {
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
-    toOpenTable(data) {
+    toTableOpen(data) {
       let extend = {
         name: data.owner.ownerName + "." + data.tableName,
         title: data.owner.ownerName + "." + data.tableName,
@@ -375,7 +370,7 @@ export default {
     toDelete(data) {
       this.tool.stopEvent();
       let msg = "确认删除";
-      if (data.isDatabase) {
+      if (data.isOwner) {
         msg += "库[" + data.name + "]";
       } else if (data.isTable) {
         msg += "表[" + data.name + "]";
@@ -384,11 +379,11 @@ export default {
       this.tool
         .confirm(msg)
         .then(async () => {
-          if (data.isDatabase) {
-            await this.doDeleteDatabase(data.ownerName);
+          if (data.isOwner) {
+            await this.doOwnerDelete(data.ownerName);
             this.refresh();
           } else if (data.isTable) {
-            await this.doDeleteTable(data.owner.ownerName, data.tableName);
+            await this.doTableDelete(data.owner.ownerName, data.tableName);
             this.reloadChildren(data.owner);
           }
         })
@@ -403,7 +398,7 @@ export default {
           let owner = {};
           owner.ownerName = one.ownerName;
           owner.text = one.ownerName;
-          owner.isDatabase = true;
+          owner.isOwner = true;
           owner.key = "owner:" + owner.ownerName;
           owner.leaf = false;
 
@@ -414,12 +409,12 @@ export default {
         this.initTreeWidth();
         return;
       }
-      if (node.data.isDatabase) {
+      if (node.data.isOwner) {
         let owner = node.data;
         resolve([
           {
             text: "Tables",
-            isDatabaseTables: true,
+            isOwnerTables: true,
             key: "owner:tables:" + owner.ownerName,
             leaf: false,
             owner: owner,
@@ -428,7 +423,7 @@ export default {
         this.initTreeWidth();
         return;
       }
-      if (node.data.isDatabaseTables) {
+      if (node.data.isOwnerTables) {
         let owner = node.data.owner;
         let tables = await this.loadTables(owner.ownerName);
         let list = [];
@@ -454,13 +449,13 @@ export default {
       //   });
       // }, 100);
     },
-    toCreateDatabase() {
-      this.toolboxWorker.showCreateDatabase(() => {
+    toOwnerCreate() {
+      this.toolboxWorker.showOwnerCreate(() => {
         this.refresh();
       });
     },
-    toCreateTable(owner) {
-      if (owner.isDatabaseTables) {
+    toTableCreate(owner) {
+      if (owner.isOwnerTables) {
         owner = owner.owner;
       }
       let extend = {
@@ -471,7 +466,7 @@ export default {
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
-    async toUpdateTable(table) {
+    async toTableUpdate(table) {
       let ownerName = table.owner.ownerName;
       let extend = {
         name: "编辑[" + ownerName + "]库表[" + table.tableName + "]",

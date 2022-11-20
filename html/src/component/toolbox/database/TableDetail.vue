@@ -3,10 +3,12 @@
     <div class="" v-if="tableDetail != null">
       <el-form ref="form" inline size="mini">
         <el-form-item label="表名" class="mgb-0">
-          <el-input v-model="tableDetail.name" @change="change"> </el-input>
+          <el-input v-model="tableDetail.tableName" @change="change">
+          </el-input>
         </el-form-item>
         <el-form-item label="注释" class="mgb-0">
-          <el-input v-model="tableDetail.comment" @change="change"> </el-input>
+          <el-input v-model="tableDetail.tableComment" @change="change">
+          </el-input>
         </el-form-item>
       </el-form>
       <div class="">
@@ -26,7 +28,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.name"
+                  v-model="scope.row.columnName"
                   type="text"
                   @change="change"
                 />
@@ -38,12 +40,12 @@
               <div class="">
                 <el-select
                   placeholder="选中类型"
-                  v-model="scope.row.type"
+                  v-model="scope.row.columnDataType"
                   @change="change"
                   filterable
                 >
                   <el-option
-                    v-for="(one, index) in source.mysqlColumnTypeInfos"
+                    v-for="(one, index) in columnTypeInfoList"
                     :key="index"
                     :value="one.name"
                     :label="one.name"
@@ -57,7 +59,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.length"
+                  v-model="scope.row.columnLength"
                   type="text"
                   @change="change"
                 />
@@ -68,7 +70,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.decimal"
+                  v-model="scope.row.columnDecimal"
                   type="text"
                   @change="change"
                 />
@@ -78,7 +80,7 @@
           <el-table-column label="必填" width="60">
             <template slot-scope="scope">
               <div class="">
-                <el-switch v-model="scope.row.notNull" @change="change" />
+                <el-switch v-model="scope.row.columnNotNull" @change="change" />
               </div>
             </template>
           </el-table-column>
@@ -93,7 +95,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.default"
+                  v-model="scope.row.columnDefault"
                   type="text"
                   @change="change"
                 />
@@ -104,7 +106,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.comment"
+                  v-model="scope.row.columnComment"
                   type="text"
                   @change="change"
                 />
@@ -158,7 +160,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.name"
+                  v-model="scope.row.indexName"
                   type="text"
                   @change="change"
                 />
@@ -170,11 +172,18 @@
               <div class="">
                 <el-select
                   placeholder="普通索引"
-                  v-model="scope.row.type"
+                  v-model="scope.row.indexType"
                   @change="change"
                 >
                   <el-option value="" label="普通索引"></el-option>
-                  <el-option value="unique" label="唯一索引"></el-option>
+
+                  <el-option
+                    v-for="(one, index) in indexTypeInfoList"
+                    :key="index"
+                    :value="one.name"
+                    :label="one.name"
+                  >
+                  </el-option>
                 </el-select>
               </div>
             </template>
@@ -184,7 +193,7 @@
               <div class="">
                 <el-select
                   placeholder="选中字段"
-                  v-model="scope.row.columns"
+                  v-model="scope.row.columnNames"
                   @change="change"
                   filterable
                   multiple
@@ -193,8 +202,8 @@
                   <el-option
                     v-for="(one, index) in tableDetail.columnList"
                     :key="index"
-                    :value="one.name"
-                    :label="one.name"
+                    :value="one.columnName"
+                    :label="one.columnName"
                   >
                   </el-option>
                 </el-select>
@@ -205,7 +214,7 @@
             <template slot-scope="scope">
               <div class="">
                 <el-input
-                  v-model="scope.row.comment"
+                  v-model="scope.row.indexComment"
                   type="text"
                   @change="change"
                 />
@@ -231,7 +240,13 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "onChange"],
+  props: [
+    "source",
+    "toolboxWorker",
+    "onChange",
+    "columnTypeInfoList",
+    "indexTypeInfoList",
+  ],
   data() {
     return {
       tableDetail: null,
@@ -330,14 +345,14 @@ export default {
 
     addColumn(column, after) {
       column = column || {};
-      column.name = column.name || "";
-      column.type = column.type || "varchar";
-      column.length = column.length || 250;
-      column.decimal = column.decimal || 0;
+      column.columnName = column.columnName || "";
+      column.columnType = column.columnType || "varchar";
+      column.columnLength = column.columnLength || 250;
+      column.columnDecimal = column.columnDecimal || 0;
       column.primaryKey = column.primaryKey || false;
-      column.notNull = column.notNull || false;
-      column.default = column.default || "";
-      column.comment = column.comment || "";
+      column.columnNotNull = column.columnNotNull || false;
+      column.columnDefault = column.columnDefault || "";
+      column.columnComment = column.columnComment || "";
 
       let appendIndex = this.tableDetail.columnList.indexOf(after);
       if (appendIndex < 0) {
@@ -351,7 +366,7 @@ export default {
       this.onChange(this.tableDetail);
     },
     removeColumn(column) {
-      if (this.tool.isEmpty(column.oldName)) {
+      if (column.oldColumn == null) {
         let findIndex = this.tableDetail.columnList.indexOf(column);
         if (findIndex >= 0) {
           this.tableDetail.columnList.splice(findIndex, 1);
@@ -364,10 +379,10 @@ export default {
     },
     addIndex(index, after) {
       index = index || {};
-      index.name = index.name || "";
-      index.type = index.type || "";
-      index.comment = index.comment || "";
-      index.columns = index.columns || [];
+      index.indexName = index.indexName || "";
+      index.indexType = index.indexType || "";
+      index.indexComment = index.indexComment || "";
+      index.columnNames = index.columnNames || [];
 
       let appendIndex = this.tableDetail.indexList.indexOf(after);
       if (appendIndex < 0) {
@@ -380,7 +395,7 @@ export default {
       this.onChange(this.tableDetail);
     },
     removeIndex(index) {
-      if (this.tool.isEmpty(index.oldName)) {
+      if (index.oldIndex == null) {
         let findIndex = this.tableDetail.indexList.indexOf(index);
         if (findIndex >= 0) {
           this.tableDetail.indexList.splice(findIndex, 1);

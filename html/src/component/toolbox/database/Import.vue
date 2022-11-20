@@ -123,7 +123,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "extend", "database", "table"],
+  props: ["source", "toolboxWorker", "extend", "ownerName", "table"],
   data() {
     return {
       ready: false,
@@ -148,7 +148,7 @@ export default {
     async init() {
       if (this.tool.isNotEmpty(this.table)) {
         this.tableDetail = await this.toolboxWorker.getTableDetail(
-          this.database,
+          this.ownerName,
           this.table
         );
       }
@@ -222,7 +222,7 @@ export default {
       });
 
       let param = Object.assign({}, this.form);
-      param.database = this.database;
+      param.ownerName = this.ownerName;
       param.table = this.table;
       param.columnList = this.tableDetail.columnList;
       param.strategyDataList = this.strategyDataList;

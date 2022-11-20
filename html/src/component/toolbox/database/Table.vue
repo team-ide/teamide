@@ -1,128 +1,30 @@
 <template>
   <div class="toolbox-database-table">
-    <div class="app-scroll-bar" style="height: calc(100% - 90px)">
+    <el-form class="pdlr-10" size="mini" inline>
+      <el-form-item label="库名">
+        <el-input v-model="form.ownerName" style="width: 120px"> </el-input>
+      </el-form-item>
+      <el-form-item label="新建表">
+        <el-switch v-model="isInsert" :readonly="tableDetail == null">
+        </el-switch>
+      </el-form-item>
+    </el-form>
+    <div class="app-scroll-bar" style="height: calc(100% - 110px)">
       <TableDetail
         class="pd-10"
         ref="TableDetail"
         :source="source"
         :toolboxWorker="toolboxWorker"
         :onChange="onTableDetailChange"
+        :columnTypeInfoList="columnTypeInfoList"
+        :indexTypeInfoList="indexTypeInfoList"
       ></TableDetail>
-      <el-form
-        class="database-table-detail-form pdlr-10"
-        ref="form"
-        size="mini"
-        inline
-      >
-        <el-form-item label="库名">
-          <el-input
-            v-model="form.database"
-            @change="toLoad"
-            style="width: 120px"
-          >
-          </el-input>
-        </el-form-item>
-        <el-form-item label="新建表">
-          <el-switch
-            v-model="isInsert"
-            @change="toLoad"
-            :readonly="tableDetail == null"
-          >
-          </el-switch>
-        </el-form-item>
-        <el-form-item label="数据库类型">
-          <el-select
-            placeholder="当前库类型"
-            v-model="form.databaseType"
-            style="width: 120px"
-          >
-            <el-option label="MySql" value="mysql"> </el-option>
-            <el-option label="Sqlite" value="sqlite"> </el-option>
-            <el-option label="Oracle" value="oracle"> </el-option>
-            <el-option label="达梦" value="dameng"> </el-option>
-            <el-option label="神通" value="shentong"> </el-option>
-            <el-option label="金仓" value="kingbase"> </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="追加库名">
-          <el-switch v-model="form.appendDatabase" @change="toLoad">
-          </el-switch>
-        </el-form-item>
-        <template v-if="form.appendDatabase">
-          <el-form-item label="库名包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.databasePackingCharacter"
-              @change="toLoad"
-              style="width: 120px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-        </template>
-        <el-form-item label="表名包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.tablePackingCharacter"
-            @change="toLoad"
-            style="width: 120px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字段包装">
-          <el-select
-            placeholder="不包装"
-            v-model="form.columnPackingCharacter"
-            @change="toLoad"
-            style="width: 120px"
-          >
-            <el-option
-              v-for="(one, index) in packingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="字符值包装">
-          <el-select
-            v-model="form.stringPackingCharacter"
-            @change="toLoad"
-            style="width: 120px"
-          >
-            <el-option
-              v-for="(one, index) in stringPackingCharacters"
-              :key="index"
-              :value="one.value"
-              :label="one.text"
-            >
-            </el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <div class="pdlr-10">
-        <div class="pdb-5">SQL预览</div>
-        <textarea v-model="showSQL" class="database-show-sql"> </textarea>
-      </div>
     </div>
     <div class="" v-if="error != null">
       <div class="bg-red ft-12 pd-5">{{ error }}</div>
     </div>
     <div class="pd-10">
+      <div class="tm-btn bg-grey ft-13 mgr-10" @click="toShowSql">查看SQL</div>
       <div
         class="tm-btn bg-green ft-13"
         @click="toExecuteSql"
@@ -131,15 +33,32 @@
         执行
       </div>
     </div>
+    <TableSql
+      ref="TableSql"
+      :source="source"
+      :toolboxWorker="toolboxWorker"
+      :isInsert="isInsert"
+      :form="form"
+      :getFormData="getFormData"
+      :onError="onError"
+    ></TableSql>
   </div>
 </template>
 
 <script>
-import TableDetail from "./TableDetail.vue";
+import TableDetail from "./TableDetail";
+import TableSql from "./TableSql";
 
 export default {
-  components: { TableDetail },
-  props: ["source", "toolboxWorker", "database", "table"],
+  components: { TableDetail, TableSql },
+  props: [
+    "source",
+    "toolboxWorker",
+    "ownerName",
+    "tableName",
+    "columnTypeInfoList",
+    "indexTypeInfoList",
+  ],
   data() {
     return {
       showSQL: null,
@@ -147,28 +66,18 @@ export default {
         { value: "utf8", text: "utf8" },
         { value: "utf8mb4", text: "utf8mb4" },
       ],
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
-      stringPackingCharacters: [
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-      ],
       form: {
-        database: null,
-        databaseType: null,
-        name: "TB_XXX",
-        comment: "",
-        appendDatabase: false,
-        databasePackingCharacter: "`",
-        tablePackingCharacter: "`",
-        columnPackingCharacter: "`",
-        stringPackingCharacter: "'",
+        ownerName: null,
+        tableName: "TB_XXX",
+        tableComment: "",
         columnList: [],
         indexList: [],
+        targetDatabaseType: "",
+        appendOwnerName: true,
+        ownerNamePackChar: "",
+        tableNamePackChar: "",
+        columnNamePackChar: "",
+        sqlValuePackChar: "",
       },
       tableDetail: null,
       isInsert: false,
@@ -179,65 +88,39 @@ export default {
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
-  watch: {
-    "form.databaseType"() {
-      if (
-        this.tool.isEmpty(this.form.databaseType) ||
-        this.form.databaseType == "mysql"
-      ) {
-        this.form.databasePackingCharacter = "`";
-        this.form.tablePackingCharacter = "`";
-        this.form.columnPackingCharacter = "`";
-      } else {
-        this.form.databasePackingCharacter = `"`;
-        this.form.tablePackingCharacter = `"`;
-        this.form.columnPackingCharacter = `"`;
-      }
-      this.toLoad();
-    },
-  },
+  watch: {},
   methods: {
     async init() {
       let tableDetail = null;
-      if (this.tool.isNotEmpty(this.table)) {
+      if (this.tool.isNotEmpty(this.tableName)) {
         tableDetail = await this.toolboxWorker.getTableDetail(
-          this.database,
-          this.table
+          this.ownerName,
+          this.tableName
         );
       }
 
-      this.initForm(this.database, tableDetail);
+      this.initForm(this.ownerName, tableDetail);
     },
-    async initForm(database, tableDetail) {
-      this.form.database = database;
+    async initForm(ownerName, tableDetail) {
+      this.form.ownerName = ownerName;
       this.tableDetail = tableDetail;
       this.isInsert = tableDetail == null;
       this.error = null;
       this.executeSqlIng = false;
 
-      this.form.name = "TB_XXX";
-      this.form.comment = "";
-      this.form.oldName = "";
-      this.form.oldComment = "";
+      this.form.tableName = "TB_XXX";
+      this.form.tableComment = "";
       this.form.columnList.splice(0, this.form.columnList.length);
       this.form.indexList.splice(0, this.form.indexList.length);
       if (tableDetail != null) {
-        this.form.name = tableDetail.name;
-        this.form.comment = tableDetail.comment;
-        this.form.oldName = tableDetail.name;
-        this.form.oldComment = tableDetail.comment;
+        this.form.tableName = tableDetail.tableName;
+        this.form.tableComment = tableDetail.tableComment;
+        this.form.oldTable = tableDetail;
         if (tableDetail.columnList) {
           let lastColumn = null;
           tableDetail.columnList.forEach((one) => {
             let column = Object.assign({}, one);
-            column.oldName = column.name;
-            column.oldComment = column.comment;
-            column.oldType = column.type;
-            column.oldLength = column.length;
-            column.oldDecimal = column.decimal;
-            column.oldPrimaryKey = column.primaryKey;
-            column.oldNotNull = column.notNull;
-            column.oldDefault = column.default;
+            column.oldColumn = one;
             column.deleted = false;
             column.oldBeforeColumn = lastColumn;
             this.form.columnList.push(column);
@@ -247,16 +130,12 @@ export default {
         if (tableDetail.indexList) {
           tableDetail.indexList.forEach((one) => {
             let index = Object.assign({}, one);
-            index.oldName = index.name;
-            index.oldComment = index.comment;
-            index.oldType = index.type;
-            index.oldColumns = index.columns;
+            index.oldIndex = one;
             index.deleted = false;
             this.form.indexList.push(index);
           });
         }
       }
-      await this.toLoad();
       this.$nextTick(() => {
         this.$refs.TableDetail.init(this.form);
       });
@@ -274,6 +153,7 @@ export default {
         delete column.oldBeforeColumn;
         data.columnList.push(column);
       });
+      this.toolboxWorker.formatParam(data);
       return data;
     },
     async toExecuteSql() {
@@ -282,9 +162,9 @@ export default {
       this.executeSqlIng = true;
       let res = null;
       if (this.isInsert) {
-        res = await this.toolboxWorker.work("createTable", data);
+        res = await this.toolboxWorker.work("tableCreate", data);
       } else {
-        res = await this.toolboxWorker.work("updateTable", data);
+        res = await this.toolboxWorker.work("tableUpdate", data);
       }
       this.executeSqlIng = false;
       this.error = null;
@@ -294,39 +174,20 @@ export default {
       }
       this.tool.success("执行成功");
       let tableDetail = await this.toolboxWorker.getTableDetail(
-        data.database,
-        data.name
+        data.ownerName,
+        data.tableName
       );
 
-      this.initForm(data.database, tableDetail);
+      this.initForm(data.ownerName, tableDetail);
 
       return res.data || {};
     },
-    async onTableDetailChange() {
-      await this.toLoad();
+    async onTableDetailChange() {},
+    onError(error) {
+      this.error = error;
     },
-    async toLoad() {
-      this.showSQL = "";
-      let res = await this.loadSqls();
-      let sqlList = res.sqlList || [];
-      sqlList.forEach((sql) => {
-        this.showSQL += sql + ";\n\n";
-      });
-    },
-    async loadSqls() {
-      let data = this.getFormData();
-      let res = null;
-      if (this.isInsert) {
-        res = await this.toolboxWorker.work("createTableSql", data);
-      } else {
-        res = await this.toolboxWorker.work("updateTableSql", data);
-      }
-      this.error = null;
-      if (res.code != 0) {
-        this.error = res.msg;
-        return;
-      }
-      return res.data || {};
+    toShowSql() {
+      this.$refs.TableSql.show();
     },
   },
   // 在实例创建完成后被立即调用
@@ -342,18 +203,5 @@ export default {
 .toolbox-database-table {
   width: 100%;
   height: 100%;
-}
-.database-show-sql {
-  width: 100%;
-  height: 300px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  padding: 0px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
 }
 </style>

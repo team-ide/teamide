@@ -267,7 +267,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "extend", "database", "table"],
+  props: ["source", "toolboxWorker", "extend", "ownerName", "table"],
   data() {
     return {
       ready: false,
@@ -325,11 +325,11 @@ export default {
     async init() {
       if (this.tool.isNotEmpty(this.table)) {
         this.tableDetail = await this.toolboxWorker.getTableDetail(
-          this.database,
+          this.ownerName,
           this.table
         );
       }
-      this.form.exportDatabase = this.database;
+      this.form.exportDatabase = this.ownerName;
       this.form.exportTable = this.table;
       this.exportColumnList = [];
 
@@ -384,7 +384,7 @@ export default {
     },
     async doExport() {
       let param = Object.assign({}, this.form);
-      param.database = this.database;
+      param.ownerName = this.ownerName;
       param.table = this.table;
 
       if (this.tableDetail) {

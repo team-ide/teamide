@@ -3,14 +3,14 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="300px" class="">
-          <Database
-            ref="ToolboxDatabaseDatabase"
+          <Owner
+            ref="Owner"
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
             :ownersChange="ownersChange"
           >
-          </Database>
+          </Owner>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
@@ -18,6 +18,8 @@
             :source="source"
             :toolboxWorker="toolboxWorker"
             :owners="owners"
+            :columnTypeInfoList="columnTypeInfoList"
+            :indexTypeInfoList="indexTypeInfoList"
           >
           </Tabs>
         </tm-layout>
@@ -26,8 +28,8 @@
       </ShowExportSql>
       <ShowSaveSql :source="source" :toolboxWorker="toolboxWorker">
       </ShowSaveSql>
-      <CreateDatabase :source="source" :toolboxWorker="toolboxWorker">
-      </CreateDatabase>
+      <OwnerCreate :source="source" :toolboxWorker="toolboxWorker">
+      </OwnerCreate>
       <Table :source="source" :toolboxWorker="toolboxWorker"> </Table>
     </template>
     <ShowInfo :source="source" :toolboxWorker="toolboxWorker"> </ShowInfo>
@@ -36,20 +38,20 @@
 
 
 <script>
-import Database from "./Database";
+import Owner from "./Owner";
 import Tabs from "./Tabs";
 import ShowExportSql from "./ShowExportSql";
 import ShowSaveSql from "./ShowSaveSql";
-import CreateDatabase from "./CreateDatabase";
+import OwnerCreate from "./OwnerCreate";
 import ShowInfo from "./ShowInfo";
 
 export default {
   components: {
-    Database,
+    Owner,
     Tabs,
     ShowExportSql,
     ShowSaveSql,
-    CreateDatabase,
+    OwnerCreate,
     ShowInfo,
   },
   props: ["source", "toolboxWorker", "extend"],
@@ -57,16 +59,63 @@ export default {
     return {
       ready: false,
       owners: [],
+      columnTypeInfoList: [],
+      indexTypeInfoList: [],
     };
   },
   computed: {},
   watch: {},
   methods: {
-    init() {
+    async init() {
       this.toolboxWorker.columnIsNumber = this.columnIsNumber;
       this.toolboxWorker.columnIsDate = this.columnIsDate;
       this.toolboxWorker.formatDateColumn = this.formatDateColumn;
+      this.toolboxWorker.formatParam = this.formatParam;
+      await this.loadData();
       this.ready = true;
+    },
+    async loadData() {
+      let param = {};
+      let res = await this.toolboxWorker.work("data", param);
+      let data = res.data || {};
+      this.columnTypeInfoList = data.columnTypeInfoList || [];
+      this.indexTypeInfoList = data.indexTypeInfoList || [];
+    },
+    formatParam(param) {
+      param = param || {};
+      if (this.tool.isEmpty(param.ownerNamePackChar)) {
+        delete param.ownerNamePack;
+        delete param.ownerNamePackChar;
+      } else {
+        if (param.ownerNamePackChar == "-") {
+          param.ownerNamePack = false;
+        } else {
+          param.ownerNamePack = true;
+        }
+      }
+      if (this.tool.isEmpty(param.tableNamePackChar)) {
+        delete param.tableNamePack;
+        delete param.tableNamePackChar;
+      } else {
+        if (param.tableNamePackChar == "-") {
+          param.tableNamePack = false;
+        } else {
+          param.tableNamePack = true;
+        }
+      }
+      if (this.tool.isEmpty(param.columnNamePackChar)) {
+        delete param.columnNamePack;
+        delete param.columnNamePackChar;
+      } else {
+        if (param.columnNamePackChar == "-") {
+          param.columnNamePack = false;
+        } else {
+          param.columnNamePack = true;
+        }
+      }
+      if (this.tool.isEmpty(param.sqlValuePackChar)) {
+        delete param.sqlValuePackChar;
+      }
     },
     ownersChange(owners) {
       this.owners = owners;
@@ -125,7 +174,7 @@ export default {
       return value;
     },
     refresh() {
-      this.$refs.ToolboxDatabaseDatabase.refresh();
+      this.$refs.Owner.refresh();
     },
   },
   created() {},

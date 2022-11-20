@@ -11,8 +11,8 @@
             <TableData
               :source="source"
               :toolboxWorker="toolboxWorker"
-              :database="item.extend.database"
-              :table="item.extend.table"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
               :extend="item.extend"
               :tabId="item.tabId"
             >
@@ -23,7 +23,7 @@
               :source="source"
               :toolboxWorker="toolboxWorker"
               :extend="item.extend"
-              :databases="databases"
+              :owners="owners"
               :tabId="item.tabId"
             >
             </Sql>
@@ -32,8 +32,8 @@
             <DDL
               :source="source"
               :toolboxWorker="toolboxWorker"
-              :database="item.extend.database"
-              :table="item.extend.table"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
               :tabId="item.tabId"
             >
             </DDL>
@@ -42,8 +42,10 @@
             <Table
               :source="source"
               :toolboxWorker="toolboxWorker"
-              :database="item.extend.database"
-              :table="item.extend.table"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
+              :columnTypeInfoList="columnTypeInfoList"
+              :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
             >
@@ -53,8 +55,8 @@
             <Export
               :source="source"
               :toolboxWorker="toolboxWorker"
-              :database="item.extend.database"
-              :table="item.extend.table"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
               :extend="item.extend"
               :tabId="item.tabId"
             >
@@ -64,8 +66,8 @@
             <Import
               :source="source"
               :toolboxWorker="toolboxWorker"
-              :database="item.extend.database"
-              :table="item.extend.table"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
               :extend="item.extend"
               :tabId="item.tabId"
             >
@@ -88,7 +90,13 @@ import Import from "./Import";
 
 export default {
   components: { DDL, Sql, Table, TableData, Export, Import },
-  props: ["source", "toolboxWorker", "databases"],
+  props: [
+    "source",
+    "toolboxWorker",
+    "owners",
+    "columnTypeInfoList",
+    "indexTypeInfoList",
+  ],
   data() {
     return {};
   },

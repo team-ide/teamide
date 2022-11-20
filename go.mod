@@ -18,7 +18,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.22.10
 	github.com/tealeg/xlsx v1.0.5
-	github.com/team-ide/go-dialect v1.1.6
+	github.com/team-ide/go-dialect v1.1.9
 	github.com/team-ide/go-driver v1.1.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.3.0
@@ -86,5 +86,3 @@ require (
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/godror/godror v0.35.0 => github.com/team-ide/godror v0.0.2

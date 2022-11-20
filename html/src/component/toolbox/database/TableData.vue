@@ -325,7 +325,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "database", "table", "toolboxWorker", "extend", "tabId"],
+  props: ["source", "ownerName", "table", "toolboxWorker", "extend", "tabId"],
   data() {
     return {
       ready: false,
@@ -412,7 +412,7 @@ export default {
     },
     async initTable() {
       this.tableDetail = await this.toolboxWorker.getTableDetail(
-        this.database,
+        this.ownerName,
         this.table
       );
     },
@@ -568,7 +568,7 @@ export default {
         columnList.push(column);
       });
       let data = {};
-      data.database = this.database;
+      data.ownerName = this.ownerName;
       data.table = this.table;
       data.wheres = wheres;
       data.orders = orders;
@@ -769,7 +769,7 @@ export default {
       menus.push({
         text: "查看新增、修改、删除记录SQL",
         onClick: () => {
-          this.toolboxWorker.showSaveSql(this.database, this.tableDetail, {
+          this.toolboxWorker.showSaveSql(this.ownerName, this.tableDetail, {
             insertList,
             updateList,
             updateWhereList,
@@ -1002,7 +1002,7 @@ export default {
     },
     async doSave(insertList, updateList, updateWhereList) {
       let data = {};
-      data.database = this.database;
+      data.ownerName = this.ownerName;
       data.table = this.table;
       data.columnList = this.tableDetail.columnList;
       data.insertList = insertList;
@@ -1027,7 +1027,7 @@ export default {
     },
     async doDelete(deleteList) {
       let data = {};
-      data.database = this.database;
+      data.ownerName = this.ownerName;
       data.table = this.table;
       data.columnList = this.tableDetail.columnList;
       data.deleteList = deleteList;
@@ -1072,7 +1072,7 @@ export default {
     },
     showExportSql() {
       this.toolboxWorker.showExportSql(
-        this.database,
+        this.ownerName,
         this.tableDetail,
         this.selects
       );
@@ -1084,7 +1084,7 @@ export default {
       let updateWhereList = this.getUpdateWhereList();
       let deleteList = this.getDeleteList();
 
-      this.toolboxWorker.showSaveSql(this.database, this.tableDetail, {
+      this.toolboxWorker.showSaveSql(this.ownerName, this.tableDetail, {
         insertList,
         updateList,
         updateWhereList,

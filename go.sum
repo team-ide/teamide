@@ -66,6 +66,8 @@ github.com/go-zookeeper/zk v1.0.3 h1:7M2kwOsc//9VeeFiPtf+uSJlVpU66x9Ba5+8XK7/TDg
 github.com/go-zookeeper/zk v1.0.3/go.mod h1:nOB03cncLtlp4t+UAkGSV+9beXP/akpekBwL+UX1Qcw=
 github.com/goccy/go-json v0.9.7 h1:IcB+Aqpx/iMHu5Yooh7jEzJk1JZ7Pjtmys2ukPr7EeM=
 github.com/goccy/go-json v0.9.7/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
+github.com/godror/godror v0.35.0 h1:V9sTD76SBPREtjsDL6YtZjW2FTwF9uI+ZIVTt/phzMo=
+github.com/godror/godror v0.35.0/go.mod h1:jW1+pN+z/V0h28p9XZXVNtEvfZP/2EBfaSjKJLp3E4g=
 github.com/godror/knownpb v0.1.0 h1:dJPK8s/I3PQzGGaGcUStL2zIaaICNzKKAK8BzP1uLio=
 github.com/godror/knownpb v0.1.0/go.mod h1:4nRFbQo1dDuwKnblRXDxrfCFYeT4hjg3GjMqef58eRE=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
@@ -173,12 +175,10 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tealeg/xlsx v1.0.5 h1:+f8oFmvY8Gw1iUXzPk+kz+4GpbDZPK1FhPiQRd+ypgE=
 github.com/tealeg/xlsx v1.0.5/go.mod h1:btRS8dz54TDnvKNosuAqxrM1QgN1udgk9O34bDCnORM=
-github.com/team-ide/go-dialect v1.1.6 h1:4hEKS2beA4qhITjaAvVbmN7/ByuaGS4FUSU4CZEZEPw=
-github.com/team-ide/go-dialect v1.1.6/go.mod h1:eulGzwjJcPgr/8YsHYN/IzcAyEigeJqiPnNjPRjy0nA=
+github.com/team-ide/go-dialect v1.1.9 h1:P2aC5oo/QTzseWaLSgxyWGRavL2mHMpJMou5LOtNrMw=
+github.com/team-ide/go-dialect v1.1.9/go.mod h1:eulGzwjJcPgr/8YsHYN/IzcAyEigeJqiPnNjPRjy0nA=
 github.com/team-ide/go-driver v1.1.0 h1:DGMaZh4Y1lQijcNmqh9Yi4gA51b7H3i5QG0l3BrerXw=
 github.com/team-ide/go-driver v1.1.0/go.mod h1:1MMLcR0vW0+xFKYV5kb+nSvcRUVLn8mdRsW6CfAKoBE=
-github.com/team-ide/godror v0.0.2 h1:9LapcxbXkz/O7dkzUs8fxvncrB9JPvrba/jIewopr0I=
-github.com/team-ide/godror v0.0.2/go.mod h1:jW1+pN+z/V0h28p9XZXVNtEvfZP/2EBfaSjKJLp3E4g=
 github.com/tklauser/go-sysconf v0.3.10 h1:IJ1AZGZRWbY8T5Vfk04D9WOA5WSejdflXxP03OUqALw=
 github.com/tklauser/go-sysconf v0.3.10/go.mod h1:C8XykCvCb+Gn0oNCWPIlcb0RuglQTYaQ2hGm7jmxEFk=
 github.com/tklauser/numcpus v0.4.0 h1:E53Dm1HjH1/R2/aoCtXtPgzmElmn51aOkhCFSuZq//o=

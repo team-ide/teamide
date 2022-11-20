@@ -9,8 +9,6 @@ import (
 	"github.com/team-ide/go-driver/db_dm"
 	"github.com/team-ide/go-driver/db_kingbase_v8r6"
 	"github.com/team-ide/go-driver/db_mysql"
-	"github.com/team-ide/go-driver/db_oracle"
-	"github.com/team-ide/go-driver/db_shentong"
 	"github.com/team-ide/go-driver/db_sqlite3"
 	"go.uber.org/zap"
 	"strings"
@@ -18,13 +16,10 @@ import (
 )
 
 type DatabaseType struct {
-	DriverName         string `json:"driverName"`
-	DialectName        string `json:"dialectName"`
-	getDSN             func(config *DatabaseConfig) string
-	dia                dialect.Dialect
-	matches            []string
-	ColumnTypeInfoList []*dialect.ColumnTypeInfo `json:"columnTypeInfoList"`
-	IndexTypeInfoList  []*dialect.IndexTypeInfo  `json:"indexTypeInfoList"`
+	DialectName string `json:"dialectName"`
+	newDb       func(config *DatabaseConfig) (db *sql.DB, err error)
+	dia         dialect.Dialect
+	matches     []string
 }
 
 func (this_ *DatabaseType) init() {
@@ -33,7 +28,6 @@ func (this_ *DatabaseType) init() {
 	if err != nil {
 		panic(err)
 	}
-	this_.ColumnTypeInfoList = this_.dia.GetColumnTypeInfos()
 	return
 }
 
@@ -43,55 +37,46 @@ var (
 
 func init() {
 	addDatabaseType(&DatabaseType{
-		getDSN: func(config *DatabaseConfig) string {
-			return db_mysql.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_mysql.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+			db, err = db_mysql.Open(dsn)
+			return
 		},
-		DriverName:  db_mysql.GetDriverName(),
 		DialectName: db_mysql.GetDialect(),
 		matches:     []string{"mysql"},
 	})
 
-	addDatabaseType(&DatabaseType{getDSN: func(config *DatabaseConfig) string {
-		return db_sqlite3.GetDSN(config.DatabasePath)
-	},
-		DriverName:  db_sqlite3.GetDriverName(),
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_sqlite3.GetDSN(config.DatabasePath)
+			db, err = db_sqlite3.Open(dsn)
+			return
+		},
 		DialectName: db_sqlite3.GetDialect(),
 		matches:     []string{"sqlite", "sqlite3"},
 	})
 
 	addDatabaseType(&DatabaseType{
-		getDSN: func(config *DatabaseConfig) string {
-			return db_oracle.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Sid)
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_dm.GetDSN(config.Username, config.Password, config.Host, config.Port)
+			db, err = db_dm.Open(dsn)
+			return
 		},
-		DriverName:  db_oracle.GetDriverName(),
-		DialectName: db_oracle.GetDialect(),
-		matches:     []string{"oracle"},
-	})
-	addDatabaseType(&DatabaseType{
-		getDSN: func(config *DatabaseConfig) string {
-			return db_shentong.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
-		},
-		DriverName:  db_shentong.GetDriverName(),
-		DialectName: db_shentong.GetDialect(),
-		matches:     []string{"ShenTong", "st"},
-	})
-	addDatabaseType(&DatabaseType{
-		getDSN: func(config *DatabaseConfig) string {
-			return db_dm.GetDSN(config.Username, config.Password, config.Host, config.Port)
-		},
-		DriverName:  db_dm.GetDriverName(),
 		DialectName: db_dm.GetDialect(),
 		matches:     []string{"DaMeng", "dm"},
 	})
 	addDatabaseType(&DatabaseType{
-		getDSN: func(config *DatabaseConfig) string {
-			return db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+			db, err = db_kingbase_v8r6.Open(dsn)
+			return
 		},
-		DriverName:  db_kingbase_v8r6.GetDriverName(),
 		DialectName: db_kingbase_v8r6.GetDialect(),
 		matches:     []string{"KingBase", "kb"},
 	})
 
+	initOracleDatabase()
+	initShenTongDatabase()
 }
 
 func addDatabaseType(databaseType *DatabaseType) *DatabaseType {
@@ -157,9 +142,8 @@ func (this_ *DatabaseWorker) init() (err error) {
 		return
 	}
 
-	dns := this_.databaseType.getDSN(this_.config)
 	this_.Dialect = this_.databaseType.dia
-	this_.db, err = sql.Open(this_.databaseType.DriverName, dns)
+	this_.db, err = this_.databaseType.newDb(this_.config)
 	if err != nil {
 		return
 	}

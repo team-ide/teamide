@@ -292,6 +292,18 @@ source.toolboxTypes = [];
 source.toolboxGroups = [];
 source.quickCommands = null;
 source.quickCommandSSHCommands = null;
+source.namePackChars = [
+    { value: "", text: "默认" },
+    { value: "-", text: "不包装" },
+    { value: "'", text: "'" },
+    { value: '"', text: '"' },
+    { value: "`", text: "`" },
+];
+source.sqlValuePackChars = [
+    { value: "", text: "默认" },
+    { value: "'", text: "'" },
+    { value: '"', text: '"' },
+];
 source.initToolboxData = async () => {
     let res = await server.toolbox.data();
     if (res.code != 0) {

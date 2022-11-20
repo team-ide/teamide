@@ -10,12 +10,12 @@
           inline
         >
           <el-form-item label="数据库">
-            <el-select v-model="form.database" style="width: 150px">
+            <el-select v-model="form.ownerName" style="width: 150px">
               <el-option
-                v-for="(one, index) in databases"
+                v-for="(one, index) in owners"
                 :key="index"
-                :value="one.name"
-                :label="one.name"
+                :value="one.ownerName"
+                :label="one.ownerName"
               >
               </el-option>
             </el-select>
@@ -131,7 +131,7 @@ import SqlSelectDataList from "./SqlSelectDataList.vue";
 
 export default {
   components: { SqlSelectDataList },
-  props: ["source", "toolboxWorker", "extend", "databases", "tabId"],
+  props: ["source", "toolboxWorker", "extend", "owners", "tabId"],
   data() {
     let sqlItemsWorker = this.tool.newItemsWorker({
       async onRemoveItem(item) {},
@@ -143,7 +143,7 @@ export default {
       executeSQL: null,
       sqlItemsWorker: sqlItemsWorker,
       form: {
-        database: null,
+        ownerName: null,
         openTransaction: true,
         errorContinue: false,
       },
@@ -162,9 +162,9 @@ export default {
         this.lastSavedExecuteSQL = this.executeSQL;
         keyValueMap.executeSQL = this.executeSQL;
       }
-      if (this.lastSavedDatabase != this.form.database) {
-        this.lastSavedDatabase = this.form.database;
-        keyValueMap.database = this.form.database;
+      if (this.lastSavedDatabase != this.form.ownerName) {
+        this.lastSavedDatabase = this.form.ownerName;
+        keyValueMap.ownerName = this.form.ownerName;
       }
       await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
       setTimeout(this.autoSaveSql, 300);
@@ -172,7 +172,7 @@ export default {
     init() {
       if (this.extend) {
         this.executeSQL = this.extend.executeSQL;
-        this.form.database = this.extend.database;
+        this.form.ownerName = this.extend.ownerName;
       }
       this.autoSaveSql();
       this.ready = true;
