@@ -150,16 +150,19 @@ export default {
       let deleteList = [];
 
       let keys = [];
+      let otherKeys = [];
       this.tableDetail.columnList.forEach((column) => {
         if (column.primaryKey) {
           keys.push(column.columnName);
+        } else {
+          otherKeys.push(column.columnName);
         }
       });
 
       this.dataList.forEach((data) => {
         switch (this.form.sqlType) {
           case "insert":
-            insertList.push(data);
+            insertList.push(Object.assign({}, data));
             break;
           case "update":
             if (keys.length > 0) {
@@ -169,19 +172,17 @@ export default {
               });
               updateWhereList.push(whereData);
             } else {
-              updateWhereList.push(data);
+              updateWhereList.push(Object.assign({}, data));
             }
 
-            if (keys.length > 0) {
+            if (otherKeys.length > 0) {
               let updateData = {};
-              for (let name in data) {
-                if (keys.indexOf(name) < 0) {
-                  updateData[name] = data[name];
-                }
-              }
+              otherKeys.forEach((key) => {
+                updateData[key] = data[key];
+              });
               updateList.push(updateData);
             } else {
-              updateList.push(data);
+              updateList.push(Object.assign({}, data));
             }
             break;
           case "delete":
@@ -192,7 +193,7 @@ export default {
               });
               deleteList.push(whereData);
             } else {
-              deleteList.push(data);
+              deleteList.push(Object.assign({}, data));
             }
             break;
         }

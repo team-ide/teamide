@@ -196,7 +196,7 @@ func (this_ *Service) DataListSql(param *Param, ownerName string, tableName stri
 		}
 		sqlList = append(sqlList, sqlList_...)
 	}
-	if len(insertDataList) > 0 {
+	if len(updateDataList) > 0 {
 		param.ParamModel.AppendSqlValue = new(bool)
 		*param.ParamModel.AppendSqlValue = true
 		sqlList_, _, err = dia.DataListUpdateSql(param.ParamModel, appendOwnerName, tableName, columnList, updateDataList, updateWhereDataList)
@@ -238,7 +238,7 @@ func (this_ *Service) DataListExec(param *Param, ownerName string, tableName str
 		sqlList = append(sqlList, sqlList_...)
 		valuesList = append(valuesList, valuesList_...)
 	}
-	if len(insertDataList) > 0 {
+	if len(updateDataList) > 0 {
 		sqlList_, valuesList_, err = dia.DataListUpdateSql(param.ParamModel, appendOwnerName, tableName, columnList, updateDataList, updateWhereDataList)
 		if err != nil {
 			return
@@ -270,7 +270,7 @@ type UpdateTableParam struct {
 type DataListResult struct {
 	Sql      string                   `json:"sql"`
 	Total    int                      `json:"total"`
-	Params   []interface{}            `json:"params"`
+	Args     []interface{}            `json:"args"`
 	DataList []map[string]interface{} `json:"dataList"`
 }
 
@@ -306,7 +306,7 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 		}
 	}
 	dataListResult.Sql = this_.DatabaseWorker.PackPageSql(sql, page.PageSize, page.PageNo)
-	dataListResult.Params = values
+	dataListResult.Args = values
 	dataListResult.Total = page.TotalCount
 	dataListResult.DataList = listMap
 	return

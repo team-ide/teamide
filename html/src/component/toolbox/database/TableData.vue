@@ -184,7 +184,9 @@
             <div class="color-grey tm-link mgr-10" @click="toUnselectAll">
               取消全选
             </div>
-            <div @click="toInsert" class="color-blue tm-link mgr-10">新增</div>
+            <div @click="toInsert({})" class="color-blue tm-link mgr-10">
+              新增
+            </div>
             <div
               class="color-red tm-link mgr-10"
               @click="toDeleteSelect"
@@ -306,7 +308,7 @@
               small
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
-              :current-page="pageIndex"
+              :current-page="pageNo"
               :page-sizes="[10, 50, 100, 200, 500]"
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
@@ -340,7 +342,7 @@ export default {
       dataList_loading: false,
       dataList: [],
       sql: null,
-      params: null,
+      args: null,
       executeSql: null,
       inserts: [],
       updates: [],
@@ -348,7 +350,7 @@ export default {
       keys: [],
       columnList: [],
       pageSize: 50,
-      pageIndex: 1,
+      pageNo: 1,
       total: 0,
       form: {
         wheres: [],
@@ -396,8 +398,8 @@ export default {
       if (this.extend.pageSize) {
         this.pageSize = this.extend.pageSize;
       }
-      if (this.extend.pageIndex) {
-        this.pageIndex = this.extend.pageIndex;
+      if (this.extend.pageNo) {
+        this.pageNo = this.extend.pageNo;
       }
       this.ready = true;
       this.$nextTick(() => {
@@ -427,8 +429,8 @@ export default {
       this.pageSize = pageSize;
       this.doSearch();
     },
-    handleCurrentChange(pageIndex) {
-      this.pageIndex = pageIndex;
+    handleCurrentChange(pageNo) {
+      this.pageNo = pageNo;
       this.doSearch();
     },
     initInputWidth() {
@@ -543,7 +545,7 @@ export default {
       keyValueMap.orders = this.form.orders;
       keyValueMap.wheres = this.form.wheres;
       keyValueMap.pageSize = this.pageSize;
-      keyValueMap.pageIndex = this.pageIndex;
+      keyValueMap.pageNo = this.pageNo;
       await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
     },
     async doSearch() {
@@ -580,14 +582,14 @@ export default {
       data.wheres = wheres;
       data.orders = orders;
       data.columnList = columnList;
-      data.pageIndex = this.pageIndex;
+      data.pageNo = this.pageNo;
       data.pageSize = this.pageSize;
       this.dataList_loading = true;
 
       this.dataList = [];
       this.total = 0;
       this.sql = null;
-      this.params = null;
+      this.args = null;
       this.executeSql = null;
       this.updates = [];
       this.inserts = [];
@@ -616,11 +618,11 @@ export default {
       this.dataList = dataList;
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
-      this.params = res.data.params || [];
+      this.args = res.data.args || [];
       this.dataList_loading = false;
       let executeSql = this.sql || "";
       executeSql = executeSql.replace(new RegExp("\\?", "g"), "{$v#-}");
-      this.params.forEach((v, i) => {
+      this.args.forEach((v, i) => {
         if (typeof v == "string") {
           executeSql = executeSql.replace("{$v#-}", `'` + v + `'`);
         } else {

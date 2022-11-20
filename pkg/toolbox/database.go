@@ -203,8 +203,9 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["sql"] = dataListRequest.Sql
-		res["params"] = dataListRequest.Params
+		res["args"] = dataListRequest.Args
 		res["total"] = dataListRequest.Total
+		res["dataList"] = dataListRequest.DataList
 
 		break
 	case "dataListSql":
