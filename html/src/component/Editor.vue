@@ -91,7 +91,7 @@ export default {
         fontSize: 13, //字体大小
         autoIndent: true, //自动布局
         // quickSuggestionsDelay: 500, //代码提示延时
-        contextmenu: true,
+        contextmenu: false,
       });
       this.monacoInstance.onDidChangeModelContent((e) => {
         if (this.isSetValue) {

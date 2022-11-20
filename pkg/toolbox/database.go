@@ -231,7 +231,10 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 		break
 	case "executeSQL":
-
+		res["executeList"], res["error"], err = service.ExecuteSQL(param, request.OwnerName, request.ExecuteSQL)
+		if err != nil {
+			return
+		}
 		break
 	case "import":
 

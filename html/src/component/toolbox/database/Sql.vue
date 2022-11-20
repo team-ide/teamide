@@ -9,8 +9,9 @@
           size="mini"
           inline
         >
-          <el-form-item label="数据库">
+          <el-form-item label="数据库|模式">
             <el-select v-model="form.ownerName" style="width: 150px">
+              <el-option value="" label="不选中库|模式"> </el-option>
               <el-option
                 v-for="(one, index) in owners"
                 :key="index"
@@ -223,11 +224,10 @@ export default {
         return;
       }
       res.data = res.data || {};
-      let task = res.data.task;
-      if (task.error) {
-        this.tool.error(task.error);
+      if (res.data.error) {
+        this.tool.error(res.data.error);
       }
-      this.executeList = task.executeList || [];
+      this.executeList = res.data.executeList || [];
       this.initExecuteList();
     },
     initExecuteList() {
