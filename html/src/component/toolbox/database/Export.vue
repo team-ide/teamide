@@ -27,18 +27,35 @@
             :source="source"
             :toolboxWorker="toolboxWorker"
             :form="form"
-            :change="toLoad"
+            :change="packChange"
           >
           </Pack>
         </template>
+      </el-form>
+      <el-form ref="form" :model="form" size="mini" inline>
+        <el-form-item label="导出库">
+          <el-checkbox-group v-model="form.owners">
+            <el-checkbox
+              v-for="(owner, index) in ownerList"
+              :label="owner"
+              :key="index"
+            >
+              {{ owner.ownerName }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
       </el-form>
 
       <template v-for="(owner, ownerIndex) in form.owners">
         <div :key="ownerIndex">
           <div>
-            <el-form ref="form" :model="form" size="mini" inline>
+            <el-form :model="form" size="mini" inline>
               <el-form-item label="库名称">
-                <el-select v-model="owner.ownerName" style="width: 150px">
+                <el-select
+                  v-model="owner.ownerName"
+                  style="width: 150px"
+                  filterable
+                >
                   <el-option
                     v-for="(one, index) in ownerList"
                     :key="index"
@@ -54,110 +71,142 @@
               </el-form-item>
             </el-form>
           </div>
-
-          <template v-for="(table, tableIndex) in owner.tables">
-            <div :key="tableIndex">
-              <div>
-                <el-form ref="form" :model="form" size="mini" inline>
-                  <el-form-item label="库名称">
-                    <el-select v-model="table.tableName" style="width: 150px">
-                      <el-option
-                        v-for="(one, index) in owner.tableList"
-                        :key="index"
-                        :value="one.tableName"
-                        :label="one.tableName"
+          <div class="pdl-20">
+            <el-form :model="form" size="mini" inline>
+              <el-form-item label="导出表">
+                <el-checkbox-group v-model="owner.tables">
+                  <el-checkbox
+                    v-for="(table, index) in owner.tableList"
+                    :label="table"
+                    :key="index"
+                  >
+                    {{ table.tableName }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+            </el-form>
+            <template v-for="(table, tableIndex) in owner.tables">
+              <div :key="tableIndex">
+                <div>
+                  <el-form ref="form" :model="form" size="mini" inline>
+                    <el-form-item label="表名称">
+                      <el-select
+                        v-model="table.tableName"
+                        style="width: 150px"
+                        filterable
                       >
-                      </el-option>
-                    </el-select>
-                  </el-form-item>
-                  <el-form-item label="导出名称">
-                    <el-input v-model="table.exportName" style="width: 150px">
-                    </el-input>
-                  </el-form-item>
-                </el-form>
-              </div>
-            </div>
-          </template>
-        </div>
-      </template>
-
-      <template
-        v-if="
-          form.exportType == 'excel' ||
-          form.exportType == 'sql' ||
-          form.exportType == 'csv'
-        "
-      >
-        <div v-if="tableDetail != null" class="mgt-20">
-          <div class="mgb-10">
-            <div class="tm-link color-grey" @click="addExportColumn({})">
-              添加
-            </div>
-          </div>
-          <el-table
-            :data="exportColumnList"
-            border
-            style="width: 100%"
-            size="mini"
-          >
-            <el-table-column label="字段">
-              <template slot-scope="scope">
-                <div class="">
-                  <el-select v-model="scope.row.columnName" style="width: 100%">
-                    <el-option
-                      v-for="(one, index) in tableDetail.columnList"
-                      :key="index"
-                      :value="one.columnName"
-                      :label="one.columnName"
+                        <el-option
+                          v-for="(one, index) in owner.tableList"
+                          :key="index"
+                          :value="one.tableName"
+                          :label="one.tableName"
+                        >
+                        </el-option>
+                      </el-select>
+                    </el-form-item>
+                    <el-form-item label="导出名称">
+                      <el-input v-model="table.exportName" style="width: 150px">
+                      </el-input>
+                    </el-form-item>
+                    <div
+                      class="tm-link color-green mgr-5"
+                      @click="addExportColumn(table, {})"
                     >
-                    </el-option>
-                  </el-select>
+                      添加字段
+                    </div>
+                    <div
+                      class="tm-link color-orange mgr-5"
+                      v-if="table.openColumnList"
+                      @click="table.openColumnList = false"
+                    >
+                      收起字段
+                    </div>
+                    <div
+                      class="tm-link color-orange mgr-5"
+                      v-if="!table.openColumnList"
+                      @click="table.openColumnList = true"
+                    >
+                      展开字段
+                    </div>
+                  </el-form>
                 </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="导出名称（列名，字段名）">
-              <template slot-scope="scope">
-                <div class="">
-                  <el-input v-model="scope.row.exportName" type="text" />
+                <div v-if="table.openColumnList">
+                  <el-table
+                    :data="table.columnList"
+                    border
+                    style="width: 100%"
+                    size="mini"
+                  >
+                    <el-table-column label="字段">
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-select
+                            v-model="scope.row.columnName"
+                            style="width: 100%"
+                          >
+                            <el-option
+                              v-for="(one, index) in table.columnList"
+                              :key="index"
+                              :value="one.columnName"
+                              :label="one.columnName"
+                            >
+                            </el-option>
+                          </el-select>
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="导出名称（列名，字段名）">
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-input
+                            v-model="scope.row.exportName"
+                            type="text"
+                          />
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column
+                      label="导出固定值（函数脚本，默认为查询出的值）"
+                    >
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-input v-model="scope.row.value" type="text" />
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="200px">
+                      <template slot-scope="scope">
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="upExportColumn(table, scope.row)"
+                        >
+                          上移
+                        </div>
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="downExportColumn(table, scope.row)"
+                        >
+                          下移
+                        </div>
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="addExportColumn(table, {}, scope.row)"
+                        >
+                          插入
+                        </div>
+                        <div
+                          class="tm-link color-red mglr-5"
+                          @click="removeExportColumn(table, scope.row)"
+                        >
+                          删除
+                        </div>
+                      </template>
+                    </el-table-column>
+                  </el-table>
                 </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="导出固定值（函数脚本，默认为查询出的值）">
-              <template slot-scope="scope">
-                <div class="">
-                  <el-input v-model="scope.row.value" type="text" />
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200px">
-              <template slot-scope="scope">
-                <div
-                  class="tm-link color-grey mglr-5"
-                  @click="upExportColumn(scope.row)"
-                >
-                  上移
-                </div>
-                <div
-                  class="tm-link color-grey mglr-5"
-                  @click="downExportColumn(scope.row)"
-                >
-                  下移
-                </div>
-                <div
-                  class="tm-link color-grey mglr-5"
-                  @click="addExportColumn({}, scope.row)"
-                >
-                  插入
-                </div>
-                <div
-                  class="tm-link color-red mglr-5"
-                  @click="removeExportColumn(scope.row)"
-                >
-                  删除
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
+              </div>
+            </template>
+          </div>
         </div>
       </template>
     </div>
@@ -227,97 +276,105 @@ export default {
     },
   },
   methods: {
+    packChange() {},
     async init() {
       let ownerList = [];
       if (this.tool.isNotEmpty(this.ownerName)) {
         let owner = {
           ownerName: this.ownerName,
-          tables: null,
+          tableList: null,
+          tables: [],
         };
 
         if (this.tool.isNotEmpty(this.tableName)) {
-          let tableDetail = await this.toolboxWorker.getTableDetail(
-            owner.ownerName,
-            this.tableName
-          );
-          if (tableDetail == null) {
-            tableDetail = {
-              tableName: this.tableName,
-              columnList: [],
-            };
-          }
-          owner.tables = [];
-          owner.tables.push(tableDetail);
+          let table = {
+            tableName: this.tableName,
+            exportName: this.tableName,
+            columnList: null,
+            columnListLoading: false,
+            openColumnList: false,
+          };
+          owner.tableList = [];
+          owner.tableList.push(table);
         }
         ownerList.push(owner);
       } else {
         ownerList = await this.toolboxWorker.loadOwners();
+        ownerList = ownerList || [];
       }
-      // this.exportColumnList = [];
+      ownerList.forEach((owner) => {
+        owner.tableListLoading = false;
+        owner.exportName = owner.ownerName;
+      });
 
-      // if (this.tableDetail) {
-      //   this.tableDetail.columnList.forEach((column) => {
-      //     let exportColumn = {};
-      //     exportColumn.columnName = column.columnName;
-      //     exportColumn.exportName = column.columnName;
-      //     exportColumn.value = null;
-      //     this.exportColumnList.push(exportColumn);
-      //   });
-      // }
-
+      this.ownerList = ownerList;
+      ownerList.forEach((owner) => {
+        this.form.owners.push(owner);
+        this.initOwnerTables(owner);
+      });
       this.ready = true;
     },
-    async newExportTable(owner, table) {
-      let exportTable = {
-        tableName: null,
-        exportName: null,
-        columnList: [],
-        exportColumnList: [],
-      };
+    async initOwnerTables(owner) {
+      if (owner.tableList == null) {
+        owner.tableListLoading = true;
+        let tableList = await this.toolboxWorker.loadTables(owner.ownerName);
+        tableList.forEach((table) => {
+          table.exportName = table.tableName;
+          table.openColumnList = false;
+          table.columnListLoading = false;
+        });
+        owner.tableList = tableList;
+        owner.tableListLoading = false;
+      }
+      owner.tableList.forEach(async (table) => {
+        owner.tables.push(table);
+        await this.initOwnerTableColumns(owner, table);
+      });
+    },
+    async initOwnerTableColumns(owner, table) {
       if (table.columnList == null) {
+        table.columnListLoading = true;
         let detail = await this.toolboxWorker.getTableDetail(
           owner.ownerName,
           table.tableName
         );
+        let columnList = [];
         if (detail) {
-          Object.assign(table, detail);
+          columnList = detail.columnList || [];
         }
-        table.columnList = table.columnList || [];
+        columnList.forEach((column) => {
+          column.exportName = column.columnName;
+          column.value = null;
+        });
+        table.columnList = columnList;
+        table.columnListLoading = false;
       }
-      exportTable.columnList = table.columnList || [];
-      table.columnList.forEach((column) => {
-        let exportColumn = {};
-        exportColumn.columnName = column.columnName;
-        exportColumn.exportName = column.columnName;
-        exportColumn.value = null;
-        exportTable.exportColumnList.push(exportColumn);
-      });
     },
 
-    upExportColumn(exportColumn) {
-      this.tool.up(this, "exportColumnList", exportColumn);
+    upExportColumn(table, exportColumn) {
+      this.tool.up(table, "columnList", exportColumn);
     },
-    downExportColumn(exportColumn) {
-      this.tool.down(this, "exportColumnList", exportColumn);
+    downExportColumn(table, exportColumn) {
+      this.tool.down(table, "columnList", exportColumn);
     },
-    addExportColumn(exportColumn, after) {
+    addExportColumn(table, exportColumn, after) {
       exportColumn = exportColumn || {};
       exportColumn.columnName = exportColumn.columnName || "";
       exportColumn.exportName = exportColumn.exportName || "";
       exportColumn.value = exportColumn.value || "";
 
-      let appendIndex = this.exportColumnList.indexOf(after);
+      let appendIndex = table.columnList.indexOf(after);
       if (appendIndex < 0) {
-        appendIndex = this.exportColumnList.length;
+        appendIndex = table.columnList.length;
       } else {
         appendIndex++;
       }
-      this.exportColumnList.splice(appendIndex, 0, exportColumn);
+      table.columnList.splice(appendIndex, 0, exportColumn);
     },
-    removeExportColumn(exportColumn) {
-      let findIndex = this.exportColumnList.indexOf(exportColumn);
+    removeExportColumn(table, exportColumn) {
+      let findIndex = table.columnList.indexOf(exportColumn);
       if (findIndex >= 0) {
-        this.exportColumnList.splice(findIndex, 1);
+        table.columnList.splice(findIndex, 1);
       }
     },
     async toExport() {
