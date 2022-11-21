@@ -109,9 +109,31 @@ let validateFields = function (data, fields, all) {
 // new Promise((resolve, reject)=>{
 
 // })
+
+let execVIf = function (vIf, data) {
+    if (vIf == null || vIf == "") {
+        return true;
+    }
+    try {
+        var script = ``;
+        for (let key in data) {
+            script += `var ` + key + `= data['` + key + `'];`;
+        }
+        script += vIf;
+        var res = eval("" + script + "");
+        return res;
+    } catch (error) {
+        console.log(error);
+    }
+    return false;
+};
 let validateField = function (data, field) {
     return new Promise((resolve, reject) => {
         if (field.type == 'jsonView') {
+            resolve(true)
+            return;
+        }
+        if (!execVIf(field.vIf, data)) {
             resolve(true)
             return;
         }

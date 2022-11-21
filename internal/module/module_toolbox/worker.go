@@ -336,8 +336,17 @@ func databaseWorker() *Worker {
 				},
 				{Label: "Username", Name: "username", VIf: `type != 'sqlite'`},
 				{Label: "Password", Name: "password", Type: "password", VIf: `type != 'sqlite'`},
-				{Label: "Database", Name: "database", VIf: `type == 'mysql' || type == 'kingbase' || type == 'shentong'`},
-				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`},
+				{Label: "Database", Name: "database", VIf: `type == 'mysql'`},
+				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`,
+					Rules: []*form.Rule{
+						{Required: true, Message: "SID不能为空"},
+					},
+				},
+				{Label: "DbName", Name: "dbName", VIf: `type == 'kingbase' || type == 'shentong'`,
+					Rules: []*form.Rule{
+						{Required: true, Message: "dbName径不能为空"},
+					},
+				},
 				{Label: "数据库文件路径", Name: "databasePath", VIf: `type == 'sqlite'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库文件路径不能为空"},

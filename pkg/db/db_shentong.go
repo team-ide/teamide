@@ -10,7 +10,7 @@ import (
 func initShenTongDatabase() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			dsn := db_shentong.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+			dsn := db_shentong.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
 			db, err = db_shentong.Open(dsn)
 			return
 		},

@@ -67,7 +67,7 @@ func init() {
 	})
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			dsn := db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Database)
+			dsn := db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
 			db, err = db_kingbase_v8r6.Open(dsn)
 			return
 		},
@@ -105,6 +105,7 @@ type DatabaseConfig struct {
 	Host         string `json:"host,omitempty"`
 	Port         int    `json:"port,omitempty"`
 	Database     string `json:"database,omitempty"`
+	DbName       string `json:"dbName,omitempty"`
 	Username     string `json:"username,omitempty"`
 	Password     string `json:"password,omitempty"`
 	Sid          string `json:"sid,omitempty"`
