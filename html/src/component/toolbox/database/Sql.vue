@@ -9,8 +9,8 @@
           size="mini"
           inline
         >
-          <el-form-item label="数据库|模式">
-            <el-select v-model="form.ownerName" style="width: 150px">
+          <el-form-item label="数据库">
+            <el-select v-model="form.ownerName" style="width: 150px" filterable>
               <el-option value="" label="不选中库|模式"> </el-option>
               <el-option
                 v-for="(one, index) in owners"
@@ -24,15 +24,29 @@
           <el-form-item label="开启事务">
             <el-switch v-model="form.openTransaction"> </el-switch>
           </el-form-item>
-          <el-form-item label="忽略异常继续">
+          <el-form-item label="异常继续">
             <el-switch v-model="form.errorContinue"> </el-switch>
           </el-form-item>
-
-          <div class="tm-btn tm-btn-sm bg-green ft-13" @click="toExecuteSql">
+          <el-form-item label="用户名" title="可以指定执行用户">
+            <el-input v-model="form.execUsername" style="width: 80px">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="密码" title="可以指定执行用户密码">
+            <el-input
+              type="password"
+              v-model="form.execPassword"
+              style="width: 80px"
+            >
+            </el-input>
+          </el-form-item>
+          <div
+            class="mgt-2 tm-btn tm-btn-sm bg-green ft-13"
+            @click="toExecuteSql"
+          >
             执行
           </div>
           <div
-            class="tm-btn tm-btn-sm bg-green ft-13"
+            class="mgt-2 tm-btn tm-btn-sm bg-blue ft-13"
             @click="toExecuteSelectSql"
           >
             执行选中
@@ -147,6 +161,8 @@ export default {
         ownerName: null,
         openTransaction: true,
         errorContinue: false,
+        execUsername: null,
+        execPassword: null,
       },
       executeList: [],
     };

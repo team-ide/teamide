@@ -291,11 +291,11 @@ export default {
               type: "sql",
               ownerName: data.owner.ownerName,
               executeSQL:
-                "SELECT * FROM `" +
+                "SELECT * FROM " +
                 data.owner.ownerName +
-                "`.`" +
+                "." +
                 data.tableName +
-                "`;",
+                ";",
             };
             this.toolboxWorker.openTabByExtend(extend);
           },
@@ -306,30 +306,30 @@ export default {
             this.toTableUpdate(data);
           },
         });
-        menus.push({
-          text: "导出数据（SQL、Excel等）",
-          onClick: () => {
-            this.toExport(data);
-          },
-        });
-        menus.push({
-          text: "导入数据（策略、SQL、Excel等）",
-          onClick: () => {
-            this.toImport(data);
-          },
-        });
-        menus.push({
-          text: "清空数据",
-          onClick: () => {
-            this.toTableDataTrim(data);
-          },
-        });
       }
       if (data.isOwner || data.isTable) {
         menus.push({
           text: "查看DDL",
           onClick: () => {
             this.toShowDDL(data);
+          },
+        });
+        menus.push({
+          text: "导出",
+          onClick: () => {
+            this.toExport(data);
+          },
+        });
+        menus.push({
+          text: "导入",
+          onClick: () => {
+            this.toImport(data);
+          },
+        });
+        menus.push({
+          text: "同步",
+          onClick: () => {
+            this.toSync(data);
           },
         });
         menus.push({
@@ -343,6 +343,12 @@ export default {
             } else {
               this.tool.warn("复制失败，请允许访问剪贴板！");
             }
+          },
+        });
+        menus.push({
+          text: "清空数据",
+          onClick: () => {
+            this.toDataTrim(data);
           },
         });
         menus.push({
@@ -398,21 +404,24 @@ export default {
         })
         .catch((e) => {});
     },
-    toTableDataTrim(data) {
+    toDataTrim(data) {
       this.tool.stopEvent();
-      let msg =
-        "清空" +
-        "库[" +
-        data.owner.ownerName +
-        "]" +
-        "表[" +
-        data.tableName +
-        "]";
+      let msg = "清空";
+      if (data.isOwner) {
+        msg += "库[" + data.ownerName + "]";
+      } else if (data.isTable) {
+        msg +=
+          "库[" + data.owner.ownerName + "]" + "表[" + data.tableName + "]";
+      }
       msg += "数据，将无法恢复，确认清空?";
       this.tool
         .confirm(msg)
         .then(async () => {
-          await this.doTableDataTrim(data.owner.ownerName, data.tableName);
+          if (data.isOwner) {
+            await this.doOwnerDataTrim(data.ownerName);
+          } else if (data.isTable) {
+            await this.doTableDataTrim(data.owner.ownerName, data.tableName);
+          }
         })
         .catch((e) => {});
     },
@@ -504,25 +513,69 @@ export default {
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
-    async toExport(table) {
-      let ownerName = table.owner.ownerName;
+    async toExport(data) {
+      let ownerName = null;
+      let tableName = null;
+      if (data.isOwner) {
+        ownerName = data.ownerName;
+      } else if (data.isTable) {
+        ownerName = data.owner.ownerName;
+        tableName = data.tableName;
+      }
+      let name = "导出[" + ownerName + "]库";
+      if (tableName) {
+        name += "[" + tableName + "]表";
+      }
       let extend = {
-        name: "导出[" + ownerName + "]库表[" + table.tableName + "]数据",
-        title: "导出[" + ownerName + "]库表[" + table.tableName + "]数据",
+        name: name,
+        title: name,
         type: "export",
         ownerName: ownerName,
-        tableName: table.tableName,
+        tableName: tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
-    async toImport(table) {
-      let ownerName = table.owner.ownerName;
+    async toImport(data) {
+      let ownerName = null;
+      let tableName = null;
+      if (data.isOwner) {
+        ownerName = data.ownerName;
+      } else if (data.isTable) {
+        ownerName = data.owner.ownerName;
+        tableName = data.tableName;
+      }
+      let name = "导入[" + ownerName + "]库";
+      if (tableName) {
+        name += "[" + tableName + "]表";
+      }
       let extend = {
-        name: "导入[" + ownerName + "]库表[" + table.tableName + "]数据",
-        title: "导入[" + ownerName + "]库表[" + table.tableName + "]数据",
+        name: name,
+        title: name,
         type: "import",
         ownerName: ownerName,
-        tableName: table.tableName,
+        tableName: tableName,
+      };
+      this.toolboxWorker.openTabByExtend(extend);
+    },
+    async toSync(data) {
+      let ownerName = null;
+      let tableName = null;
+      if (data.isOwner) {
+        ownerName = data.ownerName;
+      } else if (data.isTable) {
+        ownerName = data.owner.ownerName;
+        tableName = data.tableName;
+      }
+      let name = "同步[" + ownerName + "]库";
+      if (tableName) {
+        name += "[" + tableName + "]表";
+      }
+      let extend = {
+        name: name,
+        title: name,
+        type: "sycn",
+        ownerName: ownerName,
+        tableName: tableName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
@@ -567,6 +620,17 @@ export default {
       this.tool.success("删除成功");
       return true;
     },
+    async doOwnerDataTrim(ownerName) {
+      let param = {
+        ownerName: ownerName,
+      };
+      let res = await this.toolboxWorker.work("ownerDataTrim", param);
+      if (res.code != 0) {
+        return false;
+      }
+      this.tool.success("清空成功");
+      return true;
+    },
     async doTableDataTrim(ownerName, tableName) {
       let param = {
         ownerName: ownerName,
@@ -600,6 +664,7 @@ export default {
   created() {},
   mounted() {
     this.toolboxWorker.getTableDetail = this.getTableDetail;
+    this.toolboxWorker.loadOwners = this.loadOwners;
     this.init();
   },
 };

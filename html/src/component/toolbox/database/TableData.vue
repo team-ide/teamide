@@ -621,14 +621,6 @@ export default {
       this.args = res.data.args || [];
       this.dataList_loading = false;
       let executeSql = this.sql || "";
-      executeSql = executeSql.replace(new RegExp("\\?", "g"), "{$v#-}");
-      this.args.forEach((v, i) => {
-        if (typeof v == "string") {
-          executeSql = executeSql.replace("{$v#-}", `'` + v + `'`);
-        } else {
-          executeSql = executeSql.replace("{$v#-}", v);
-        }
-      });
       this.executeSql = executeSql;
     },
     toSelectAll() {

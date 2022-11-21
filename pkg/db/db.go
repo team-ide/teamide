@@ -59,6 +59,9 @@ func init() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
 			dsn := db_dm.GetDSN(config.Username, config.Password, config.Host, config.Port)
+			if config.Schema != "" {
+				dsn += "&schema=" + config.Schema
+			}
 			db, err = db_dm.Open(dsn)
 			return
 		},
@@ -68,6 +71,9 @@ func init() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
 			dsn := db_kingbase_v8r6.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
+			if config.Schema != "" {
+				dsn += "&search_path=" + config.Schema
+			}
 			db, err = db_kingbase_v8r6.Open(dsn)
 			return
 		},
@@ -108,6 +114,7 @@ type DatabaseConfig struct {
 	DbName       string `json:"dbName,omitempty"`
 	Username     string `json:"username,omitempty"`
 	Password     string `json:"password,omitempty"`
+	Schema       string `json:"schema,omitempty"`
 	Sid          string `json:"sid,omitempty"`
 	MaxIdleConns int    `json:"maxIdleConns,omitempty"`
 	MaxOpenConns int    `json:"maxOpenConns,omitempty"`

@@ -1,13 +1,10 @@
 package db
 
 import (
-	"context"
-	"database/sql"
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
-	"strings"
 	"teamide/pkg/util"
 	"time"
 )
@@ -84,6 +81,21 @@ func (this_ *Service) OwnerCreate(param *Param, owner *dialect.OwnerModel) (crea
 
 func (this_ *Service) OwnerDelete(param *Param, ownerName string) (deleted bool, err error) {
 	deleted, err = worker.OwnerDelete(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName)
+	return
+}
+
+func (this_ *Service) OwnerDataTrim(param *Param, ownerName string) (err error) {
+	tables, err := worker.TablesSelect(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName)
+	if err != nil {
+		return
+	}
+	for _, table := range tables {
+		sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerNamePack(param.ParamModel, ownerName) + "." + this_.DatabaseWorker.TableNamePack(param.ParamModel, table.TableName)
+		_, err = worker.DoExec(this_.DatabaseWorker.db, sqlInfo, nil)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
@@ -279,7 +291,14 @@ type DataListResult struct {
 
 func (this_ *Service) TableData(param *Param, ownerName string, tableName string, columnList []*dialect.ColumnModel, whereList []*dialect.Where, orderList []*dialect.Order, pageSize int, pageNo int) (dataListResult DataListResult, err error) {
 
-	sql, values, err := this_.DatabaseWorker.Dialect.DataListSelectSql(param.ParamModel, ownerName, tableName, columnList, whereList, orderList)
+	param.AppendSqlValue = nil
+	selectSql, values, err := this_.DatabaseWorker.Dialect.DataListSelectSql(param.ParamModel, ownerName, tableName, columnList, whereList, orderList)
+	if err != nil {
+		return
+	}
+	param.AppendSqlValue = new(bool)
+	*param.AppendSqlValue = true
+	selectTextSql, _, err := this_.DatabaseWorker.Dialect.DataListSelectSql(param.ParamModel, ownerName, tableName, columnList, whereList, orderList)
 	if err != nil {
 		return
 	}
@@ -287,7 +306,7 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 	page := worker.NewPage()
 	page.PageSize = pageSize
 	page.PageNo = pageNo
-	listMap, err := this_.DatabaseWorker.QueryMapPage(sql, values, page)
+	listMap, err := this_.DatabaseWorker.QueryMapPage(selectSql, values, page)
 	if err != nil {
 		return
 	}
@@ -308,7 +327,7 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 			}
 		}
 	}
-	dataListResult.Sql = this_.DatabaseWorker.PackPageSql(sql, page.PageSize, page.PageNo)
+	dataListResult.Sql = this_.DatabaseWorker.PackPageSql(selectTextSql, page.PageSize, page.PageNo)
 	dataListResult.Args = values
 	dataListResult.Total = page.TotalCount
 	dataListResult.DataList = listMap
@@ -334,177 +353,15 @@ func (this_ *Service) GetTargetDialect(param *Param) (dia dialect.Dialect) {
 }
 
 func (this_ *Service) ExecuteSQL(param *Param, ownerName string, sqlContent string) (executeList []map[string]interface{}, errStr string, err error) {
-	sqlList := this_.GetTargetDialect(param).SqlSplit(sqlContent)
 
-	var executeData map[string]interface{}
-	var query func(query string, args ...any) (*sql.Rows, error)
-	var exec func(query string, args ...any) (sql.Result, error)
-	cxt := context.Background()
-	conn, err := this_.DatabaseWorker.db.Conn(cxt)
-	if err != nil {
-		util.Logger.Error("ExecuteSQL Conn error", zap.Error(err))
-		return
+	task := &executeTask{
+		config:       *this_.DatabaseWorker.config,
+		databaseType: this_.DatabaseWorker.databaseType,
+		dia:          this_.GetTargetDialect(param),
+		ownerName:    ownerName,
+		Param:        param,
 	}
-	switch this_.DatabaseWorker.databaseType.DialectName {
-	case "mysql":
-		if ownerName != "" {
-			_, err = conn.QueryContext(cxt, "USE `"+ownerName+"`")
-			if err != nil {
-				util.Logger.Error("ExecuteSQL USE `"+ownerName+"` error", zap.Error(err))
-				return
-			}
-		}
-	}
-	var hasError bool
-	if param.OpenTransaction {
-		var tx *sql.Tx
-		tx, err = conn.BeginTx(cxt, nil)
-		if err != nil {
-			util.Logger.Error("ExecuteSQL BeginTx error", zap.Error(err))
-			return
-		}
-		defer func() {
-			if hasError {
-				err = tx.Rollback()
-			} else {
-				err = tx.Commit()
-			}
-		}()
-		query = tx.Query
-		exec = tx.Exec
-	} else {
-		query = func(query string, args ...any) (*sql.Rows, error) {
-			return conn.QueryContext(cxt, query, args...)
-		}
-		exec = func(query string, args ...any) (sql.Result, error) {
-			return conn.ExecContext(cxt, query, args...)
-		}
-	}
-	for _, executeSql := range sqlList {
-		executeData, err = this_.execExecuteSQL(param, executeSql, query, exec)
-		executeList = append(executeList, executeData)
-		if err != nil {
-			util.Logger.Error("ExecuteSQL execExecuteSQL error", zap.Any("executeSql", executeSql), zap.Error(err))
-			errStr = err.Error()
-			hasError = true
-			if !param.ErrorContinue {
-				return
-			}
-			err = nil
-		}
-	}
-
-	return
-}
-
-func (this_ *Service) execExecuteSQL(param *Param, executeSql string,
-	query func(query string, args ...any) (*sql.Rows, error),
-	exec func(query string, args ...any) (sql.Result, error),
-) (executeData map[string]interface{}, err error) {
-
-	executeData = map[string]interface{}{}
-	var startTime = util.Now()
-	executeData["sql"] = executeSql
-	executeData["startTime"] = util.Format(startTime)
-
-	defer func() {
-		var endTime = time.Now()
-		executeData["endTime"] = util.Format(endTime)
-		executeData["isEnd"] = true
-		executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
-		if err != nil {
-			executeData["error"] = err.Error()
-			return
-		}
-	}()
-
-	str := strings.ToLower(executeSql)
-	if strings.HasPrefix(str, "select") ||
-		strings.HasPrefix(str, "show") {
-		executeData["isSelect"] = true
-		// 查询
-		var rows *sql.Rows
-		rows, err = query(executeSql)
-		if err != nil {
-			return
-		}
-		defer func() {
-			_ = rows.Close()
-		}()
-		var columnTypes []*sql.ColumnType
-		columnTypes, err = rows.ColumnTypes()
-		if err != nil {
-			return
-		}
-
-		var columnList []map[string]interface{}
-		if len(columnTypes) > 0 {
-			for _, columnType := range columnTypes {
-				column := map[string]interface{}{}
-				column["name"] = columnType.Name()
-				column["type"] = columnType.DatabaseTypeName()
-				columnList = append(columnList, column)
-			}
-		}
-		executeData["columnList"] = columnList
-		var dataList []map[string]interface{}
-		for rows.Next() {
-			cache := worker.GetSqlValueCache(columnTypes) //临时存储每行数据
-			err = rows.Scan(cache...)
-			if err != nil {
-				return
-			}
-			item := make(map[string]interface{})
-			for index, data := range cache {
-				name := columnTypes[index].Name()
-				switch tV := data.(type) {
-				case time.Time:
-					if tV.IsZero() {
-						item[name] = nil
-					} else {
-						item[name] = util.GetTimeTime(tV)
-					}
-				default:
-					item[name] = worker.GetSqlValue(columnTypes[index], data)
-				}
-			}
-			dataList = append(dataList, item)
-		}
-		executeData["dataList"] = dataList
-	} else if strings.HasPrefix(str, "insert") {
-		executeData["isInsert"] = true
-		var result sql.Result
-		result, err = exec(executeSql)
-		if err != nil {
-			return
-		}
-		executeData["rowsAffected"], _ = result.RowsAffected()
-	} else if strings.HasPrefix(str, "update") {
-		executeData["isUpdate"] = true
-		var result sql.Result
-		result, err = exec(executeSql)
-		if err != nil {
-			return
-		}
-		executeData["rowsAffected"], _ = result.RowsAffected()
-	} else if strings.HasPrefix(str, "delete") {
-		executeData["isDelete"] = true
-		var result sql.Result
-		result, err = exec(executeSql)
-		if err != nil {
-			return
-		}
-		executeData["rowsAffected"], _ = result.RowsAffected()
-	} else {
-		executeData["isExec"] = true
-		var result sql.Result
-		result, err = exec(executeSql)
-		if err != nil {
-			return
-		}
-		executeData["rowsAffected"], _ = result.RowsAffected()
-	}
-
+	executeList, errStr, err = task.run(sqlContent)
 	return
 }
 
@@ -515,4 +372,6 @@ type Param struct {
 	AppendOwnerName      bool   `json:"appendOwnerName"`
 	OpenTransaction      bool   `json:"openTransaction"`
 	ErrorContinue        bool   `json:"errorContinue"`
+	ExecUsername         string `json:"execUsername"`
+	ExecPassword         string `json:"execPassword"`
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-database-import">
+  <div class="toolbox-database-sync">
     <el-form
       class="pdt-10 pdlr-10"
       size="mini"
@@ -287,7 +287,7 @@ export default {
 </script>
 
 <style>
-.toolbox-database-import {
+.toolbox-database-sync {
   width: 100%;
   height: 100%;
 }

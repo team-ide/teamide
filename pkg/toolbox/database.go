@@ -50,6 +50,9 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 	if err != nil {
 		return
 	}
+	if param.ParamModel == nil {
+		param.ParamModel = &dialect.ParamModel{}
+	}
 
 	res = map[string]interface{}{}
 	switch work {
@@ -203,7 +206,6 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["sql"] = dataListRequest.Sql
-		res["args"] = dataListRequest.Args
 		res["total"] = dataListRequest.Total
 		res["dataList"] = dataListRequest.DataList
 

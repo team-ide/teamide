@@ -9,7 +9,7 @@
         </el-switch>
       </el-form-item>
     </el-form>
-    <div class="app-scroll-bar" style="height: calc(100% - 110px)">
+    <div class="app-scroll-bar" style="height: calc(100% - 130px)">
       <TableDetail
         class="pd-10"
         ref="TableDetail"
@@ -21,7 +21,7 @@
       ></TableDetail>
     </div>
     <div class="" v-if="error != null">
-      <div class="bg-red ft-12 pd-5">{{ error }}</div>
+      <div class="bg-red ft-12 mglr-10 pd-5">{{ error }}</div>
     </div>
     <div class="pd-10">
       <div class="tm-btn bg-grey ft-13 mgr-10" @click="toShowSql">查看SQL</div>
@@ -142,8 +142,8 @@ export default {
     },
     getFormData() {
       this.form.columnList.forEach((one) => {
-        one.length = Number(one.length);
-        one.decimal = Number(one.decimal);
+        one.columnLength = Number(one.columnLength);
+        one.columnDecimal = Number(one.columnDecimal);
       });
       let data = Object.assign({}, this.form);
       data.columnList = [];

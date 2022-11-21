@@ -57,6 +57,9 @@
               :toolboxWorker="toolboxWorker"
               :ownerName="item.extend.ownerName"
               :tableName="item.extend.tableName"
+              :owners="owners"
+              :columnTypeInfoList="columnTypeInfoList"
+              :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
             >
@@ -68,10 +71,27 @@
               :toolboxWorker="toolboxWorker"
               :ownerName="item.extend.ownerName"
               :tableName="item.extend.tableName"
+              :owners="owners"
+              :columnTypeInfoList="columnTypeInfoList"
+              :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
             >
             </Import>
+          </template>
+          <template v-if="item.extend.type == 'sync'">
+            <Sync
+              :source="source"
+              :toolboxWorker="toolboxWorker"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
+              :owners="owners"
+              :columnTypeInfoList="columnTypeInfoList"
+              :indexTypeInfoList="indexTypeInfoList"
+              :extend="item.extend"
+              :tabId="item.tabId"
+            >
+            </Sync>
           </template>
         </template>
       </WorkspaceSpans>
@@ -87,9 +107,10 @@ import Table from "./Table";
 import TableData from "./TableData";
 import Export from "./Export";
 import Import from "./Import";
+import Sync from "./Sync";
 
 export default {
-  components: { DDL, Sql, Table, TableData, Export, Import },
+  components: { DDL, Sql, Table, TableData, Export, Import, Sync },
   props: [
     "source",
     "toolboxWorker",

@@ -14,102 +14,73 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <template v-if="form.exportType == 'csv'">
-          <el-form-item label="文件后缀">
-            <el-input v-model="form.fileSuffix" style="width: 120px">
-            </el-input>
-          </el-form-item>
+        <template v-if="form.exportType == 'csv' || form.exportType == 'txt'">
           <el-form-item label="列分割字符">
-            <el-input v-model="form.cellSeparator" style="width: 120px">
-            </el-input>
+            <el-input v-model="form.separator" style="width: 100px"> </el-input>
+          </el-form-item>
+          <el-form-item label="换行符转换">
+            <el-input v-model="form.linefeed" style="width: 100px"> </el-input>
           </el-form-item>
         </template>
         <template v-if="form.exportType == 'sql'">
-          <el-form-item label="追加库名">
-            <el-switch v-model="form.appendDatabase"> </el-switch>
-          </el-form-item>
-          <template v-if="form.appendDatabase">
-            <el-form-item label="导出库名（导出SQL文件拼接的库名）">
-              <el-input v-model="form.exportDatabase" style="width: 120px">
-              </el-input>
-            </el-form-item>
-            <el-form-item label="库名包装">
-              <el-select
-                placeholder="不包装"
-                v-model="form.databasePackingCharacter"
-                style="width: 90px"
-              >
-                <el-option
-                  v-for="(one, index) in packingCharacters"
-                  :key="index"
-                  :value="one.value"
-                  :label="one.text"
-                >
-                </el-option>
-              </el-select>
-            </el-form-item>
-          </template>
-          <el-form-item label="导出表名（导出SQL文件拼接的表名）">
-            <el-input v-model="form.exportTable" style="width: 120px">
-            </el-input>
-          </el-form-item>
-          <el-form-item label="表名包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.tablePackingCharacter"
-              style="width: 90px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="字段包装">
-            <el-select
-              placeholder="不包装"
-              v-model="form.columnPackingCharacter"
-              style="width: 90px"
-            >
-              <el-option
-                v-for="(one, index) in packingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="字符值包装">
-            <el-select
-              v-model="form.stringPackingCharacter"
-              style="width: 60px"
-            >
-              <el-option
-                v-for="(one, index) in stringPackingCharacters"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="日期函数">
-            <el-select v-model="form.dateFunction" style="width: 120px">
-              <el-option
-                v-for="(one, index) in dateFunctions"
-                :key="index"
-                :value="one.value"
-                :label="one.text"
-              >
-              </el-option>
-            </el-select>
-          </el-form-item>
+          <Pack
+            :source="source"
+            :toolboxWorker="toolboxWorker"
+            :form="form"
+            :change="toLoad"
+          >
+          </Pack>
         </template>
       </el-form>
+
+      <template v-for="(owner, ownerIndex) in form.owners">
+        <div :key="ownerIndex">
+          <div>
+            <el-form ref="form" :model="form" size="mini" inline>
+              <el-form-item label="库名称">
+                <el-select v-model="owner.ownerName" style="width: 150px">
+                  <el-option
+                    v-for="(one, index) in ownerList"
+                    :key="index"
+                    :value="one.ownerName"
+                    :label="one.ownerName"
+                  >
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="导出名称">
+                <el-input v-model="owner.exportName" style="width: 150px">
+                </el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <template v-for="(table, tableIndex) in owner.tables">
+            <div :key="tableIndex">
+              <div>
+                <el-form ref="form" :model="form" size="mini" inline>
+                  <el-form-item label="库名称">
+                    <el-select v-model="table.tableName" style="width: 150px">
+                      <el-option
+                        v-for="(one, index) in owner.tableList"
+                        :key="index"
+                        :value="one.tableName"
+                        :label="one.tableName"
+                      >
+                      </el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item label="导出名称">
+                    <el-input v-model="table.exportName" style="width: 150px">
+                    </el-input>
+                  </el-form-item>
+                </el-form>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
       <template
         v-if="
           form.exportType == 'excel' ||
@@ -119,7 +90,9 @@
       >
         <div v-if="tableDetail != null" class="mgt-20">
           <div class="mgb-10">
-            <div class="tm-link color-grey" @click="addExportColumn">添加</div>
+            <div class="tm-link color-grey" @click="addExportColumn({})">
+              添加
+            </div>
           </div>
           <el-table
             :data="exportColumnList"
@@ -130,12 +103,12 @@
             <el-table-column label="字段">
               <template slot-scope="scope">
                 <div class="">
-                  <el-select v-model="scope.row.column" style="width: 100%">
+                  <el-select v-model="scope.row.columnName" style="width: 100%">
                     <el-option
                       v-for="(one, index) in tableDetail.columnList"
                       :key="index"
-                      :value="one.name"
-                      :label="one.name"
+                      :value="one.columnName"
+                      :label="one.columnName"
                     >
                     </el-option>
                   </el-select>
@@ -188,86 +161,29 @@
         </div>
       </template>
     </div>
-    <div class="pdlr-10 mgt-10" style="user-select: text">
-      <div class="ft-12">
-        <span class="color-grey">任务状态：</span>
-        <template v-if="task == null">
-          <span class="color-orange pdr-10">暂未开始</span>
-        </template>
-        <template v-else>
-          <template v-if="!task.isEnd">
-            <span class="color-orange pdr-10"> 处理中 </span>
-          </template>
-          <template v-if="task.isStop">
-            <span class="color-red pdr-10"> 已停止 </span>
-          </template>
-          <template v-else>
-            <span class="color-green pdr-10"> 执行完成 </span>
-          </template>
-          <span class="color-grey pdr-10">
-            开始：
-            <span>
-              {{
-                tool.formatDate(new Date(task.startTime), "yyyy-MM-dd hh:mm:ss")
-              }}
-            </span>
-          </span>
-          <template v-if="task.isEnd">
-            <span class="color-grey pdr-10">
-              结束：
-              <span>
-                {{
-                  tool.formatDate(new Date(task.endTime), "yyyy-MM-dd hh:mm:ss")
-                }}
-              </span>
-            </span>
-            <span class="color-grey pdr-10">
-              耗时： <span>{{ task.useTime }} 毫秒</span>
-            </span>
-          </template>
-          <template v-if="!task.isEnd">
-            <div @click="stopTask" class="color-red tm-link mgr-10">
-              停止执行
-            </div>
-          </template>
-          <div class="mgt-5">
-            <span class="color-grey pdr-10">
-              预计导出： <span>{{ task.dataCount }}</span>
-            </span>
-            <span class="color-grey pdr-10">
-              已准备数据： <span>{{ task.readyDataCount }}</span>
-            </span>
-            <span class="color-success pdr-10">
-              成功： <span>{{ task.successCount }}</span>
-            </span>
-            <span class="color-error pdr-10">
-              异常： <span>{{ task.errorCount }}</span>
-            </span>
-            <template v-if="task.isEnd">
-              <div class="tm-link color-green mgl-50" @click="toDownload">
-                下载
-              </div>
-            </template>
-          </div>
-          <template v-if="task.error != null">
-            <div class="mgt-5 color-error pdr-10">
-              异常： <span>{{ task.error }}</span>
-            </div>
-          </template>
-        </template>
-      </div>
-    </div>
+
     <div class="pdlr-10 mgt-10" v-if="taskKey == null">
-      <div class="tm-btn bg-green" @click="toExport">导出</div>
+      <div class="tm-btn bg-green" @click="toExport">开始</div>
     </div>
   </div>
 </template>
 
 
 <script>
+import Pack from "./Pack";
+
 export default {
-  components: {},
-  props: ["source", "toolboxWorker", "extend", "ownerName", "table"],
+  components: { Pack },
+  props: [
+    "source",
+    "toolboxWorker",
+    "extend",
+    "ownerName",
+    "tableName",
+    "owners",
+    "columnTypeInfoList",
+    "indexTypeInfoList",
+  ],
   data() {
     return {
       ready: false,
@@ -275,44 +191,25 @@ export default {
         { text: "SQL", value: "sql" },
         { text: "Excel", value: "excel" },
         { text: "CSV", value: "csv" },
-      ],
-      packingCharacters: [
-        { value: "", text: "不包装" },
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-        { value: "`", text: "`" },
-      ],
-      stringPackingCharacters: [
-        { value: "'", text: "'" },
-        { value: '"', text: '"' },
-      ],
-      dateFunctions: [
-        {
-          value: "",
-          text: "无函数",
-        },
-        {
-          value: "to_date('$value','yyyy-mm-dd hh24:mi:ss')",
-          text: "to_date('$value','yyyy-mm-dd hh24:mi:ss')",
-        },
-        {
-          value: "to_timestamp('$value','yyyy-mm-dd hh24:mi:ss')",
-          text: "to_timestamp('$value','yyyy-mm-dd hh24:mi:ss')",
-        },
+        { text: "Txt", value: "txt" },
       ],
       form: {
         exportType: "excel",
-        appendDatabase: true,
-        exportDatabase: "",
-        databasePackingCharacter: "`",
-        exportTable: "",
-        tablePackingCharacter: "`",
-        columnPackingCharacter: "`",
-        stringPackingCharacter: "'",
-        dateFunction: "",
-        cellSeparator: ",",
-        fileSuffix: "csv",
+        exportOwnerName: "",
+        exportTableName: "",
+
+        separator: "|:-:|",
+        linefeed: "|:-n-:|",
+        targetDatabaseType: "",
+        appendOwnerName: true,
+        ownerNamePackChar: "",
+        tableNamePackChar: "",
+        columnNamePackChar: "",
+        sqlValuePackChar: "",
+
+        owners: [],
       },
+      ownerList: [],
       exportColumnList: null,
       tableDetail: null,
       taskKey: null,
@@ -320,28 +217,53 @@ export default {
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    "form.exportType"() {
+      if (this.form.exportType == "txt") {
+        this.form.separator = "|:-:|";
+      } else if (this.form.exportType == "csv") {
+        this.form.separator = ",";
+      }
+    },
+  },
   methods: {
     async init() {
-      if (this.tool.isNotEmpty(this.table)) {
-        this.tableDetail = await this.toolboxWorker.getTableDetail(
-          this.ownerName,
-          this.table
-        );
-      }
-      this.form.exportDatabase = this.ownerName;
-      this.form.exportTable = this.table;
-      this.exportColumnList = [];
+      let ownerList = [];
+      if (this.tool.isNotEmpty(this.ownerName)) {
+        let owner = {
+          ownerName: this.ownerName,
+          tables: null,
+        };
 
-      if (this.tableDetail) {
-        this.tableDetail.columnList.forEach((column) => {
-          let exportColumn = {};
-          exportColumn.column = column.name;
-          exportColumn.exportName = column.name;
-          exportColumn.value = null;
-          this.exportColumnList.push(exportColumn);
-        });
+        if (this.tool.isNotEmpty(this.tableName)) {
+          let tableDetail = await this.toolboxWorker.getTableDetail(
+            owner.ownerName,
+            this.tableName
+          );
+          if (tableDetail == null) {
+            tableDetail = {
+              tableName: this.tableName,
+              columnList: [],
+            };
+          }
+          owner.tables = [];
+          owner.tables.push(tableDetail);
+        }
+        ownerList.push(owner);
+      } else {
+        ownerList = await this.toolboxWorker.loadOwners();
       }
+      // this.exportColumnList = [];
+
+      // if (this.tableDetail) {
+      //   this.tableDetail.columnList.forEach((column) => {
+      //     let exportColumn = {};
+      //     exportColumn.columnName = column.columnName;
+      //     exportColumn.exportName = column.columnName;
+      //     exportColumn.value = null;
+      //     this.exportColumnList.push(exportColumn);
+      //   });
+      // }
 
       this.ready = true;
     },
@@ -354,7 +276,7 @@ export default {
     },
     addExportColumn(exportColumn, after) {
       exportColumn = exportColumn || {};
-      exportColumn.column = exportColumn.column || "";
+      exportColumn.columnName = exportColumn.columnName || "";
       exportColumn.exportName = exportColumn.exportName || "";
       exportColumn.value = exportColumn.value || "";
 
@@ -384,8 +306,10 @@ export default {
     },
     async doExport() {
       let param = Object.assign({}, this.form);
+      this.toolboxWorker.formatParam(param);
+
       param.ownerName = this.ownerName;
-      param.table = this.table;
+      param.tableName = this.tableName;
 
       if (this.tableDetail) {
         param.columnList = this.tableDetail.columnList;
