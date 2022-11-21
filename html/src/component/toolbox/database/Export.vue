@@ -267,6 +267,32 @@ export default {
 
       this.ready = true;
     },
+    async newExportTable(owner, table) {
+      let exportTable = {
+        tableName: null,
+        exportName: null,
+        columnList: [],
+        exportColumnList: [],
+      };
+      if (table.columnList == null) {
+        let detail = await this.toolboxWorker.getTableDetail(
+          owner.ownerName,
+          table.tableName
+        );
+        if (detail) {
+          Object.assign(table, detail);
+        }
+        table.columnList = table.columnList || [];
+      }
+      exportTable.columnList = table.columnList || [];
+      table.columnList.forEach((column) => {
+        let exportColumn = {};
+        exportColumn.columnName = column.columnName;
+        exportColumn.exportName = column.columnName;
+        exportColumn.value = null;
+        exportTable.exportColumnList.push(exportColumn);
+      });
+    },
 
     upExportColumn(exportColumn) {
       this.tool.up(this, "exportColumnList", exportColumn);
