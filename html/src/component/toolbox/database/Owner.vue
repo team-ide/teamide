@@ -665,6 +665,7 @@ export default {
   mounted() {
     this.toolboxWorker.getTableDetail = this.getTableDetail;
     this.toolboxWorker.loadOwners = this.loadOwners;
+    this.toolboxWorker.loadTables = this.loadTables;
     this.init();
   },
 };
