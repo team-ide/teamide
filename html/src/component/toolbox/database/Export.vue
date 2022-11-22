@@ -2,7 +2,7 @@
   <div class="toolbox-database-export">
     <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
       <el-form ref="form" :model="form" size="mini" inline>
-        <el-form-item label="导出类型">
+        <el-form-item label="类型">
           <el-select v-model="form.exportType" style="width: 100px">
             <el-option
               v-for="(one, index) in exportTypes"
@@ -30,104 +30,145 @@
             :change="packChange"
           >
           </Pack>
+          <el-checkbox v-model="form.exportStruct">导出结构体 </el-checkbox>
+          <el-checkbox v-model="form.exportData">导出数据 </el-checkbox>
         </template>
+        <template v-if="form.exportData">
+          <el-checkbox v-model="form.exportBatchSql"
+            >导出批量插入语句
+          </el-checkbox>
+          <template v-if="form.exportBatchSql">
+            <el-form-item label="批量插入数量">
+              <el-input v-model="form.batchNumber" style="width: 60px">
+              </el-input>
+            </el-form-item>
+          </template>
+        </template>
+        <el-checkbox v-model="form.errorContinue"> 有错继续</el-checkbox>
       </el-form>
       <el-form ref="form" :model="form" size="mini" inline>
-        <el-form-item label="导出库">
-          <el-checkbox-group v-model="form.owners">
-            <el-checkbox
-              v-for="(owner, index) in ownerList"
-              :label="owner"
-              :key="index"
-            >
-              {{ owner.ownerName }}
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
+        <template v-if="ownerList == null || owners.length == 0">
+          <el-form-item label="所有库">
+            <div class="tm-link color-green mgr-5" @click="initOwners()">
+              自定义导出库
+            </div>
+          </el-form-item>
+        </template>
+        <template v-else>
+          <el-form-item label="选择库">
+            <el-checkbox-group v-model="owners">
+              <el-checkbox
+                v-for="(owner, index) in ownerList"
+                :label="owner"
+                :key="index"
+                :disabled="ownersReadonly"
+              >
+                {{ owner.ownerName }}
+              </el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </template>
       </el-form>
 
-      <template v-for="(owner, ownerIndex) in form.owners">
+      <template v-for="(owner, ownerIndex) in owners">
         <div :key="ownerIndex">
           <div>
             <el-form :model="form" size="mini" inline>
               <el-form-item label="库名称">
-                <el-select
+                <el-input
                   v-model="owner.ownerName"
                   style="width: 150px"
-                  filterable
+                  readonly=""
                 >
-                  <el-option
-                    v-for="(one, index) in ownerList"
-                    :key="index"
-                    :value="one.ownerName"
-                    :label="one.ownerName"
-                  >
-                  </el-option>
-                </el-select>
+                </el-input>
               </el-form-item>
-              <el-form-item label="导出名称">
+              <el-form-item :label="ownerExportNameLabel">
                 <el-input v-model="owner.exportName" style="width: 150px">
                 </el-input>
               </el-form-item>
             </el-form>
           </div>
-          <div class="pdl-20">
+          <div class="pdl-20" v-loading="owner.tableListLoading">
             <el-form :model="form" size="mini" inline>
-              <el-form-item label="导出表">
-                <el-checkbox-group v-model="owner.tables">
-                  <el-checkbox
-                    v-for="(table, index) in owner.tableList"
-                    :label="table"
-                    :key="index"
+              <template
+                v-if="owner.tableList == null || owner.tables.length == 0"
+              >
+                <el-form-item label="所有表">
+                  <div
+                    class="tm-link color-green mgr-5"
+                    @click="initOwnerTables(owner)"
                   >
-                    {{ table.tableName }}
-                  </el-checkbox>
-                </el-checkbox-group>
-              </el-form-item>
+                    自定义导出表
+                  </div>
+                </el-form-item>
+              </template>
+              <template v-else>
+                <el-form-item label="选择表">
+                  <el-checkbox-group v-model="owner.tables">
+                    <el-checkbox
+                      v-for="(table, index) in owner.tableList"
+                      :label="table"
+                      :key="index"
+                      :disabled="tablesReadonly"
+                    >
+                      {{ table.tableName }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+              </template>
             </el-form>
             <template v-for="(table, tableIndex) in owner.tables">
               <div :key="tableIndex">
-                <div>
+                <div v-loading="table.columnListLoading">
                   <el-form ref="form" :model="form" size="mini" inline>
                     <el-form-item label="表名称">
-                      <el-select
+                      <el-input
                         v-model="table.tableName"
                         style="width: 150px"
-                        filterable
+                        readonly=""
                       >
-                        <el-option
-                          v-for="(one, index) in owner.tableList"
-                          :key="index"
-                          :value="one.tableName"
-                          :label="one.tableName"
-                        >
-                        </el-option>
-                      </el-select>
+                      </el-input>
                     </el-form-item>
-                    <el-form-item label="导出名称">
+                    <el-form-item :label="tableExportNameLabel">
                       <el-input v-model="table.exportName" style="width: 150px">
                       </el-input>
                     </el-form-item>
-                    <div
-                      class="tm-link color-green mgr-5"
-                      @click="addExportColumn(table, {})"
+                    <template
+                      v-if="
+                        table.columnList == null || table.columnList.length == 0
+                      "
                     >
-                      添加字段
-                    </div>
-                    <div
-                      class="tm-link color-orange mgr-5"
-                      v-if="table.openColumnList"
-                      @click="table.openColumnList = false"
-                    >
-                      收起字段
-                    </div>
-                    <div
-                      class="tm-link color-orange mgr-5"
-                      v-if="!table.openColumnList"
-                      @click="table.openColumnList = true"
-                    >
-                      展开字段
-                    </div>
+                      <el-form-item label="所有字段">
+                        <div
+                          class="tm-link color-green mgr-5"
+                          @click="initOwnerTableColumns(owner, table)"
+                        >
+                          自定义导出字段
+                        </div>
+                      </el-form-item>
+                    </template>
+                    <template v-else>
+                      <div
+                        class="tm-link color-green mgr-5"
+                        @click="addExportColumn(table, {})"
+                      >
+                        添加字段
+                      </div>
+                      <div
+                        class="tm-link color-orange mgr-5"
+                        v-if="table.openColumnList"
+                        @click="table.openColumnList = false"
+                      >
+                        收起字段
+                      </div>
+                      <div
+                        class="tm-link color-orange mgr-5"
+                        v-if="!table.openColumnList"
+                        @click="table.openColumnList = true"
+                      >
+                        展开字段
+                      </div>
+                    </template>
                   </el-form>
                 </div>
                 <div v-if="table.openColumnList">
@@ -210,9 +251,81 @@
         </div>
       </template>
     </div>
-
-    <div class="pdlr-10 mgt-10" v-if="taskKey == null">
-      <div class="tm-btn bg-green" @click="toExport">开始</div>
+    <div class="mglr-10 mgt-10" style="user-select: text">
+      <div class="ft-12">
+        <span class="color-grey">任务状态：</span>
+        <template v-if="task == null">
+          <span class="color-orange pdr-10">暂未开始</span>
+        </template>
+        <template v-else>
+          <template v-if="!task.isEnd">
+            <span class="color-orange pdr-10"> 处理中 </span>
+          </template>
+          <template v-else-if="task.isStop">
+            <span class="color-red pdr-10"> 已停止 </span>
+          </template>
+          <template v-else>
+            <span class="color-green pdr-10"> 执行完成 </span>
+          </template>
+          <span class="color-grey pdr-10">
+            开始：
+            <span>
+              {{
+                tool.formatDate(new Date(task.startTime), "yyyy-MM-dd hh:mm:ss")
+              }}
+            </span>
+          </span>
+          <template v-if="task.isEnd">
+            <span class="color-grey pdr-10">
+              结束：
+              <span>
+                {{
+                  tool.formatDate(new Date(task.endTime), "yyyy-MM-dd hh:mm:ss")
+                }}
+              </span>
+            </span>
+            <span class="color-grey pdr-10">
+              耗时： <span>{{ task.useTime }} 毫秒</span>
+            </span>
+          </template>
+          <template v-if="!task.isEnd">
+            <div @click="stopTask()" class="color-red tm-link mgr-10">
+              停止执行
+            </div>
+          </template>
+          <div class="mgt-5">
+            <span class="color-grey pdr-10">
+              总数居： <span>{{ task.dataCount }}</span>
+            </span>
+            <span class="color-grey pdr-10">
+              已准备： <span>{{ task.dataReadyCount }}</span>
+            </span>
+            <span class="color-success pdr-10">
+              成功： <span>{{ task.dataSuccessCount }}</span>
+            </span>
+            <span class="color-error pdr-10">
+              异常： <span>{{ task.dataErrorCount }}</span>
+            </span>
+            <template v-if="task.isEnd">
+              <template
+                v-if="task.extend && tool.isNotEmpty(task.extend.downloadPath)"
+              >
+                <div @click="toDownload()" class="color-green tm-link mgr-10">
+                  下载
+                </div>
+              </template>
+            </template>
+          </div>
+          <template v-if="tool.isNotEmpty(task.error)">
+            <div class="mgt-5 color-error pdr-10">
+              异常： <span>{{ task.error }}</span>
+            </div>
+          </template>
+        </template>
+      </div>
+    </div>
+    <div class="pdlr-10 mgt-10" v-if="taskId == null">
+      <div class="tm-btn bg-green" @click="toDo">开始</div>
     </div>
   </div>
 </template>
@@ -229,7 +342,6 @@ export default {
     "extend",
     "ownerName",
     "tableName",
-    "owners",
     "columnTypeInfoList",
     "indexTypeInfoList",
   ],
@@ -243,9 +355,12 @@ export default {
         { text: "Txt", value: "txt" },
       ],
       form: {
-        exportType: "excel",
-        exportOwnerName: "",
-        exportTableName: "",
+        exportType: "sql",
+        exportStruct: true,
+        exportData: true,
+        exportBatchSql: true,
+        errorContinue: true,
+        batchNumber: 200,
 
         separator: "|:-:|",
         linefeed: "|:-n-:|",
@@ -255,20 +370,23 @@ export default {
         tableNamePackChar: "",
         columnNamePackChar: "",
         sqlValuePackChar: "",
-
-        owners: [],
       },
+      ownersReadonly: false,
+      tablesReadonly: false,
+      owners: [],
       ownerList: [],
       exportColumnList: null,
-      tableDetail: null,
-      taskKey: null,
+      ownerExportNameLabel: "导出后库名称",
+      tableExportNameLabel: "导出后表名称",
+      taskId: null,
       task: null,
     };
   },
   computed: {},
   watch: {
     "form.exportType"() {
-      if (this.form.exportType == "txt") {
+      if (this.form.exportType == "sql") {
+      } else if (this.form.exportType == "txt") {
         this.form.separator = "|:-:|";
       } else if (this.form.exportType == "csv") {
         this.form.separator = ",";
@@ -279,14 +397,20 @@ export default {
     packChange() {},
     async init() {
       let ownerList = [];
+      this.ownersReadonly = false;
+      this.tablesReadonly = false;
       if (this.tool.isNotEmpty(this.ownerName)) {
+        this.ownersReadonly = true;
         let owner = {
           ownerName: this.ownerName,
+          exportName: this.ownerName,
+          tableListLoading: false,
           tableList: null,
           tables: [],
         };
 
         if (this.tool.isNotEmpty(this.tableName)) {
+          this.tablesReadonly = true;
           let table = {
             tableName: this.tableName,
             exportName: this.tableName,
@@ -296,23 +420,31 @@ export default {
           };
           owner.tableList = [];
           owner.tableList.push(table);
+          owner.tables.push(table);
         }
         ownerList.push(owner);
+        this.owners.push(owner);
+        this.ownerList = ownerList;
       } else {
-        ownerList = await this.toolboxWorker.loadOwners();
-        ownerList = ownerList || [];
+        this.ownerList = null;
       }
-      ownerList.forEach((owner) => {
-        owner.tableListLoading = false;
-        owner.exportName = owner.ownerName;
-      });
 
-      this.ownerList = ownerList;
-      ownerList.forEach((owner) => {
-        this.form.owners.push(owner);
-        this.initOwnerTables(owner);
-      });
       this.ready = true;
+    },
+    async initOwners() {
+      if (this.ownerList == null) {
+        let ownerList = await this.toolboxWorker.loadOwners();
+        ownerList.forEach((owner) => {
+          owner.tableList = null;
+          owner.tables = [];
+          owner.tableListLoading = false;
+          owner.exportName = owner.ownerName;
+        });
+        this.ownerList = ownerList;
+        ownerList.forEach(async (owner) => {
+          this.owners.push(owner);
+        });
+      }
     },
     async initOwnerTables(owner) {
       if (owner.tableList == null) {
@@ -321,6 +453,7 @@ export default {
         tableList.forEach((table) => {
           table.exportName = table.tableName;
           table.openColumnList = false;
+          table.columnList = null;
           table.columnListLoading = false;
         });
         owner.tableList = tableList;
@@ -328,7 +461,6 @@ export default {
       }
       owner.tableList.forEach(async (table) => {
         owner.tables.push(table);
-        await this.initOwnerTableColumns(owner, table);
       });
     },
     async initOwnerTableColumns(owner, table) {
@@ -348,6 +480,7 @@ export default {
         });
         table.columnList = columnList;
         table.columnListLoading = false;
+        table.openColumnList = true;
       }
     },
 
@@ -377,63 +510,91 @@ export default {
         table.columnList.splice(findIndex, 1);
       }
     },
-    async toExport() {
+    async toDo() {
       if (this.task != null) {
-        this.cleanTask(this.task.key);
+        this.taskClean();
       }
       this.task = null;
-      this.taskKey = null;
-      let res = await this.doExport();
-      this.taskKey = res.taskKey;
-      this.loadStatus();
+      this.taskId = null;
+      let res = await this.start();
+      if (res) {
+        this.taskId = res.taskId;
+        this.loadStatus();
+      }
     },
-    async doExport() {
-      let param = Object.assign({}, this.form);
+    async start() {
+      let param = Object.assign({ owners: [] }, this.form);
       this.toolboxWorker.formatParam(param);
 
-      param.ownerName = this.ownerName;
-      param.tableName = this.tableName;
-
-      if (this.tableDetail) {
-        param.columnList = this.tableDetail.columnList;
-      }
-      param.exportColumnList = this.exportColumnList;
+      param.batchNumber = Number(param.batchNumber);
+      param.owners = [];
+      this.owners.forEach((owner) => {
+        let exportOwner = {
+          sourceName: owner.ownerName,
+          targetName: owner.exportName,
+          tables: [],
+        };
+        owner.tables.forEach((table) => {
+          let exportTable = {
+            sourceName: table.tableName,
+            targetName: table.exportName,
+            columns: [],
+          };
+          if (table.columnList) {
+            table.columnList.forEach((column) => {
+              let exportColumn = {
+                sourceName: column.columnName,
+                targetName: column.exportName,
+                value: column.value,
+              };
+              exportTable.columns.push(exportColumn);
+            });
+          }
+          exportOwner.tables.push(exportTable);
+        });
+        param.owners.push(exportOwner);
+      });
 
       let res = await this.toolboxWorker.work("export", param);
       res.data = res.data || {};
-      return res.data;
+      return res.data.task;
     },
     async loadStatus() {
-      if (this.taskKey == null) {
+      if (this.taskId == null) {
         return;
       }
       if (this.task != null && this.task.isEnd) {
-        this.taskKey = null;
-        this.cleanTask();
+        this.taskId = null;
+        return;
+      }
+      if (this.isDestroyed) {
         return;
       }
       let param = {
-        taskKey: this.taskKey,
+        taskId: this.taskId,
       };
-      let res = await this.toolboxWorker.work("exportStatus", param);
+      let res = await this.toolboxWorker.work("taskStatus", param);
       res.data = res.data || {};
       this.task = res.data.task;
       setTimeout(this.loadStatus, 100);
     },
     async stopTask() {
-      if (this.taskKey == null) {
+      if (this.task == null) {
         return;
       }
       let param = {
-        taskKey: this.taskKey,
+        taskId: this.task.taskId,
       };
-      await this.toolboxWorker.work("exportStop", param);
+      await this.toolboxWorker.work("taskStop", param);
     },
-    async cleanTask(taskKey) {
+    async taskClean() {
+      if (this.task == null) {
+        return;
+      }
       let param = {
-        taskKey: taskKey,
+        taskId: this.task.taskId,
       };
-      await this.toolboxWorker.work("exportClean", param);
+      await this.toolboxWorker.work("taskClean", param);
     },
     toDownload() {
       if (this.task == null) {
@@ -442,8 +603,8 @@ export default {
       }
       let url =
         this.source.api +
-        "api/toolbox/database/export/download?taskKey=" +
-        encodeURIComponent(this.task.key) +
+        "api/toolbox/database/download?taskId=" +
+        encodeURIComponent(this.task.taskId) +
         "&jwt=" +
         encodeURIComponent(this.tool.getJWT());
       window.location.href = url;
@@ -452,6 +613,10 @@ export default {
   created() {},
   mounted() {
     this.init();
+  },
+  beforeDestroy() {
+    this.isDestroyed = true;
+    this.taskClean();
   },
 };
 </script>

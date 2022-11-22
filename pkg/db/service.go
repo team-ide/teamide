@@ -1,10 +1,12 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
+	"os"
 	"teamide/pkg/util"
 	"time"
 )
@@ -365,6 +367,95 @@ func (this_ *Service) ExecuteSQL(param *Param, ownerName string, sqlContent stri
 	return
 }
 
+func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
+
+	var workDbs []*sql.DB
+	databaseType := this_.DatabaseWorker.databaseType
+	config := *this_.config
+	var username string
+	var password string
+	task_ := worker.NewTaskImport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect,
+		func(ownerName string) (workDb *sql.DB, err error) {
+			workDb, err = newWorkDb(databaseType, config, username, password, ownerName)
+			if err != nil {
+				util.Logger.Error("import new db pool error", zap.Error(err))
+				return
+			}
+			workDbs = append(workDbs, workDb)
+			return
+		},
+		importParam,
+	)
+	task_.Param = param.ParamModel
+
+	go func() {
+
+		defer func() {
+			for _, workDb := range workDbs {
+				_ = workDb.Close()
+			}
+		}()
+
+		err = task_.Start()
+		if err != nil {
+			return
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	task = task_.Task
+	if err != nil {
+		worker.ClearTask(task.TaskId)
+		task = nil
+		return
+	}
+	return
+}
+
+func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportParam) (task *worker.Task, err error) {
+	downloadPath := "export/" + util.UUID()
+	exportParam.Dir, err = util.GetTempDir()
+	if err != nil {
+		return
+	}
+	exportParam.Dir += downloadPath
+	exportParam.DataSourceType = worker.GetDataSource(param.ExportType)
+	exportParam.OnProgress = func(progress *worker.TaskProgress) {
+		util.Logger.Info("export task on progress", zap.Any("progress", progress))
+	}
+
+	targetDialect := this_.GetTargetDialect(param)
+	task_ := worker.NewTaskExport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, targetDialect, exportParam)
+	task_.Param = param.ParamModel
+	task_.Extend = map[string]interface{}{}
+	go func() {
+		defer func() {
+			if err != nil {
+				_ = os.RemoveAll(exportParam.Dir)
+				return
+			}
+			err = util.Zip(exportParam.Dir, exportParam.Dir+".zip")
+			if err != nil {
+				return
+			}
+			task_.Extend["dirPath"] = exportParam.Dir
+			task_.Extend["zipPath"] = exportParam.Dir + ".zip"
+			task_.Extend["downloadPath"] = downloadPath + ".zip"
+		}()
+		err = task_.Start()
+		if err != nil {
+			return
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	task = task_.Task
+	if err != nil {
+		worker.ClearTask(task.TaskId)
+		task = nil
+		return
+	}
+	return
+}
+
 type Param struct {
 	*dialect.ParamModel
 	TargetDatabaseType   string `json:"targetDatabaseType"`
@@ -374,4 +465,5 @@ type Param struct {
 	ErrorContinue        bool   `json:"errorContinue"`
 	ExecUsername         string `json:"execUsername"`
 	ExecPassword         string `json:"execPassword"`
+	ExportType           string `json:"exportType"`
 }

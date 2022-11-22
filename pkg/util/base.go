@@ -88,7 +88,7 @@ func GetTempDir() (dir string, err error) {
 		dir = TempDir
 		return
 	}
-	dir, err = ioutil.TempDir("toolbox/temp", "temp")
+	dir, err = ioutil.TempDir("teamide/temp", "temp")
 	return
 }
 

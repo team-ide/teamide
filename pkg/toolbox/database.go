@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
+	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
+	"os"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 )
@@ -12,7 +14,7 @@ import (
 type DatabaseBaseRequest struct {
 	OwnerName    string                 `json:"ownerName"`
 	TableName    string                 `json:"tableName"`
-	TaskKey      string                 `json:"taskKey"`
+	TaskId       string                 `json:"taskId"`
 	ExecuteSQL   string                 `json:"executeSQL"`
 	ColumnList   []*dialect.ColumnModel `json:"columnList"`
 	Wheres       []*dialect.Where       `json:"wheres"`
@@ -239,27 +241,57 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 		break
 	case "import":
+		var importParam = &worker.TaskImportParam{}
+		err = json.Unmarshal(dataBS, importParam)
+		if err != nil {
+			return
+		}
 
-		break
-	case "importStatus":
-
-		break
-	case "importStop":
-
-		break
-	case "importClean":
-
+		var task *worker.Task
+		task, err = service.StartImport(param, importParam)
+		if err != nil {
+			return
+		}
+		res["task"] = task
 		break
 	case "export":
+		var exportParam = &worker.TaskExportParam{}
+		err = json.Unmarshal(dataBS, exportParam)
+		if err != nil {
+			return
+		}
+
+		var task *worker.Task
+		task, err = service.StartExport(param, exportParam)
+		if err != nil {
+			return
+		}
+		res["task"] = task
 
 		break
-	case "exportStatus":
+	case "sync":
 
 		break
-	case "exportStop":
-
+	case "taskStatus":
+		task := worker.GetTask(request.TaskId)
+		res["task"] = task
 		break
-	case "exportClean":
+	case "taskStop":
+		worker.StopTask(request.TaskId)
+		break
+	case "taskClean":
+		task := worker.GetTask(request.TaskId)
+		if task != nil {
+			if task.Extend != nil {
+				if task.Extend["dirPath"] != "" {
+					_ = os.RemoveAll(task.Extend["dirPath"].(string))
+				}
+				if task.Extend["zipPath"] != "" {
+					_ = os.Remove(task.Extend["zipPath"].(string))
+				}
+			}
+		}
+		worker.ClearTask(request.TaskId)
 		break
 	}
 	return

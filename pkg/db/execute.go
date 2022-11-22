@@ -19,29 +19,33 @@ type executeTask struct {
 	ownerName string
 }
 
+func newWorkDb(databaseType *DatabaseType, config DatabaseConfig, username string, password string, ownerName string) (workDb *sql.DB, err error) {
+	config.MaxIdleConns = 2
+	config.MaxIdleConns = 2
+	if username != "" {
+		config.Username = username
+	}
+	if password != "" {
+		config.Password = password
+	}
+	switch databaseType.DialectName {
+	case "mysql":
+		config.Database = ownerName
+		break
+	default:
+		config.Schema = ownerName
+		break
+	}
+	workDb, err = databaseType.newDb(&config)
+	return
+}
+
 func (this_ *executeTask) run(sqlContent string) (executeList []map[string]interface{}, errStr string, err error) {
 	var executeData map[string]interface{}
 	var query func(query string, args ...any) (*sql.Rows, error)
 	var exec func(query string, args ...any) (sql.Result, error)
 
-	config := this_.config
-	config.MaxIdleConns = 2
-	config.MaxIdleConns = 2
-	if this_.ExecUsername != "" {
-		config.Username = this_.ExecUsername
-	}
-	if this_.ExecPassword != "" {
-		config.Password = this_.ExecPassword
-	}
-	switch this_.databaseType.DialectName {
-	case "mysql":
-		config.Database = this_.ownerName
-		break
-	default:
-		config.Schema = this_.ownerName
-		break
-	}
-	workDb, err := this_.databaseType.newDb(&config)
+	workDb, err := newWorkDb(this_.databaseType, this_.config, this_.ExecUsername, this_.ExecPassword, this_.ownerName)
 	if err != nil {
 		util.Logger.Error("ExecuteSQL new db pool error", zap.Error(err))
 		return
@@ -95,7 +99,7 @@ func (this_ *executeTask) run(sqlContent string) (executeList []map[string]inter
 		exec = tx.Exec
 	} else {
 		query = func(query string, args ...any) (*sql.Rows, error) {
-			return workDb.QueryContext(cxt, query, args...)
+			return conn.QueryContext(cxt, query, args...)
 		}
 		exec = func(query string, args ...any) (sql.Result, error) {
 			return conn.ExecContext(cxt, query, args...)
