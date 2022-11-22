@@ -76,14 +76,14 @@
             <el-form :model="form" size="mini" inline>
               <el-form-item label="库名称">
                 <el-input
-                  v-model="owner.ownerName"
+                  v-model="owner.sourceName"
                   style="width: 150px"
                   readonly=""
                 >
                 </el-input>
               </el-form-item>
               <el-form-item :label="ownerExportNameLabel">
-                <el-input v-model="owner.exportName" style="width: 150px">
+                <el-input v-model="owner.targetName" style="width: 150px">
                 </el-input>
               </el-form-item>
             </el-form>
@@ -123,14 +123,14 @@
                   <el-form ref="form" :model="form" size="mini" inline>
                     <el-form-item label="表名称">
                       <el-input
-                        v-model="table.tableName"
+                        v-model="table.sourceName"
                         style="width: 150px"
                         readonly=""
                       >
                       </el-input>
                     </el-form-item>
                     <el-form-item :label="tableExportNameLabel">
-                      <el-input v-model="table.exportName" style="width: 150px">
+                      <el-input v-model="table.targetName" style="width: 150px">
                       </el-input>
                     </el-form-item>
                     <template
@@ -181,18 +181,10 @@
                     <el-table-column label="字段">
                       <template slot-scope="scope">
                         <div class="">
-                          <el-select
-                            v-model="scope.row.columnName"
-                            style="width: 100%"
-                          >
-                            <el-option
-                              v-for="(one, index) in table.columnList"
-                              :key="index"
-                              :value="one.columnName"
-                              :label="one.columnName"
-                            >
-                            </el-option>
-                          </el-select>
+                          <el-input
+                            v-model="scope.row.sourceName"
+                            type="text"
+                          />
                         </div>
                       </template>
                     </el-table-column>
@@ -200,7 +192,7 @@
                       <template slot-scope="scope">
                         <div class="">
                           <el-input
-                            v-model="scope.row.exportName"
+                            v-model="scope.row.targetName"
                             type="text"
                           />
                         </div>
@@ -436,7 +428,8 @@ export default {
         this.ownersReadonly = true;
         let owner = {
           ownerName: this.ownerName,
-          exportName: this.ownerName,
+          sourceName: this.ownerName,
+          targetName: this.ownerName,
           tableListLoading: false,
           tableList: null,
           tables: [],
@@ -446,7 +439,8 @@ export default {
           this.tablesReadonly = true;
           let table = {
             tableName: this.tableName,
-            exportName: this.tableName,
+            sourceName: this.tableName,
+            targetName: this.tableName,
             columnList: null,
             columnListLoading: false,
             openColumnList: false,
@@ -471,7 +465,8 @@ export default {
           owner.tableList = null;
           owner.tables = [];
           owner.tableListLoading = false;
-          owner.exportName = owner.ownerName;
+          owner.sourceName = owner.ownerName;
+          owner.targetName = owner.ownerName;
         });
         this.ownerList = ownerList;
         ownerList.forEach(async (owner) => {
@@ -484,7 +479,8 @@ export default {
         owner.tableListLoading = true;
         let tableList = await this.toolboxWorker.loadTables(owner.ownerName);
         tableList.forEach((table) => {
-          table.exportName = table.tableName;
+          table.sourceName = table.tableName;
+          table.targetName = table.tableName;
           table.openColumnList = false;
           table.columnList = null;
           table.columnListLoading = false;
@@ -508,7 +504,8 @@ export default {
           columnList = detail.columnList || [];
         }
         columnList.forEach((column) => {
-          column.exportName = column.columnName;
+          column.sourceName = column.columnName;
+          column.targetName = column.columnName;
           column.value = null;
         });
         table.columnList = columnList;
@@ -525,8 +522,8 @@ export default {
     },
     addExportColumn(table, exportColumn, after) {
       exportColumn = exportColumn || {};
-      exportColumn.columnName = exportColumn.columnName || "";
-      exportColumn.exportName = exportColumn.exportName || "";
+      exportColumn.sourceName = exportColumn.sourceName || "";
+      exportColumn.targetName = exportColumn.targetName || "";
       exportColumn.value = exportColumn.value || "";
 
       let appendIndex = table.columnList.indexOf(after);
@@ -563,21 +560,21 @@ export default {
       param.owners = [];
       this.owners.forEach((owner) => {
         let exportOwner = {
-          sourceName: owner.ownerName,
-          targetName: owner.exportName,
+          sourceName: owner.sourceName,
+          targetName: owner.targetName,
           tables: [],
         };
         owner.tables.forEach((table) => {
           let exportTable = {
-            sourceName: table.tableName,
-            targetName: table.exportName,
+            sourceName: table.sourceName,
+            targetName: table.targetName,
             columns: [],
           };
           if (table.columnList) {
             table.columnList.forEach((column) => {
               let exportColumn = {
-                sourceName: column.columnName,
-                targetName: column.exportName,
+                sourceName: column.sourceName,
+                targetName: column.targetName,
                 value: column.value,
               };
               exportTable.columns.push(exportColumn);
