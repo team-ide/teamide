@@ -369,7 +369,7 @@ func (this_ *Service) ExecuteSQL(param *Param, ownerName string, sqlContent stri
 
 func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
 
-	importParam.DataSourceType = worker.GetDataSource(param.ExportType)
+	importParam.DataSourceType = worker.GetDataSource(param.ImportType)
 	importParam.OnProgress = func(progress *worker.TaskProgress) {
 		util.Logger.Info("import task on progress", zap.Any("progress", progress))
 	}
@@ -470,4 +470,5 @@ type Param struct {
 	ExecUsername         string `json:"execUsername"`
 	ExecPassword         string `json:"execPassword"`
 	ExportType           string `json:"exportType"`
+	ImportType           string `json:"importType"`
 }
