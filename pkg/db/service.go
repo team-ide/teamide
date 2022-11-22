@@ -369,6 +369,10 @@ func (this_ *Service) ExecuteSQL(param *Param, ownerName string, sqlContent stri
 
 func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
 
+	importParam.DataSourceType = worker.GetDataSource(param.ExportType)
+	importParam.OnProgress = func(progress *worker.TaskProgress) {
+		util.Logger.Info("import task on progress", zap.Any("progress", progress))
+	}
 	var workDbs []*sql.DB
 	databaseType := this_.DatabaseWorker.databaseType
 	config := *this_.config
@@ -402,12 +406,11 @@ func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportPa
 		}
 	}()
 	time.Sleep(time.Millisecond * 100)
-	task = task_.Task
 	if err != nil {
-		worker.ClearTask(task.TaskId)
-		task = nil
+		worker.ClearTask(task_.TaskId)
 		return
 	}
+	task = task_.Task
 	return
 }
 
@@ -426,7 +429,9 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 	targetDialect := this_.GetTargetDialect(param)
 	task_ := worker.NewTaskExport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, targetDialect, exportParam)
 	task_.Param = param.ParamModel
-	task_.Extend = map[string]interface{}{}
+	task_.Extend = map[string]interface{}{
+		"downloadPath": "",
+	}
 	go func() {
 		defer func() {
 			if err != nil {
@@ -447,12 +452,11 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 		}
 	}()
 	time.Sleep(time.Millisecond * 100)
-	task = task_.Task
 	if err != nil {
-		worker.ClearTask(task.TaskId)
-		task = nil
+		worker.ClearTask(task_.TaskId)
 		return
 	}
+	task = task_.Task
 	return
 }
 
