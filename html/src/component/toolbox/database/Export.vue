@@ -295,16 +295,46 @@
           </template>
           <div class="mgt-5">
             <span class="color-grey pdr-10">
-              总数居： <span>{{ task.dataCount }}</span>
+              库 总数/成功/失败：
+              <span>
+                {{ task.ownerCount }}
+                /
+                <span class="color-green">
+                  {{ task.ownerSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.ownerErrorCount }}
+                </span>
+              </span>
             </span>
             <span class="color-grey pdr-10">
-              已准备： <span>{{ task.dataReadyCount }}</span>
+              表 总数/成功/失败：
+              <span>
+                {{ task.tableCount }}
+                /
+                <span class="color-green">
+                  {{ task.tableSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.tableErrorCount }}
+                </span>
+              </span>
             </span>
-            <span class="color-success pdr-10">
-              成功： <span>{{ task.dataSuccessCount }}</span>
-            </span>
-            <span class="color-error pdr-10">
-              异常： <span>{{ task.dataErrorCount }}</span>
+            <span class="color-grey pdr-10">
+              数据 总数/成功/失败：
+              <span>
+                {{ task.dataCount }}
+                /
+                <span class="color-green">
+                  {{ task.dataSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.dataErrorCount }}
+                </span>
+              </span>
             </span>
             <template v-if="task.isEnd">
               <template
@@ -314,6 +344,9 @@
                   下载
                 </div>
               </template>
+              <div @click="taskClean()" class="color-orange tm-link mgr-10">
+                删除
+              </div>
             </template>
           </div>
           <template v-if="tool.isNotEmpty(task.error)">
@@ -594,6 +627,8 @@ export default {
       let param = {
         taskId: this.task.taskId,
       };
+      this.task = null;
+      this.taskId = null;
       await this.toolboxWorker.work("taskClean", param);
     },
     toDownload() {
