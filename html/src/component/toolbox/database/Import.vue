@@ -66,9 +66,28 @@
                 <el-input v-model="owner.name" style="width: 150px" readonly="">
                 </el-input>
               </el-form-item>
-              <el-form-item label="文件路径">
-                <el-input v-model="owner.path" style="width: 150px"> </el-input>
-              </el-form-item>
+              <template v-if="form.importType == 'sql'">
+                <el-form-item label="文件路径">
+                  <el-input
+                    v-model="owner.path"
+                    style="width: 300px"
+                    readonly=""
+                  >
+                  </el-input>
+                  <el-upload
+                    class="toolbox-database-import-upload-file"
+                    :action="source.api + 'upload'"
+                    :limit="1"
+                    :data="{ place: 'other' }"
+                    :headers="{ JWT: tool.getJWT() }"
+                    name="file"
+                    :on-success="owner.onFileUpload"
+                    :show-file-list="false"
+                  >
+                    <div class="tm-link color-teal-8">点击上传</div>
+                  </el-upload>
+                </el-form-item>
+              </template>
             </el-form>
           </div>
           <div class="pdl-20" v-loading="owner.tableListLoading">
@@ -111,8 +130,24 @@
                       </el-input>
                     </el-form-item>
                     <el-form-item label="文件路径">
-                      <el-input v-model="table.path" style="width: 150px">
+                      <el-input
+                        v-model="table.path"
+                        style="width: 300px"
+                        readonly
+                      >
                       </el-input>
+                      <el-upload
+                        class="toolbox-database-import-upload-file"
+                        :action="source.api + 'upload'"
+                        :limit="1"
+                        :data="{ place: 'other' }"
+                        :headers="{ JWT: tool.getJWT() }"
+                        name="file"
+                        :on-success="table.onFileUpload"
+                        :show-file-list="false"
+                      >
+                        <div class="tm-link color-teal-8">点击上传</div>
+                      </el-upload>
                     </el-form-item>
                     <template v-if="table.columnList == null">
                       <el-form-item label="字段未加载">
@@ -387,6 +422,9 @@ export default {
           tableList: null,
           tables: [],
         };
+        owner.onFileUpload = (response) => {
+          this.onFileUpload(owner, response);
+        };
 
         if (this.tool.isNotEmpty(this.tableName)) {
           this.tablesReadonly = true;
@@ -397,6 +435,9 @@ export default {
             columnList: null,
             columnListLoading: false,
             openColumnList: false,
+          };
+          table.onFileUpload = (response) => {
+            this.onFileUpload(table, response);
           };
           owner.tableList = [];
           owner.tableList.push(table);
@@ -420,11 +461,12 @@ export default {
           owner.tableListLoading = false;
           owner.name = owner.ownerName;
           owner.path = "";
+
+          owner.onFileUpload = (response) => {
+            this.onFileUpload(owner, response);
+          };
         });
         this.ownerList = ownerList;
-        ownerList.forEach(async (owner) => {
-          this.owners.push(owner);
-        });
       }
     },
     async initOwnerTables(owner) {
@@ -437,13 +479,14 @@ export default {
           table.openColumnList = false;
           table.columnList = null;
           table.columnListLoading = false;
+
+          table.onFileUpload = (response) => {
+            this.onFileUpload(table, response);
+          };
         });
         owner.tableList = tableList;
         owner.tableListLoading = false;
       }
-      owner.tableList.forEach(async (table) => {
-        owner.tables.push(table);
-      });
     },
     async initOwnerTableColumns(owner, table) {
       if (table.columnList == null) {
@@ -492,6 +535,13 @@ export default {
       if (findIndex >= 0) {
         table.columnList.splice(findIndex, 1);
       }
+    },
+    onFileUpload(obj, response) {
+      if (response.code != 0) {
+        this.tool.error(response.msg);
+        return false;
+      }
+      obj.path = response.data.files[0].path;
     },
     async toDo() {
       if (this.task != null) {

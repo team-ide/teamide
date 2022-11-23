@@ -32,23 +32,23 @@
           </Pack>
           <el-checkbox v-model="form.exportStruct">导出结构体 </el-checkbox>
           <el-checkbox v-model="form.exportData">导出数据 </el-checkbox>
-        </template>
-        <template v-if="form.exportData">
-          <el-checkbox v-model="form.exportBatchSql"
-            >导出批量插入语句
-          </el-checkbox>
-          <template v-if="form.exportBatchSql">
-            <el-form-item label="批量插入数量">
-              <el-input v-model="form.batchNumber" style="width: 60px">
-              </el-input>
-            </el-form-item>
+          <template v-if="form.exportData">
+            <el-checkbox v-model="form.exportBatchSql"
+              >导出批量插入语句
+            </el-checkbox>
+            <template v-if="form.exportBatchSql">
+              <el-form-item label="批量插入数量">
+                <el-input v-model="form.batchNumber" style="width: 60px">
+                </el-input>
+              </el-form-item>
+            </template>
           </template>
         </template>
         <el-checkbox v-model="form.errorContinue"> 有错继续</el-checkbox>
       </el-form>
       <el-form ref="form" :model="form" size="mini" inline>
         <template v-if="ownerList == null || owners.length == 0">
-          <el-form-item label="所有库">
+          <el-form-item label="导出所有库">
             <div class="tm-link color-green mgr-5" @click="initOwners()">
               自定义导出库
             </div>
@@ -93,7 +93,7 @@
               <template
                 v-if="owner.tableList == null || owner.tables.length == 0"
               >
-                <el-form-item label="所有表">
+                <el-form-item label="导出所有表">
                   <div
                     class="tm-link color-green mgr-5"
                     @click="initOwnerTables(owner)"
@@ -138,7 +138,7 @@
                         table.columnList == null || table.columnList.length == 0
                       "
                     >
-                      <el-form-item label="所有字段">
+                      <el-form-item label="导出所有字段">
                         <div
                           class="tm-link color-green mgr-5"
                           @click="initOwnerTableColumns(owner, table)"
@@ -411,7 +411,14 @@ export default {
   watch: {
     "form.exportType"() {
       if (this.form.exportType == "sql") {
-      } else if (this.form.exportType == "txt") {
+        this.exportData = true;
+        this.exportStruct = true;
+      } else {
+        this.exportData = true;
+        this.exportStruct = false;
+      }
+
+      if (this.form.exportType == "txt") {
         this.form.separator = "|:-:|";
       } else if (this.form.exportType == "csv") {
         this.form.separator = ",";

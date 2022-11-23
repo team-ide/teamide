@@ -51,7 +51,6 @@
                 </a>
               </div>
               <el-upload
-                class="upload-file"
                 :action="source.api + 'upload'"
                 :limit="1"
                 :data="{ place: 'other' }"

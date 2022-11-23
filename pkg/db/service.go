@@ -367,7 +367,21 @@ func (this_ *Service) ExecuteSQL(param *Param, ownerName string, sqlContent stri
 	return
 }
 
+var (
+	FileUploadDir string
+)
+
 func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
+	for _, owner := range importParam.Owners {
+		if owner.Path != "" {
+			owner.Path = FileUploadDir + owner.Path
+		}
+		for _, table := range owner.Tables {
+			if table.Path != "" {
+				table.Path = FileUploadDir + table.Path
+			}
+		}
+	}
 
 	importParam.DataSourceType = worker.GetDataSource(param.ImportType)
 	importParam.OnProgress = func(progress *worker.TaskProgress) {

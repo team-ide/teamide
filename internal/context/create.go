@@ -223,6 +223,8 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		return
 	}
 
+	db.FileUploadDir = this_.GetFilesDir()
+
 	initServerWebsocket()
 
 	return
