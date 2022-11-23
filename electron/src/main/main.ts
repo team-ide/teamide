@@ -220,12 +220,24 @@ const createWindow = async () => {
             return
           }
           log.info("exePath:" + exePath)
+          var options = {
+            cwd: getRootPath(""),
+            PATH: "",
+            LD_LIBRARY_PATH: "",
+          };
+          const os = require('os');
+          if (os.type() == 'Windows_NT') {
+            //windows
+            options.PATH = process.env.PATH + ";" + getRootPath("") + "/lib";
+            options.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH + ";" + getRootPath("") + "/lib";
+          } else {
+            options.PATH = process.env.PATH + ":" + getRootPath("") + "/lib";
+            options.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH + ":" + getRootPath("") + "/lib";
+          }
           serverProcess = child_process.spawn(
             exePath,
             ["--isElectron"],
-            {
-              cwd: getRootPath(""),
-            },
+            options,
           );
         }
         serverProcess.stdout.on('data', (data: any) => {

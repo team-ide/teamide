@@ -175,6 +175,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
+          cp -rf lib/shentong/linux64/libaci.so electron/lib/libaci.so
+          
           mv .git electron/
           chmod +x electron/teamide-linux-x64
           cd electron
@@ -241,6 +243,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           move release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
+          move lib/shentong/win64/aci.dll electron/lib/aci.dll
+          move lib/shentong/win64/aci.lib electron/lib/aci.lib
           move .git electron/.git
           cd electron
           npm install
