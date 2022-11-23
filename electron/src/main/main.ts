@@ -185,13 +185,26 @@ const createWindow = async () => {
 
         if (isDev) {
           const rootPath = getRootPath("../")
-          log.info("root path:", rootPath)
+          var options = {
+            cwd: rootPath,
+            env: process.env,
+          };
+          const os = require('os');
+          if (os.type() == 'Windows_NT') {
+            //windows
+            options.env.PATH += ";" + getRootPath("../lib/shentong/win64");
+            options.env.LD_LIBRARY_PATH += ";" + getRootPath("../lib/shentong/win64");
+          } else {
+            options.env.PATH += ":" + getRootPath("../lib/shentong/win64");
+            options.env.LD_LIBRARY_PATH += ":" + getRootPath("../lib/shentong/win64");
+          }
+          log.info("options cwd:", options.cwd)
+          log.info("options PATH:", options.env.PATH)
+          log.info("options LD_LIBRARY_PATH:", options.env.LD_LIBRARY_PATH)
           serverProcess = child_process.spawn(
             "go",
             ["run", ".", "--isDev", "--isElectron"],
-            {
-              cwd: getRootPath("../"),
-            },
+            options,
           );
         } else {
           let exePath = getRootPath('teamide-windows-x64.exe')
@@ -220,20 +233,23 @@ const createWindow = async () => {
             return
           }
           log.info("exePath:" + exePath)
+          const rootPath = getRootPath("")
           var options = {
-            cwd: getRootPath(""),
-            PATH: "",
-            LD_LIBRARY_PATH: "",
+            cwd: rootPath,
+            env: process.env,
           };
           const os = require('os');
           if (os.type() == 'Windows_NT') {
             //windows
-            options.PATH = process.env.PATH + ";" + getRootPath("") + "/lib";
-            options.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH + ";" + getRootPath("") + "/lib";
+            options.env.PATH += ";" + getRootPath("lib");
+            options.env.LD_LIBRARY_PATH += ";" + getRootPath("lib");
           } else {
-            options.PATH = process.env.PATH + ":" + getRootPath("") + "/lib";
-            options.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH + ":" + getRootPath("") + "/lib";
+            options.env.PATH += ":" + getRootPath("lib");
+            options.env.LD_LIBRARY_PATH += ":" + getRootPath("lib");
           }
+          log.info("options cwd:", options.cwd)
+          log.info("options PATH:", options.env.PATH)
+          log.info("options LD_LIBRARY_PATH:", options.env.LD_LIBRARY_PATH)
           serverProcess = child_process.spawn(
             exePath,
             ["--isElectron"],
