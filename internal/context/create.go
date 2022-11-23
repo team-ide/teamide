@@ -181,6 +181,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	util.Logger = this_.Logger
 	util.TempDir = serverConfig.Server.TempDir
 	node.Logger = this_.Logger
+	db.FileUploadDir = this_.GetFilesDir()
 
 	this_.ServerContext = serverConfig.Server.Context
 	if this_.ServerContext == "" || !strings.HasSuffix(this_.ServerContext, "/") {
@@ -222,8 +223,6 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return
 	}
-
-	db.FileUploadDir = this_.GetFilesDir()
 
 	initServerWebsocket()
 
