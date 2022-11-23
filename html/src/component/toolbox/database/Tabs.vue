@@ -38,6 +38,16 @@
             >
             </DDL>
           </template>
+          <template v-else-if="item.extend.type == 'model'">
+            <Model
+              :source="source"
+              :toolboxWorker="toolboxWorker"
+              :ownerName="item.extend.ownerName"
+              :tableName="item.extend.tableName"
+              :tabId="item.tabId"
+            >
+            </Model>
+          </template>
           <template v-if="item.extend.type == 'table'">
             <Table
               :source="source"
@@ -99,6 +109,7 @@
 
 <script>
 import DDL from "./DDL";
+import Model from "./Model";
 import Sql from "./Sql";
 import Table from "./Table";
 import TableData from "./TableData";
@@ -107,7 +118,7 @@ import Import from "./Import";
 import Sync from "./Sync";
 
 export default {
-  components: { DDL, Sql, Table, TableData, Export, Import, Sync },
+  components: { DDL, Model, Sql, Table, TableData, Export, Import, Sync },
   props: [
     "source",
     "toolboxWorker",

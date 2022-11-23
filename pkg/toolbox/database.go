@@ -117,6 +117,14 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 		res["sqlList"] = sqlList
 		break
+	case "model":
+		var content string
+		content, err = service.Model(param, request.OwnerName, request.TableName)
+		if err != nil {
+			return
+		}
+		res["content"] = content
+		break
 	case "tables":
 		var tables []*dialect.TableModel
 		tables, err = service.TablesSelect(param, request.OwnerName)

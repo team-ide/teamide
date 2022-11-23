@@ -148,6 +148,32 @@ func (this_ *Service) DDL(param *Param, ownerName string, tableName string) (sql
 	return
 }
 
+func (this_ *Service) Model(param *Param, ownerName string, tableName string) (content string, err error) {
+
+	var tables []*dialect.TableModel
+	if tableName != "" {
+		var table *dialect.TableModel
+		table, err = worker.TableDetail(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, tableName, false)
+		if err != nil {
+			return
+		}
+		if table != nil {
+			tables = append(tables, table)
+		}
+	} else {
+		tables, err = worker.TablesDetail(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, false)
+		if err != nil {
+			return
+		}
+	}
+	gen := &modelGen{
+		modelType: param.ModelType,
+		tables:    tables,
+	}
+	content, err = gen.gen()
+
+	return
+}
 func (this_ *Service) TableCreate(param *Param, ownerName string, table *dialect.TableModel) (err error) {
 	err = worker.TableCreate(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, table)
 	return
@@ -542,4 +568,5 @@ type Param struct {
 	ExportType           string          `json:"exportType"`
 	ImportType           string          `json:"importType"`
 	TargetDatabaseConfig *DatabaseConfig `json:"targetDatabaseConfig"`
+	ModelType            string          `json:"modelType"`
 }

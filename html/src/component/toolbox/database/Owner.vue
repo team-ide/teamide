@@ -207,6 +207,26 @@ export default {
         this.toolboxWorker.openTabByExtend(extend);
       }
     },
+    async toShowModel(data) {
+      if (data.isOwner) {
+        let extend = {
+          name: data.ownerName + ">Model",
+          title: data.ownerName + ">Model",
+          type: "model",
+          ownerName: data.ownerName,
+        };
+        this.toolboxWorker.openTabByExtend(extend);
+      } else if (data.isTable) {
+        let extend = {
+          name: data.owner.ownerName + "." + data.tableName + ">Model",
+          title: data.owner.ownerName + "." + data.tableName + ">Model",
+          type: "model",
+          ownerName: data.owner.ownerName,
+          tableName: data.tableName,
+        };
+        this.toolboxWorker.openTabByExtend(extend);
+      }
+    },
     nodeClick(data, node, nodeView) {
       let nowTime = new Date().getTime();
       let clickTime = node.clickTime;
@@ -312,6 +332,12 @@ export default {
           text: "查看DDL",
           onClick: () => {
             this.toShowDDL(data);
+          },
+        });
+        menus.push({
+          text: "查看Model",
+          onClick: () => {
+            this.toShowModel(data);
           },
         });
         menus.push({
