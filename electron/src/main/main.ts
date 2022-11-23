@@ -31,11 +31,24 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+var isServerError = false
+let startServer = () => { }
 
 ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+  log.info("ipcMain on ipc-example arg:", arg)
+  if (arg[0] == "ping") {
+    event.reply('ipc-example', "pong");
+  } else if (arg[0] == "info") {
+    let out = JSON.stringify({
+      isStopped: isStopped,
+      isServerError: isServerError,
+    })
+    log.info("ipcMain on ipc-example out:", out)
+    event.reply('ipc-example', out);
+  } else if (arg[0] == "startServer") {
+    startServer()
+    event.reply('ipc-example', "serverStarted");
+  }
 });
 ipcMain.on('open-new-window', async (_event: any, config: any) => {
   config = config || {};
@@ -169,6 +182,105 @@ const createWindow = async () => {
 
   mainWindow.loadURL(serverUrl);
 
+  startServer = () => {
+    // 打开 Team IDE 服务
+
+    if (isDev) {
+      const rootPath = getRootPath("../")
+      log.info("rootPath:", rootPath)
+      serverProcess = child_process.spawn(
+        "go",
+        ["run", ".", "--isDev", "--isElectron"],
+        {
+          cwd: rootPath,
+        },
+      );
+    } else {
+      let exePath = getRootPath('teamide-windows-x64.exe')
+      try {
+        fs.statSync(exePath);
+      } catch (error) {
+
+        try {
+          exePath = getRootPath('teamide-darwin-x64')
+          fs.statSync(exePath);
+        } catch (error) {
+          try {
+            exePath = getRootPath('teamide-linux-x64')
+            fs.statSync(exePath);
+          } catch (error) {
+            exePath = "";
+          }
+        }
+      }
+      if (exePath == "") {
+        // alert("Team IDE Server not found.")
+        log.error("Team IDE Server not found.")
+        if (app != null) {
+          app.quit();
+        }
+        return
+      }
+      log.info("exePath:" + exePath)
+      const rootPath = getRootPath("")
+      var options = {
+        cwd: rootPath,
+        env: process.env,
+      };
+      const os = require('os');
+      if (os.type() == 'Windows_NT') {
+        //windows
+        options.env.PATH += ";" + getRootPath("lib");
+        options.env.LD_LIBRARY_PATH += ";" + getRootPath("lib");
+      } else {
+        options.env.PATH += ":" + getRootPath("lib");
+        options.env.LD_LIBRARY_PATH += ":" + getRootPath("lib");
+      }
+      log.info("options cwd:", options.cwd)
+      log.info("options PATH:", options.env.PATH)
+      log.info("options LD_LIBRARY_PATH:", options.env.LD_LIBRARY_PATH)
+      serverProcess = child_process.spawn(
+        exePath,
+        ["--isElectron"],
+        options,
+      );
+    }
+    serverProcess.stdout.on('data', (data: any) => {
+      if (data == null) {
+        return
+      }
+      let msg = data.toString()
+      if (msg.startsWith("TeamIDE:event:serverUrl:")) {
+        serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
+        if (mainWindow != null) {
+          mainWindow.loadURL(serverUrl);
+        }
+        return
+      }
+      log.info("msg:", msg);
+    });
+    serverProcess.stderr.on('data', (data: any) => {
+      console.log('错误输出:');
+      console.log(data.toString());
+      console.log('--------------------');
+    });
+    serverProcess.on('close', (code: any) => {
+      log.info(`server process close: ${code}`);
+      if (isStopped || mainWindow == null) {
+        serverProcess = null;
+        log.info(`server is stopped`);
+      } else {
+        isServerError = true
+        serverProcess = null;
+        log.error(`server process closed: ${code}`);
+        // 服务异常关闭，转到服务异常页面
+        let serverErrorUrl = resolveHtmlPath('/error')
+        log.info(`server error urk:`, serverErrorUrl);
+        mainWindow.loadURL(serverErrorUrl);
+        // destroyAll()
+      }
+    });
+  }
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
@@ -180,106 +292,10 @@ const createWindow = async () => {
 
 
       if (mainWindow !== null && serverProcess == null) {
-
-        // 打开 Team IDE 服务
-
-        if (isDev) {
-          const rootPath = getRootPath("../")
-          var options = {
-            cwd: rootPath,
-            env: process.env,
-          };
-          const os = require('os');
-          if (os.type() == 'Windows_NT') {
-            //windows
-            options.env.PATH += ";" + getRootPath("../lib/shentong/win64");
-            options.env.LD_LIBRARY_PATH += ";" + getRootPath("../lib/shentong/win64");
-          } else {
-            options.env.PATH += ":" + getRootPath("../lib/shentong/win64");
-            options.env.LD_LIBRARY_PATH += ":" + getRootPath("../lib/shentong/win64");
-          }
-          log.info("options cwd:", options.cwd)
-          log.info("options PATH:", options.env.PATH)
-          log.info("options LD_LIBRARY_PATH:", options.env.LD_LIBRARY_PATH)
-          serverProcess = child_process.spawn(
-            "go",
-            ["run", ".", "--isDev", "--isElectron"],
-            options,
-          );
-        } else {
-          let exePath = getRootPath('teamide-windows-x64.exe')
-          try {
-            fs.statSync(exePath);
-          } catch (error) {
-
-            try {
-              exePath = getRootPath('teamide-darwin-x64')
-              fs.statSync(exePath);
-            } catch (error) {
-              try {
-                exePath = getRootPath('teamide-linux-x64')
-                fs.statSync(exePath);
-              } catch (error) {
-                exePath = "";
-              }
-            }
-          }
-          if (exePath == "") {
-            // alert("Team IDE Server not found.")
-            log.error("Team IDE Server not found.")
-            if (app != null) {
-              app.quit();
-            }
-            return
-          }
-          log.info("exePath:" + exePath)
-          const rootPath = getRootPath("")
-          var options = {
-            cwd: rootPath,
-            env: process.env,
-          };
-          const os = require('os');
-          if (os.type() == 'Windows_NT') {
-            //windows
-            options.env.PATH += ";" + getRootPath("lib");
-            options.env.LD_LIBRARY_PATH += ";" + getRootPath("lib");
-          } else {
-            options.env.PATH += ":" + getRootPath("lib");
-            options.env.LD_LIBRARY_PATH += ":" + getRootPath("lib");
-          }
-          log.info("options cwd:", options.cwd)
-          log.info("options PATH:", options.env.PATH)
-          log.info("options LD_LIBRARY_PATH:", options.env.LD_LIBRARY_PATH)
-          serverProcess = child_process.spawn(
-            exePath,
-            ["--isElectron"],
-            options,
-          );
+        if (isServerError) {
+          return
         }
-        serverProcess.stdout.on('data', (data: any) => {
-          if (data == null) {
-            return
-          }
-          let msg = data.toString()
-          if (msg.startsWith("TeamIDE:event:serverUrl:")) {
-            serverUrl = msg.substring("TeamIDE:event:serverUrl:".length)
-            if (mainWindow != null) {
-              mainWindow.loadURL(serverUrl);
-            }
-            return
-          }
-          log.info("msg:", msg);
-        });
-        serverProcess.stderr.on('data', (data: any) => {
-          console.log('错误输出:');
-          console.log(data.toString());
-          console.log('--------------------');
-        });
-        serverProcess.on('close', (code: any) => {
-          serverProcess = null;
-          log.info(`server process close: ${code}`);
-          destroyAll()
-        });
+        startServer()
       }
     }
   });
@@ -356,8 +372,9 @@ let allWindowDestroy = () => {
   })
   viewWindowList.splice(0, viewWindowList.length)
 };
-
+let isStopped = false
 let destroyAll = () => {
+  isStopped = true
   try {
     allWindowDestroy()
   } catch (error) {
