@@ -270,7 +270,18 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 
 		break
 	case "sync":
+		var syncParam = &worker.TaskSyncParam{}
+		err = json.Unmarshal(dataBS, syncParam)
+		if err != nil {
+			return
+		}
 
+		var task *worker.Task
+		task, err = service.StartSync(param, syncParam)
+		if err != nil {
+			return
+		}
+		res["task"] = task
 		break
 	case "taskStatus":
 		task := worker.GetTask(request.TaskId)

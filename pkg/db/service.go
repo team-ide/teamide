@@ -371,63 +371,6 @@ var (
 	FileUploadDir string
 )
 
-func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
-	for _, owner := range importParam.Owners {
-		if owner.Path != "" {
-			owner.Path = FileUploadDir + owner.Path
-		}
-		for _, table := range owner.Tables {
-			if table.Path != "" {
-				table.Path = FileUploadDir + table.Path
-			}
-		}
-	}
-
-	importParam.DataSourceType = worker.GetDataSource(param.ImportType)
-	importParam.OnProgress = func(progress *worker.TaskProgress) {
-		util.Logger.Info("import task on progress", zap.Any("progress", progress))
-	}
-	var workDbs []*sql.DB
-	databaseType := this_.DatabaseWorker.databaseType
-	config := *this_.config
-	var username string
-	var password string
-	task_ := worker.NewTaskImport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect,
-		func(ownerName string) (workDb *sql.DB, err error) {
-			workDb, err = newWorkDb(databaseType, config, username, password, ownerName)
-			if err != nil {
-				util.Logger.Error("import new db pool error", zap.Error(err))
-				return
-			}
-			workDbs = append(workDbs, workDb)
-			return
-		},
-		importParam,
-	)
-	task_.Param = param.ParamModel
-
-	go func() {
-
-		defer func() {
-			for _, workDb := range workDbs {
-				_ = workDb.Close()
-			}
-		}()
-
-		err = task_.Start()
-		if err != nil {
-			return
-		}
-	}()
-	time.Sleep(time.Millisecond * 100)
-	if err != nil {
-		worker.ClearTask(task_.TaskId)
-		return
-	}
-	task = task_.Task
-	return
-}
-
 func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportParam) (task *worker.Task, err error) {
 	downloadPath := "export/" + util.UUID()
 	exportParam.Dir, err = util.GetTempDir()
@@ -474,15 +417,129 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 	return
 }
 
+func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportParam) (task *worker.Task, err error) {
+	for _, owner := range importParam.Owners {
+		if owner.Path != "" {
+			owner.Path = FileUploadDir + owner.Path
+		}
+		for _, table := range owner.Tables {
+			if table.Path != "" {
+				table.Path = FileUploadDir + table.Path
+			}
+		}
+	}
+
+	importParam.DataSourceType = worker.GetDataSource(param.ImportType)
+	importParam.OnProgress = func(progress *worker.TaskProgress) {
+		util.Logger.Info("import task on progress", zap.Any("progress", progress))
+	}
+	var workDbs []*sql.DB
+	databaseType := this_.DatabaseWorker.databaseType
+	config := *this_.config
+
+	task_ := worker.NewTaskImport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect,
+		func(owner *worker.TaskImportOwner) (workDb *sql.DB, err error) {
+			ownerName := owner.Name
+			username := owner.Username
+			password := owner.Password
+			workDb, err = newWorkDb(databaseType, config, username, password, ownerName)
+			if err != nil {
+				util.Logger.Error("import new db pool error", zap.Error(err))
+				return
+			}
+			workDbs = append(workDbs, workDb)
+			return
+		},
+		importParam,
+	)
+	task_.Param = param.ParamModel
+
+	go func() {
+
+		defer func() {
+			for _, workDb := range workDbs {
+				_ = workDb.Close()
+			}
+		}()
+
+		err = task_.Start()
+		if err != nil {
+			return
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	if err != nil {
+		worker.ClearTask(task_.TaskId)
+		return
+	}
+	task = task_.Task
+	return
+}
+
+func (this_ *Service) StartSync(param *Param, syncParam *worker.TaskSyncParam) (task *worker.Task, err error) {
+
+	targetDatabaseWorker, err := NewDatabaseWorker(param.TargetDatabaseConfig)
+	if err != nil {
+		return
+	}
+	syncParam.OnProgress = func(progress *worker.TaskProgress) {
+		util.Logger.Info("sync task on progress", zap.Any("progress", progress))
+	}
+	var workDbs []*sql.DB
+
+	task_ := worker.NewTaskSync(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, targetDatabaseWorker.db, targetDatabaseWorker.Dialect,
+		func(owner *worker.TaskSyncOwner) (workDb *sql.DB, err error) {
+			ownerName := owner.TargetName
+			if ownerName == "" {
+				ownerName = owner.SourceName
+			}
+			username := owner.Username
+			password := owner.Password
+			workDb, err = newWorkDb(targetDatabaseWorker.databaseType, *param.TargetDatabaseConfig, username, password, ownerName)
+			if err != nil {
+				util.Logger.Error("sync new db pool error", zap.Error(err))
+				return
+			}
+			workDbs = append(workDbs, workDb)
+			return
+		},
+		syncParam,
+	)
+	task_.Param = param.ParamModel
+
+	go func() {
+
+		defer func() {
+			for _, workDb := range workDbs {
+				_ = workDb.Close()
+			}
+			_ = targetDatabaseWorker.db.Close()
+		}()
+
+		err = task_.Start()
+		if err != nil {
+			return
+		}
+	}()
+	time.Sleep(time.Millisecond * 100)
+	if err != nil {
+		worker.ClearTask(task_.TaskId)
+		return
+	}
+	task = task_.Task
+	return
+}
+
 type Param struct {
 	*dialect.ParamModel
-	TargetDatabaseType   string `json:"targetDatabaseType"`
-	AppendOwnerCreateSql bool   `json:"appendOwnerCreateSql"`
-	AppendOwnerName      bool   `json:"appendOwnerName"`
-	OpenTransaction      bool   `json:"openTransaction"`
-	ErrorContinue        bool   `json:"errorContinue"`
-	ExecUsername         string `json:"execUsername"`
-	ExecPassword         string `json:"execPassword"`
-	ExportType           string `json:"exportType"`
-	ImportType           string `json:"importType"`
+	TargetDatabaseType   string          `json:"targetDatabaseType"`
+	AppendOwnerCreateSql bool            `json:"appendOwnerCreateSql"`
+	AppendOwnerName      bool            `json:"appendOwnerName"`
+	OpenTransaction      bool            `json:"openTransaction"`
+	ErrorContinue        bool            `json:"errorContinue"`
+	ExecUsername         string          `json:"execUsername"`
+	ExecPassword         string          `json:"execPassword"`
+	ExportType           string          `json:"exportType"`
+	ImportType           string          `json:"importType"`
+	TargetDatabaseConfig *DatabaseConfig `json:"targetDatabaseConfig"`
 }

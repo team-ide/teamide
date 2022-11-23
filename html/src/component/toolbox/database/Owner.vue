@@ -573,7 +573,7 @@ export default {
       let extend = {
         name: name,
         title: name,
-        type: "sycn",
+        type: "sync",
         ownerName: ownerName,
         tableName: tableName,
       };

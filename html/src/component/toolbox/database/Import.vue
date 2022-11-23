@@ -1,9 +1,9 @@
 <template>
   <div class="toolbox-database-import">
     <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
-      <el-form ref="form" :model="form" size="mini" inline>
+      <el-form size="mini" inline>
         <el-form-item label="类型">
-          <el-select v-model="form.importType" style="width: 100px">
+          <el-select v-model="formData.importType" style="width: 100px">
             <el-option
               v-for="(one, index) in importTypes"
               :key="index"
@@ -14,27 +14,21 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <template v-if="form.importType == 'csv' || form.importType == 'txt'">
+        <template
+          v-if="formData.importType == 'csv' || formData.importType == 'txt'"
+        >
           <el-form-item label="列分割字符">
-            <el-input v-model="form.separator" style="width: 100px"> </el-input>
+            <el-input v-model="formData.separator" style="width: 100px">
+            </el-input>
           </el-form-item>
           <el-form-item label="换行符转换">
-            <el-input v-model="form.linefeed" style="width: 100px"> </el-input>
+            <el-input v-model="formData.linefeed" style="width: 100px">
+            </el-input>
           </el-form-item>
         </template>
-        <template v-if="form.importType == 'sql'">
-          <Pack
-            :source="source"
-            :toolboxWorker="toolboxWorker"
-            :form="form"
-            :change="packChange"
-          >
-          </Pack>
-        </template>
-
-        <el-checkbox v-model="form.errorContinue"> 有错继续</el-checkbox>
+        <el-checkbox v-model="formData.errorContinue"> 有错继续</el-checkbox>
       </el-form>
-      <el-form ref="form" :model="form" size="mini" inline>
+      <el-form size="mini" inline>
         <template v-if="ownerList == null">
           <el-form-item label="库未加载">
             <div class="tm-link color-green mgr-5" @click="initOwners()">
@@ -61,12 +55,12 @@
       <template v-for="(owner, ownerIndex) in owners">
         <div :key="ownerIndex">
           <div>
-            <el-form :model="form" size="mini" inline>
+            <el-form size="mini" inline>
               <el-form-item label="名称">
                 <el-input v-model="owner.name" style="width: 150px" readonly="">
                 </el-input>
               </el-form-item>
-              <template v-if="form.importType == 'sql'">
+              <template v-if="formData.importType == 'sql'">
                 <el-form-item label="文件路径">
                   <el-input
                     v-model="owner.path"
@@ -88,10 +82,18 @@
                   </el-upload>
                 </el-form-item>
               </template>
+              <el-form-item label="执行用户">
+                <el-input v-model="owner.username" style="width: 150px">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="执行密码">
+                <el-input v-model="owner.password" style="width: 150px">
+                </el-input>
+              </el-form-item>
             </el-form>
           </div>
           <div class="pdl-20" v-loading="owner.tableListLoading">
-            <el-form :model="form" size="mini" inline>
+            <el-form size="mini" inline>
               <template v-if="owner.tableList == null">
                 <el-form-item label="表未加载">
                   <div
@@ -120,7 +122,7 @@
             <template v-for="(table, tableIndex) in owner.tables">
               <div :key="tableIndex">
                 <div v-loading="table.columnListLoading">
-                  <el-form ref="form" :model="form" size="mini" inline>
+                  <el-form size="mini" inline>
                     <el-form-item label="表名称">
                       <el-input
                         v-model="table.name"
@@ -349,10 +351,8 @@
 
 
 <script>
-import Pack from "./Pack";
-
 export default {
-  components: { Pack },
+  components: {},
   props: [
     "source",
     "toolboxWorker",
@@ -371,18 +371,12 @@ export default {
         { text: "CSV", value: "csv" },
         { text: "Txt", value: "txt" },
       ],
-      form: {
+      formData: {
         importType: "sql",
         errorContinue: true,
 
         separator: "|:-:|",
         linefeed: "|:-n-:|",
-        targetDatabaseType: "",
-        appendOwnerName: true,
-        ownerNamePackChar: "",
-        tableNamePackChar: "",
-        columnNamePackChar: "",
-        sqlValuePackChar: "",
       },
       ownersReadonly: false,
       tablesReadonly: false,
@@ -397,12 +391,12 @@ export default {
   },
   computed: {},
   watch: {
-    "form.importType"() {
-      if (this.form.importType == "sql") {
-      } else if (this.form.importType == "txt") {
-        this.form.separator = "|:-:|";
-      } else if (this.form.importType == "csv") {
-        this.form.separator = ",";
+    "formData.importType"() {
+      if (this.formData.importType == "sql") {
+      } else if (this.formData.importType == "txt") {
+        this.formData.separator = "|:-:|";
+      } else if (this.formData.importType == "csv") {
+        this.formData.separator = ",";
       }
     },
   },
@@ -416,29 +410,15 @@ export default {
         this.ownersReadonly = true;
         let owner = {
           ownerName: this.ownerName,
-          name: this.ownerName,
-          path: null,
-          tableListLoading: false,
-          tableList: null,
-          tables: [],
         };
-        owner.onFileUpload = (response) => {
-          this.onFileUpload(owner, response);
-        };
+        this.initOwnerData(owner);
 
         if (this.tool.isNotEmpty(this.tableName)) {
           this.tablesReadonly = true;
           let table = {
             tableName: this.tableName,
-            name: this.tableName,
-            path: null,
-            columnList: null,
-            columnListLoading: false,
-            openColumnList: false,
           };
-          table.onFileUpload = (response) => {
-            this.onFileUpload(table, response);
-          };
+          this.initTableData(table);
           owner.tableList = [];
           owner.tableList.push(table);
           owner.tables.push(table);
@@ -452,19 +432,37 @@ export default {
 
       this.ready = true;
     },
+    initOwnerData(owner) {
+      owner.name = owner.ownerName;
+      owner.path = null;
+      owner.tableListLoading = false;
+      owner.tableList = null;
+      owner.username = null;
+      owner.password = null;
+      owner.tables = [];
+      owner.onFileUpload = (response) => {
+        this.onFileUpload(owner, response);
+      };
+    },
+    initTableData(table) {
+      table.name = table.tableName;
+      table.path = null;
+      table.columnListLoading = false;
+      table.columnList = null;
+      table.openColumnList = false;
+      table.onFileUpload = (response) => {
+        this.onFileUpload(table, response);
+      };
+    },
+    initColumnData(column) {
+      column.name = column.columnName;
+      column.value = null;
+    },
     async initOwners() {
       if (this.ownerList == null) {
         let ownerList = await this.toolboxWorker.loadOwners();
         ownerList.forEach((owner) => {
-          owner.tableList = null;
-          owner.tables = [];
-          owner.tableListLoading = false;
-          owner.name = owner.ownerName;
-          owner.path = "";
-
-          owner.onFileUpload = (response) => {
-            this.onFileUpload(owner, response);
-          };
+          this.initOwnerData(owner);
         });
         this.ownerList = ownerList;
       }
@@ -474,15 +472,7 @@ export default {
         owner.tableListLoading = true;
         let tableList = await this.toolboxWorker.loadTables(owner.ownerName);
         tableList.forEach((table) => {
-          table.name = table.tableName;
-          table.path = "";
-          table.openColumnList = false;
-          table.columnList = null;
-          table.columnListLoading = false;
-
-          table.onFileUpload = (response) => {
-            this.onFileUpload(table, response);
-          };
+          this.initTableData(table);
         });
         owner.tableList = tableList;
         owner.tableListLoading = false;
@@ -500,9 +490,7 @@ export default {
           columnList = detail.columnList || [];
         }
         columnList.forEach((column) => {
-          column.name = column.columnName;
-          column.path = "";
-          column.value = null;
+          this.initColumnData(column);
         });
         table.columnList = columnList;
         table.columnListLoading = false;
@@ -556,7 +544,7 @@ export default {
       }
     },
     async start() {
-      let param = Object.assign({ owners: [] }, this.form);
+      let param = Object.assign({ owners: [] }, this.formData);
       this.toolboxWorker.formatParam(param);
 
       param.owners = [];
@@ -564,6 +552,8 @@ export default {
         let importOwner = {
           name: owner.name,
           path: owner.path,
+          username: owner.username,
+          password: owner.password,
           tables: [],
         };
         owner.tables.forEach((table) => {

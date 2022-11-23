@@ -1,9 +1,9 @@
 <template>
   <div class="toolbox-database-export">
     <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
-      <el-form ref="form" :model="form" size="mini" inline>
+      <el-form size="mini" inline>
         <el-form-item label="类型">
-          <el-select v-model="form.exportType" style="width: 100px">
+          <el-select v-model="formData.exportType" style="width: 100px">
             <el-option
               v-for="(one, index) in exportTypes"
               :key="index"
@@ -14,39 +14,43 @@
             </el-option>
           </el-select>
         </el-form-item>
-        <template v-if="form.exportType == 'csv' || form.exportType == 'txt'">
+        <template
+          v-if="formData.exportType == 'csv' || formData.exportType == 'txt'"
+        >
           <el-form-item label="列分割字符">
-            <el-input v-model="form.separator" style="width: 100px"> </el-input>
+            <el-input v-model="formData.separator" style="width: 100px">
+            </el-input>
           </el-form-item>
           <el-form-item label="换行符转换">
-            <el-input v-model="form.linefeed" style="width: 100px"> </el-input>
+            <el-input v-model="formData.linefeed" style="width: 100px">
+            </el-input>
           </el-form-item>
         </template>
-        <template v-if="form.exportType == 'sql'">
+        <template v-if="formData.exportType == 'sql'">
           <Pack
             :source="source"
             :toolboxWorker="toolboxWorker"
-            :form="form"
+            :form="formData"
             :change="packChange"
           >
           </Pack>
-          <el-checkbox v-model="form.exportStruct">导出结构体 </el-checkbox>
-          <el-checkbox v-model="form.exportData">导出数据 </el-checkbox>
-          <template v-if="form.exportData">
-            <el-checkbox v-model="form.exportBatchSql"
+          <el-checkbox v-model="formData.exportStruct">导出结构体 </el-checkbox>
+          <el-checkbox v-model="formData.exportData">导出数据 </el-checkbox>
+          <template v-if="formData.exportData">
+            <el-checkbox v-model="formData.exportBatchSql"
               >导出批量插入语句
             </el-checkbox>
-            <template v-if="form.exportBatchSql">
+            <template v-if="formData.exportBatchSql">
               <el-form-item label="批量插入数量">
-                <el-input v-model="form.batchNumber" style="width: 60px">
+                <el-input v-model="formData.batchNumber" style="width: 60px">
                 </el-input>
               </el-form-item>
             </template>
           </template>
         </template>
-        <el-checkbox v-model="form.errorContinue"> 有错继续</el-checkbox>
+        <el-checkbox v-model="formData.errorContinue"> 有错继续</el-checkbox>
       </el-form>
-      <el-form ref="form" :model="form" size="mini" inline>
+      <el-form size="mini" inline>
         <template v-if="ownerList == null || owners.length == 0">
           <el-form-item label="导出所有库">
             <div class="tm-link color-green mgr-5" @click="initOwners()">
@@ -73,7 +77,7 @@
       <template v-for="(owner, ownerIndex) in owners">
         <div :key="ownerIndex">
           <div>
-            <el-form :model="form" size="mini" inline>
+            <el-form size="mini" inline>
               <el-form-item label="库名称">
                 <el-input
                   v-model="owner.sourceName"
@@ -89,7 +93,7 @@
             </el-form>
           </div>
           <div class="pdl-20" v-loading="owner.tableListLoading">
-            <el-form :model="form" size="mini" inline>
+            <el-form size="mini" inline>
               <template
                 v-if="owner.tableList == null || owner.tables.length == 0"
               >
@@ -120,7 +124,7 @@
             <template v-for="(table, tableIndex) in owner.tables">
               <div :key="tableIndex">
                 <div v-loading="table.columnListLoading">
-                  <el-form ref="form" :model="form" size="mini" inline>
+                  <el-form size="mini" inline>
                     <el-form-item label="表名称">
                       <el-input
                         v-model="table.sourceName"
@@ -379,7 +383,7 @@ export default {
         { text: "CSV", value: "csv" },
         { text: "Txt", value: "txt" },
       ],
-      form: {
+      formData: {
         exportType: "sql",
         exportStruct: true,
         exportData: true,
@@ -409,8 +413,8 @@ export default {
   },
   computed: {},
   watch: {
-    "form.exportType"() {
-      if (this.form.exportType == "sql") {
+    "formData.exportType"() {
+      if (this.formData.exportType == "sql") {
         this.exportData = true;
         this.exportStruct = true;
       } else {
@@ -418,10 +422,10 @@ export default {
         this.exportStruct = false;
       }
 
-      if (this.form.exportType == "txt") {
-        this.form.separator = "|:-:|";
-      } else if (this.form.exportType == "csv") {
-        this.form.separator = ",";
+      if (this.formData.exportType == "txt") {
+        this.formData.separator = "|:-:|";
+      } else if (this.formData.exportType == "csv") {
+        this.formData.separator = ",";
       }
     },
   },
@@ -435,23 +439,14 @@ export default {
         this.ownersReadonly = true;
         let owner = {
           ownerName: this.ownerName,
-          sourceName: this.ownerName,
-          targetName: this.ownerName,
-          tableListLoading: false,
-          tableList: null,
-          tables: [],
         };
-
+        this.initOwnerData(owner);
         if (this.tool.isNotEmpty(this.tableName)) {
           this.tablesReadonly = true;
           let table = {
             tableName: this.tableName,
-            sourceName: this.tableName,
-            targetName: this.tableName,
-            columnList: null,
-            columnListLoading: false,
-            openColumnList: false,
           };
+          this.initTableData(table);
           owner.tableList = [];
           owner.tableList.push(table);
           owner.tables.push(table);
@@ -465,15 +460,30 @@ export default {
 
       this.ready = true;
     },
+    initOwnerData(owner) {
+      owner.sourceName = owner.ownerName;
+      owner.targetName = owner.ownerName;
+      owner.tableListLoading = false;
+      owner.tableList = null;
+      owner.tables = [];
+    },
+    initTableData(table) {
+      table.sourceName = table.tableName;
+      table.targetName = table.tableName;
+      table.columnListLoading = false;
+      table.columnList = null;
+      table.openColumnList = false;
+    },
+    initColumnData(column) {
+      column.sourceName = column.columnName;
+      column.targetName = column.columnName;
+      column.value = null;
+    },
     async initOwners() {
       if (this.ownerList == null) {
         let ownerList = await this.toolboxWorker.loadOwners();
         ownerList.forEach((owner) => {
-          owner.tableList = null;
-          owner.tables = [];
-          owner.tableListLoading = false;
-          owner.sourceName = owner.ownerName;
-          owner.targetName = owner.ownerName;
+          this.initOwnerData(owner);
         });
         this.ownerList = ownerList;
         ownerList.forEach(async (owner) => {
@@ -486,11 +496,7 @@ export default {
         owner.tableListLoading = true;
         let tableList = await this.toolboxWorker.loadTables(owner.ownerName);
         tableList.forEach((table) => {
-          table.sourceName = table.tableName;
-          table.targetName = table.tableName;
-          table.openColumnList = false;
-          table.columnList = null;
-          table.columnListLoading = false;
+          this.initTableData(table);
         });
         owner.tableList = tableList;
         owner.tableListLoading = false;
@@ -511,9 +517,7 @@ export default {
           columnList = detail.columnList || [];
         }
         columnList.forEach((column) => {
-          column.sourceName = column.columnName;
-          column.targetName = column.columnName;
-          column.value = null;
+          this.initColumnData(column);
         });
         table.columnList = columnList;
         table.columnListLoading = false;
@@ -560,7 +564,7 @@ export default {
       }
     },
     async start() {
-      let param = Object.assign({ owners: [] }, this.form);
+      let param = Object.assign({ owners: [] }, this.formData);
       this.toolboxWorker.formatParam(param);
 
       param.batchNumber = Number(param.batchNumber);

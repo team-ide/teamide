@@ -1,57 +1,222 @@
 <template>
   <div class="toolbox-database-sync">
-    <el-form
-      class="pdt-10 pdlr-10"
-      size="mini"
-      @submit.native.prevent
-      label-width="80px"
-      inline
-    >
-      <el-form-item label="导入类型">
-        <el-select v-model="form.importType" style="width: 100px">
-          <el-option
-            v-for="(one, index) in importTypes"
-            :key="index"
-            :value="one.value"
-            :label="one.text"
-            :disabled="one.disabled"
-          >
-          </el-option>
-        </el-select>
-      </el-form-item>
-    </el-form>
-
-    <template v-if="form.importType == 'strategy'">
-      <ScriptInfo></ScriptInfo>
-      <div class="mglr-10 mgt-10">
-        <div class="tm-link color-grey" @click="addStrategyData">添加</div>
-      </div>
-      <div
-        class="mglr-10 mgt-10 app-scroll-bar"
-        style="height: calc(100% - 380px)"
-      >
-        <template v-for="(strategyData, index) in strategyDataList">
-          <div :key="index" class="mgb-10">
-            <div class="ft-12 mgb-5">数据策略[ {{ index + 1 }} ]</div>
-            <div>
-              <el-form size="mini" @submit.native.prevent label-width="200px">
-                <el-form-item label="导入数量" class="mgb-5">
-                  <el-input v-model="strategyData.count"> </el-input>
-                </el-form-item>
-                <el-form-item label="批量保存数量" class="mgb-5">
-                  <el-input v-model="strategyData.batchNumber"> </el-input>
-                </el-form-item>
-                <template v-for="(column, index) in strategyData.columnList">
-                  <el-form-item :key="index" :label="column.name" class="mgb-5">
-                    <el-input v-model="column.value"> </el-input>
-                  </el-form-item>
-                </template>
-              </el-form>
+    <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
+      <el-form :model="formData" size="mini" inline>
+        <el-form-item label="目标数据库配置">
+          <FormBox ref="DatabaseFormBox" :source="source"></FormBox>
+        </el-form-item>
+        <el-checkbox v-model="formData.ownerCreateIfNotExist">
+          库不存在则创建
+        </el-checkbox>
+        <el-checkbox v-model="formData.errorContinue"> 有错继续</el-checkbox>
+        <el-checkbox v-model="formData.syncStruct"> 同步结构体</el-checkbox>
+        <el-checkbox v-model="formData.syncData"> 同步数据</el-checkbox>
+      </el-form>
+      <el-form :model="formData" size="mini" inline>
+        <template v-if="ownerList == null || owners.length == 0">
+          <el-form-item label="同步所有库">
+            <div class="tm-link color-green mgr-5" @click="initOwners()">
+              自定义同步库
             </div>
-          </div>
+          </el-form-item>
         </template>
-      </div>
-    </template>
+        <template v-else>
+          <el-form-item label="选择库">
+            <el-checkbox-group v-model="owners">
+              <el-checkbox
+                v-for="(owner, index) in ownerList"
+                :label="owner"
+                :key="index"
+                :disabled="ownersReadonly"
+              >
+                {{ owner.ownerName }}
+              </el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </template>
+      </el-form>
+
+      <template v-for="(owner, ownerIndex) in owners">
+        <div :key="ownerIndex">
+          <div>
+            <el-form :model="form" size="mini" inline>
+              <el-form-item label="库名称">
+                <el-input
+                  v-model="owner.sourceName"
+                  style="width: 150px"
+                  readonly=""
+                >
+                </el-input>
+              </el-form-item>
+              <el-form-item :label="ownerSyncNameLabel">
+                <el-input v-model="owner.targetName" style="width: 150px">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="执行用户">
+                <el-input v-model="owner.username" style="width: 150px">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="执行密码">
+                <el-input v-model="owner.password" style="width: 150px">
+                </el-input>
+              </el-form-item>
+            </el-form>
+          </div>
+          <div class="pdl-20" v-loading="owner.tableListLoading">
+            <el-form size="mini" inline>
+              <template
+                v-if="owner.tableList == null || owner.tables.length == 0"
+              >
+                <el-form-item label="同步所有表">
+                  <div
+                    class="tm-link color-green mgr-5"
+                    @click="initOwnerTables(owner)"
+                  >
+                    自定义同步表
+                  </div>
+                </el-form-item>
+              </template>
+              <template v-else>
+                <el-form-item label="选择表">
+                  <el-checkbox-group v-model="owner.tables">
+                    <el-checkbox
+                      v-for="(table, index) in owner.tableList"
+                      :label="table"
+                      :key="index"
+                      :disabled="tablesReadonly"
+                    >
+                      {{ table.tableName }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </el-form-item>
+              </template>
+            </el-form>
+            <template v-for="(table, tableIndex) in owner.tables">
+              <div :key="tableIndex">
+                <div v-loading="table.columnListLoading">
+                  <el-form size="mini" inline>
+                    <el-form-item label="表名称">
+                      <el-input
+                        v-model="table.sourceName"
+                        style="width: 150px"
+                        readonly=""
+                      >
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item :label="tableSyncNameLabel">
+                      <el-input v-model="table.targetName" style="width: 150px">
+                      </el-input>
+                    </el-form-item>
+                    <template
+                      v-if="
+                        table.columnList == null || table.columnList.length == 0
+                      "
+                    >
+                      <el-form-item label="同步所有字段">
+                        <div
+                          class="tm-link color-green mgr-5"
+                          @click="initOwnerTableColumns(owner, table)"
+                        >
+                          自定义同步字段
+                        </div>
+                      </el-form-item>
+                    </template>
+                    <template v-else>
+                      <div
+                        class="tm-link color-green mgr-5"
+                        @click="addSyncColumn(table, {})"
+                      >
+                        添加字段
+                      </div>
+                      <div
+                        class="tm-link color-orange mgr-5"
+                        v-if="table.openColumnList"
+                        @click="table.openColumnList = false"
+                      >
+                        收起字段
+                      </div>
+                      <div
+                        class="tm-link color-orange mgr-5"
+                        v-if="!table.openColumnList"
+                        @click="table.openColumnList = true"
+                      >
+                        展开字段
+                      </div>
+                    </template>
+                  </el-form>
+                </div>
+                <div v-if="table.openColumnList">
+                  <el-table
+                    :data="table.columnList"
+                    border
+                    style="width: 100%"
+                    size="mini"
+                  >
+                    <el-table-column label="字段">
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-input
+                            v-model="scope.row.sourceName"
+                            type="text"
+                          />
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="同步名称（列名，字段名）">
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-input
+                            v-model="scope.row.targetName"
+                            type="text"
+                          />
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column
+                      label="同步固定值（函数脚本，默认为查询出的值）"
+                    >
+                      <template slot-scope="scope">
+                        <div class="">
+                          <el-input v-model="scope.row.value" type="text" />
+                        </div>
+                      </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="200px">
+                      <template slot-scope="scope">
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="upSyncColumn(table, scope.row)"
+                        >
+                          上移
+                        </div>
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="downSyncColumn(table, scope.row)"
+                        >
+                          下移
+                        </div>
+                        <div
+                          class="tm-link color-grey mglr-5"
+                          @click="addSyncColumn(table, {}, scope.row)"
+                        >
+                          插入
+                        </div>
+                        <div
+                          class="tm-link color-red mglr-5"
+                          @click="removeSyncColumn(table, scope.row)"
+                        >
+                          删除
+                        </div>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
     <div class="mglr-10 mgt-10" style="user-select: text">
       <div class="ft-12">
         <span class="color-grey">任务状态：</span>
@@ -62,7 +227,7 @@
           <template v-if="!task.isEnd">
             <span class="color-orange pdr-10"> 处理中 </span>
           </template>
-          <template v-if="task.isStop">
+          <template v-else-if="task.isStop">
             <span class="color-red pdr-10"> 已停止 </span>
           </template>
           <template v-else>
@@ -90,25 +255,67 @@
             </span>
           </template>
           <template v-if="!task.isEnd">
-            <div @click="stopTask" class="color-red tm-link mgr-10">
+            <div @click="stopTask()" class="color-red tm-link mgr-10">
               停止执行
             </div>
           </template>
           <div class="mgt-5">
             <span class="color-grey pdr-10">
-              预计导入： <span>{{ task.dataCount }}</span>
+              库 总数/成功/失败：
+              <span>
+                {{ task.ownerCount }}
+                /
+                <span class="color-green">
+                  {{ task.ownerSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.ownerErrorCount }}
+                </span>
+              </span>
             </span>
             <span class="color-grey pdr-10">
-              已准备数据： <span>{{ task.readyDataCount }}</span>
+              表 总数/成功/失败：
+              <span>
+                {{ task.tableCount }}
+                /
+                <span class="color-green">
+                  {{ task.tableSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.tableErrorCount }}
+                </span>
+              </span>
             </span>
-            <span class="color-success pdr-10">
-              成功： <span>{{ task.successCount }}</span>
+            <span class="color-grey pdr-10">
+              数据 总数/成功/失败：
+              <span>
+                {{ task.dataCount }}
+                /
+                <span class="color-green">
+                  {{ task.dataSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.dataErrorCount }}
+                </span>
+              </span>
             </span>
-            <span class="color-error pdr-10">
-              异常： <span>{{ task.errorCount }}</span>
-            </span>
+            <template v-if="task.isEnd">
+              <template
+                v-if="task.extend && tool.isNotEmpty(task.extend.downloadPath)"
+              >
+                <div @click="toDownload()" class="color-green tm-link mgr-10">
+                  下载
+                </div>
+              </template>
+              <div @click="taskClean()" class="color-orange tm-link mgr-10">
+                删除
+              </div>
+            </template>
           </div>
-          <template v-if="task.error != null">
+          <template v-if="tool.isNotEmpty(task.error)">
             <div class="mgt-5 color-error pdr-10">
               异常： <span>{{ task.error }}</span>
             </div>
@@ -116,8 +323,8 @@
         </template>
       </div>
     </div>
-    <div class="mglr-10 mgt-20" v-if="taskKey == null">
-      <div class="tm-btn bg-green" @click="toImport">导入</div>
+    <div class="pdlr-10 mgt-10" v-if="taskId == null">
+      <div class="tm-btn bg-green" @click="toDo">开始</div>
     </div>
   </div>
 </template>
@@ -132,156 +339,284 @@ export default {
     "extend",
     "ownerName",
     "tableName",
-    "owners",
     "columnTypeInfoList",
     "indexTypeInfoList",
   ],
   data() {
     return {
       ready: false,
-      importTypes: [
-        { text: "策略函数", value: "strategy" },
-        { text: "SQL", value: "sql", disabled: true },
-        { text: "Excel", value: "excel", disabled: true },
-        { text: "文本", value: "text", disabled: true },
-      ],
-      form: {
-        importType: "strategy",
+      formData: {
+        syncStruct: true,
+        syncData: true,
+        errorContinue: true,
+        batchNumber: 200,
+        ownerCreateIfNotExist: true,
+        targetDatabaseConfig: {
+          type: "mysql",
+          host: "127.0.0.1",
+          port: 3306,
+          database: null,
+          dbName: null,
+          username: "root",
+          password: "123456",
+          sid: null,
+        },
       },
-      strategyDataList: null,
-      tableDetail: null,
-      taskKey: null,
+      ownersReadonly: false,
+      tablesReadonly: false,
+      owners: [],
+      ownerList: [],
+      syncColumnList: null,
+      ownerSyncNameLabel: "同步后库名称",
+      tableSyncNameLabel: "同步后表名称",
+      taskId: null,
       task: null,
     };
   },
   computed: {},
   watch: {},
   methods: {
+    packChange() {},
     async init() {
-      if (this.tool.isNotEmpty(this.table)) {
-        this.tableDetail = await this.toolboxWorker.getTableDetail(
-          this.ownerName,
-          this.table
-        );
+      this.$refs.DatabaseFormBox.build([
+        {
+          form: this.form.toolbox.database,
+          data: this.formData.targetDatabaseConfig,
+        },
+      ]);
+      let ownerList = [];
+      this.ownersReadonly = false;
+      this.tablesReadonly = false;
+      if (this.tool.isNotEmpty(this.ownerName)) {
+        this.ownersReadonly = true;
+        let owner = {
+          ownerName: this.ownerName,
+        };
+        this.initOwnerData(owner);
+        if (this.tool.isNotEmpty(this.tableName)) {
+          this.tablesReadonly = true;
+          let table = {
+            tableName: this.tableName,
+          };
+          this.initTableData(table);
+          owner.tableList = [];
+          owner.tableList.push(table);
+          owner.tables.push(table);
+        }
+        ownerList.push(owner);
+        this.owners.push(owner);
+        this.ownerList = ownerList;
+      } else {
+        this.ownerList = null;
       }
-      this.strategyDataList = [];
-      await this.addStrategyData();
+
       this.ready = true;
     },
-    async addStrategyData() {
-      if (this.tableDetail == null) {
-        return;
-      }
-      let data = {};
-      data.count = 1;
-      data.batchNumber = 100;
-      data.columnList = [];
-
-      let keys = [];
-      this.tableDetail.columnList.forEach((column) => {
-        let value = null;
-        if (column.primaryKey) {
-          keys.push(column.name);
-          if (
-            column.type == "int" ||
-            column.type == "bigint" ||
-            column.type == "number"
-          ) {
-            value = "0 + _$index";
-          } else {
-            value = "_$uuid()";
-          }
-        } else if (column.notNull) {
-          if (
-            column.type == "int" ||
-            column.type == "bigint" ||
-            column.type == "number"
-          ) {
-            value = "0";
-          } else if (
-            column.type == "date" ||
-            column.type == "time" ||
-            column.type == "datetime"
-          ) {
-            value = "_$now()";
-          } else {
-            if (keys.length > 0) {
-              value = "'" + column.name + "' + " + keys.join(" + ") + "";
-            } else {
-              value = "_$randomString(1, 5)";
-            }
-          }
-        }
-
-        data.columnList.push({
-          name: column.name,
-          value: value,
+    initOwnerData(owner) {
+      owner.sourceName = owner.ownerName;
+      owner.targetName = owner.ownerName;
+      owner.username = null;
+      owner.password = null;
+      owner.tableListLoading = false;
+      owner.tableList = null;
+      owner.tables = [];
+    },
+    initTableData(table) {
+      table.sourceName = table.tableName;
+      table.targetName = table.tableName;
+      table.columnListLoading = false;
+      table.columnList = null;
+      table.openColumnList = false;
+    },
+    initColumnData(column) {
+      column.sourceName = column.columnName;
+      column.targetName = column.columnName;
+      column.value = null;
+    },
+    async initOwners() {
+      if (this.ownerList == null) {
+        let ownerList = await this.toolboxWorker.loadOwners();
+        ownerList.forEach((owner) => {
+          this.initOwnerData(owner);
         });
-      });
-      this.strategyDataList.push(data);
+        this.ownerList = ownerList;
+        ownerList.forEach(async (owner) => {
+          this.owners.push(owner);
+        });
+      }
     },
-    async toImport() {
+    async initOwnerTables(owner) {
+      if (owner.tableList == null) {
+        owner.tableListLoading = true;
+        let tableList = await this.toolboxWorker.loadTables(owner.ownerName);
+        tableList.forEach((table) => {
+          this.initTableData(table);
+        });
+        owner.tableList = tableList;
+        owner.tableListLoading = false;
+      }
+      owner.tableList.forEach(async (table) => {
+        owner.tables.push(table);
+      });
+    },
+    async initOwnerTableColumns(owner, table) {
+      if (table.columnList == null) {
+        table.columnListLoading = true;
+        let detail = await this.toolboxWorker.getTableDetail(
+          owner.ownerName,
+          table.tableName
+        );
+        let columnList = [];
+        if (detail) {
+          columnList = detail.columnList || [];
+        }
+        columnList.forEach((column) => {
+          this.initColumnData(column);
+        });
+        table.columnList = columnList;
+        table.columnListLoading = false;
+        table.openColumnList = true;
+      }
+    },
+
+    upSyncColumn(table, syncColumn) {
+      this.tool.up(table, "columnList", syncColumn);
+    },
+    downSyncColumn(table, syncColumn) {
+      this.tool.down(table, "columnList", syncColumn);
+    },
+    addSyncColumn(table, syncColumn, after) {
+      syncColumn = syncColumn || {};
+      syncColumn.sourceName = syncColumn.sourceName || "";
+      syncColumn.targetName = syncColumn.targetName || "";
+      syncColumn.value = syncColumn.value || "";
+
+      let appendIndex = table.columnList.indexOf(after);
+      if (appendIndex < 0) {
+        appendIndex = table.columnList.length;
+      } else {
+        appendIndex++;
+      }
+      table.columnList.splice(appendIndex, 0, syncColumn);
+    },
+    removeSyncColumn(table, syncColumn) {
+      let findIndex = table.columnList.indexOf(syncColumn);
+      if (findIndex >= 0) {
+        table.columnList.splice(findIndex, 1);
+      }
+    },
+    async toDo() {
+      if (this.task != null) {
+        this.taskClean();
+      }
       this.task = null;
-      this.taskKey = null;
-      let res = await this.doImport();
-      this.taskKey = res.taskKey;
-      this.loadStatus();
+      this.taskId = null;
+      let res = await this.start();
+      if (res) {
+        this.taskId = res.taskId;
+        this.loadStatus();
+      }
     },
-    async doImport() {
-      this.strategyDataList.forEach((one) => {
-        one.count = Number(one.count);
-        one.batchNumber = Number(one.batchNumber);
+    async start() {
+      let param = Object.assign({ owners: [] }, this.formData);
+      this.toolboxWorker.formatParam(param);
+
+      param.targetDatabaseConfig.port = Number(param.targetDatabaseConfig.port);
+      param.batchNumber = Number(param.batchNumber);
+      param.owners = [];
+      this.owners.forEach((owner) => {
+        let syncOwner = {
+          sourceName: owner.sourceName,
+          targetName: owner.targetName,
+          username: owner.username,
+          password: owner.password,
+          tables: [],
+        };
+        owner.tables.forEach((table) => {
+          let syncTable = {
+            sourceName: table.sourceName,
+            targetName: table.targetName,
+            columns: [],
+          };
+          if (table.columnList) {
+            table.columnList.forEach((column) => {
+              let syncColumn = {
+                sourceName: column.sourceName,
+                targetName: column.targetName,
+                value: column.value,
+              };
+              syncTable.columns.push(syncColumn);
+            });
+          }
+          syncOwner.tables.push(syncTable);
+        });
+        param.owners.push(syncOwner);
       });
 
-      let param = Object.assign({}, this.form);
-      param.ownerName = this.ownerName;
-      param.table = this.table;
-      param.columnList = this.tableDetail.columnList;
-      param.strategyDataList = this.strategyDataList;
-
-      let res = await this.toolboxWorker.work("import", param);
+      let res = await this.toolboxWorker.work("sync", param);
       res.data = res.data || {};
-      return res.data;
+      return res.data.task;
     },
     async loadStatus() {
-      if (this.taskKey == null) {
+      if (this.taskId == null) {
         return;
       }
       if (this.task != null && this.task.isEnd) {
-        this.taskKey = null;
-        this.cleanTask();
+        this.taskId = null;
+        return;
+      }
+      if (this.isDestroyed) {
         return;
       }
       let param = {
-        taskKey: this.taskKey,
+        taskId: this.taskId,
       };
-      let res = await this.toolboxWorker.work("importStatus", param);
+      let res = await this.toolboxWorker.work("taskStatus", param);
       res.data = res.data || {};
       this.task = res.data.task;
       setTimeout(this.loadStatus, 100);
     },
     async stopTask() {
-      if (this.taskKey == null) {
+      if (this.task == null) {
         return;
       }
       let param = {
-        taskKey: this.taskKey,
+        taskId: this.task.taskId,
       };
-      await this.toolboxWorker.work("importStop", param);
+      await this.toolboxWorker.work("taskStop", param);
     },
-    async cleanTask() {
-      if (this.taskKey == null) {
+    async taskClean() {
+      if (this.task == null) {
         return;
       }
       let param = {
-        taskKey: this.taskKey,
+        taskId: this.task.taskId,
       };
-      await this.toolboxWorker.work("importClean", param);
+      this.task = null;
+      this.taskId = null;
+      await this.toolboxWorker.work("taskClean", param);
+    },
+    toDownload() {
+      if (this.task == null) {
+        this.tool.error("任务数据丢失");
+        return;
+      }
+      let url =
+        this.source.api +
+        "api/toolbox/database/download?taskId=" +
+        encodeURIComponent(this.task.taskId) +
+        "&jwt=" +
+        encodeURIComponent(this.tool.getJWT());
+      window.location.href = url;
     },
   },
   created() {},
   mounted() {
     this.init();
+  },
+  beforeDestroy() {
+    this.isDestroyed = true;
+    this.taskClean();
   },
 };
 </script>
