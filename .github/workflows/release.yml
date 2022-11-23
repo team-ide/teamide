@@ -232,6 +232,7 @@ jobs:
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe . 
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main 
+          timeout /NOBREAK /t 3
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1

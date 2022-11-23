@@ -16,3 +16,8 @@ body {
 .app-system-message-info {
   font-size: 24px;
 }
+
+.reset-btn {
+  color: greenyellow;
+  cursor: pointer;
+}

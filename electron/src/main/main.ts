@@ -32,6 +32,7 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 var isServerError = false
+var serverError = ""
 let startServer = () => { }
 
 ipcMain.on('ipc-example', async (event, arg) => {
@@ -42,6 +43,7 @@ ipcMain.on('ipc-example', async (event, arg) => {
     let out = JSON.stringify({
       isStopped: isStopped,
       isServerError: isServerError,
+      serverError: serverError,
     })
     log.info("ipcMain on ipc-example out:", out)
     event.reply('ipc-example', out);
@@ -260,7 +262,8 @@ const createWindow = async () => {
       log.info("msg:", msg);
     });
     serverProcess.stderr.on('data', (data: any) => {
-      console.log('错误输出:');
+      serverError = data.toString()
+      console.log('stderr:');
       console.log(data.toString());
       console.log('--------------------');
     });
