@@ -368,6 +368,7 @@ export default {
   props: [
     "source",
     "toolboxWorker",
+    "actived",
     "extend",
     "ownerName",
     "tableName",
@@ -430,8 +431,17 @@ export default {
     },
   },
   methods: {
+    onFocus() {
+      if (this.inited) {
+        return;
+      }
+      this.$nextTick(async () => {
+        this.init();
+      });
+    },
     packChange() {},
     async init() {
+      this.inited = true;
       let ownerList = [];
       this.ownersReadonly = false;
       this.tablesReadonly = false;
@@ -655,7 +665,9 @@ export default {
   },
   created() {},
   mounted() {
-    this.init();
+    if (this.actived) {
+      this.init();
+    }
   },
   beforeDestroy() {
     this.isDestroyed = true;

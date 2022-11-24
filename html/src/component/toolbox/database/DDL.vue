@@ -38,7 +38,7 @@ import Pack from "./Pack";
 
 export default {
   components: { Pack },
-  props: ["source", "toolboxWorker", "ownerName", "tableName"],
+  props: ["source", "toolboxWorker", "actived", "ownerName", "tableName"],
   data() {
     return {
       ready: false,
@@ -63,7 +63,16 @@ export default {
     },
   },
   methods: {
+    onFocus() {
+      if (this.inited) {
+        return;
+      }
+      this.$nextTick(async () => {
+        this.init();
+      });
+    },
     init() {
+      this.inited = true;
       this.ready = true;
       this.toLoad();
     },
@@ -95,7 +104,9 @@ export default {
   },
   created() {},
   mounted() {
-    this.init();
+    if (this.actived) {
+      this.init();
+    }
   },
 };
 </script>

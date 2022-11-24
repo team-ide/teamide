@@ -329,9 +329,10 @@ export default {
   components: {},
   props: [
     "source",
+    "toolboxWorker",
+    "actived",
     "ownerName",
     "tableName",
-    "toolboxWorker",
     "extend",
     "tabId",
   ],
@@ -362,7 +363,16 @@ export default {
   computed: {},
   watch: {},
   methods: {
+    onFocus() {
+      if (this.inited) {
+        return;
+      }
+      this.$nextTick(async () => {
+        this.init();
+      });
+    },
     async init() {
+      this.inited = true;
       await this.initTable();
       if (this.tableDetail == null) {
         return;
@@ -1103,7 +1113,9 @@ export default {
   },
   created() {},
   mounted() {
-    this.init();
+    if (this.actived) {
+      this.init();
+    }
   },
 };
 </script>

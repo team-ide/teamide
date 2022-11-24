@@ -146,7 +146,7 @@ import SqlSelectDataList from "./SqlSelectDataList.vue";
 
 export default {
   components: { SqlSelectDataList },
-  props: ["source", "toolboxWorker", "extend", "owners", "tabId"],
+  props: ["source", "toolboxWorker", "actived", "extend", "owners", "tabId"],
   data() {
     let sqlItemsWorker = this.tool.newItemsWorker({
       async onRemoveItem(item) {},
@@ -170,6 +170,14 @@ export default {
   computed: {},
   watch: {},
   methods: {
+    onFocus() {
+      if (this.inited) {
+        return;
+      }
+      this.$nextTick(async () => {
+        this.init();
+      });
+    },
     async autoSaveSql() {
       if (this.isDestroyed) {
         return;
@@ -187,6 +195,7 @@ export default {
       setTimeout(this.autoSaveSql, 300);
     },
     init() {
+      this.inited = true;
       if (this.extend) {
         this.executeSQL = this.extend.executeSQL;
         this.form.ownerName = this.extend.ownerName;
@@ -297,7 +306,9 @@ export default {
   },
   created() {},
   mounted() {
-    this.init();
+    if (this.actived) {
+      this.init();
+    }
   },
   beforeDestroy() {
     this.isDestroyed = true;

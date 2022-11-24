@@ -54,6 +54,7 @@ export default {
   props: [
     "source",
     "toolboxWorker",
+    "actived",
     "ownerName",
     "tableName",
     "columnTypeInfoList",
@@ -90,7 +91,16 @@ export default {
   // 计算属性 数据变，直接会触发相应的操作
   watch: {},
   methods: {
+    onFocus() {
+      if (this.inited) {
+        return;
+      }
+      this.$nextTick(async () => {
+        this.init();
+      });
+    },
     async init() {
+      this.inited = true;
       let tableDetail = null;
       if (this.tool.isNotEmpty(this.tableName)) {
         tableDetail = await this.toolboxWorker.getTableDetail(
@@ -194,7 +204,9 @@ export default {
   created() {},
   // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
   mounted() {
-    this.init();
+    if (this.actived) {
+      this.init();
+    }
   },
 };
 </script>

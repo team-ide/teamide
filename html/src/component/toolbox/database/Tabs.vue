@@ -15,6 +15,10 @@
               :tableName="item.extend.tableName"
               :extend="item.extend"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </TableData>
           </template>
@@ -25,6 +29,10 @@
               :extend="item.extend"
               :owners="owners"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Sql>
           </template>
@@ -35,6 +43,10 @@
               :ownerName="item.extend.ownerName"
               :tableName="item.extend.tableName"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </DDL>
           </template>
@@ -45,6 +57,10 @@
               :ownerName="item.extend.ownerName"
               :tableName="item.extend.tableName"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Model>
           </template>
@@ -58,6 +74,10 @@
               :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Table>
           </template>
@@ -71,6 +91,10 @@
               :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Export>
           </template>
@@ -84,6 +108,10 @@
               :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Import>
           </template>
@@ -97,6 +125,10 @@
               :indexTypeInfoList="indexTypeInfoList"
               :extend="item.extend"
               :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
             >
             </Sync>
           </template>

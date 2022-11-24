@@ -266,8 +266,6 @@ export default {
       this.indexList = [];
       let tableDetail = this.tableDetail;
       tableDetail.columnList.forEach((column, i) => {
-        column.length = Number(column.length);
-        column.decimal = Number(column.decimal);
         if (column.default == "") {
           column.default = null;
         }
