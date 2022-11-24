@@ -175,8 +175,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tealeg/xlsx v1.0.5 h1:+f8oFmvY8Gw1iUXzPk+kz+4GpbDZPK1FhPiQRd+ypgE=
 github.com/tealeg/xlsx v1.0.5/go.mod h1:btRS8dz54TDnvKNosuAqxrM1QgN1udgk9O34bDCnORM=
-github.com/team-ide/go-dialect v1.3.6 h1:bUdmGqUp6ITthc0waCjVv0AF+5QOLTNVbMX94UsD61o=
-github.com/team-ide/go-dialect v1.3.6/go.mod h1:eulGzwjJcPgr/8YsHYN/IzcAyEigeJqiPnNjPRjy0nA=
+github.com/team-ide/go-dialect v1.4.2 h1:x2W0yRfuiz84k6IKG4Rr52osKBiCNMtd5ql5Kud8vvU=
+github.com/team-ide/go-dialect v1.4.2/go.mod h1:eulGzwjJcPgr/8YsHYN/IzcAyEigeJqiPnNjPRjy0nA=
 github.com/team-ide/go-driver v1.1.0 h1:DGMaZh4Y1lQijcNmqh9Yi4gA51b7H3i5QG0l3BrerXw=
 github.com/team-ide/go-driver v1.1.0/go.mod h1:1MMLcR0vW0+xFKYV5kb+nSvcRUVLn8mdRsW6CfAKoBE=
 github.com/tklauser/go-sysconf v0.3.10 h1:IJ1AZGZRWbY8T5Vfk04D9WOA5WSejdflXxP03OUqALw=

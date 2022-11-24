@@ -2,7 +2,17 @@
   <div class="toolbox-database-table">
     <el-form class="pdlr-10" size="mini" inline>
       <el-form-item label="库名">
-        <el-input v-model="form.ownerName" style="width: 120px"> </el-input>
+        <template v-if="!isInsert && tableDetail != null">
+          <el-input
+            v-model="tableDetail.ownerName"
+            style="width: 120px"
+            readonly
+          >
+          </el-input>
+        </template>
+        <template v-else>
+          <el-input v-model="form.ownerName" style="width: 120px"> </el-input>
+        </template>
       </el-form-item>
       <el-form-item label="新建表">
         <el-switch v-model="isInsert" :readonly="tableDetail == null">
@@ -118,16 +128,14 @@ export default {
       if (tableDetail != null) {
         this.form.tableName = tableDetail.tableName;
         this.form.tableComment = tableDetail.tableComment;
-        this.form.oldTable = tableDetail;
+        this.form.oldTableName = tableDetail.tableName;
+        this.form.oldTableComment = tableDetail.tableComment;
         if (tableDetail.columnList) {
-          let lastColumn = null;
           tableDetail.columnList.forEach((one) => {
             let column = Object.assign({}, one);
             column.oldColumn = one;
             column.deleted = false;
-            column.oldBeforeColumn = lastColumn;
             this.form.columnList.push(column);
-            lastColumn = column;
           });
         }
         if (tableDetail.indexList) {
@@ -140,7 +148,7 @@ export default {
         }
       }
       this.$nextTick(() => {
-        this.$refs.TableDetail.init(this.form);
+        this.$refs.TableDetail.init(this.ownerName, this.tableName, this.form);
       });
     },
     getFormData() {
@@ -152,9 +160,12 @@ export default {
       data.columnList = [];
       this.form.columnList.forEach((one) => {
         let column = Object.assign({}, one);
-        delete column.beforeColumn_;
-        delete column.oldBeforeColumn;
         data.columnList.push(column);
+      });
+      data.indexList = [];
+      this.form.indexList.forEach((one) => {
+        let index = Object.assign({}, one);
+        data.indexList.push(index);
       });
       this.toolboxWorker.formatParam(data);
       return data;
@@ -167,6 +178,8 @@ export default {
       if (this.isInsert) {
         res = await this.toolboxWorker.work("tableCreate", data);
       } else {
+        data.ownerName = this.ownerName;
+        data.tableName = this.tableName;
         res = await this.toolboxWorker.work("tableUpdate", data);
       }
       this.executeSqlIng = false;

@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
@@ -200,18 +201,109 @@ func (this_ *Service) TableCreateSql(param *Param, ownerName string, table *dial
 	return
 }
 
-func (this_ *Service) TableUpdateSql(param *Param, ownerName string, updateTableParam *UpdateTableParam) (sqlList []string, err error) {
+type UpdateTableParam struct {
+	TableComment    string               `json:"tableComment"`
+	OldTableComment string               `json:"oldTableComment"`
+	ColumnList      []*UpdateTableColumn `json:"columnList"`
+	IndexList       []*UpdateTableIndex  `json:"indexList"`
+}
+
+type UpdateTableColumn struct {
+	*dialect.ColumnModel
+	OldColumn *dialect.ColumnModel `json:"oldColumn"`
+	Delete    bool                 `json:"delete"`
+}
+type UpdateTableIndex struct {
+	*dialect.IndexModel
+	OldIndex *dialect.IndexModel `json:"oldIndex"`
+	Delete   bool                `json:"delete"`
+}
+
+func (this_ *Service) TableUpdateSql(param *Param, ownerName string, tableName string, updateTableParam *UpdateTableParam) (sqlList []string, err error) {
+	var last *UpdateTableColumn
+	for _, one := range updateTableParam.ColumnList {
+		if last != nil {
+			one.ColumnAfterColumn = last.ColumnName
+		}
+		last = one
+	}
+
+	var newPrimaryKeys []string
+	var oldPrimaryKeys []string
+	var sqlList_ []string
+	for _, one := range updateTableParam.ColumnList {
+		if one.PrimaryKey {
+			newPrimaryKeys = append(newPrimaryKeys, one.ColumnName)
+		}
+		if one.OldColumn != nil {
+			if one.OldColumn.PrimaryKey {
+				oldPrimaryKeys = append(oldPrimaryKeys, one.OldColumn.ColumnName)
+			}
+		}
+		if one.Delete {
+			if one.OldColumn == nil {
+				sqlList_, err = this_.GetTargetDialect(param).ColumnDeleteSql(param.ParamModel, ownerName, tableName, one.ColumnName)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+			}
+		} else if one.OldColumn == nil {
+			sqlList_, err = this_.GetTargetDialect(param).ColumnAddSql(param.ParamModel, ownerName, tableName, one.ColumnModel)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		} else {
+			sqlList_, err = this_.GetTargetDialect(param).ColumnUpdateSql(param.ParamModel, ownerName, tableName, one.OldColumn, one.ColumnModel)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		}
+	}
+
+	var primaryKeyChange bool
+	for _, oldPrimaryKey := range oldPrimaryKeys {
+		if dialect.StringsIndex(newPrimaryKeys, oldPrimaryKey) < 0 {
+			primaryKeyChange = true
+		}
+	}
+	if !primaryKeyChange {
+		for _, newPrimaryKey := range newPrimaryKeys {
+			if dialect.StringsIndex(oldPrimaryKeys, newPrimaryKey) < 0 {
+				primaryKeyChange = true
+			}
+		}
+	}
+	if primaryKeyChange {
+		if len(oldPrimaryKeys) > 0 {
+			sqlList_, err = this_.GetTargetDialect(param).PrimaryKeyDeleteSql(param.ParamModel, ownerName, tableName)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		}
+		if len(newPrimaryKeys) > 0 {
+			sqlList_, err = this_.GetTargetDialect(param).PrimaryKeyAddSql(param.ParamModel, ownerName, tableName, newPrimaryKeys)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		}
+	}
 	return
 }
 
-func (this_ *Service) TableUpdate(param *Param, ownerName string, updateTableParam *UpdateTableParam) (err error) {
-	sqlList, err := this_.TableUpdateSql(param, ownerName, updateTableParam)
+func (this_ *Service) TableUpdate(param *Param, ownerName string, tableName string, updateTableParam *UpdateTableParam) (err error) {
+	sqlList, err := this_.TableUpdateSql(param, ownerName, tableName, updateTableParam)
 	if err != nil {
 		return
 	}
-	_, _, _, err = worker.DoExecs(this_.DatabaseWorker.db, sqlList, nil)
+	_, errSql, _, err := worker.DoExecs(this_.DatabaseWorker.db, sqlList, nil)
 	if err != nil {
-		util.Logger.Error("TableUpdate error", zap.Error(err))
+		err = errors.New("sql:" + errSql + ",error:" + err.Error())
+		util.Logger.Error("TableUpdate error:", zap.Error(err))
 		return
 	}
 	return
@@ -304,10 +396,6 @@ func (this_ *Service) DataListExec(param *Param, ownerName string, tableName str
 	}
 
 	return
-}
-
-type UpdateTableParam struct {
-	TableName string `json:"tableName"`
 }
 
 type DataListResult struct {

@@ -3,8 +3,13 @@
     <template v-if="tableDetail != null">
       <el-form ref="form" inline size="mini">
         <el-form-item label="表名" class="mgb-0">
-          <el-input v-model="tableDetail.tableName" @change="change">
-          </el-input>
+          <template v-if="!isInsert">
+            <el-input v-model="tableName" readonly> </el-input>
+          </template>
+          <template v-else>
+            <el-input v-model="tableDetail.tableName" @change="change">
+            </el-input>
+          </template>
         </el-form-item>
         <el-form-item label="注释" class="mgb-0">
           <el-input v-model="tableDetail.tableComment" @change="change">
@@ -297,6 +302,7 @@ export default {
       indexList: [],
       activeName: "column",
       showSQL: null,
+      tableName: null,
     };
   },
   computed: {},
@@ -315,9 +321,14 @@ export default {
     },
   },
   methods: {
-    init(tableDetail) {
+    init(ownerName, tableName, tableDetail) {
+      this.ownerName = ownerName;
+      this.tableName = tableName;
       this.tableDetail = tableDetail;
       this.initData();
+      this.$nextTick(() => {
+        this.canLoadSql = true;
+      });
     },
     initData() {
       this.columnList = [];
@@ -335,18 +346,6 @@ export default {
           if (this.columnList.indexOf(column) < 0) {
             this.columnList.push(column);
           }
-        }
-      });
-      this.columnList.forEach((column, i) => {
-        delete column.beforeColumn;
-        if (
-          column.beforeColumn_ != null &&
-          column.beforeColumn_ != column.oldBeforeColumn &&
-          this.columnList.indexOf(column.beforeColumn_) >= 0
-        ) {
-          column.beforeColumn = column.beforeColumn_.name;
-        } else {
-          delete column.beforeColumn_;
         }
       });
       tableDetail.indexList.forEach((index) => {
@@ -368,32 +367,12 @@ export default {
       this.tool.up(this, "columnList", column);
       this.tool.up(this.tableDetail, "columnList", column);
 
-      let findIndex = this.columnList.indexOf(column);
-      if (findIndex == 0) {
-        column.beforeColumn_ = null;
-        if (this.columnList.length > 1) {
-          this.columnList[1].beforeColumn_ = column;
-        }
-      } else {
-        column.beforeColumn_ = this.columnList[findIndex - 1];
-      }
-
       this.initData();
       this.callChange();
     },
     downColumn(column) {
       this.tool.down(this, "columnList", column);
       this.tool.down(this.tableDetail, "columnList", column);
-
-      let findIndex = this.columnList.indexOf(column);
-      if (findIndex == 0) {
-        column.beforeColumn_ = null;
-        if (this.columnList.length > 1) {
-          this.columnList[1].beforeColumn_ = column;
-        }
-      } else {
-        column.beforeColumn_ = this.columnList[findIndex - 1];
-      }
 
       this.initData();
       this.callChange();
@@ -402,7 +381,7 @@ export default {
     addColumn(column, after) {
       column = column || {};
       column.columnName = column.columnName || "";
-      column.columnType = column.columnType || "varchar";
+      column.columnDataType = column.columnDataType || "varchar";
       column.columnLength = column.columnLength || 250;
       column.columnDecimal = column.columnDecimal || 0;
       column.primaryKey = column.primaryKey || false;
@@ -417,7 +396,6 @@ export default {
         appendIndex++;
       }
       this.tableDetail.columnList.splice(appendIndex, 0, column);
-      column.beforeColumn_ = this.tableDetail.columnList[appendIndex - 1];
       this.initData();
       this.callChange();
     },
@@ -467,6 +445,9 @@ export default {
       this.toLoad();
     },
     async toLoad() {
+      if (!this.canLoadSql) {
+        return;
+      }
       this.showSQL = "";
       let res = await this.loadSqls();
       let sqlList = res.sqlList || [];
@@ -481,6 +462,8 @@ export default {
       if (this.isInsert) {
         res = await this.toolboxWorker.work("tableCreateSql", data);
       } else {
+        data.ownerName = this.ownerName;
+        data.tableName = this.tableName;
         res = await this.toolboxWorker.work("tableUpdateSql", data);
       }
       this.error = null;

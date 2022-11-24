@@ -175,7 +175,7 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		if err != nil {
 			return
 		}
-		err = service.TableUpdate(param, request.OwnerName, updateTableParam)
+		err = service.TableUpdate(param, request.OwnerName, request.TableName, updateTableParam)
 		if err != nil {
 			return
 		}
@@ -188,7 +188,7 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		var sqlList []string
-		sqlList, err = service.TableUpdateSql(param, request.OwnerName, updateTableParam)
+		sqlList, err = service.TableUpdateSql(param, request.OwnerName, request.TableName, updateTableParam)
 		if err != nil {
 			return
 		}
