@@ -93,7 +93,6 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          go env -w CGO_ENABLED=0
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide .
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
