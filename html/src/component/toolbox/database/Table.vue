@@ -9,7 +9,7 @@
         </el-switch>
       </el-form-item>
     </el-form>
-    <div class="app-scroll-bar" style="height: calc(100% - 130px)">
+    <div style="height: calc(100% - 130px)">
       <TableDetail
         class="pd-10"
         ref="TableDetail"
@@ -18,13 +18,16 @@
         :onChange="onTableDetailChange"
         :columnTypeInfoList="columnTypeInfoList"
         :indexTypeInfoList="indexTypeInfoList"
+        :formData="form"
+        :getFormData="getFormData"
+        :isInsert="isInsert"
+        :onError="onError"
       ></TableDetail>
     </div>
     <div class="" v-if="error != null">
       <div class="bg-red ft-12 mglr-10 pd-5">{{ error }}</div>
     </div>
     <div class="pd-10">
-      <div class="tm-btn bg-grey ft-13 mgr-10" @click="toShowSql">查看SQL</div>
       <div
         class="tm-btn bg-green ft-13"
         @click="toExecuteSql"
@@ -33,24 +36,14 @@
         执行
       </div>
     </div>
-    <TableSql
-      ref="TableSql"
-      :source="source"
-      :toolboxWorker="toolboxWorker"
-      :isInsert="isInsert"
-      :form="form"
-      :getFormData="getFormData"
-      :onError="onError"
-    ></TableSql>
   </div>
 </template>
 
 <script>
 import TableDetail from "./TableDetail";
-import TableSql from "./TableSql";
 
 export default {
-  components: { TableDetail, TableSql },
+  components: { TableDetail },
   props: [
     "source",
     "toolboxWorker",
@@ -196,13 +189,9 @@ export default {
     onError(error) {
       this.error = error;
     },
-    toShowSql() {
-      this.$refs.TableSql.show();
-    },
   },
-  // 在实例创建完成后被立即调用
   created() {},
-  // el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用
+  updated() {},
   mounted() {
     if (this.actived) {
       this.init();
