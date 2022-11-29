@@ -75,11 +75,22 @@
                     </div>
                   </template>
                 </el-table-column>
-                <el-table-column label="小数点" width="70">
+                <el-table-column label="精度" width="70">
                   <template slot-scope="scope">
                     <div class="">
                       <el-input
-                        v-model="scope.row.columnDecimal"
+                        v-model="scope.row.columnPrecision"
+                        type="text"
+                        @change="change"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column label="标度" width="70">
+                  <template slot-scope="scope">
+                    <div class="">
+                      <el-input
+                        v-model="scope.row.columnScale"
                         type="text"
                         @change="change"
                       />
@@ -383,7 +394,8 @@ export default {
       column.columnName = column.columnName || "";
       column.columnDataType = column.columnDataType || "varchar";
       column.columnLength = column.columnLength || 250;
-      column.columnDecimal = column.columnDecimal || 0;
+      column.columnPrecision = column.columnPrecision || 0;
+      column.columnScale = column.columnScale || 0;
       column.primaryKey = column.primaryKey || false;
       column.columnNotNull = column.columnNotNull || false;
       column.columnDefault = column.columnDefault || "";

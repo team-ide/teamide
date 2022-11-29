@@ -3,6 +3,7 @@ package module_toolbox
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"teamide/pkg/db"
 	"teamide/pkg/elasticsearch"
 	"teamide/pkg/form"
@@ -180,6 +181,22 @@ func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work stri
 	}
 
 	optionBytes := []byte(option)
+
+	if len(optionBytes) > 0 {
+		optionData := map[string]interface{}{}
+		e := json.Unmarshal(optionBytes, &optionData)
+		if e == nil {
+			strV, strVOk := optionData["port"].(string)
+			if strVOk {
+				if strV == "" {
+					delete(optionData, "port")
+				} else {
+					optionData["port"], _ = strconv.Atoi(strV)
+				}
+				optionBytes, _ = json.Marshal(optionData)
+			}
+		}
+	}
 
 	switch toolboxWorker {
 	case databaseWorker_:

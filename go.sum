@@ -26,8 +26,8 @@ github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91/go.mod h1:2pZnwu
 github.com/dlclark/regexp2 v1.7.0 h1:7lJfhqlPssTb1WQx4yvTHN0uElPEv52sbaECrAQxjAo=
 github.com/dlclark/regexp2 v1.7.0/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/dop251/goja v0.0.0-20211022113120-dc8c55024d06/go.mod h1:R9ET47fwRVRPZnOGvHxxhuZcbrMCuiqOz3Rlrh4KSnk=
-github.com/dop251/goja v0.0.0-20221115122301-6c0d9883792e h1:Uo51nR73BJlci20AE5tXT5qiLSGZy5LHnRlKt7VkcUM=
-github.com/dop251/goja v0.0.0-20221115122301-6c0d9883792e/go.mod h1:yRkwfj0CBpOGre+TwBsqPV0IH0Pk73e4PXJOeNDboGs=
+github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86 h1:E2wycakfddWJ26v+ZyEY91Lb/HEZyaiZhbMX+KQcdmc=
+github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86/go.mod h1:yRkwfj0CBpOGre+TwBsqPV0IH0Pk73e4PXJOeNDboGs=
 github.com/dop251/goja_nodejs v0.0.0-20210225215109-d91c329300e7/go.mod h1:hn7BA7c8pLvoGndExHudxTDKZ84Pyvv+90pbBjbTz0Y=
 github.com/dop251/goja_nodejs v0.0.0-20211022123610-8dd9abb0616d/go.mod h1:DngW8aVqWbuLRMHItjPUyqdj+HWPvnQe8V8y1nDpIbM=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
@@ -175,8 +175,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tealeg/xlsx v1.0.5 h1:+f8oFmvY8Gw1iUXzPk+kz+4GpbDZPK1FhPiQRd+ypgE=
 github.com/tealeg/xlsx v1.0.5/go.mod h1:btRS8dz54TDnvKNosuAqxrM1QgN1udgk9O34bDCnORM=
-github.com/team-ide/go-dialect v1.4.2 h1:x2W0yRfuiz84k6IKG4Rr52osKBiCNMtd5ql5Kud8vvU=
-github.com/team-ide/go-dialect v1.4.2/go.mod h1:eulGzwjJcPgr/8YsHYN/IzcAyEigeJqiPnNjPRjy0nA=
+github.com/team-ide/go-dialect v1.4.4 h1:chAGsn6GSEGoHFOUJHqzcMo7T73V/yhmc94//a7xVGQ=
+github.com/team-ide/go-dialect v1.4.4/go.mod h1:FNc8p+60wVNkN7FuvDRXqD0NpcUyPXMtK8eliZnLDz4=
 github.com/team-ide/go-driver v1.1.0 h1:DGMaZh4Y1lQijcNmqh9Yi4gA51b7H3i5QG0l3BrerXw=
 github.com/team-ide/go-driver v1.1.0/go.mod h1:1MMLcR0vW0+xFKYV5kb+nSvcRUVLn8mdRsW6CfAKoBE=
 github.com/tklauser/go-sysconf v0.3.10 h1:IJ1AZGZRWbY8T5Vfk04D9WOA5WSejdflXxP03OUqALw=

@@ -52,8 +52,11 @@ func (this_ *modelGen) appendTableModel(table *dialect.TableModel) (err error) {
 		if column.ColumnLength > 0 {
 			this_.content += "ColumnLength: " + fmt.Sprintf("%d", column.ColumnLength) + ", "
 		}
-		if column.ColumnDecimal > 0 {
-			this_.content += "ColumnDecimal: " + fmt.Sprintf("%d", column.ColumnDecimal) + ", "
+		if column.ColumnPrecision > 0 {
+			this_.content += "ColumnPrecision: " + fmt.Sprintf("%d", column.ColumnPrecision) + ", "
+		}
+		if column.ColumnScale > 0 {
+			this_.content += "ColumnScale: " + fmt.Sprintf("%d", column.ColumnScale) + ", "
 		}
 		if column.ColumnNotNull {
 			this_.content += "ColumnNotNull: true, "

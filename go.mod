@@ -7,7 +7,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/Shopify/sarama v1.37.2
 	github.com/creack/pty v1.1.18
-	github.com/dop251/goja v0.0.0-20221115122301-6c0d9883792e
+	github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-zookeeper/zk v1.0.3
@@ -18,7 +18,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.22.10
 	github.com/tealeg/xlsx v1.0.5
-	github.com/team-ide/go-dialect v1.4.2
+	github.com/team-ide/go-dialect v1.4.4
 	github.com/team-ide/go-driver v1.1.0
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.3.0

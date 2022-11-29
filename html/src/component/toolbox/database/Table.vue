@@ -154,7 +154,8 @@ export default {
     getFormData() {
       this.form.columnList.forEach((one) => {
         one.columnLength = Number(one.columnLength);
-        one.columnDecimal = Number(one.columnDecimal);
+        one.columnPrecision = Number(one.columnPrecision);
+        one.columnScale = Number(one.columnScale);
       });
       let data = Object.assign({}, this.form);
       data.columnList = [];
