@@ -346,7 +346,7 @@ func databaseWorker() *Worker {
 					},
 				},
 				{
-					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: "3306", VIf: `type != 'sqlite'`,
+					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: 3306, VIf: `type != 'sqlite'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
