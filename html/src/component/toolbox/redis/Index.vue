@@ -23,7 +23,6 @@
       </tm-layout>
     </template>
     <ShowInfo :source="source" :toolboxWorker="toolboxWorker"></ShowInfo>
-    <ShowValue :source="source" :toolboxWorker="toolboxWorker"></ShowValue>
   </div>
 </template>
 
@@ -32,10 +31,9 @@
 import Keys from "./Keys";
 import Tabs from "./Tabs";
 import ShowInfo from "./ShowInfo.vue";
-import ShowValue from "./ShowValue.vue";
 
 export default {
-  components: { Keys, Tabs, ShowInfo, ShowValue },
+  components: { Keys, Tabs, ShowInfo },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {

@@ -356,7 +356,7 @@ export default {
       this.ready = true;
     },
     toViewJSONValue(value) {
-      this.toolboxWorker.showValue(value);
+      this.toolboxWorker.showJSONData(value);
     },
     refresh() {},
     reloadForm() {
