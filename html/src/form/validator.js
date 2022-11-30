@@ -59,7 +59,18 @@ let buildFormValidator = function (form) {
             if (isEmpty(field.name)) {
                 return;
             }
-            data[field.name] = field.defaultValue || null;
+            if (field.fields && field.fields.length > 0) {
+                if (field.type == 'list') {
+                    data[field.name] = field.defaultValue || [];
+                } else {
+                    data[field.name] = field.defaultValue || {};
+                    field.fields.forEach(one => {
+                        data[field.name][one.name] = one.defaultValue || null;
+                    });
+                }
+            } else {
+                data[field.name] = field.defaultValue || null;
+            }
         });
         return data;
     };

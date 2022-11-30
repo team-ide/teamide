@@ -88,6 +88,58 @@
               >
               </el-input>
             </template>
+            <template v-else-if="field.type == 'list'">
+              <el-table :data="listObjectMap[field.name].list">
+                <template
+                  v-for="(listField, listFieldIndex) in listObjectMap[
+                    field.name
+                  ].fields"
+                >
+                  <el-table-column
+                    :key="listFieldIndex"
+                    :label="listField.label"
+                    fixed
+                  >
+                    <template slot-scope="scope">
+                      <el-input
+                        v-model="scope.row[listField.name]"
+                        type="text"
+                      />
+                    </template>
+                  </el-table-column>
+                </template>
+                <el-table-column label="操作" width="200px">
+                  <template slot="header" s>
+                    <div
+                      class="tm-link color-green mgl-10"
+                      @click="listObjectMap[field.name].add({})"
+                    >
+                      新增
+                    </div>
+                  </template>
+                  <template slot-scope="scope">
+                    <div
+                      class="tm-link color-grey mglr-5"
+                      @click="listObjectMap[field.name].up(scope.row)"
+                    >
+                      上移
+                    </div>
+                    <div
+                      class="tm-link color-grey mglr-5"
+                      @click="listObjectMap[field.name].down(scope.row)"
+                    >
+                      下移
+                    </div>
+                    <div
+                      class="tm-link color-red mglr-5"
+                      @click="listObjectMap[field.name].remove(scope.row)"
+                    >
+                      删除
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
             <template v-else-if="field.type == 'jsonView'">
               <el-input
                 type="textarea"
@@ -133,6 +185,7 @@ export default {
       fileObjectMap: null,
       jsonStringMap: null,
       jsonViewMap: null,
+      listObjectMap: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -148,6 +201,7 @@ export default {
       let fileObjectMap = {};
       let jsonStringMap = {};
       let jsonViewMap = {};
+      let listObjectMap = {};
       this.formBuild.fields.forEach((one) => {
         let name = one.name;
         let type = one.type;
@@ -188,8 +242,42 @@ export default {
               this.formData[name] = response.data.files[0].path;
             },
           };
+        } else if (type == "list") {
+          let listFields = one.fields || [];
+          let list = this.formData[name] || [];
+          one.fields = one.fields || [];
+          let listObject = {
+            list: list,
+            fields: listFields,
+            fullData: (data) => {
+              data = data || {};
+              listFields.forEach((listField) => {
+                data[listField.name] = data[listField.name];
+              });
+            },
+            add: (data) => {
+              listObject.fullData(data);
+              list.push(data);
+            },
+
+            up: (data) => {
+              this.tool.up(listObject, "list", data);
+            },
+            down: (data) => {
+              this.tool.down(listObject, "list", data);
+            },
+            remove: (data) => {
+              let findIndex = list.indexOf(data);
+              if (findIndex >= 0) {
+                list.splice(findIndex, 1);
+              }
+            },
+          };
+          listObjectMap[name] = listObject;
+          this.formData[name] = list;
         }
       });
+      this.listObjectMap = listObjectMap;
       this.jsonViewMap = jsonViewMap;
       this.jsonStringMap = jsonStringMap;
       this.fileObjectMap = fileObjectMap;

@@ -79,7 +79,7 @@ func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSi
 
 	err = util.Read(reader, buf, func(n int) (e error) {
 		if *callStop {
-			e = errors.New("is call stopped")
+			e = util.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -121,7 +121,7 @@ func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSiz
 
 	err = util.Read(f, buf, func(n int) (e error) {
 		if *callStop {
-			e = errors.New("is call stopped")
+			e = util.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)

@@ -20,7 +20,6 @@
       <ReindexForm :source="source" :toolboxWorker="toolboxWorker">
       </ReindexForm>
       <DataForm :source="source" :toolboxWorker="toolboxWorker"> </DataForm>
-      <ShowData :source="source" :toolboxWorker="toolboxWorker"> </ShowData>
       <MappingForm :source="source" :toolboxWorker="toolboxWorker">
       </MappingForm>
       <ShowInfo :source="source" :toolboxWorker="toolboxWorker"> </ShowInfo>
@@ -36,7 +35,6 @@ import IndexForm from "./IndexForm";
 import ReindexForm from "./ReindexForm";
 import MappingForm from "./MappingForm";
 import DataForm from "./DataForm";
-import ShowData from "./ShowData";
 import ShowInfo from "./ShowInfo";
 export default {
   components: {
@@ -46,7 +44,6 @@ export default {
     ReindexForm,
     MappingForm,
     DataForm,
-    ShowData,
     ShowInfo,
   },
   props: ["source", "toolboxWorker", "extend"],

@@ -17,7 +17,6 @@
         </tm-layout>
       </tm-layout>
       <TopicForm :source="source" :toolboxWorker="toolboxWorker"> </TopicForm>
-      <ShowData :source="source" :toolboxWorker="toolboxWorker"> </ShowData>
     </template>
     <ShowInfo :source="source" :toolboxWorker="toolboxWorker"> </ShowInfo>
   </div>
@@ -28,10 +27,9 @@
 import Topic from "./Topic";
 import Tabs from "./Tabs";
 import TopicForm from "./TopicForm";
-import ShowData from "./ShowData";
 import ShowInfo from "./ShowInfo";
 export default {
-  components: { Topic, Tabs, TopicForm, ShowData, ShowInfo },
+  components: { Topic, Tabs, TopicForm, ShowInfo },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {

@@ -15,6 +15,7 @@ type Field struct {
 	Rules        []*Rule     `json:"rules,omitempty"`
 	Options      []*Option   `json:"options,omitempty"`
 	VIf          string      `json:"vIf,omitempty"`
+	Fields       []*Field    `json:"fields,omitempty"`
 }
 
 type Rule struct {

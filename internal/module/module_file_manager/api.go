@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"strings"
@@ -300,13 +301,18 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename*=utf-8''%s", url.QueryEscape(fileInfo.Name)))
-	c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
+
+	// 此处不设置 文件大小，如果设置文件大小，将无法终止下载
+	//c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
 	c.Header("download-file-name", fileInfo.Name)
 
 	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, &cWriter{
 		c: c,
 	})
 	if err != nil {
+		c.AbortWithStatus(http.StatusOK)
+		err = nil
+		this_.Logger.Warn("file manager download file error", zap.Error(err))
 		return
 	}
 	c.Status(http.StatusOK)

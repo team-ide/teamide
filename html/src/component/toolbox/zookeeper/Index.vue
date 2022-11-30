@@ -84,6 +84,9 @@
             <el-form ref="form" size="mini" @submit.native.prevent>
               <div class="ft-12 color-grey" v-if="stat != null">
                 节点信息：
+                <div class="tm-link color-green" @click="reloadForm()">
+                  刷新
+                </div>
                 <div>
                   <div class="pdtb-2">
                     创建时间:
@@ -435,6 +438,13 @@ export default {
       }
       this.stat = null;
       this.form.value = null;
+    },
+    reloadForm() {
+      if (this.stat != null) {
+        this.toUpdate({ path: this.form.path });
+      } else {
+        this.toInsert({ path: this.form.path });
+      }
     },
     async toUpdate(one) {
       this.tool.stopEvent();

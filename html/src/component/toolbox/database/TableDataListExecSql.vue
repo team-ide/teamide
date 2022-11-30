@@ -16,7 +16,7 @@
     :before-close="hide"
     width="1200px"
   >
-    <div class="mgt--20 toolbox-database-save-sql">
+    <div class="mgt--20">
       <el-form ref="form" :model="form" size="mini" :inline="true">
         <Pack
           :source="source"
@@ -125,17 +125,4 @@ export default {
 </script>
 
 <style>
-.toolbox-database-save-sql-textarea {
-  width: 100%;
-  height: 400px;
-  letter-spacing: 1px;
-  word-spacing: 5px;
-  word-break: break-all;
-  font-size: 12px;
-  border: 1px solid #ddd;
-  padding: 0px 5px;
-  outline: none;
-  user-select: none;
-  resize: none;
-}
 </style>

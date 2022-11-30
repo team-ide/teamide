@@ -135,11 +135,7 @@
               <span class="color-green">完成</span>
             </template>
             <template v-else>
-              <span
-                :key="index"
-                class="tm-link mgl-5 color-orange"
-                @click="doCallStop(one)"
-              >
+              <span class="tm-link mgl-5 color-red-4" @click="doCallStop(one)">
                 终止
               </span>
               <span class="mgl-5 color-orange">执行中</span>

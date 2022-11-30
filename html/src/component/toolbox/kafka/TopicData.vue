@@ -72,6 +72,21 @@
                   <span>{{ scope.row.offset }}</span>
                 </template>
               </el-table-column>
+              <template v-for="(column, index) in headerColumnList">
+                <template v-if="column.checked">
+                  <el-table-column
+                    :key="index"
+                    :prop="column.name"
+                    :label="`header:${column.name}`"
+                  >
+                    <template slot-scope="scope">
+                      <div class="">
+                        {{ scope.row.headerValue[column.name] }}
+                      </div>
+                    </template>
+                  </el-table-column>
+                </template>
+              </template>
               <el-table-column width="120" label="Key">
                 <template slot-scope="scope">
                   <span>{{ scope.row.key }}</span>
@@ -101,7 +116,7 @@
                 <template slot-scope="scope">
                   <div
                     class="tm-btn color-grey tm-btn-xs"
-                    @click="toolboxWorker.showData(scope.row)"
+                    @click="toolboxWorker.showJSONData(scope.row)"
                   >
                     查看
                   </div>
@@ -153,6 +168,7 @@ export default {
         pullTimeout: 1000,
       },
       dataList: [],
+      headerColumnList: [],
       columnList: [],
       dataListLoading: false,
     };
@@ -181,7 +197,7 @@ export default {
       }
     },
     rowDbClick(data) {
-      this.toolboxWorker.showData(data);
+      this.toolboxWorker.showJSONData(data);
     },
     toPush() {
       let data = {
@@ -279,7 +295,10 @@ export default {
       dataList = dataList || [];
       let columnList = [];
       let columnNameList = [];
+      let headerColumnList = [];
+      let headerColumnNameList = [];
       dataList.forEach((one) => {
+        let headerValue = {};
         let jsonValue = {};
         let value = one.value;
         if (this.tool.isJSONString(value)) {
@@ -301,8 +320,23 @@ export default {
             checked: true,
           });
         }
+        if (one.headers && one.headers.length > 0) {
+          one.headers.forEach((data) => {
+            if (headerColumnNameList.indexOf(data.key) >= 0) {
+              return;
+            }
+            headerColumnNameList.push(data.key);
+            headerValue[data.key] = data.value;
+            headerColumnList.push({
+              name: data.key,
+              checked: true,
+            });
+          });
+        }
+        one.headerValue = headerValue;
         one.jsonValue = jsonValue;
       });
+      this.headerColumnList = headerColumnList;
       this.columnList = columnList;
     },
     async doPull() {

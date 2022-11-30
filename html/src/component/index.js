@@ -19,6 +19,9 @@ Vue.component('SystemInfoBox', SystemInfoBox);
 import AlertBox from './message/AlertBox.vue'
 Vue.component('AlertBox', AlertBox);
 
+import JSONDataDialog from './dialog/JSONDataDialog.vue'
+Vue.component('JSONDataDialog', JSONDataDialog);
+
 import Login from './Login.vue'
 Vue.component('Login', Login);
 

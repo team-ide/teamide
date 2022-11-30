@@ -215,7 +215,7 @@
                 <template slot-scope="scope">
                   <div
                     class="tm-btn color-grey tm-btn-xs"
-                    @click="toolboxWorker.showData(scope.row)"
+                    @click="toolboxWorker.showJSONData(scope.row)"
                   >
                     查看
                   </div>
@@ -464,7 +464,7 @@ export default {
     },
     toIndex() {},
     rowDblClick(row, column, event) {
-      this.toolboxWorker.showData(row);
+      this.toolboxWorker.showJSONData(row);
     },
     toDelete(data) {
       let indexName = data.indexName;

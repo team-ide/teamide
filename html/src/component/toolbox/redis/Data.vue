@@ -3,26 +3,29 @@
     <template v-if="ready">
       <div class="toolbox-redis-form-box">
         <el-form size="mini" @submit.native.prevent>
-          <el-form-item label="Database">
-            <el-input v-model="form.database"> </el-input>
-          </el-form-item>
-          <el-form-item label="值类型">
-            <el-select
-              placeholder="请选择类型"
-              v-model="form.valueType"
-              style="width: 100%"
-            >
-              <el-option label="string" value="string"> </el-option>
-              <el-option label="list" value="list"></el-option>
-              <el-option label="set" value="set"></el-option>
-              <el-option label="hash" value="hash"></el-option>
-            </el-select>
-          </el-form-item>
+          <el-form size="mini" @submit.native.prevent inline class="pdt-10">
+            <el-form-item label="Database">
+              <el-input v-model="form.database" style="width: 100px">
+              </el-input>
+            </el-form-item>
+            <el-form-item label="值类型">
+              <el-select
+                placeholder="请选择类型"
+                v-model="form.valueType"
+                style="width: 200px"
+              >
+                <el-option label="string" value="string"> </el-option>
+                <el-option label="list" value="list"></el-option>
+                <el-option label="set" value="set"></el-option>
+                <el-option label="hash" value="hash"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="过期时间（秒）">
+              <el-input v-model="form.expire" style="width: 100px"> </el-input>
+            </el-form-item>
+          </el-form>
           <el-form-item label="Key">
             <el-input v-model="form.key"> </el-input>
-          </el-form-item>
-          <el-form-item label="过期时间（秒）">
-            <el-input v-model="form.expire"> </el-input>
           </el-form-item>
           <div
             class="ft-12 pdb-10"
@@ -47,6 +50,7 @@
                 </span>
               </span>
             </template>
+            <div class="tm-link color-green" @click="reloadForm()">刷新</div>
           </div>
           <template v-if="form.valueType == 'string'">
             <el-form-item label="Value">
@@ -355,6 +359,9 @@ export default {
       this.toolboxWorker.showValue(value);
     },
     refresh() {},
+    reloadForm() {
+      this.initForm();
+    },
     async initForm() {
       this.loading = true;
       this.form.value = null;
@@ -544,7 +551,7 @@ export default {
 }
 .toolbox-redis-value-box {
   width: 100%;
-  height: calc(100% - 330px);
+  height: calc(100% - 235px);
 }
 .toolbox-redis-form-box .el-form .el-form-item {
   padding: 0px 10px;

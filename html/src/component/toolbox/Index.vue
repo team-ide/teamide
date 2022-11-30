@@ -86,6 +86,7 @@
     </QuickCommand>
     <QuickCommandSSHCommandForm :source="source" :toolboxWorker="toolboxWorker">
     </QuickCommandSSHCommandForm>
+    <JSONDataDialog ref="JSONDataDialog" :source="source"></JSONDataDialog>
   </div>
 </template>
 
@@ -139,6 +140,9 @@ export default {
         return;
       }
       this.inited = true;
+      this.toolboxWorker.showJSONData = (data) => {
+        this.$refs.JSONDataDialog.show(data);
+      };
       await this.toolboxWorker.init();
       this.ready = true;
     },

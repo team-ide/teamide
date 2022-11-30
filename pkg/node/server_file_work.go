@@ -1,7 +1,6 @@
 package node
 
 import (
-	"errors"
 	"io"
 	"sync"
 	"teamide/pkg/filework"
@@ -56,7 +55,7 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 	var buf = make([]byte, 1024*32)
 	err = util.Read(reader, buf, func(n int) (e error) {
 		if *callStop {
-			e = errors.New("is call stopped")
+			e = util.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -90,7 +89,7 @@ func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer i
 		on: func(buf []byte) (err error) {
 
 			if *callStop {
-				err = errors.New("is call stopped")
+				err = util.ProgressCallStoppedError
 				return
 			}
 			n := len(buf)

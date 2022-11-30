@@ -476,6 +476,13 @@ func kafkaWorker() *Worker {
 						},
 					},
 					{
+						Label: "Header", Name: "headers", Type: "list",
+						Fields: []*form.Field{
+							{Label: "Header Key", Name: "key"},
+							{Label: "Header Value", Name: "value"},
+						},
+					},
+					{
 						Label: "KeyType", Name: "keyType", DefaultValue: "string", Type: "select",
 						Options: []*form.Option{
 							{Text: "String", Value: "string"},
