@@ -144,10 +144,6 @@ let validateField = function (data, field) {
             resolve(true)
             return;
         }
-        if (!execVIf(field.vIf, data)) {
-            resolve(true)
-            return;
-        }
         let value = data[field.name];
         if (value != null) {
             if (field.isNumber) {
@@ -170,6 +166,10 @@ let validateField = function (data, field) {
                 }
                 data[field.name] = jsonValue;
             }
+        }
+        if (!execVIf(field.vIf, data)) {
+            resolve(true)
+            return;
         }
         let rules = field.rules || [];
         let valid = true;

@@ -384,6 +384,7 @@ export default {
           data: this.formData.targetDatabaseConfig,
         },
       ]);
+
       let ownerList = [];
       this.ownersReadonly = false;
       this.tablesReadonly = false;
@@ -518,9 +519,15 @@ export default {
       }
     },
     async start() {
+      let validateResult = await this.$refs.DatabaseFormBox.validate();
+      if (!validateResult.valid) {
+        return;
+      }
+      let targetDatabaseConfig = this.$refs.DatabaseFormBox.getDataList()[0];
+
       let param = Object.assign({ owners: [] }, this.formData);
       this.toolboxWorker.formatParam(param);
-
+      param.targetDatabaseConfig = targetDatabaseConfig;
       param.targetDatabaseConfig.port = Number(param.targetDatabaseConfig.port);
       param.batchNumber = Number(param.batchNumber);
       param.owners = [];

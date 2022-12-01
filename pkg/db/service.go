@@ -325,7 +325,7 @@ func (this_ *Service) DataListSql(param *Param, ownerName string, tableName stri
 	if len(insertDataList) > 0 {
 		param.ParamModel.AppendSqlValue = new(bool)
 		*param.ParamModel.AppendSqlValue = true
-		sqlList_, _, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
+		sqlList_, _, _, _, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
 		if err != nil {
 			return
 		}
@@ -366,7 +366,7 @@ func (this_ *Service) DataListExec(param *Param, ownerName string, tableName str
 	var sqlList_ []string
 	var valuesList_ [][]interface{}
 	if len(insertDataList) > 0 {
-		sqlList_, valuesList_, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
+		sqlList_, valuesList_, _, _, err = dia.DataListInsertSql(param.ParamModel, appendOwnerName, tableName, columnList, insertDataList)
 		if err != nil {
 			return
 		}
@@ -495,6 +495,9 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 	exportParam.DataSourceType = worker.GetDataSource(param.ExportType)
 	exportParam.OnProgress = func(progress *worker.TaskProgress) {
 		util.Logger.Info("export task on progress", zap.Any("progress", progress))
+		progress.OnError = func(err error) {
+			util.Logger.Error("export task progress error", zap.Any("progress", progress), zap.Error(err))
+		}
 	}
 
 	targetDialect := this_.GetTargetDialect(param)
@@ -546,6 +549,9 @@ func (this_ *Service) StartImport(param *Param, importParam *worker.TaskImportPa
 	importParam.DataSourceType = worker.GetDataSource(param.ImportType)
 	importParam.OnProgress = func(progress *worker.TaskProgress) {
 		util.Logger.Info("import task on progress", zap.Any("progress", progress))
+		progress.OnError = func(err error) {
+			util.Logger.Error("import task progress error", zap.Any("progress", progress), zap.Error(err))
+		}
 	}
 	var workDbs []*sql.DB
 	databaseType := this_.DatabaseWorker.databaseType
@@ -598,6 +604,9 @@ func (this_ *Service) StartSync(param *Param, syncParam *worker.TaskSyncParam) (
 	}
 	syncParam.OnProgress = func(progress *worker.TaskProgress) {
 		util.Logger.Info("sync task on progress", zap.Any("progress", progress))
+		progress.OnError = func(err error) {
+			util.Logger.Error("sync task progress error", zap.Any("progress", progress), zap.Error(err))
+		}
 	}
 	var workDbs []*sql.DB
 

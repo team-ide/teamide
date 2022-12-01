@@ -353,6 +353,15 @@ func init() {
 
 func getDatabaseService(config *db.DatabaseConfig) (res *db.Service, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
+	if config.DatabasePath != "" {
+		key += "-" + config.DatabasePath
+	}
+	if config.Database != "" {
+		key += "-" + config.Database
+	}
+	if config.DbName != "" {
+		key += "-" + config.DbName
+	}
 	if config.Username != "" {
 		key += "-" + util.GetMd5String(key+config.Username)
 	}

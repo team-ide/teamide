@@ -74,6 +74,16 @@ export default {
       }
       return validateResult;
     },
+    getDataList() {
+      let dataList = [];
+      for (let i = 0; i < this.formObjectList.length; i++) {
+        let formObject = this.formObjectList[i];
+        let data = {};
+        Object.assign(data, formObject.formData);
+        dataList.push(data);
+      }
+      return dataList;
+    },
     async doSave() {
       this.saveBtnDisabled = true;
       let validateResult = await this.validate();
