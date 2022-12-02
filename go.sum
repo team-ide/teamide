@@ -1,5 +1,5 @@
-gitee.com/chunanyong/dm v1.8.8 h1:cgmqWdD2/G36urWJZ16rLhOufBSryOI0BPz+DfsW7HA=
-gitee.com/chunanyong/dm v1.8.8/go.mod h1:EPRJnuPFgbyOFgJ0TRYCTGzhq+ZT4wdyaj/GW/LLcNg=
+gitee.com/chunanyong/dm v1.8.9 h1:7hYG/Rahz7i2NowZEhWH6uYlDD7+0JBvKA5QzUJse8Y=
+gitee.com/chunanyong/dm v1.8.9/go.mod h1:EPRJnuPFgbyOFgJ0TRYCTGzhq+ZT4wdyaj/GW/LLcNg=
 github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak=
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/Chain-Zhang/pinyin v0.1.3 h1:RzErNyNwVa8z2sOLCuXSOtVdY/AsARb8mBzI2p2qtnE=
@@ -66,8 +66,8 @@ github.com/go-zookeeper/zk v1.0.3 h1:7M2kwOsc//9VeeFiPtf+uSJlVpU66x9Ba5+8XK7/TDg
 github.com/go-zookeeper/zk v1.0.3/go.mod h1:nOB03cncLtlp4t+UAkGSV+9beXP/akpekBwL+UX1Qcw=
 github.com/goccy/go-json v0.9.7 h1:IcB+Aqpx/iMHu5Yooh7jEzJk1JZ7Pjtmys2ukPr7EeM=
 github.com/goccy/go-json v0.9.7/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
-github.com/godror/godror v0.35.0 h1:V9sTD76SBPREtjsDL6YtZjW2FTwF9uI+ZIVTt/phzMo=
-github.com/godror/godror v0.35.0/go.mod h1:jW1+pN+z/V0h28p9XZXVNtEvfZP/2EBfaSjKJLp3E4g=
+github.com/godror/godror v0.35.1 h1:H1p50ZOwDJ/NuxGuEGEqFOUWj+CK0yY9GarkHcx62E8=
+github.com/godror/godror v0.35.1/go.mod h1:jW1+pN+z/V0h28p9XZXVNtEvfZP/2EBfaSjKJLp3E4g=
 github.com/godror/knownpb v0.1.0 h1:dJPK8s/I3PQzGGaGcUStL2zIaaICNzKKAK8BzP1uLio=
 github.com/godror/knownpb v0.1.0/go.mod h1:4nRFbQo1dDuwKnblRXDxrfCFYeT4hjg3GjMqef58eRE=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
@@ -128,8 +128,8 @@ github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
 github.com/mattn/go-isatty v0.0.14 h1:yVuAays6BHfxijgZPzw+3Zlu5yQgKGP2/hcQbHb7S9Y=
 github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27kJ6hsGG94=
-github.com/mattn/go-sqlite3 v1.14.15 h1:vfoHhTN1af61xCRSWzFIWzx2YskyMTwHLrExkBOjvxI=
-github.com/mattn/go-sqlite3 v1.14.15/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
+github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
+github.com/mattn/go-sqlite3 v1.14.16/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 h1:ZqeYNhU3OHLH3mGKHDcjJRFFRrJa6eAM5H+CtDdOsPc=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
@@ -175,10 +175,10 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/tealeg/xlsx v1.0.5 h1:+f8oFmvY8Gw1iUXzPk+kz+4GpbDZPK1FhPiQRd+ypgE=
 github.com/tealeg/xlsx v1.0.5/go.mod h1:btRS8dz54TDnvKNosuAqxrM1QgN1udgk9O34bDCnORM=
-github.com/team-ide/go-dialect v1.5.8 h1:ygCa6B5osII54q4CsyKGtq3M1iN5ZHJx8r+ib8uN+6Y=
-github.com/team-ide/go-dialect v1.5.8/go.mod h1:y6R3ZqoqNO0dF6Nk5eyvtwIWPOTR9Vb6nm7xdN8V/eo=
-github.com/team-ide/go-driver v1.1.0 h1:DGMaZh4Y1lQijcNmqh9Yi4gA51b7H3i5QG0l3BrerXw=
-github.com/team-ide/go-driver v1.1.0/go.mod h1:1MMLcR0vW0+xFKYV5kb+nSvcRUVLn8mdRsW6CfAKoBE=
+github.com/team-ide/go-dialect v1.6.1 h1:HrA7tnfhB9DdXXW74O556V7FEPKqG54WYrYpLBLhals=
+github.com/team-ide/go-dialect v1.6.1/go.mod h1:FslfieenftsT5/7sWA/ualSlXusm2VH8unMRFF/rbDY=
+github.com/team-ide/go-driver v1.1.2 h1:PeiyDcdTUwCGZ2s/a+V2Q+kNALF4oWgA90NIxFPXcrI=
+github.com/team-ide/go-driver v1.1.2/go.mod h1:zUBf/0Ax+Is7dA2vieuWaO1CSxYjlmFjWTqnFFB6ASk=
 github.com/tklauser/go-sysconf v0.3.10 h1:IJ1AZGZRWbY8T5Vfk04D9WOA5WSejdflXxP03OUqALw=
 github.com/tklauser/go-sysconf v0.3.10/go.mod h1:C8XykCvCb+Gn0oNCWPIlcb0RuglQTYaQ2hGm7jmxEFk=
 github.com/tklauser/numcpus v0.4.0 h1:E53Dm1HjH1/R2/aoCtXtPgzmElmn51aOkhCFSuZq//o=
