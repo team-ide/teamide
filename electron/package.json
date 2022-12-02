@@ -247,7 +247,10 @@
         "./assets/**",
         "./lib/**",
         "./teamide-windows-x64.exe"
-      ]
+      ],
+      "signDlls": true,
+      "certificateFile": "teamide.electron.windows.pvk",
+      "certificatePassword": "123456"
     },
     "linux": {
       "artifactName": "${productName}-linux-x64-${version}.${ext}",
