@@ -8,17 +8,35 @@ import (
 )
 
 var (
-	serviceCache = map[string]Service{}
-	lock         sync.Mutex
+	serviceCache  = map[string]Service{}
+	lockCacheLock sync.Mutex
+	lockCache     = map[string]sync.Mutex{}
 )
 
 func init() {
 	go startServiceTimer()
 }
+func getLockCache(key string) sync.Mutex {
+	lockCacheLock.Lock()
+	defer lockCacheLock.Unlock()
+	res, ok := lockCache[key]
+	if !ok {
+		lockCache[key] = sync.Mutex{}
+	}
+	return res
+}
+func removeLockCache(key string) {
+	lockCacheLock.Lock()
+	defer lockCacheLock.Unlock()
+	delete(lockCache, key)
+}
 
 func GetService(key string, create func() (Service, error)) (Service, error) {
+	lock := getLockCache(key)
 	lock.Lock()
+	defer removeLockCache(key)
 	defer lock.Unlock()
+
 	res, ok := serviceCache[key]
 	if ok {
 		return res, nil
