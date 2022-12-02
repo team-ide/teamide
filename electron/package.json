@@ -249,7 +249,7 @@
         "./teamide-windows-x64.exe"
       ],
       "signDlls": true,
-      "certificateFile": "teamide.electron.windows.pvk",
+      "certificateFile": "www.teamide.com.p12",
       "certificatePassword": "123456"
     },
     "linux": {
