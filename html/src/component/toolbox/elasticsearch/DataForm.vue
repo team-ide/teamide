@@ -9,31 +9,43 @@
     :visible="showDialog"
     :before-close="hide"
     width="1200px"
+    top="40px"
   >
     <div class="mgt--25">
       <el-form ref="form" size="mini" @submit.native.prevent>
         <el-form-item label="ID">
-          <el-input type="input" v-model="id"> </el-input>
+          <el-input type="input" v-model="id" style="width: 800px"> </el-input>
         </el-form-item>
         <div class="tm-row">
           <div class="col-6 pdr-5">
             <el-form-item label="数据">
-              <el-input
-                type="textarea"
-                v-model="docValue"
-                :autosize="{ minRows: 10, maxRows: 20 }"
+              <div
+                style="
+                  height: 520px !important;
+                  display: inline-block;
+                  width: 100%;
+                "
               >
-              </el-input>
+                <Editor
+                  ref="docValue"
+                  :source="source"
+                  language="json"
+                  :change="onChangeDocValue"
+                ></Editor>
+              </div>
             </el-form-item>
           </div>
           <div class="col-6 pdl-5">
             <el-form-item label="数据JSON预览">
-              <el-input
-                type="textarea"
-                v-model="docJSON"
-                :autosize="{ minRows: 10, maxRows: 20 }"
+              <div
+                style="
+                  height: 520px !important;
+                  display: inline-block;
+                  width: 100%;
+                "
               >
-              </el-input>
+                <Editor ref="docJSON" :source="source" language="json"></Editor>
+              </div>
             </el-form-item>
           </div>
         </div>
@@ -52,6 +64,9 @@
 </template>
 
 <script>
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
   components: {},
   props: ["source", "toolboxWorker"],
@@ -83,14 +98,18 @@ export default {
               throw error;
             }
           }
-          this.docJSON = JSON.stringify(data, null, "  ");
+          this.docJSON = JSONbigString.stringify(data, null, "  ");
         } catch (e) {
-          this.docJSON = e;
+          this.docJSON = e.toString();
         }
       }
+      this.$refs.docJSON.setValue(this.docJSON);
     },
   },
   methods: {
+    onChangeDocValue(value) {
+      this.docValue = value;
+    },
     show(data, mapping, callback) {
       data = data || {};
 
@@ -118,10 +137,12 @@ export default {
         }
       }
 
-      this.docValue = JSON.stringify(doc, null, "  ");
-
       this.callback = callback;
       this.showDialog = true;
+      this.$nextTick(() => {
+        this.docValue = JSONbigString.stringify(doc, null, "  ");
+        this.$refs.docValue.setValue(this.docValue);
+      });
     },
     hide() {
       this.showDialog = false;

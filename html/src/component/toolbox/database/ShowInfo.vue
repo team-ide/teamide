@@ -1,24 +1,5 @@
 <template>
-  <el-dialog
-    ref="modal"
-    title="信息查看"
-    :close-on-click-modal="true"
-    :close-on-press-escape="true"
-    :show-close="true"
-    :append-to-body="true"
-    :visible="showDialog"
-    :before-close="hide"
-    width="1000px"
-  >
-    <div class="ft-15">
-      <el-input
-        type="textarea"
-        v-model="info"
-        :autosize="{ minRows: 10, maxRows: 25 }"
-      >
-      </el-input>
-    </div>
-  </el-dialog>
+  <div></div>
 </template>
 
 <script>
@@ -26,20 +7,14 @@ export default {
   components: {},
   props: ["source", "toolboxWorker"],
   data() {
-    return {
-      showDialog: false,
-      info: null,
-    };
+    return {};
   },
   computed: {},
   watch: {},
   methods: {
     async show() {
-      this.info = await this.loadInfo();
-      this.showDialog = true;
-    },
-    hide() {
-      this.showDialog = false;
+      let infoData = await this.loadInfo();
+      this.toolboxWorker.showJSONData(infoData);
     },
     async loadInfo() {
       let param = {};
@@ -52,7 +27,6 @@ export default {
   created() {},
   mounted() {
     this.toolboxWorker.showInfo = this.show;
-    this.toolboxWorker.hideInfo = this.hide;
     this.init();
   },
 };

@@ -18,7 +18,7 @@
                 class="tm-btn tm-btn-xs bg-grey"
                 @click="toolboxWorker.showInfo()"
               >
-                新建主题
+                信息
               </div>
             </el-form-item>
           </el-form>

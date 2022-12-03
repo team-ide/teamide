@@ -9,6 +9,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="700px"
+    top="40px"
   >
     <Form :source="source" ref="formBuild"> </Form>
     <div class="">

@@ -16,7 +16,6 @@
           <Tabs :source="source" :toolboxWorker="toolboxWorker"> </Tabs>
         </tm-layout>
       </tm-layout>
-      <IndexForm :source="source" :toolboxWorker="toolboxWorker"> </IndexForm>
       <ReindexForm :source="source" :toolboxWorker="toolboxWorker">
       </ReindexForm>
       <DataForm :source="source" :toolboxWorker="toolboxWorker"> </DataForm>
@@ -31,7 +30,6 @@
 <script>
 import IndexNames from "./IndexNames";
 import Tabs from "./Tabs";
-import IndexForm from "./IndexForm";
 import ReindexForm from "./ReindexForm";
 import MappingForm from "./MappingForm";
 import DataForm from "./DataForm";
@@ -40,7 +38,6 @@ export default {
   components: {
     IndexNames,
     Tabs,
-    IndexForm,
     ReindexForm,
     MappingForm,
     DataForm,

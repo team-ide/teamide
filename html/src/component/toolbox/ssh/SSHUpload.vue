@@ -9,6 +9,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="900px"
+    top="40px"
   >
     <div>
       <div

@@ -9,9 +9,10 @@
     :visible="showDialog"
     :before-close="hide"
     width="1200px"
+    top="40px"
   >
     <div class="mgt--20">
-      <div style="height: 560px !important">
+      <div style="height: 660px !important">
         <Editor
           ref="Editor"
           :source="source"
@@ -24,6 +25,9 @@
 </template>
 
 <script>
+var JSONbig = require("json-bigint");
+var JSONbigString = JSONbig({});
+
 export default {
   components: {},
   props: ["source"],
@@ -44,9 +48,13 @@ export default {
       this.$nextTick(() => {
         try {
           data = data || {};
-          this.text = JSON.stringify(data, null, "    ");
+          if (typeof data == "string") {
+            this.text = data;
+          } else {
+            this.text = JSONbigString.stringify(data, null, "    ");
+          }
         } catch (e) {
-          this.text = e;
+          this.text = e.toString();
         }
         this.$refs.Editor.setValue(this.text);
       });

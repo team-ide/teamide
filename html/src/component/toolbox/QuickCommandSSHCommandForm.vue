@@ -9,6 +9,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="800px"
+    top="40px"
   >
     <div class="">
       <el-form ref="form" size="mini" @submit.native.prevent>

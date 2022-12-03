@@ -15,6 +15,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="1200px"
+    top="40px"
   >
     <div class="mgt--20 toolbox-database-export-sql">
       <el-form ref="form" :model="form" size="mini" inline>
@@ -56,7 +57,7 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div style="height: 480px !important">
+      <div style="height: 550px !important">
         <Editor
           ref="Editor"
           :source="source"

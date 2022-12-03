@@ -4,16 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![Gitee Release Latest](https://img.shields.io/badge/Release-V1.7.7-brightgreen)](https://gitee.com/teamide/teamide/releases)
-[![GitHub Release Latest](https://img.shields.io/badge/Release-V1.7.7-brightgreen)](https://github.com/team-ide/teamide/releases)
-
-## 注意
-
-> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/temeide`下
-
-**服务端模式目前存在问题，请大家先单机运行，后续将完善服务端模式**
-
-> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
+[![GitHub Release Latest](https://img.shields.io/badge/Release-V1.8.3-brightgreen)](https://github.com/team-ide/teamide/releases)
 
 ## Team · IDE 功能模块
 
@@ -94,11 +85,11 @@ Team IDE 团队在线开发工具
     </tr>
     <tr>
         <td rowspan="7">Database</td>
-        <td>MySql库列表、库表数据加载</td>
+        <td>数据库库|用户|模式列表、表数据加载</td>
         <td>完成</td>
     </tr>
     <tr>
-        <td>MySql表数据增删改查、批量新增、修改、删除等操作</td>
+        <td>数据库库表数据增删改查、批量新增、修改、删除等操作</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -118,7 +109,7 @@ Team IDE 团队在线开发工具
         <td>完成</td>
     </tr>
     <tr>
-        <td>导出建表语句，支持MySql、Oracle、达梦、金仓、神通等数据库</td>
+        <td>支持数据库，MySql、Oracle、达梦、金仓、神通、Sqlite等数据库</td>
         <td>完成</td>
     </tr>
     <tr>
@@ -147,6 +138,16 @@ Team IDE 团队在线开发工具
 服务端：go开发
 
 前端：vue开发
+
+
+### 注意
+
+> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/temeide`下
+
+**服务端模式目前存在问题，请大家先单机运行，后续将完善服务端模式**
+
+> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
+
 
 ```shell
 conf/           # 配置文件

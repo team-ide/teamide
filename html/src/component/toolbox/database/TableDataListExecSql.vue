@@ -15,6 +15,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="1200px"
+    top="40px"
   >
     <div class="mgt--20">
       <el-form ref="form" :model="form" size="mini" :inline="true">
@@ -26,7 +27,7 @@
         >
         </Pack>
       </el-form>
-      <div style="height: 480px !important">
+      <div style="height: 600px !important">
         <Editor
           ref="Editor"
           :source="source"

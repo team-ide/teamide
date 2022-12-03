@@ -39,39 +39,54 @@ type LoginRequest struct {
 func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	loginRequest := &LoginRequest{}
 	base.RequestJSON(loginRequest, c)
-	if loginRequest.Account == "" {
-		err = base.NewValidateError("登录账号不能为空!")
-		return
+
+	var loginUser *module_user.UserModel
+	if this_.IsServer {
+
+		if loginRequest.Account == "" {
+			err = base.NewValidateError("登录账号不能为空!")
+			return
+		}
+		if loginRequest.Password == "" {
+			err = base.NewValidateError("登录密码不能为空!")
+			return
+		}
+		var pwd string
+		pwd, err = util.AesDecryptCBCByKey(loginRequest.Password, this_.HttpAesKey)
+		if err != nil {
+			return
+		}
+		if pwd == "" {
+			err = base.NewValidateError("用户名或密码错误!")
+			return
+		}
+
+		login := &module_login.LoginModel{
+			Account:  loginRequest.Account,
+			Password: pwd,
+		}
+
+		loginUser, err = this_.loginService.Login(login)
+		if err != nil {
+			return
+		}
+	} else {
+		loginUser, err = this_.userService.Get(this_.getStandAloneUserId())
+		if err != nil {
+			return
+		}
+		if loginUser == nil {
+			err = base.NewValidateError("单机版用户信息不存在!")
+			return
+		}
 	}
-	if loginRequest.Password == "" {
-		err = base.NewValidateError("登录密码不能为空!")
-		return
-	}
-	pwd, err := util.AesDecryptCBCByKey(loginRequest.Password, this_.HttpAesKey)
-	if err != nil {
-		return
-	}
-	if pwd == "" {
+
+	if loginUser == nil {
 		err = base.NewValidateError("用户名或密码错误!")
 		return
 	}
 
-	login := &module_login.LoginModel{
-		Account:  loginRequest.Account,
-		Password: pwd,
-	}
-
-	var user *module_user.UserModel
-	user, err = this_.loginService.Login(login)
-	if err != nil {
-		return
-	}
-	if user == nil {
-		err = base.NewValidateError("用户名或密码错误!")
-		return
-	}
-
-	res = this_.getJWTStr(user)
+	res = this_.getJWTStr(loginUser)
 	return
 }
 
@@ -145,13 +160,14 @@ func (this_ *Api) getStandAloneUserId() (userId int64) {
 func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	response := &SessionResponse{}
 
-	var userId int64
-	if request.JWT != nil {
-		userId = request.JWT.UserId
-	} else {
-		if !this_.IsServer {
-			userId = this_.getStandAloneUserId()
+	var userId int64 = -1
+
+	if this_.IsServer {
+		if request.JWT != nil {
+			userId = request.JWT.UserId
 		}
+	} else {
+		userId = this_.getStandAloneUserId()
 	}
 	if userId > 0 {
 		var find *module_user.UserModel

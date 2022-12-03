@@ -11,6 +11,7 @@ source.url = null;
 source.api = null;
 source.filesUrl = null;
 source.hasNewVersion = false;
+source.isServer = true;
 
 source.header = {
     title: "Team · IDE",
@@ -283,6 +284,7 @@ source.init = (data) => {
         source.url = data.url;
         source.api = data.api;
         source.filesUrl = data.filesUrl;
+        source.isServer = data.isServer;
     } else {
         source.status = "error";
         source.ready = false;
@@ -524,6 +526,18 @@ source.initSession = (data) => {
             source.login.user = data.user;
         } else if (data.user.userId != source.login.user.userId) {
             source.login.user = data.user;
+        } else {
+            let oldUser = Object.assign({}, source.login.user || {})
+            let newUser = Object.assign({}, data.user || {})
+            delete oldUser.createTime;
+            delete oldUser.updateTime;
+            delete oldUser.deleteTime;
+            delete newUser.createTime;
+            delete newUser.updateTime;
+            delete newUser.deleteTime;
+            if (JSON.stringify(oldUser) != JSON.stringify(newUser)) {
+                source.login.user = data.user;
+            }
         }
         source.powers = data.powers || [];
         tool.setJWT(data.JWT);

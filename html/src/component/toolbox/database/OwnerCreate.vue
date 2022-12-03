@@ -9,6 +9,7 @@
     :visible="showDialog"
     :before-close="hide"
     width="700px"
+    top="40px"
   >
     <el-form class="mgt--20" ref="form" :model="form" size="mini">
       <el-form-item label="数据库|用户|模式">
