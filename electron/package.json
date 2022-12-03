@@ -169,7 +169,6 @@
   },
   "build": {
     "productName": "TeamIDE",
-    "appId": "com.teamide.app",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
     "files": [
@@ -242,7 +241,7 @@
           ]
         }
       ],
-      "publisherName": "朱亮",
+      "publisherName": "ZhuLiang",
       "extraResources": [
         "./assets/**",
         "./lib/**",
