@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"io"
 	"os"
@@ -63,21 +64,25 @@ func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 		var bs []byte
 		bs, err = io.ReadAll(f)
 		if err != nil {
-			panic(err)
+			util.Logger.Error("yaml read error", zap.Any("path", configPath), zap.Error(err))
+			return
 		}
 		configMap := map[string]interface{}{}
 		err = yaml.Unmarshal(bs, &configMap)
 		if err != nil {
+			util.Logger.Error("yaml to map error", zap.Any("path", configPath), zap.Error(err))
 			return
 		}
 		formatMap(configMap)
 
 		bs, err = json.Marshal(configMap)
 		if err != nil {
+			util.Logger.Error("config map to bytes error", zap.Any("configMap", configMap), zap.Error(err))
 			return
 		}
 		err = json.Unmarshal(bs, config)
 		if err != nil {
+			util.Logger.Error("config bytes to config error", zap.Any("config", string(bs)), zap.Error(err))
 			return
 		}
 	}
@@ -128,7 +133,7 @@ func formatValue(value interface{}) (v interface{}) {
 	}
 	stringValue, stringValueOk := value.(string)
 	if !stringValueOk {
-		v = stringValue
+		v = value
 		return
 	}
 	res := ""
@@ -158,11 +163,13 @@ func GetFromSystem(key string) string {
 	return os.Getenv(key)
 }
 
-/*PathExists
-  判断文件或文件夹是否存在
-  如果返回的错误为nil,说明文件或文件夹存在
-  如果返回的错误类型使用os.IsNotExist()判断为true,说明文件或文件夹不存在
-  如果返回的错误为其它类型,则不确定是否在存在
+/*
+PathExists
+
+	判断文件或文件夹是否存在
+	如果返回的错误为nil,说明文件或文件夹存在
+	如果返回的错误类型使用os.IsNotExist()判断为true,说明文件或文件夹不存在
+	如果返回的错误为其它类型,则不确定是否在存在
 */
 func PathExists(path string) (bool, error) {
 

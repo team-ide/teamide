@@ -44,7 +44,7 @@ var (
 	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerCallStop   = base.AppendPower(&base.PowerAction{Action: "file_manager_call_stop", Text: "工具", ShouldLogin: true, StandAlone: true})
 	PowerClose      = base.AppendPower(&base.PowerAction{Action: "file_manager_close", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "工具", ShouldLogin: true, StandAlone: true})
+	//PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "工具", ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
