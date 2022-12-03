@@ -242,13 +242,12 @@
           ]
         }
       ],
-      "publisherName": "朱亮",
+      "publisherName": "TeamIDE",
       "extraResources": [
         "./assets/**",
         "./lib/**",
         "./teamide-windows-x64.exe"
-      ],
-      "signDlls": true
+      ]
     },
     "linux": {
       "artifactName": "${productName}-linux-x64-${version}.${ext}",

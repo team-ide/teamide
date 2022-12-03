@@ -191,7 +191,7 @@ jobs:
           name: release
           path: release
 
-  buildWindowExe:
+  buildWindow:
     needs: buildStatic
     runs-on: windows-latest
     steps:
@@ -230,36 +230,8 @@ jobs:
       - run: |
           go mod tidy
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-windows-x64.exe . 
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main 
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
-
-  buildWindow:
-    needs: buildWindowExe
-    runs-on: macos-latest
-    steps:
-      # 下载源码
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
-
-      # 读取发布版本
-      - name: Read Release Version
-        id: release_version
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: release/package.json
-          property: version
+          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-windows-x64.exe .
+          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -270,93 +242,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mv .git electron/
-          mv release/teamide-windows-x64/teamide-windows-x64.exe electron/teamide-windows-x64.exe
+          move lib/shentong/win64/aci.dll electron/lib/aci.dll
+          move lib/shentong/win64/aci.lib electron/lib/aci.lib
+          move .git electron/.git
           cd electron
           set CSC_LINK="${{ secrets.CSC_LINK }}"
           set CSC_KEY_PASSWORD="${{ secrets.CSC_KEY_PASSWORD }}"
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --win
+          npm exec electron-builder -- --
       - run: |
-          mv electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
+          move electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
           name: release
           path: release
-
-#  buildWindow:
-#    needs: buildStatic
-#    runs-on: windows-latest
-#    steps:
-#      # 下载源码
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#
-#      # 下载共享资源
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: release
-#          path: release
-#
-#      # 下载共享资源
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: html
-#          path: html/dist
-#
-#      # 读取发布版本
-#      - name: Read Release Version
-#        id: release_version
-#        uses: ashley-taylor/read-json-property-action@v1.0
-#        with:
-#          path: release/package.json
-#          property: version
-#
-#      # 打包构建 Server
-#      - name: Build Server
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: "^1.18"
-#
-#      # 将静态资源打包html.go
-#      # -H=windowsgui
-#      - run: |
-#          go mod tidy
-#          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-#          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-windows-x64.exe .
-#          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main
-#
-#      - name: Install Node and NPM
-#        uses: actions/setup-node@v1
-#        with:
-#          node-version: 16
-#
-#      - name: Electron Build
-#        env:
-#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: |
-#          move lib/shentong/win64/aci.dll electron/lib/aci.dll
-#          move lib/shentong/win64/aci.lib electron/lib/aci.lib
-#          move .git electron/.git
-#          cd electron
-#          set CSC_LINK="${{ secrets.CSC_LINK }}"
-#          set CSC_KEY_PASSWORD="${{ secrets.CSC_KEY_PASSWORD }}"
-#          npm install
-#          npm run postinstall
-#          npm run build
-#          npm exec electron-builder -- --
-#      - run: |
-#          move electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
-#
-#      # 上传共享资源
-#      - uses: actions/upload-artifact@v2
-#        with:
-#          name: release
-#          path: release
 
   release:
     needs:
