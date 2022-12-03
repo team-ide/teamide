@@ -240,18 +240,18 @@ jobs:
 
       - name: Electron Build
         env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           move lib/shentong/win64/aci.dll electron/lib/aci.dll
           move lib/shentong/win64/aci.lib electron/lib/aci.lib
           move .git electron/.git
           cd electron
-          set CSC_LINK "${{ secrets.CSC_LINK }}"
-          set CSC_KEY_PASSWORD "${{ secrets.CSC_KEY_PASSWORD }}"
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --
+          npm exec electron-builder -- --win
       - run: |
           move electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
 
