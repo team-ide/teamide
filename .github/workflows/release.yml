@@ -246,8 +246,8 @@ jobs:
           move lib/shentong/win64/aci.lib electron/lib/aci.lib
           move .git electron/.git
           cd electron
-          set CSC_LINK="${{ secrets.CSC_LINK }}"
-          set CSC_KEY_PASSWORD="${{ secrets.CSC_KEY_PASSWORD }}"
+          set CSC_LINK "${{ secrets.CSC_LINK }}"
+          set CSC_KEY_PASSWORD "${{ secrets.CSC_KEY_PASSWORD }}"
           npm install
           npm run postinstall
           npm run build
