@@ -272,7 +272,6 @@ jobs:
         run: |
           mv .git electron/
           mv release/teamide-windows-x64/teamide-windows-x64.exe electron/teamide-windows-x64.exe
-          chmod +x electron/teamide-darwin-x64
           cd electron
           set CSC_LINK="${{ secrets.CSC_LINK }}"
           set CSC_KEY_PASSWORD="${{ secrets.CSC_KEY_PASSWORD }}"
