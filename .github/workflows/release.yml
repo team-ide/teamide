@@ -94,7 +94,7 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide .
+          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-darwin-x64 .
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
 
       - name: Install Node and NPM
@@ -106,7 +106,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp -rf release/teamide-darwin-x64/teamide electron/teamide-darwin-x64
           mv .git electron/
           chmod +x electron/teamide-darwin-x64
           cd electron
@@ -114,7 +113,8 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --mac
-          mv release/build/TeamIDE-mac-1.0.0.dmg ../release/TeamIDE-mac.dmg
+      - run: |
+          mv electron/release/build/TeamIDE-mac-1.0.0.dmg release/TeamIDE-mac.dmg
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -159,7 +159,7 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide .
+          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-linux-x64 .
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
@@ -173,7 +173,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp -rf release/teamide-linux-x64/teamide electron/teamide-linux-x64
           cp -rf lib/shentong/linux64/libaci.so electron/lib/libaci.so
           
           mv .git electron/
@@ -183,7 +182,8 @@ jobs:
           npm run postinstall
           npm run build
           npm exec electron-builder -- --linux
-          mv release/build/TeamIDE-linux-x64-1.0.0.AppImage ../release/TeamIDE-linux-x64.AppImage
+      - run: |
+          mv electron/release/build/TeamIDE-linux-x64-1.0.0.AppImage release/TeamIDE-linux-x64.AppImage
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -230,7 +230,7 @@ jobs:
       - run: |
           go mod tidy
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide.exe . 
+          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-windows-x64.exe . 
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main 
 
       - name: Install Node and NPM
@@ -242,17 +242,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          move release/teamide-windows-x64/teamide.exe electron/teamide-windows-x64.exe
           move lib/shentong/win64/aci.dll electron/lib/aci.dll
           move lib/shentong/win64/aci.lib electron/lib/aci.lib
           move .git electron/.git
           cd electron
+          set CSC_LINK=${{ secrets.CSC_LINK }}
+          set CSC_KEY_PASSWORD=${{ secrets.CSC_KEY_PASSWORD }}
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --win
-          move release/build/TeamIDE-windows-x64-1.0.0.exe ../release/TeamIDE-windows-x64.exe
-          move teamide-windows-x64.exe ../release/teamide-windows-x64/teamide.exe
+          npm exec electron-builder -- --
+      - run: |
+          move electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2

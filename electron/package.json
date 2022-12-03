@@ -248,9 +248,7 @@
         "./lib/**",
         "./teamide-windows-x64.exe"
       ],
-      "signDlls": true,
-      "certificateFile": "www.teamide.com.p12",
-      "certificatePassword": "123456"
+      "signDlls": true
     },
     "linux": {
       "artifactName": "${productName}-linux-x64-${version}.${ext}",
