@@ -61,7 +61,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	return
 }
 
-//Init 格式化配置，填充默认值
+// Init 格式化配置，填充默认值
 func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) {
 	if this_.IsServer {
 		if serverConfig.Server.Port == 0 {
@@ -191,7 +191,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	this_.ServerPort = serverConfig.Server.Port
 
 	if this_.ServerHost == "0.0.0.0" || this_.ServerHost == ":" || this_.ServerHost == "::" {
-		this_.ServerUrl = fmt.Sprint("http://127.0.0.1:", this_.ServerPort)
+		this_.ServerUrl = fmt.Sprint("http://localhost:", this_.ServerPort)
 	} else {
 		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
 	}
@@ -229,7 +229,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	return
 }
 
-//backupSqlite 备份
+// backupSqlite 备份
 func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, databaseConfig *db.DatabaseConfig) (err error) {
 	databasePath := databaseConfig.DatabasePath
 	exist, err := util.PathExists(databasePath)

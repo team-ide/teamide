@@ -56,18 +56,18 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 	}
 	if this_.IsServer {
 		println("服务启动，访问地址:")
+		s := "http"
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
-			httpServer := fmt.Sprint("localhost", ":", this_.ServerPort)
-			println("\t", "http://"+httpServer+this_.ServerContext.ServerContext)
-			for _, iface := range ins {
-				if iface.Flags&net.FlagUp == 0 {
+			fmt.Printf("\t%s://localhost:%d%s", s, this_.ServerPort, this_.ServerContext.ServerContext)
+			for _, in := range ins {
+				if in.Flags&net.FlagUp == 0 {
 					continue
 				}
-				if iface.Flags&net.FlagLoopback != 0 {
+				if in.Flags&net.FlagLoopback != 0 {
 					continue
 				}
 				var adders []net.Addr
-				adders, err = iface.Addrs()
+				adders, err = in.Addrs()
 				if err != nil {
 					return
 				}
@@ -76,18 +76,17 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 					if ip == nil {
 						continue
 					}
-					httpServer := fmt.Sprint(ip, ":", this_.ServerPort)
-					println("\t", "http://"+httpServer+this_.ServerContext.ServerContext)
+					fmt.Printf("\t%s://%s:%d%s", s, ip.String(), this_.ServerPort, this_.ServerContext.ServerContext)
 				}
 			}
 		} else {
-			httpServer := fmt.Sprint(this_.ServerHost, ":", this_.ServerPort)
-			println("\t", "http://"+httpServer+this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://%s:%d%s", s, this_.ServerHost, this_.ServerPort, this_.ServerContext.ServerContext)
 		}
 	}
-	httpServer := fmt.Sprint(this_.ServerHost, ":", this_.ServerPort)
+	addr := fmt.Sprint(this_.ServerHost, ":", this_.ServerPort)
+	this_.Logger.Info("http server start", zap.Any("addr", addr))
 	s := &http.Server{
-		Addr:    httpServer,
+		Addr:    addr,
 		Handler: router,
 	}
 	ln, err := net.Listen("tcp", s.Addr)

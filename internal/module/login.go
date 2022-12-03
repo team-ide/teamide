@@ -154,18 +154,18 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		}
 	}
 	if userId > 0 {
-		var user *module_user.UserModel
-		user, err = this_.userService.Get(userId)
+		var find *module_user.UserModel
+		find, err = this_.userService.Get(userId)
 		if err != nil {
 			return
 		}
-		response.User = user
+		response.User = find
 	}
 	response.Powers = this_.getPowersByUserId(userId)
 	response.JWT = this_.getJWTStr(response.User)
 
-	json := util.ToJSON(response)
-	res, err = util.AesEncryptCBCByKey(json, this_.HttpAesKey)
+	jsonString := util.ToJSON(response)
+	res, err = util.AesEncryptCBCByKey(jsonString, this_.HttpAesKey)
 	if err != nil {
 		return
 	}
