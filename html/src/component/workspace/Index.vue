@@ -193,7 +193,12 @@
                   <MenuItem @click="openPage('userCenter')">
                     个人中心
                   </MenuItem>
-                  <MenuItem @click="tool.toLogout()"> 退出登录 </MenuItem>
+                  <MenuItem
+                    v-if="source.hasPower('logout')"
+                    @click="tool.toLogout()"
+                  >
+                    退出登录
+                  </MenuItem>
                 </MenuBox>
               </el-dropdown-menu>
             </el-dropdown>
