@@ -30,12 +30,12 @@ var (
 	// Terminal 权限
 
 	// Power 文件管理器 基本 权限
-	Power                = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "工具", ShouldLogin: false, StandAlone: true})
-	PowerWebsocket       = base.AppendPower(&base.PowerAction{Action: "terminal_websocket", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerClose           = base.AppendPower(&base.PowerAction{Action: "terminal_close", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerKet             = base.AppendPower(&base.PowerAction{Action: "terminal_key", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerChangeSize      = base.AppendPower(&base.PowerAction{Action: "terminal_change_size", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerUploadWebsocket = base.AppendPower(&base.PowerAction{Action: "terminal_upload_websocket", Text: "工具", ShouldLogin: true, StandAlone: true})
+	Power                = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "终端", ShouldLogin: true, StandAlone: true})
+	PowerWebsocket       = base.AppendPower(&base.PowerAction{Action: "terminal_websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerClose           = base.AppendPower(&base.PowerAction{Action: "terminal_close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerKet             = base.AppendPower(&base.PowerAction{Action: "terminal_key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerChangeSize      = base.AppendPower(&base.PowerAction{Action: "terminal_change_size", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerUploadWebsocket = base.AppendPower(&base.PowerAction{Action: "terminal_upload_websocket", Text: "终端上传WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {

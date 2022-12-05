@@ -21,7 +21,7 @@
                 信息
               </div>
               <div class="color-orange ft-12 pdt-5">
-                双击展开目录，单机查看节点数据
+                双击展开目录，单击查看节点数据
               </div>
             </div>
           </tm-layout>
@@ -514,6 +514,9 @@ export default {
             key = "/" + key;
           }
           this.reloadChildren(key);
+          this.toUpdate({
+            path: path,
+          });
         }
       }
     },

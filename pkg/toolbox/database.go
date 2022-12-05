@@ -7,11 +7,13 @@ import (
 	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
 	"os"
+	"sync"
 	"teamide/pkg/db"
 	"teamide/pkg/util"
 )
 
 type DatabaseBaseRequest struct {
+	WorkerId     string                 `json:"workerId"`
 	OwnerName    string                 `json:"ownerName"`
 	TableName    string                 `json:"tableName"`
 	TaskId       string                 `json:"taskId"`
@@ -32,9 +34,11 @@ type DatabaseBaseRequest struct {
 func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interface{}) (res map[string]interface{}, err error) {
 	var service *db.Service
 
-	service, err = getDatabaseService(config)
-	if err != nil {
-		return
+	if work != "close" {
+		service, err = getDatabaseService(config)
+		if err != nil {
+			return
+		}
 	}
 
 	dataBS, err := json.Marshal(data)
@@ -261,6 +265,10 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["task"] = task
+
+		if task != nil {
+			addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		}
 		break
 	case "export":
 		var exportParam = &worker.TaskExportParam{}
@@ -276,6 +284,9 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 		res["task"] = task
 
+		if task != nil {
+			addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		}
 		break
 	case "sync":
 		var syncParam = &worker.TaskSyncParam{}
@@ -290,6 +301,10 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 			return
 		}
 		res["task"] = task
+
+		if task != nil {
+			addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		}
 		break
 	case "taskStatus":
 		task := worker.GetTask(request.TaskId)
@@ -312,7 +327,45 @@ func DatabaseWork(work string, config *db.DatabaseConfig, data map[string]interf
 		}
 		worker.ClearTask(request.TaskId)
 		break
+	case "close":
+		removeDatabaseWorkerTasks(request.WorkerId)
+		break
 	}
+	return
+}
+
+var databaseWorkerTasksCache = map[string][]string{}
+var databaseWorkerTasksCacheLock sync.Mutex
+
+func addDatabaseWorkerTask(workerId string, taskId string) {
+	databaseWorkerTasksCacheLock.Lock()
+	defer databaseWorkerTasksCacheLock.Unlock()
+	taskIds := databaseWorkerTasksCache[workerId]
+	if util.ContainsString(taskIds, taskId) < 0 {
+		taskIds = append(taskIds, taskId)
+		databaseWorkerTasksCache[workerId] = taskIds
+	}
+	return
+}
+func removeDatabaseWorkerTasks(workerId string) {
+	databaseWorkerTasksCacheLock.Lock()
+	defer databaseWorkerTasksCacheLock.Unlock()
+	taskIds := databaseWorkerTasksCache[workerId]
+	for _, taskId := range taskIds {
+		task := worker.GetTask(taskId)
+		if task != nil {
+			if task.Extend != nil {
+				if task.Extend["dirPath"] != "" {
+					_ = os.RemoveAll(task.Extend["dirPath"].(string))
+				}
+				if task.Extend["zipPath"] != "" {
+					_ = os.Remove(task.Extend["zipPath"].(string))
+				}
+			}
+			worker.ClearTask(taskId)
+		}
+	}
+	delete(databaseWorkerTasksCache, workerId)
 	return
 }
 

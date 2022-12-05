@@ -4,9 +4,6 @@ let toolbox = {
     data(param) {
         return http.post('api/toolbox', param);
     },
-    page(param) {
-        return http.post('api/toolbox/page', param);
-    },
     list(param) {
         return http.post('api/toolbox/list', param);
     },

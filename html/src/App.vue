@@ -5,6 +5,12 @@
       <SystemInfoBox :source="source"></SystemInfoBox>
       <AlertBox :source="source"></AlertBox>
       <router-view :source="source"></router-view>
+      <template v-if="source.login.show">
+        <Login :source="source"></Login>
+      </template>
+      <template v-if="source.register.show">
+        <Register :source="source"></Register>
+      </template>
       <UpdateCheck :source="source"></UpdateCheck>
     </template>
     <template v-else>
@@ -36,10 +42,12 @@
 <script>
 import source from "@/source";
 
+import Login from "@/views/Login.vue";
+import Register from "@/views/Register.vue";
 import UpdateCheck from "@/views/UpdateCheck.vue";
 
 export default {
-  components: { UpdateCheck },
+  components: { Login, Register, UpdateCheck },
   props: [],
   data() {
     return { source, contextmenu: { menus: [] } };

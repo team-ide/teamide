@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//GZipBytes 压缩
+// GZipBytes 压缩
 func GZipBytes(data []byte) ([]byte, error) {
 
 	var b bytes.Buffer
@@ -27,7 +27,7 @@ func GZipBytes(data []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-//UGZipBytes 解压
+// UGZipBytes 解压
 func UGZipBytes(data []byte) ([]byte, error) {
 	var in bytes.Buffer
 	in.Write(data)
@@ -40,7 +40,7 @@ func UGZipBytes(data []byte) ([]byte, error) {
 	return bs, err
 }
 
-//Zip zip压缩 srcFile 文件路径，destZip压缩包保存路径
+// Zip zip压缩 srcFile 文件路径，destZip压缩包保存路径
 func Zip(srcFile string, destZip string) error {
 	srcFiles := srcFile
 	zipFile, err := os.Create(destZip)
@@ -61,6 +61,10 @@ func Zip(srcFile string, destZip string) error {
 		path = strings.Replace(path, "\\", "/", -1)
 		srcFiles = strings.Replace(srcFiles, "\\", "/", -1)
 		header.Name = strings.Replace(path, srcFiles, "", -1)
+		header.Name = strings.TrimPrefix(header.Name, "/")
+		if header.Name == "" {
+			return nil
+		}
 		if info.IsDir() {
 			header.Name += "/"
 		} else {
@@ -78,13 +82,14 @@ func Zip(srcFile string, destZip string) error {
 			}
 			defer file.Close()
 			_, err = io.Copy(writer, file)
+			//fmt.Println("zip io copy path:", path, ",headerName:", header.Name)
 		}
 		return err
 	})
 	return err
 }
 
-//Unzip zip解压 zipFile 压缩包地址 destDir 解压保存文件夹
+// Unzip zip解压 zipFile 压缩包地址 destDir 解压保存文件夹
 func Unzip(zipFile string, destDir string) error {
 	reader, err := zip.OpenReader(zipFile)
 	if err != nil {

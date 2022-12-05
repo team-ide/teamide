@@ -27,9 +27,12 @@ type RedisBaseRequest struct {
 func RedisWork(work string, config *redis.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service redis.Service
-	service, err = getRedisService(*config)
-	if err != nil {
-		return
+
+	if work != "close" {
+		service, err = getRedisService(*config)
+		if err != nil {
+			return
+		}
 	}
 
 	var dataBS []byte
@@ -53,6 +56,7 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 			return
 		}
 		res["info"] = info
+		break
 	case "get":
 		var valueInfo *redis.ValueInfo
 		valueInfo, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)
@@ -65,6 +69,7 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		res["valueEnd"] = valueInfo.ValueEnd
 		res["valueCount"] = valueInfo.ValueCount
 		res["ttl"] = valueInfo.TTL
+		break
 	case "keys":
 		var count int
 		var keys []string
@@ -82,6 +87,7 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		}
 		res["count"] = count
 		res["dataList"] = dataList
+		break
 	case "do":
 		switch request.DoType {
 		case "set":
@@ -113,27 +119,32 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		if err != nil {
 			return
 		}
+		break
 	case "delete":
 		var count int
 		count, err = service.Del(ctx, request.Database, request.Key)
 		res["count"] = count
+		break
 	case "deletePattern":
 		var count int
 		count, err = service.DelPattern(ctx, request.Database, request.Pattern)
 		res["count"] = count
+		break
 	case "expire":
 		var success bool
 		success, err = service.Expire(ctx, request.Database, request.Key, request.Expire)
 		res["success"] = success
+		break
 	case "ttl":
 		var ttl int64
 		ttl, err = service.TTL(ctx, request.Database, request.Key)
 		res["ttl"] = ttl
+		break
 	case "persist":
 		var success bool
 		success, err = service.Persist(ctx, request.Database, request.Key)
 		res["success"] = success
-
+		break
 	case "import":
 
 		taskKey := util.UUID()
@@ -150,13 +161,19 @@ func RedisWork(work string, config *redis.Config, data map[string]interface{}) (
 		redis.StartImportTask(importTask)
 
 		res["taskKey"] = taskKey
+		break
 	case "importStatus":
 		task := redis.GetImportTask(request.TaskKey)
 		res["task"] = task
+		break
 	case "importStop":
 		redis.StopImportTask(request.TaskKey)
+		break
 	case "importClean":
 		redis.CleanImportTask(request.TaskKey)
+		break
+	case "close":
+		break
 	}
 	return
 }

@@ -3,39 +3,58 @@
     <div class="login-box bg-teal-5 pd-20">
       <div class="login-left">
         <div class="ft-25 pdtb-10 pdlr-20">Team IDE</div>
-        <p class="ft-15 ft-16 pdtb-5 pdlr-20">
-          <span class="pdlr-5">团队协作</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">工作报告</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">高效</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">安全</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">可靠</span>
-        </p>
-        <hr />
-        <div class="ft-25 pdtb-10 pdlr-20">Toolbox</div>
         <p class="ft-15 pdtb-5 pdlr-20">
           <span class="pdlr-5">Redis</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">Mysql</span>
           <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Zookeeper</span>
           <br />
           <span class="pdlr-5">Elasticsearch</span>
           <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Kafka</span>
+          <br />
+          <span class="pdlr-5">Mysql</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">Oracle</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">达梦</span>
+          <br />
+          <span class="pdlr-5">神通</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">金仓</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">Sqlite</span>
         </p>
       </div>
-      <div class="login-right">
+      <div class="login-right" v-if="loginForm != null">
         <Form
-          v-if="loginForm != null"
           :formBuild="loginForm"
           :formData="loginData"
           :saveShow="false"
           class="pd-10"
         >
+          <div class="tm-row">
+            <el-checkbox v-model="rememberPassword">记住密码 </el-checkbox>
+            <el-checkbox v-model="autoLogin">自动登录 </el-checkbox>
+          </div>
+          <div class="tm-row pdtb-10">
+            <div
+              v-if="source.hasPower('login')"
+              class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
+              :class="{ 'tm-disabled': loginBtnDisabled }"
+              @click="doLogin"
+            >
+              登&nbsp;&nbsp;录
+            </div>
+          </div>
+          <div
+            v-if="source.hasPower('register')"
+            class="pdtb-10 text-right ft-13"
+          >
+            没有账号？
+            <div class="tm-link color-orange mgt--1" @click="tool.toRegister()">
+              立即注册
+            </div>
+          </div>
           <!-- <b-form-group>
             <b-form-checkbox
               v-model="rememberPassword"
@@ -181,5 +200,14 @@ export default {
   width: 400px;
   height: 100%;
   float: right;
+}
+.login-page .el-form-item__label {
+  color: #ffffff;
+}
+.login-page .el-checkbox__label {
+  color: #ffffff;
+}
+.login-page .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #ffffff;
 }
 </style>

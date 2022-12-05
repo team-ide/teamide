@@ -81,6 +81,21 @@ func (this_ *UserService) Query(user *UserModel) (res []*UserModel, err error) {
 	return
 }
 
+// QueryByAccount 查询
+func (this_ *UserService) QueryByAccount(account string) (res []*UserModel, err error) {
+
+	var values []interface{}
+	sql := `SELECT * FROM ` + TableUser + ` WHERE deleted=2 `
+	sql += " AND account = ?"
+	values = append(values, account)
+	err = this_.DatabaseWorker.Query(sql, values, &res)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // CheckExist 查询
 func (this_ *UserService) CheckExist(account string, email string) (res bool, err error) {
 

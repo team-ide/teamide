@@ -11,13 +11,18 @@
     <div class="workspace-header">
       <div class="workspace-header-nav-box">
         <div
+          v-if="source.hasPower('toolbox')"
           class="workspace-header-nav"
           @click="tool.showSwitchToolboxContext()"
         >
           工具箱
           <span class="color-green mgl-2">({{ source.toolboxCount }})</span>
         </div>
-        <div class="workspace-header-nav" @click="openNodeContext()">
+        <div
+          v-if="source.hasPower('node')"
+          class="workspace-header-nav"
+          @click="openNodeContext()"
+        >
           节点
           <span class="color-green mgl-2">
             (
@@ -27,7 +32,11 @@
             )
           </span>
         </div>
-        <div class="workspace-header-nav" @click="openNodeNetProxyContext()">
+        <div
+          v-if="source.hasPower('node_net_proxy')"
+          class="workspace-header-nav"
+          @click="openNodeNetProxyContext()"
+        >
           网络代理|透传
           <span class="color-green mgl-2">
             (
@@ -39,7 +48,7 @@
             )
           </span>
         </div>
-        <div class="workspace-header-nav">
+        <div v-if="source.hasPower('terminal')" class="workspace-header-nav">
           <el-dropdown
             trigger="click"
             class="terminal-dropdown"
@@ -92,7 +101,10 @@
             </el-dropdown-menu>
           </el-dropdown>
         </div>
-        <div class="workspace-header-nav">
+        <div
+          v-if="source.hasPower('file_manager')"
+          class="workspace-header-nav"
+        >
           <el-dropdown
             trigger="click"
             class="file-manager-dropdown"
@@ -155,15 +167,43 @@
             v-if="source.hasPower('login')"
             @click="tool.toLogin()"
           >
-            登录
+            登 录
+          </div>
+          <div
+            class="workspace-header-nav"
+            v-if="source.hasPower('register')"
+            @click="tool.toRegister()"
+          >
+            注 册
           </div>
         </template>
         <template v-else>
           <div class="workspace-header-nav">
-            {{ source.login.user.name }}
+            <el-dropdown
+              trigger="click"
+              class="user-dropdown"
+              ref="userDropdown"
+            >
+              <span class="el-dropdown-link">
+                {{ source.login.user.name }}
+                <i class="el-icon-arrow-down el-icon--right"></i>
+              </span>
+              <el-dropdown-menu slot="dropdown" class="user-dropdown-menu">
+                <MenuBox>
+                  <MenuItem @click="openPage('userCenter')">
+                    个人中心
+                  </MenuItem>
+                  <MenuItem @click="tool.toLogout()"> 退出登录 </MenuItem>
+                </MenuBox>
+              </el-dropdown-menu>
+            </el-dropdown>
           </div>
         </template>
-        <div class="workspace-header-nav" @click="tool.showUpdateCheck()">
+        <div
+          v-if="source.hasPower('update_check')"
+          class="workspace-header-nav"
+          @click="tool.showUpdateCheck()"
+        >
           <template v-if="source.hasNewVersion"> 有新版本 </template>
           <template v-else> 检测新版本 </template>
         </div>
@@ -250,13 +290,28 @@ export default {
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    "source.login.user"() {
+      this.initUserData();
+    },
+  },
   methods: {
-    init() {
-      this.server.addServerSocketOnOpen(async () => {
+    async initUserData() {
+      if (this.source.login.user != null) {
+        await this.source.initToolboxData();
         await this.source.initUserToolboxData();
         await this.source.initNodeContext();
         await this.initOpens();
+      } else {
+        this.toMainActiveItem(null);
+        this.mainItemsWorker.items.splice(0, this.mainItemsWorker.items.length);
+        await this.source.initToolboxData();
+        await this.source.initUserToolboxData();
+      }
+    },
+    init() {
+      this.server.addServerSocketOnOpen(() => {
+        this.initUserData();
       });
       this.server.addServerSocketOnEvent("node-data-change", (data) => {
         try {
@@ -625,6 +680,26 @@ export default {
   top: 35px !important;
 }
 .terminal-dropdown-menu .menu-box a {
+  cursor: pointer;
+}
+
+.user-dropdown.el-dropdown {
+  color: unset;
+  font-size: unset;
+  display: flex;
+  white-space: nowrap;
+  align-items: center;
+}
+.user-dropdown-menu.el-dropdown-menu {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 0;
+  background: transparent;
+  top: 35px !important;
+}
+.user-dropdown-menu .menu-box a {
   cursor: pointer;
 }
 

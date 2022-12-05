@@ -11,11 +11,13 @@ type ApiWorker struct {
 }
 
 type PowerAction struct {
-	Action      string `json:"action,omitempty"`
-	Text        string `json:"text,omitempty"`
-	ShouldLogin bool   `json:"shouldLogin,omitempty"`
-	StandAlone  bool   `json:"standAlone,omitempty"` // 单机是否可用
-	Parent      *PowerAction
+	Action       string       `json:"action,omitempty"`
+	Text         string       `json:"text,omitempty"`
+	ShouldLogin  bool         `json:"shouldLogin,omitempty"`
+	StandAlone   bool         `json:"standAlone,omitempty"` // 单机是否可用
+	ShouldPower  bool         `json:"shouldPower,omitempty"`
+	ParentAction string       `json:"parentAction,omitempty"`
+	Parent       *PowerAction `json:"-"`
 }
 
 var (
@@ -23,6 +25,9 @@ var (
 )
 
 func addPower(power *PowerAction) *PowerAction {
+	if power.Parent != nil {
+		power.ParentAction = power.Parent.Action
+	}
 	powers = append(powers, power)
 	return power
 }
@@ -32,7 +37,7 @@ func AppendPower(power *PowerAction) *PowerAction {
 }
 func GetPowers() (ps []*PowerAction) {
 
-	ps = append(ps, powers...)
+	ps = powers
 
 	return
 }

@@ -108,7 +108,7 @@ func main() {
 	defer func() {
 		if e := recover(); e != nil {
 			fmt.Println("启动失败:", e)
-			if serverContext != nil {
+			if serverContext != nil && serverContext.Logger != nil {
 				serverContext.Logger.Error("启动失败", zap.Any("error", e))
 			}
 			waitGroupForStop.Done()

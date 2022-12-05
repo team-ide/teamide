@@ -49,7 +49,12 @@ export default {
         try {
           data = data || {};
           if (typeof data == "string") {
-            this.text = data;
+            try {
+              let json = JSONbigString.parse(data);
+              this.text = JSONbigString.stringify(json, null, "    ");
+            } catch (e) {
+              this.text = data;
+            }
           } else {
             this.text = JSONbigString.stringify(data, null, "    ");
           }

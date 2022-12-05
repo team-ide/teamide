@@ -22,12 +22,6 @@ Vue.component('AlertBox', AlertBox);
 import JSONDataDialog from './dialog/JSONDataDialog.vue'
 Vue.component('JSONDataDialog', JSONDataDialog);
 
-import Login from './Login.vue'
-Vue.component('Login', Login);
-
-import Register from './Register.vue'
-Vue.component('Register', Register);
-
 import Workspace from './workspace/Index.vue'
 Vue.component('Workspace', Workspace);
 import WorkspaceTabs from './workspace/Tabs.vue'

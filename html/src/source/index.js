@@ -307,25 +307,27 @@ source.sqlValuePackChars = [
     { value: '"', text: '"' },
 ];
 source.initToolboxData = async () => {
-    let res = await server.toolbox.data();
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let data = res.data || {};
-
-        source.quickCommandTypes = data.quickCommandTypes;
-        source.databaseTypes = data.databaseTypes || [];
-        source.sqlConditionalOperations = data.sqlConditionalOperations;
-        source.toolboxTypes = data.types || [];
-        source.toolboxTypes.forEach((one) => {
-            form.toolbox[one.name] = one.configForm;
-            if (one.otherForm) {
-                for (let formName in one.otherForm) {
-                    form.toolbox[one.name][formName] = one.otherForm[formName];
-                }
-            }
-        });
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.toolbox.data();
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
     }
+
+    source.quickCommandTypes = data.quickCommandTypes;
+    source.databaseTypes = data.databaseTypes || [];
+    source.sqlConditionalOperations = data.sqlConditionalOperations;
+    source.toolboxTypes = data.types || [];
+    source.toolboxTypes.forEach((one) => {
+        form.toolbox[one.name] = one.configForm;
+        if (one.otherForm) {
+            for (let formName in one.otherForm) {
+                form.toolbox[one.name][formName] = one.otherForm[formName];
+            }
+        }
+    });
 }
 source.initUserToolboxData = async () => {
 
@@ -336,42 +338,49 @@ source.initUserToolboxData = async () => {
 }
 source.toolboxCount = 0;
 source.initToolboxCount = async () => {
-    let res = await server.toolbox.count({});
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let data = res.data || {};
-        source.toolboxCount = data.count || 0;
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.toolbox.count({});
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
     }
+    source.toolboxCount = data.count || 0;
 }
 
 source.initToolboxGroups = async () => {
-    let res = await server.toolbox.group.list({});
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let data = res.data || {};
-        let groups = data.groupList || [];
-        source.toolboxGroups = groups;
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.toolbox.group.list({});
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
     }
+    let groups = data.groupList || [];
+    source.toolboxGroups = groups;
 }
 source.sshToolboxList = [];
 source.initToolboxSSHList = async () => {
-    let res = await server.toolbox.list({ toolboxType: "ssh" });
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let data = res.data || {};
-        let toolboxList = data.toolboxList || [];
-
-        var sshToolboxList = [];
-        toolboxList.forEach((one) => {
-            if (one.toolboxType == "ssh") {
-                sshToolboxList.push(one);
-            }
-        });
-        source.sshToolboxList = sshToolboxList;
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.toolbox.list({ toolboxType: "ssh" });
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
     }
+
+    let toolboxList = data.toolboxList || [];
+
+    var sshToolboxList = [];
+    toolboxList.forEach((one) => {
+        if (one.toolboxType == "ssh") {
+            sshToolboxList.push(one);
+        }
+    });
+    source.sshToolboxList = sshToolboxList;
 }
 
 source.getQuickCommandType = (name) => {
@@ -387,25 +396,28 @@ source.getQuickCommandType = (name) => {
     return res;
 }
 source.initToolboxQuickCommands = async () => {
-    let res = await server.toolbox.quickCommand.query({});
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let quickCommands = res.data.quickCommands || [];
-
-        let quickCommandSSHCommands = [];
-        let quickCommandTypeSSHCommand = source.getQuickCommandType("SSH Command");
-
-        quickCommands.forEach((one) => {
-            if (quickCommandTypeSSHCommand) {
-                if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
-                    quickCommandSSHCommands.push(one);
-                }
-            }
-        });
-        source.quickCommands = quickCommands;
-        source.quickCommandSSHCommands = quickCommandSSHCommands;
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.toolbox.quickCommand.query({});
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
     }
+    let quickCommands = data.quickCommands || [];
+
+    let quickCommandSSHCommands = [];
+    let quickCommandTypeSSHCommand = source.getQuickCommandType("SSH Command");
+
+    quickCommands.forEach((one) => {
+        if (quickCommandTypeSSHCommand) {
+            if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
+                quickCommandSSHCommands.push(one);
+            }
+        }
+    });
+    source.quickCommands = quickCommands;
+    source.quickCommandSSHCommands = quickCommandSSHCommands;
 }
 source.nodeLocalList = []
 source.nodeList = []

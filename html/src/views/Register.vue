@@ -3,40 +3,36 @@
     <div class="register-box bg-teal-5 pd-20">
       <div class="register-left">
         <div class="ft-25 pdtb-10 pdlr-20">Team IDE</div>
-        <p class="ft-15 ft-16 pdtb-5 pdlr-20">
-          <span class="pdlr-5">团队协作</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">工作报告</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">高效</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">安全</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">可靠</span>
-        </p>
-        <hr />
-        <div class="ft-25 pdtb-10 pdlr-20">Toolbox</div>
         <p class="ft-15 pdtb-5 pdlr-20">
           <span class="pdlr-5">Redis</span>
-          <span class="pdlr-5 ft-20">·</span>
-          <span class="pdlr-5">Mysql</span>
           <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Zookeeper</span>
           <br />
           <span class="pdlr-5">Elasticsearch</span>
           <span class="pdlr-5 ft-20">·</span>
           <span class="pdlr-5">Kafka</span>
+          <br />
+          <span class="pdlr-5">Mysql</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">Oracle</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">达梦</span>
+          <br />
+          <span class="pdlr-5">神通</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">金仓</span>
+          <span class="pdlr-5 ft-20">·</span>
+          <span class="pdlr-5">Sqlite</span>
         </p>
       </div>
-      <div class="register-right">
+      <div class="register-right" v-if="registerForm != null">
         <Form
-          v-if="registerForm != null"
-          :form="registerForm"
+          :formBuild="registerForm"
           :formData="registerData"
           :saveShow="false"
           class="pd-10"
         >
-          <div class="pdtb-10">
+          <div class="tm-row pdtb-10">
             <div
               v-if="source.hasPower('register')"
               class="tm-btn bg-teal-8 ft-18 pdtb-5 tm-btn-block"
@@ -105,6 +101,7 @@ export default {
     },
     init() {
       this.registerForm = this.form.build(this.form.register);
+      console.log(this.registerForm);
       let registerData = this.registerForm.newDefaultData();
       this.registerData = registerData;
     },
@@ -147,5 +144,8 @@ export default {
   width: 400px;
   height: 100%;
   float: right;
+}
+.register-page .el-form-item__label {
+  color: #ffffff;
 }
 </style>

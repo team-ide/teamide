@@ -66,9 +66,12 @@ type ElasticsearchBaseRequest struct {
 func ESWork(work string, config *elasticsearch.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *elasticsearch.V7Service
-	service, err = getESService(*config)
-	if err != nil {
-		return
+
+	if work != "close" {
+		service, err = getESService(*config)
+		if err != nil {
+			return
+		}
 	}
 
 	dataBS, err := json.Marshal(data)
@@ -90,6 +93,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["info"] = info
+		break
 	case "indexNames":
 		var indexNames []string
 		indexNames, err = service.IndexNames()
@@ -97,16 +101,19 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["indexNames"] = indexNames
+		break
 	case "createIndex":
 		err = service.CreateIndex(request.IndexName, request.Mapping)
 		if err != nil {
 			return
 		}
+		break
 	case "deleteIndex":
 		err = service.DeleteIndex(request.IndexName)
 		if err != nil {
 			return
 		}
+		break
 	case "getMapping":
 		var mapping interface{}
 		mapping, err = service.GetMapping(request.IndexName)
@@ -114,11 +121,13 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["mapping"] = mapping
+		break
 	case "putMapping":
 		err = service.PutMapping(request.IndexName, request.Mapping)
 		if err != nil {
 			return
 		}
+		break
 	case "search":
 		var queryResult *elasticsearch.SearchResult
 		queryResult, err = service.Search(request.IndexName, request.PageIndex, request.PageSize, request.WhereList, request.OrderList)
@@ -126,6 +135,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = queryResult
+		break
 	case "scroll":
 		var result *elasticsearch.SearchResult
 		result, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize, request.WhereList, request.OrderList)
@@ -133,6 +143,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = result
+		break
 	case "insertData":
 		var result *elasticsearch.IndexResponse
 		result, err = service.Insert(request.IndexName, request.Id, request.Doc)
@@ -140,6 +151,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = result
+		break
 	case "updateData":
 		var result *elasticsearch.UpdateResponse
 		result, err = service.Update(request.IndexName, request.Id, request.Doc)
@@ -147,6 +159,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = result
+		break
 	case "deleteData":
 		var result *elasticsearch.DeleteResponse
 		result, err = service.Delete(request.IndexName, request.Id)
@@ -154,6 +167,7 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = result
+		break
 	case "reindex":
 		var result *elasticsearch.BulkIndexByScrollResponse
 		result, err = service.Reindex(request.SourceIndexName, request.DestIndexName)
@@ -161,6 +175,9 @@ func ESWork(work string, config *elasticsearch.Config, data map[string]interface
 			return
 		}
 		res["result"] = result
+		break
+	case "close":
+		break
 	}
 	return
 }

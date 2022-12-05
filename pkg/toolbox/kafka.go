@@ -65,9 +65,12 @@ type KafkaBaseRequest struct {
 func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *kafka.SaramaService
-	service, err = getKafkaService(*config)
-	if err != nil {
-		return
+
+	if work != "close" {
+		service, err = getKafkaService(*config)
+		if err != nil {
+			return
+		}
 	}
 
 	dataBS, err := json.Marshal(data)
@@ -90,11 +93,13 @@ func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (
 			return
 		}
 		res["topics"] = topics
+		break
 	case "commit":
 		err = service.MarkOffset(request.GroupId, request.Topic, request.Partition, request.Offset)
 		if err != nil {
 			return
 		}
+		break
 	case "pull":
 		var msgList []*kafka.Message
 		msgList, err = service.Pull(request.GroupId, []string{request.Topic}, request.PullSize, request.PullTimeout, request.KeyType, request.ValueType)
@@ -102,6 +107,7 @@ func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (
 			return
 		}
 		res["msgList"] = msgList
+		break
 	case "push":
 
 		msg := &kafka.Message{}
@@ -113,26 +119,31 @@ func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (
 		if err != nil {
 			return nil, err
 		}
+		break
 	case "reset":
 		err = service.ResetOffset(request.GroupId, request.Topic, request.Partition, request.Offset)
 		if err != nil {
 			return
 		}
+		break
 	case "deleteTopic":
 		err = service.DeleteTopic(request.Topic)
 		if err != nil {
 			return
 		}
+		break
 	case "createTopic":
 		err = service.CreateTopic(request.Topic, request.NumPartitions, request.ReplicationFactor)
 		if err != nil {
 			return
 		}
+		break
 	case "createPartitions":
 		err = service.CreatePartitions(request.Topic, request.Count)
 		if err != nil {
 			return
 		}
+		break
 	case "deleteRecords":
 		partitionOffsets := make(map[int32]int64)
 		partitionOffsets[request.Partition] = request.Offset
@@ -140,6 +151,9 @@ func KafkaWork(work string, config *kafka.Config, data map[string]interface{}) (
 		if err != nil {
 			return
 		}
+		break
+	case "close":
+		break
 	}
 	return
 }

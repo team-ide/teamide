@@ -52,9 +52,12 @@ type ZookeeperBaseRequest struct {
 func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) (res map[string]interface{}, err error) {
 
 	var service *zookeeper.ZKService
-	service, err = getZKService(*config)
-	if err != nil {
-		return
+
+	if work != "close" {
+		service, err = getZKService(*config)
+		if err != nil {
+			return
+		}
 	}
 
 	dataBS, err := json.Marshal(data)
@@ -76,6 +79,7 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 			return
 		}
 		res["info"] = info
+		break
 	case "get":
 		var data []byte
 		var statInfo *zookeeper.StatInfo
@@ -85,6 +89,7 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 		}
 		res["data"] = string(data)
 		res["stat"] = statInfo
+		break
 	case "save":
 		var isEx bool
 		isEx, err = service.Exists(request.Path)
@@ -99,6 +104,7 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 		if err != nil {
 			return
 		}
+		break
 	case "getChildren":
 		var isEx bool
 		isEx, err = service.Exists(request.Path)
@@ -135,6 +141,7 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 			}
 			res["children"] = children
 		}
+		break
 	case "delete":
 		var isEx bool
 		isEx, err = service.Exists(request.Path)
@@ -147,6 +154,10 @@ func ZKWork(work string, config *zookeeper.Config, data map[string]interface{}) 
 				return
 			}
 		}
+		break
+	case "close":
+		break
+
 	}
 	return
 }

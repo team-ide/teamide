@@ -197,6 +197,9 @@ export default {
       this.build();
     },
     build() {
+      if (this.formBuild == null) {
+        return;
+      }
       this.key = this.tool.getNumber();
       let fileObjectMap = {};
       let jsonStringMap = {};

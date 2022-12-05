@@ -7,11 +7,11 @@ import (
 	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
-	"teamide/internal/config"
 	"teamide/internal/context"
 	"teamide/internal/module/module_file_manager"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_node"
+	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_terminal"
 	"teamide/internal/module/module_toolbox"
@@ -21,15 +21,17 @@ import (
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
 	api = &Api{
-		ServerContext:   ServerContext,
-		userService:     module_user.NewUserService(ServerContext),
-		registerService: module_register.NewRegisterService(ServerContext),
-		loginService:    module_login.NewLoginService(ServerContext),
-		installService:  NewInstallService(ServerContext),
-		toolboxService:  module_toolbox.NewToolboxService(ServerContext),
-		nodeService:     module_node.NewNodeService(ServerContext),
-
-		apiCache: make(map[string]*base.ApiWorker),
+		ServerContext:     ServerContext,
+		userService:       module_user.NewUserService(ServerContext),
+		registerService:   module_register.NewRegisterService(ServerContext),
+		loginService:      module_login.NewLoginService(ServerContext),
+		installService:    NewInstallService(ServerContext),
+		toolboxService:    module_toolbox.NewToolboxService(ServerContext),
+		nodeService:       module_node.NewNodeService(ServerContext),
+		powerRoleService:  module_power.NewPowerRoleService(ServerContext),
+		powerRouteService: module_power.NewPowerRouteService(ServerContext),
+		powerUserService:  module_power.NewPowerUserService(ServerContext),
+		apiCache:          make(map[string]*base.ApiWorker),
 	}
 	var apis []*base.ApiWorker
 	apis, err = api.GetApis()
@@ -64,9 +66,13 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	if err != nil {
 		return
 	}
-	// 如果是单机 初始化一些用户
-	if !ServerContext.IsServer {
-		err = api.InitStandAlone()
+	if ServerContext.IsServer {
+		err = api.initServer()
+		if err != nil {
+			return
+		}
+	} else {
+		err = api.initStandAlone()
 		if err != nil {
 			return
 		}
@@ -77,15 +83,17 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
 // Api ID服务
 type Api struct {
-	config.ServerConfig
 	*context.ServerContext
-	toolboxService  *module_toolbox.ToolboxService
-	nodeService     *module_node.NodeService
-	userService     *module_user.UserService
-	registerService *module_register.RegisterService
-	loginService    *module_login.LoginService
-	installService  *InstallService
-	apiCache        map[string]*base.ApiWorker
+	toolboxService    *module_toolbox.ToolboxService
+	nodeService       *module_node.NodeService
+	userService       *module_user.UserService
+	registerService   *module_register.RegisterService
+	loginService      *module_login.LoginService
+	powerRoleService  *module_power.PowerRoleService
+	powerRouteService *module_power.PowerRouteService
+	powerUserService  *module_power.PowerUserService
+	installService    *InstallService
+	apiCache          map[string]*base.ApiWorker
 }
 
 var (
@@ -98,8 +106,8 @@ var (
 	PowerLogout      = base.AppendPower(&base.PowerAction{Action: "logout", Text: "登出", StandAlone: false})
 	PowerAutoLogin   = base.AppendPower(&base.PowerAction{Action: "auto_login", Text: "自动登录", StandAlone: false})
 	PowerUpload      = base.AppendPower(&base.PowerAction{Action: "upload", Text: "上传", StandAlone: true})
-	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "updateCheck", Text: "更新检测", StandAlone: true})
-	PowerWebsocket   = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "更新检测", StandAlone: true})
+	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "update_check", Text: "更新检测", ShouldPower: true, ShouldLogin: true, StandAlone: true})
+	PowerWebsocket   = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "WebSocket", StandAlone: true})
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {

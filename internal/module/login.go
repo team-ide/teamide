@@ -3,33 +3,12 @@ package module
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"os/user"
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_user"
 	"teamide/pkg/util"
 )
-
-var (
-	SystemUserUid      string // 用户的 ID
-	SystemUserGid      string // 用户所属组的 ID，如果属于多个组，那么此 ID 为主组的 ID
-	SystemUserUsername string // 用户名
-	SystemUserName     string // 属组名称，如果属于多个组，那么此名称为主组的名称
-	SystemUserHomeDir  string // 用户的宿主目录
-)
-
-func init() {
-	u, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	SystemUserUsername = u.Username
-	SystemUserName = u.Name
-	SystemUserHomeDir = u.HomeDir
-	SystemUserGid = u.Gid
-	SystemUserUid = u.Uid
-}
 
 type LoginRequest struct {
 	Account  string `json:"account,omitempty"`
@@ -71,7 +50,7 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 			return
 		}
 	} else {
-		loginUser, err = this_.userService.Get(this_.getStandAloneUserId())
+		loginUser, err = this_.userService.Get(base.StandAloneUserId)
 		if err != nil {
 			return
 		}
@@ -152,22 +131,17 @@ type SessionResponse struct {
 	JWT    string                 `json:"JWT,omitempty"`
 }
 
-func (this_ *Api) getStandAloneUserId() (userId int64) {
-	userId = 1
-	return
-}
-
 func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	response := &SessionResponse{}
 
-	var userId int64 = -1
+	var userId int64 = 0
 
 	if this_.IsServer {
 		if request.JWT != nil {
 			userId = request.JWT.UserId
 		}
 	} else {
-		userId = this_.getStandAloneUserId()
+		userId = base.StandAloneUserId
 	}
 	if userId > 0 {
 		var find *module_user.UserModel

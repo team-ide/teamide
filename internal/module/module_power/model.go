@@ -20,9 +20,11 @@ const (
 type PowerRoleModel struct {
 	PowerRoleId    int64     `json:"powerRoleId,omitempty"`
 	Name           string    `json:"name,omitempty"`
+	RoleType       int       `json:"roleType,omitempty"`
 	ExpirationTime time.Time `json:"expirationTime,omitempty"`
 	CreateTime     time.Time `json:"createTime,omitempty"`
 	UpdateTime     time.Time `json:"updateTime,omitempty"`
+	IsSuper        bool      `json:"isSuper"`
 }
 
 // PowerRouteModel 权限路由模型，和权限路由表对应
@@ -39,6 +41,7 @@ type PowerRouteModel struct {
 // PowerUserModel 权限用户模型，和权限用户表对应
 type PowerUserModel struct {
 	PowerUserId    int64     `json:"powerUserId,omitempty"`
+	PowerRoleId    int64     `json:"powerRoleId,omitempty"`
 	UserId         int64     `json:"userId,omitempty"`
 	ExpirationTime time.Time `json:"expirationTime,omitempty"`
 	CreateTime     time.Time `json:"createTime,omitempty"`

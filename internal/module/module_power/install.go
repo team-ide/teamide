@@ -107,5 +107,39 @@ CREATE TABLE ` + TablePowerUser + ` (
 				},
 			},
 		},
+
+		// 权限角色 添加 角色类型
+		{
+			Version: "1.1",
+			Module:  ModulePower,
+			Stage:   `表[` + TablePowerRole + `]添加角色类型`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TablePowerRole + ` ADD COLUMN roleType int(2) DEFAULT 0 COMMENT '角色类型';`,
+					`ALTER TABLE ` + TablePowerRole + ` ADD INDEX ` + TablePowerRole + `_index_roleType (roleType);`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TablePowerRole + ` ADD roleType int(2) DEFAULT 0;`,
+					`CREATE INDEX ` + TablePowerRole + `_index_roleType on ` + TablePowerRole + ` (roleType);`,
+				},
+			},
+		},
+
+		// 权限用户 添加 权限角色 ID
+		{
+			Version: "1.1",
+			Module:  ModulePower,
+			Stage:   `表[` + TablePowerUser + `]添加权限角色ID`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TablePowerUser + ` ADD COLUMN powerRoleId bigint(20) DEFAULT NULL COMMENT '权限角色ID';`,
+					`ALTER TABLE ` + TablePowerUser + ` ADD INDEX ` + TablePowerUser + `_index_powerRoleId (powerRoleId);`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TablePowerUser + ` ADD powerRoleId bigint(20);`,
+					`CREATE INDEX ` + TablePowerUser + `_index_powerRoleId on ` + TablePowerUser + ` (powerRoleId);`,
+				},
+			},
+		},
 	}
 }

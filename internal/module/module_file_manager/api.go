@@ -29,22 +29,22 @@ var (
 	// 文件管理器 权限
 
 	// Power 文件管理器 基本 权限
-	Power           = base.AppendPower(&base.PowerAction{Action: "file_manager", Text: "工具", ShouldLogin: false, StandAlone: true})
-	PowerCreate     = base.AppendPower(&base.PowerAction{Action: "file_manager_create", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerFile       = base.AppendPower(&base.PowerAction{Action: "file_manager_file", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerFiles      = base.AppendPower(&base.PowerAction{Action: "file_manager_files", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerRead       = base.AppendPower(&base.PowerAction{Action: "file_manager_read", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerWrite      = base.AppendPower(&base.PowerAction{Action: "file_manager_write", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerRename     = base.AppendPower(&base.PowerAction{Action: "file_manager_rename", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerRemove     = base.AppendPower(&base.PowerAction{Action: "file_manager_remove", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerCopy       = base.AppendPower(&base.PowerAction{Action: "file_manager_copy", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerMove       = base.AppendPower(&base.PowerAction{Action: "file_manager_move", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerUpload     = base.AppendPower(&base.PowerAction{Action: "file_manager_upload", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerDownload   = base.AppendPower(&base.PowerAction{Action: "file_manager_download", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerCallStop   = base.AppendPower(&base.PowerAction{Action: "file_manager_call_stop", Text: "工具", ShouldLogin: true, StandAlone: true})
-	PowerClose      = base.AppendPower(&base.PowerAction{Action: "file_manager_close", Text: "工具", ShouldLogin: true, StandAlone: true})
-	//PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "工具", ShouldLogin: true, StandAlone: true})
+	Power           = base.AppendPower(&base.PowerAction{Action: "file_manager", Text: "文件管理器", ShouldLogin: true, StandAlone: true})
+	PowerCreate     = base.AppendPower(&base.PowerAction{Action: "file_manager_create", Text: "新建文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerFile       = base.AppendPower(&base.PowerAction{Action: "file_manager_file", Text: "文件信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerFiles      = base.AppendPower(&base.PowerAction{Action: "file_manager_files", Text: "文件列表", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerRead       = base.AppendPower(&base.PowerAction{Action: "file_manager_read", Text: "读取文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerWrite      = base.AppendPower(&base.PowerAction{Action: "file_manager_write", Text: "写入文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerRename     = base.AppendPower(&base.PowerAction{Action: "file_manager_rename", Text: "重命名文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerRemove     = base.AppendPower(&base.PowerAction{Action: "file_manager_remove", Text: "删除文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerCopy       = base.AppendPower(&base.PowerAction{Action: "file_manager_copy", Text: "复制文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerMove       = base.AppendPower(&base.PowerAction{Action: "file_manager_move", Text: "移动文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerUpload     = base.AppendPower(&base.PowerAction{Action: "file_manager_upload", Text: "上传文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerDownload   = base.AppendPower(&base.PowerAction{Action: "file_manager_download", Text: "下载文件", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerCallAction = base.AppendPower(&base.PowerAction{Action: "file_manager_call_action", Text: "文件操作动作", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerCallStop   = base.AppendPower(&base.PowerAction{Action: "file_manager_call_stop", Text: "文件操作停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerClose      = base.AppendPower(&base.PowerAction{Action: "file_manager_close", Text: "文件管理器关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	PowerOpen       = base.AppendPower(&base.PowerAction{Action: "file_manager_open", Text: "打开文件", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -63,7 +63,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callStop"}, Power: PowerCallStop, Do: this_.callStop})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/close"}, Power: PowerClose, Do: this_.close})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/open"}, Power: PowerDownload, Do: this_.open, IsGet: true})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/open"}, Power: PowerOpen, Do: this_.open, IsGet: true})
 	return
 }
 

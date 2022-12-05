@@ -3,7 +3,6 @@ package module
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"strings"
 	"teamide/internal/base"
 	"teamide/pkg/util"
 )
@@ -14,6 +13,12 @@ func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Cont
 		this_.Logger.Error("权限验证失败", zap.Error(base.ShouldLoginError))
 		base.ResponseJSON(nil, base.ShouldLoginError, c)
 		return false
+	}
+	if !this_.IsServer && api.Power.StandAlone {
+		return true
+	}
+	if !api.Power.ShouldPower {
+		return true
 	}
 	ps := this_.getPowersByJWT(JWT)
 
@@ -73,21 +78,13 @@ func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
 			if !power.ShouldLogin {
 				continue
 			}
+			if !power.ShouldPower {
+				powers = append(powers, power.Action)
+				continue
+			}
 			if util.ContainsString(userPowers, power.Action) >= 0 {
 				powers = append(powers, power.Action)
 			} else {
-				if strings.Index(power.Action, "user_") == 0 {
-					powers = append(powers, power.Action)
-				}
-				if strings.Index(power.Action, "manage_") == 0 {
-					powers = append(powers, power.Action)
-				}
-				if strings.Index(power.Action, "workspace_") == 0 {
-					powers = append(powers, power.Action)
-				}
-				if strings.Index(power.Action, "toolbox_") == 0 {
-					powers = append(powers, power.Action)
-				}
 			}
 		}
 	}

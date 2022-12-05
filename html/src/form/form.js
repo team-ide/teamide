@@ -11,7 +11,12 @@ let login = {
             label: "密码",
             name: "password",
             type: "password",
-            rules: rule.password,
+            rules: [
+                {
+                    required: true,
+                    message: `密码不能为空!`
+                }
+            ],
         }
     ],
 };

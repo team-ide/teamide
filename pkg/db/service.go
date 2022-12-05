@@ -487,11 +487,13 @@ var (
 
 func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportParam) (task *worker.Task, err error) {
 	downloadPath := "export/" + util.UUID()
-	exportParam.Dir, err = util.GetTempDir()
+	var exportDir string
+	exportDir, err = util.GetTempDir()
 	if err != nil {
 		return
 	}
-	exportParam.Dir += downloadPath
+	exportDir += downloadPath
+	exportParam.Dir = exportDir
 	exportParam.DataSourceType = worker.GetDataSource(param.ExportType)
 	exportParam.OnProgress = func(progress *worker.TaskProgress) {
 		util.Logger.Info("export task on progress", zap.Any("progress", progress))
@@ -509,15 +511,16 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 	go func() {
 		defer func() {
 			if err != nil {
-				_ = os.RemoveAll(exportParam.Dir)
+				_ = os.RemoveAll(exportDir)
 				return
 			}
-			err = util.Zip(exportParam.Dir, exportParam.Dir+".zip")
+			err = util.Zip(exportDir, exportDir+".zip")
 			if err != nil {
+				util.Logger.Error("export file zip error", zap.Any("exportDir", exportDir), zap.Error(err))
 				return
 			}
-			task_.Extend["dirPath"] = exportParam.Dir
-			task_.Extend["zipPath"] = exportParam.Dir + ".zip"
+			task_.Extend["dirPath"] = exportDir
+			task_.Extend["zipPath"] = exportDir + ".zip"
 			task_.Extend["downloadPath"] = downloadPath + ".zip"
 		}()
 		err = task_.Start()

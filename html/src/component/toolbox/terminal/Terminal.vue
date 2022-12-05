@@ -369,26 +369,26 @@ export default {
     async onKeydown(e) {
       // let key = arg.key;
       // console.log(key);
-
-      if (this.worker.socket == null) {
-        this.tool.stopEvent(e);
-
-        if (this.worker.building) {
-          return;
-        }
-        if (this.tool.keyIsEnter(e)) {
-          this.term.write("\r\n终端会话连接中，请稍后！\r\n");
-          this.worker.refresh();
-          return;
-        }
-        this.term.write("\r\n终端会话已关闭，输入回车重新连接！\r\n");
-
-        return;
-      }
       if (this.tool.keyIsCtrlC(e)) {
         this.doEventCopy();
-      } else if (this.tool.keyIsCtrlV(e)) {
-        this.doEventPaste();
+      } else {
+        if (this.worker.socket == null) {
+          this.tool.stopEvent(e);
+
+          if (this.worker.building) {
+            return;
+          }
+          if (this.tool.keyIsEnter(e)) {
+            this.term.write("\r\n终端会话连接中，请稍后！\r\n");
+            this.worker.refresh();
+            return;
+          }
+          this.term.write("\r\n终端会话已关闭，输入回车重新连接！\r\n");
+          return;
+        }
+        if (this.tool.keyIsCtrlV(e)) {
+          this.doEventPaste();
+        }
       }
     },
     initNextHeaderHandler(session) {

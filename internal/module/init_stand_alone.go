@@ -1,27 +1,29 @@
 package module
 
-import "teamide/internal/module/module_register"
+import (
+	"teamide/internal/base"
+	"teamide/internal/module/module_register"
+)
 
-func (this_ *Api) InitStandAlone() (err error) {
-	err = this_.InitStandAloneUser()
+func (this_ *Api) initStandAlone() (err error) {
+	err = this_.initStandAloneUser()
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Api) InitStandAloneUser() (err error) {
+// 初始化 单机用户
+func (this_ *Api) initStandAloneUser() (err error) {
 
-	standAloneUserId := this_.getStandAloneUserId()
-
-	user, err := this_.userService.Get(standAloneUserId)
+	user, err := this_.userService.Get(base.StandAloneUserId)
 	if err != nil {
 		return
 	}
 	if user == nil {
 		register := &module_register.RegisterModel{
-			UserId:     standAloneUserId,
-			Name:       SystemUserName,
+			UserId:     base.StandAloneUserId,
+			Name:       base.SystemUserName,
 			Account:    "admin",
 			Email:      "admin@teamide.com",
 			Password:   "admin123",

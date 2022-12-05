@@ -99,6 +99,12 @@ export default {
       return releaseHistory;
     },
     updateCheck() {
+      if (!this.source.hasPower("update_check")) {
+        setTimeout(() => {
+          this.updateCheck();
+        }, 1000 * 60 * 30);
+        return;
+      }
       this.server
         .updateCheck({})
         .then((res) => {
