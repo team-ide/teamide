@@ -55,14 +55,31 @@ export default {
   computed: {},
   watch: {
     "source.login.user"() {
-      this.server.closeWebsocket();
-      this.server.openWebsocket();
+      if (this.source.login.user == null) {
+        if (this.source.login.userId != null) {
+          this.source.login.userId = null;
+        }
+      } else {
+        if (this.source.login.userId != this.source.login.user.userId) {
+          this.source.login.userId = this.source.login.user.userId;
+        }
+      }
+    },
+    "source.login.userId"() {
+      var info = "change userId:";
+      if (this.source.login.userId != null) {
+        info += this.source.login.userId;
+      }
+      this.server.websocketSendText(info);
+    },
+    "source.ready"() {
+      if (this.source.ready) {
+        this.server.openWebsocket();
+      }
     },
   },
   methods: {
-    init() {
-      this.server.openWebsocket();
-    },
+    init() {},
     showContextmenu(menus) {
       let e = window.event;
       this.tool.stopEvent(e || window.event);

@@ -41,7 +41,7 @@ func (this_ *RegisterService) Register(register *RegisterModel) (rowsAffected in
 
 	checkExist := func() error {
 
-		exist, err := this_.userService.CheckExist(register.Account, register.Email)
+		exist, err := this_.userService.CheckExist(0, register.Account, register.Email)
 		if err != nil {
 			return err
 		}

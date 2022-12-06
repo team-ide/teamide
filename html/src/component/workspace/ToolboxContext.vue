@@ -187,12 +187,18 @@ export default {
       groupList: [],
       searchGroup: null,
       toolboxTypes: [],
+      toolboxGroups: [],
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {
+    "source.login.userId"(userId) {
+      if (userId == null) {
+        this.showBox = false;
+      }
+    },
     showBox() {
       if (this.showBox) {
         this.initData();
@@ -210,9 +216,21 @@ export default {
       this.showBox = false;
     },
     init() {},
+    async initToolboxGroups() {
+      let data = {};
+      if (this.source.login.user != null) {
+        let res = await this.server.toolbox.group.list({});
+        if (res.code != 0) {
+          this.tool.error(res.msg);
+        }
+        data = res.data || {};
+      }
+      let groups = data.groupList || [];
+      this.toolboxGroups = groups;
+    },
     async initData() {
-      this.source.initToolboxCount();
-      await this.source.initToolboxGroups();
+      this.source.initUserToolboxData();
+      await this.initToolboxGroups();
       if (this.toolboxTypes.length == 0) {
         this.toolboxTypes = this.source.toolboxTypes || [];
       }
@@ -253,9 +271,9 @@ export default {
           sshToolboxList.push(one);
         }
       });
-      this.source.sshToolboxList = sshToolboxList;
+      this.sshToolboxList = sshToolboxList;
 
-      let groups = this.source.toolboxGroups || [];
+      let groups = this.toolboxGroups || [];
       groupList.push({
         groupId: null,
         name: "未分组",

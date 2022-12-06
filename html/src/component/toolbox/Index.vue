@@ -81,11 +81,11 @@
         >
         </TerminalEditor>
       </template>
+      <template v-else-if="toolboxType == 'page'">
+        <Page :source="source" :extend="extend" :toolboxWorker="toolboxWorker">
+        </Page>
+      </template>
     </template>
-    <QuickCommand :source="source" :toolboxWorker="toolboxWorker">
-    </QuickCommand>
-    <QuickCommandSSHCommandForm :source="source" :toolboxWorker="toolboxWorker">
-    </QuickCommandSSHCommandForm>
     <JSONDataDialog ref="JSONDataDialog" :source="source"></JSONDataDialog>
   </div>
 </template>
@@ -93,17 +93,15 @@
 
 <script>
 import "./toolbox.css";
-import QuickCommand from "./QuickCommand";
-import QuickCommandSSHCommandForm from "./QuickCommandSSHCommandForm";
+import Page from "./Page.vue";
 import NodeEditor from "./node/Index.vue";
 import FileManagerEditor from "./file-manager/Index.vue";
 import TerminalEditor from "./terminal/Index.vue";
 
 export default {
   components: {
+    Page,
     NodeEditor,
-    QuickCommand,
-    QuickCommandSSHCommandForm,
     FileManagerEditor,
     TerminalEditor,
   },

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"teamide/internal/base"
 	"teamide/pkg/db"
 	"teamide/pkg/elasticsearch"
 	"teamide/pkg/form"
@@ -153,21 +154,27 @@ func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, er
 }
 
 // Work 执行
-func (this_ *ToolboxService) Work(toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
+func (this_ *ToolboxService) Work(requestBean *base.RequestBean, toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
 
-	tD, err := this_.Get(toolboxId)
+	find, err := this_.Get(toolboxId)
 	if err != nil {
 		return
 	}
-	if tD == nil {
-		tD = this_.GetOtherToolbox(toolboxId)
+	if find != nil && find.UserId != 0 {
+		if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+			err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+			return
+		}
+	}
+	if find == nil {
+		find = this_.GetOtherToolbox(toolboxId)
 	}
 	option := ""
-	if tD != nil {
-		if tD.ToolboxType != "" {
-			toolboxType = tD.ToolboxType
+	if find != nil {
+		if find.ToolboxType != "" {
+			toolboxType = find.ToolboxType
 		}
-		option = tD.Option
+		option = find.Option
 	}
 
 	if toolboxType == "" {

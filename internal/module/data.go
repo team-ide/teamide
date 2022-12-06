@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"strings"
 	"teamide/internal/base"
+	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/db"
+	"teamide/pkg/toolbox"
 )
 
 type DataRequest struct {
@@ -17,6 +20,11 @@ type DataResponse struct {
 	Api      string `json:"api"`
 	FilesUrl string `json:"filesUrl"`
 	IsServer bool   `json:"isServer"`
+
+	ToolboxTypes             []*module_toolbox.Worker           `json:"toolboxTypes"`
+	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations"`
+	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes"`
+	QuickCommandTypes        []*module_toolbox.QuickCommandType `json:"quickCommandTypes"`
 }
 
 func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -43,6 +51,11 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.Api = response.Url + "api/"
 	response.FilesUrl = response.Api + "files/"
 	response.IsServer = this_.IsServer
+
+	response.ToolboxTypes = module_toolbox.GetWorkers()
+	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
+	response.DatabaseTypes = db.DatabaseTypes
+	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()
 
 	res = response
 	return

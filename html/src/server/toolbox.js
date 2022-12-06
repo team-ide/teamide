@@ -1,9 +1,6 @@
 import http from '@/server/http';
 
 let toolbox = {
-    data(param) {
-        return http.post('api/toolbox', param);
-    },
     list(param) {
         return http.post('api/toolbox/list', param);
     },

@@ -32,6 +32,7 @@ source.login = {
     show: false,
     remove: false,
     user: null,
+    userId: null,
 }
 
 source.register = {
@@ -285,15 +286,24 @@ source.init = (data) => {
         source.api = data.api;
         source.filesUrl = data.filesUrl;
         source.isServer = data.isServer;
+        source.quickCommandTypes = data.quickCommandTypes;
+        source.databaseTypes = data.databaseTypes || [];
+        source.sqlConditionalOperations = data.sqlConditionalOperations;
+        source.toolboxTypes = data.toolboxTypes || [];
+        source.toolboxTypes.forEach((one) => {
+            form.toolbox[one.name] = one.configForm;
+            if (one.otherForm) {
+                for (let formName in one.otherForm) {
+                    form.toolbox[one.name][formName] = one.otherForm[formName];
+                }
+            }
+        });
     } else {
         source.status = "error";
         source.ready = false;
     }
 }
 source.toolboxTypes = [];
-source.toolboxGroups = [];
-source.quickCommands = null;
-source.quickCommandSSHCommands = null;
 source.namePackChars = [
     { value: "", text: "默认" },
     { value: "-", text: "不包装" },
@@ -306,38 +316,13 @@ source.sqlValuePackChars = [
     { value: "'", text: "'" },
     { value: '"', text: '"' },
 ];
-source.initToolboxData = async () => {
-    let data = {}
-    if (source.login.user != null) {
-        let res = await server.toolbox.data();
-        if (res.code != 0) {
-            tool.error(res.msg);
-        }
-        data = res.data || {};
-    }
+source.initUserToolboxData = () => {
 
-    source.quickCommandTypes = data.quickCommandTypes;
-    source.databaseTypes = data.databaseTypes || [];
-    source.sqlConditionalOperations = data.sqlConditionalOperations;
-    source.toolboxTypes = data.types || [];
-    source.toolboxTypes.forEach((one) => {
-        form.toolbox[one.name] = one.configForm;
-        if (one.otherForm) {
-            for (let formName in one.otherForm) {
-                form.toolbox[one.name][formName] = one.otherForm[formName];
-            }
-        }
-    });
-}
-source.initUserToolboxData = async () => {
-
-    await source.initToolboxCount();
-    await source.initToolboxGroups();
-    await source.initToolboxQuickCommands();
-    source.initToolboxSSHList();
+    source.initUserToolboxCount();
+    source.initUserToolboxSSHList();
 }
 source.toolboxCount = 0;
-source.initToolboxCount = async () => {
+source.initUserToolboxCount = async () => {
     let data = {}
     if (source.login.user != null) {
         let res = await server.toolbox.count({});
@@ -349,20 +334,8 @@ source.initToolboxCount = async () => {
     source.toolboxCount = data.count || 0;
 }
 
-source.initToolboxGroups = async () => {
-    let data = {}
-    if (source.login.user != null) {
-        let res = await server.toolbox.group.list({});
-        if (res.code != 0) {
-            tool.error(res.msg);
-        }
-        data = res.data || {};
-    }
-    let groups = data.groupList || [];
-    source.toolboxGroups = groups;
-}
 source.sshToolboxList = [];
-source.initToolboxSSHList = async () => {
+source.initUserToolboxSSHList = async () => {
     let data = {}
     if (source.login.user != null) {
         let res = await server.toolbox.list({ toolboxType: "ssh" });
@@ -381,103 +354,6 @@ source.initToolboxSSHList = async () => {
         }
     });
     source.sshToolboxList = sshToolboxList;
-}
-
-source.getQuickCommandType = (name) => {
-    if (source.quickCommandTypes == null) {
-        return null;
-    }
-    let res = null;
-    source.quickCommandTypes.forEach((one) => {
-        if (one.name == name) {
-            res = one;
-        }
-    });
-    return res;
-}
-source.initToolboxQuickCommands = async () => {
-    let data = {}
-    if (source.login.user != null) {
-        let res = await server.toolbox.quickCommand.query({});
-        if (res.code != 0) {
-            tool.error(res.msg);
-        }
-        data = res.data || {};
-    }
-    let quickCommands = data.quickCommands || [];
-
-    let quickCommandSSHCommands = [];
-    let quickCommandTypeSSHCommand = source.getQuickCommandType("SSH Command");
-
-    quickCommands.forEach((one) => {
-        if (quickCommandTypeSSHCommand) {
-            if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
-                quickCommandSSHCommands.push(one);
-            }
-        }
-    });
-    source.quickCommands = quickCommands;
-    source.quickCommandSSHCommands = quickCommandSSHCommands;
-}
-source.nodeLocalList = []
-source.nodeList = []
-source.nodeCount = 0
-source.nodeSuccessCount = 0
-source.nodeNetProxyList = []
-source.nodeNetProxyCount = 0
-source.nodeNetProxyInnerSuccessCount = 0
-source.nodeNetProxyOuterSuccessCount = 0
-source.localIpList = [];
-source.nodeOptionMap = {};
-
-source.initNodeContext = async () => {
-    let res = await server.node.context({});
-    if (res.code != 0) {
-        tool.error(res.msg);
-    } else {
-        let data = res.data || {};
-        source.localIpList = data.localIpList || [];
-        source.initNodeDataCount(data.countData)
-        source.initNodeList(data.nodeList)
-        source.initNodeNetProxyList(data.netProxyList)
-    }
-}
-source.initNodeDataCount = (countData) => {
-    countData = countData || {};
-    source.nodeCount = countData.nodeCount || 0;
-    source.nodeSuccessCount = countData.nodeSuccessCount || 0;
-    source.nodeNetProxyCount = countData.nodeNetProxyCount || 0;
-    source.nodeNetProxyInnerSuccessCount = countData.nodeNetProxyInnerSuccessCount || 0;
-    source.nodeNetProxyOuterSuccessCount = countData.nodeNetProxyOuterSuccessCount || 0;
-}
-source.initNodeList = (nodeList) => {
-    nodeList = nodeList || []
-    form.node.nodeOptions.splice(0, form.node.nodeOptions.length);
-    let nodeOptionMap = {};
-    var nodeLocalList = [];
-    nodeList.forEach(one => {
-        let option = {};
-        option.isStarted = one.isStarted
-        option.value = one.serverId;
-        option.text = one.name;
-
-        form.node.nodeOptions.push(option);
-        nodeOptionMap[option.value] = option;
-        if (one.isLocal == 1) {
-            nodeLocalList.push(one);
-        }
-    });
-    source.nodeLocalList = nodeLocalList;
-    source.nodeList = nodeList;
-    source.nodeOptionMap = nodeOptionMap;
-}
-source.initNodeNetProxyList = (nodeNetProxyList) => {
-    nodeNetProxyList = nodeNetProxyList || []
-    nodeNetProxyList.forEach(one => {
-        one.innerMonitorData = one.innerMonitorData || null
-        one.outerMonitorData = one.outerMonitorData || null
-    });
-    source.nodeNetProxyList = nodeNetProxyList;
 }
 
 let refreshPowers = function () {
@@ -534,7 +410,8 @@ source.initSession = (data) => {
         }
     }
     if (data != null) {
-        if (data.user == null || source.login.user == null) {
+        if (data.user == null && source.login.user == null) {
+        } else if (data.user == null || source.login.user == null) {
             source.login.user = data.user;
         } else if (data.user.userId != source.login.user.userId) {
             source.login.user = data.user;

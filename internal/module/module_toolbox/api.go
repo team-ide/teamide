@@ -1,11 +1,8 @@
 package module_toolbox
 
 import (
-	"github.com/gin-gonic/gin"
 	"teamide/internal/base"
 	"teamide/internal/context"
-	"teamide/pkg/db"
-	"teamide/pkg/toolbox"
 )
 
 type ToolboxApi struct {
@@ -57,7 +54,6 @@ var (
 )
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox"}, Power: Power, Do: this_.index})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/list"}, Power: PowerList, Do: this_.list})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/count"}, Power: PowerCount, Do: this_.count})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/insert"}, Power: PowerInsert, Do: this_.insert})
@@ -105,25 +101,6 @@ func init() {
 	QuickCommandTypes = append(QuickCommandTypes, &QuickCommandType{Name: "SSH Command", Text: "", Value: 1})
 }
 
-type IndexResponse struct {
-	Types                    []*Worker                          `json:"types,omitempty"`
-	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations,omitempty"`
-	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes,omitempty"`
-	QuickCommandTypes        []*QuickCommandType                `json:"quickCommandTypes,omitempty"`
-}
-
-func (this_ *ToolboxApi) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
-
-	response := &IndexResponse{}
-
-	response.Types = GetWorkers()
-	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
-	response.DatabaseTypes = db.DatabaseTypes
-	response.QuickCommandTypes = QuickCommandTypes
-	res = response
-	return
-}
-
-func (this_ *ToolboxApi) page(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
-	return
+func GetQuickCommandTypes() []*QuickCommandType {
+	return QuickCommandTypes
 }

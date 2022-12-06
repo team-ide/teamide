@@ -3,6 +3,7 @@ package module_node
 import (
 	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"teamide/pkg/util"
 )
@@ -123,11 +124,12 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 	}
 	err := this_.formatNetProxy(netProxyModel)
 	if err != nil {
+		this_.Logger.Error("toAddNetProxyModel formatNetProxy error", zap.Error(err))
 		return
 	}
 	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
 	if len(lineNodeIdList) > 0 {
-		_ = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
+		err = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
 			{
 				Id:             netProxyModel.Code,
 				NodeId:         netProxyModel.InnerServerId,
@@ -137,10 +139,13 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 				LineNodeIdList: netProxyModel.LineNodeIdList,
 			},
 		})
+		if err != nil {
+			this_.Logger.Error("toAddNetProxyModel AddNetProxyInnerList error", zap.Error(err))
+		}
 	}
 	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
 	if len(lineNodeIdList) > 0 {
-		_ = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
+		err = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
 			{
 				Id:                    netProxyModel.Code,
 				NodeId:                netProxyModel.OuterServerId,
@@ -150,6 +155,9 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 				ReverseLineNodeIdList: netProxyModel.ReverseLineNodeIdList,
 			},
 		})
+		if err != nil {
+			this_.Logger.Error("toAddNetProxyModel AddNetProxyOuterList error", zap.Error(err))
+		}
 	}
 }
 

@@ -29,11 +29,11 @@ type NodeModel struct {
 	ConnServerIds        string    `json:"connServerIds,omitempty"`
 	HistoryConnServerIds string    `json:"historyConnServerIds,omitempty"`
 	Option               string    `json:"option,omitempty"`
-	IsLocal              int8      `json:"isLocal,omitempty"`
+	IsLocal              int8      `json:"isLocal"`
 	UserId               int64     `json:"userId,omitempty"`
-	Enabled              int8      `json:"enabled,omitempty"`
+	Enabled              int8      `json:"enabled"`
 	DeleteUserId         int64     `json:"deleteUserId,omitempty"`
-	Deleted              int8      `json:"deleted,omitempty"`
+	Deleted              int8      `json:"deleted"`
 	CreateTime           time.Time `json:"createTime,omitempty"`
 	UpdateTime           time.Time `json:"updateTime,omitempty"`
 	DeleteTime           time.Time `json:"deleteTime,omitempty"`
@@ -87,9 +87,9 @@ type NetProxyModel struct {
 	LineServerIds string    `json:"lineServerIds,omitempty"`
 	Option        string    `json:"option,omitempty"`
 	UserId        int64     `json:"userId,omitempty"`
-	Enabled       int8      `json:"enabled,omitempty"`
+	Enabled       int8      `json:"enabled"`
 	DeleteUserId  int64     `json:"deleteUserId,omitempty"`
-	Deleted       int8      `json:"deleted,omitempty"`
+	Deleted       int8      `json:"deleted"`
 	CreateTime    time.Time `json:"createTime,omitempty"`
 	UpdateTime    time.Time `json:"updateTime,omitempty"`
 	DeleteTime    time.Time `json:"deleteTime,omitempty"`

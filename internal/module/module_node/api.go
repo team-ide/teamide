@@ -41,18 +41,17 @@ var (
 	PowerNetProxyInsert       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_insert", Text: "节点代理新增", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyUpdate       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_update", Text: "节点代理修改", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyUpdateOption = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_update_option", Text: "节点代理修改配置", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
-	PowerNetProxyMonitorData  = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_monitor_data", Text: "节点代理监控数据", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
+	PowerNetProxyMonitorData  = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_monitor_data", Text: "节点代理监控数据", Parent: PowerNetProxy, ShouldLogin: false, StandAlone: true})
 	PowerNetProxyEnable       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_enable", Text: "节点代理启用", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyDisable      = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_disable", Text: "节点代理停用", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
 	PowerNetProxyDelete       = base.AppendPower(&base.PowerAction{Action: "node_net_proxy_delete", Text: "节点代理删除", Parent: PowerNetProxy, ShouldLogin: true, StandAlone: true})
 
 	PowerNodeSystemInfo             = base.AppendPower(&base.PowerAction{Action: "node_system_info", Text: "节点服务器信息", Parent: PowerNode, ShouldLogin: true, StandAlone: true})
-	PowerNodeSystemQueryMonitorData = base.AppendPower(&base.PowerAction{Action: "node_system_monitor_data", Text: "节点服务器监控数据", Parent: PowerNode, ShouldLogin: true, StandAlone: true})
+	PowerNodeSystemQueryMonitorData = base.AppendPower(&base.PowerAction{Action: "node_system_monitor_data", Text: "节点服务器监控数据", Parent: PowerNode, ShouldLogin: false, StandAlone: true})
 	PowerNodeSystemCleanMonitorData = base.AppendPower(&base.PowerAction{Action: "node_system_clean_monitor_data", Text: "节点服务器清理监控数据", Parent: PowerNode, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"node"}, Power: PowerNode, Do: this_.index})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/context"}, Power: PowerNodeContext, Do: this_.context})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/start"}, Power: PowerNodeStart, Do: this_.start})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/stop"}, Power: PowerNodeStop, Do: this_.stop})
@@ -77,17 +76,6 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/system/queryMonitorData"}, Power: PowerNodeSystemQueryMonitorData, Do: this_.nodeSystemQueryMonitorData})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"node/system/cleanMonitorData"}, Power: PowerNodeSystemCleanMonitorData, Do: this_.nodeSystemCleanMonitorData})
 
-	return
-}
-
-type IndexResponse struct {
-}
-
-func (this_ *NodeApi) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
-
-	response := &IndexResponse{}
-
-	res = response
 	return
 }
 

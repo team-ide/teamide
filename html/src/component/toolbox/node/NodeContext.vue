@@ -58,7 +58,7 @@
             <div class="text-center pdt-50">
               <div
                 class="tm-btn bg-green tm-btn-lg"
-                @click="tool.toInsertLocalNode()"
+                @click="toolboxWorker.toInsertLocalNode()"
               >
                 设置本地节点
               </div>
@@ -68,7 +68,7 @@
             <NodeView
               :source="source"
               :nodeList="nodeList"
-              :onNodeMoved="tool.onNodeMoved"
+              :onNodeMoved="toolboxWorker.onNodeMoved"
             ></NodeView>
           </template>
         </div>
@@ -82,7 +82,7 @@ import NodeView from "./NodeView.vue";
 
 export default {
   components: { NodeView },
-  props: ["source"],
+  props: ["source", "toolboxWorker", "nodeContext"],
   data() {
     return {
       isDestroyed: false,
@@ -96,7 +96,7 @@ export default {
   computed: {},
   // 计算属性 数据变，直接会触发相应的操作
   watch: {
-    "source.nodeList"() {
+    "nodeContext.nodeList"() {
       if (!this.isDestroyed) {
         this.initView();
       }
@@ -112,7 +112,7 @@ export default {
       this.ready = true;
     },
     initView() {
-      let nodeLocalList = this.source.nodeLocalList || [];
+      let nodeLocalList = this.nodeContext.nodeLocalList || [];
 
       let localNodeConnList = [];
       nodeLocalList.forEach((one) => {
@@ -122,7 +122,7 @@ export default {
           let ip = address.substring(0, lastIndex);
           let port = address.substring(lastIndex + 1);
           if (this.tool.isEmpty(ip) || ip == "0.0.0.0") {
-            this.source.localIpList.forEach((localIp) => {
+            this.nodeContext.localIpList.forEach((localIp) => {
               localNodeConnList.push({
                 address: localIp + ":" + port,
                 bindToken: one.bindToken,
@@ -137,7 +137,7 @@ export default {
         }
       });
       this.localNodeConnList = localNodeConnList;
-      this.nodeList = this.source.nodeList;
+      this.nodeList = this.nodeContext.nodeList;
     },
   },
   created() {},

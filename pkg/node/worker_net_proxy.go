@@ -16,7 +16,7 @@ func (this_ *Worker) doAddNetProxyInnerList(netProxyList []*NetProxyInner) (err 
 
 		var find = this_.findInnerNetProxy(netProxy.Id)
 		if find == nil {
-			Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
+			Logger.Info(this_.server.GetServerInfo()+" doAddNetProxyInnerList ", zap.Any("netProxy", netProxy))
 			this_.netProxyInnerList = append(this_.netProxyInnerList, netProxy)
 
 			if netProxy.IsEnabled() {
@@ -65,7 +65,7 @@ func (this_ *Worker) doAddNetProxyOuterList(netProxyList []*NetProxyOuter) (err 
 
 		var find = this_.findOuterNetProxy(netProxy.Id)
 		if find == nil {
-			Logger.Info(this_.server.GetServerInfo()+" 添加网络代理 ", zap.Any("netProxy", netProxy))
+			Logger.Info(this_.server.GetServerInfo()+" doAddNetProxyOuterList ", zap.Any("netProxy", netProxy))
 			this_.netProxyOuterList = append(this_.netProxyOuterList, netProxy)
 
 			if netProxy.IsEnabled() {

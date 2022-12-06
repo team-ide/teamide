@@ -20,14 +20,14 @@ type WorkRequest struct {
 	Data        map[string]interface{} `json:"data,omitempty"`
 }
 
-func (this_ *ToolboxApi) work(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) work(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &WorkRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
 
-	res, err = this_.ToolboxService.Work(request.ToolboxId, request.ToolboxType, request.Work, request.Data)
+	res, err = this_.ToolboxService.Work(requestBean, request.ToolboxId, request.ToolboxType, request.Work, request.Data)
 	if err != nil {
 		return
 	}

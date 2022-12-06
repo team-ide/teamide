@@ -1,5 +1,8 @@
 <template>
-  <div class="workspace-tabs">
+  <div
+    class="workspace-tabs"
+    :class="{ 'workspace-tabs-no-tab': mainTabs.length == 0 }"
+  >
     <div class="workspace-tabs-left">
       <slot name="leftExtend"></slot>
       <el-dropdown
@@ -266,7 +269,9 @@ export default {
   display: flex;
   border-bottom: 1px solid #4e4e4e;
 }
-
+.workspace-tabs.workspace-tabs-no-tab {
+  border-bottom: 1px solid transparent;
+}
 .workspace-tabs-body {
   display: flex;
   position: relative;

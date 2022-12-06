@@ -1,10 +1,12 @@
 package module_user
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
+	"teamide/internal/module/module_lock"
 	"time"
 )
 
@@ -97,7 +99,7 @@ func (this_ *UserService) QueryByAccount(account string) (res []*UserModel, err 
 }
 
 // CheckExist 查询
-func (this_ *UserService) CheckExist(account string, email string) (res bool, err error) {
+func (this_ *UserService) CheckExist(userId int64, account string, email string) (res bool, err error) {
 
 	var values []interface{}
 	sql := `SELECT COUNT(1) FROM ` + TableUser + ` WHERE deleted=2 AND (1=2`
@@ -111,6 +113,10 @@ func (this_ *UserService) CheckExist(account string, email string) (res bool, er
 		values = append(values, email)
 	}
 	sql += ")"
+	if userId != 0 {
+		sql += " AND userId != ?"
+		values = append(values, userId)
+	}
 
 	count, err := this_.DatabaseWorker.Count(sql, values)
 	if err != nil {
@@ -169,6 +175,38 @@ func (this_ *UserService) Insert(user *UserModel) (rowsAffected int64, err error
 
 // Update 更新
 func (this_ *UserService) Update(user *UserModel) (rowsAffected int64, err error) {
+	if user.Account != "" || user.Email != "" {
+		checkExist := func() error {
+
+			exist, err := this_.CheckExist(user.UserId, user.Account, user.Email)
+			if err != nil {
+				return err
+			}
+			if exist {
+				err = errors.New(fmt.Sprintf("用户账号[%s],[%s]已存在!", user.Account, user.Email))
+				return err
+			}
+			return nil
+		}
+
+		err = checkExist()
+		if err != nil {
+			return
+		}
+
+		accountLock := module_lock.GetLock("user:account:" + user.Account)
+		accountLock.Lock()
+		defer accountLock.Unlock()
+
+		emailLock := module_lock.GetLock("user:email:" + user.Email)
+		emailLock.Lock()
+		defer emailLock.Unlock()
+
+		err = checkExist()
+		if err != nil {
+			return
+		}
+	}
 
 	var values []interface{}
 
@@ -181,9 +219,15 @@ func (this_ *UserService) Update(user *UserModel) (rowsAffected int64, err error
 		sql += "name=?,"
 		values = append(values, user.Name)
 	}
-	if user.Avatar != "" {
-		sql += "avatar=?,"
-		values = append(values, user.Avatar)
+	sql += "avatar=?,"
+	values = append(values, user.Avatar)
+	if user.Account != "" {
+		sql += "account=?,"
+		values = append(values, user.Account)
+	}
+	if user.Email != "" {
+		sql += "email=?,"
+		values = append(values, user.Email)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")

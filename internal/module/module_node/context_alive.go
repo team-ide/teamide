@@ -166,6 +166,7 @@ func (this_ *NodeContext) checkChangeOut() {
 	newCountDataStr := string(newBs)
 	//this_.Logger.Info("count data validate", zap.Any("old", string(oldCountBs)), zap.Any("new", string(newBs)))
 	if oldCountDataStr != newCountDataStr {
+		//this_.Logger.Info("data count change", zap.Any("old", oldCountDataStr), zap.Any("new", newCountDataStr))
 		this_.oldCountDataStr = newCountDataStr
 		this_.countData = countData
 		this_.callNodeCountDataChange(countData)
@@ -175,14 +176,15 @@ func (this_ *NodeContext) checkChangeOut() {
 	newNodeListStr := string(newBs)
 	//this_.Logger.Info("node list validate", zap.Any("old", string(oldNodeBs)), zap.Any("new", string(newBs)))
 	if oldNodeListStr != newNodeListStr {
+		//this_.Logger.Info("node list change", zap.Any("old", oldNodeListStr), zap.Any("new", newNodeListStr))
 		this_.oldNodeListStr = newNodeListStr
 		this_.callNodeListChange(nodeModelList)
 	}
 
 	newBs, _ = json.Marshal(netProxyModelList)
 	newNetProxyListStr := string(newBs)
-	//this_.Logger.Info("net proxy list validate", zap.Any("old", string(netProxyBs)), zap.Any("new", string(newBs)))
 	if oldNetProxyListStr != newNetProxyListStr {
+		//this_.Logger.Info("net proxy list change", zap.Any("old", oldNetProxyListStr), zap.Any("new", newNetProxyListStr))
 		this_.oldNetProxyListStr = newNetProxyListStr
 		this_.callNetProxyListChange(netProxyModelList)
 	}

@@ -114,7 +114,7 @@ func (this_ *InnerServer) onConn(conn net.Conn) {
 		end := util.Now().UnixNano()
 		this_.MonitorData.monitorRead(int64(n), end-start)
 
-		e = this_.worker.netProxySend(true, this_.netProxy.LineNodeIdList, netProxyId, connId, buf[:n])
+		e = this_.worker.netProxySend(false, this_.netProxy.LineNodeIdList, netProxyId, connId, buf[:n])
 		if e != nil {
 			Logger.Error(this_.netProxy.GetInfoStr()+" 节点线流发送异常", zap.Error(e))
 			return

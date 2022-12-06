@@ -1,5 +1,19 @@
 <template>
   <div class="register-page bg-teal-9">
+    <div
+      class="tm-link"
+      style="
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        font-size: 30px;
+        color: #ffffff;
+        line-height: 30px;
+      "
+      @click="tool.hideRegister()"
+    >
+      <Icon class="mdi-close"></Icon>
+    </div>
     <div class="register-box bg-teal-5 pd-20">
       <div class="register-left">
         <div class="ft-25 pdtb-10 pdlr-20">Team IDE</div>

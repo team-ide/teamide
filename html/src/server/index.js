@@ -4,6 +4,7 @@ import toolbox from "./toolbox.js";
 import node from "./node.js";
 import fileManager from "./fileManager.js";
 import terminal from "./terminal.js";
+import user from "./user.js";
 
 import tool from '../tool/index.js';
 import source from '../source/index.js';
@@ -12,6 +13,7 @@ let server = {
     node,
     fileManager,
     terminal,
+    user,
     data(param) {
         param = param || {};
         param.origin = location.origin;
@@ -41,7 +43,6 @@ let server = {
     },
     openWebsocket() {
         if (serverSocket != null) { return }
-        if (source.login.user == null) { return; }
         let url = source.api;
         url = url.substring(url.indexOf(":"));
         url = "ws" + url + "websocket";
@@ -59,7 +60,9 @@ let server = {
             serverSocketIsOpen = false;
             serverSocket = null;
             serverSocketOnClose();
-            server.openWebsocket()
+            window.setTimeout(() => {
+                server.openWebsocket()
+            }, 1000)
         };
         serverSocket.onerror = () => {
             serverSocketOnError();
@@ -69,6 +72,10 @@ let server = {
     closeWebsocket() {
         if (serverSocket == null) { return }
         serverSocket.close()
+    },
+    websocketSendText(text) {
+        if (serverSocket == null) { return }
+        serverSocket.send(text)
     },
     addServerSocketOnEvent(event, call) {
         if (call == null) { return }

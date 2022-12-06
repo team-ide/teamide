@@ -1,6 +1,7 @@
 package module_toolbox
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"teamide/internal/base"
 )
@@ -56,7 +57,10 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	response.ToolboxList = append(response.ToolboxList, Others...)
+
+	if request.ToolboxType == "" {
+		response.ToolboxList = append(response.ToolboxList, Others...)
+	}
 
 	res = response
 	return
@@ -104,6 +108,20 @@ func (this_ *ToolboxApi) update(requestBean *base.RequestBean, c *gin.Context) (
 	}
 	response := &UpdateResponse{}
 
+	if request.ToolboxId != 0 {
+		var find *ToolboxModel
+		find, err = this_.ToolboxService.Get(request.ToolboxId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+
 	toolbox := request.ToolboxModel
 
 	_, err = this_.ToolboxService.Update(toolbox)
@@ -129,6 +147,20 @@ func (this_ *ToolboxApi) moveGroup(requestBean *base.RequestBean, c *gin.Context
 		return
 	}
 	response := &MoveGroupResponse{}
+
+	if request.ToolboxId != 0 {
+		var find *ToolboxModel
+		find, err = this_.ToolboxService.Get(request.ToolboxId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 
 	toolbox := request.ToolboxModel
 
@@ -156,6 +188,20 @@ func (this_ *ToolboxApi) rename(requestBean *base.RequestBean, c *gin.Context) (
 	}
 	response := &RenameResponse{}
 
+	if request.ToolboxId != 0 {
+		var find *ToolboxModel
+		find, err = this_.ToolboxService.Get(request.ToolboxId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+
 	toolbox := request.ToolboxModel
 
 	_, err = this_.ToolboxService.Rename(toolbox.ToolboxId, toolbox.Name)
@@ -182,6 +228,20 @@ func (this_ *ToolboxApi) delete(requestBean *base.RequestBean, c *gin.Context) (
 	}
 	response := &DeleteResponse{}
 
+	if request.ToolboxId != 0 {
+		var find *ToolboxModel
+		find, err = this_.ToolboxService.Get(request.ToolboxId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+
 	_, err = this_.ToolboxService.Delete(request.ToolboxModel.ToolboxId)
 	if err != nil {
 		return
@@ -200,12 +260,25 @@ type OpenResponse struct {
 }
 
 func (this_ *ToolboxApi) open(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
 	request := &OpenRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
 	response := &OpenResponse{}
+
+	if request.ToolboxId != 0 {
+		var find *ToolboxModel
+		find, err = this_.ToolboxService.Get(request.ToolboxId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 
 	toolboxOpen := request.ToolboxOpenModel
 	toolboxOpen.UserId = requestBean.JWT.UserId
@@ -288,6 +361,20 @@ func (this_ *ToolboxApi) close(requestBean *base.RequestBean, c *gin.Context) (r
 	}
 	response := &CloseResponse{}
 
+	if request.OpenId != 0 {
+		var find *ToolboxOpenModel
+		find, err = this_.ToolboxService.GetOpen(request.OpenId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+
 	_, err = this_.ToolboxService.Close(request.OpenId)
 	if err != nil {
 		return
@@ -311,6 +398,20 @@ func (this_ *ToolboxApi) updateOpenExtend(requestBean *base.RequestBean, c *gin.
 		return
 	}
 	response := &UpdateOpenExtendResponse{}
+
+	if request.OpenId != 0 {
+		var find *ToolboxOpenModel
+		find, err = this_.ToolboxService.GetOpen(request.OpenId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 
 	_, err = this_.ToolboxService.UpdateOpenExtend(request.ToolboxOpenModel)
 	if err != nil {

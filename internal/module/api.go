@@ -125,6 +125,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
 	apis = append(apis, module_file_manager.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
 	apis = append(apis, module_terminal.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
+	apis = append(apis, module_user.NewApi(this_.userService).GetApis()...)
 
 	return
 }

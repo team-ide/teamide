@@ -7,7 +7,7 @@
             <el-form-item label="" class="mgb-5">
               <div
                 class="tm-btn tm-btn-sm bg-green ft-13"
-                @click="tool.toInsertNodeNetProxy()"
+                @click="toolboxWorker.toInsertNodeNetProxy()"
               >
                 新增
               </div>
@@ -16,9 +16,12 @@
         </div>
       </tm-layout>
       <tm-layout height="auto" class="">
-        <div class="node-net-proxy-body app-scroll-bar toolbox-editor" v-if="ready">
+        <div
+          class="node-net-proxy-body app-scroll-bar toolbox-editor"
+          v-if="ready"
+        >
           <el-table
-            :data="source.nodeNetProxyList"
+            :data="nodeContext.nodeNetProxyList"
             :border="true"
             height="100%"
             style="width: 100%"
@@ -43,20 +46,23 @@
                     节点:
                     <span
                       v-if="
-                        source.nodeOptionMap[scope.row.innerServerId] != null
+                        nodeContext.nodeOptionMap[scope.row.innerServerId] !=
+                        null
                       "
                       class="pdl-10"
                       :class="{
                         'color-green':
-                          source.nodeOptionMap[scope.row.innerServerId]
+                          nodeContext.nodeOptionMap[scope.row.innerServerId]
                             .isStarted,
 
                         'color-red':
-                          !source.nodeOptionMap[scope.row.innerServerId]
+                          !nodeContext.nodeOptionMap[scope.row.innerServerId]
                             .isStarted,
                       }"
                     >
-                      {{ source.nodeOptionMap[scope.row.innerServerId].text }}
+                      {{
+                        nodeContext.nodeOptionMap[scope.row.innerServerId].text
+                      }}
                     </span>
                     <span v-else class="pdl-10">
                       {{ scope.row.innerServerId }}
@@ -79,7 +85,7 @@
                       {{ scope.row.innerAddress }}
                     </span>
                   </div>
-                  <div class="">
+                  <div class="" v-if="scope.row.innerMonitorData != null">
                     输入:<span class="pdlr-10 color-blue">
                       {{ scope.row.innerMonitorData.readSize }}
                       {{ scope.row.innerMonitorData.readSizeUnit }}
@@ -96,7 +102,7 @@
                       }}
                     </span>
                   </div>
-                  <div class="ft-12">
+                  <div class="ft-12" v-if="scope.row.innerMonitorData != null">
                     输出:<span class="pdlr-10 color-blue">
                       {{ scope.row.innerMonitorData.writeSize }}
                       {{ scope.row.innerMonitorData.writeSizeUnit }}
@@ -122,20 +128,23 @@
                   <div class="">
                     节点:<span
                       v-if="
-                        source.nodeOptionMap[scope.row.outerServerId] != null
+                        nodeContext.nodeOptionMap[scope.row.outerServerId] !=
+                        null
                       "
                       class="pdl-10"
                       :class="{
                         'color-green':
-                          source.nodeOptionMap[scope.row.outerServerId]
+                          nodeContext.nodeOptionMap[scope.row.outerServerId]
                             .isStarted,
 
                         'color-red':
-                          !source.nodeOptionMap[scope.row.outerServerId]
+                          !nodeContext.nodeOptionMap[scope.row.outerServerId]
                             .isStarted,
                       }"
                     >
-                      {{ source.nodeOptionMap[scope.row.outerServerId].text }}
+                      {{
+                        nodeContext.nodeOptionMap[scope.row.outerServerId].text
+                      }}
                     </span>
                     <span v-else class="pdl-10">
                       {{ scope.row.outerServerId }}
@@ -158,7 +167,7 @@
                       {{ scope.row.outerAddress }}
                     </span>
                   </div>
-                  <div class="ft-12">
+                  <div class="ft-12" v-if="scope.row.outerMonitorData != null">
                     输入:<span class="pdlr-10 color-blue">
                       {{ scope.row.outerMonitorData.readSize }}
                       {{ scope.row.outerMonitorData.readSizeUnit }}
@@ -175,7 +184,7 @@
                       }}
                     </span>
                   </div>
-                  <div class="ft-12">
+                  <div class="ft-12" v-if="scope.row.outerMonitorData != null">
                     输出:<span class="pdlr-10 color-blue">
                       {{ scope.row.outerMonitorData.writeSize }}
                       {{ scope.row.outerMonitorData.writeSizeUnit }}
@@ -214,26 +223,26 @@
                 <div
                   class="tm-link color-orange mgl-5"
                   v-if="scope.row.enabled == 1"
-                  @click="tool.toDisableNodeNetProxy(scope.row)"
+                  @click="toolboxWorker.toDisableNodeNetProxy(scope.row)"
                 >
                   停用
                 </div>
                 <div
                   class="tm-link color-green mgl-5"
                   v-if="scope.row.enabled != 1"
-                  @click="tool.toEnableNodeNetProxy(scope.row)"
+                  @click="toolboxWorker.toEnableNodeNetProxy(scope.row)"
                 >
                   启用
                 </div>
                 <div
                   class="tm-link color-grey mgl-5"
-                  @click="tool.toCopyNodeNetProxy(scope.row)"
+                  @click="toolboxWorker.toCopyNodeNetProxy(scope.row)"
                 >
                   复制
                 </div>
                 <div
                   class="tm-link color-red mgl-5"
-                  @click="tool.toDeleteNodeNetProxy(scope.row)"
+                  @click="toolboxWorker.toDeleteNodeNetProxy(scope.row)"
                 >
                   删除
                 </div>
@@ -249,7 +258,7 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "toolboxWorker", "nodeContext"],
   data() {
     return {
       isDestroyed: false,
@@ -270,7 +279,7 @@ export default {
     },
     async initData() {
       this.ready = false;
-      this.dataList = this.source.nodeNetProxyList || [];
+      this.dataList = this.nodeContext.nodeNetProxyList || [];
       this.initView();
       this.ready = true;
     },
@@ -280,7 +289,7 @@ export default {
         return;
       }
       let idList = [];
-      let list = this.source.nodeNetProxyList || [];
+      let list = this.nodeContext.nodeNetProxyList || [];
       list.forEach((one) => {
         idList.push(one.code);
       });

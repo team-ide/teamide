@@ -207,13 +207,13 @@ export default {
         menus.push({
           text: "添加子节点",
           onClick: () => {
-            this.tool.toInsertToNode(data);
+            this.toolboxWorker.toInsertToNode(data);
           },
         });
         menus.push({
           text: "添加父节点",
           onClick: () => {
-            this.tool.toInsertFromNode(data);
+            this.toolboxWorker.toInsertFromNode(data);
           },
         });
         if (this.tool.openByExtend) {
@@ -225,6 +225,7 @@ export default {
                 type: "node-info",
                 title: "查看节点-" + data.name,
                 serverId: data.serverId,
+                onlyOpenOneKey: "node:node-info:" + data.serverId,
               });
             },
           });
@@ -235,14 +236,14 @@ export default {
         //     menus.push({
         //       text: "停用",
         //       onClick: () => {
-        //         this.tool.toDisableNode(data);
+        //         this.toolboxWorker.toDisableNode(data);
         //       },
         //     });
         //   } else {
         //     menus.push({
         //       text: "启用",
         //       onClick: () => {
-        //         this.tool.toEnableNode(data);
+        //         this.toolboxWorker.toEnableNode(data);
         //       },
         //     });
         //   }
@@ -251,7 +252,7 @@ export default {
           menus.push({
             text: "删除",
             onClick: () => {
-              this.tool.toDeleteNode(data);
+              this.toolboxWorker.toDeleteNode(data);
             },
           });
         }

@@ -1,6 +1,7 @@
 package module_toolbox
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"teamide/internal/base"
 )
@@ -20,6 +21,20 @@ func (this_ *ToolboxApi) openTab(requestBean *base.RequestBean, c *gin.Context) 
 		return
 	}
 	response := &OpenTabResponse{}
+
+	if request.OpenId != 0 {
+		var find *ToolboxOpenModel
+		find, err = this_.ToolboxService.GetOpen(request.OpenId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 
 	toolboxOpenTab := request.ToolboxOpenTabModel
 	toolboxOpenTab.UserId = requestBean.JWT.UserId
@@ -43,7 +58,7 @@ type QueryOpenTabsResponse struct {
 	Tabs []*ToolboxOpenTabModel `json:"tabs,omitempty"`
 }
 
-func (this_ *ToolboxApi) queryOpenTabs(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) queryOpenTabs(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &QueryOpenTabsRequest{}
 	if !base.RequestJSON(request, c) {
@@ -75,6 +90,19 @@ func (this_ *ToolboxApi) closeTab(requestBean *base.RequestBean, c *gin.Context)
 	}
 	response := &CloseTabResponse{}
 
+	if request.TabId != 0 {
+		var find *ToolboxOpenTabModel
+		find, err = this_.ToolboxService.GetOpenTab(request.TabId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 	_, err = this_.ToolboxService.CloseTab(request.TabId)
 	if err != nil {
 		return
@@ -98,6 +126,20 @@ func (this_ *ToolboxApi) updateOpenTabExtend(requestBean *base.RequestBean, c *g
 		return
 	}
 	response := &UpdateOpenTabExtendResponse{}
+
+	if request.TabId != 0 {
+		var find *ToolboxOpenTabModel
+		find, err = this_.ToolboxService.GetOpenTab(request.TabId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
 
 	_, err = this_.ToolboxService.UpdateOpenTabExtend(request.ToolboxOpenTabModel)
 	if err != nil {

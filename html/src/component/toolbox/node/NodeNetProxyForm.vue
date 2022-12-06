@@ -16,7 +16,7 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "toolboxWorker", "nodeContext"],
   data() {
     return {};
   },
@@ -150,22 +150,23 @@ export default {
   },
   created() {},
   updated() {
-    this.tool.showNodeNetProxyInfo = this.showNodeNetProxyInfo;
-    this.tool.toInsertNodeNetProxy = this.toInsert;
-    this.tool.toDeleteNodeNetProxy = this.toDelete;
-    this.tool.doDeleteNodeNetProxy = this.doDelete;
-    this.tool.toEnableNodeNetProxy = this.toEnable;
-    this.tool.toDisableNodeNetProxy = this.toDisable;
+    this.toolboxWorker.showNodeNetProxyInfo = this.showNodeNetProxyInfo;
+    this.toolboxWorker.toInsertNodeNetProxy = this.toInsert;
+    this.toolboxWorker.toDeleteNodeNetProxy = this.toDelete;
+    this.toolboxWorker.toCopyNodeNetProxy = this.toCopy;
+    this.toolboxWorker.doDeleteNodeNetProxy = this.doDelete;
+    this.toolboxWorker.toEnableNodeNetProxy = this.toEnable;
+    this.toolboxWorker.toDisableNodeNetProxy = this.toDisable;
   },
   async mounted() {
     this.init();
-    this.tool.showNodeNetProxyInfo = this.showNodeNetProxyInfo;
-    this.tool.toInsertNodeNetProxy = this.toInsert;
-    this.tool.toCopyNodeNetProxy = this.toCopy;
-    this.tool.toDeleteNodeNetProxy = this.toDelete;
-    this.tool.doDeleteNodeNetProxy = this.doDelete;
-    this.tool.toEnableNodeNetProxy = this.toEnable;
-    this.tool.toDisableNodeNetProxy = this.toDisable;
+    this.toolboxWorker.showNodeNetProxyInfo = this.showNodeNetProxyInfo;
+    this.toolboxWorker.toInsertNodeNetProxy = this.toInsert;
+    this.toolboxWorker.toDeleteNodeNetProxy = this.toDelete;
+    this.toolboxWorker.toCopyNodeNetProxy = this.toCopy;
+    this.toolboxWorker.doDeleteNodeNetProxy = this.doDelete;
+    this.toolboxWorker.toEnableNodeNetProxy = this.toEnable;
+    this.toolboxWorker.toDisableNodeNetProxy = this.toDisable;
   },
 };
 </script>

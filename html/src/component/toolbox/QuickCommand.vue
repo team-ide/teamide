@@ -16,6 +16,46 @@ export default {
       this.toolboxWorker.toInsertSSHCommand = this.toInsertSSHCommand;
       this.toolboxWorker.toUpdateSSHCommand = this.toUpdateSSHCommand;
       this.toolboxWorker.toDeleteSSHCommand = this.toDeleteSSHCommand;
+
+      // source.quickCommands = null;
+      // source.quickCommandSSHCommands = null;
+      // source.getQuickCommandType = (name) => {
+      //   if (source.quickCommandTypes == null) {
+      //     return null;
+      //   }
+      //   let res = null;
+      //   source.quickCommandTypes.forEach((one) => {
+      //     if (one.name == name) {
+      //       res = one;
+      //     }
+      //   });
+      //   return res;
+      // };
+      // source.initToolboxQuickCommands = async () => {
+      //   let data = {};
+      //   if (source.login.user != null) {
+      //     let res = await server.toolbox.quickCommand.query({});
+      //     if (res.code != 0) {
+      //       tool.error(res.msg);
+      //     }
+      //     data = res.data || {};
+      //   }
+      //   let quickCommands = data.quickCommands || [];
+
+      //   let quickCommandSSHCommands = [];
+      //   let quickCommandTypeSSHCommand =
+      //     source.getQuickCommandType("SSH Command");
+
+      //   quickCommands.forEach((one) => {
+      //     if (quickCommandTypeSSHCommand) {
+      //       if (one.quickCommandType == quickCommandTypeSSHCommand.value) {
+      //         quickCommandSSHCommands.push(one);
+      //       }
+      //     }
+      //   });
+      //   source.quickCommands = quickCommands;
+      //   source.quickCommandSSHCommands = quickCommandSSHCommands;
+      // };
     },
     toInsertSSHCommand() {
       this.toolboxWorker.showQuickCommandSSHCommandForm({}, async (data) => {

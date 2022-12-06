@@ -24,13 +24,6 @@
           @click="openNodeContext()"
         >
           节点
-          <span class="color-green mgl-2">
-            (
-            {{ source.nodeCount }}
-            /
-            {{ source.nodeSuccessCount }}
-            )
-          </span>
         </div>
         <div
           v-if="source.hasPower('node_net_proxy')"
@@ -38,15 +31,6 @@
           @click="openNodeNetProxyContext()"
         >
           网络代理|透传
-          <span class="color-green mgl-2">
-            (
-            {{ source.nodeNetProxyCount }}
-            /
-            {{ source.nodeNetProxyInnerSuccessCount }}
-            |
-            {{ source.nodeNetProxyOuterSuccessCount }}
-            )
-          </span>
         </div>
         <div v-if="source.hasPower('terminal')" class="workspace-header-nav">
           <el-dropdown
@@ -190,7 +174,7 @@
               </span>
               <el-dropdown-menu slot="dropdown" class="user-dropdown-menu">
                 <MenuBox>
-                  <MenuItem @click="openPage('userCenter')">
+                  <MenuItem @click="openPage('userCenter', '个人中心')">
                     个人中心
                   </MenuItem>
                   <MenuItem
@@ -217,32 +201,6 @@
     <div class="workspace-main">
       <div class="workspace-main-tabs-container">
         <WorkspaceTabs :source="source" :itemsWorker="mainItemsWorker">
-          <!-- <el-dropdown
-        slot="leftExtend"
-        trigger="click"
-        class="workspace-tabs-nav-dropdown"
-      >
-        <div class="workspace-tabs-nav tm-pointer pdlr-5 ft-12">
-          全部
-          <i class="mdi mdi-menu-down"></i>
-        </div>
-        <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item> 全部 </el-dropdown-item>
-
-          <template v-for="(one, index) in source.toolboxGroups">
-            <el-dropdown-item :key="index" :command="one">
-              {{ one.name || one.title }}
-            </el-dropdown-item>
-          </template>
-        </el-dropdown-menu>
-      </el-dropdown> -->
-          <!-- <div
-            slot="rightExtend"
-            class="workspace-tabs-nav tm-pointer color-green pdlr-2"
-            @click="tool.showSwitchToolboxContext()"
-          >
-            <i class="mdi mdi-plus"></i>
-          </div> -->
         </WorkspaceTabs>
       </div>
       <div class="workspace-main-spans-container">
@@ -262,23 +220,19 @@
           </template>
         </WorkspaceSpans>
       </div>
-      <ToolboxContext
-        :source="source"
-        :openByToolboxId="openByToolboxId"
-      ></ToolboxContext>
     </div>
-    <NodeForm :source="source"></NodeForm>
-    <NodeNetProxyForm :source="source"></NodeNetProxyForm>
+    <ToolboxContext
+      :source="source"
+      :openByToolboxId="openByToolboxId"
+    ></ToolboxContext>
   </div>
 </template>
 
 <script>
 import ToolboxContext from "./ToolboxContext";
-import NodeForm from "./NodeForm";
-import NodeNetProxyForm from "./NodeNetProxyForm";
 
 export default {
-  components: { ToolboxContext, NodeForm, NodeNetProxyForm },
+  components: { ToolboxContext },
   props: ["source"],
   data() {
     let mainItemsWorker = this.tool.newItemsWorker({
@@ -296,45 +250,25 @@ export default {
   },
   computed: {},
   watch: {
-    "source.login.user"() {
+    "source.login.userId"() {
       this.initUserData();
     },
   },
   methods: {
     async initUserData() {
-      if (this.source.login.user != null) {
-        await this.source.initToolboxData();
-        await this.source.initUserToolboxData();
-        await this.source.initNodeContext();
-        await this.initOpens();
-      } else {
-        this.toMainActiveItem(null);
-        this.mainItemsWorker.items.splice(0, this.mainItemsWorker.items.length);
-        await this.source.initToolboxData();
-        await this.source.initUserToolboxData();
-      }
+      await this.source.initUserToolboxData();
+      await this.initOpens();
     },
     init() {
-      this.server.addServerSocketOnOpen(() => {
-        this.initUserData();
-      });
-      this.server.addServerSocketOnEvent("node-data-change", (data) => {
-        try {
-          if (data.type == "count") {
-            this.source.initNodeDataCount(data);
-          } else if (data.type == "node-list") {
-            this.source.initNodeList(data.nodeList);
-          } else if (data.type == "net-proxy-list") {
-            this.source.initNodeNetProxyList(data.netProxyList);
-          }
-        } catch (error) {}
-      });
+      this.initUserData();
+      this.server.addServerSocketOnOpen(() => {});
     },
     openNodeContext() {
       this.tool.openByExtend({
         toolboxType: "node",
         type: "node-context",
         title: "节点",
+        onlyOpenOneKey: "node:node-context",
       });
     },
     openNodeNetProxyContext() {
@@ -342,6 +276,15 @@ export default {
         toolboxType: "node",
         type: "net-proxy-context",
         title: "网络透传",
+        onlyOpenOneKey: "node:net-proxy-context",
+      });
+    },
+    openPage(page, title) {
+      this.tool.openByExtend({
+        toolboxType: "page",
+        page: page,
+        title: title,
+        onlyOpenOneKey: "page:" + page,
       });
     },
     openTerminal(place, placeData) {
@@ -352,7 +295,7 @@ export default {
         placeId: null,
       };
       if (place == "local") {
-        extend.title = "本地";
+        extend.title = "终端-本地";
       } else if (place == "ssh") {
         extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.toolboxId;
@@ -374,7 +317,7 @@ export default {
         placeId: null,
       };
       if (place == "local") {
-        extend.title = "本地";
+        extend.title = "文件管理器-本地";
       } else if (place == "ssh") {
         extend.title = "" + placeData.name;
         extend.placeId = "" + placeData.toolboxId;
@@ -438,6 +381,23 @@ export default {
       if (this.tool.isEmpty(extend.title)) {
         this.tool.error("根据扩展打开需要配置标题");
         return;
+      }
+      if (this.tool.isNotEmpty(extend.onlyOpenOneKey)) {
+        let items = this.getMainItems() || [];
+        let find = null;
+        items.forEach((item) => {
+          if (
+            item &&
+            item.extend &&
+            item.extend.onlyOpenOneKey == extend.onlyOpenOneKey
+          ) {
+            find = item;
+          }
+        });
+        if (find != null) {
+          this.toMainActiveItem(find);
+          return;
+        }
       }
       let param = {
         extend: JSON.stringify(extend || {}),
@@ -519,11 +479,13 @@ export default {
     },
     async initOpens() {
       let opens = [];
-      let res = await this.server.toolbox.queryOpens({});
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      } else {
-        opens = res.data.opens || [];
+      if (this.source.login.user != null) {
+        let res = await this.server.toolbox.queryOpens({});
+        if (res.code != 0) {
+          this.tool.error(res.msg);
+        } else {
+          opens = res.data.opens || [];
+        }
       }
       opens.forEach((one) => {
         this.addMainItemByOpen(one);
@@ -545,7 +507,9 @@ export default {
       if (activeOpen != null) {
         this.toMainActiveItem(activeOpen.item);
       } else {
-        this.tool.showToolboxContext();
+        if (this.source.login.user != null) {
+          this.tool.showToolboxContext();
+        }
       }
     },
     async onMainActiveItem(item) {
@@ -571,18 +535,22 @@ export default {
         this.tool.error(res.msg);
       }
       if (this.getMainItems().length == 0) {
-        this.tool.showToolboxContext();
+        if (this.source.login.user != null) {
+          this.tool.showToolboxContext();
+        }
       }
     },
   },
   created() {},
   updated() {
     this.tool.openByExtend = this.openByExtend;
+    this.tool.openPage = this.openPage;
     this.tool.openTerminal = this.openTerminal;
     this.tool.openFileManager = this.openFileManager;
   },
   mounted() {
     this.tool.openByExtend = this.openByExtend;
+    this.tool.openPage = this.openPage;
     this.tool.openTerminal = this.openTerminal;
     this.tool.openFileManager = this.openFileManager;
 
@@ -621,7 +589,6 @@ export default {
   width: 100%;
   height: 30px;
   position: relative;
-  border-bottom: 1px solid #4e4e4e;
 }
 .workspace-main-spans-container {
   width: 100%;

@@ -18,7 +18,7 @@
 <script>
 export default {
   components: {},
-  props: ["source"],
+  props: ["source", "toolboxWorker", "nodeContext"],
   data() {
     return {};
   },
@@ -90,7 +90,7 @@ export default {
       if (res.code == 0) {
         this.tool.success("新增成功");
         if (config.isLocal) {
-          this.source.initNodeContext();
+          this.toolboxWorker.initNodeContext();
         }
         return true;
       } else {
@@ -205,8 +205,8 @@ export default {
       option.x = position.x;
       option.y = position.y;
       let optionStr = JSON.stringify(option);
-      if (this.source.nodeList) {
-        this.source.nodeList.forEach((one) => {
+      if (this.nodeContext.nodeList) {
+        this.nodeContext.nodeList.forEach((one) => {
           if (one && one.nodeId == node.nodeId) {
             one.option = optionStr;
           }
@@ -220,25 +220,25 @@ export default {
   },
   created() {},
   updated() {
-    this.tool.toInsertToNode = this.toInsertToNode;
-    this.tool.toInsertFromNode = this.toInsertFromNode;
-    this.tool.toInsertLocalNode = this.toInsertLocal;
-    this.tool.toDeleteNode = this.toDelete;
-    this.tool.doDeleteNode = this.doDelete;
-    this.tool.toEnableNode = this.toEnable;
-    this.tool.toDisableNode = this.toDisable;
-    this.tool.onNodeMoved = this.onNodeMoved;
+    this.toolboxWorker.toInsertToNode = this.toInsertToNode;
+    this.toolboxWorker.toInsertFromNode = this.toInsertFromNode;
+    this.toolboxWorker.toInsertLocalNode = this.toInsertLocal;
+    this.toolboxWorker.toDeleteNode = this.toDelete;
+    this.toolboxWorker.doDeleteNode = this.doDelete;
+    this.toolboxWorker.toEnableNode = this.toEnable;
+    this.toolboxWorker.toDisableNode = this.toDisable;
+    this.toolboxWorker.onNodeMoved = this.onNodeMoved;
   },
   mounted() {
     this.init();
-    this.tool.toInsertToNode = this.toInsertToNode;
-    this.tool.toInsertFromNode = this.toInsertFromNode;
-    this.tool.toInsertLocalNode = this.toInsertLocal;
-    this.tool.toDeleteNode = this.toDelete;
-    this.tool.doDeleteNode = this.doDelete;
-    this.tool.toEnableNode = this.toEnable;
-    this.tool.toDisableNode = this.toDisable;
-    this.tool.onNodeMoved = this.onNodeMoved;
+    this.toolboxWorker.toInsertToNode = this.toInsertToNode;
+    this.toolboxWorker.toInsertFromNode = this.toInsertFromNode;
+    this.toolboxWorker.toInsertLocalNode = this.toInsertLocal;
+    this.toolboxWorker.toDeleteNode = this.toDelete;
+    this.toolboxWorker.doDeleteNode = this.doDelete;
+    this.toolboxWorker.toEnableNode = this.toEnable;
+    this.toolboxWorker.toDisableNode = this.toDisable;
+    this.toolboxWorker.onNodeMoved = this.onNodeMoved;
   },
 };
 </script>

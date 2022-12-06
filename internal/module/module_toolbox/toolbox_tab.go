@@ -6,6 +6,23 @@ import (
 	"time"
 )
 
+// GetOpenTab 查询单个
+func (this_ *ToolboxService) GetOpenTab(tabId int64) (res *ToolboxOpenTabModel, err error) {
+	res = &ToolboxOpenTabModel{}
+
+	sql := `SELECT * FROM ` + TableToolboxOpenTab + ` WHERE tabId=? `
+	find, err := this_.DatabaseWorker.QueryOne(sql, []interface{}{tabId}, res)
+	if err != nil {
+		this_.Logger.Error("GetOpenTab Error", zap.Error(err))
+		return
+	}
+
+	if !find {
+		res = nil
+	}
+	return
+}
+
 // OpenTab 新增
 func (this_ *ToolboxService) OpenTab(toolboxOpenTab *ToolboxOpenTabModel) (rowsAffected int64, err error) {
 

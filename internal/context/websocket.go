@@ -4,66 +4,18 @@ import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 	"teamide/pkg/util"
 )
 
 var (
-	idServerWebsocket   map[string]*ServerWebsocket
-	userServerWebsocket map[string][]*ServerWebsocket
+	idServerWebsocket   = make(map[string]*ServerWebsocket)
+	userServerWebsocket = make(map[string][]*ServerWebsocket)
 	serverWebsocketLock sync.Mutex
 
-	websocketMessageOut chan *WebsocketMessage
-
-	websocketMessageLock  sync.Mutex
-	serverWebsocketInited bool
+	websocketMessageLock sync.Mutex
 )
-
-func initServerWebsocket() {
-	if serverWebsocketInited {
-		return
-	}
-	serverWebsocketInited = true
-	idServerWebsocket = make(map[string]*ServerWebsocket)
-	userServerWebsocket = make(map[string][]*ServerWebsocket)
-
-	websocketMessageOut = make(chan *WebsocketMessage, 10)
-
-	go func() {
-		for msg := range websocketMessageOut {
-
-			if msg == nil {
-				continue
-			}
-			var list []*ServerWebsocket
-			if msg.id != "" {
-				find := GetServerWebsocket(msg.id)
-				if find != nil {
-					list = append(list, find)
-				}
-			} else if msg.userId != "" {
-				list = GetUserServerWebsocketList(msg.userId)
-			} else {
-				list = GetServerWebsocketList()
-			}
-			go func() {
-
-				defer func() {
-					if e := recover(); e != nil {
-						util.Logger.Error("WSWriteText error", zap.Any("error", e))
-					}
-				}()
-
-				bs, _ := json.Marshal(msg)
-				for _, one := range list {
-					one.WSWriteText(bs)
-				}
-			}()
-
-		}
-	}()
-
-}
 
 func ServerWebsocketOutEvent(event string, data interface{}) {
 	websocketMessageLock.Lock()
@@ -74,7 +26,20 @@ func ServerWebsocketOutEvent(event string, data interface{}) {
 		Event:   event,
 		Data:    data,
 	}
-	websocketMessageOut <- msg
+
+	//util.Logger.Info("ServerWebsocketOutEvent start", zap.Any("event", event), zap.Any("data", data))
+
+	go func(m *WebsocketMessage) {
+		var list = GetServerWebsocketList()
+		bs, err := json.Marshal(m)
+		if err != nil {
+			util.Logger.Error("ServerWebsocketOutEvent json marshal error", zap.Error(err))
+			return
+		}
+		for _, one := range list {
+			one.WSWriteText(bs)
+		}
+	}(msg)
 }
 
 func AddServerWebsocket(id string, userId string, ws *websocket.Conn) {
@@ -86,13 +51,43 @@ func AddServerWebsocket(id string, userId string, ws *websocket.Conn) {
 		userId: userId,
 		ws:     ws,
 	}
+	go serverWebsocket.start()
 
 	idServerWebsocket[id] = serverWebsocket
-	_, ok := userServerWebsocket[userId]
-	if !ok {
-		userServerWebsocket[userId] = []*ServerWebsocket{}
+
+	if userId != "" {
+		list := userServerWebsocket[userId]
+		list = append(list, serverWebsocket)
+		userServerWebsocket[userId] = list
 	}
-	userServerWebsocket[userId] = append(userServerWebsocket[userId], serverWebsocket)
+}
+
+func ChangeServerWebsocketUserId(serverWebsocket *ServerWebsocket, userId string) {
+	if serverWebsocket.userId == userId {
+		return
+	}
+	serverWebsocketLock.Lock()
+	defer serverWebsocketLock.Unlock()
+
+	if serverWebsocket.userId != "" {
+		list := userServerWebsocket[serverWebsocket.userId]
+		var newList []*ServerWebsocket
+		for _, one := range list {
+			if one != serverWebsocket {
+				newList = append(newList, one)
+			}
+		}
+		userServerWebsocket[serverWebsocket.userId] = newList
+	}
+
+	serverWebsocket.userId = userId
+	if userId != "" {
+		list := userServerWebsocket[userId]
+		list = append(list, serverWebsocket)
+		userServerWebsocket[userId] = list
+	}
+
+	return
 }
 
 func GetServerWebsocket(id string) (serverWebsocket *ServerWebsocket) {
@@ -132,8 +127,8 @@ func CloseServerWebsocket(serverWebsocket *ServerWebsocket) {
 
 	delete(idServerWebsocket, serverWebsocket.id)
 
-	list, ok := userServerWebsocket[serverWebsocket.userId]
-	if ok {
+	if serverWebsocket.userId != "" {
+		list := userServerWebsocket[serverWebsocket.userId]
 		var newList []*ServerWebsocket
 		for _, one := range list {
 			if one.id != serverWebsocket.id {
@@ -183,12 +178,39 @@ func (this_ *ServerWebsocket) WSWriteByType(messageType int, bs []byte) {
 	this_.wsWriteLock.Lock()
 	defer this_.wsWriteLock.Unlock()
 
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("WSWriteByType error", zap.Any("error", e))
+		}
+	}()
 	//fmt.Println("write message:", string(msg.Data))
 	err := this_.ws.WriteMessage(messageType, bs)
 
 	if err != nil {
 		CloseServerWebsocket(this_)
 		return
+	}
+
+}
+
+func (this_ *ServerWebsocket) start() {
+
+	defer func() {
+		_ = this_.ws.Close()
+	}()
+	for {
+		//读取ws中的数据
+		_, bytes, err := this_.ws.ReadMessage()
+		if err != nil {
+			break
+		}
+		text := string(bytes)
+		if strings.HasSuffix(text, "change userId:") {
+			userId := strings.TrimSuffix(text, "change userId:")
+			userId = strings.TrimSpace(userId)
+			util.Logger.Info("web socket change userId", zap.Any("oldUserId", this_.userId), zap.Any("userId", userId))
+			ChangeServerWebsocketUserId(this_, userId)
+		}
 	}
 
 }

@@ -39,7 +39,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 		return
 	}
 
-	//Logger.Info(this_.server.GetServerInfo() + " 新建至 " + this_.netProxy.Outer.GetInfoStr() + " 的连接 [" + connId + "]")
+	//Logger.Info(" OuterListener newConn [" + connId + "]")
 
 	conn, err := net.Dial(this_.netProxy.GetType(), this_.netProxy.GetAddress())
 	if err != nil {

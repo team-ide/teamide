@@ -110,6 +110,26 @@ const newToolboxWorker = function (workerOption) {
             }
         },
         async openTabByExtend(extend, fromItem, createTime) {
+
+
+            if (extend && tool.isNotEmpty(extend.onlyOpenOneKey)) {
+                let items = itemsWorker.items || [];
+                let find = null;
+                items.forEach((item) => {
+                    if (
+                        item &&
+                        item.extend &&
+                        item.extend.onlyOpenOneKey == extend.onlyOpenOneKey
+                    ) {
+                        find = item;
+                    }
+                });
+                if (find != null) {
+                    itemsWorker.toActiveItem(find);
+                    return;
+                }
+            }
+
             let param = {
                 openId: worker.openId,
                 toolboxId: worker.toolboxId,
