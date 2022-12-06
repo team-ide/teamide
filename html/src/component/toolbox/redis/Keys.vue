@@ -225,6 +225,7 @@ export default {
         type: "data",
         key: data.key,
         database: data.database,
+        onlyOpenOneKey: "data:key" + data.key,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },

@@ -115,7 +115,6 @@ export default {
     },
     init() {
       this.registerForm = this.form.build(this.form.register);
-      console.log(this.registerForm);
       let registerData = this.registerForm.newDefaultData();
       this.registerData = registerData;
     },

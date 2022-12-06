@@ -38,7 +38,7 @@
             class="terminal-dropdown"
             ref="terminalDropdown"
           >
-            <span class="el-dropdown-link">
+            <span class="el-dropdown-link" style="padding: 5px 0px">
               终端<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <el-dropdown-menu slot="dropdown" class="terminal-dropdown-menu">
@@ -94,7 +94,7 @@
             class="file-manager-dropdown"
             ref="fileManagerDropdown"
           >
-            <span class="el-dropdown-link">
+            <span class="el-dropdown-link" style="padding: 5px 0px">
               文件管理器<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <el-dropdown-menu
@@ -168,7 +168,7 @@
               class="user-dropdown"
               ref="userDropdown"
             >
-              <span class="el-dropdown-link">
+              <span class="el-dropdown-link" style="padding: 5px 0px">
                 {{ source.login.user.name }}
                 <i class="el-icon-arrow-down el-icon--right"></i>
               </span>

@@ -551,7 +551,7 @@ export default {
 }
 .toolbox-redis-value-box {
   width: 100%;
-  height: calc(100% - 235px);
+  height: calc(100% - 240px);
 }
 .toolbox-redis-form-box .el-form .el-form-item {
   padding: 0px 10px;
