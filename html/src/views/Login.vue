@@ -155,11 +155,28 @@ export default {
                 this.tool.setJWT(res.data);
                 this.tool.success("登录成功！");
                 this.tool.initSession();
+                if (this.autoLogin) {
+                  this.tool.setCache("autoLogin", "1");
+                } else {
+                  this.tool.removeCache("autoLogin");
+                }
+                if (this.rememberPassword) {
+                  this.tool.setCache("rememberPassword", "1");
+                  this.tool.setCache(
+                    "loginData",
+                    this.tool.aesEncrypt(JSON.stringify(this.loginData))
+                  );
+                } else {
+                  this.tool.removeCache("rememberPassword");
+                  this.tool.removeCache("loginData");
+                }
                 setTimeout(() => {
                   this.tool.hideLogin();
                 }, 300);
               } else {
                 this.tool.error(res.msg);
+                this.tool.removeCache("autoLogin");
+                this.tool.removeCache("loginData");
               }
             })
             .catch((e) => {
@@ -173,7 +190,31 @@ export default {
     init() {
       this.loginForm = this.form.build(this.form.login);
       let loginData = this.loginForm.newDefaultData();
+      let setLoginDataSuccess = false;
+      if (this.tool.getCache("rememberPassword") == "1") {
+        this.rememberPassword = true;
+        let loginDataValue = this.tool.getCache("loginData");
+        if (this.tool.isNotEmpty(loginDataValue)) {
+          try {
+            let json = JSON.parse(this.tool.aesDecrypt(loginDataValue));
+            for (let key in loginData) {
+              if (json[key]) {
+                loginData[key] = json[key];
+                setLoginDataSuccess = true;
+              }
+            }
+          } catch (e) {}
+        }
+      }
+      if (this.tool.getCache("autoLogin") == "1") {
+        this.autoLogin = true;
+      }
       this.loginData = loginData;
+      if (this.autoLogin && setLoginDataSuccess) {
+        if (setLoginDataSuccess) {
+          this.doLogin();
+        }
+      }
     },
   },
   // 在实例创建完成后被立即调用

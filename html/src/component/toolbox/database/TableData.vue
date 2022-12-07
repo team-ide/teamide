@@ -740,6 +740,12 @@ export default {
             this.inputValueChange(row);
           },
         });
+        menus.push({
+          text: "查看数据",
+          onClick: () => {
+            this.toolboxWorker.showJSONData(row[name]);
+          },
+        });
       }
       let dataCache = this.getCacheData(row);
       let insertData = Object.assign({}, row);

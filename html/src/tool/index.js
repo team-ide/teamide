@@ -155,6 +155,7 @@ tool.toLogout = function () {
     server.logout().then(res => {
         if (res.code == 0) {
             tool.setJWT("");
+            tool.removeCache("autoLogin");
             tool.initSession();
         }
     }).catch(() => {
@@ -169,6 +170,7 @@ tool.stopEvent = function (event) {
     }
 };
 tool.setJWT = function (jwt) {
+    source.jwt = jwt;
     if (tool.isNotEmpty(jwt)) {
         tool.setCookie("team-ide-jwt", jwt, 60);
     } else {
@@ -176,6 +178,9 @@ tool.setJWT = function (jwt) {
     }
 }
 tool.getJWT = function () {
+    if (tool.isNotEmpty(source.jwt)) {
+        return source.jwt;
+    }
     return tool.getCookie("team-ide-jwt");
 }
 tool.setCookie = function (cname, cvalue, exms) {

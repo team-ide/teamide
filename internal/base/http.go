@@ -1,14 +1,16 @@
 package base
 
 import (
+	"github.com/gin-gonic/gin/binding"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type RequestBean struct {
-	JWT  *JWTBean
-	Path string
+	JWT    *JWTBean
+	Path   string
+	Action string
 }
 
 var (
@@ -16,10 +18,11 @@ var (
 )
 
 type JWTBean struct {
-	Sign   string `json:"sign,omitempty"`
-	UserId int64  `json:"userId,omitempty"`
-	Name   string `json:"name,omitempty"`
-	Time   int64  `json:"time,omitempty"`
+	Sign    string `json:"sign,omitempty"`
+	UserId  int64  `json:"userId,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Time    int64  `json:"time,omitempty"`
+	LoginId int64  `json:"loginId,omitempty"`
 }
 
 type HttpResponse struct {
@@ -29,7 +32,7 @@ type HttpResponse struct {
 }
 
 func RequestJSON(data interface{}, c *gin.Context) bool {
-	err := c.BindJSON(data)
+	err := c.ShouldBindBodyWith(data, binding.JSON)
 	if err != nil {
 		ResponseJSON(nil, err, c)
 		return false

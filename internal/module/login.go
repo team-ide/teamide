@@ -3,6 +3,7 @@ package module
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/mssola/user_agent"
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/module/module_login"
@@ -17,9 +18,12 @@ type LoginRequest struct {
 
 func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	loginRequest := &LoginRequest{}
-	base.RequestJSON(loginRequest, c)
+	if !base.RequestJSON(loginRequest, c) {
+		return
+	}
 
 	var loginUser *module_user.UserModel
+	var loginId int64
 	if this_.IsServer {
 
 		if loginRequest.Account == "" {
@@ -39,16 +43,31 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 			err = base.NewValidateError("用户名或密码错误!")
 			return
 		}
+		userAgentStr := c.Request.UserAgent()
 
+		var source string
+		if userAgentStr != "" {
+			userAgent := user_agent.New(userAgentStr)
+			source += userAgent.OS()
+			s1, s2 := userAgent.Browser()
+			source += ";" + s1 + "@" + s2
+			s1, s2 = userAgent.Engine()
+			source += ";" + s1 + "@" + s2
+		}
 		login := &module_login.LoginModel{
-			Account:  loginRequest.Account,
-			Password: pwd,
+			Account:    loginRequest.Account,
+			Password:   pwd,
+			Ip:         c.ClientIP(),
+			SourceType: module_login.SourceTypeWeb,
+			Source:     source,
+			UserAgent:  userAgentStr,
 		}
 
 		loginUser, err = this_.loginService.Login(login)
 		if err != nil {
 			return
 		}
+		loginId = login.LoginId
 	} else {
 		loginUser, err = this_.userService.Get(base.StandAloneUserId)
 		if err != nil {
@@ -65,12 +84,17 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	res = this_.getJWTStr(loginUser)
+	res = this_.getJWTStr(loginId, loginUser)
 	return
 }
 
 func (this_ *Api) apiLogout(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
+	if request.JWT == nil {
+		return
+	}
+	if request.JWT.LoginId != 0 {
+		_, _ = this_.loginService.Logout(request.JWT.LoginId)
+	}
 	return
 }
 
@@ -107,15 +131,16 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	return res
 }
 
-func (this_ *Api) getJWTStr(user *module_user.UserModel) string {
+func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) string {
 	if user == nil {
 		return ""
 	}
 	jwt := &base.JWTBean{
-		Sign:   util.UUID(),
-		UserId: user.UserId,
-		Name:   user.Name,
-		Time:   util.GetNowTime(),
+		Sign:    util.UUID(),
+		UserId:  user.UserId,
+		Name:    user.Name,
+		Time:    util.GetNowTime(),
+		LoginId: loginId,
 	}
 	jwtStr := util.ToJSON(jwt)
 	jwtStr = this_.Decryption.Encrypt(jwtStr)
@@ -135,10 +160,12 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 	response := &SessionResponse{}
 
 	var userId int64 = 0
+	var loginId int64 = 0
 
 	if this_.IsServer {
 		if request.JWT != nil {
 			userId = request.JWT.UserId
+			loginId = request.JWT.LoginId
 		}
 	} else {
 		userId = base.StandAloneUserId
@@ -152,7 +179,7 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		response.User = find
 	}
 	response.Powers = this_.getPowersByUserId(userId)
-	response.JWT = this_.getJWTStr(response.User)
+	response.JWT = this_.getJWTStr(loginId, response.User)
 
 	jsonString := util.ToJSON(response)
 	res, err = util.AesEncryptCBCByKey(jsonString, this_.HttpAesKey)

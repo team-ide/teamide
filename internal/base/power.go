@@ -8,6 +8,7 @@ type ApiWorker struct {
 	Do          func(request *RequestBean, c *gin.Context) (res interface{}, err error)
 	IsGet       bool
 	IsWebSocket bool
+	IsUpload    bool
 }
 
 type PowerAction struct {

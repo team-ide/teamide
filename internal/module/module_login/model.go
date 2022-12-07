@@ -18,6 +18,7 @@ type LoginModel struct {
 	Ip         string    `json:"ip,omitempty"`
 	SourceType int       `json:"sourceType,omitempty"`
 	Source     string    `json:"source,omitempty"`
+	UserAgent  string    `json:"userAgent,omitempty"`
 	UserId     int64     `json:"userId,omitempty"`
 	Deleted    int8      `json:"deleted,omitempty"`
 	LoginTime  time.Time `json:"loginTime,omitempty"`
@@ -26,3 +27,5 @@ type LoginModel struct {
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 	DeleteTime time.Time `json:"deleteTime,omitempty"`
 }
+
+var SourceTypeWeb = 1

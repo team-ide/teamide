@@ -92,9 +92,9 @@ func (this_ *LoginService) insert(login *LoginModel) (rowsAffected int64, err er
 		login.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + TableLogin + `(loginId, account, ip, sourceType, source, userId, loginTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableLogin + `(loginId, account, ip, sourceType, source, userAgent, userId, loginTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{login.LoginId, login.Account, login.Ip, login.SourceType, login.Source, login.UserId, login.LoginTime, login.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{login.LoginId, login.Account, login.Ip, login.SourceType, login.Source, login.UserAgent, login.UserId, login.LoginTime, login.CreateTime})
 	if err != nil {
 		return
 	}

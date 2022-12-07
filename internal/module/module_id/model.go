@@ -53,4 +53,7 @@ const (
 	IDTypeNode = 6001
 	// IDTypeNodeNetProxy 节点
 	IDTypeNodeNetProxy = 6002
+
+	// IDTypeLog 日志
+	IDTypeLog = 7001
 )

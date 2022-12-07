@@ -1,14 +1,17 @@
 package module
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/internal/module/module_file_manager"
+	"teamide/internal/module/module_log"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_power"
@@ -16,6 +19,7 @@ import (
 	"teamide/internal/module/module_terminal"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
+	"teamide/pkg/util"
 )
 
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
@@ -31,6 +35,7 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		powerRoleService:  module_power.NewPowerRoleService(ServerContext),
 		powerRouteService: module_power.NewPowerRouteService(ServerContext),
 		powerUserService:  module_power.NewPowerUserService(ServerContext),
+		logService:        module_log.NewLogService(ServerContext),
 		apiCache:          make(map[string]*base.ApiWorker),
 	}
 	var apis []*base.ApiWorker
@@ -92,6 +97,7 @@ type Api struct {
 	powerRoleService  *module_power.PowerRoleService
 	powerRouteService *module_power.PowerRouteService
 	powerUserService  *module_power.PowerUserService
+	logService        *module_log.LogService
 	installService    *InstallService
 	apiCache          map[string]*base.ApiWorker
 }
@@ -117,7 +123,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: PowerLogout, Do: this_.apiLogout})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"register"}, Power: PowerRegister, Do: this_.apiRegister})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: PowerSession, Do: this_.apiSession})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"upload"}, Power: PowerUpload, Do: this_.apiUpload})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"upload"}, Power: PowerUpload, Do: this_.apiUpload, IsUpload: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"updateCheck"}, Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"websocket"}, Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true})
 
@@ -175,9 +181,9 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	if index < 0 {
 		return false
 	}
-	name := path[index+len("api/"):]
+	action := path[index+len("api/"):]
 
-	api := this_.apiCache[name]
+	api := this_.apiCache[action]
 	if api == nil {
 		return false
 	}
@@ -193,10 +199,53 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 		return true
 	}
 	if api.Do != nil {
-		this_.Logger.Info("处理操作", zap.String("path", path))
+		var err error
+		var startTime = util.Now()
+		userAgentStr := c.Request.UserAgent()
+		logRecode := &module_log.LogModel{
+			Action:     action,
+			Method:     c.Request.Method,
+			StartTime:  startTime,
+			CreateTime: startTime,
+			Ip:         c.ClientIP(),
+			UserAgent:  userAgentStr,
+		}
+		var param = make(map[string]interface{})
+		_ = c.Request.ParseForm()
+		f := c.Request.Form
+		for k, v := range f {
+			param[k] = v
+		}
+		f = c.Request.PostForm
+		for k, v := range f {
+			param[k] = v
+		}
+		if len(param) > 0 {
+			bs, _ := json.Marshal(param)
+			logRecode.Param = string(bs)
+		}
+		if !api.IsUpload {
+			var data = make(map[string]interface{})
+			_ = c.ShouldBindBodyWith(&data, binding.JSON)
+			if len(data) > 0 {
+				bs, _ := json.Marshal(data)
+				logRecode.Data = string(bs)
+			}
+		}
+		if requestBean.JWT != nil {
+			logRecode.UserId = requestBean.JWT.UserId
+		}
+		_ = this_.logService.Start(logRecode)
+
+		defer func() {
+
+			_ = this_.logService.End(logRecode.LogId, startTime, err)
+		}()
+
+		this_.Logger.Info("处理操作", zap.String("action", action))
 		res, err := api.Do(requestBean, c)
 		if err != nil {
-			this_.Logger.Error("操作异常", zap.String("path", path), zap.Error(err))
+			this_.Logger.Error("操作异常", zap.String("action", action), zap.Any("error", err.Error()))
 		}
 		if res == base.HttpNotResponse {
 			return true

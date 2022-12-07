@@ -5,12 +5,8 @@
       <SystemInfoBox :source="source"></SystemInfoBox>
       <AlertBox :source="source"></AlertBox>
       <router-view :source="source"></router-view>
-      <template v-if="source.login.show">
-        <Login :source="source"></Login>
-      </template>
-      <template v-if="source.register.show">
-        <Register :source="source"></Register>
-      </template>
+      <Login v-show="source.login.show" :source="source"></Login>
+      <Register v-show="source.register.show" :source="source"></Register>
       <UpdateCheck :source="source"></UpdateCheck>
     </template>
     <template v-else>

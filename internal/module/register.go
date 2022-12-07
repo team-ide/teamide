@@ -2,7 +2,7 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
-	base2 "teamide/internal/base"
+	"teamide/internal/base"
 	"teamide/internal/module/module_register"
 	"teamide/pkg/util"
 )
@@ -14,16 +14,19 @@ type RegisterRequest struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (this_ *Api) apiRegister(request *base2.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *Api) apiRegister(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	registerRequest := &RegisterRequest{}
-	base2.RequestJSON(registerRequest, c)
+
+	if !base.RequestJSON(registerRequest, c) {
+		return
+	}
 
 	pwd, err := util.AesDecryptCBCByKey(registerRequest.Password, this_.HttpAesKey)
 	if err != nil {
 		return
 	}
 	if pwd == "" {
-		err = base2.NewValidateError("密码不能为空!")
+		err = base.NewValidateError("密码不能为空!")
 		return
 	}
 	register := &module_register.RegisterModel{

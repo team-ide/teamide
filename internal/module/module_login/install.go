@@ -61,5 +61,20 @@ CREATE TABLE ` + TableLogin + ` (
 				},
 			},
 		},
+
+		// UserAgent
+		{
+			Version: "1.1",
+			Module:  ModuleLogin,
+			Stage:   `表[` + TableLogin + `]添加 UserAgent`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableLogin + ` ADD COLUMN userAgent text DEFAULT NULL COMMENT 'User-Agent';`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableLogin + ` ADD userAgent text;`,
+				},
+			},
+		},
 	}
 }

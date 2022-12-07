@@ -58,7 +58,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/remove"}, Power: PowerRemove, Do: this_.remove})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/move"}, Power: PowerCopy, Do: this_.move})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/copy"}, Power: PowerMove, Do: this_.copy})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/upload"}, Power: PowerUpload, Do: this_.upload})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/upload"}, Power: PowerUpload, Do: this_.upload, IsUpload: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/download"}, Power: PowerDownload, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callAction"}, Power: PowerCallAction, Do: this_.callAction})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"file_manager/callStop"}, Power: PowerCallStop, Do: this_.callStop})
