@@ -21,6 +21,7 @@ type JWTBean struct {
 	Sign    string `json:"sign,omitempty"`
 	UserId  int64  `json:"userId,omitempty"`
 	Name    string `json:"name,omitempty"`
+	Account string `json:"account,omitempty"`
 	Time    int64  `json:"time,omitempty"`
 	LoginId int64  `json:"loginId,omitempty"`
 }

@@ -17,7 +17,10 @@ func GetInstallStages() []*install.StageModel {
 				Mysql: []string{`
 CREATE TABLE ` + TableLog + ` (
 	logId bigint(20) NOT NULL COMMENT '登录ID',
+	loginId bigint(20) DEFAULT NULL COMMENT '登录ID',
 	userId bigint(20) DEFAULT NULL COMMENT '用户ID',
+	userName varchar(50) DEFAULT NULL COMMENT '用户名称',
+	userAccount varchar(50) DEFAULT NULL COMMENT '用户账号',
 	ip varchar(50) DEFAULT NULL COMMENT 'IP',
 	action varchar(100) DEFAULT NULL COMMENT '操作',
 	method varchar(20) DEFAULT NULL COMMENT '方法',
@@ -31,7 +34,10 @@ CREATE TABLE ` + TableLog + ` (
 	endTime datetime DEFAULT NULL COMMENT '结束时间',
 	useTime int(10) DEFAULT 0 COMMENT '使用时长',
 	PRIMARY KEY (logId),
+	KEY index_loginId (loginId),
 	KEY index_userId (userId),
+	KEY index_userName (userName),
+	KEY index_userAccount (userAccount),
 	KEY index_ip (ip),
 	KEY index_status (status),
 	KEY index_action (action),
@@ -43,7 +49,10 @@ CREATE TABLE ` + TableLog + ` (
 				Sqlite: []string{`
 CREATE TABLE ` + TableLog + ` (
 	logId bigint(20) NOT NULL,
+	loginId bigint(20) DEFAULT NULL,
 	userId bigint(20) DEFAULT NULL,
+	userName varchar(50) DEFAULT NULL,
+	userAccount varchar(50) DEFAULT NULL,
 	ip varchar(50) DEFAULT NULL,
 	action varchar(100) DEFAULT NULL,
 	method varchar(20) DEFAULT NULL,
@@ -59,7 +68,10 @@ CREATE TABLE ` + TableLog + ` (
 	PRIMARY KEY (logId)
 );
 `,
+					`CREATE INDEX ` + TableLog + `_index_loginId on ` + TableLog + ` (loginId);`,
 					`CREATE INDEX ` + TableLog + `_index_userId on ` + TableLog + ` (userId);`,
+					`CREATE INDEX ` + TableLog + `_index_userName on ` + TableLog + ` (userName);`,
+					`CREATE INDEX ` + TableLog + `_index_userAccount on ` + TableLog + ` (userAccount);`,
 					`CREATE INDEX ` + TableLog + `_index_ip on ` + TableLog + ` (ip);`,
 					`CREATE INDEX ` + TableLog + `_index_status on ` + TableLog + ` (status);`,
 					`CREATE INDEX ` + TableLog + `_index_action on ` + TableLog + ` (action);`,

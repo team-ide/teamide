@@ -234,6 +234,9 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 		}
 		if requestBean.JWT != nil {
 			logRecode.UserId = requestBean.JWT.UserId
+			logRecode.UserName = requestBean.JWT.Name
+			logRecode.UserAccount = requestBean.JWT.Account
+			logRecode.LoginId = requestBean.JWT.LoginId
 		}
 		_ = this_.logService.Start(logRecode)
 

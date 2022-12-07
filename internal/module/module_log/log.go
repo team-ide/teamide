@@ -41,9 +41,9 @@ func (this_ *LogService) Start(log *LogModel) (err error) {
 		log.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + TableLog + `(logId, userId, ip, action, method, param, data, userAgent, startTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableLog + `(logId, loginId, userId, userName, userAccount, ip, action, method, param, data, userAgent, startTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
 
-	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{log.LogId, log.UserId, log.Ip, log.Action, log.Method, log.Param, log.Data, log.UserAgent, log.StartTime, log.CreateTime})
+	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{log.LogId, log.LoginId, log.UserId, log.UserName, log.UserAccount, log.Ip, log.Action, log.Method, log.Param, log.Data, log.UserAgent, log.StartTime, log.CreateTime})
 	if err != nil {
 		return
 	}

@@ -139,6 +139,7 @@ func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) string {
 		Sign:    util.UUID(),
 		UserId:  user.UserId,
 		Name:    user.Name,
+		Account: user.Account,
 		Time:    util.GetNowTime(),
 		LoginId: loginId,
 	}
