@@ -14,6 +14,7 @@ const (
 type TerminalLogModel struct {
 	TerminalLogId int64     `json:"terminalLogId,omitempty"`
 	LoginId       int64     `json:"loginId,omitempty"`
+	WorkerId      string    `json:"workerId,omitempty"`
 	UserId        int64     `json:"userId,omitempty"`
 	UserName      string    `json:"userName,omitempty"`
 	UserAccount   string    `json:"userAccount,omitempty"`

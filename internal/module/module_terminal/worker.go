@@ -2,7 +2,6 @@ package module_terminal
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"io"
@@ -140,26 +139,7 @@ func (this_ *worker) onCommand(logContext *logContext, commandBytes []byte, log 
 	str := string(commandBytes)
 	if strings.Contains(str, "\n") ||
 		strings.Contains(str, "\r") {
-
 		command := string(logContext.commandBytes)
-		var s = ``
-		for {
-			index := strings.Index(str, s)
-			if index < 0 {
-				break
-			}
-			fmt.Println("find " + s)
-			strS := ""
-			if index > 1 {
-				strS = str[0 : index-2]
-			}
-			strE := ""
-			if index < len(str)-1 {
-				strE = str[index+1:]
-			}
-			str = strS + strE
-		}
-
 		log.Command = command
 		_ = this_.terminalLogService.Insert(&log)
 		logContext.commandBytes = []byte{}

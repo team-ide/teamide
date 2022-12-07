@@ -37,9 +37,9 @@ func (this_ *TerminalLogService) Insert(log *TerminalLogModel) (err error) {
 		log.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + TableTerminalLog + `(terminalLogId, loginId, userId, userName, userAccount, ip, place, placeId, command, userAgent, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableTerminalLog + `(terminalLogId, loginId, workerId, userId, userName, userAccount, ip, place, placeId, command, userAgent, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
 
-	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{log.TerminalLogId, log.LoginId, log.UserId, log.UserName, log.UserAccount, log.Ip, log.Place, log.PlaceId, log.Command, log.UserAgent, log.CreateTime})
+	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{log.TerminalLogId, log.LoginId, log.WorkerId, log.UserId, log.UserName, log.UserAccount, log.Ip, log.Place, log.PlaceId, log.Command, log.UserAgent, log.CreateTime})
 	if err != nil {
 		return
 	}

@@ -104,6 +104,12 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		err = errors.New("placeId获取失败")
 		return
 	}
+	workerId := c.Query("workerId")
+	if workerId == "" {
+		err = errors.New("workerId获取失败")
+		return
+	}
+
 	cols, _ := strconv.Atoi(c.Query("cols"))
 	rows, _ := strconv.Atoi(c.Query("rows"))
 	//升级get请求为webSocket协议
@@ -128,6 +134,7 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		UserAgent: userAgentStr,
 		Place:     place,
 		PlaceId:   placeId,
+		WorkerId:  workerId,
 	}
 
 	baseLog.UserId = request.JWT.UserId
