@@ -56,4 +56,7 @@ const (
 
 	// IDTypeLog 日志
 	IDTypeLog = 7001
+
+	// IDTypeTerminalLog 控制台日志
+	IDTypeTerminalLog = 8001
 )

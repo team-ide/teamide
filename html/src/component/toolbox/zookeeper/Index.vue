@@ -158,18 +158,14 @@
                 >
                 </el-input>
               </el-form-item>
-              <template v-if="form.valueJson != null">
-                <el-form-item label="值JSON预览">
-                  <el-input
-                    type="textarea"
-                    v-model="form.valueJson"
-                    :autosize="{ minRows: 5, maxRows: 10 }"
-                  >
-                  </el-input>
-                </el-form-item>
-              </template>
             </el-form>
             <div class="pdtb-20">
+              <div
+                class="tm-btn bg-grey-7"
+                @click="toolboxWorker.showJSONData(form.value)"
+              >
+                预览值
+              </div>
               <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
             </div>
           </div>
@@ -207,7 +203,6 @@ export default {
         nameFormat: null,
         path: null,
         value: null,
-        valueJson: null,
       },
       stat: null,
       ready: false,
@@ -240,17 +235,6 @@ export default {
             let data = JSONbigString.parse(value);
             this.form.nameFormat = JSON.stringify(data, null, "    ");
           } catch (e) {}
-        }
-      }
-    },
-    "form.value"(value) {
-      this.form.valueJson = null;
-      if (this.tool.isJSONString(value)) {
-        try {
-          let data = JSONbigString.parse(value);
-          this.form.valueJson = JSON.stringify(data, null, "    ");
-        } catch (e) {
-          this.form.valueJson = e;
         }
       }
     },

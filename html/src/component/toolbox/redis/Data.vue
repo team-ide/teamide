@@ -61,17 +61,13 @@
               >
               </el-input>
             </el-form-item>
-            <template v-if="form.valueJson != null">
-              <el-form-item label="值JSON预览">
-                <el-input
-                  type="textarea"
-                  v-model="form.valueJson"
-                  :autosize="{ minRows: 5, maxRows: 10 }"
-                >
-                </el-input>
-              </el-form-item>
-            </template>
             <div class="pdlr-10">
+              <div
+                class="tm-btn bg-grey-7"
+                @click="toolboxWorker.showJSONData(form.value)"
+              >
+                预览值
+              </div>
               <div class="tm-btn bg-teal-8" @click="toSave">保存</div>
             </div>
           </template>
@@ -123,10 +119,9 @@
                   </el-col>
                   <el-col :span="4">
                     <a
-                      v-if="tool.isJSONString(one.value)"
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toViewJSONValue(one.value)"
-                      title="预览JSON"
+                      @click="toolboxWorker.showJSONData(one.value)"
+                      title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>
                     </a>
@@ -189,10 +184,9 @@
                   </el-col>
                   <el-col :span="4">
                     <a
-                      v-if="tool.isJSONString(one.value)"
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toViewJSONValue(one.value)"
-                      title="预览JSON"
+                      @click="toolboxWorker.showJSONData(one.value)"
+                      title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>
                     </a>
@@ -256,10 +250,9 @@
                   </el-col>
                   <el-col :span="4">
                     <a
-                      v-if="tool.isJSONString(one.value)"
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toViewJSONValue(one.value)"
-                      title="预览JSON"
+                      @click="toolboxWorker.showJSONData(one.value)"
+                      title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>
                     </a>
@@ -302,9 +295,6 @@
 
 
 <script>
-var JSONbig = require("json-bigint");
-var JSONbigString = JSONbig({});
-
 export default {
   components: {},
   props: ["source", "toolboxWorker", "extend", ""],
@@ -318,7 +308,6 @@ export default {
         valueSize: 10,
         key: null,
         value: null,
-        valueJson: null,
         memoryUsage: 0,
         unitMemoryUsage: null,
         unit: null,
@@ -332,19 +321,7 @@ export default {
     };
   },
   computed: {},
-  watch: {
-    "form.value"(value) {
-      this.form.valueJson = null;
-      if (this.tool.isJSONString(value)) {
-        try {
-          let data = JSONbigString.parse(value);
-          this.form.valueJson = JSON.stringify(data, null, "    ");
-        } catch (e) {
-          this.form.valueJson = e;
-        }
-      }
-    },
-  },
+  watch: {},
   methods: {
     init() {
       let extend = this.extend || {};
@@ -354,9 +331,6 @@ export default {
       this.form.key = key;
       this.initForm();
       this.ready = true;
-    },
-    toViewJSONValue(value) {
-      this.toolboxWorker.showJSONData(value);
     },
     refresh() {},
     reloadForm() {

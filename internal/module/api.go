@@ -238,11 +238,11 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 			logRecode.UserAccount = requestBean.JWT.Account
 			logRecode.LoginId = requestBean.JWT.LoginId
 		}
-		_ = this_.logService.Start(logRecode)
 
 		defer func() {
+			logRecode.EndTime = util.Now()
 
-			_ = this_.logService.End(logRecode.LogId, startTime, err)
+			_ = this_.logService.Insert(logRecode, err)
 		}()
 
 		this_.Logger.Info("处理操作", zap.String("action", action))

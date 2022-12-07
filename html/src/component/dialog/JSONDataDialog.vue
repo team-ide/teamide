@@ -46,20 +46,23 @@ export default {
     async show(data) {
       this.showDialog = true;
       this.$nextTick(() => {
-        try {
-          data = data || {};
-          if (typeof data == "string") {
-            try {
-              let json = JSONbigString.parse(data);
-              this.text = JSONbigString.stringify(json, null, "    ");
-            } catch (e) {
-              this.text = data;
+        this.text = "";
+        if (data != null && data != "") {
+          try {
+            data = data || {};
+            if (typeof data == "string") {
+              try {
+                let json = JSONbigString.parse(data);
+                this.text = JSONbigString.stringify(json, null, "    ");
+              } catch (e) {
+                this.text = data;
+              }
+            } else {
+              this.text = JSONbigString.stringify(data, null, "    ");
             }
-          } else {
-            this.text = JSONbigString.stringify(data, null, "    ");
+          } catch (e) {
+            this.text = e.toString();
           }
-        } catch (e) {
-          this.text = e.toString();
         }
         this.$refs.Editor.setValue(this.text);
       });

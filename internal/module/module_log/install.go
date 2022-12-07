@@ -16,7 +16,7 @@ func GetInstallStages() []*install.StageModel {
 			Sql: &install.StageSqlModel{
 				Mysql: []string{`
 CREATE TABLE ` + TableLog + ` (
-	logId bigint(20) NOT NULL COMMENT '登录ID',
+	logId bigint(20) NOT NULL COMMENT '日志ID',
 	loginId bigint(20) DEFAULT NULL COMMENT '登录ID',
 	userId bigint(20) DEFAULT NULL COMMENT '用户ID',
 	userName varchar(50) DEFAULT NULL COMMENT '用户名称',
@@ -42,6 +42,7 @@ CREATE TABLE ` + TableLog + ` (
 	KEY index_status (status),
 	KEY index_action (action),
 	KEY index_useTime (useTime),
+	KEY index_createTime (createTime),
 	KEY index_startTime (startTime),
 	KEY index_endTime (endTime)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableLogComment + `';
@@ -76,6 +77,7 @@ CREATE TABLE ` + TableLog + ` (
 					`CREATE INDEX ` + TableLog + `_index_status on ` + TableLog + ` (status);`,
 					`CREATE INDEX ` + TableLog + `_index_action on ` + TableLog + ` (action);`,
 					`CREATE INDEX ` + TableLog + `_index_useTime on ` + TableLog + ` (useTime);`,
+					`CREATE INDEX ` + TableLog + `_index_createTime on ` + TableLog + ` (createTime);`,
 					`CREATE INDEX ` + TableLog + `_index_startTime on ` + TableLog + ` (startTime);`,
 					`CREATE INDEX ` + TableLog + `_index_endTime on ` + TableLog + ` (endTime);`,
 				},

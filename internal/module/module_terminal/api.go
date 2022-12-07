@@ -122,10 +122,22 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
+	userAgentStr := c.Request.UserAgent()
+	baseLog := &TerminalLogModel{
+		Ip:        c.ClientIP(),
+		UserAgent: userAgentStr,
+		Place:     place,
+		PlaceId:   placeId,
+	}
+
+	baseLog.UserId = request.JWT.UserId
+	baseLog.UserName = request.JWT.Name
+	baseLog.UserAccount = request.JWT.Account
+	baseLog.LoginId = request.JWT.LoginId
 	err = this_.Start(key, place, placeId, &terminal.Size{
 		Cols: cols,
 		Rows: rows,
-	}, ws)
+	}, ws, baseLog)
 	if err != nil {
 		_ = ws.WriteMessage(websocket.BinaryMessage, []byte("start error:"+err.Error()))
 		this_.Logger.Error("websocket start error", zap.Error(err))

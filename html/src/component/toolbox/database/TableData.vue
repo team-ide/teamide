@@ -741,12 +741,18 @@ export default {
           },
         });
         menus.push({
-          text: "查看数据",
+          text: "查看列数据",
           onClick: () => {
             this.toolboxWorker.showJSONData(row[name]);
           },
         });
       }
+      menus.push({
+        text: "查看行数据",
+        onClick: () => {
+          this.toolboxWorker.showJSONData(row);
+        },
+      });
       let dataCache = this.getCacheData(row);
       let insertData = Object.assign({}, row);
       let updateData = {};

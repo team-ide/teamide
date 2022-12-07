@@ -11,7 +11,7 @@
               <el-input v-model="searchForm.pattern" style="width: 160px" />
             </el-form-item>
             <el-form-item label="数量" class="mgb-5">
-              <el-input v-model="searchForm.size" style="width: 50px" />
+              <el-input v-model="searchForm.size" style="width: 55px" />
             </el-form-item>
             <el-form-item label="" class="mgb-5">
               <div class="tm-btn tm-btn-xs bg-teal-8" @click="toSearch">
@@ -47,34 +47,74 @@
           <template v-if="searchResult == null">
             <div class="text-center ft-13 pdtb-10">数据加载中，请稍后!</div>
           </template>
-          <template
-            v-else-if="
-              searchResult.dataList == null || searchResult.dataList.length == 0
-            "
-          >
-            <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
-          </template>
           <template v-else>
-            <div class="text-center ft-13 pdtb-10" style="height: 40px">
-              Keys （{{ searchResult.count }}）
-              <span class="color-orange">双击查看Key数据</span>
+            <div class="text-center ft-12 pdtb-10" style="height: 40px">
+              共
+              <span class="color-green-2 pdlr-3">
+                {{ searchResult.count }}</span
+              >
+              Keys
+              <span class="pdlr-2"></span>
+              加载
+              <span class="color-green pdlr-3">
+                {{ searchResult.dataList.length }}
+              </span>
+              个
+              <el-radio-group v-model="viewModel">
+                <el-radio label="list" class="mglr-0 mgl-5">列表</el-radio>
+                <el-radio label="tree" class="mglr-0 mgl-5"
+                  >树形(分割符号'{{ splitChars.join("','") }}')</el-radio
+                >
+              </el-radio-group>
+            </div>
+            <div>
+              <el-input placeholder="输入关键字进行过滤" v-model="filterText">
+              </el-input>
             </div>
             <div
-              class="data-list-box app-scroll-bar"
-              style="height: calc(100% - 40px); user-select: text"
+              class="app-scroll-bar"
+              style="height: calc(100% - 80px); user-select: text"
             >
-              <template v-for="(one, index) in searchResult.dataList">
-                <div
-                  :key="index"
-                  class="data-list-one"
-                  @click="rowClick(one)"
-                  @contextmenu="dataContextmenu(one)"
+              <div class="pd-10">
+                <el-tree
+                  ref="tree"
+                  :props="defaultProps"
+                  node-key="key"
+                  :expand-on-click-node="false"
+                  :data="
+                    viewModel == 'list'
+                      ? searchResult.dataList
+                      : searchResult.treeDatas
+                  "
+                  :filter-node-method="filterNode"
+                  @node-click="nodeClick"
+                  @node-contextmenu="nodeContextmenu"
+                  empty-text="暂无匹配数据"
                 >
-                  <div class="data-list-one-text">
-                    {{ one.key }}
-                  </div>
-                </div>
-              </template>
+                  <span
+                    class="toolbox-editor-tree-span"
+                    slot-scope="{ node, data }"
+                  >
+                    <span>{{ node.label }}</span>
+                    <template v-if="data.isData">
+                      <div class="toolbox-editor-tree-btn-group">
+                        <div
+                          class="tm-link color-green ft-15 mgr-2"
+                          @click="toUpdate(data)"
+                        >
+                          <i class="mdi mdi-text-box-edit-outline"></i>
+                        </div>
+                        <div
+                          class="tm-link color-orange ft-15 mgr-2"
+                          @click="toDelete(data)"
+                        >
+                          <i class="mdi mdi-delete-outline"></i>
+                        </div>
+                      </div>
+                    </template>
+                  </span>
+                </el-tree>
+              </div>
             </div>
           </template>
         </tm-layout>
@@ -94,14 +134,37 @@ export default {
       searchForm: {
         database: 0,
         pattern: "xx*",
-        size: 50,
+        size: 200,
       },
+      splitChars: [":", "-", "/"],
       searchResult: null,
+      viewModel: "list",
+      filterText: "",
+      defaultProps: {
+        children: "children",
+        label: "name",
+        isLeaf: "leaf",
+      },
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    filterText(val) {
+      this.$refs.tree && this.$refs.tree.filter(val);
+    },
+    viewModel() {
+      this.$nextTick(() => {
+        this.$refs.tree && this.$refs.tree.filter(this.filterText);
+      });
+    },
+  },
   methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return (
+        data.key && data.key.toLowerCase().indexOf(value.toLowerCase()) !== -1
+      );
+    },
     init() {
       this.ready = true;
       if (this.extend && this.extend.search) {
@@ -137,7 +200,71 @@ export default {
       }
       param.size = Number(param.size);
       let res = await this.toolboxWorker.work("keys", param);
-      this.searchResult = res.data;
+      let keysData = res.data || {};
+      this.formatData(keysData);
+      this.searchResult = keysData;
+    },
+    formatData(keysData) {
+      keysData = keysData || {};
+      keysData.dataList = keysData.dataList || [];
+      keysData.treeDatas = [];
+      var treeDataCache = {};
+      keysData.dataList.forEach((data) => {
+        data.isData = true;
+        data.name = data.key;
+        let treeData = {
+          database: data.database,
+          key: data.key,
+          name: data.key,
+          isData: true,
+          children: [],
+        };
+        let lastFind = null;
+        let splitChar = null;
+        this.splitChars.forEach((one) => {
+          if (splitChar == null) {
+            if (data.key.indexOf(one) >= 0) {
+              splitChar = one;
+            }
+          }
+        });
+        if (data.key.indexOf(splitChar) >= 0) {
+          let ss = data.key.split(splitChar);
+          let lastK = "";
+          ss.forEach((s, i) => {
+            treeData.name = s;
+            if (i >= ss.length - 1) {
+              return;
+            }
+            if (i > 0) {
+              lastK += splitChar;
+            }
+            lastK += s;
+            let find = treeDataCache[lastK];
+            if (find == null) {
+              find = {
+                database: data.database,
+                key: lastK,
+                name: s,
+                isData: false,
+                children: [],
+              };
+              treeDataCache[lastK] = find;
+              if (lastFind != null) {
+                lastFind.children.push(find);
+              } else {
+                keysData.treeDatas.push(find);
+              }
+            }
+            lastFind = find;
+          });
+        }
+        if (lastFind != null) {
+          lastFind.children.push(treeData);
+        } else {
+          keysData.treeDatas.push(treeData);
+        }
+      });
     },
     rowClick(data) {
       this.rowClickTimeCache = this.rowClickTimeCache || {};
@@ -154,6 +281,37 @@ export default {
     },
     rowDbClick(data) {
       this.toUpdate(data);
+    },
+
+    nodeClick(data, node) {
+      this.rowClickTimeCache = this.rowClickTimeCache || {};
+      let nowTime = new Date().getTime();
+      let clickTime = this.rowClickTimeCache[node];
+      this.rowClickTimeCache[node] = nowTime;
+      if (clickTime) {
+        let timeout = nowTime - clickTime;
+        if (timeout < 300) {
+          delete this.rowClickTimeCache[node];
+          this.nodeDbClick(node);
+        }
+      }
+    },
+    nodeDbClick(node) {
+      if (node.data.isData) {
+        this.toUpdate(node.data);
+        return;
+      }
+      if (node.expanded) {
+        node.expanded = false;
+      } else {
+        node.loaded = false;
+        node.expand();
+      }
+    },
+    nodeContextmenu(event, data, node, nodeView) {
+      if (data.isData) {
+        this.dataContextmenu(data);
+      }
     },
     dataContextmenu(data) {
       let menus = [];
