@@ -104,7 +104,10 @@
                 />
               </div>
             </div>
-            <div class="toolbox-type-data-box app-scroll-bar">
+            <div
+              class="toolbox-type-data-box app-scroll-bar"
+              @contextmenu="dataContextmenu(toolboxType)"
+            >
               <template
                 v-if="
                   selectGroup.context[toolboxType.name] == null ||
@@ -187,6 +190,7 @@ export default {
       groupList: [],
       searchGroup: null,
       toolboxTypes: [],
+      toolboxTypeMap: {},
       toolboxGroups: [],
     };
   },
@@ -242,6 +246,9 @@ export default {
         });
         this.searchMap = searchMap;
       }
+      this.toolboxTypes.forEach((one) => {
+        this.toolboxTypeMap[one.name] = one;
+      });
     },
     toSelectGroup(group) {
       if (group == null) {
@@ -375,57 +382,77 @@ export default {
         return;
       }
       let menus = [];
+
       menus.push({
-        header: toolboxType.text + ":" + toolboxData.name,
+        header:
+          toolboxType.text +
+          (toolboxData != null ? ":" + toolboxData.name : ""),
       });
-      menus.push({
-        text: "打开",
-        onClick: () => {
-          this.toolboxDataOpen(toolboxData);
-        },
-      });
-      if (toolboxData.toolboxType == "ssh") {
+      if (toolboxData != null) {
         menus.push({
-          text: "文件管理器",
+          text: "打开",
           onClick: () => {
-            this.tool.openFileManager("ssh", toolboxData);
+            this.toolboxDataOpen(toolboxData);
           },
         });
       }
-      if (this.groupList.length > 0) {
-        let moveGroupMenu = {
-          text: "移动分组",
-          menus: [],
-        };
-        menus.push(moveGroupMenu);
-        this.groupList.forEach((one) => {
-          moveGroupMenu.menus.push({
-            text: one.name,
+      if (toolboxData != null) {
+        if (toolboxData.toolboxType == "ssh") {
+          menus.push({
+            text: "文件管理器",
             onClick: () => {
-              this.moveGroup(toolboxData.toolboxId, one.groupId);
+              this.tool.openFileManager("ssh", toolboxData);
             },
           });
+        }
+        if (this.groupList.length > 0) {
+          let moveGroupMenu = {
+            text: "移动分组",
+            menus: [],
+          };
+          menus.push(moveGroupMenu);
+          this.groupList.forEach((one) => {
+            moveGroupMenu.menus.push({
+              text: one.name,
+              onClick: () => {
+                this.moveGroup(toolboxData.toolboxId, one.groupId);
+              },
+            });
+          });
+        }
+        menus.push({
+          text: "修改",
+          onClick: () => {
+            this.toUpdate(toolboxType, toolboxData);
+          },
+        });
+        menus.push({
+          text: "复制",
+          onClick: () => {
+            this.toCopy(toolboxType, toolboxData);
+          },
+        });
+        menus.push({
+          text: "复制到剪切板",
+          onClick: () => {
+            this.toCopyToClipboard(toolboxType, toolboxData);
+          },
         });
       }
       menus.push({
-        text: "修改",
+        text: "从剪切板新增",
         onClick: () => {
-          this.toUpdate(toolboxType, toolboxData);
+          this.toInsertFromClipboard();
         },
       });
-      menus.push({
-        text: "复制",
-        onClick: () => {
-          this.toCopy(toolboxType, toolboxData);
-        },
-      });
-      menus.push({
-        text: "删除",
-        onClick: () => {
-          this.toDelete(toolboxType, toolboxData);
-        },
-      });
-
+      if (toolboxData != null) {
+        menus.push({
+          text: "删除",
+          onClick: () => {
+            this.toDelete(toolboxType, toolboxData);
+          },
+        });
+      }
       if (menus.length > 0) {
         this.tool.showContextmenu(menus);
       }
@@ -442,6 +469,80 @@ export default {
         toolboxType,
         selectGroup,
       });
+    },
+    async toCopyToClipboard(toolboxType, data) {
+      let out = {
+        isToolboxData: true,
+        toolboxType: toolboxType.name,
+        data: data,
+        fromUser: {
+          userId: this.source.login.user.userId,
+          name: this.source.login.user.name,
+          account: this.source.login.user.account,
+          email: this.source.login.user.email,
+        },
+      };
+      let str = JSON.stringify(out);
+      str = this.tool.aesEncrypt(str);
+      str =
+        `TeamIDE;toolboxType:${toolboxType.name};name:${data.name};data:` + str;
+      let res = await this.tool.clipboardWrite(str);
+      if (res.success) {
+        this.tool.success("复制成功");
+      } else {
+        this.tool.warn("复制失败，请允许访问剪贴板！");
+      }
+    },
+    async toInsertFromClipboard() {
+      let readResult = await this.tool.readClipboardText();
+      if (!readResult.success) {
+        this.tool.warn("请允许访问剪贴板！");
+        return;
+      }
+      let str = readResult.text;
+      if (this.tool.isEmpty(str)) {
+        this.tool.warn("不是有效工具箱数据！");
+        return;
+      }
+      let ss = str.split(";data:");
+      if (ss.length < 2) {
+        this.tool.warn("不是有效工具箱数据！");
+        return;
+      }
+      str = ss[ss.length - 1];
+      try {
+        let json = JSON.parse(this.tool.aesDecrypt(str));
+        this.tool.stopEvent();
+        if (
+          !json.isToolboxData ||
+          this.tool.isEmpty(json.toolboxType) ||
+          json.data == null
+        ) {
+          this.tool.warn("不是有效工具箱数据！");
+          return;
+        }
+        let toolboxType = this.toolboxTypeMap[json.toolboxType];
+        if (toolboxType == null) {
+          this.tool.warn("不是有效工具箱数据！");
+          return;
+        }
+        let toolboxData = {};
+        Object.assign(toolboxData, json.data);
+        delete toolboxData.toolboxId;
+
+        let optionsJSON = this.tool.getOptionJSON(toolboxData.option);
+
+        this.$refs.InsertToolbox.show({
+          title: `新增[${toolboxType.text}]工具`,
+          form: [this.form.toolbox, toolboxType.configForm],
+          data: [toolboxData, optionsJSON],
+          toolboxType,
+          selectGroup: this.selectGroup,
+        });
+      } catch (e) {
+        this.tool.warn("不是有效工具箱数据！");
+        return;
+      }
     },
     toCopy(toolboxType, copy) {
       this.tool.stopEvent();
