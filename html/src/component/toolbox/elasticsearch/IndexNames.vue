@@ -118,6 +118,7 @@ export default {
         title: data.name,
         type: "data",
         indexName: data.name,
+        onlyOpenOneKey: "elasticsearch:data:indexName" + data.name,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },

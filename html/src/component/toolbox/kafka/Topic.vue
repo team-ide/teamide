@@ -117,6 +117,7 @@ export default {
         title: data.name,
         type: "data",
         topic: data.name,
+        onlyOpenOneKey: "kafka:data:topic" + data.name,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
