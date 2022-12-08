@@ -13,6 +13,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
+	github.com/mssola/user_agent v0.5.3
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/pkg/sftp v1.13.5
 	github.com/robfig/cron/v3 v3.0.1
@@ -71,7 +72,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/mssola/user_agent v0.5.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

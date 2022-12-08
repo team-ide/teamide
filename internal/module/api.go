@@ -10,15 +10,20 @@ import (
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/internal/module/module_database"
+	"teamide/internal/module/module_elasticsearch"
 	"teamide/internal/module/module_file_manager"
+	"teamide/internal/module/module_kafka"
 	"teamide/internal/module/module_log"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_power"
+	"teamide/internal/module/module_redis"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_terminal"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
+	"teamide/internal/module/module_zookeeper"
 	"teamide/pkg/util"
 )
 
@@ -132,6 +137,11 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_file_manager.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
 	apis = append(apis, module_terminal.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
 	apis = append(apis, module_user.NewApi(this_.userService).GetApis()...)
+	apis = append(apis, module_redis.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_database.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_zookeeper.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_kafka.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_elasticsearch.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }

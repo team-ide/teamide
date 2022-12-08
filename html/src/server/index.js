@@ -6,6 +6,12 @@ import fileManager from "./fileManager.js";
 import terminal from "./terminal.js";
 import user from "./user.js";
 
+import database from "./database.js";
+import elasticsearch from "./elasticsearch.js";
+import kafka from "./kafka.js";
+import zookeeper from "./zookeeper.js";
+import redis from "./redis.js";
+
 import tool from '../tool/index.js';
 import source from '../source/index.js';
 let server = {
@@ -14,6 +20,11 @@ let server = {
     fileManager,
     terminal,
     user,
+    database,
+    elasticsearch,
+    kafka,
+    zookeeper,
+    redis,
     data(param) {
         param = param || {};
         param.origin = location.origin;
