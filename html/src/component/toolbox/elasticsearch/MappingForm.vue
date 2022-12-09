@@ -78,7 +78,7 @@ export default {
           }
           this.mappingJSON = JSON.stringify(data, null, "    ");
         } catch (e) {
-          this.mappingJSON = e;
+          this.mappingJSON = e.toString();
         }
       }
     },
@@ -105,7 +105,7 @@ export default {
         try {
           mapping = eval("(" + this.mappingValue + ")");
         } catch (error2) {
-          this.tool.error("请输入有效JSON:" + e);
+          this.tool.error("请输入有效JSON:" + e.toString());
           return;
         }
       }

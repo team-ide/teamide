@@ -3,13 +3,13 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="400px" class="">
-          <Topic
-            ref="Topic"
+          <Topics
+            ref="Topics"
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
           >
-          </Topic>
+          </Topics>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
@@ -24,12 +24,12 @@
 
 
 <script>
-import Topic from "./Topic";
+import Topics from "./Topics";
 import Tabs from "./Tabs";
 import TopicForm from "./TopicForm";
 import ShowInfo from "./ShowInfo";
 export default {
-  components: { Topic, Tabs, TopicForm, ShowInfo },
+  components: { Topics, Tabs, TopicForm, ShowInfo },
   props: ["source", "toolboxWorker", "extend"],
   data() {
     return {
@@ -43,7 +43,7 @@ export default {
       this.ready = true;
     },
     refresh() {
-      this.$refs.Topic.refresh();
+      this.$refs.Topics.refresh();
     },
   },
   created() {},

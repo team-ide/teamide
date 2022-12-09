@@ -163,7 +163,7 @@ export default {
             fromData = jsYaml.load(value);
           }
         } catch (e) {
-          this.error = e;
+          this.error = e.toString();
         }
       }
 
@@ -184,7 +184,7 @@ export default {
           value = jsYaml.dump(fromData);
         }
       } catch (e) {
-        data.error = e;
+        data.error = e.toString();
       }
       return value;
     },

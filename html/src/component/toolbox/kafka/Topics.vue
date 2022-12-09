@@ -44,7 +44,7 @@
                   :key="index"
                   v-if="
                     tool.isEmpty(searchForm.pattern) ||
-                    one.name
+                    one.topic
                       .toLowerCase()
                       .indexOf(searchForm.pattern.toLowerCase()) >= 0
                   "
@@ -53,7 +53,7 @@
                   @contextmenu="dataContextmenu(one)"
                 >
                   <div class="data-list-one-text">
-                    {{ one.name }}
+                    {{ one.topic }}
                   </div>
                 </div>
               </template>
@@ -113,18 +113,18 @@ export default {
     },
     toOpenTopic(data) {
       let extend = {
-        name: data.name,
-        title: data.name,
+        name: data.topic,
+        title: data.topic,
         type: "data",
-        topic: data.name,
-        onlyOpenOneKey: "kafka:data:topic" + data.name,
+        topic: data.topic,
+        onlyOpenOneKey: "kafka:data:topic" + data.topic,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
     dataContextmenu(data) {
       let menus = [];
       menus.push({
-        header: data.name,
+        header: data.topic,
       });
       menus.push({
         text: "数据",
@@ -153,12 +153,12 @@ export default {
     },
     async doInsert(dataList) {
       let data = dataList[0];
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         topic: data.topic,
         numPartitions: Number(data.numPartitions),
         replicationFactor: Number(data.replicationFactor),
-      };
-      let res = await this.toolboxWorker.work("createTopic", param);
+      });
+      let res = await this.server.kafka.createTopic(param);
       if (res.code == 0) {
         await this.loadTopics();
         return true;
@@ -168,20 +168,20 @@ export default {
     },
     toDelete(data) {
       let msg = "确认删除";
-      msg += "主题[" + data.name + "]";
+      msg += "主题[" + data.topic + "]";
       msg += "?";
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doDelete(data.name);
+          this.doDelete(data.topic);
         })
         .catch((e) => {});
     },
     async doDelete(topic) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         topic: topic,
-      };
-      let res = await this.toolboxWorker.work("deleteTopic", param);
+      });
+      let res = await this.server.kafka.deleteTopic(param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.loadTopics();
@@ -189,18 +189,9 @@ export default {
     },
     async loadTopics() {
       this.topics = null;
-      let param = {};
-      let res = await this.toolboxWorker.work("topics", param);
-      res.data = res.data || {};
-      res.data.topics = res.data.topics || [];
-      let topics = [];
-      res.data.topics.forEach((one) => {
-        let topic = {};
-        topic.name = one;
-
-        topics.push(topic);
-      });
-      this.topics = topics;
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.kafka.topics(param);
+      this.topics = res.data || [];
     },
   },
   created() {},

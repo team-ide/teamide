@@ -214,9 +214,8 @@ export default {
     },
     async doPush(dataList) {
       let data = dataList[0];
-      let param = {};
-      Object.assign(param, data);
-      let res = await this.toolboxWorker.work("push", param);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, data));
+      let res = await this.server.kafka.push(param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -249,9 +248,8 @@ export default {
         .catch((e) => {});
     },
     async doCommit(data) {
-      let param = {};
-      Object.assign(param, data);
-      let res = await this.toolboxWorker.work("commit", param);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, data));
+      let res = await this.server.kafka.commit(param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -281,9 +279,8 @@ export default {
         .catch((e) => {});
     },
     async doDelete(data) {
-      let param = {};
-      Object.assign(param, data);
-      let res = await this.toolboxWorker.work("deleteRecords", param);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, data));
+      let res = await this.server.kafka.deleteRecords(param);
       if (res.code == 0) {
         this.doPull();
         return true;
@@ -307,7 +304,7 @@ export default {
             let jsonStr = JSON.stringify(data, null, "    ");
             jsonValue = JSON.parse(jsonStr);
           } catch (e) {
-            this.form.valueJson = e;
+            this.form.valueJson = e.toString();
           }
         }
         for (let key in jsonValue) {
@@ -342,11 +339,11 @@ export default {
     async doPull() {
       this.dataListLoading = true;
       try {
-        let param = {};
-        Object.assign(param, this.pullForm);
-        let res = await this.toolboxWorker.work("pull", param);
-        res.data = res.data || {};
-        let dataList = res.data.msgList || [];
+        let param = this.toolboxWorker.getWorkParam(
+          Object.assign({}, this.pullForm)
+        );
+        let res = await this.server.kafka.pull(param);
+        let dataList = res.data || [];
         this.initDataList(dataList);
         this.dataList = dataList;
       } catch (error) {}

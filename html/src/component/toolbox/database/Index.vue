@@ -169,7 +169,7 @@ export default {
           value = this.tool.formatDate(new Date(value), "yyyy-MM-dd hh:mm:ss");
         }
       } catch (e) {
-        this.tool.error(e);
+        this.tool.error(e.toString());
       }
       return value;
     },

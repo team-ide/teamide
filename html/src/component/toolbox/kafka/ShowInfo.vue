@@ -20,10 +20,10 @@ export default {
       this.showDialog = false;
     },
     async loadInfo() {
-      let param = {};
-      let res = await this.toolboxWorker.work("info", param);
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.kafka.info(param);
       res.data = res.data || {};
-      return res.data.info;
+      return res.data;
     },
     init() {},
   },

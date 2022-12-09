@@ -113,6 +113,12 @@ func (this_ *SaramaService) getClient() (saramaClient sarama.Client, err error) 
 	}
 	return
 }
+
+func (this_ *SaramaService) Info() (res interface{}, err error) {
+
+	return
+}
+
 func closeSaramaClient(saramaClient sarama.Client) {
 	_ = saramaClient.Close()
 }
@@ -120,19 +126,31 @@ func closeClusterAdmin(clusterAdmin sarama.ClusterAdmin) {
 	_ = clusterAdmin.Close()
 }
 
-func (this_ *SaramaService) GetTopics() (topics []string, err error) {
+type TopicInfo struct {
+	Topic string `json:"topic"`
+}
+
+func (this_ *SaramaService) GetTopics() (res []*TopicInfo, err error) {
 	var saramaClient sarama.Client
 	saramaClient, err = this_.getClient()
 	if err != nil {
 		return
 	}
 	defer closeSaramaClient(saramaClient)
-	topics, err = saramaClient.Topics()
+	topics, err := saramaClient.Topics()
 	if err != nil {
 		return
 	}
 
 	sort.Strings(topics)
+
+	for _, topic := range topics {
+		info := &TopicInfo{
+			Topic: topic,
+		}
+		res = append(res, info)
+	}
+
 	return
 }
 
@@ -357,7 +375,7 @@ func (this_ *SaramaService) DeleteRecords(topic string, partitionOffsets map[int
 	return
 }
 
-//NewSyncProducer 创建生产者
+// NewSyncProducer 创建生产者
 func (this_ *SaramaService) NewSyncProducer() (syncProducer sarama.SyncProducer, err error) {
 
 	config := sarama.NewConfig()

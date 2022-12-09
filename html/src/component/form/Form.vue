@@ -336,7 +336,7 @@ export default {
             }
             jsonString = JSON.stringify(json, null, "  ");
           } catch (e) {
-            jsonString = e;
+            jsonString = e.toString();
           }
         }
         jsonView.value = jsonString;

@@ -221,7 +221,7 @@ export default {
             this.last_session.close();
           }
         } catch (e) {}
-        this.term.write("\r\nzsentry consume error:" + e);
+        this.term.write("\r\nzsentry consume error:" + e.toString());
         this.term.write("\r\n关闭当前会话");
         this.zsentry = this.NewSentry();
         this.worker.closeSocket();

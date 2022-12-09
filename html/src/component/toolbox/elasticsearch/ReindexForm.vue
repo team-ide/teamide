@@ -72,7 +72,7 @@ export default {
         try {
           mapping = eval("(" + this.mappingValue + ")");
         } catch (error2) {
-          this.tool.error("请输入有效JSON:" + e);
+          this.tool.error("请输入有效JSON:" + e.toString());
           return;
         }
       }

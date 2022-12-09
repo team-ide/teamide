@@ -49,6 +49,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	}
 	return
 }
+
 func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
 	key := "zookeeper-" + zkConfig.Address
 	if zkConfig.Username != "" {

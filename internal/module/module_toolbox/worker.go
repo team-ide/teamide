@@ -325,28 +325,6 @@ func (this_ *ToolboxService) Work(requestBean *base.RequestBean, toolboxId int64
 		config.Auth = this_.DecryptOptionAttr(config.Auth)
 		res, err = toolbox.RedisWork(work, config, data)
 		break
-	case kafkaWorker_:
-		var config *kafka.Config
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		if config.CertPath != "" {
-			config.CertPath = this_.GetFilesFile(config.CertPath)
-		}
-		config.Password = this_.DecryptOptionAttr(config.Password)
-		res, err = toolbox.KafkaWork(work, config, data)
-		break
-	case otherWorker_:
-		var config *toolbox.OtherConfig
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		res, err = toolbox.OtherWork(work, config, data)
-		break
-	case sshWorker_:
-		break
 	}
 	if err != nil {
 		return
