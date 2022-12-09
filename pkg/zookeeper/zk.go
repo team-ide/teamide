@@ -26,7 +26,7 @@ func CreateZKService(config Config) (service *ZKService, err error) {
 	return
 }
 
-//ZKService 注册处理器在线信息等
+// ZKService 注册处理器在线信息等
 type ZKService struct {
 	address     string
 	username    string
@@ -94,7 +94,7 @@ func (this_ *ZKService) Stop() {
 	this_.GetConn().Close()
 }
 
-//Create 创建节点
+// Create 创建节点
 func (this_ *ZKService) Create(path string, data []byte, mode int32) (err error) {
 	isExist, err := this_.Exists(path)
 	if err != nil {
@@ -148,7 +148,7 @@ func (this_ *ZKService) SetData(path string, data []byte) (err error) {
 	return nil
 }
 
-//CreateIfNotExists 一层层检查，如果不存在则创建父节点
+// CreateIfNotExists 一层层检查，如果不存在则创建父节点
 func (this_ *ZKService) CreateIfNotExists(path string, data []byte) (err error) {
 	isExist, err := this_.Exists(path)
 	if err != nil {
@@ -172,7 +172,7 @@ func (this_ *ZKService) CreateIfNotExists(path string, data []byte) (err error) 
 	return nil
 }
 
-//Exists 判断节点是否存在
+// Exists 判断节点是否存在
 func (this_ *ZKService) Exists(path string) (isExist bool, err error) {
 	isExist, _, err = this_.GetConn().Exists(path)
 	return
@@ -192,14 +192,24 @@ type StatInfo struct {
 	Pzxid          int64 `json:"pzxid,omitempty"`
 }
 
-//Get 判断节点是否存在
-func (this_ *ZKService) Get(path string) (data []byte, info *StatInfo, err error) {
+type NodeInfo struct {
+	Path string    `json:"path"`
+	Data string    `json:"data"`
+	Stat *StatInfo `json:"stat"`
+}
+
+// Get 判断节点是否存在
+func (this_ *ZKService) Get(path string) (info *NodeInfo, err error) {
+
 	data, stat, err := this_.GetConn().Get(path)
 	if err != nil {
 		return
 	}
+	info = &NodeInfo{}
+	info.Data = string(data)
+
 	if stat != nil {
-		info = &StatInfo{
+		info.Stat = &StatInfo{
 			Czxid:          stat.Czxid,
 			Mzxid:          stat.Mzxid,
 			Ctime:          stat.Ctime,
@@ -216,7 +226,7 @@ func (this_ *ZKService) Get(path string) (data []byte, info *StatInfo, err error
 	return
 }
 
-//Stat 判断节点是否存在
+// Stat 判断节点是否存在
 func (this_ *ZKService) Stat(path string) (info *StatInfo, err error) {
 	_, stat, err := this_.GetConn().Exists(path)
 	if err != nil {
@@ -240,14 +250,14 @@ func (this_ *ZKService) Stat(path string) (info *StatInfo, err error) {
 	return
 }
 
-//GetChildren 判断节点是否存在
+// GetChildren 判断节点是否存在
 func (this_ *ZKService) GetChildren(path string) (children []string, err error) {
 	children, _, err = this_.GetConn().Children(path)
 	sort.Strings(children)
 	return
 }
 
-//Delete 判断节点是否存在
+// Delete 判断节点是否存在
 func (this_ *ZKService) Delete(path string) (err error) {
 	var isExist bool
 	var stat *zk.Stat

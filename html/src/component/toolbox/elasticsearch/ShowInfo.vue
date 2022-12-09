@@ -17,10 +17,9 @@ export default {
       this.toolboxWorker.showJSONData(infoData);
     },
     async loadInfo() {
-      let param = {};
-      let res = await this.toolboxWorker.work("info", param);
-      res.data = res.data || {};
-      return res.data.info;
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.elasticsearch.info(param);
+      return res.data;
     },
     init() {},
   },

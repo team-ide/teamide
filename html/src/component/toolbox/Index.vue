@@ -97,6 +97,7 @@ import Page from "./Page.vue";
 import NodeEditor from "./node/Index.vue";
 import FileManagerEditor from "./file-manager/Index.vue";
 import TerminalEditor from "./terminal/Index.vue";
+import toolboxWorker_ from './toolboxWorker.js';
 
 export default {
   components: {
@@ -107,7 +108,7 @@ export default {
   },
   props: ["source", "extend", "toolboxType", "toolboxId", "openId"],
   data() {
-    let toolboxWorker = this.tool.newToolboxWorker({
+    let toolboxWorker = toolboxWorker_.newToolboxWorker({
       toolboxId: this.toolboxId,
       openId: this.openId,
       toolboxType: this.toolboxType,

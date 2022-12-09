@@ -8,13 +8,11 @@ import md5 from 'js-md5';
 import cryptoJS from 'crypto-js';
 import keyCode from '@/tool/keyCode.js';
 import itemsWorker from './itemsWorker.js';
-import toolboxWorker from './toolboxWorker.js';
 
 let tool = {};
 Object.assign(tool, tm);
 Object.assign(tool, keyCode.keyEvent);
 tool.newItemsWorker = itemsWorker.newItemsWorker;
-tool.newToolboxWorker = toolboxWorker.newToolboxWorker;
 tool.md5 = md5;
 tool.jQuery = jQuery;
 

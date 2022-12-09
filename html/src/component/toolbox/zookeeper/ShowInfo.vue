@@ -17,10 +17,10 @@ export default {
       this.toolboxWorker.showJSONData(infoData);
     },
     async loadInfo() {
-      let param = {};
-      let res = await this.toolboxWorker.work("info", param);
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.zookeeper.info(param);
       res.data = res.data || {};
-      return res.data.info;
+      return res.data;
     },
     init() {},
   },

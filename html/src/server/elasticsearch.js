@@ -4,8 +4,8 @@ let elasticsearch = {
     info(param) {
         return http.post('api/elasticsearch/info', param);
     },
-    indexNames(param) {
-        return http.post('api/elasticsearch/indexNames', param);
+    indexes(param) {
+        return http.post('api/elasticsearch/indexes', param);
     },
     createIndex(param) {
         return http.post('api/elasticsearch/createIndex', param);

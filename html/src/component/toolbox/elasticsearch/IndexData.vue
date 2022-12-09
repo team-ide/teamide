@@ -490,12 +490,12 @@ export default {
       });
     },
     async doInsert(data) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: data.indexName,
         doc: data.doc,
         id: data.id,
-      };
-      let res = await this.toolboxWorker.work("insertData", param);
+      });
+      let res = await this.server.elasticsearch.insertData(param);
       if (res.code == 0) {
         await this.toSearch();
         return true;
@@ -528,12 +528,12 @@ export default {
       });
     },
     async doUpdate(data) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: data.indexName,
         doc: data.doc,
         id: data.id,
-      };
-      let res = await this.toolboxWorker.work("updateData", param);
+      });
+      let res = await this.server.elasticsearch.updateData(param);
       if (res.code == 0) {
         await this.toSearch();
         return true;
@@ -543,11 +543,12 @@ export default {
     },
     async doDelete(data) {
       let indexName = this.indexName;
-      let param = {
+
+      let param = this.toolboxWorker.getWorkParam({
         indexName: indexName,
         id: data._id,
-      };
-      let res = await this.toolboxWorker.work("deleteData", param);
+      });
+      let res = await this.server.elasticsearch.deleteData(param);
       if (res.code == 0) {
         this.doSearch();
         return true;
@@ -566,8 +567,8 @@ export default {
       this.dataListLoading = true;
       try {
         await this.initMapping();
-        let param = {};
-        Object.assign(param, this.searchForm);
+        let data = {};
+        Object.assign(data, this.searchForm);
         let whereList = [];
         let orderList = [];
         this.searchForm.whereList.forEach((one) => {
@@ -580,14 +581,15 @@ export default {
             orderList.push(one);
           }
         });
-        param.whereList = whereList;
-        param.orderList = orderList;
+        data.whereList = whereList;
+        data.orderList = orderList;
 
-        param.pageIndex = Number(this.pageIndex);
-        param.pageSize = Number(this.pageSize);
-        let res = await this.toolboxWorker.work("search", param);
-        res.data = res.data || {};
-        let result = res.data.result || {};
+        data.pageIndex = Number(this.pageIndex);
+        data.pageSize = Number(this.pageSize);
+        let param = this.toolboxWorker.getWorkParam(data);
+
+        let res = await this.server.elasticsearch.search(param);
+        let result = res.data || {};
         let hits = result.hits || [];
         hits.forEach((one) => {
           one._source = this.formatSourceJSON(one._source);

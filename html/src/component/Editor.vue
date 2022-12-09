@@ -18,7 +18,7 @@ export default {
         if (value == null) {
           value = "";
         }
-        if (!this.getValue() != value) {
+        if (this.getValue() != value) {
           this.isSetValue = true;
           this.monacoInstance.setValue(value);
         }

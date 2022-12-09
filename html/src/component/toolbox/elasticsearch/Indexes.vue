@@ -1,5 +1,5 @@
 <template>
-  <div class="toolbox-elasticsearch-indexName">
+  <div class="toolbox-elasticsearch-index">
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="80px">
@@ -8,7 +8,7 @@
               <el-input v-model="searchForm.pattern" style="width: 300px" />
             </el-form-item>
             <el-form-item label="" class="mgb-5">
-              <div class="tm-btn tm-btn-xs bg-grey-6" @click="loadIndexNames">
+              <div class="tm-btn tm-btn-xs bg-grey-6" @click="loadIndexes">
                 刷新
               </div>
               <div class="tm-btn tm-btn-xs bg-teal-8" @click="toInsert">
@@ -24,27 +24,27 @@
           </el-form>
         </tm-layout>
         <tm-layout height="auto">
-          <template v-if="indexNames == null">
+          <template v-if="indexes == null">
             <div class="text-center ft-13 pdtb-10">数据加载中，请稍后!</div>
           </template>
-          <template v-else-if="indexNames.length == 0">
+          <template v-else-if="indexes.length == 0">
             <div class="text-center ft-13 pdtb-10">暂无匹配数据!</div>
           </template>
           <template v-else>
             <div class="text-center ft-13 pdtb-10" style="height: 40px">
-              IndexNames （{{ indexNames.length }}）
+              Indexes （{{ indexes.length }}）
               <span class="color-orange">双击查看Index数据</span>
             </div>
             <div
               class="data-list-box app-scroll-bar"
               style="height: calc(100% - 40px); user-select: text"
             >
-              <template v-for="(one, index) in indexNames">
+              <template v-for="(one, index) in indexes">
                 <div
                   :key="index"
                   v-if="
                     tool.isEmpty(searchForm.pattern) ||
-                    one.name
+                    one.indexName
                       .toLowerCase()
                       .indexOf(searchForm.pattern.toLowerCase()) >= 0
                   "
@@ -53,7 +53,7 @@
                   @contextmenu="dataContextmenu(one)"
                 >
                   <div class="data-list-one-text">
-                    {{ one.name }}
+                    {{ one.indexName }}
                   </div>
                 </div>
               </template>
@@ -82,7 +82,7 @@ export default {
       searchForm: {
         pattern: null,
       },
-      indexNames: null,
+      indexes: null,
     };
   },
   computed: {},
@@ -91,10 +91,10 @@ export default {
     init() {
       this.toolboxWorker.getMapping = this.getMapping;
       this.ready = true;
-      this.loadIndexNames();
+      this.loadIndexes();
     },
     refresh() {
-      this.loadIndexNames();
+      this.loadIndexes();
     },
     rowClick(data) {
       this.rowClickTimeCache = this.rowClickTimeCache || {};
@@ -114,18 +114,18 @@ export default {
     },
     toOpenIndexName(data) {
       let extend = {
-        name: data.name,
-        title: data.name,
+        name: data.indexName,
+        title: data.indexName,
         type: "data",
-        indexName: data.name,
-        onlyOpenOneKey: "elasticsearch:data:indexName" + data.name,
+        indexName: data.indexName,
+        onlyOpenOneKey: "elasticsearch:data:indexName" + data.indexName,
       };
       this.toolboxWorker.openTabByExtend(extend);
     },
     dataContextmenu(data) {
       let menus = [];
       menus.push({
-        header: data.name,
+        header: data.indexName,
       });
       menus.push({
         text: "数据",
@@ -172,13 +172,13 @@ export default {
     },
     async doInsert(dataList) {
       let data = dataList[0];
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: data.indexName,
         mapping: data.mapping,
-      };
-      let res = await this.toolboxWorker.work("createIndex", param);
+      });
+      let res = await this.server.elasticsearch.createIndex(param);
       if (res.code == 0) {
-        await this.loadIndexNames();
+        await this.loadIndexes();
         return true;
       } else {
         return false;
@@ -187,7 +187,7 @@ export default {
     toReindex(data) {
       this.toolboxWorker.showReindexForm(
         {
-          indexName: data.name,
+          indexName: data.indexName,
         },
         async (m) => {
           let flag = await this.doReindex(m);
@@ -196,13 +196,13 @@ export default {
       );
     },
     async doReindex(data) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         sourceIndexName: data.sourceIndexName,
         destIndexName: data.destIndexName,
-      };
-      let res = await this.toolboxWorker.work("reindex", param);
+      });
+      let res = await this.server.elasticsearch.reindex(param);
       if (res.code == 0) {
-        await this.loadIndexNames();
+        await this.loadIndexes();
         return true;
       } else {
         return false;
@@ -210,17 +210,17 @@ export default {
     },
     toDelete(data) {
       let msg = "确认删除";
-      msg += "索引[" + data.name + "]";
+      msg += "索引[" + data.indexName + "]";
       msg += "?";
       this.tool
         .confirm(msg)
         .then(async () => {
-          this.doDelete(data.name);
+          this.doDelete(data.indexName);
         })
         .catch((e) => {});
     },
     async toUpdateMapping(data) {
-      let indexName = data.name;
+      let indexName = data.indexName;
       let mapping = await this.getMapping(indexName);
       this.toolboxWorker.showMappingForm(
         {
@@ -234,45 +234,35 @@ export default {
       );
     },
     async doDelete(indexName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: indexName,
-      };
-      let res = await this.toolboxWorker.work("deleteIndex", param);
+      });
+      let res = await this.server.elasticsearch.deleteIndex(param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
-        this.loadIndexNames();
+        this.loadIndexes();
       }
     },
-    async loadIndexNames() {
-      this.indexNames = null;
-      let param = {};
-      let res = await this.toolboxWorker.work("indexNames", param);
-      res.data = res.data || {};
-      res.data.indexNames = res.data.indexNames || [];
-      let indexNames = [];
-      res.data.indexNames.forEach((one) => {
-        let indexName = {};
-        indexName.name = one;
-
-        indexNames.push(indexName);
-      });
-      this.indexNames = indexNames;
+    async loadIndexes() {
+      this.indexes = null;
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.elasticsearch.indexes(param);
+      res.data = res.data || [];
+      this.indexes = res.data || [];
     },
     async getMapping(indexName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: indexName,
-      };
-      let res = await this.toolboxWorker.work("getMapping", param);
-      res.data = res.data || {};
-      res.data.mapping = res.data.mapping || {};
-      return res.data.mapping;
+      });
+      let res = await this.server.elasticsearch.getMapping(param);
+      return res.data || {};
     },
     async putMapping(indexName, mapping) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         indexName: indexName,
         mapping: mapping,
-      };
-      let res = await this.toolboxWorker.work("putMapping", param);
+      });
+      let res = await this.server.elasticsearch.putMapping(param);
       if (res.code != 0) {
         return false;
       }
@@ -287,7 +277,7 @@ export default {
 </script>
 
 <style>
-.toolbox-elasticsearch-indexName {
+.toolbox-elasticsearch-index {
   width: 100%;
   height: 100%;
 }

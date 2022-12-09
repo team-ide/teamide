@@ -377,8 +377,7 @@ export default {
         resolve([]);
         this.initTreeWidth();
       } else {
-        res.data = res.data || {};
-        let list = res.data.children || [];
+        let list = res.data || [];
         let dataList = [];
         list.forEach((one) => {
           let oneData = Object.assign({}, one);
@@ -451,32 +450,25 @@ export default {
         })
         .catch((e) => {});
     },
-    async loadHasChildren(path) {
-      let param = {
-        path: path,
-      };
-      let res = await this.toolboxWorker.work("hasChildren", param);
-      return res;
-    },
     async loadChildren(path) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         path: path,
-      };
-      let res = await this.toolboxWorker.work("getChildren", param);
+      });
+      let res = await this.server.zookeeper.getChildren(param);
       return res;
     },
     async get(path) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         path: path,
-      };
-      let res = await this.toolboxWorker.work("get", param);
+      });
+      let res = await this.server.zookeeper.get(param);
       return res.data;
     },
     async doSave() {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         path: this.form.path,
         data: this.form.value,
-      };
+      });
 
       if (this.tool.isEmpty(param.path)) {
         this.tool.error("路径不能为空！");
@@ -487,7 +479,7 @@ export default {
         return;
       }
 
-      let res = await this.toolboxWorker.work("save", param);
+      let res = await this.server.zookeeper.save(param);
       if (res.code == 0) {
         this.tool.success("保存成功!");
 
@@ -505,10 +497,10 @@ export default {
       }
     },
     async doDelete(path) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         path: path,
-      };
-      let res = await this.toolboxWorker.work("delete", param);
+      });
+      let res = await this.server.zookeeper.delete(param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
 

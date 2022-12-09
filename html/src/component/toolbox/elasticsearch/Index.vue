@@ -3,13 +3,13 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout width="400px" class="">
-          <IndexNames
-            ref="ToolboxElasticsearchIndexNames"
+          <Indexes
+            ref="Indexes"
             :source="source"
             :toolboxWorker="toolboxWorker"
             :extend="extend"
           >
-          </IndexNames>
+          </Indexes>
         </tm-layout>
         <tm-layout-bar right></tm-layout-bar>
         <tm-layout width="auto">
@@ -28,7 +28,7 @@
 
 
 <script>
-import IndexNames from "./IndexNames";
+import Indexes from "./Indexes";
 import Tabs from "./Tabs";
 import ReindexForm from "./ReindexForm";
 import MappingForm from "./MappingForm";
@@ -36,7 +36,7 @@ import DataForm from "./DataForm";
 import ShowInfo from "./ShowInfo";
 export default {
   components: {
-    IndexNames,
+    Indexes,
     Tabs,
     ReindexForm,
     MappingForm,
@@ -56,7 +56,7 @@ export default {
       this.ready = true;
     },
     refresh() {
-      this.$refs.ToolboxElasticsearchIndexNames.refresh();
+      this.$refs.Indexes.refresh();
     },
   },
   created() {},

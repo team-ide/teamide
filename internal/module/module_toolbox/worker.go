@@ -3,6 +3,7 @@ package module_toolbox
 import (
 	"encoding/json"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"strconv"
 	"teamide/internal/base"
 	"teamide/pkg/db"
@@ -153,6 +154,103 @@ func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, er
 	return
 }
 
+type BindConfigRequest struct {
+	ToolboxId   int64  `json:"toolboxId,omitempty"`
+	ToolboxType string `json:"toolboxType,omitempty"`
+}
+
+func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (err error) {
+	bindConfigRequest := &BindConfigRequest{}
+	if !base.RequestJSON(bindConfigRequest, c) {
+		return
+	}
+
+	find, err := this_.Get(bindConfigRequest.ToolboxId)
+	if err != nil {
+		return
+	}
+	if find != nil && find.UserId != 0 {
+		if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+			err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+			return
+		}
+	}
+	if find == nil {
+		find = this_.GetOtherToolbox(bindConfigRequest.ToolboxId)
+	}
+	var toolboxType string
+	option := ""
+	if find != nil {
+		if find.ToolboxType != "" {
+			toolboxType = find.ToolboxType
+		}
+		option = find.Option
+	}
+
+	if toolboxType == "" {
+		return
+	}
+
+	toolboxWorker := GetWorker(toolboxType)
+	if toolboxWorker == nil {
+		//err = errors.New("不支持的工具类型[" + toolboxType + "]")
+		return
+	}
+
+	optionBytes := []byte(option)
+
+	if len(optionBytes) > 0 {
+		optionData := map[string]interface{}{}
+		e := json.Unmarshal(optionBytes, &optionData)
+		if e == nil {
+			strV, strVOk := optionData["port"].(string)
+			if strVOk {
+				if strV == "" {
+					delete(optionData, "port")
+				} else {
+					optionData["port"], _ = strconv.Atoi(strV)
+				}
+				optionBytes, _ = json.Marshal(optionData)
+			}
+		}
+	}
+
+	err = json.Unmarshal(optionBytes, &config)
+	if err != nil {
+		return
+	}
+	switch conf := config.(type) {
+	case *db.DatabaseConfig:
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
+	case *redis.Config:
+		if conf.CertPath != "" {
+			conf.CertPath = this_.GetFilesFile(conf.CertPath)
+		}
+		conf.Auth = this_.DecryptOptionAttr(conf.Auth)
+		break
+	case *zookeeper.Config:
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
+	case *elasticsearch.Config:
+		if conf.CertPath != "" {
+			conf.CertPath = this_.GetFilesFile(conf.CertPath)
+		}
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
+	case *kafka.Config:
+		if conf.CertPath != "" {
+			conf.CertPath = this_.GetFilesFile(conf.CertPath)
+		}
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
+	}
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Work 执行
 func (this_ *ToolboxService) Work(requestBean *base.RequestBean, toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
 
@@ -226,27 +324,6 @@ func (this_ *ToolboxService) Work(requestBean *base.RequestBean, toolboxId int64
 		}
 		config.Auth = this_.DecryptOptionAttr(config.Auth)
 		res, err = toolbox.RedisWork(work, config, data)
-		break
-	case zookeeperWorker_:
-		var config *zookeeper.Config
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		config.Password = this_.DecryptOptionAttr(config.Password)
-		res, err = toolbox.ZKWork(work, config, data)
-		break
-	case elasticsearchWorker_:
-		var config *elasticsearch.Config
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		if config.CertPath != "" {
-			config.CertPath = this_.GetFilesFile(config.CertPath)
-		}
-		config.Password = this_.DecryptOptionAttr(config.Password)
-		res, err = toolbox.ESWork(work, config, data)
 		break
 	case kafkaWorker_:
 		var config *kafka.Config

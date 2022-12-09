@@ -19,16 +19,29 @@ const newToolboxWorker = function (workerOption) {
             worker.openTabByExtend(item.extend, item, item.createTime)
         },
     });
+    let workerId = "";
+    if (tool.isNotEmpty(workerOption.openId)) {
+        workerId = "" + workerOption.openId;
+    } else {
+        workerId = tool.generatekey(30);
+    }
     const worker = {
         toolboxId: workerOption.toolboxId,
         openId: workerOption.openId,
         toolboxType: workerOption.toolboxType,
         extend: workerOption.extend,
-        workerId: tool.generatekey(30),
+        workerId: workerId,
         itemsWorker: itemsWorker,
 
         async init() {
             await this.initOpenTabs()
+        },
+        getWorkParam(data) {
+            data = data || {};
+            data.workerId = worker.workerId
+            data.toolboxId = worker.toolboxId
+            data.toolboxType = worker.toolboxType
+            return data;
         },
         async work(work, data) {
             data = data || {};

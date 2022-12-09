@@ -34,7 +34,7 @@ func CreateESService(config Config) (*V7Service, error) {
 	return service, err
 }
 
-//V7Service 注册处理器在线信息等
+// V7Service 注册处理器在线信息等
 type V7Service struct {
 	url         string
 	username    string
@@ -173,18 +173,28 @@ func (this_ *V7Service) CreateIndex(indexName string, bodyJSON map[string]interf
 	return
 }
 
-func (this_ *V7Service) IndexNames() (res []string, err error) {
+type IndexInfo struct {
+	IndexName string `json:"indexName"`
+}
+
+func (this_ *V7Service) Indexes() (indexes []*IndexInfo, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
 	}
 	//defer client.Stop()
-	res, err = client.IndexNames()
+	indexNames, err := client.IndexNames()
 	if err != nil {
 		return
 	}
 
-	sort.Strings(res)
+	sort.Strings(indexNames)
+	for _, indexName := range indexNames {
+		info := &IndexInfo{
+			IndexName: indexName,
+		}
+		indexes = append(indexes, info)
+	}
 	return
 }
 
