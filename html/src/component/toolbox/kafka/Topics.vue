@@ -163,6 +163,7 @@ export default {
         await this.loadTopics();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -185,12 +186,17 @@ export default {
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.loadTopics();
+      } else {
+        this.tool.error(res.msg);
       }
     },
     async loadTopics() {
       this.topics = null;
       let param = this.toolboxWorker.getWorkParam({});
       let res = await this.server.kafka.topics(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       this.topics = res.data || [];
     },
   },

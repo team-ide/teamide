@@ -220,6 +220,7 @@ export default {
         this.doPull();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -254,6 +255,7 @@ export default {
         this.doPull();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -285,6 +287,7 @@ export default {
         this.doPull();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -343,6 +346,9 @@ export default {
           Object.assign({}, this.pullForm)
         );
         let res = await this.server.kafka.pull(param);
+        if (res.code != 0) {
+          this.tool.error(res.msg);
+        }
         let dataList = res.data || [];
         this.initDataList(dataList);
         this.dataList = dataList;

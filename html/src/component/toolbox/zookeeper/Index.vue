@@ -455,6 +455,9 @@ export default {
         path: path,
       });
       let res = await this.server.zookeeper.getChildren(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       return res;
     },
     async get(path) {
@@ -462,6 +465,9 @@ export default {
         path: path,
       });
       let res = await this.server.zookeeper.get(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       return res.data;
     },
     async doSave() {
@@ -494,6 +500,8 @@ export default {
             path: path,
           });
         }
+      } else {
+        this.tool.error(res.msg);
       }
     },
     async doDelete(path) {
@@ -511,6 +519,8 @@ export default {
           }
           this.reloadChildren(key);
         }
+      } else {
+        this.tool.error(res.msg);
       }
     },
   },

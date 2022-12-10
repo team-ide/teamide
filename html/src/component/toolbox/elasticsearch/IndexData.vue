@@ -500,6 +500,7 @@ export default {
         await this.toSearch();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -538,6 +539,7 @@ export default {
         await this.toSearch();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -553,6 +555,7 @@ export default {
         this.doSearch();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -589,6 +592,9 @@ export default {
         let param = this.toolboxWorker.getWorkParam(data);
 
         let res = await this.server.elasticsearch.search(param);
+        if (res.code != 0) {
+          this.tool.error(res.msg);
+        }
         let result = res.data || {};
         let hits = result.hits || [];
         hits.forEach((one) => {

@@ -181,6 +181,7 @@ export default {
         await this.loadIndexes();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -205,6 +206,7 @@ export default {
         await this.loadIndexes();
         return true;
       } else {
+        this.tool.error(res.msg);
         return false;
       }
     },
@@ -241,12 +243,17 @@ export default {
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.loadIndexes();
+      } else {
+        this.tool.error(res.msg);
       }
     },
     async loadIndexes() {
       this.indexes = null;
       let param = this.toolboxWorker.getWorkParam({});
       let res = await this.server.elasticsearch.indexes(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       res.data = res.data || [];
       this.indexes = res.data || [];
     },
@@ -255,6 +262,9 @@ export default {
         indexName: indexName,
       });
       let res = await this.server.elasticsearch.getMapping(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       return res.data || {};
     },
     async putMapping(indexName, mapping) {
@@ -264,6 +274,7 @@ export default {
       });
       let res = await this.server.elasticsearch.putMapping(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return false;
       }
       return true;
