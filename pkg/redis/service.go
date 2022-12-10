@@ -37,7 +37,7 @@ type Service interface {
 	GetClient(ctx context.Context, database int) (client redis.Cmdable, err error)
 	Exists(ctx context.Context, database int, key string) (res int64, err error)
 	Info(ctx context.Context) (res string, err error)
-	Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error)
+	Keys(ctx context.Context, database int, pattern string, size int64) (keysResult *KeysResult, err error)
 	Get(ctx context.Context, database int, key string, valueStart, valueSize int64) (valueInfo *ValueInfo, err error)
 	Set(ctx context.Context, database int, key string, value string) (err error)
 	Expire(ctx context.Context, database int, key string, expire int64) (res bool, err error)

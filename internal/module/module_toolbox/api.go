@@ -44,8 +44,6 @@ var (
 	PowerQueryOpenTabs       = base.AppendPower(&base.PowerAction{Action: "toolbox_query_open_tabs", Text: "查询工具箱工具打开的Tab", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerCloseTab            = base.AppendPower(&base.PowerAction{Action: "toolbox_close_tab", Text: "工具箱工具关闭Tab", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerUpdateOpenTabExtend = base.AppendPower(&base.PowerAction{Action: "toolbox_update_open_tab_extend", Text: "更新工具箱工具Tab扩展", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerWork                = base.AppendPower(&base.PowerAction{Action: "toolbox_work", Text: "工具箱工具工作", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerDatabaseDownload    = base.AppendPower(&base.PowerAction{Action: "toolbox_database_download", Text: "工具箱数据库下载", Parent: Power, ShouldLogin: true, StandAlone: true})
 
 	PowerQuickCommandQuery  = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_query", Text: "工具快速指令查询", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerQuickCommandInsert = base.AppendPower(&base.PowerAction{Action: "toolbox_quickCommand_insert", Text: "工具快速指令新增", Parent: Power, ShouldLogin: true, StandAlone: true})
@@ -67,7 +65,6 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/update"}, Power: PowerGroupUpdate, Do: this_.updateGroup})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/group/delete"}, Power: PowerGroupDelete, Do: this_.deleteGroup})
 
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/work"}, Power: PowerWork, Do: this_.work})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/open"}, Power: PowerOpen, Do: this_.open})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/getOpen"}, Power: PowerGetOpen, Do: this_.getOpen})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/queryOpens"}, Power: PowerQueryOpens, Do: this_.queryOpens})
@@ -77,7 +74,6 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/openTab"}, Power: PowerOpenTab, Do: this_.openTab})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/closeTab"}, Power: PowerCloseTab, Do: this_.closeTab})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/updateOpenTabExtend"}, Power: PowerUpdateOpenTabExtend, Do: this_.updateOpenTabExtend})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/database/download"}, Power: PowerDatabaseDownload, Do: this_.databaseDownload, IsGet: true})
 
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/query"}, Power: PowerQuickCommandQuery, Do: this_.queryQuickCommand})
 	apis = append(apis, &base.ApiWorker{Apis: []string{"toolbox/quickCommand/insert"}, Power: PowerQuickCommandInsert, Do: this_.insertQuickCommand})

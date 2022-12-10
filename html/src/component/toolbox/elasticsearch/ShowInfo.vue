@@ -19,6 +19,9 @@ export default {
     async loadInfo() {
       let param = this.toolboxWorker.getWorkParam({});
       let res = await this.server.elasticsearch.info(param);
+      if (res.code != 0) {
+        return res.msg;
+      }
       return res.data;
     },
     init() {},

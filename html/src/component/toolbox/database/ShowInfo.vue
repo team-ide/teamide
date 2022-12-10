@@ -17,10 +17,12 @@ export default {
       this.toolboxWorker.showJSONData(infoData);
     },
     async loadInfo() {
-      let param = {};
-      let res = await this.toolboxWorker.work("info", param);
-      res.data = res.data || {};
-      return res.data.info;
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.database.info(param);
+      if (res.code != 0) {
+        return res.msg;
+      }
+      return res.data;
     },
     init() {},
   },

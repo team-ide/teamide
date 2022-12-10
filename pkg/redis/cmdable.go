@@ -9,23 +9,31 @@ import (
 	"time"
 )
 
-func Keys(ctx context.Context, client redis.Cmdable, pattern string, size int64) (count int, keys []string, err error) {
-
+func Keys(ctx context.Context, client redis.Cmdable, database int, pattern string, size int64) (keysResult *KeysResult, err error) {
+	keysResult = &KeysResult{}
 	var list []string
 	cmdKeys := client.Keys(ctx, pattern)
 	list, err = cmdKeys.Result()
 	if err != nil {
 		return
 	}
-	count = len(list)
+	keysResult.Count = len(list)
 
 	sor := sort.StringSlice(list)
 	sor.Sort()
 
-	if int64(count) <= size || size < 0 {
+	var keys []string
+	if int64(keysResult.Count) <= size || size < 0 {
 		keys = list
 	} else {
 		keys = list[0:size]
+	}
+	for _, key := range keys {
+		info := &KeyInfo{
+			Key:      key,
+			Database: database,
+		}
+		keysResult.KeyList = append(keysResult.KeyList, info)
 	}
 	return
 }
@@ -87,13 +95,16 @@ func TTL(ctx context.Context, client redis.Cmdable, key string) (res int64, err 
 	return
 }
 
-func Get(ctx context.Context, client redis.Cmdable, key string, valueStart, valueSize int64) (valueInfo *ValueInfo, err error) {
+func Get(ctx context.Context, client redis.Cmdable, database int, key string, valueStart, valueSize int64) (valueInfo *ValueInfo, err error) {
 	var valueType string
 	valueType, err = ValueType(ctx, client, key)
 	if err != nil {
 		return
 	}
-	valueInfo = &ValueInfo{}
+	valueInfo = &ValueInfo{
+		Key:      key,
+		Database: database,
+	}
 
 	valueInfo.MemoryUsage, _ = MemoryUsage(ctx, client, key)
 	valueInfo.TTL, _ = TTL(ctx, client, key)
@@ -311,13 +322,14 @@ func Del(ctx context.Context, client redis.Cmdable, key string) (count int, err 
 	return
 }
 
-func DelPattern(ctx context.Context, client redis.Cmdable, pattern string) (count int, err error) {
+func DelPattern(ctx context.Context, client redis.Cmdable, database int, pattern string) (count int, err error) {
 	count = 0
-	var keys []string
-	_, keys, err = Keys(ctx, client, pattern, -1)
-
-	for _, key := range keys {
-		cmd := client.Del(ctx, key)
+	keysResult, err := Keys(ctx, client, database, pattern, -1)
+	if err != nil {
+		return
+	}
+	for _, keyInfo := range keysResult.KeyList {
+		cmd := client.Del(ctx, keyInfo.Key)
 		_, err = cmd.Result()
 		if err == nil {
 			count++

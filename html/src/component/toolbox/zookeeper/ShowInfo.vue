@@ -19,7 +19,9 @@ export default {
     async loadInfo() {
       let param = this.toolboxWorker.getWorkParam({});
       let res = await this.server.zookeeper.info(param);
-      res.data = res.data || {};
+      if (res.code != 0) {
+        return res.msg;
+      }
       return res.data;
     },
     init() {},

@@ -98,14 +98,14 @@ func (this_ *ClusterService) Info(ctx context.Context) (res string, err error) {
 	return Info(ctx, client)
 }
 
-func (this_ *ClusterService) Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error) {
+func (this_ *ClusterService) Keys(ctx context.Context, database int, pattern string, size int64) (keysResult *KeysResult, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
 		return
 	}
 
-	return ClusterKeys(ctx, client.(*redis.ClusterClient), pattern, size)
+	return ClusterKeys(ctx, client.(*redis.ClusterClient), database, pattern, size)
 }
 
 func (this_ *ClusterService) Expire(ctx context.Context, database int, key string, expire int64) (res bool, err error) {
@@ -155,7 +155,7 @@ func (this_ *ClusterService) Get(ctx context.Context, database int, key string, 
 		return
 	}
 
-	return Get(ctx, client, key, valueStart, valueSize)
+	return Get(ctx, client, database, key, valueStart, valueSize)
 }
 
 func (this_ *ClusterService) Set(ctx context.Context, database int, key string, value string) (err error) {
@@ -265,15 +265,14 @@ func (this_ *ClusterService) DelPattern(ctx context.Context, database int, patte
 		return
 	}
 
-	var keys []string
-	_, keys, err = ClusterKeys(ctx, client.(*redis.ClusterClient), pattern, -1)
+	keysResult, err := ClusterKeys(ctx, client.(*redis.ClusterClient), database, pattern, -1)
 	if err != nil {
 		return
 	}
 
 	count = 0
-	for _, key := range keys {
-		_, err = Del(ctx, client, key)
+	for _, keyInfo := range keysResult.KeyList {
+		_, err = Del(ctx, client, keyInfo.Key)
 		if err == nil {
 			count++
 		}
@@ -281,8 +280,17 @@ func (this_ *ClusterService) DelPattern(ctx context.Context, database int, patte
 	return
 }
 
-func ClusterKeys(ctx context.Context, client *redis.ClusterClient, pattern string, size int64) (count int, keys []string, err error) {
+type KeysResult struct {
+	Count   int        `json:"count"`
+	KeyList []*KeyInfo `json:"keyList"`
+}
+type KeyInfo struct {
+	Database int    `json:"database"`
+	Key      string `json:"key"`
+}
 
+func ClusterKeys(ctx context.Context, client *redis.ClusterClient, database int, pattern string, size int64) (keysResult *KeysResult, err error) {
+	keysResult = &KeysResult{}
 	var list []string
 	err = client.ForEachMaster(ctx, func(ctx context.Context, client *redis.Client) (err error) {
 
@@ -292,17 +300,24 @@ func ClusterKeys(ctx context.Context, client *redis.ClusterClient, pattern strin
 		if err != nil {
 			return
 		}
-		count += len(ls)
+		keysResult.Count += len(ls)
 		list = append(list, ls...)
 		return
 	})
 	sor := sort.StringSlice(list)
 	sor.Sort()
-	listCount := len(list)
-	if int64(listCount) <= size || size < 0 {
+	var keys []string
+	if int64(keysResult.Count) <= size || size < 0 {
 		keys = list
 	} else {
 		keys = list[0:size]
+	}
+	for _, key := range keys {
+		info := &KeyInfo{
+			Key:      key,
+			Database: database,
+		}
+		keysResult.KeyList = append(keysResult.KeyList, info)
 	}
 	return
 }

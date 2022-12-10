@@ -57,7 +57,7 @@
               <span class="pdlr-2"></span>
               加载
               <span class="color-green pdlr-3">
-                {{ searchResult.dataList.length }}
+                {{ searchResult.keyList.length }}
               </span>
               个
               <el-radio-group v-model="viewModel">
@@ -83,7 +83,7 @@
                   :expand-on-click-node="false"
                   :data="
                     viewModel == 'list'
-                      ? searchResult.dataList
+                      ? searchResult.keyList
                       : searchResult.treeDatas
                   "
                   :filter-node-method="filterNode"
@@ -192,24 +192,31 @@ export default {
     },
     async loadKeys() {
       this.searchResult = null;
-      let param = {};
       this.searchForm.database = Number(this.searchForm.database);
+
+      let param = this.toolboxWorker.getWorkParam(
+        Object.assign({}, this.searchForm)
+      );
       Object.assign(param, this.searchForm);
       if (this.tool.isEmpty(param.size)) {
         param.size = 50;
       }
       param.size = Number(param.size);
-      let res = await this.toolboxWorker.work("keys", param);
-      let keysData = res.data || {};
-      this.formatData(keysData);
-      this.searchResult = keysData;
+      let res = await this.server.redis.keys(param);
+      if (res.code == 0) {
+        let keysData = res.data || {};
+        this.formatData(keysData);
+        this.searchResult = keysData;
+      } else {
+        this.tool.error(res.msg);
+      }
     },
     formatData(keysData) {
       keysData = keysData || {};
-      keysData.dataList = keysData.dataList || [];
+      keysData.keyList = keysData.keyList || [];
       keysData.treeDatas = [];
       var treeDataCache = {};
-      keysData.dataList.forEach((data) => {
+      keysData.keyList.forEach((data) => {
         data.isData = true;
         data.name = data.key;
         let treeData = {
@@ -404,25 +411,29 @@ export default {
         .catch((e) => {});
     },
     async doDelete(database, key) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         database: Number(database),
         key: key,
-      };
-      let res = await this.toolboxWorker.work("delete", param);
+      });
+      let res = await this.server.redis.delete(param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.toSearch();
+      } else {
+        this.tool.error(res.msg);
       }
     },
     async doDeletePattern(database, pattern) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         database: Number(database),
         pattern: pattern,
-      };
-      let res = await this.toolboxWorker.work("deletePattern", param);
+      });
+      let res = await this.server.redis.deletePattern(param);
       if (res.code == 0) {
         this.tool.success("删除成功!");
         this.toSearch();
+      } else {
+        this.tool.error(res.msg);
       }
     },
   },

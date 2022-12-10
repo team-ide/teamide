@@ -21,7 +21,7 @@ type DataResponse struct {
 	FilesUrl string `json:"filesUrl"`
 	IsServer bool   `json:"isServer"`
 
-	ToolboxTypes             []*module_toolbox.Worker           `json:"toolboxTypes"`
+	ToolboxTypes             []*module_toolbox.ToolboxType      `json:"toolboxTypes"`
 	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations"`
 	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes"`
 	QuickCommandTypes        []*module_toolbox.QuickCommandType `json:"quickCommandTypes"`
@@ -52,7 +52,7 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.FilesUrl = response.Api + "files/"
 	response.IsServer = this_.IsServer
 
-	response.ToolboxTypes = module_toolbox.GetWorkers()
+	response.ToolboxTypes = module_toolbox.GetToolboxTypes()
 	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()

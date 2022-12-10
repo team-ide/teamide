@@ -128,7 +128,7 @@
                     <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
-                        toDo(one.isNew ? 'RPush' : 'LSet', {
+                        toDo(one.isNew ? 'rpush' : 'lset', {
                           value: one.value,
                           index: one.index,
                         })
@@ -140,7 +140,7 @@
                     <a
                       class="tm-link color-red ft-15 mgt-30"
                       @click="
-                        toDo('LRem', {
+                        toDo('lrem', {
                           value: one.value,
                           count: 0,
                           isNew: one.isNew,
@@ -193,7 +193,7 @@
                     <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
-                        toDo('SAdd', {
+                        toDo('sadd', {
                           value: one.value,
                           index: one.index,
                           isNew: one.isNew,
@@ -205,7 +205,7 @@
                     </a>
                     <a
                       class="tm-link color-red ft-15 mgt-30"
-                      @click="toDo('SRem', { value: one.value })"
+                      @click="toDo('srem', { value: one.value })"
                       title="删除"
                     >
                       <i class="mdi mdi-delete-outline"></i>
@@ -259,7 +259,7 @@
                     <a
                       class="tm-link color-green ft-15 mgt-30"
                       @click="
-                        toDo('HSet', {
+                        toDo('hset', {
                           field: one.field,
                           value: one.value,
                           index: one.index,
@@ -272,7 +272,7 @@
                     </a>
                     <a
                       class="tm-link color-red ft-15 mgt-30"
-                      @click="toDo('HDel', { field: one.field })"
+                      @click="toDo('hdel', { field: one.field })"
                       title="删除"
                     >
                       <i class="mdi mdi-delete-outline"></i>
@@ -357,12 +357,15 @@ export default {
       this.loading = false;
     },
     async load(database, key) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         database: Number(database),
         key: key,
         valueSize: Number(this.form.valueSize),
-      };
-      let res = await this.toolboxWorker.work("get", param);
+      });
+      let res = await this.server.redis.get(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       let data = res.data || {};
       return data;
     },
@@ -436,7 +439,6 @@ export default {
       data = data || {};
       data.database = Number(this.form.database);
       data.key = this.form.key;
-      data.doType = doType;
       if (this.tool.isEmpty(doType)) {
         this.tool.error("操作类型不能为空！");
         return;
@@ -445,7 +447,7 @@ export default {
         this.tool.error("Key不能为空！");
         return;
       }
-      if (data.doType == "LRem") {
+      if (doType == "lrem") {
         if (data.isNew) {
           this.listList.splice(this.listList.indexOf(data), 1);
           return;
@@ -453,10 +455,10 @@ export default {
         this.tool
           .confirm("确认删除[" + data.key + "]下所有值[" + data.value + "]？")
           .then(async () => {
-            await this.doDo(data);
+            await this.doDo(doType, data);
           })
           .catch((e) => {});
-      } else if (data.doType == "SRem") {
+      } else if (doType == "srem") {
         if (data.isNew) {
           this.setList.splice(this.setList.indexOf(data), 1);
           return;
@@ -464,46 +466,52 @@ export default {
         this.tool
           .confirm("确认删除[" + data.key + "]下键[" + data.value + "]？")
           .then(async () => {
-            await this.doDo(data);
+            await this.doDo(doType, data);
           })
           .catch((e) => {});
-      } else if (data.doType == "HDel") {
+      } else if (doType == "hdel") {
         if (data.isNew) {
           this.hashList.splice(this.hashList.indexOf(data), 1);
           return;
         }
         this.tool
-          .confirm("确认删除[" + data.key + "]下键[" + data.value + "]？")
+          .confirm("确认删除[" + data.key + "]下键[" + data.field + "]？")
           .then(async () => {
-            await this.doDo(data);
+            await this.doDo(doType, data);
           })
           .catch((e) => {});
       } else {
-        await this.doDo(data);
+        await this.doDo(doType, data);
       }
     },
-    async doDo(data) {
-      let res = await this.toolboxWorker.work("do", data);
-      if (res.code != 0) {
-        this.tool.error(res.msg);
-      } else {
+    async doDo(doType, data) {
+      let param = this.toolboxWorker.getWorkParam(data);
+      let call = this.server.redis[doType];
+      if (call == null) {
+        this.tool.error("暂不支持[" + doType + "]操作！");
+        return;
+      }
+      let res = await call(param);
+      if (res.code == 0) {
         this.tool.success("操作成功");
-
         this.initForm();
         this.toolboxWorker.loadKeys();
+      } else {
+        this.tool.error(res.msg);
       }
     },
     async doSave() {
-      let param = {};
       this.form.valueSize = Number(this.form.valueSize);
       this.form.expire = Number(this.form.expire);
-      Object.assign(param, this.form);
-      param.doType = "set";
-      let res = await this.toolboxWorker.work("do", param);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
+      let res = await this.server.redis.set(param);
+
       if (res.code == 0) {
         this.tool.success("保存成功!");
         this.initForm();
         this.toolboxWorker.loadKeys();
+      } else {
+        this.tool.error(res.msg);
       }
     },
   },

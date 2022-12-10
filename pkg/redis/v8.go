@@ -23,6 +23,8 @@ func CreateRedisService(address string, username string, auth string, certPath s
 }
 
 type ValueInfo struct {
+	Database    int         `json:"database"`
+	Key         string      `json:"key"`
 	ValueType   string      `json:"valueType"`
 	Value       interface{} `json:"value"`
 	ValueCount  int64       `json:"valueCount"`
@@ -110,14 +112,14 @@ func (this_ *V8Service) Info(ctx context.Context) (res string, err error) {
 	return Info(ctx, client)
 }
 
-func (this_ *V8Service) Keys(ctx context.Context, database int, pattern string, size int64) (count int, keys []string, err error) {
+func (this_ *V8Service) Keys(ctx context.Context, database int, pattern string, size int64) (keysResult *KeysResult, err error) {
 
 	client, err := this_.GetClient(ctx, database)
 	if err != nil {
 		return
 	}
 
-	return Keys(ctx, client, pattern, size)
+	return Keys(ctx, client, database, pattern, size)
 }
 
 func (this_ *V8Service) Expire(ctx context.Context, database int, key string, expire int64) (res bool, err error) {
@@ -167,7 +169,7 @@ func (this_ *V8Service) Get(ctx context.Context, database int, key string, value
 		return
 	}
 
-	return Get(ctx, client, key, valueStart, valueSize)
+	return Get(ctx, client, database, key, valueStart, valueSize)
 }
 
 func (this_ *V8Service) Set(ctx context.Context, database int, key string, value string) (err error) {
@@ -277,5 +279,5 @@ func (this_ *V8Service) DelPattern(ctx context.Context, database int, pattern st
 		return
 	}
 
-	return DelPattern(ctx, client, pattern)
+	return DelPattern(ctx, client, database, pattern)
 }

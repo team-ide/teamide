@@ -12,7 +12,6 @@ import (
 	"teamide/pkg/kafka"
 	"teamide/pkg/redis"
 	"teamide/pkg/ssh"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/zookeeper"
 )
 
@@ -56,8 +55,8 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	if toolboxData.ToolboxType == "" {
 		return
 	}
-	toolboxWorker := GetWorker(toolboxData.ToolboxType)
-	if toolboxWorker == nil {
+	toolboxType := GetToolboxType(toolboxData.ToolboxType)
+	if toolboxType == nil {
 		err = errors.New("不支持的工具类型[" + toolboxData.ToolboxType + "]")
 		return
 	}
@@ -68,7 +67,7 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		return
 	}
 
-	switch toolboxWorker {
+	switch toolboxType {
 	case databaseWorker_:
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
@@ -178,23 +177,9 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	if find == nil {
 		find = this_.GetOtherToolbox(bindConfigRequest.ToolboxId)
 	}
-	var toolboxType string
 	option := ""
 	if find != nil {
-		if find.ToolboxType != "" {
-			toolboxType = find.ToolboxType
-		}
 		option = find.Option
-	}
-
-	if toolboxType == "" {
-		return
-	}
-
-	toolboxWorker := GetWorker(toolboxType)
-	if toolboxWorker == nil {
-		//err = errors.New("不支持的工具类型[" + toolboxType + "]")
-		return
 	}
 
 	optionBytes := []byte(option)
@@ -251,89 +236,7 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	return
 }
 
-// Work 执行
-func (this_ *ToolboxService) Work(requestBean *base.RequestBean, toolboxId int64, toolboxType string, work string, data map[string]interface{}) (res interface{}, err error) {
-
-	find, err := this_.Get(toolboxId)
-	if err != nil {
-		return
-	}
-	if find != nil && find.UserId != 0 {
-		if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
-			err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
-			return
-		}
-	}
-	if find == nil {
-		find = this_.GetOtherToolbox(toolboxId)
-	}
-	option := ""
-	if find != nil {
-		if find.ToolboxType != "" {
-			toolboxType = find.ToolboxType
-		}
-		option = find.Option
-	}
-
-	if toolboxType == "" {
-		return
-	}
-
-	toolboxWorker := GetWorker(toolboxType)
-	if toolboxWorker == nil {
-		//err = errors.New("不支持的工具类型[" + toolboxType + "]")
-		return
-	}
-
-	optionBytes := []byte(option)
-
-	if len(optionBytes) > 0 {
-		optionData := map[string]interface{}{}
-		e := json.Unmarshal(optionBytes, &optionData)
-		if e == nil {
-			strV, strVOk := optionData["port"].(string)
-			if strVOk {
-				if strV == "" {
-					delete(optionData, "port")
-				} else {
-					optionData["port"], _ = strconv.Atoi(strV)
-				}
-				optionBytes, _ = json.Marshal(optionData)
-			}
-		}
-	}
-
-	switch toolboxWorker {
-	case databaseWorker_:
-		var config *db.DatabaseConfig
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		config.Password = this_.DecryptOptionAttr(config.Password)
-		res, err = toolbox.DatabaseWork(work, config, data)
-		break
-	case redisWorker_:
-		var config *redis.Config
-		err = json.Unmarshal(optionBytes, &config)
-		if err != nil {
-			return
-		}
-		if config.CertPath != "" {
-			config.CertPath = this_.GetFilesFile(config.CertPath)
-		}
-		config.Auth = this_.DecryptOptionAttr(config.Auth)
-		res, err = toolbox.RedisWork(work, config, data)
-		break
-	}
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-type Worker struct {
+type ToolboxType struct {
 	Name       string                `json:"name,omitempty"`
 	Text       string                `json:"text,omitempty"`
 	Icon       string                `json:"icon,omitempty"`
@@ -341,12 +244,9 @@ type Worker struct {
 	ConfigForm *form.Form            `json:"configForm,omitempty"`
 	OtherForm  map[string]*form.Form `json:"otherForm,omitempty"`
 }
-type WorkerConfig interface {
-	GetConfigKey() string
-}
 
 var (
-	workers              = &[]*Worker{}
+	toolboxTypes         = &[]*ToolboxType{}
 	databaseWorker_      = databaseWorker()
 	sshWorker_           = sshWorker()
 	redisWorker_         = redisWorker()
@@ -357,22 +257,22 @@ var (
 )
 
 func init() {
-	*workers = append(*workers, databaseWorker_)
-	*workers = append(*workers, sshWorker_)
-	*workers = append(*workers, redisWorker_)
-	*workers = append(*workers, zookeeperWorker_)
-	*workers = append(*workers, elasticsearchWorker_)
-	*workers = append(*workers, kafkaWorker_)
-	*workers = append(*workers, otherWorker_)
+	*toolboxTypes = append(*toolboxTypes, databaseWorker_)
+	*toolboxTypes = append(*toolboxTypes, sshWorker_)
+	*toolboxTypes = append(*toolboxTypes, redisWorker_)
+	*toolboxTypes = append(*toolboxTypes, zookeeperWorker_)
+	*toolboxTypes = append(*toolboxTypes, elasticsearchWorker_)
+	*toolboxTypes = append(*toolboxTypes, kafkaWorker_)
+	*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
 
-func GetWorkers() (res []*Worker) {
-	res = *workers
+func GetToolboxTypes() (res []*ToolboxType) {
+	res = *toolboxTypes
 	return
 }
 
-func GetWorker(name string) (res *Worker) {
-	for _, one := range *workers {
+func GetToolboxType(name string) (res *ToolboxType) {
+	for _, one := range *toolboxTypes {
 		if one.Name == name {
 			res = one
 		}
@@ -380,9 +280,9 @@ func GetWorker(name string) (res *Worker) {
 	return
 }
 
-func databaseWorker() *Worker {
+func databaseWorker() *ToolboxType {
 
-	worker_ := &Worker{
+	worker_ := &ToolboxType{
 		Name: "database",
 		Text: "Database",
 		ConfigForm: &form.Form{
@@ -438,8 +338,8 @@ func databaseWorker() *Worker {
 	return worker_
 }
 
-func elasticsearchWorker() *Worker {
-	worker_ := &Worker{
+func elasticsearchWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "elasticsearch",
 		Text: "Elasticsearch",
 		ConfigForm: &form.Form{
@@ -490,8 +390,8 @@ func elasticsearchWorker() *Worker {
 	return worker_
 }
 
-func kafkaWorker() *Worker {
-	worker_ := &Worker{
+func kafkaWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "kafka",
 		Text: "Kafka",
 		ConfigForm: &form.Form{
@@ -584,8 +484,8 @@ func kafkaWorker() *Worker {
 	return worker_
 }
 
-func sshWorker() *Worker {
-	worker_ := &Worker{
+func sshWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "ssh",
 		Text: "SSH",
 		ConfigForm: &form.Form{
@@ -615,8 +515,8 @@ func sshWorker() *Worker {
 	return worker_
 }
 
-func redisWorker() *Worker {
-	worker_ := &Worker{
+func redisWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "redis",
 		Text: "Redis",
 		ConfigForm: &form.Form{
@@ -636,8 +536,8 @@ func redisWorker() *Worker {
 	return worker_
 }
 
-func zookeeperWorker() *Worker {
-	worker_ := &Worker{
+func zookeeperWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "zookeeper",
 		Text: "Zookeeper",
 		ConfigForm: &form.Form{
@@ -657,8 +557,8 @@ func zookeeperWorker() *Worker {
 	return worker_
 }
 
-func otherWorker() *Worker {
-	worker_ := &Worker{
+func otherWorker() *ToolboxType {
+	worker_ := &ToolboxType{
 		Name: "other",
 		Text: "其它",
 		ConfigForm: &form.Form{
