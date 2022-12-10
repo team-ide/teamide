@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![GitHub Release Latest](https://img.shields.io/badge/Release-V1.8.3-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![GitHub Release Latest](https://img.shields.io/badge/Release-V1.8.6-brightgreen)](https://github.com/team-ide/teamide/releases)
 
 ## Team · IDE 功能模块
 
