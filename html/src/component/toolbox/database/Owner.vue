@@ -606,80 +606,89 @@ export default {
       this.toolboxWorker.openTabByExtend(extend);
     },
     async loadOwners() {
-      let param = {};
-      let res = await this.toolboxWorker.work("owners", param);
-      res.data = res.data || {};
-      return res.data.owners || [];
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.database.owners(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      return res.data || [];
     },
     async loadTables(ownerName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
-      };
-      let res = await this.toolboxWorker.work("tables", param);
-      res.data = res.data || {};
-      return res.data.tables || [];
+      });
+
+      let res = await this.server.database.tables(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      return res.data || [];
     },
     async getTableDetail(ownerName, tableName) {
       let res = await this.loadTableDetail(ownerName, tableName);
       return res;
     },
     async doOwnerDelete(ownerName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
-      };
-      let res = await this.toolboxWorker.work("ownerDelete", param);
+      });
+      let res = await this.server.database.ownerDelete(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return false;
       }
       this.tool.success("删除成功");
       return true;
     },
     async doTableDelete(ownerName, tableName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
         tableName: tableName,
-      };
-      let res = await this.toolboxWorker.work("tableDelete", param);
+      });
+      let res = await this.server.database.tableDelete(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return false;
       }
       this.tool.success("删除成功");
       return true;
     },
     async doOwnerDataTrim(ownerName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
-      };
-      let res = await this.toolboxWorker.work("ownerDataTrim", param);
+      });
+      let res = await this.server.database.ownerDataTrim(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return false;
       }
       this.tool.success("清空成功");
       return true;
     },
     async doTableDataTrim(ownerName, tableName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
         tableName: tableName,
-      };
-      let res = await this.toolboxWorker.work("tableDataTrim", param);
+      });
+      let res = await this.server.database.tableDataTrim(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return false;
       }
       this.tool.success("清空成功");
       return true;
     },
     async loadTableDetail(ownerName, tableName) {
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         ownerName: ownerName,
         tableName: tableName,
-      };
-      let res = await this.toolboxWorker.work("tableDetail", param);
+      });
+      let res = await this.server.database.tableDetail(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return null;
       }
-      res.data = res.data || {};
-      let tableDetail = res.data.table;
+      let tableDetail = res.data;
       if (tableDetail) {
         tableDetail.columnList = tableDetail.columnList || [];
         tableDetail.indexList = tableDetail.indexList || [];

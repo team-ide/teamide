@@ -1,9 +1,21 @@
 package module_database
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-dialect/dialect"
+	"github.com/team-ide/go-dialect/worker"
+	"go.uber.org/zap"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"sync"
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/db"
+	"teamide/pkg/util"
 )
 
 type api struct {
@@ -17,16 +29,905 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 }
 
 var (
-	Power     = base.AppendPower(&base.PowerAction{Action: "database", Text: "Database", ShouldLogin: true, StandAlone: true})
-	PowerInfo = base.AppendPower(&base.PowerAction{Action: "database_info", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	Power               = base.AppendPower(&base.PowerAction{Action: "database", Text: "Database", ShouldLogin: true, StandAlone: true})
+	infoPower           = base.AppendPower(&base.PowerAction{Action: "info", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	dataPower           = base.AppendPower(&base.PowerAction{Action: "data", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	ownersPower         = base.AppendPower(&base.PowerAction{Action: "owners", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	ownerCreatePower    = base.AppendPower(&base.PowerAction{Action: "ownerCreate", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	ownerDeletePower    = base.AppendPower(&base.PowerAction{Action: "ownerDelete", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	ownerCreateSqlPower = base.AppendPower(&base.PowerAction{Action: "ownerCreateSql", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	ddlPower            = base.AppendPower(&base.PowerAction{Action: "ddl", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	modelPower          = base.AppendPower(&base.PowerAction{Action: "model", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tablesPower         = base.AppendPower(&base.PowerAction{Action: "tables", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableDetailPower    = base.AppendPower(&base.PowerAction{Action: "tableDetail", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableCreatePower    = base.AppendPower(&base.PowerAction{Action: "tableCreate", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableCreateSqlPower = base.AppendPower(&base.PowerAction{Action: "tableCreateSql", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableUpdatePower    = base.AppendPower(&base.PowerAction{Action: "tableUpdate", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableUpdateSqlPower = base.AppendPower(&base.PowerAction{Action: "tableUpdateSql", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableDeletePower    = base.AppendPower(&base.PowerAction{Action: "tableDelete", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableDataTrimPower  = base.AppendPower(&base.PowerAction{Action: "tableDataTrim", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	tableDataPower      = base.AppendPower(&base.PowerAction{Action: "tableData", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	dataListSqlPower    = base.AppendPower(&base.PowerAction{Action: "dataListSql", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	dataListExecPower   = base.AppendPower(&base.PowerAction{Action: "dataListExec", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	executeSQLPower     = base.AppendPower(&base.PowerAction{Action: "executeSQL", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	importPower         = base.AppendPower(&base.PowerAction{Action: "import", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	exportPower         = base.AppendPower(&base.PowerAction{Action: "export", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	exportDownloadPower = base.AppendPower(&base.PowerAction{Action: "exportDownload", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	syncPower           = base.AppendPower(&base.PowerAction{Action: "sync", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskStatusPower     = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskStopPower       = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskCleanPower      = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower          = base.AppendPower(&base.PowerAction{Action: "close", Text: "Database信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"database/info"}, Power: PowerInfo, Do: this_.info})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/info"}, Power: infoPower, Do: this_.info})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/data"}, Power: dataPower, Do: this_.data})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/owners"}, Power: ownersPower, Do: this_.owners})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/ownerCreate"}, Power: ownerCreatePower, Do: this_.ownerCreate})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/ownerDelete"}, Power: ownerDeletePower, Do: this_.ownerDelete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/ownerCreateSql"}, Power: ownerCreateSqlPower, Do: this_.ownerCreateSql})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/ddl"}, Power: ddlPower, Do: this_.ddl})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/model"}, Power: modelPower, Do: this_.model})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tables"}, Power: tablesPower, Do: this_.tables})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableDetail"}, Power: tableDetailPower, Do: this_.tableDetail})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableCreate"}, Power: tableCreatePower, Do: this_.tableCreate})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableCreateSql"}, Power: tableCreateSqlPower, Do: this_.tableCreateSql})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableUpdate"}, Power: tableUpdatePower, Do: this_.tableUpdate})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableUpdateSql"}, Power: tableUpdateSqlPower, Do: this_.tableUpdateSql})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableDelete"}, Power: tableDeletePower, Do: this_.tableDelete})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableDataTrim"}, Power: tableDataTrimPower, Do: this_.tableDataTrim})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/tableData"}, Power: tableDataPower, Do: this_.tableData})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/dataListSql"}, Power: dataListSqlPower, Do: this_.dataListSql})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/dataListExec"}, Power: dataListExecPower, Do: this_.dataListExec})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/executeSQL"}, Power: executeSQLPower, Do: this_.executeSQL})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/import"}, Power: importPower, Do: this_._import})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/export"}, Power: exportPower, Do: this_.export})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/exportDownload"}, Power: exportDownloadPower, Do: this_.exportDownload})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/sync"}, Power: syncPower, Do: this_.sync})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/taskStatus"}, Power: taskStatusPower, Do: this_.taskStatus})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/taskStop"}, Power: taskStopPower, Do: this_.taskStop})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/taskClean"}, Power: taskCleanPower, Do: this_.taskClean})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"database/close"}, Power: closePower, Do: this_.close})
 
 	return
 }
 
-func (this_ *api) info(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
+func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *db.DatabaseConfig, err error) {
+	config = &db.DatabaseConfig{}
+	err = this_.toolboxService.BindConfig(requestBean, c, config)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
+	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
+	if config.DatabasePath != "" {
+		key += "-" + config.DatabasePath
+	}
+	if config.Database != "" {
+		key += "-" + config.Database
+	}
+	if config.DbName != "" {
+		key += "-" + config.DbName
+	}
+	if config.Username != "" {
+		key += "-" + util.GetMd5String(key+config.Username)
+	}
+	if config.Password != "" {
+		key += "-" + util.GetMd5String(key+config.Password)
+	}
+	var service util.Service
+	service, err = util.GetService(key, func() (res util.Service, err error) {
+		var s *db.Service
+		s, err = db.CreateService(config)
+		if err != nil {
+			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
+			if s != nil {
+				s.Stop()
+			}
+			return
+		}
+		res = s
+		return
+	})
+	if err != nil {
+		return
+	}
+	res = service.(*db.Service)
+	res.SetLastUseTime()
+	return
+}
+
+type BaseRequest struct {
+	WorkerId     string                 `json:"workerId"`
+	OwnerName    string                 `json:"ownerName"`
+	TableName    string                 `json:"tableName"`
+	TaskId       string                 `json:"taskId"`
+	ExecuteSQL   string                 `json:"executeSQL"`
+	ColumnList   []*dialect.ColumnModel `json:"columnList"`
+	Wheres       []*dialect.Where       `json:"wheres"`
+	Orders       []*dialect.Order       `json:"orders"`
+	PageNo       int                    `json:"pageNo"`
+	PageSize     int                    `json:"pageSize"`
+	DatabaseType string                 `json:"databaseType"`
+
+	InsertList      []map[string]interface{} `json:"insertList"`
+	UpdateList      []map[string]interface{} `json:"updateList"`
+	UpdateWhereList []map[string]interface{} `json:"updateWhereList"`
+	DeleteList      []map[string]interface{} `json:"deleteList"`
+}
+
+func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	res, err = service.Info()
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) data(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	param := this_.getParam(requestBean, c)
+
+	data := make(map[string]interface{})
+	data["columnTypeInfoList"] = service.GetTargetDialect(param).GetColumnTypeInfos()
+	data["indexTypeInfoList"] = service.GetTargetDialect(param).GetIndexTypeInfos()
+	res = data
+	return
+}
+
+func (this_ *api) owners(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.OwnersSelect(param)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) ownerCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	param := this_.getParam(requestBean, c)
+	var owner = &dialect.OwnerModel{}
+	if !base.RequestJSON(owner, c) {
+		return
+	}
+	res, err = service.OwnerCreate(param, owner)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) ownerDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	param := this_.getParam(requestBean, c)
+	res, err = service.OwnerDelete(param, request.OwnerName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) ownerCreateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	param := this_.getParam(requestBean, c)
+
+	var owner = &dialect.OwnerModel{}
+	if !base.RequestJSON(owner, c) {
+		return
+	}
+	res, err = service.DatabaseWorker.OwnerCreateSql(param.ParamModel, owner)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) ddl(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.DDL(param, request.OwnerName, request.TableName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) model(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.Model(param, request.OwnerName, request.TableName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tables(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.TablesSelect(param, request.OwnerName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableDetail(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.TableDetail(param, request.OwnerName, request.TableName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var table = &dialect.TableModel{}
+	if !base.RequestJSON(table, c) {
+		return
+	}
+
+	err = service.TableCreate(param, request.OwnerName, table)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableCreateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var table = &dialect.TableModel{}
+	if !base.RequestJSON(table, c) {
+		return
+	}
+
+	res, err = service.TableCreateSql(param, request.OwnerName, table)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var updateTableParam = &db.UpdateTableParam{}
+	if !base.RequestJSON(updateTableParam, c) {
+		return
+	}
+
+	err = service.TableUpdate(param, request.OwnerName, request.TableName, updateTableParam)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableUpdateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var updateTableParam = &db.UpdateTableParam{}
+	if !base.RequestJSON(updateTableParam, c) {
+		return
+	}
+
+	res, err = service.TableUpdateSql(param, request.OwnerName, request.TableName, updateTableParam)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	err = service.TableDelete(param, request.OwnerName, request.TableName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableDataTrim(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	err = service.TableDataTrim(param, request.OwnerName, request.TableName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) tableData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.TableData(param, request.OwnerName, request.TableName, request.ColumnList, request.Wheres, request.Orders, request.PageSize, request.PageNo)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) dataListSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	res, err = service.DataListSql(param, request.OwnerName, request.TableName, request.ColumnList,
+		request.InsertList,
+		request.UpdateList, request.UpdateWhereList,
+		request.DeleteList,
+	)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) getParam(requestBean *base.RequestBean, c *gin.Context) (param *db.Param) {
+
+	param = &db.Param{}
+	if !base.RequestJSON(param, c) {
+		return
+	}
+	if param.ParamModel == nil {
+		param.ParamModel = &dialect.ParamModel{}
+	}
+
+	return
+}
+
+func (this_ *api) dataListExec(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	err = service.DataListExec(param, request.OwnerName, request.TableName, request.ColumnList,
+		request.InsertList,
+		request.UpdateList, request.UpdateWhereList,
+		request.DeleteList,
+	)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) executeSQL(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	data := make(map[string]interface{})
+	data["executeList"], data["error"], err = service.ExecuteSQL(param, request.OwnerName, request.ExecuteSQL)
+	if err != nil {
+		return
+	}
+	res = data
+	return
+}
+
+func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var importParam = &worker.TaskImportParam{}
+	if !base.RequestJSON(importParam, c) {
+		return
+	}
+
+	var task *worker.Task
+	task, err = service.StartImport(param, importParam)
+	if err != nil {
+		return
+	}
+	res = task
+
+	if task != nil {
+		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+	}
+	return
+}
+
+func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var exportParam = &worker.TaskExportParam{}
+	if !base.RequestJSON(exportParam, c) {
+		return
+	}
+
+	var task *worker.Task
+	task, err = service.StartExport(param, exportParam)
+	if err != nil {
+		return
+	}
+	res = task
+
+	if task != nil {
+		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+	}
+	return
+}
+
+func (this_ *api) exportDownload(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	data := map[string]string{}
+	err = c.Bind(&data)
+	if err != nil {
+		return
+	}
+
+	taskId := data["taskId"]
+	if taskId == "" {
+		err = errors.New("taskId获取失败")
+		return
+	}
+
+	task := worker.GetTask(taskId)
+	if task == nil {
+		err = errors.New("任务不存在")
+		return
+	}
+	if task.Extend == nil || task.Extend["downloadPath"] == "" {
+		err = errors.New("任务导出文件丢失")
+		return
+	}
+	tempDir, err := util.GetTempDir()
+	if err != nil {
+		return
+	}
+
+	path := tempDir + task.Extend["downloadPath"].(string)
+	exists, err := util.PathExists(path)
+	if err != nil {
+		return
+	}
+	if !exists {
+		err = errors.New("文件不存在")
+		return
+	}
+	var fileName string
+	var fileSize int64
+	ff, err := os.Lstat(path)
+	if err != nil {
+		return
+	}
+	var fileInfo *os.File
+	if ff.IsDir() {
+		exists, err = util.PathExists(path + ".zip")
+		if err != nil {
+			return
+		}
+		if !exists {
+			err = util.Zip(path, path+".zip")
+			if err != nil {
+				return
+			}
+		}
+		ff, err = os.Lstat(path + ".zip")
+		if err != nil {
+			return
+		}
+		fileInfo, err = os.Open(path + ".zip")
+		if err != nil {
+			return
+		}
+	} else {
+		fileInfo, err = os.Open(path)
+		if err != nil {
+			return
+		}
+	}
+	fileName = ff.Name()
+	fileSize = ff.Size()
+
+	defer func() {
+		_ = fileInfo.Close()
+	}()
+
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fileName))
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Length", fmt.Sprint(fileSize))
+	c.Header("download-file-name", fileName)
+
+	_, err = io.Copy(c.Writer, fileInfo)
+	if err != nil {
+		return
+	}
+
+	c.Status(http.StatusOK)
+	res = base.HttpNotResponse
+	return
+}
+
+func (this_ *api) sync(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	param := this_.getParam(requestBean, c)
+
+	var syncParam = &worker.TaskSyncParam{}
+	if !base.RequestJSON(syncParam, c) {
+		return
+	}
+
+	var task *worker.Task
+	task, err = service.StartSync(param, syncParam)
+	if err != nil {
+		return
+	}
+	res = task
+
+	if task != nil {
+		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+	}
+	return
+}
+
+func (this_ *api) taskStatus(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res = worker.GetTask(request.TaskId)
+	return
+}
+
+func (this_ *api) taskStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	worker.StopTask(request.TaskId)
+	return
+}
+
+func (this_ *api) taskClean(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	task := worker.GetTask(request.TaskId)
+	if task != nil {
+		if task.Extend != nil {
+			if task.Extend["dirPath"] != "" {
+				_ = os.RemoveAll(task.Extend["dirPath"].(string))
+			}
+			if task.Extend["zipPath"] != "" {
+				_ = os.Remove(task.Extend["zipPath"].(string))
+			}
+		}
+	}
+	worker.ClearTask(request.TaskId)
+	return
+}
+
+func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	removeDatabaseWorkerTasks(request.WorkerId)
+	return
+}
+
+var databaseWorkerTasksCache = map[string][]string{}
+var databaseWorkerTasksCacheLock sync.Mutex
+
+func addDatabaseWorkerTask(workerId string, taskId string) {
+	databaseWorkerTasksCacheLock.Lock()
+	defer databaseWorkerTasksCacheLock.Unlock()
+	taskIds := databaseWorkerTasksCache[workerId]
+	if util.ContainsString(taskIds, taskId) < 0 {
+		taskIds = append(taskIds, taskId)
+		databaseWorkerTasksCache[workerId] = taskIds
+	}
+	return
+}
+func removeDatabaseWorkerTasks(workerId string) {
+	databaseWorkerTasksCacheLock.Lock()
+	defer databaseWorkerTasksCacheLock.Unlock()
+	taskIds := databaseWorkerTasksCache[workerId]
+	for _, taskId := range taskIds {
+		task := worker.GetTask(taskId)
+		if task != nil {
+			if task.Extend != nil {
+				if task.Extend["dirPath"] != "" {
+					_ = os.RemoveAll(task.Extend["dirPath"].(string))
+				}
+				if task.Extend["zipPath"] != "" {
+					_ = os.Remove(task.Extend["zipPath"].(string))
+				}
+			}
+			worker.ClearTask(taskId)
+		}
+	}
+	delete(databaseWorkerTasksCache, workerId)
 	return
 }

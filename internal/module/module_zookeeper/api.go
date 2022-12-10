@@ -5,7 +5,6 @@ import (
 	"go.uber.org/zap"
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/util"
 	"teamide/pkg/zookeeper"
 )
@@ -22,12 +21,12 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power            = base.AppendPower(&base.PowerAction{Action: "zookeeper", Text: "Zookeeper", ShouldLogin: true, StandAlone: true})
-	infoPower        = base.AppendPower(&base.PowerAction{Action: "zookeeper_info", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getPower         = base.AppendPower(&base.PowerAction{Action: "zookeeper_get", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	savePower        = base.AppendPower(&base.PowerAction{Action: "zookeeper_save", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getChildrenPower = base.AppendPower(&base.PowerAction{Action: "zookeeper_getChildren", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deletePower      = base.AppendPower(&base.PowerAction{Action: "zookeeper_delete", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower       = base.AppendPower(&base.PowerAction{Action: "zookeeper_close", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getPower         = base.AppendPower(&base.PowerAction{Action: "get", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	savePower        = base.AppendPower(&base.PowerAction{Action: "save", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getChildrenPower = base.AppendPower(&base.PowerAction{Action: "getChildren", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deletePower      = base.AppendPower(&base.PowerAction{Action: "delete", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -58,8 +57,8 @@ func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error)
 	if zkConfig.Password != "" {
 		key += "-" + util.GetMd5String(key+zkConfig.Password)
 	}
-	var service toolbox.Service
-	service, err = toolbox.GetService(key, func() (res toolbox.Service, err error) {
+	var service util.Service
+	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s *zookeeper.ZKService
 		s, err = zookeeper.CreateZKService(zkConfig)
 		if err != nil {

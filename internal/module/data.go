@@ -7,7 +7,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/db"
-	"teamide/pkg/toolbox"
 )
 
 type DataRequest struct {
@@ -22,7 +21,7 @@ type DataResponse struct {
 	IsServer bool   `json:"isServer"`
 
 	ToolboxTypes             []*module_toolbox.ToolboxType      `json:"toolboxTypes"`
-	SqlConditionalOperations []*toolbox.SqlConditionalOperation `json:"sqlConditionalOperations"`
+	SqlConditionalOperations []*db.SqlConditionalOperation      `json:"sqlConditionalOperations"`
 	DatabaseTypes            []*db.DatabaseType                 `json:"databaseTypes"`
 	QuickCommandTypes        []*module_toolbox.QuickCommandType `json:"quickCommandTypes"`
 }
@@ -53,7 +52,7 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.IsServer = this_.IsServer
 
 	response.ToolboxTypes = module_toolbox.GetToolboxTypes()
-	response.SqlConditionalOperations = toolbox.SqlConditionalOperations
+	response.SqlConditionalOperations = db.GetSqlConditionalOperations()
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()
 

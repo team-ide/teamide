@@ -70,14 +70,18 @@ export default {
     },
     async load() {
       let data = await this.loadModel(this.ownerName, this.tableName);
-      this.$refs.Editor.setValue(data.content);
+      this.$refs.Editor.setValue(data);
     },
     async loadModel(ownerName, tableName) {
-      let param = Object.assign({}, this.formData);
+      let param = this.toolboxWorker.getWorkParam(
+        Object.assign({}, this.formData)
+      );
       param.ownerName = ownerName;
       param.tableName = tableName;
-      let res = await this.toolboxWorker.work("model", param);
-      res.data = res.data || {};
+      let res = await this.server.database.model(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       return res.data;
     },
   },

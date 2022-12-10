@@ -43,21 +43,6 @@ const newToolboxWorker = function (workerOption) {
             data.toolboxType = worker.toolboxType
             return data;
         },
-        async work(work, data) {
-            data = data || {};
-            data.workerId = worker.workerId
-            let param = {
-                toolboxId: worker.toolboxId,
-                toolboxType: worker.toolboxType,
-                work: work,
-                data: data,
-            };
-            let res = await server.toolbox.work(param);
-            if (res.code != 0) {
-                tool.error(res.msg);
-            }
-            return res;
-        },
         async updateOpenTabExtend(tabId, keyValueMap) {
             if (keyValueMap == null) {
                 return;

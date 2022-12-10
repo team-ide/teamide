@@ -574,7 +574,9 @@ export default {
       }
     },
     async start() {
-      let param = Object.assign({ owners: [] }, this.formData);
+      let param = this.toolboxWorker.getWorkParam(
+        Object.assign({}, this.formData)
+      );
       this.toolboxWorker.formatParam(param);
 
       param.batchNumber = Number(param.batchNumber);
@@ -606,9 +608,11 @@ export default {
         param.owners.push(exportOwner);
       });
 
-      let res = await this.toolboxWorker.work("export", param);
-      res.data = res.data || {};
-      return res.data.task;
+      let res = await this.server.database.export(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      return res.data;
     },
     async loadStatus() {
       if (this.taskId == null) {
@@ -621,33 +625,35 @@ export default {
       if (this.isDestroyed) {
         return;
       }
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         taskId: this.taskId,
-      };
-      let res = await this.toolboxWorker.work("taskStatus", param);
-      res.data = res.data || {};
-      this.task = res.data.task;
+      });
+      let res = await this.server.database.taskStatus(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      this.task = res.data;
       setTimeout(this.loadStatus, 100);
     },
     async stopTask() {
       if (this.task == null) {
         return;
       }
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         taskId: this.task.taskId,
-      };
-      await this.toolboxWorker.work("taskStop", param);
+      });
+      await this.server.database.taskStop(param);
     },
     async taskClean() {
       if (this.task == null) {
         return;
       }
-      let param = {
+      let param = this.toolboxWorker.getWorkParam({
         taskId: this.task.taskId,
-      };
+      });
       this.task = null;
       this.taskId = null;
-      await this.toolboxWorker.work("taskClean", param);
+      await this.server.database.taskClean(param);
     },
     toDownload() {
       if (this.task == null) {
@@ -656,7 +662,7 @@ export default {
       }
       let url =
         this.source.api +
-        "api/toolbox/database/download?taskId=" +
+        "api/database/exportDownload?taskId=" +
         encodeURIComponent(this.task.taskId) +
         "&jwt=" +
         encodeURIComponent(this.tool.getJWT());

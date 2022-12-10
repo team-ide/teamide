@@ -6,7 +6,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/elasticsearch"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/util"
 )
 
@@ -22,19 +21,19 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power            = base.AppendPower(&base.PowerAction{Action: "elasticsearch", Text: "Elasticsearch", ShouldLogin: true, StandAlone: true})
-	infoPower        = base.AppendPower(&base.PowerAction{Action: "elasticsearch_info", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	indexesPower     = base.AppendPower(&base.PowerAction{Action: "elasticsearch_indexes", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	createIndexPower = base.AppendPower(&base.PowerAction{Action: "elasticsearch_createIndex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteIndexPower = base.AppendPower(&base.PowerAction{Action: "elasticsearch_deleteIndex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getMappingPower  = base.AppendPower(&base.PowerAction{Action: "elasticsearch_getMapping", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	putMappingPower  = base.AppendPower(&base.PowerAction{Action: "elasticsearch_putMapping", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	searchPower      = base.AppendPower(&base.PowerAction{Action: "elasticsearch_search", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	scrollPower      = base.AppendPower(&base.PowerAction{Action: "elasticsearch_scroll", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	insertDataPower  = base.AppendPower(&base.PowerAction{Action: "elasticsearch_insertData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "elasticsearch_updateData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "elasticsearch_deleteData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	reindexPower     = base.AppendPower(&base.PowerAction{Action: "elasticsearch_reindex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower       = base.AppendPower(&base.PowerAction{Action: "elasticsearch_close", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	indexesPower     = base.AppendPower(&base.PowerAction{Action: "indexes", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	createIndexPower = base.AppendPower(&base.PowerAction{Action: "createIndex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteIndexPower = base.AppendPower(&base.PowerAction{Action: "deleteIndex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getMappingPower  = base.AppendPower(&base.PowerAction{Action: "getMapping", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	putMappingPower  = base.AppendPower(&base.PowerAction{Action: "putMapping", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	searchPower      = base.AppendPower(&base.PowerAction{Action: "search", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	scrollPower      = base.AppendPower(&base.PowerAction{Action: "scroll", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	insertDataPower  = base.AppendPower(&base.PowerAction{Action: "insertData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "updateData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "Elasticsearch信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -76,8 +75,8 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 		key += "-" + util.GetMd5String(key+esConfig.CertPath)
 	}
 
-	var service toolbox.Service
-	service, err = toolbox.GetService(key, func() (res toolbox.Service, err error) {
+	var service util.Service
+	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s *elasticsearch.V7Service
 		s, err = elasticsearch.CreateESService(esConfig)
 		if err != nil {

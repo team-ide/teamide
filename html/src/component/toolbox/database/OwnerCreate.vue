@@ -95,8 +95,8 @@ export default {
     },
     async toExecuteSql() {
       this.executeSqlIng = true;
-      let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("ownerCreate", data);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
+      let res = await this.server.database.ownerCreate(param);
       this.error = null;
       this.executeSqlIng = false;
       if (res.code != 0) {
@@ -118,8 +118,8 @@ export default {
       this.$refs.Editor.setValue(this.showSQL);
     },
     async loadSqls() {
-      let data = Object.assign({}, this.form);
-      let res = await this.toolboxWorker.work("ownerCreateSql", data);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
+      let res = await this.server.database.ownerCreateSql(param);
       this.error = null;
       if (res.code != 0) {
         this.error = res.msg;

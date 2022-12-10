@@ -114,7 +114,7 @@ export default {
       }
     },
     getFileOpenUrl() {
-      let url = this.source.api + "file_manager/open?";
+      let url = this.source.api + "fileManager/open?";
       url += "workerId=" + (this.fileWorker.workerId || "");
       url += "&jwt=" + encodeURIComponent(this.tool.getJWT());
       url += "&fileWorkerKey=" + (this.fileWorker.fileWorkerKey || "");

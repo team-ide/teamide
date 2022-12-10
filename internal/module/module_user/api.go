@@ -28,15 +28,15 @@ var (
 
 	// Power 用户基本 权限
 	Power               = base.AppendPower(&base.PowerAction{Action: "user", Text: "用户", ShouldLogin: true, StandAlone: true})
-	PowerGet            = base.AppendPower(&base.PowerAction{Action: "user_get", Text: "登录用户信息", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerUpdate         = base.AppendPower(&base.PowerAction{Action: "user_update", Text: "登录用户信息修改", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerUpdatePassword = base.AppendPower(&base.PowerAction{Action: "user_update_password", Text: "登录用户密码修改", Parent: Power, ShouldLogin: true, StandAlone: true})
+	getPower            = base.AppendPower(&base.PowerAction{Action: "get", Text: "登录用户信息", Parent: Power, ShouldLogin: true, StandAlone: true})
+	updatePower         = base.AppendPower(&base.PowerAction{Action: "update", Text: "登录用户信息修改", Parent: Power, ShouldLogin: true, StandAlone: true})
+	updatePasswordPower = base.AppendPower(&base.PowerAction{Action: "updatePassword", Text: "登录用户密码修改", Parent: Power, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/get"}, Power: PowerGet, Do: this_.get})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/update"}, Power: PowerUpdate, Do: this_.update})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/updatePassword"}, Power: PowerUpdatePassword, Do: this_.updatePassword})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"user/get"}, Power: getPower, Do: this_.get})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"user/update"}, Power: updatePower, Do: this_.update})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"user/updatePassword"}, Power: updatePasswordPower, Do: this_.updatePassword})
 
 	return
 }

@@ -34,7 +34,12 @@ func addPower(power *PowerAction) *PowerAction {
 }
 
 func AppendPower(power *PowerAction) *PowerAction {
-	return addPower(power)
+	if power.Parent != nil {
+		power.ParentAction = power.Parent.Action
+		power.Action = power.Parent.Action + ":" + power.Action
+	}
+	powers = append(powers, power)
+	return power
 }
 func GetPowers() (ps []*PowerAction) {
 

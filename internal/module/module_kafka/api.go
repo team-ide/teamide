@@ -6,7 +6,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/kafka"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/util"
 )
 
@@ -22,17 +21,17 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power                 = base.AppendPower(&base.PowerAction{Action: "kafka", Text: "Kafka", ShouldLogin: true, StandAlone: true})
-	infoPower             = base.AppendPower(&base.PowerAction{Action: "kafka_info", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	topicsPower           = base.AppendPower(&base.PowerAction{Action: "kafka_topics", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	commitPower           = base.AppendPower(&base.PowerAction{Action: "kafka_commit", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	pullPower             = base.AppendPower(&base.PowerAction{Action: "kafka_pull", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	pushPower             = base.AppendPower(&base.PowerAction{Action: "kafka_push", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	resetPower            = base.AppendPower(&base.PowerAction{Action: "kafka_reset", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteTopicPower      = base.AppendPower(&base.PowerAction{Action: "kafka_deleteTopic", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	createTopicPower      = base.AppendPower(&base.PowerAction{Action: "kafka_createTopic", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	createPartitionsPower = base.AppendPower(&base.PowerAction{Action: "kafka_createPartitions", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteRecordsPower    = base.AppendPower(&base.PowerAction{Action: "kafka_deleteRecords", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower            = base.AppendPower(&base.PowerAction{Action: "kafka_close", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	infoPower             = base.AppendPower(&base.PowerAction{Action: "info", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	topicsPower           = base.AppendPower(&base.PowerAction{Action: "topics", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	commitPower           = base.AppendPower(&base.PowerAction{Action: "commit", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	pullPower             = base.AppendPower(&base.PowerAction{Action: "pull", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	pushPower             = base.AppendPower(&base.PowerAction{Action: "push", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	resetPower            = base.AppendPower(&base.PowerAction{Action: "reset", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteTopicPower      = base.AppendPower(&base.PowerAction{Action: "deleteTopic", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	createTopicPower      = base.AppendPower(&base.PowerAction{Action: "createTopic", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	createPartitionsPower = base.AppendPower(&base.PowerAction{Action: "createPartitions", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteRecordsPower    = base.AppendPower(&base.PowerAction{Action: "deleteRecords", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower            = base.AppendPower(&base.PowerAction{Action: "close", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -71,8 +70,8 @@ func getService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) 
 	if kafkaConfig.CertPath != "" {
 		key += "-" + util.GetMd5String(key+kafkaConfig.CertPath)
 	}
-	var service toolbox.Service
-	service, err = toolbox.GetService(key, func() (res toolbox.Service, err error) {
+	var service util.Service
+	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s *kafka.SaramaService
 		s, err = kafka.CreateKafkaService(kafkaConfig)
 		if err != nil {

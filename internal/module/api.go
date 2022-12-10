@@ -115,9 +115,9 @@ var (
 	PowerSession     = base.AppendPower(&base.PowerAction{Action: "session", Text: "会话", StandAlone: true})
 	PowerLogin       = base.AppendPower(&base.PowerAction{Action: "login", Text: "登录", StandAlone: false})
 	PowerLogout      = base.AppendPower(&base.PowerAction{Action: "logout", Text: "登出", StandAlone: false})
-	PowerAutoLogin   = base.AppendPower(&base.PowerAction{Action: "auto_login", Text: "自动登录", StandAlone: false})
+	PowerAutoLogin   = base.AppendPower(&base.PowerAction{Action: "autoLogin", Text: "自动登录", StandAlone: false})
 	PowerUpload      = base.AppendPower(&base.PowerAction{Action: "upload", Text: "上传", StandAlone: true})
-	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "update_check", Text: "更新检测", ShouldPower: true, ShouldLogin: true, StandAlone: true})
+	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "updateCheck", Text: "更新检测", ShouldPower: true, ShouldLogin: true, StandAlone: true})
 	PowerWebsocket   = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "WebSocket", StandAlone: true})
 )
 

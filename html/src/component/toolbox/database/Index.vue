@@ -75,8 +75,8 @@ export default {
       this.ready = true;
     },
     async loadData() {
-      let param = {};
-      let res = await this.toolboxWorker.work("data", param);
+      let param = this.toolboxWorker.getWorkParam({});
+      let res = await this.server.database.data(param);
       let data = res.data || {};
       this.columnTypeInfoList = data.columnTypeInfoList || [];
       this.indexTypeInfoList = data.indexTypeInfoList || [];

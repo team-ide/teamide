@@ -31,25 +31,20 @@ var (
 
 	// Power 文件管理器 基本 权限
 	Power                = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "终端", ShouldLogin: true, StandAlone: true})
-	PowerWebsocket       = base.AppendPower(&base.PowerAction{Action: "terminal_websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
-	PowerClose           = base.AppendPower(&base.PowerAction{Action: "terminal_close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
-	PowerKet             = base.AppendPower(&base.PowerAction{Action: "terminal_key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
-	PowerChangeSize      = base.AppendPower(&base.PowerAction{Action: "terminal_change_size", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
-	PowerUploadWebsocket = base.AppendPower(&base.PowerAction{Action: "terminal_upload_websocket", Text: "终端上传WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	websocketPower       = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower           = base.AppendPower(&base.PowerAction{Action: "close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	keyPower             = base.AppendPower(&base.PowerAction{Action: "key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
+	changeSizePower      = base.AppendPower(&base.PowerAction{Action: "changeSize", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
+	uploadWebsocketPower = base.AppendPower(&base.PowerAction{Action: "uploadWebsocket", Text: "终端上传WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal"}, Power: Power, Do: this_.index})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/key"}, Power: PowerKet, Do: this_.key})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/websocket"}, Power: PowerWebsocket, Do: this_.websocket, IsWebSocket: true})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/changeSize"}, Power: PowerChangeSize, Do: this_.changeSize})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/close"}, Power: PowerClose, Do: this_.close})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/uploadWebsocket"}, Power: PowerUploadWebsocket, Do: this_.uploadWebsocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/key"}, Power: keyPower, Do: this_.key})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/websocket"}, Power: websocketPower, Do: this_.websocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/changeSize"}, Power: changeSizePower, Do: this_.changeSize})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/close"}, Power: closePower, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/uploadWebsocket"}, Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
 
-	return
-}
-
-func (this_ *api) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
 	return
 }
 

@@ -461,8 +461,7 @@ export default {
         return;
       }
       this.showSQL = "";
-      let res = await this.loadSqls();
-      let sqlList = res.sqlList || [];
+      let sqlList = await this.loadSqls();
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
@@ -470,20 +469,20 @@ export default {
     },
     async loadSqls() {
       let data = this.getFormData();
+      let param = this.toolboxWorker.getWorkParam(data);
       let res = null;
       if (this.isInsert) {
-        res = await this.toolboxWorker.work("tableCreateSql", data);
+        res = await this.server.database.tableCreateSql(param);
       } else {
-        data.ownerName = this.ownerName;
-        data.tableName = this.tableName;
-        res = await this.toolboxWorker.work("tableUpdateSql", data);
+        param.ownerName = this.ownerName;
+        param.tableName = this.tableName;
+        res = await this.server.database.tableUpdateSql(param);
       }
       this.error = null;
       if (res.code != 0) {
         this.onError(res.msg);
-        return;
       }
-      return res.data || {};
+      return res.data || [];
     },
   },
   created() {},

@@ -2,46 +2,46 @@ import http from '@/server/http';
 
 let fileManager = {
     close(param) {
-        return http.post('api/file_manager/close', param);
+        return http.post('api/fileManager/close', param);
     },
     file(param) {
-        return http.post('api/file_manager/file', param);
+        return http.post('api/fileManager/file', param);
     },
     files(param) {
-        return http.post('api/file_manager/files', param);
+        return http.post('api/fileManager/files', param);
     },
     create(param) {
-        return http.post('api/file_manager/create', param);
+        return http.post('api/fileManager/create', param);
     },
     read(param) {
-        return http.post('api/file_manager/read', param);
+        return http.post('api/fileManager/read', param);
     },
     write(param) {
-        return http.post('api/file_manager/write', param);
+        return http.post('api/fileManager/write', param);
     },
     rename(param) {
-        return http.post('api/file_manager/rename', param);
+        return http.post('api/fileManager/rename', param);
     },
     move(param) {
-        return http.post('api/file_manager/move', param);
+        return http.post('api/fileManager/move', param);
     },
     remove(param) {
-        return http.post('api/file_manager/remove', param);
+        return http.post('api/fileManager/remove', param);
     },
     copy(param) {
-        return http.post('api/file_manager/copy', param);
+        return http.post('api/fileManager/copy', param);
     },
     callAction(param) {
-        return http.post('api/file_manager/callAction', param);
+        return http.post('api/fileManager/callAction', param);
     },
     callStop(param) {
-        return http.post('api/file_manager/callStop', param);
+        return http.post('api/fileManager/callStop', param);
     },
     upload(param) {
-        return http.post('api/file_manager/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
+        return http.post('api/fileManager/upload', param, { headers: { 'Content-Type': 'multipart/form-data' } });
     },
     download(param) {
-        return http.post('api/file_manager/download', param, { responseType: "blob" });
+        return http.post('api/fileManager/download', param, { responseType: "blob" });
     },
 };
 

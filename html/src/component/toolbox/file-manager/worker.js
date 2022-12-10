@@ -353,7 +353,7 @@ const newWorker = function (workerOption) {
             }
         },
         async download(path) {
-            let url = source.api + "file_manager/download?";
+            let url = source.api + "fileManager/download?";
             url += "workerId=" + (this.workerId || "");
             url += "&jwt=" + encodeURIComponent(tool.getJWT());
             url += "&fileWorkerKey=" + (this.fileWorkerKey || "");

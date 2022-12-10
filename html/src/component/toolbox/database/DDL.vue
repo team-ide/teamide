@@ -93,13 +93,15 @@ export default {
       this.$refs.Editor.setValue(ddl);
     },
     async loadDDL(ownerName, tableName) {
-      let param = Object.assign({}, this.form);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
       this.toolboxWorker.formatParam(param);
       param.ownerName = ownerName;
       param.tableName = tableName;
-      let res = await this.toolboxWorker.work("ddl", param);
-      res.data = res.data || {};
-      return res.data.sqlList || [];
+      let res = await this.server.database.ddl(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
+      return res.data || [];
     },
   },
   created() {},

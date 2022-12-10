@@ -62,6 +62,10 @@ func (this_ *Service) Stop() {
 	}
 }
 
+func (this_ *Service) Info() (res interface{}, err error) {
+	return
+}
+
 func (this_ *Service) OwnersSelect(param *Param) (owners []*dialect.OwnerModel, err error) {
 	owners, err = worker.OwnersSelect(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel)
 	return

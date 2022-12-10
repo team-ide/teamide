@@ -605,7 +605,11 @@ export default {
       this.inserts = [];
       this.selects = [];
 
-      let res = await this.toolboxWorker.work("tableData", data);
+      let param = this.toolboxWorker.getWorkParam(data);
+      let res = await this.server.database.tableData(param);
+      if (res.code != 0) {
+        this.tool.error(res.msg);
+      }
       res.data = res.data || {};
 
       let dataList = res.data.dataList || [];
@@ -1036,12 +1040,13 @@ export default {
       data.updateList = updateList;
       data.updateWhereList = updateWhereList;
 
-      let res = await this.toolboxWorker.work("dataListExec", data);
+      let param = this.toolboxWorker.getWorkParam(data);
+      let res = await this.server.database.dataListExec(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return;
       }
-      res.data = res.data || {};
-      let task = res.data.task || {};
+      let task = res.data || {};
       let info = "保存成功，";
       info +=
         "成功记录数（" +
@@ -1059,12 +1064,13 @@ export default {
       data.columnList = this.tableDetail.columnList;
       data.deleteList = deleteList;
 
-      let res = await this.toolboxWorker.work("dataListExec", data);
+      let param = this.toolboxWorker.getWorkParam(data);
+      let res = await this.server.database.dataListExec(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return;
       }
-      res.data = res.data || {};
-      let task = res.data.task || {};
+      let task = res.data || {};
       let info = "删除成功，";
       info +=
         "成功记录数（" +

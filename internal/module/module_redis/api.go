@@ -7,7 +7,6 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/redis"
-	"teamide/pkg/toolbox"
 	"teamide/pkg/util"
 )
 
@@ -23,24 +22,24 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power              = base.AppendPower(&base.PowerAction{Action: "redis", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	infoPower          = base.AppendPower(&base.PowerAction{Action: "redis_info", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getPower           = base.AppendPower(&base.PowerAction{Action: "redis_get", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	keysPower          = base.AppendPower(&base.PowerAction{Action: "redis_keys", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	setPower           = base.AppendPower(&base.PowerAction{Action: "redis_set", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	saddPower          = base.AppendPower(&base.PowerAction{Action: "redis_sadd", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	sremPower          = base.AppendPower(&base.PowerAction{Action: "redis_srem", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	lpushPower         = base.AppendPower(&base.PowerAction{Action: "redis_lpush", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	rpushPower         = base.AppendPower(&base.PowerAction{Action: "redis_rpush", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	lsetPower          = base.AppendPower(&base.PowerAction{Action: "redis_lset", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	lremPower          = base.AppendPower(&base.PowerAction{Action: "redis_lrem", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	hsetPower          = base.AppendPower(&base.PowerAction{Action: "redis_hset", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	hdelPower          = base.AppendPower(&base.PowerAction{Action: "redis_hdel", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	deletePower        = base.AppendPower(&base.PowerAction{Action: "redis_delete", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	deletePatternPower = base.AppendPower(&base.PowerAction{Action: "redis_deletePattern", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	expirePower        = base.AppendPower(&base.PowerAction{Action: "redis_expire", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	ttlPower           = base.AppendPower(&base.PowerAction{Action: "redis_ttl", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	persistPower       = base.AppendPower(&base.PowerAction{Action: "redis_persist", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	closePower         = base.AppendPower(&base.PowerAction{Action: "redis_close", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	infoPower          = base.AppendPower(&base.PowerAction{Action: "info", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getPower           = base.AppendPower(&base.PowerAction{Action: "get", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	keysPower          = base.AppendPower(&base.PowerAction{Action: "keys", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	setPower           = base.AppendPower(&base.PowerAction{Action: "set", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	saddPower          = base.AppendPower(&base.PowerAction{Action: "sadd", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	sremPower          = base.AppendPower(&base.PowerAction{Action: "srem", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	lpushPower         = base.AppendPower(&base.PowerAction{Action: "lpush", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	rpushPower         = base.AppendPower(&base.PowerAction{Action: "rpush", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	lsetPower          = base.AppendPower(&base.PowerAction{Action: "lset", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	lremPower          = base.AppendPower(&base.PowerAction{Action: "lrem", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	hsetPower          = base.AppendPower(&base.PowerAction{Action: "hset", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	hdelPower          = base.AppendPower(&base.PowerAction{Action: "hdel", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	deletePower        = base.AppendPower(&base.PowerAction{Action: "delete", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	deletePatternPower = base.AppendPower(&base.PowerAction{Action: "deletePattern", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	expirePower        = base.AppendPower(&base.PowerAction{Action: "expire", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	ttlPower           = base.AppendPower(&base.PowerAction{Action: "ttl", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	persistPower       = base.AppendPower(&base.PowerAction{Action: "persist", Text: "Redis", ShouldLogin: true, StandAlone: true})
+	closePower         = base.AppendPower(&base.PowerAction{Action: "close", Text: "Redis", ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -86,8 +85,8 @@ func getService(redisConfig redis.Config) (res redis.Service, err error) {
 	if redisConfig.CertPath != "" {
 		key += "-" + util.GetMd5String(key+redisConfig.CertPath)
 	}
-	var service toolbox.Service
-	service, err = toolbox.GetService(key, func() (res toolbox.Service, err error) {
+	var service util.Service
+	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s redis.Service
 		s, err = redis.CreateService(redisConfig)
 		if err != nil {

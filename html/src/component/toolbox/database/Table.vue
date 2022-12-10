@@ -148,7 +148,11 @@ export default {
         }
       }
       this.$nextTick(() => {
-        this.$refs.TableDetail.init(this.ownerName, this.tableName, this.form);
+        this.$refs.TableDetail.init(
+          this.ownerName,
+          this.form.tableName,
+          this.form
+        );
       });
     },
     getFormData() {
@@ -173,15 +177,16 @@ export default {
     },
     async toExecuteSql() {
       let data = this.getFormData();
+      let param = this.toolboxWorker.getWorkParam(data);
 
       this.executeSqlIng = true;
       let res = null;
       if (this.isInsert) {
-        res = await this.toolboxWorker.work("tableCreate", data);
+        res = await this.server.database.tableCreate(param);
       } else {
-        data.ownerName = this.ownerName;
-        data.tableName = this.tableName;
-        res = await this.toolboxWorker.work("tableUpdate", data);
+        param.ownerName = this.ownerName;
+        param.tableName = this.tableName || this.form.tableName;
+        res = await this.server.database.tableUpdate(param);
       }
       this.executeSqlIng = false;
       this.error = null;
@@ -191,13 +196,10 @@ export default {
       }
       this.tool.success("执行成功");
       let tableDetail = await this.toolboxWorker.getTableDetail(
-        data.ownerName,
-        data.tableName
+        param.ownerName,
+        param.tableName
       );
-
-      this.initForm(data.ownerName, tableDetail);
-
-      return res.data || {};
+      this.initForm(param.ownerName, tableDetail);
     },
     async onTableDetailChange() {},
     onError(error) {

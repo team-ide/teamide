@@ -241,18 +241,19 @@ export default {
       await this.doExecuteSql(this.executeSQL);
     },
     async doExecuteSql(executeSQL) {
-      let data = Object.assign({}, this.form);
+      let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
 
-      data.executeSQL = executeSQL;
-      let res = await this.toolboxWorker.work("executeSQL", data);
+      param.executeSQL = executeSQL;
+      let res = await this.server.database.executeSQL(param);
       if (res.code != 0) {
+        this.tool.error(res.msg);
         return;
       }
-      res.data = res.data || {};
-      if (res.data.error) {
-        this.tool.error(res.data.error);
+      let data = res.data || {};
+      if (data.error) {
+        this.tool.error(data.error);
       }
-      this.executeList = res.data.executeList || [];
+      this.executeList = data.executeList || [];
       this.initExecuteList();
     },
     initExecuteList() {

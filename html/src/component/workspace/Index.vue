@@ -85,10 +85,7 @@
             </el-dropdown-menu>
           </el-dropdown>
         </div>
-        <div
-          v-if="source.hasPower('file_manager')"
-          class="workspace-header-nav"
-        >
+        <div v-if="source.hasPower('fileManager')" class="workspace-header-nav">
           <el-dropdown
             trigger="click"
             class="file-manager-dropdown"
@@ -189,7 +186,7 @@
           </div>
         </template>
         <div
-          v-if="source.hasPower('update_check')"
+          v-if="source.hasPower('updateCheck')"
           class="workspace-header-nav"
           @click="tool.showUpdateCheck()"
         >

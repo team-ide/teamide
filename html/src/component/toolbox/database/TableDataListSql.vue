@@ -133,9 +133,7 @@ export default {
     },
     async toLoad() {
       this.showSQL = "";
-      let res = await this.loadSqls();
-      let sqlList = res.sqlList || [];
-      let valuesList = res.valuesList || [];
+      let sqlList = await this.loadSqls();
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
@@ -210,11 +208,12 @@ export default {
       data.updateWhereList = updateWhereList;
       data.deleteList = deleteList;
 
-      let res = await this.toolboxWorker.work("dataListSql", data);
+      let param = this.toolboxWorker.getWorkParam(data);
+      let res = await this.server.database.dataListSql(param);
       if (res.code != 0) {
-        return {};
+        this.tool.error(res.msg);
       }
-      return res.data || {};
+      return res.data || [];
     },
     init() {},
   },
