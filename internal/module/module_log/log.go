@@ -1,6 +1,7 @@
 package module_log
 
 import (
+	"github.com/team-ide/go-dialect/worker"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
 	"teamide/pkg/util"
@@ -44,6 +45,50 @@ func (this_ *LogService) Insert(log *LogModel, errLog error) (err error) {
 	sql := `INSERT INTO ` + TableLog + `(logId, loginId, userId, userName, userAccount, ip, action, method, param, data, userAgent, status, error, useTime, startTime, endTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
 
 	_, err = this_.DatabaseWorker.Exec(sql, []interface{}{log.LogId, log.LoginId, log.UserId, log.UserName, log.UserAccount, log.Ip, log.Action, log.Method, log.Param, log.Data, log.UserAgent, log.Status, log.Error, log.UseTime, log.StartTime, log.EndTime, log.CreateTime})
+	if err != nil {
+		return
+	}
+	return
+}
+
+type LogPage struct {
+	*worker.Page
+	DataList []*LogModel `json:"dataList"`
+}
+
+// QueryPage 新增
+func (this_ *LogService) QueryPage(log *LogModel, page *LogPage) (err error) {
+	var sql string
+	var values []interface{}
+
+	sql += "SELECT * FROM " + TableLog + " WHERE 1=1"
+	if log.UserId != 0 {
+		sql += " AND userId=?"
+		values = append(values, log.UserId)
+	}
+	if log.Action != "" {
+		sql += " AND action=?"
+		values = append(values, log.Action)
+	}
+	sql += " ORDER BY createTime DESC"
+	page.DataList = []*LogModel{}
+	err = this_.DatabaseWorker.QueryPage(sql, values, &page.DataList, page.Page)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *LogService) clean(log *LogModel) (err error) {
+	var sql string
+	var values []interface{}
+
+	sql += "DELETE FROM " + TableLog + " WHERE 1=1"
+	if log.UserId != 0 {
+		sql += " AND userId=?"
+		values = append(values, log.UserId)
+	}
+	_, err = this_.DatabaseWorker.Exec(sql, values)
 	if err != nil {
 		return
 	}

@@ -12,6 +12,9 @@ import kafka from "./kafka.js";
 import zookeeper from "./zookeeper.js";
 import redis from "./redis.js";
 
+import log from "./log.js";
+import power from "./power.js";
+
 import tool from '../tool/index.js';
 import source from '../source/index.js';
 let server = {
@@ -25,6 +28,8 @@ let server = {
     kafka,
     zookeeper,
     redis,
+    log,
+    power,
     data(param) {
         param = param || {};
         param.origin = location.origin;

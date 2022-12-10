@@ -141,6 +141,14 @@
             </el-dropdown-menu>
           </el-dropdown>
         </div>
+
+        <div
+          v-if="source.hasPower('log')"
+          class="workspace-header-nav"
+          @click="openPage('log', '日志')"
+        >
+          日志
+        </div>
         <div style="flex: 1"></div>
         <template v-if="source.login.user == null">
           <div

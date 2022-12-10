@@ -79,7 +79,6 @@ export default {
       this.userForm.avatar = user.avatar;
       this.userForm.account = user.account;
       this.userForm.email = user.email;
-      console.log(this.userForm);
     },
     async doUpdate() {
       if (this.tool.isEmpty(this.userForm.name)) {

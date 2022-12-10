@@ -3,7 +3,6 @@ package base
 import "github.com/gin-gonic/gin"
 
 type ApiWorker struct {
-	Apis        []string
 	Power       *PowerAction
 	Do          func(request *RequestBean, c *gin.Context) (res interface{}, err error)
 	IsGet       bool
@@ -36,7 +35,7 @@ func addPower(power *PowerAction) *PowerAction {
 func AppendPower(power *PowerAction) *PowerAction {
 	if power.Parent != nil {
 		power.ParentAction = power.Parent.Action
-		power.Action = power.Parent.Action + ":" + power.Action
+		power.Action = power.Parent.Action + "/" + power.Action
 	}
 	powers = append(powers, power)
 	return power

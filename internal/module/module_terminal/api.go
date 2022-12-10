@@ -39,11 +39,11 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/key"}, Power: keyPower, Do: this_.key})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/websocket"}, Power: websocketPower, Do: this_.websocket, IsWebSocket: true})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/changeSize"}, Power: changeSizePower, Do: this_.changeSize})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/close"}, Power: closePower, Do: this_.close})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"terminal/uploadWebsocket"}, Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Power: keyPower, Do: this_.key})
+	apis = append(apis, &base.ApiWorker{Power: websocketPower, Do: this_.websocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Power: changeSizePower, Do: this_.changeSize})
+	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
 
 	return
 }

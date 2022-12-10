@@ -122,15 +122,15 @@ var (
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"data"}, Power: PowerData, Do: this_.apiData})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"login"}, Power: PowerLogin, Do: this_.apiLogin})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"autoLogin"}, Power: PowerAutoLogin, Do: this_.apiLogin})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"logout"}, Power: PowerLogout, Do: this_.apiLogout})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"register"}, Power: PowerRegister, Do: this_.apiRegister})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"session"}, Power: PowerSession, Do: this_.apiSession})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"upload"}, Power: PowerUpload, Do: this_.apiUpload, IsUpload: true})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"updateCheck"}, Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"websocket"}, Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Power: PowerData, Do: this_.apiData})
+	apis = append(apis, &base.ApiWorker{Power: PowerLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Power: PowerAutoLogin, Do: this_.apiLogin})
+	apis = append(apis, &base.ApiWorker{Power: PowerLogout, Do: this_.apiLogout})
+	apis = append(apis, &base.ApiWorker{Power: PowerRegister, Do: this_.apiRegister})
+	apis = append(apis, &base.ApiWorker{Power: PowerSession, Do: this_.apiSession})
+	apis = append(apis, &base.ApiWorker{Power: PowerUpload, Do: this_.apiUpload, IsUpload: true})
+	apis = append(apis, &base.ApiWorker{Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
+	apis = append(apis, &base.ApiWorker{Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true})
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
@@ -142,6 +142,8 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_zookeeper.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_kafka.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_elasticsearch.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_log.NewApi(this_.logService).GetApis()...)
+	apis = append(apis, module_power.NewApi(this_.powerRoleService).GetApis()...)
 
 	return
 }
@@ -155,26 +157,17 @@ func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 			err = errors.New(fmt.Sprint("API未设置权限!", api))
 			return
 		}
-		if len(api.Apis) == 0 {
+		if api.Power.Action == "" {
 			err = errors.New(fmt.Sprint("API未设置映射路径!", api))
 			return
 		}
 
-		if !this_.IsServer {
-			if !api.Power.StandAlone {
-				continue
-			}
+		_, find := this_.apiCache[api.Power.Action]
+		if find {
+			err = errors.New(fmt.Sprint("API映射路径[", api.Power.Action, "]已存在!", api))
+			return
 		}
-		for _, apiName := range api.Apis {
-
-			_, find := this_.apiCache[apiName]
-			if find {
-				err = errors.New(fmt.Sprint("API映射路径[", apiName, "]已存在!", api))
-				return
-			}
-			// println("add api path :" + apiName + ",action:" + api.Power.Action)
-			this_.apiCache[apiName] = api
-		}
+		this_.apiCache[api.Power.Action] = api
 	}
 	return
 }

@@ -22,20 +22,20 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 var (
 	Power            = base.AppendPower(&base.PowerAction{Action: "zookeeper", Text: "Zookeeper", ShouldLogin: true, StandAlone: true})
 	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getPower         = base.AppendPower(&base.PowerAction{Action: "get", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	savePower        = base.AppendPower(&base.PowerAction{Action: "save", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getChildrenPower = base.AppendPower(&base.PowerAction{Action: "getChildren", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deletePower      = base.AppendPower(&base.PowerAction{Action: "delete", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "Zookeeper信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getPower         = base.AppendPower(&base.PowerAction{Action: "get", Text: "Zookeeper获取节点数据", ShouldLogin: true, StandAlone: true, Parent: Power})
+	savePower        = base.AppendPower(&base.PowerAction{Action: "save", Text: "Zookeeper保存节点数据", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getChildrenPower = base.AppendPower(&base.PowerAction{Action: "getChildren", Text: "Zookeeper查询子节点", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deletePower      = base.AppendPower(&base.PowerAction{Action: "delete", Text: "Zookeeper删除节点", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "Zookeeper关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/info"}, Power: infoPower, Do: this_.info})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/get"}, Power: getPower, Do: this_.get})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/save"}, Power: savePower, Do: this_.save})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/getChildren"}, Power: getChildrenPower, Do: this_.getChildren})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/delete"}, Power: deletePower, Do: this_.delete})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"zookeeper/close"}, Power: closePower, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
+	apis = append(apis, &base.ApiWorker{Power: getPower, Do: this_.get})
+	apis = append(apis, &base.ApiWorker{Power: savePower, Do: this_.save})
+	apis = append(apis, &base.ApiWorker{Power: getChildrenPower, Do: this_.getChildren})
+	apis = append(apis, &base.ApiWorker{Power: deletePower, Do: this_.delete})
+	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
 }

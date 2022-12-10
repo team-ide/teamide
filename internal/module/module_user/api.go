@@ -34,9 +34,9 @@ var (
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/get"}, Power: getPower, Do: this_.get})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/update"}, Power: updatePower, Do: this_.update})
-	apis = append(apis, &base.ApiWorker{Apis: []string{"user/updatePassword"}, Power: updatePasswordPower, Do: this_.updatePassword})
+	apis = append(apis, &base.ApiWorker{Power: getPower, Do: this_.get})
+	apis = append(apis, &base.ApiWorker{Power: updatePower, Do: this_.update})
+	apis = append(apis, &base.ApiWorker{Power: updatePasswordPower, Do: this_.updatePassword})
 
 	return
 }
