@@ -26,7 +26,7 @@
           节点
         </div>
         <div
-          v-if="source.hasPower('node_net_proxy')"
+          v-if="source.hasPower('node/netProxy')"
           class="workspace-header-nav"
           @click="openNodeNetProxyContext()"
         >

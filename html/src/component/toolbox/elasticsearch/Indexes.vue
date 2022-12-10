@@ -152,6 +152,18 @@ export default {
         },
       });
       menus.push({
+        text: "导入",
+        onClick: () => {
+          this.toImport(data);
+        },
+      });
+      menus.push({
+        text: "导出",
+        onClick: () => {
+          this.toExport(data);
+        },
+      });
+      menus.push({
         text: "删除",
         onClick: () => {
           this.toDelete(data);
@@ -160,6 +172,14 @@ export default {
       if (menus.length > 0) {
         this.tool.showContextmenu(menus);
       }
+    },
+    async toExport(data) {
+      this.tool.warn("功能还未完善，敬请期待！");
+      return;
+    },
+    async toImport(data) {
+      this.tool.warn("功能还未完善，敬请期待！");
+      return;
     },
     toInsert() {
       let data = {};

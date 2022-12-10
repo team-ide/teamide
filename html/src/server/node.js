@@ -58,8 +58,8 @@ let node = {
         info(param) {
             return http.post('api/node/system/info', param);
         },
-        queryMonitorData(param) {
-            return http.post('api/node/system/queryMonitorData', param);
+        monitorData(param) {
+            return http.post('api/node/system/monitorData', param);
         },
         cleanMonitorData(param) {
             return http.post('api/node/system/cleanMonitorData', param);

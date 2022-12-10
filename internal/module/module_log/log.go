@@ -70,6 +70,14 @@ func (this_ *LogService) QueryPage(log *LogModel, page *LogPage) (err error) {
 		sql += " AND action=?"
 		values = append(values, log.Action)
 	}
+	if !log.StartTime.IsZero() {
+		sql += " AND (startTime>=? OR endTime>=?)"
+		values = append(values, log.StartTime, log.StartTime)
+	}
+	if !log.EndTime.IsZero() {
+		sql += " AND (startTime<=? OR endTime<=?)"
+		values = append(values, log.EndTime, log.EndTime)
+	}
 	sql += " ORDER BY createTime DESC"
 	page.DataList = []*LogModel{}
 	err = this_.DatabaseWorker.QueryPage(sql, values, &page.DataList, page.Page)

@@ -365,14 +365,16 @@ export default {
       return;
     },
     async toImport(data) {
-      data = data || {};
-      let extend = {
-        name: "导入",
-        title: "导入",
-        type: "import",
-        database: data.database || this.searchForm.database,
-      };
-      this.toolboxWorker.openTabByExtend(extend);
+      this.tool.warn("功能还未完善，敬请期待！");
+      return;
+      // data = data || {};
+      // let extend = {
+      //   name: "导入",
+      //   title: "导入",
+      //   type: "import",
+      //   database: data.database || this.searchForm.database,
+      // };
+      // this.toolboxWorker.openTabByExtend(extend);
     },
     toInsert() {
       let extend = {

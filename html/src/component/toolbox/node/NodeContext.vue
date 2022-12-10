@@ -69,6 +69,7 @@
               :source="source"
               :nodeList="nodeList"
               :onNodeMoved="toolboxWorker.onNodeMoved"
+              :toolboxWorker="toolboxWorker"
             ></NodeView>
           </template>
         </div>

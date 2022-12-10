@@ -258,7 +258,7 @@ export default {
       }
       size = size || 30;
       try {
-        let res = await this.server.node.system.queryMonitorData({
+        let res = await this.server.node.system.monitorData({
           nodeId: this.serverId,
           timestamp: Number(timestamp),
           size: Number(size),

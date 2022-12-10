@@ -12,7 +12,7 @@ import NodeInfo from "./NodeInfo.vue";
 
 export default {
   components: {},
-  props: ["source", "nodeList", "onNodeMoved"],
+  props: ["source", "nodeList", "onNodeMoved", "toolboxWorker"],
   data() {
     return {
       nodeWrapList: null,

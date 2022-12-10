@@ -21,6 +21,21 @@
               </template>
             </el-select>
           </el-form-item>
+          <el-form-item label="时间区间">
+            <el-date-picker
+              v-model="formData.startTime"
+              type="datetime"
+              placeholder="选择日期时间"
+            >
+            </el-date-picker>
+            <span>-</span>
+            <el-date-picker
+              v-model="formData.endTime"
+              type="datetime"
+              placeholder="选择日期时间"
+            >
+            </el-date-picker>
+          </el-form-item>
           <el-form-item label="">
             <div class="">
               <div class="tm-btn tm-btn-sm bg-grey ft-13" @click="doSearch()">
@@ -114,6 +129,8 @@ export default {
     return {
       formData: {
         action: "",
+        startTime: null,
+        endTime: null,
         pageSize: 50,
         pageNo: 1,
       },
@@ -144,6 +161,12 @@ export default {
     },
     async doSearch() {
       let param = Object.assign({}, this.formData);
+      if (this.tool.isNotEmpty(param.startTime)) {
+        param.startTime = new Date(param.startTime).getTime() / 1000;
+      }
+      if (this.tool.isNotEmpty(param.endTime)) {
+        param.endTime = new Date(param.endTime).getTime() / 1000;
+      }
       let res = await this.server.log.queryPage(param);
       if (res.code != 0) {
         this.tool.error(res.msg);
