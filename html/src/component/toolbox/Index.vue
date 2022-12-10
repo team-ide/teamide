@@ -177,10 +177,6 @@ export default {
   mounted() {
     this.bindEvent();
   },
-  beforeDestroy() {
-    let param = {};
-    this.toolboxWorker.work("close", param);
-  },
   updated() {},
 };
 </script>

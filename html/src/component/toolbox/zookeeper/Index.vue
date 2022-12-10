@@ -528,6 +528,10 @@ export default {
   mounted() {
     this.init();
   },
+  beforeDestroy() {
+    let param = this.toolboxWorker.getWorkParam({});
+    this.server.zookeeper.close(param);
+  },
 };
 </script>
 
