@@ -113,6 +113,12 @@ func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
 	if config.DbName != "" {
 		key += "-" + config.DbName
 	}
+	if config.OdbcName != "" {
+		key += "-" + config.OdbcName
+	}
+	if config.OdbcDialectName != "" {
+		key += "-" + config.OdbcDialectName
+	}
 	if config.Username != "" {
 		key += "-" + util.GetMd5String(key+config.Username)
 	}

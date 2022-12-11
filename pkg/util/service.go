@@ -36,7 +36,6 @@ func GetService(key string, create func() (Service, error)) (Service, error) {
 	if ok {
 		return res, nil
 	}
-	Logger.Info("缓存暂无该服务，创建服务", zap.Any("Key", key))
 	res, err := createService(key, create)
 	return res, err
 }
