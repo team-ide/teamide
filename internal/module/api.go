@@ -55,23 +55,6 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		}
 	}
 
-	var apiPowerMap = make(map[string]bool)
-	for _, one := range api.apiCache {
-		apiPowerMap[one.Power.Action] = true
-	}
-	ps := base.GetPowers()
-	for _, one := range ps {
-		if !ServerContext.IsServer {
-			if !one.StandAlone {
-				continue
-			}
-		}
-		_, ok := apiPowerMap[one.Action]
-		if !ok {
-			ServerContext.Logger.Warn("权限[" + one.Action + "]未配置动作")
-		}
-	}
-
 	err = api.installService.Install()
 	if err != nil {
 		return
