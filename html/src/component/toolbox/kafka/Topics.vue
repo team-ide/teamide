@@ -14,6 +14,12 @@
               <div class="tm-btn tm-btn-xs bg-teal-8" @click="toInsert">
                 新建主题
               </div>
+              <div class="tm-btn tm-btn-xs bg-grey" @click="toImport()">
+                导入
+              </div>
+              <div class="tm-btn tm-btn-xs bg-grey" @click="toExport()">
+                导出
+              </div>
               <div
                 class="tm-btn tm-btn-xs bg-grey"
                 @click="toolboxWorker.showInfo()"

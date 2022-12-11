@@ -233,7 +233,7 @@ export default {
       this.toolboxGroups = groups;
     },
     async initData() {
-      this.source.initUserToolboxData();
+      this.source.initLoginUserData();
       await this.initToolboxGroups();
       if (this.toolboxTypes.length == 0) {
         this.toolboxTypes = this.source.toolboxTypes || [];

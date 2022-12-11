@@ -124,6 +124,7 @@ export default {
       this.nodeContext.nodeLocalList = nodeLocalList;
       this.nodeContext.nodeList = nodeList;
       this.nodeContext.nodeOptionMap = nodeOptionMap;
+      this.source.nodeList = nodeList;
     },
     initNodeNetProxyList(nodeNetProxyList) {
       nodeNetProxyList = nodeNetProxyList || [];

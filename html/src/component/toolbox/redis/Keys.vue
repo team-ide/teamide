@@ -61,8 +61,8 @@
               </span>
               个
               <el-radio-group v-model="viewModel">
-                <el-radio label="list" class="mglr-0 mgl-5">列表</el-radio>
-                <el-radio label="tree" class="mglr-0 mgl-5"
+                <el-radio label="list" class="mglr-0 mgl-10">列表</el-radio>
+                <el-radio label="tree" class="mglr-0 mgl-10"
                   >树形(分割符号'{{ splitChars.join("','") }}')</el-radio
                 >
               </el-radio-group>

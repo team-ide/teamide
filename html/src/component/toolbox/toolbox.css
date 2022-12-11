@@ -474,6 +474,10 @@
     color: #ddd;
 }
 
+.toolbox-editor .el-radio__label {
+    color: #ddd;
+}
+
 .toolbox-editor .el-checkbox__input.is-disabled+span.el-checkbox__label {
     color: #767676;
 }

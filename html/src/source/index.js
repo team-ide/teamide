@@ -316,10 +316,11 @@ source.sqlValuePackChars = [
     { value: "'", text: "'" },
     { value: '"', text: '"' },
 ];
-source.initUserToolboxData = () => {
+source.initLoginUserData = () => {
 
     source.initUserToolboxCount();
     source.initUserToolboxSSHList();
+    source.initUserNodeList();
 }
 source.toolboxCount = 0;
 source.initUserToolboxCount = async () => {
@@ -354,6 +355,22 @@ source.initUserToolboxSSHList = async () => {
         }
     });
     source.sshToolboxList = sshToolboxList;
+}
+
+source.nodeList = [];
+source.initUserNodeList = async () => {
+    let data = {}
+    if (source.login.user != null) {
+        let res = await server.node.list({});
+        if (res.code != 0) {
+            tool.error(res.msg);
+        }
+        data = res.data || {};
+    }
+
+    let nodeList = data.nodeList || [];
+
+    source.nodeList = nodeList;
 }
 
 let refreshPowers = function () {

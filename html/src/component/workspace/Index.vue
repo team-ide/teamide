@@ -261,7 +261,7 @@ export default {
   },
   methods: {
     async initUserData() {
-      await this.source.initUserToolboxData();
+      await this.source.initLoginUserData();
       await this.initOpens();
     },
     init() {
