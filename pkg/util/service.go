@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	serviceCache  = map[string]Service{}
-	lockCacheLock sync.Mutex
-	lockCache     = map[string]sync.Mutex{}
+	serviceCache     = map[string]Service{}
+	serviceCacheLock sync.Mutex
+	lockCacheLock    sync.Mutex
+	lockCache        = map[string]sync.Mutex{}
 )
 
 func init() {
@@ -31,6 +32,16 @@ func removeLockCache(key string) {
 }
 
 func GetService(key string, create func() (Service, error)) (Service, error) {
+	res, ok := FindService(key)
+	if ok {
+		return res, nil
+	}
+	Logger.Info("缓存暂无该服务，创建服务", zap.Any("Key", key))
+	res, err := createService(key, create)
+	return res, err
+}
+
+func createService(key string, create func() (Service, error)) (Service, error) {
 	lock := getLockCache(key)
 	lock.Lock()
 	defer removeLockCache(key)
@@ -52,6 +63,17 @@ func GetService(key string, create func() (Service, error)) (Service, error) {
 	return res, err
 }
 
+func FindService(key string) (Service, bool) {
+	serviceCacheLock.Lock()
+	defer serviceCacheLock.Unlock()
+
+	res, ok := serviceCache[key]
+	if ok {
+		return res, true
+	}
+	return nil, false
+}
+
 type Service interface {
 	GetWaitTime() int64
 	GetLastUseTime() int64
@@ -60,18 +82,24 @@ type Service interface {
 
 func startServiceTimer() {
 	for {
-		time.Sleep(1 * time.Second)
-		nowTime := GetNowTime()
-		for key, one := range serviceCache {
-			if one.GetWaitTime() <= 0 {
-				continue
-			}
-			t := nowTime - one.GetLastUseTime()
-			if t >= one.GetWaitTime() {
-				delete(serviceCache, key)
-				one.Stop()
-				Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.GetWaitTime()), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.GetLastUseTime()))
-			}
+		time.Sleep(1 * time.Minute)
+		cleanCache()
+	}
+}
+
+func cleanCache() {
+	serviceCacheLock.Lock()
+	defer serviceCacheLock.Unlock()
+	nowTime := GetNowTime()
+	for key, one := range serviceCache {
+		if one.GetWaitTime() <= 0 {
+			continue
+		}
+		t := nowTime - one.GetLastUseTime()
+		if t >= one.GetWaitTime() {
+			delete(serviceCache, key)
+			go one.Stop()
+			Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.GetWaitTime()), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.GetLastUseTime()))
 		}
 	}
 }

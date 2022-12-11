@@ -85,6 +85,9 @@ func (this_ *V8Service) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
 
+func (this_ *V8Service) SetLastUseTime() {
+	this_.lastUseTime = util.GetNowTime()
+}
 func (this_ *V8Service) Stop() {
 	_ = this_.client.Close()
 }

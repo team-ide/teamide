@@ -74,8 +74,8 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(redisConfig redis.Config) (res redis.Service, err error) {
-	key := "redis-" + redisConfig.Address
+func getServiceKey(redisConfig redis.Config) (key string) {
+	key = "redis-" + redisConfig.Address
 	if redisConfig.Username != "" {
 		key += "-" + util.GetMd5String(key+redisConfig.Username)
 	}
@@ -85,6 +85,10 @@ func getService(redisConfig redis.Config) (res redis.Service, err error) {
 	if redisConfig.CertPath != "" {
 		key += "-" + util.GetMd5String(key+redisConfig.CertPath)
 	}
+	return
+}
+func getService(redisConfig redis.Config) (res redis.Service, err error) {
+	key := getServiceKey(redisConfig)
 	var service util.Service
 	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s redis.Service
@@ -113,6 +117,8 @@ func getService(redisConfig redis.Config) (res redis.Service, err error) {
 		return
 	}
 	res = service.(redis.Service)
+	res.SetLastUseTime()
+
 	return
 }
 

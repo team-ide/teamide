@@ -83,6 +83,7 @@ func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error)
 		return
 	}
 	res = service.(*zookeeper.ZKService)
+	res.SetLastUseTime()
 	return
 }
 

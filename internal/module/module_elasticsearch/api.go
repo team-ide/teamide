@@ -101,6 +101,7 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 		return
 	}
 	res = service.(*elasticsearch.V7Service)
+	res.SetLastUseTime()
 	return
 }
 

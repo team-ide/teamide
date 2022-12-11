@@ -72,7 +72,9 @@ func (this_ *ClusterService) GetWaitTime() int64 {
 func (this_ *ClusterService) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
-
+func (this_ *ClusterService) SetLastUseTime() {
+	this_.lastUseTime = util.GetNowTime()
+}
 func (this_ *ClusterService) Stop() {
 	_ = this_.redisCluster.Close()
 }

@@ -89,6 +89,9 @@ func (this_ *ZKService) GetWaitTime() int64 {
 func (this_ *ZKService) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
+func (this_ *ZKService) SetLastUseTime() {
+	this_.lastUseTime = util.GetNowTime()
+}
 
 func (this_ *ZKService) Stop() {
 	this_.GetConn().Close()

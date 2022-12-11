@@ -33,6 +33,7 @@ func CreateService(config Config) (service Service, err error) {
 type Service interface {
 	GetWaitTime() int64
 	GetLastUseTime() int64
+	SetLastUseTime()
 	Stop()
 	GetClient(ctx context.Context, database int) (client redis.Cmdable, err error)
 	Exists(ctx context.Context, database int, key string) (res int64, err error)

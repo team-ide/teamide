@@ -58,6 +58,10 @@ func (this_ *V7Service) GetLastUseTime() int64 {
 	return this_.lastUseTime
 }
 
+func (this_ *V7Service) SetLastUseTime() {
+	this_.lastUseTime = util.GetNowTime()
+}
+
 func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 	defer func() {
 		this_.lastUseTime = util.GetNowTime()
