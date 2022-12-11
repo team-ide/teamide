@@ -19,8 +19,8 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.22.10
 	github.com/tealeg/xlsx v1.0.5
-	github.com/team-ide/go-dialect v1.6.1
-	github.com/team-ide/go-driver v1.1.2
+	github.com/team-ide/go-dialect v1.6.3
+	github.com/team-ide/go-driver v1.1.3
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.3.0
 	golang.org/x/net v0.2.0
@@ -66,6 +66,7 @@ require (
 	github.com/klauspost/compress v1.15.11 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

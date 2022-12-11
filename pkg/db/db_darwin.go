@@ -30,3 +30,15 @@ func initOracleDatabase() {
 		matches:     []string{"oracle"},
 	})
 }
+
+func initOdbcDatabase() {
+
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			err = errors.New("darwin can not support [odbc] database.")
+			return
+		},
+		DialectName: "odbc",
+		matches:     []string{"odbc"},
+	})
+}

@@ -296,19 +296,21 @@ func databaseWorker() *ToolboxType {
 						{Text: "金仓", Value: "kingbase"},
 						{Text: "神通", Value: "shentong"},
 						{Text: "Oracle", Value: "oracle"},
+						{Text: "Postgresql", Value: "postgresql"},
+						{Text: "Odbc", Value: "odbc"},
 					},
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库类型不能为空"},
 					},
 				},
 				{
-					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite'`,
+					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite' && type != 'odbc'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接地址不能为空"},
 					},
 				},
 				{
-					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: 3306, VIf: `type != 'sqlite'`,
+					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: 3306, VIf: `type != 'sqlite' && type != 'odbc'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
@@ -321,7 +323,7 @@ func databaseWorker() *ToolboxType {
 						{Required: true, Message: "SID不能为空"},
 					},
 				},
-				{Label: "DbName", Name: "dbName", VIf: `type == 'kingbase' || type == 'shentong'`,
+				{Label: "DbName", Name: "dbName", VIf: `type == 'kingbase' || type == 'shentong' || type == 'postgresql'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "dbName径不能为空"},
 					},
@@ -329,6 +331,23 @@ func databaseWorker() *ToolboxType {
 				{Label: "数据库文件路径", Name: "databasePath", VIf: `type == 'sqlite'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库文件路径不能为空"},
+					},
+				},
+				{Label: "OdbcName", Name: "odbcName", VIf: `type == 'odbc'`,
+					Rules: []*form.Rule{
+						{Required: true, Message: "OdbcName不能为空"},
+					},
+				},
+				{Label: "OdbcDialectName", Name: "odbcDialectName", Type: "select", VIf: `type == 'odbc'`,
+					Options: []*form.Option{
+						{Text: "默认", Value: ""},
+						{Text: "MySql", Value: "mysql"},
+						{Text: "Sqlite", Value: "sqlite"},
+						{Text: "达梦", Value: "dameng"},
+						{Text: "金仓", Value: "kingbase"},
+						{Text: "神通", Value: "shentong"},
+						{Text: "Oracle", Value: "oracle"},
+						{Text: "Postgresql", Value: "postgresql"},
 					},
 				},
 			},

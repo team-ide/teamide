@@ -9,6 +9,7 @@ import (
 	"github.com/team-ide/go-driver/db_dm"
 	"github.com/team-ide/go-driver/db_kingbase_v8r6"
 	"github.com/team-ide/go-driver/db_mysql"
+	"github.com/team-ide/go-driver/db_postgresql"
 	"github.com/team-ide/go-driver/db_sqlite3"
 	"go.uber.org/zap"
 	"strings"
@@ -121,6 +122,18 @@ func init() {
 
 	initOracleDatabase()
 	initShenTongDatabase()
+
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_postgresql.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
+			db, err = db_postgresql.Open(dsn)
+			return
+		},
+		DialectName: db_postgresql.GetDialect(),
+		matches:     []string{"postgresql", "ps"},
+	})
+
+	initOdbcDatabase()
 }
 
 func addDatabaseType(databaseType *DatabaseType) *DatabaseType {
@@ -145,13 +158,16 @@ func GetDatabaseType(databaseType string) *DatabaseType {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Type         string `json:"type,omitempty"`
-	Host         string `json:"host,omitempty"`
-	Port         int    `json:"port,omitempty"`
-	Database     string `json:"database,omitempty"`
-	DbName       string `json:"dbName,omitempty"`
-	Username     string `json:"username,omitempty"`
-	Password     string `json:"password,omitempty"`
+	Type            string `json:"type,omitempty"`
+	Host            string `json:"host,omitempty"`
+	Port            int    `json:"port,omitempty"`
+	Database        string `json:"database,omitempty"`
+	DbName          string `json:"dbName,omitempty"`
+	Username        string `json:"username,omitempty"`
+	Password        string `json:"password,omitempty"`
+	OdbcName        string `json:"odbcName,omitempty"`
+	OdbcDialectName string `json:"odbcDialectName,omitempty"`
+
 	Schema       string `json:"schema,omitempty"`
 	Sid          string `json:"sid,omitempty"`
 	MaxIdleConns int    `json:"maxIdleConns,omitempty"`
@@ -188,7 +204,17 @@ func (this_ *DatabaseWorker) init() (err error) {
 		return
 	}
 
-	this_.Dialect = this_.databaseType.dia
+	if this_.databaseType.DialectName == "odbc" {
+		if this_.config.OdbcDialectName != "" {
+			this_.Dialect, err = dialect.NewDialect(this_.config.OdbcDialectName)
+			if err != nil {
+				return
+			}
+		}
+	}
+	if this_.Dialect == nil {
+		this_.Dialect = this_.databaseType.dia
+	}
 	this_.db, err = this_.databaseType.newDb(this_.config)
 	if err != nil {
 		return
