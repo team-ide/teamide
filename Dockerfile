@@ -2,9 +2,12 @@ FROM alpine:3.17.0
 
 EXPOSE 21080/tcp
 
-COPY teamide /opt/teamide/teamide
-COPY conf /opt/teamide/conf
-RUN chmod +x /opt/teamide/server
+COPY release/teamide-server/teamide /opt/teamide/teamide
+COPY release/teamide-server/conf /opt/teamide/conf
+COPY release/teamide-server/libaci.so /opt/teamide/lib/libaci.so
+RUN chmod +x /opt/teamide/teamide
+
+ENV LD_LIBRARY_PATH=/opt/teamide/lib/
 
 WORKDIR /opt/teamide
 

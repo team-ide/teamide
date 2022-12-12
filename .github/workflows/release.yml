@@ -3,11 +3,11 @@ on:
   push:
     # tags: # 当我们提交代码为tag 是以'v'开头的时候才会触发自动部署到服务端 如 git push tag v0.1.0
     #   - 'v*'
-    # branches:
-    #   - main
+    branches:
+      - main
     #   - dev
     # package.json 更改后再触发发布
-    paths: [ "package.json" ]
+#    paths: [ "package.json" ]
 jobs:
   buildStatic:
     runs-on: ubuntu-latest
@@ -165,8 +165,8 @@ jobs:
       - run: |
           mkdir release/teamide-server
           go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
-          mv conf/release release/teamide-server/conf
-          mv Dockerfile release/teamide-server/Dockerfile
+          cp -rf conf/release release/teamide-server/conf
+          cp -rf lib/shentong/linux64/libaci.so release/teamide-server/libaci.so
 
       - name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
@@ -180,7 +180,7 @@ jobs:
         #导入这个模块来完成自动编译和推送
         uses: docker/build-push-action@v3
         with:
-          context: ./release/teamide-server
+          context: .
           push: true
           #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
           platforms: linux/amd64
