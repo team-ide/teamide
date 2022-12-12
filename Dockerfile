@@ -11,7 +11,7 @@ ENV LD_LIBRARY_PATH=/opt/teamide/lib/
 
 WORKDIR /opt/teamide
 
-ENTRYPOINT ["./teamide"]
+ENTRYPOINT ["/opt/teamide/teamide"]
 # docker build -t teamide/toolbox .
 
 
