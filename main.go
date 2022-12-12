@@ -170,12 +170,17 @@ func main() {
 
 	serverContext, err = context.NewServerContext(*serverConf)
 	if err != nil {
+		util.Logger.Error("context NewServerContext error", zap.Error(err))
 		panic(err)
 	}
+	util.Logger.Info("context init success")
+	util.Logger.Info("server to start")
 	serverUrl, err = internal.Start(serverContext)
 	if err != nil {
+		util.Logger.Error("internal Start error", zap.Error(err))
 		panic(err)
 	}
+	util.Logger.Info("server start success")
 	if serverContext.IsHtmlDev {
 		serverUrl = "http://localhost:21081/"
 	}

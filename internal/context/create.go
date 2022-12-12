@@ -39,6 +39,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	var serverConfig *config.ServerConfig
 	serverConfig, err = config.CreateServerConfig(serverConf.Server)
 	if err != nil {
+		util.Logger.Error("config CreateServerConfig error", zap.Error(err))
 		return
 	}
 	//context.ServerConf = serverConf
@@ -66,6 +67,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	if this_.IsServer {
 		if serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
+			util.Logger.Error("Init error", zap.Error(err))
 			return
 		}
 	}

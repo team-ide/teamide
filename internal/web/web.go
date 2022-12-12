@@ -100,11 +100,25 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 			panic(err)
 		}
 	}()
+	var checkStartTime = util.GetNowTime()
 	for {
+		var newTime = util.GetNowTime()
+		if (newTime - checkStartTime) > 1000*5 {
+			this_.Logger.Warn("服务启动检查超过5秒，不再检测")
+			break
+		}
 		time.Sleep(time.Millisecond * 100)
 		checkURL := this_.ServerUrl + this_.ServerContext.ServerContext
 		this_.Logger.Info("监听服务是否启动成功", zap.Any("checkURL", checkURL))
-		res, _ := http.Get(checkURL)
+		res, e := http.Get(checkURL)
+		if e != nil {
+			this_.Logger.Warn("监听服务连接失败，将继续监听", zap.Any("checkURL", checkURL), zap.Any("error", e.Error()))
+			continue
+		}
+		if res == nil {
+			this_.Logger.Warn("监听服务连接无返回，不再监听", zap.Any("checkURL", checkURL))
+			continue
+		}
 		if res.StatusCode == 200 {
 			_ = res.Body.Close()
 			this_.Logger.Info("服务启动成功", zap.Any("ServerUrl", this_.ServerUrl))
