@@ -12,4 +12,4 @@ ENV LD_LIBRARY_PATH=/opt/teamide/lib/
 
 WORKDIR /opt/teamide
 
-ENTRYPOINT ["/opt/teamide/docker-entrypoint.sh"]
+CMD ["/opt/teamide/docker-entrypoint.sh"]
