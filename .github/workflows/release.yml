@@ -164,7 +164,7 @@ jobs:
 
       - run: |
           mkdir release/teamide-server
-          go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
+          CGO_ENABLED=0 go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
           cp -rf conf/release release/teamide-server/conf
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/libaci.so
 
