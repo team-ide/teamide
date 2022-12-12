@@ -33,6 +33,10 @@ var (
 	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "updateData", Text: "ES修改数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "ES删除数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "ES复制索引", ShouldLogin: true, StandAlone: true, Parent: Power})
+	importPower      = base.AppendPower(&base.PowerAction{Action: "import", Text: "ES导入", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskStatusPower  = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "ES任务状态", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskStopPower    = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "ES任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskCleanPower   = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "ES任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "ES关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
@@ -49,6 +53,10 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: updateDataPower, Do: this_.updateData})
 	apis = append(apis, &base.ApiWorker{Power: deleteDataPower, Do: this_.deleteData})
 	apis = append(apis, &base.ApiWorker{Power: reindexPower, Do: this_.reindex})
+	apis = append(apis, &base.ApiWorker{Power: importPower, Do: this_._import})
+	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus})
+	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
+	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -117,6 +125,7 @@ type BaseRequest struct {
 	DestIndexName   string                 `json:"destIndexName"`
 	WhereList       []*elasticsearch.Where `json:"whereList"`
 	OrderList       []*elasticsearch.Order `json:"orderList"`
+	TaskId          string                 `json:"taskId"`
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -364,6 +373,62 @@ func (this_ *api) reindex(requestBean *base.RequestBean, c *gin.Context) (res in
 	}
 	return
 }
+
+func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	var task = &elasticsearch.ImportTask{}
+	if !base.RequestJSON(task, c) {
+		return
+	}
+
+	task.Service = service
+	elasticsearch.StartImportTask(task)
+	res = task
+
+	return
+}
+
+func (this_ *api) taskStatus(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res = elasticsearch.GetTask(request.TaskId)
+	return
+}
+
+func (this_ *api) taskStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	elasticsearch.StopTask(request.TaskId)
+	return
+}
+
+func (this_ *api) taskClean(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	elasticsearch.CleanTask(request.TaskId)
+	return
+}
+
 func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	return
 }

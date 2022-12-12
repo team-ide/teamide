@@ -64,7 +64,7 @@
             >
             </Model>
           </template>
-          <template v-if="item.extend.type == 'table'">
+          <template v-else-if="item.extend.type == 'table'">
             <Table
               :source="source"
               :toolboxWorker="toolboxWorker"
@@ -81,7 +81,7 @@
             >
             </Table>
           </template>
-          <template v-if="item.extend.type == 'export'">
+          <template v-else-if="item.extend.type == 'export'">
             <Export
               :source="source"
               :toolboxWorker="toolboxWorker"
@@ -98,7 +98,7 @@
             >
             </Export>
           </template>
-          <template v-if="item.extend.type == 'import'">
+          <template v-else-if="item.extend.type == 'import'">
             <Import
               :source="source"
               :toolboxWorker="toolboxWorker"
@@ -115,7 +115,7 @@
             >
             </Import>
           </template>
-          <template v-if="item.extend.type == 'sync'">
+          <template v-else-if="item.extend.type == 'sync'">
             <Sync
               :source="source"
               :toolboxWorker="toolboxWorker"

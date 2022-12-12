@@ -379,11 +379,11 @@ func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int, wh
 	return
 }
 
-type IndexResponse struct {
+type InsertResponse struct {
 	*elastic.IndexResponse
 }
 
-func (this_ *V7Service) Insert(indexName string, id string, doc interface{}) (res *IndexResponse, err error) {
+func (this_ *V7Service) Insert(indexName string, id string, doc interface{}) (res *InsertResponse, err error) {
 	client, err := this_.GetClient()
 	if err != nil {
 		return
@@ -394,7 +394,24 @@ func (this_ *V7Service) Insert(indexName string, id string, doc interface{}) (re
 	if err != nil {
 		return
 	}
-	res = &IndexResponse{
+	res = &InsertResponse{
+		IndexResponse: indexResponse,
+	}
+	return
+}
+
+func (this_ *V7Service) InsertNotWait(indexName string, id string, doc interface{}) (res *InsertResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	//defer client.Stop()
+	doer := client.Index()
+	indexResponse, err := doer.Index(indexName).Id(id).BodyJson(doc).Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = &InsertResponse{
 		IndexResponse: indexResponse,
 	}
 	return

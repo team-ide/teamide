@@ -145,7 +145,8 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 
 	str := strings.ToLower(executeSql)
 	if strings.HasPrefix(str, "select") ||
-		strings.HasPrefix(str, "show") {
+		strings.HasPrefix(str, "show") ||
+		strings.HasPrefix(str, "desc") {
 		executeData["isSelect"] = true
 		// 查询
 		var rows *sql.Rows

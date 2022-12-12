@@ -184,7 +184,20 @@ export default {
       return;
     },
     async toImport(data) {
-      this.tool.warn("功能还未完善，敬请期待！");
+      let name = "导入";
+      let indexName = null;
+      if (data) {
+        indexName = data.indexName;
+        name += ":" + data.indexName;
+      }
+
+      let extend = {
+        name: name,
+        title: name,
+        type: "import",
+        indexName: indexName,
+      };
+      this.toolboxWorker.openTabByExtend(extend);
       return;
     },
     toInsert() {

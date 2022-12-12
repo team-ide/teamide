@@ -37,6 +37,24 @@ let elasticsearch = {
     reindex(param) {
         return http.post('api/elasticsearch/reindex', param);
     },
+    import(param) {
+        return http.post('api/elasticsearch/import', param);
+    },
+    export(param) {
+        return http.post('api/elasticsearch/export', param);
+    },
+    sync(param) {
+        return http.post('api/elasticsearch/sync', param);
+    },
+    taskStatus(param) {
+        return http.post('api/elasticsearch/taskStatus', param);
+    },
+    taskStop(param) {
+        return http.post('api/elasticsearch/taskStop', param);
+    },
+    taskClean(param) {
+        return http.post('api/elasticsearch/taskClean', param);
+    },
     close(param) {
         return http.post('api/elasticsearch/close', param);
     },

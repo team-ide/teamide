@@ -6,6 +6,7 @@
       height="100%"
       style="width: 100%"
       size="mini"
+      @row-contextmenu="rowContextmenu"
     >
       <el-table-column width="70" label="序号">
         <template slot-scope="scope">
@@ -66,6 +67,48 @@ export default {
           that.loadmore();
         }
       });
+    },
+    rowContextmenu(row, column, event) {
+      let menus = [];
+
+      menus.push({
+        text: "查看行数据",
+        onClick: () => {
+          this.toolboxWorker.showJSONData(row);
+        },
+      });
+
+      if (this.item && this.item.columnList) {
+        let insertData = Object.assign({}, row);
+
+        let ownerName = "ownerName";
+        let insertList = [insertData];
+        let tableDetail = {
+          tableName: "tableName",
+          columnList: [],
+        };
+        this.item.columnList.forEach((one) => {
+          tableDetail.columnList.push({
+            columnName: one.name,
+          });
+        });
+        menus.push({
+          text: "查看新增记录SQL",
+          onClick: () => {
+            this.toolboxWorker.showTableDataListExecSql(
+              ownerName,
+              tableDetail,
+              {
+                insertList,
+              }
+            );
+          },
+        });
+      }
+
+      if (menus.length > 0) {
+        this.tool.showContextmenu(menus);
+      }
     },
     loadmore() {
       if (this.loadmore_ing) {

@@ -16,6 +16,10 @@ type StrategyData struct {
 	FieldList []*StrategyDataField `json:"fieldList,omitempty"`
 }
 
+func (this_ *StrategyData) AddField(field *StrategyDataField) {
+	this_.FieldList = append(this_.FieldList, field)
+}
+
 type StrategyDataField struct {
 	Name        string               `json:"name,omitempty"`
 	IndexName   string               `json:"indexName,omitempty"`

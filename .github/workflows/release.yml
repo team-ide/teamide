@@ -162,7 +162,30 @@ jobs:
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-linux-x64 .
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
-      #      - run: go build -ldflags "-w -s -X main.buildFlags=--isServer -X main.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-linux-x64/teamide
+      - run: |
+          mkdir release/teamide-server
+          go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
+          mv conf/release release/teamide-server/conf
+          mv Dockerfile release/teamide-server/Dockerfile
+
+      - name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          #这里用到了github的secrets功能，避免账户和密码随仓库泄露
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        #导入这个模块来完成自动编译和推送
+        uses: docker/build-push-action@v3
+        with:
+          context: ./release/teamide-server
+          push: true
+          #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
+          platforms: linux/amd64
+          #指定用户/仓库名
+          tags: teamide/teamide-server:${{ steps.release_version.outputs.value }}
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1

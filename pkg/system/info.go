@@ -167,26 +167,28 @@ func StartCollectMonitorData() {
 		return
 	}
 	monitorDataTask = &task.CronTask{
-		Key:  monitorDataTaskKey,
 		Spec: "0/5 * * * * *",
-		Do: func() {
-			monitorData, err := GetMonitorData()
-			if err != nil {
-				util.Logger.Error("system get info error", zap.Error(err))
-				return
-			}
+		Task: &task.Task{
+			Key: monitorDataTaskKey,
+			Do: func() {
+				monitorData, err := GetMonitorData()
+				if err != nil {
+					util.Logger.Error("system get info error", zap.Error(err))
+					return
+				}
 
-			monitorDataListLock.Lock()
-			defer monitorDataListLock.Unlock()
+				monitorDataListLock.Lock()
+				defer monitorDataListLock.Unlock()
 
-			if len(monitorDataList) >= CollectMaxSize {
-				monitorDataList = monitorDataList[len(monitorDataList)-CollectMaxSize+1:]
-			}
-			monitorDataList = append(monitorDataList, monitorData)
+				if len(monitorDataList) >= CollectMaxSize {
+					monitorDataList = monitorDataList[len(monitorDataList)-CollectMaxSize+1:]
+				}
+				monitorDataList = append(monitorDataList, monitorData)
+			},
 		},
 	}
 
-	_ = task.AddTask(monitorDataTask)
+	_ = task.AddCronTask(monitorDataTask)
 }
 
 const (

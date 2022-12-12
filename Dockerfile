@@ -1,12 +1,14 @@
-FROM centos:7
+FROM alpine:3.17.0
 
 EXPOSE 21080/tcp
 
-COPY release/teamide-linux-x64 /data/teamide
-RUN chmod +x /data/teamide/server
-CMD cd /data/teamide && ./server
+COPY teamide /opt/teamide/teamide
+COPY conf /opt/teamide/conf
+RUN chmod +x /opt/teamide/server
 
+WORKDIR /opt/teamide
 
+ENTRYPOINT ["./teamide"]
 # docker build -t teamide/toolbox .
 
 

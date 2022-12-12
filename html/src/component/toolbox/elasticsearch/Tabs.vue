@@ -7,12 +7,28 @@
     <div class="default-spans-container">
       <WorkspaceSpans :source="source" :itemsWorker="toolboxWorker.itemsWorker">
         <template v-slot:span="{ item }">
-          <IndexData
-            :source="source"
-            :toolboxWorker="toolboxWorker"
-            :indexName="item.extend.indexName"
-          >
-          </IndexData>
+          <template v-if="item.extend == null || item.extend.type == 'data'">
+            <IndexData
+              :source="source"
+              :toolboxWorker="toolboxWorker"
+              :indexName="item.extend.indexName"
+            >
+            </IndexData>
+          </template>
+          <template v-if="item.extend.type == 'import'">
+            <Import
+              :source="source"
+              :toolboxWorker="toolboxWorker"
+              :indexName="item.extend.indexName"
+              :extend="item.extend"
+              :tabId="item.tabId"
+              :actived="
+                toolboxWorker.itemsWorker.activeItem &&
+                item.key == toolboxWorker.itemsWorker.activeItem.key
+              "
+            >
+            </Import>
+          </template>
         </template>
       </WorkspaceSpans>
     </div>
@@ -22,8 +38,10 @@
 
 <script>
 import IndexData from "./IndexData";
+import Import from "./Import";
+
 export default {
-  components: { IndexData },
+  components: { Import, IndexData },
   props: ["source", "toolboxWorker"],
   data() {
     return {};
