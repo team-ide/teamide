@@ -1,4 +1,4 @@
-FROM centos:centos7.9.2009
+FROM teamide/build:0.5
 
 EXPOSE 21080/tcp
 

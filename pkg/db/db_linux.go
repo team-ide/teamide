@@ -4,41 +4,43 @@ package db
 
 import (
 	"database/sql"
-	"errors"
+	"github.com/team-ide/go-driver/db_odbc"
+	"github.com/team-ide/go-driver/db_oracle"
+	"github.com/team-ide/go-driver/db_shentong"
 )
 
-func initShenTongDatabase() {
-
+func initOdbcDatabase() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			err = errors.New("darwin can not support [ShenTong] database.")
+			dsn := db_odbc.GetDSN(config.OdbcName, config.Username, config.Password)
+			db, err = db_odbc.Open(dsn)
 			return
 		},
-		DialectName: "shentong",
-		matches:     []string{"ShenTong", "st"},
+		DialectName: db_odbc.GetDialect(),
+		matches:     []string{"odbc"},
 	})
 }
 
 func initOracleDatabase() {
-
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			err = errors.New("darwin can not support [oracle] database.")
+			dsn := db_oracle.GetDSN(config.Username, config.Password, config.Host, config.Port, config.Sid)
+			db, err = db_oracle.Open(dsn)
 			return
 		},
-		DialectName: "oracle",
+		DialectName: db_oracle.GetDialect(),
 		matches:     []string{"oracle"},
 	})
 }
 
-func initOdbcDatabase() {
-
+func initShenTongDatabase() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			err = errors.New("darwin can not support [odbc] database.")
+			dsn := db_shentong.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
+			db, err = db_shentong.Open(dsn)
 			return
 		},
-		DialectName: "odbc",
-		matches:     []string{"odbc"},
+		DialectName: db_shentong.GetDialect(),
+		matches:     []string{"ShenTong", "st"},
 	})
 }
