@@ -11,6 +11,7 @@ on:
 jobs:
   buildLinux:
     runs-on: ubuntu-latest
+    container: docker.io/teamide/build:0.5
     steps:
       # 下载源码
       - name: Checkout code
@@ -31,16 +32,10 @@ jobs:
           go-version: "^1.19"
 
       - run: |
-          sudo apt-get install gcc
-          sudo apt-get install unixodbc
-          sudo apt-get install unixodbc-dev
-      - run: |
           mkdir release
           mkdir release/teamide-server
           cp -rf conf/release release/teamide-server/conf
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/libaci.so
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/release/teamide-server:/lib:/usr/lib64:/lib:/usr/lib64
-          echo $LD_LIBRARY_PATH
           go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
 
       - run: |
