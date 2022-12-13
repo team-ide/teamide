@@ -11,7 +11,7 @@ on:
 jobs:
   buildLinux:
     runs-on: ubuntu-latest
-    container: docker.io/teamide/build:0.5
+    container: docker.io/teamide/build:0.6
     steps:
       # 下载源码
       - name: Checkout code

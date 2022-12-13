@@ -8,7 +8,7 @@ cd `dirname $0`
 
 echo `pwd`
 
-export LD_LIBRARY_PATH=/opt/teamide/lib/
+export LD_LIBRARY_PATH=$(pwd)/lib/
 echo $LD_LIBRARY_PATH
 chmod +x teamide
 
