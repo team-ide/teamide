@@ -194,7 +194,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	this_.ServerPort = serverConfig.Server.Port
 
 	if this_.ServerHost == "0.0.0.0" || this_.ServerHost == ":" || this_.ServerHost == "::" {
-		this_.ServerUrl = fmt.Sprint("http://localhost:", this_.ServerPort)
+		this_.ServerUrl = fmt.Sprint("http://127.0.0.1:", this_.ServerPort)
 	} else {
 		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
 	}

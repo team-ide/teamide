@@ -339,6 +339,11 @@ tool.clipboardWrite = async function (text) {
 
     return new Promise(function (resolve, reject) {
         let toWrite = () => {
+            if (navigator.clipboard == null) {
+                // tool.warn('复制失败，请允许访问剪贴板！')
+                resolve({ success: false })
+                return
+            }
             navigator.clipboard.writeText(text).then(() => {
                 // tool.success('复制成功！')
                 resolve({
@@ -348,6 +353,11 @@ tool.clipboardWrite = async function (text) {
                 // tool.warn('复制失败，请允许访问剪贴板！')
                 resolve({ success: false })
             })
+        }
+        if (navigator.permissions == null) {
+            // tool.warn('复制失败，请允许访问剪贴板！')
+            resolve({ success: false })
+            return
         }
 
         navigator.permissions.query(
@@ -362,6 +372,11 @@ tool.readClipboardText = function () {
 
     return new Promise(function (resolve, reject) {
         let toRead = () => {
+            if (navigator.clipboard == null) {
+                // tool.warn('读取失败，请允许访问剪贴板！')
+                resolve({ success: false })
+                return
+            }
 
             navigator.clipboard.readText().then((text) => {
                 // tool.jQuery(span).remove()
@@ -375,6 +390,11 @@ tool.readClipboardText = function () {
                 // tool.warn('读取失败，请允许访问剪贴板！')
                 resolve({ success: false })
             })
+        }
+        if (navigator.permissions == null) {
+            // tool.warn('读取失败，请允许访问剪贴板！')
+            resolve({ success: false })
+            return
         }
 
         navigator.permissions.query(

@@ -58,7 +58,7 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		println("服务启动，访问地址:")
 		s := "http"
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
-			fmt.Printf("\t%s://localhost:%d%s\n", s, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://127.0.0.1:%d%s\n", s, this_.ServerPort, this_.ServerContext.ServerContext)
 			for _, in := range ins {
 				if in.Flags&net.FlagUp == 0 {
 					continue
