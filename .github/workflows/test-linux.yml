@@ -31,6 +31,7 @@ jobs:
           go-version: "^1.19"
 
       - run: |
+          sudo apt-get install gcc
           sudo apt-get install unixodbc
           sudo apt-get install unixodbc-dev
       - run: |
@@ -39,6 +40,7 @@ jobs:
           cp -rf conf/release release/teamide-server/conf
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/libaci.so
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/release/teamide-server
+          echo $LD_LIBRARY_PATH
           CGO_ENABLED=0 go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
 
       - run: |
