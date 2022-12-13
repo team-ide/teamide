@@ -31,6 +31,7 @@ jobs:
           go-version: "^1.19"
 
       - run: |
+          mkdir release
           mkdir release/teamide-server
           CGO_ENABLED=0 go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
           cp -rf conf/release release/teamide-server/conf
