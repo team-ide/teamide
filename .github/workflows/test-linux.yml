@@ -1,0 +1,41 @@
+name: test-linux
+on:
+  push:
+    # tags: # 当我们提交代码为tag 是以'v'开头的时候才会触发自动部署到服务端 如 git push tag v0.1.0
+    #   - 'v*'
+    branches:
+      - main
+    #   - dev
+    # package.json 更改后再触发发布
+#    paths: [ "package.json" ]
+jobs:
+  buildLinux:
+    needs: buildStatic
+    runs-on: ubuntu-latest
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
+
+      # 打包构建 Server
+      - name: Build Server
+        uses: actions/setup-go@v2
+        with:
+          go-version: "^1.19"
+
+      - run: |
+          mkdir release/teamide-server
+          CGO_ENABLED=0 go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
+          cp -rf conf/release release/teamide-server/conf
+          cp -rf lib/shentong/linux64/libaci.so release/teamide-server/libaci.so
+      - run: |
+          cd release/teamide-server
+          ./teamide
