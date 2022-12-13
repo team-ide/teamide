@@ -163,7 +163,7 @@ jobs:
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       - run: |
-          mkdir release/teamide-server
+          mkdir -p release/teamide-server/lib
           cp -rf conf/release release/teamide-server/conf
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/lib/libaci.so
           cp -rf server.sh release/teamide-server/server.sh
