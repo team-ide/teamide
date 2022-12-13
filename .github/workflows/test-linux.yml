@@ -10,7 +10,6 @@ on:
 #    paths: [ "package.json" ]
 jobs:
   buildLinux:
-    needs: buildStatic
     runs-on: ubuntu-latest
     steps:
       # 下载源码
