@@ -106,7 +106,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-#          mv .git electron/
           chmod +x electron/teamide-darwin-x64
           cd electron
           npm install
@@ -203,7 +202,6 @@ jobs:
         run: |
           cp -rf lib/shentong/linux64/libaci.so electron/lib/libaci.so
           
-#          mv .git electron/
           chmod +x electron/teamide-linux-x64
           cd electron
           npm install
@@ -274,7 +272,7 @@ jobs:
         run: |
           move lib/shentong/win64/aci.dll electron/lib/aci.dll
           move lib/shentong/win64/aci.lib electron/lib/aci.lib
-#          move .git electron/.git
+
           cd electron
           npm install
           npm run postinstall
