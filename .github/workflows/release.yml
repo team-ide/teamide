@@ -315,11 +315,6 @@ jobs:
           name: release
           path: release
 
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        run: |
-          cd release
-          zip -q -r teamide-server.zip teamide-server
-
       # 读取发布版本
       - name: Read Release Version
         id: release_version
@@ -340,6 +335,10 @@ jobs:
       #        run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
       #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
       #        run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
+
+      - run: |
+          cd release
+          zip -q -r teamide-server.zip teamide-server
 
       # 读取发布说明
       - name: Read Release Description
