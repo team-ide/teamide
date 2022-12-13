@@ -72,6 +72,7 @@ func (this_ *V7Service) GetClient() (client *elastic.Client, err error) {
 		client = this_.client
 		return
 	}
+	util.Logger.Info("es client is null or not running,now to create client", zap.Any("url", this_.url))
 	var urls []string
 	if strings.Contains(this_.url, ",") {
 		urls = strings.Split(this_.url, ",")
@@ -413,6 +414,40 @@ func (this_ *V7Service) InsertNotWait(indexName string, id string, doc interface
 	}
 	res = &InsertResponse{
 		IndexResponse: indexResponse,
+	}
+	return
+}
+
+type InsertDoc struct {
+	IndexName string
+	Id        string
+	Doc       interface{}
+}
+
+type BulkResponse struct {
+	*elastic.BulkResponse
+}
+
+func (this_ *V7Service) BatchInsertNotWait(docs []*InsertDoc) (res *BulkResponse, err error) {
+	if len(docs) == 0 {
+		return
+	}
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	//defer client.Stop()
+	bulk := client.Bulk()
+	for _, doc := range docs {
+		bulk.Add(elastic.NewBulkIndexRequest().Index(doc.IndexName).Id(doc.Id).Doc(doc.Doc))
+	}
+
+	bulkResponse, err := bulk.Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = &BulkResponse{
+		BulkResponse: bulkResponse,
 	}
 	return
 }

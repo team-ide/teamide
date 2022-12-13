@@ -8,10 +8,11 @@ import (
 
 type ImportTask struct {
 	*Task
-	ImportType string                `json:"importType,omitempty"`
-	Count      int                   `json:"count,omitempty"`
-	Id         string                `json:"id,omitempty"`
-	ColumnList []*StrategyDataColumn `json:"columnList"`
+	ImportType  string                `json:"importType,omitempty"`
+	Count       int                   `json:"count,omitempty"`
+	BatchNumber int                   `json:"batchNumber,omitempty"`
+	Id          string                `json:"id,omitempty"`
+	ColumnList  []*StrategyDataColumn `json:"columnList"`
 }
 
 type StrategyDataColumn struct {
@@ -70,32 +71,54 @@ func (this_ *ImportTask) doStrategy() (err error) {
 
 	this_.taskList = append(this_.taskList, task)
 
+	var docs []*InsertDoc
+	var batchNumber = this_.BatchNumber
+	if batchNumber <= 0 {
+		batchNumber = 200
+	}
+
 	task.OnData = func(onData map[string]interface{}) (err error) {
 
 		if this_.needStop() {
 			return
 		}
 
-		var id string
-		id, err = util.GetStringValue(onData["id"])
+		doc := &InsertDoc{
+			IndexName: this_.IndexName,
+		}
+		doc.Id, err = util.GetStringValue(onData["id"])
 		if err != nil {
 			return
 		}
 
 		this_.DataReadyCount++
 
-		_, err = this_.Service.InsertNotWait(this_.IndexName, id, onData)
-		if err != nil {
-			this_.DataErrorCount++
-			return
+		doc.Doc = onData
+
+		docs = append(docs, doc)
+		var size = len(docs)
+		if size >= batchNumber {
+			_, err = this_.Service.BatchInsertNotWait(docs)
+			docs = []*InsertDoc{}
+			if err != nil {
+				this_.DataErrorCount += size
+				return
+			}
+			this_.DataSuccessCount += size
 		}
-		this_.DataSuccessCount++
 
 		return
 	}
 
 	task.OnEnd = func() {
-
+		var size = len(docs)
+		_, err = this_.Service.BatchInsertNotWait(docs)
+		docs = []*InsertDoc{}
+		if err != nil {
+			this_.DataErrorCount += size
+			return
+		}
+		this_.DataSuccessCount += size
 	}
 
 	task.Start()

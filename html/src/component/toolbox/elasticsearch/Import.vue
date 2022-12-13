@@ -21,6 +21,10 @@
         <el-form-item label="导入数量">
           <el-input v-model="formData.count" style="width: 100px"> </el-input>
         </el-form-item>
+        <el-form-item label="批量导入">
+          <el-input v-model="formData.batchNumber" style="width: 100px">
+          </el-input>
+        </el-form-item>
         <el-form-item label="ID">
           <el-input v-model="formData.id" style="width: 300px"> </el-input>
         </el-form-item>
@@ -165,6 +169,7 @@ export default {
         importType: "strategy",
         indexName: null,
         count: 1,
+        batchNumber: 200,
         id: "",
       },
       columnList: [],
@@ -232,6 +237,7 @@ export default {
     async start() {
       let param = this.toolboxWorker.getWorkParam(Object.assign(this.formData));
 
+      param.batchNumber = Number(param.batchNumber);
       param.count = Number(param.count);
       if (this.tool.isEmpty(param.id)) {
         this.tool.error("请输入id值策略");

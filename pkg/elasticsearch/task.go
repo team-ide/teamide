@@ -66,7 +66,6 @@ func CleanTask(taskKey string) *Task {
 type Task struct {
 	IndexName        string     `json:"indexName,omitempty"`
 	TaskId           string     `json:"taskId,omitempty"`
-	BatchNumber      int        `json:"batchNumber,omitempty"`
 	DataCount        int        `json:"dataCount"`
 	DataReadyCount   int        `json:"dataReadyCount"`
 	DataSuccessCount int        `json:"dataSuccessCount"`
