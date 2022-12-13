@@ -2,8 +2,10 @@ package module
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/mssola/user_agent"
+	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
 	"teamide/internal/module/module_login"
@@ -84,7 +86,10 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	res = this_.getJWTStr(loginId, loginUser)
+	res, err = this_.getJWTStr(loginId, loginUser)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -112,7 +117,11 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	if jwt == "" {
 		return nil
 	}
-	jwt = this_.Decryption.Decrypt(jwt)
+	jwt, err := util.AesDecryptCBCByKey(jwt, this_.JWTAesKey)
+	if err != nil {
+		this_.Logger.Error("jwt decrypt error", zap.Error(err))
+		return nil
+	}
 	if jwt == "" {
 		return nil
 	}
@@ -131,9 +140,10 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	return res
 }
 
-func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) string {
+func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) (jwtStr string, err error) {
 	if user == nil {
-		return ""
+		err = errors.New("用户信息不存在")
+		return
 	}
 	jwt := &base.JWTBean{
 		Sign:    util.UUID(),
@@ -143,12 +153,20 @@ func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) string {
 		Time:    util.GetNowTime(),
 		LoginId: loginId,
 	}
-	jwtStr := util.ToJSON(jwt)
-	jwtStr = this_.Decryption.Encrypt(jwtStr)
-	if jwtStr == "" {
-		return ""
+	jwtJSONBytes, err := json.Marshal(jwt)
+	if err != nil {
+		return
 	}
-	return jwtStr
+	jwtJSON := string(jwtJSONBytes)
+	jwtStr, err = util.AesEncryptCBCByKey(jwtJSON, this_.JWTAesKey)
+	if err != nil {
+		return
+	}
+	if jwtStr == "" {
+		err = errors.New("jwt加密失败")
+		return
+	}
+	return
 }
 
 type SessionResponse struct {
@@ -180,7 +198,13 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		response.User = find
 	}
 	response.Powers = this_.getPowersByUserId(userId)
-	response.JWT = this_.getJWTStr(loginId, response.User)
+
+	if response.User != nil {
+		response.JWT, err = this_.getJWTStr(loginId, response.User)
+		if err != nil {
+			return
+		}
+	}
 
 	jsonString := util.ToJSON(response)
 	res, err = util.AesEncryptCBCByKey(jsonString, this_.HttpAesKey)

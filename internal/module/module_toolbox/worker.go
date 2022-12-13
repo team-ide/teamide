@@ -25,7 +25,7 @@ func (this_ *ToolboxService) EncryptOptionAttr(str string) (res string) {
 		res = str
 		return
 	} else {
-		res = this_.Decryption.Encrypt(str)
+		res, _ = this_.Decryption.Encrypt(str)
 		return
 	}
 }
@@ -40,7 +40,7 @@ func (this_ *ToolboxService) DecryptOptionAttr(str string) (res string) {
 		res = str
 		return
 	}
-	res = this_.Decryption.Decrypt(str)
+	res, _ = this_.Decryption.Decrypt(str)
 	if res == "" {
 		res = str
 	}

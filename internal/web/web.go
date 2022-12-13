@@ -58,7 +58,7 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		println("服务启动，访问地址:")
 		s := "http"
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
-			fmt.Printf("\t%s://localhost:%d%s", s, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://localhost:%d%s\n", s, this_.ServerPort, this_.ServerContext.ServerContext)
 			for _, in := range ins {
 				if in.Flags&net.FlagUp == 0 {
 					continue
@@ -76,11 +76,11 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 					if ip == nil {
 						continue
 					}
-					fmt.Printf("\t%s://%s:%d%s", s, ip.String(), this_.ServerPort, this_.ServerContext.ServerContext)
+					fmt.Printf("\t%s://%s:%d%s\n", s, ip.String(), this_.ServerPort, this_.ServerContext.ServerContext)
 				}
 			}
 		} else {
-			fmt.Printf("\t%s://%s:%d%s", s, this_.ServerHost, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://%s:%d%s\n", s, this_.ServerHost, this_.ServerPort, this_.ServerContext.ServerContext)
 		}
 	}
 	addr := fmt.Sprint(this_.ServerHost, ":", this_.ServerPort)

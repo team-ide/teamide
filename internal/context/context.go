@@ -18,6 +18,7 @@ type ServerContext struct {
 	Logger         *zap.Logger        `json:"-" yaml:"-"`
 	Decryption     *Decryption        `json:"-" yaml:"-"`
 	HttpAesKey     string             `json:"-" yaml:"-"`
+	JWTAesKey      string             `json:"-" yaml:"-"`
 	IsServer       bool
 	IsHtmlDev      bool
 	IsServerDev    bool

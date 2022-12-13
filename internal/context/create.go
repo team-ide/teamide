@@ -36,6 +36,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 		Version:     serverConf.Version,
 	}
 	context.HttpAesKey = "Q56hFAauWk18Gy2i"
+	context.JWTAesKey = "eE4ah2jeScRmL8sM"
 	var serverConfig *config.ServerConfig
 	serverConfig, err = config.CreateServerConfig(serverConf.Server)
 	if err != nil {

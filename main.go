@@ -223,8 +223,8 @@ func formatServerConf(serverConf *context.ServerConf) (err error) {
 	if serverConf.IsServer {
 
 		serverConf.Server = serverConf.RootDir + "conf/config.yaml"
-		serverConf.PublicKey = serverConf.RootDir + "conf/publicKey.pem"
-		serverConf.PrivateKey = serverConf.RootDir + "conf/privateKey.pem"
+		serverConf.PublicKey = serverConf.RootDir + "conf/public.pem"
+		serverConf.PrivateKey = serverConf.RootDir + "conf/private.pem"
 
 		var exists bool
 		exists, err = util.PathExists(serverConf.Server)

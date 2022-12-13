@@ -13,3 +13,10 @@ RUN chmod +x /opt/teamide/docker-entrypoint.sh
 WORKDIR /opt/teamide
 
 CMD ["/opt/teamide/docker-entrypoint.sh"]
+
+
+# cd html
+# install
+# npm run build
+# go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+# go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=1.8.9" .

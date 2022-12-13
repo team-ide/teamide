@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"os"
+	"strings"
 	"teamide/pkg/util"
 )
 
@@ -60,7 +61,7 @@ func NewDecryption(publicPath string, privatePath string, logger *zap.Logger) (r
 	if err != nil {
 		return
 	}
-	res.rsaPublicKey = string(bs)
+	res.rsaPublicKey = strings.TrimSpace(string(bs))
 
 	exists, err = util.PathExists(privatePath)
 	if err != nil {
@@ -74,49 +75,65 @@ func NewDecryption(publicPath string, privatePath string, logger *zap.Logger) (r
 	if err != nil {
 		return
 	}
-	res.rsaPrivateKey = string(bs)
+	res.rsaPrivateKey = strings.TrimSpace(string(bs))
 
 	err = res.init()
 	if err != nil {
 		return
 	}
-
 	return
 }
 
 type Decryption struct {
-	rsaPublicKey  string      `json:"-" yaml:"-"`
-	rsaPrivateKey string      `json:"-" yaml:"-"`
-	Logger        *zap.Logger `json:"-" yaml:"-"`
+	rsaPublicKey  string
+	rsaPrivateKey string
+	Logger        *zap.Logger
 }
 
 // init 初始化加解密
 func (this_ *Decryption) init() (err error) {
+
 	str := "测试加解密字段"
-	str1 := this_.Encrypt(str)
+	str1, err := this_.Encrypt(str)
+	if err != nil {
+		this_.Logger.Error("加密异常!", zap.Error(err))
+		return
+	}
 	if str1 == "" || str1 == str {
 		err = errors.New("加密异常，请确认服务器信息是否正确")
 		this_.Logger.Error("加密异常!", zap.Error(err))
 		return
 	}
 	this_.Logger.Info("服务器加密成功!")
-	str2 := this_.Decrypt(str1)
-	if str2 == "" || str2 != str {
+	str2, err := this_.Decrypt(str1)
+	if err != nil {
+		this_.Logger.Error("解密异常!", zap.Error(err))
+		return
+	}
+	if str2 != str {
 		err = errors.New("解密异常，请确认服务器信息是否正确")
 		this_.Logger.Error("解密异常!", zap.Error(err))
 		return
 	}
 	this_.Logger.Info("服务器解密成功!")
 
-	str1 = this_.Encrypt(str)
+	str1, err = this_.Encrypt(str)
+	if err != nil {
+		this_.Logger.Error("加密异常!", zap.Error(err))
+		return
+	}
 	if str1 == "" || str1 == str {
 		err = errors.New("加密异常，请确认服务器信息是否正确")
 		this_.Logger.Error("加密异常!", zap.Error(err))
 		return
 	}
 	this_.Logger.Info("服务器加密验证成功!")
-	str2 = this_.Decrypt(str1)
-	if str2 == "" || str2 != str {
+	str2, err = this_.Decrypt(str1)
+	if err != nil {
+		this_.Logger.Error("解密异常!", zap.Error(err))
+		return
+	}
+	if str2 != str {
 		err = errors.New("解密异常，请确认服务器信息是否正确")
 		this_.Logger.Error("解密异常!", zap.Error(err))
 		return
@@ -126,20 +143,20 @@ func (this_ *Decryption) init() (err error) {
 }
 
 // Encrypt 加密
-func (this_ *Decryption) Encrypt(data string) (ciphertext string) {
-	ciphertext, err := util.RSAEncryptByKey(data, this_.rsaPublicKey)
+func (this_ *Decryption) Encrypt(data string) (ciphertext string, err error) {
+	ciphertext, err = util.RSAEncryptByKey(data, this_.rsaPublicKey)
 	if err != nil {
-		this_.Logger.Error("加密失败", zap.Error(err))
+		this_.Logger.Error("加密失败", zap.Any("dataLength", len(data)), zap.Error(err))
 		return
 	}
 	return
 }
 
 // Decrypt 解密
-func (this_ *Decryption) Decrypt(ciphertext string) (data string) {
-	data, err := util.RSADecryptByKey(ciphertext, this_.rsaPrivateKey)
+func (this_ *Decryption) Decrypt(ciphertext string) (data string, err error) {
+	data, err = util.RSADecryptByKey(ciphertext, this_.rsaPrivateKey)
 	if err != nil {
-		this_.Logger.Error("解密失败", zap.Error(err))
+		this_.Logger.Error("解密失败", zap.Any("ciphertextLength", len(ciphertext)), zap.Error(err))
 		return
 	}
 	return
