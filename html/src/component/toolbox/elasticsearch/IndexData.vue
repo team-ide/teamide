@@ -3,7 +3,7 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="120px" style="overflow: hidden">
-          <tm-layout width="400px">
+          <tm-layout width="auto">
             <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in searchForm.whereList">
                 <li :key="index">
@@ -112,7 +112,7 @@
             </ul>
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
-          <tm-layout width="400px">
+          <tm-layout width="300px">
             <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in searchForm.orderList">
                 <li :key="index">
@@ -157,12 +157,6 @@
                   添加排序
                 </div>
               </li>
-            </ul>
-          </tm-layout>
-          <!-- <tm-layout-bar right></tm-layout-bar> -->
-          <tm-layout>
-            <ul class="part-box app-scroll-bar mg-0">
-              <li></li>
             </ul>
           </tm-layout>
         </tm-layout>
@@ -215,7 +209,7 @@
                 <template slot-scope="scope">
                   <div
                     class="tm-btn color-grey tm-btn-xs"
-                    @click="toolboxWorker.showJSONData(scope.row)"
+                    @click="tool.showJSONData(scope.row)"
                   >
                     查看
                   </div>
@@ -464,7 +458,7 @@ export default {
     },
     toIndex() {},
     rowDblClick(row, column, event) {
-      this.toolboxWorker.showJSONData(row);
+      this.tool.showJSONData(row);
     },
     toDelete(data) {
       let indexName = data.indexName;
@@ -594,16 +588,17 @@ export default {
         let res = await this.server.elasticsearch.search(param);
         if (res.code != 0) {
           this.tool.error(res.msg);
-        }
-        let result = res.data || {};
-        let hits = result.hits || [];
-        hits.forEach((one) => {
-          one._source = this.formatSourceJSON(one._source);
-        });
-        this.dataList = hits;
-        this.total = 0;
-        if (result.total) {
-          this.total = result.total.value;
+        } else {
+          let result = res.data || {};
+          let hits = result.hits || [];
+          hits.forEach((one) => {
+            one._source = this.formatSourceJSON(one._source);
+          });
+          this.dataList = hits;
+          this.total = 0;
+          if (result.total) {
+            this.total = result.total.value;
+          }
         }
       } catch (error) {}
       this.dataListLoading = false;

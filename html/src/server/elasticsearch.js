@@ -7,6 +7,9 @@ let elasticsearch = {
     indexes(param) {
         return http.post('api/elasticsearch/indexes', param);
     },
+    indexStat(param) {
+        return http.post('api/elasticsearch/indexStat', param);
+    },
     createIndex(param) {
         return http.post('api/elasticsearch/createIndex', param);
     },

@@ -28,5 +28,5 @@ type LogModel struct {
 	CreateTime  time.Time `json:"createTime,omitempty"`
 	StartTime   time.Time `json:"startTime,omitempty"`
 	EndTime     time.Time `json:"endTime,omitempty"`
-	UseTime     int       `json:"useTime,omitempty"`
+	UseTime     int       `json:"useTime"`
 }

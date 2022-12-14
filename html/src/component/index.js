@@ -22,6 +22,9 @@ Vue.component('AlertBox', AlertBox);
 import JSONDataDialog from './dialog/JSONDataDialog.vue'
 Vue.component('JSONDataDialog', JSONDataDialog);
 
+import TextDialog from './dialog/TextDialog.vue'
+Vue.component('TextDialog', TextDialog);
+
 import Workspace from './workspace/Index.vue'
 Vue.component('Workspace', Workspace);
 import WorkspaceTabs from './workspace/Tabs.vue'

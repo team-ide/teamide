@@ -65,14 +65,14 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: deletePower, Do: this_.delete})
 
 	apis = append(apis, &base.ApiWorker{Power: systemInfoPower, Do: this_.nodeSystemInfo})
-	apis = append(apis, &base.ApiWorker{Power: systemMonitorDataPower, Do: this_.nodeSystemQueryMonitorData})
+	apis = append(apis, &base.ApiWorker{Power: systemMonitorDataPower, Do: this_.nodeSystemQueryMonitorData, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: systemCleanMonitorDataPower, Do: this_.nodeSystemCleanMonitorData})
 
 	apis = append(apis, &base.ApiWorker{Power: netProxyListPower, Do: this_.netProxyList})
 	apis = append(apis, &base.ApiWorker{Power: netProxyInsertPower, Do: this_.netProxyInsert})
 	apis = append(apis, &base.ApiWorker{Power: netProxyUpdatePower, Do: this_.netProxyUpdate})
 	apis = append(apis, &base.ApiWorker{Power: netProxyUpdateOptionPower, Do: this_.netProxyUpdateOption})
-	apis = append(apis, &base.ApiWorker{Power: netProxyMonitorDataPower, Do: this_.netProxyMonitorData})
+	apis = append(apis, &base.ApiWorker{Power: netProxyMonitorDataPower, Do: this_.netProxyMonitorData, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: netProxyEnablePower, Do: this_.netProxyEnable})
 	apis = append(apis, &base.ApiWorker{Power: netProxyDisablePower, Do: this_.netProxyDisable})
 	apis = append(apis, &base.ApiWorker{Power: netProxyDeletePower, Do: this_.netProxyDelete})

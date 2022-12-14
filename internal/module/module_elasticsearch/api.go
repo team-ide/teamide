@@ -23,6 +23,7 @@ var (
 	Power            = base.AppendPower(&base.PowerAction{Action: "elasticsearch", Text: "ES", ShouldLogin: true, StandAlone: true})
 	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "ES信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	indexesPower     = base.AppendPower(&base.PowerAction{Action: "indexes", Text: "ES索引查询", ShouldLogin: true, StandAlone: true, Parent: Power})
+	indexStatPower   = base.AppendPower(&base.PowerAction{Action: "indexStat", Text: "ES索引状态", ShouldLogin: true, StandAlone: true, Parent: Power})
 	createIndexPower = base.AppendPower(&base.PowerAction{Action: "createIndex", Text: "ES创建索引", ShouldLogin: true, StandAlone: true, Parent: Power})
 	deleteIndexPower = base.AppendPower(&base.PowerAction{Action: "deleteIndex", Text: "ES删除索引", ShouldLogin: true, StandAlone: true, Parent: Power})
 	getMappingPower  = base.AppendPower(&base.PowerAction{Action: "getMapping", Text: "ES索引信息查询", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -34,6 +35,7 @@ var (
 	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "ES删除数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "ES复制索引", ShouldLogin: true, StandAlone: true, Parent: Power})
 	importPower      = base.AppendPower(&base.PowerAction{Action: "import", Text: "ES导入", ShouldLogin: true, StandAlone: true, Parent: Power})
+	exportPower      = base.AppendPower(&base.PowerAction{Action: "export", Text: "ES导出", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStatusPower  = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "ES任务状态", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStopPower    = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "ES任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskCleanPower   = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "ES任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -43,6 +45,7 @@ var (
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: indexesPower, Do: this_.indexes})
+	apis = append(apis, &base.ApiWorker{Power: indexStatPower, Do: this_.indexStat})
 	apis = append(apis, &base.ApiWorker{Power: createIndexPower, Do: this_.createIndex})
 	apis = append(apis, &base.ApiWorker{Power: deleteIndexPower, Do: this_.deleteIndex})
 	apis = append(apis, &base.ApiWorker{Power: getMappingPower, Do: this_.getMapping})
@@ -54,7 +57,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: deleteDataPower, Do: this_.deleteData})
 	apis = append(apis, &base.ApiWorker{Power: reindexPower, Do: this_.reindex})
 	apis = append(apis, &base.ApiWorker{Power: importPower, Do: this_._import})
-	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus})
+	apis = append(apis, &base.ApiWorker{Power: exportPower, Do: this_.export})
+	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
 	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
@@ -156,6 +160,28 @@ func (this_ *api) indexes(requestBean *base.RequestBean, c *gin.Context) (res in
 	}
 
 	res, err = service.Indexes()
+	if err != nil {
+		return
+	}
+
+	return
+}
+func (this_ *api) indexStat(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.IndexStat(request.IndexName)
 	if err != nil {
 		return
 	}
@@ -392,6 +418,28 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 	task.Service = service
 	elasticsearch.StartImportTask(task)
 	res = task
+
+	return
+}
+
+func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	//config, err := this_.getConfig(requestBean, c)
+	//if err != nil {
+	//	return
+	//}
+	//service, err := getService(*config)
+	//if err != nil {
+	//	return
+	//}
+	//
+	//var task = &elasticsearch.ImportTask{}
+	//if !base.RequestJSON(task, c) {
+	//	return
+	//}
+	//
+	//task.Service = service
+	//elasticsearch.StartImportTask(task)
+	//res = task
 
 	return
 }

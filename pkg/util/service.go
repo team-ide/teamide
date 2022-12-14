@@ -8,20 +8,21 @@ import (
 
 var (
 	serviceCache     = map[string]Service{}
-	serviceCacheLock sync.Mutex
-	lockCacheLock    sync.Mutex
-	lockCache        = map[string]sync.Mutex{}
+	serviceCacheLock = &sync.Mutex{}
+	lockCacheLock    = &sync.Mutex{}
+	lockCache        = map[string]sync.Locker{}
 )
 
 func init() {
 	go startServiceTimer()
 }
-func getLockCache(key string) sync.Mutex {
+func getLockCache(key string) sync.Locker {
 	lockCacheLock.Lock()
 	defer lockCacheLock.Unlock()
 	res, ok := lockCache[key]
 	if !ok {
-		lockCache[key] = sync.Mutex{}
+		res = &sync.Mutex{}
+		lockCache[key] = res
 	}
 	return res
 }
@@ -46,7 +47,7 @@ func createService(key string, create func() (Service, error)) (Service, error) 
 	defer removeLockCache(key)
 	defer lock.Unlock()
 
-	res, ok := serviceCache[key]
+	res, ok := FindService(key)
 	if ok {
 		return res, nil
 	}
@@ -58,7 +59,7 @@ func createService(key string, create func() (Service, error)) (Service, error) 
 		}
 		return nil, err
 	}
-	serviceCache[key] = res
+	setService(key, res)
 	return res, err
 }
 
@@ -71,6 +72,13 @@ func FindService(key string) (Service, bool) {
 		return res, true
 	}
 	return nil, false
+}
+
+func setService(key string, ser Service) {
+	serviceCacheLock.Lock()
+	defer serviceCacheLock.Unlock()
+
+	serviceCache[key] = ser
 }
 
 type Service interface {

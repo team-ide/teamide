@@ -105,15 +105,15 @@ var (
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
-	apis = append(apis, &base.ApiWorker{Power: PowerData, Do: this_.apiData})
+	apis = append(apis, &base.ApiWorker{Power: PowerData, Do: this_.apiData, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: PowerLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Power: PowerAutoLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Power: PowerLogout, Do: this_.apiLogout})
 	apis = append(apis, &base.ApiWorker{Power: PowerRegister, Do: this_.apiRegister})
-	apis = append(apis, &base.ApiWorker{Power: PowerSession, Do: this_.apiSession})
+	apis = append(apis, &base.ApiWorker{Power: PowerSession, Do: this_.apiSession, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: PowerUpload, Do: this_.apiUpload, IsUpload: true})
-	apis = append(apis, &base.ApiWorker{Power: PowerUpdateCheck, Do: this_.apiUpdateCheck})
-	apis = append(apis, &base.ApiWorker{Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Power: PowerUpdateCheck, Do: this_.apiUpdateCheck, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true, NotRecodeLog: true})
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
@@ -187,48 +187,52 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	if api.Do != nil {
 		var err error
 		var startTime = util.Now()
-		userAgentStr := c.Request.UserAgent()
-		logRecode := &module_log.LogModel{
-			Action:     action,
-			Method:     c.Request.Method,
-			StartTime:  startTime,
-			CreateTime: startTime,
-			Ip:         c.ClientIP(),
-			UserAgent:  userAgentStr,
-		}
-		var param = make(map[string]interface{})
-		_ = c.Request.ParseForm()
-		f := c.Request.Form
-		for k, v := range f {
-			param[k] = v
-		}
-		f = c.Request.PostForm
-		for k, v := range f {
-			param[k] = v
-		}
-		if len(param) > 0 {
-			bs, _ := json.Marshal(param)
-			logRecode.Param = string(bs)
-		}
-		if !api.IsUpload {
-			var data = make(map[string]interface{})
-			_ = c.ShouldBindBodyWith(&data, binding.JSON)
-			if len(data) > 0 {
-				bs, _ := json.Marshal(data)
-				logRecode.Data = string(bs)
+		var logRecode *module_log.LogModel = nil
+		if !api.NotRecodeLog {
+			userAgentStr := c.Request.UserAgent()
+			logRecode = &module_log.LogModel{
+				Action:     action,
+				Method:     c.Request.Method,
+				StartTime:  startTime,
+				CreateTime: startTime,
+				Ip:         c.ClientIP(),
+				UserAgent:  userAgentStr,
 			}
-		}
-		if requestBean.JWT != nil {
-			logRecode.UserId = requestBean.JWT.UserId
-			logRecode.UserName = requestBean.JWT.Name
-			logRecode.UserAccount = requestBean.JWT.Account
-			logRecode.LoginId = requestBean.JWT.LoginId
+			var param = make(map[string]interface{})
+			_ = c.Request.ParseForm()
+			f := c.Request.Form
+			for k, v := range f {
+				param[k] = v
+			}
+			f = c.Request.PostForm
+			for k, v := range f {
+				param[k] = v
+			}
+			if len(param) > 0 {
+				bs, _ := json.Marshal(param)
+				logRecode.Param = string(bs)
+			}
+			if !api.IsUpload {
+				var data = make(map[string]interface{})
+				_ = c.ShouldBindBodyWith(&data, binding.JSON)
+				if len(data) > 0 {
+					bs, _ := json.Marshal(data)
+					logRecode.Data = string(bs)
+				}
+			}
+			if requestBean.JWT != nil {
+				logRecode.UserId = requestBean.JWT.UserId
+				logRecode.UserName = requestBean.JWT.Name
+				logRecode.UserAccount = requestBean.JWT.Account
+				logRecode.LoginId = requestBean.JWT.LoginId
+			}
 		}
 
 		defer func() {
-			logRecode.EndTime = util.Now()
-
-			_ = this_.logService.Insert(logRecode, err)
+			if logRecode != nil {
+				logRecode.EndTime = util.Now()
+				_ = this_.logService.Insert(logRecode, err)
+			}
 		}()
 
 		this_.Logger.Info("处理操作", zap.String("action", action))

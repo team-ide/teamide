@@ -62,7 +62,7 @@ var (
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
-	apis = append(apis, &base.ApiWorker{Power: dataPower, Do: this_.data})
+	apis = append(apis, &base.ApiWorker{Power: dataPower, Do: this_.data, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: ownersPower, Do: this_.owners})
 	apis = append(apis, &base.ApiWorker{Power: ownerCreatePower, Do: this_.ownerCreate})
 	apis = append(apis, &base.ApiWorker{Power: ownerDeletePower, Do: this_.ownerDelete})
@@ -85,7 +85,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: exportPower, Do: this_.export})
 	apis = append(apis, &base.ApiWorker{Power: exportDownloadPower, Do: this_.exportDownload})
 	apis = append(apis, &base.ApiWorker{Power: syncPower, Do: this_.sync})
-	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus})
+	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
 	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
@@ -904,7 +904,7 @@ func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res inte
 }
 
 var databaseWorkerTasksCache = map[string][]string{}
-var databaseWorkerTasksCacheLock sync.Mutex
+var databaseWorkerTasksCacheLock = &sync.Mutex{}
 
 func addDatabaseWorkerTask(workerId string, taskId string) {
 	databaseWorkerTasksCacheLock.Lock()

@@ -17,8 +17,8 @@ import (
 )
 
 /*
-	转换为大驼峰命名法则
-	首字母大写，“_” 忽略后大写
+转换为大驼峰命名法则
+首字母大写，“_” 忽略后大写
 */
 func Marshal(name string) string {
 	if name == "" {
@@ -147,17 +147,17 @@ func ToBean(bytes []byte, req interface{}) (err error) {
 	return
 }
 
-//GetNowTime 获取当前时间戳
+// GetNowTime 获取当前时间戳
 func GetNowTime() int64 {
 	return GetTimeTime(time.Now())
 }
 
-//GetTimeTime 获取当前时间戳
+// GetTimeTime 获取当前时间戳
 func GetTimeTime(time time.Time) int64 {
 	return time.UnixNano() / 1e6
 }
 
-//Now 获取当前时间
+// Now 获取当前时间
 func Now() time.Time {
 	return time.Now()
 }
@@ -275,7 +275,7 @@ func IsZero(value interface{}) (isZero bool) {
 }
 
 var (
-	lockMapLock = sync.Mutex{}
+	lockMapLock = &sync.Mutex{}
 	lockMap     = make(map[string]*sync.Mutex)
 )
 

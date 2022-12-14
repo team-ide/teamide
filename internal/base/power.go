@@ -3,11 +3,12 @@ package base
 import "github.com/gin-gonic/gin"
 
 type ApiWorker struct {
-	Power       *PowerAction
-	Do          func(request *RequestBean, c *gin.Context) (res interface{}, err error)
-	IsGet       bool
-	IsWebSocket bool
-	IsUpload    bool
+	Power        *PowerAction
+	Do           func(request *RequestBean, c *gin.Context) (res interface{}, err error)
+	IsGet        bool
+	IsWebSocket  bool
+	IsUpload     bool
+	NotRecodeLog bool `json:"notRecodeLog"`
 }
 
 type PowerAction struct {

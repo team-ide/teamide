@@ -146,6 +146,12 @@ export default {
         },
       });
       menus.push({
+        text: "索引状态",
+        onClick: () => {
+          this.toShowIndexStat(data);
+        },
+      });
+      menus.push({
         text: "新增索引",
         onClick: () => {
           this.toInsert();
@@ -247,6 +253,17 @@ export default {
       } else {
         this.tool.error(res.msg);
         return false;
+      }
+    },
+    async toShowIndexStat(data) {
+      let param = this.toolboxWorker.getWorkParam({
+        indexName: data.indexName,
+      });
+      let res = await this.server.elasticsearch.indexStat(param);
+      if (res.code == 0) {
+        this.tool.showJSONData(res.data);
+      } else {
+        this.tool.error(res.msg);
       }
     },
     toDelete(data) {

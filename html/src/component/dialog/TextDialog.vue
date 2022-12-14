@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     ref="modal"
-    :title="title || '数据'"
+    :title="title || '文案'"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     :show-close="true"
@@ -17,7 +17,7 @@
           ref="Editor"
           :source="source"
           :value="text"
-          language="json"
+          language="html"
         ></Editor>
       </div>
     </div>
@@ -27,7 +27,7 @@
         class="tm-btn bg-teal-8 ft-18 pdtb-5"
         @click="doSave"
       >
-        确认
+        {{ saveText || "保存" }}
       </div>
     </div>
   </el-dialog>
@@ -47,6 +47,7 @@ export default {
       title: null,
       onSave: null,
       onCancel: null,
+      saveText: null,
     };
   },
   // 计算属性 只有依赖数据发生改变，才会重新进行计算
@@ -59,6 +60,7 @@ export default {
       this.onSave = options.onSave;
       this.onCancel = options.onCancel;
       this.title = options.title;
+      this.saveText = options.saveText;
       this.showDialog = true;
       this.$nextTick(() => {
         this.text = "";

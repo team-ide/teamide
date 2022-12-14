@@ -4,16 +4,48 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"sync"
 	"teamide/pkg/javascript"
 	"teamide/pkg/util"
 	"time"
 )
 
+type DataStatistics struct {
+	DataCount        int   `json:"dataCount"`
+	DataSuccessCount int   `json:"dataSuccessCount"`
+	DataErrorCount   int   `json:"dataErrorCount"`
+	UseTime          int64 `json:"useTime"`
+
+	StartTime time.Time `json:"startTime,omitempty"`
+	EndTime   time.Time `json:"endTime,omitempty"`
+
+	countLock sync.Mutex
+}
+
+func (this_ *DataStatistics) IncrDataSuccessCount(num int, useTime int64) {
+	this_.countLock.Lock()
+	defer this_.countLock.Unlock()
+	this_.DataSuccessCount += num
+	this_.DataCount += num
+	this_.UseTime += useTime
+	return
+}
+
+func (this_ *DataStatistics) IncrDataErrorCount(num int, useTime int64) {
+	this_.countLock.Lock()
+	defer this_.countLock.Unlock()
+	this_.DataErrorCount += num
+	this_.UseTime += useTime
+	return
+}
+
 type StrategyData struct {
-	Count     int                  `json:"count,omitempty"`
-	IndexName string               `json:"indexName,omitempty"`
-	DataName  string               `json:"dataName,omitempty"`
-	FieldList []*StrategyDataField `json:"fieldList,omitempty"`
+	DataNumber  int                  `json:"dataNumber,omitempty"`
+	BatchNumber int                  `json:"batchNumber,omitempty"`
+	IndexName   string               `json:"indexName,omitempty"`
+	DataName    string               `json:"dataName,omitempty"`
+	FieldList   []*StrategyDataField `json:"fieldList,omitempty"`
+	*DataStatistics
 }
 
 func (this_ *StrategyData) AddField(field *StrategyDataField) {
@@ -25,25 +57,24 @@ type StrategyDataField struct {
 	IndexName   string               `json:"indexName,omitempty"`
 	DataName    string               `json:"dataName,omitempty"`
 	Value       string               `json:"value,omitempty"`
+	ReuseNumber int                  `json:"reuseNumber,omitempty"`
 	ValueIsList bool                 `json:"valueIsList,omitempty"`
 	ValueCount  int                  `json:"valueCount,omitempty"`
 	FieldList   []*StrategyDataField `json:"fieldList,omitempty"`
+
+	reuseValue      interface{}
+	reuseValueCount int
 }
 
 type StrategyTask struct {
-	StrategyDataList []*StrategyData `json:"strategyDataList,omitempty"`
-	DataCount        int             `json:"dataCount"`
-	ReadyDataCount   int             `json:"readyDataCount"`
-	IsEnd            bool            `json:"isEnd,omitempty"`
-	StartTime        time.Time       `json:"startTime,omitempty"`
-	EndTime          time.Time       `json:"endTime,omitempty"`
-	Error            string          `json:"error,omitempty"`
-	UseTime          int64           `json:"useTime"`
-	IsStop           bool            `json:"isStop"`
-	IsError          bool            `json:"isError"`
-	OnData           func(data map[string]interface{}) (err error)
-	OnError          func(err error)
-	OnEnd            func()
+	*StrategyData
+	IsEnd      bool   `json:"isEnd,omitempty"`
+	Error      string `json:"error,omitempty"`
+	IsStop     bool   `json:"isStop"`
+	IsError    bool   `json:"isError"`
+	OnDataList func(dataList []map[string]interface{}) (err error)
+	OnError    func(err error)
+	OnEnd      func()
 }
 
 func (this_ *StrategyTask) Stop() {
@@ -51,6 +82,9 @@ func (this_ *StrategyTask) Stop() {
 }
 
 func (this_ *StrategyTask) Start() {
+	if this_.DataStatistics == nil {
+		this_.DataStatistics = &DataStatistics{}
+	}
 	this_.StartTime = time.Now()
 	defer func() {
 		if rec := recover(); rec != nil {
@@ -64,7 +98,6 @@ func (this_ *StrategyTask) Start() {
 		}
 		this_.EndTime = time.Now()
 		this_.IsEnd = true
-		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 		util.Logger.Info("数据生成结束")
 		this_.OnEnd()
 	}()
@@ -80,30 +113,15 @@ func (this_ *StrategyTask) Start() {
 }
 
 func (this_ *StrategyTask) do() (err error) {
-	if len(this_.StrategyDataList) == 0 {
+	err = this_.doStrategyData(this_.StrategyData)
+	if err != nil {
 		return
-	}
-	for _, strategyData := range this_.StrategyDataList {
-		if strategyData.Count <= 0 {
-			strategyData.Count = 0
-		}
-		this_.DataCount += strategyData.Count
-	}
-
-	for _, strategyData := range this_.StrategyDataList {
-		if this_.needStop() {
-			break
-		}
-		err = this_.doStrategyData(strategyData)
-		if err != nil {
-			return
-		}
 	}
 	return
 }
 
 func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error) {
-	if strategyData.Count <= 0 {
+	if strategyData.DataNumber <= 0 {
 		return
 	}
 	if this_.needStop() {
@@ -118,28 +136,36 @@ func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error
 	if err != nil {
 		return
 	}
-	for index := 0; index < strategyData.Count; index++ {
+	dataNumber := strategyData.DataNumber
+	batchNumber := strategyData.BatchNumber
+	if batchNumber <= 0 {
+		batchNumber = 200
+	}
+	var data map[string]interface{}
+	var dataList []map[string]interface{}
+	for index := 0; index < dataNumber; index++ {
 
 		if this_.needStop() {
 			return
 		}
-		if strategyData.IndexName != "" {
-			err = script.Set(strategyData.IndexName, index)
-		} else {
-			err = script.Set("_$index", index)
-		}
+
+		var startTime = time.Now()
+		data, err = this_.doStrategyDataFieldList(index, strategyData.IndexName, script, strategyData.FieldList)
+		var endTime = time.Now()
+		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 		if err != nil {
+			strategyData.IncrDataErrorCount(1, useTime)
 			return
 		}
-		var data map[string]interface{}
-		data, err = this_.doStrategyDataFieldList(script, strategyData.FieldList)
-		if err != nil {
-			return
-		}
-		this_.ReadyDataCount++
-		err = this_.OnData(data)
-		if err != nil {
-			return
+		strategyData.IncrDataSuccessCount(1, useTime)
+		dataList = append(dataList, data)
+
+		if len(dataList) >= batchNumber {
+			err = this_.OnDataList(dataList)
+			dataList = []map[string]interface{}{}
+			if err != nil {
+				return
+			}
 		}
 		if strategyData.DataName != "" {
 			err = script.Set(strategyData.DataName, data)
@@ -150,13 +176,30 @@ func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error
 			return
 		}
 	}
+	if len(dataList) > 0 {
+		err = this_.OnDataList(dataList)
+		dataList = []map[string]interface{}{}
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
-func (this_ *StrategyTask) doStrategyDataFieldList(script *javascript.Script, fieldList []*StrategyDataField) (data map[string]interface{}, err error) {
+func (this_ *StrategyTask) doStrategyDataFieldList(index int, indexName string, script *javascript.Script, fieldList []*StrategyDataField) (data map[string]interface{}, err error) {
 
 	if this_.needStop() {
 		return
+	}
+	if index >= 0 {
+		if indexName != "" {
+			err = script.Set(indexName, index)
+		} else {
+			err = script.Set("_$index", index)
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	data = map[string]interface{}{}
@@ -179,7 +222,23 @@ func (this_ *StrategyTask) doStrategyDataFieldList(script *javascript.Script, fi
 
 func (this_ *StrategyTask) doStrategyDataField(script *javascript.Script, field *StrategyDataField) (name string, value interface{}, err error) {
 
+	defer func() {
+		field.reuseValueCount++
+		field.reuseValue = value
+	}()
 	name = field.Name
+	if field.ReuseNumber <= 0 {
+		field.ReuseNumber = 1
+	}
+	if field.reuseValueCount >= field.ReuseNumber {
+		field.reuseValue = nil
+		field.reuseValueCount = 0
+	}
+
+	if field.reuseValueCount > 0 {
+		value = field.reuseValue
+		return
+	}
 
 	valueCount := 1
 	if field.ValueIsList {
@@ -198,20 +257,14 @@ func (this_ *StrategyTask) doStrategyDataField(script *javascript.Script, field 
 		if this_.needStop() {
 			return
 		}
+		var setIndex = -1
 		if field.ValueIsList {
-			if field.IndexName != "" {
-				err = fieldScript.Set(field.IndexName, valueIndex)
-			} else {
-				err = fieldScript.Set("_$"+name+"_index", valueIndex)
-			}
-			if err != nil {
-				return
-			}
+			setIndex = valueIndex
 		}
 
 		var data interface{}
 		if len(field.FieldList) > 0 {
-			data, err = this_.doStrategyDataFieldList(fieldScript, field.FieldList)
+			data, err = this_.doStrategyDataFieldList(setIndex, field.IndexName, fieldScript, field.FieldList)
 		} else {
 			data, err = fieldScript.GetScriptValue(field.Value)
 		}

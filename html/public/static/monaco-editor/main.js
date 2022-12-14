@@ -6,4 +6,18 @@ require(
     ]
     , () => {
         window.monaco = monaco;
+        let onMonacoList = window.onMonacoList || [];
+        onMonacoList.forEach(one => {
+            one()
+        })
     })
+
+window.onMonacoList = []
+window.onMonacoLoad = (one) => {
+    if (window.monaco) {
+        one()
+    } else {
+        window.onMonacoList.push(one)
+    }
+
+}

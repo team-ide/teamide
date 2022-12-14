@@ -87,7 +87,7 @@ func (this_ *Progress) end(err error) {
 
 var (
 	progressCache     = map[string]*Progress{}
-	progressCacheLock sync.Mutex
+	progressCacheLock = &sync.Mutex{}
 )
 
 func getProgress(progressId string) (progress *Progress) {

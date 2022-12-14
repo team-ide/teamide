@@ -48,7 +48,6 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Power: Power, Do: this_.index})
 	apis = append(apis, &base.ApiWorker{Power: createPower, Do: this_.create})
 	apis = append(apis, &base.ApiWorker{Power: filePower, Do: this_.file})
 	apis = append(apis, &base.ApiWorker{Power: filesPower, Do: this_.files})
@@ -84,10 +83,6 @@ type FileRequest struct {
 	ProgressId    string `json:"progressId,omitempty"`
 	Action        string `json:"action,omitempty"`
 	Force         bool   `json:"force,omitempty"`
-}
-
-func (this_ *api) index(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
-	return
 }
 
 func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"teamide/pkg/data_engine"
 	"teamide/pkg/util"
+	"time"
 )
 
 type ImportTask struct {
@@ -16,8 +17,9 @@ type ImportTask struct {
 }
 
 type StrategyDataColumn struct {
-	Name  string `json:"name,omitempty"`
-	Value string `json:"value,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Value       string `json:"value,omitempty"`
+	ReuseNumber int    `json:"reuseNumber,omitempty"`
 }
 
 func (this_ *ImportTask) do() (err error) {
@@ -44,12 +46,11 @@ func (this_ *ImportTask) doStrategy() (err error) {
 
 	task := &data_engine.StrategyTask{}
 
-	taskStrategyData := &data_engine.StrategyData{}
+	this_.StrategyData = &data_engine.StrategyData{}
 
-	task.StrategyDataList = append(task.StrategyDataList, taskStrategyData)
+	task.StrategyData = this_.StrategyData
 
-	taskStrategyData.Count = this_.Count
-	taskStrategyData.AddField(&data_engine.StrategyDataField{
+	this_.StrategyData.AddField(&data_engine.StrategyDataField{
 		Name:  "id",
 		Value: this_.Id,
 	})
@@ -57,9 +58,10 @@ func (this_ *ImportTask) doStrategy() (err error) {
 		if column.Name == "" {
 			continue
 		}
-		taskStrategyData.AddField(&data_engine.StrategyDataField{
-			Name:  column.Name,
-			Value: column.Value,
+		this_.StrategyData.AddField(&data_engine.StrategyDataField{
+			Name:        column.Name,
+			Value:       column.Value,
+			ReuseNumber: column.ReuseNumber,
 		})
 	}
 
@@ -67,58 +69,55 @@ func (this_ *ImportTask) doStrategy() (err error) {
 		err = onErr
 	}
 
-	this_.DataCount += this_.Count
-
 	this_.taskList = append(this_.taskList, task)
 
-	var docs []*InsertDoc
 	var batchNumber = this_.BatchNumber
 	if batchNumber <= 0 {
 		batchNumber = 200
 	}
+	this_.StrategyData.DataNumber = this_.Count
+	this_.StrategyData.BatchNumber = batchNumber
 
-	task.OnData = func(onData map[string]interface{}) (err error) {
+	task.OnDataList = func(dataList []map[string]interface{}) (err error) {
 
 		if this_.needStop() {
 			return
 		}
+		var startTime = time.Now()
 
-		doc := &InsertDoc{
-			IndexName: this_.IndexName,
-		}
-		doc.Id, err = util.GetStringValue(onData["id"])
-		if err != nil {
-			return
-		}
+		var docs []*InsertDoc
+		for _, data := range dataList {
 
-		this_.DataReadyCount++
-
-		doc.Doc = onData
-
-		docs = append(docs, doc)
-		var size = len(docs)
-		if size >= batchNumber {
-			_, err = this_.Service.BatchInsertNotWait(docs)
-			docs = []*InsertDoc{}
+			doc := &InsertDoc{
+				IndexName: this_.IndexName,
+			}
+			doc.Id, err = util.GetStringValue(data["id"])
 			if err != nil {
-				this_.DataErrorCount += size
+				this_.IncrDataErrorCount(1, 0)
 				return
 			}
-			this_.DataSuccessCount += size
+
+			doc.Doc = data
+
+			docs = append(docs, doc)
 		}
+
+		var size = len(docs)
+
+		_, err = this_.Service.BatchInsertNotWait(docs)
+		var endTime = time.Now()
+		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+		if err != nil {
+			this_.IncrDataErrorCount(size, useTime)
+			return
+		}
+		this_.IncrDataSuccessCount(size, useTime)
 
 		return
 	}
 
 	task.OnEnd = func() {
-		var size = len(docs)
-		_, err = this_.Service.BatchInsertNotWait(docs)
-		docs = []*InsertDoc{}
-		if err != nil {
-			this_.DataErrorCount += size
-			return
-		}
-		this_.DataSuccessCount += size
+
 	}
 
 	task.Start()

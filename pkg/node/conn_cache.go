@@ -9,14 +9,14 @@ import (
 type connCache struct {
 	_connCache          map[string]net.Conn
 	_connCacheLock      sync.Mutex
-	_connWriteLockCache map[string]sync.Mutex
+	_connWriteLockCache map[string]sync.Locker
 	MonitorData         *MonitorData
 }
 
 func newConnCache(MonitorData *MonitorData) *connCache {
 	return &connCache{
 		_connCache:          make(map[string]net.Conn),
-		_connWriteLockCache: make(map[string]sync.Mutex),
+		_connWriteLockCache: make(map[string]sync.Locker),
 		MonitorData:         MonitorData,
 	}
 }
@@ -29,7 +29,7 @@ func (this_ *connCache) clean() {
 		_ = conn.Close()
 	}
 	this_._connCache = make(map[string]net.Conn)
-	this_._connWriteLockCache = make(map[string]sync.Mutex)
+	this_._connWriteLockCache = make(map[string]sync.Locker)
 	return
 }
 
@@ -38,10 +38,10 @@ func (this_ *connCache) setConn(connId string, conn net.Conn) {
 	defer this_._connCacheLock.Unlock()
 
 	this_._connCache[connId] = conn
-	this_._connWriteLockCache[connId] = sync.Mutex{}
+	this_._connWriteLockCache[connId] = &sync.Mutex{}
 	return
 }
-func (this_ *connCache) getConn(connId string) (conn net.Conn, writeLock sync.Mutex) {
+func (this_ *connCache) getConn(connId string) (conn net.Conn, writeLock sync.Locker) {
 	this_._connCacheLock.Lock()
 	defer this_._connCacheLock.Unlock()
 

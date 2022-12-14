@@ -104,6 +104,13 @@ export default {
         this.tool.stopEvent();
         this.onContextMenu && this.onContextMenu();
       });
+      // console.log(this.monacoInstance);
+      // let as = this.monacoInstance.getActions();
+      // as.forEach((a) => {
+      //   if (a.id.toLowerCase().indexOf("copy") >= 0) {
+      //     console.log(a);
+      //   }
+      // });
       //提示项设值
       //       monaco.languages.registerCompletionItemProvider("java", {
       //         provideCompletionItems: (model, position) => {
@@ -127,9 +134,17 @@ export default {
       //         },
       //       });
     },
+    setSelection(arg) {
+      this.monacoInstance && this.monacoInstance.setSelection(arg);
+    },
+    getAction(action) {
+      return this.monacoInstance.getAction(action);
+    },
   },
   mounted() {
-    this.init();
+    window.onMonacoLoad(() => {
+      this.init();
+    });
   },
   beforeDestroy() {
     if (this.monacoInstance != null) {

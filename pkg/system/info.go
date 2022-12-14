@@ -19,8 +19,8 @@ import (
 var (
 	monitorDataList     []*MonitorData
 	CollectMaxSize      = 3600
-	collectLock         sync.Mutex
-	monitorDataListLock sync.Mutex
+	collectLock         = &sync.Mutex{}
+	monitorDataListLock = &sync.Mutex{}
 )
 
 type VirtualMemoryStat struct {

@@ -46,7 +46,7 @@ type docOptions struct {
 
 var (
 	docTemplateCache     = map[string]*docTemplate{}
-	docTemplateCacheLock sync.Mutex
+	docTemplateCacheLock = &sync.Mutex{}
 )
 
 func addDocTemplate(template *docTemplate) {

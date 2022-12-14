@@ -85,13 +85,13 @@
               <template slot-scope="scope">
                 <div
                   class="tm-link color-grey"
-                  @click="toolboxWorker.showJSONData(scope.row)"
+                  @click="tool.showJSONData(scope.row)"
                 >
                   查看
                 </div>
                 <div
                   class="tm-link color-grey mgl-5"
-                  @click="toolboxWorker.showJSONData(scope.row.paramStr)"
+                  @click="tool.showJSONData(scope.row.paramStr)"
                 >
                   查看参数
                 </div>

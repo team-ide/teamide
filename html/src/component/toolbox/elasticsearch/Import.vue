@@ -1,6 +1,6 @@
 <template>
   <div class="toolbox-elasticsearch-import">
-    <div class="app-scroll-bar pd-10" style="height: calc(100% - 120px)">
+    <div class="pd-10">
       <el-form size="mini" inline>
         <el-form-item label="类型">
           <el-select v-model="formData.importType" style="width: 100px">
@@ -29,12 +29,24 @@
           <el-input v-model="formData.id" style="width: 300px"> </el-input>
         </el-form-item>
       </el-form>
-      <div>
-        <div class="tm-link color-green mgr-5" @click="addImportColumn({})">
-          添加字段
-        </div>
+    </div>
+
+    <div class="pdlr-10 mgt--10">
+      <div class="tm-link color-green mgr-5" @click="addImportColumn({})">
+        添加字段
       </div>
-      <el-table :data="columnList" border style="width: 100%" size="mini">
+      <div class="tm-link color-grey mgr-5" @click="showColumnListCode()">
+        字段模板
+      </div>
+    </div>
+    <div class="pdlr-10" style="height: calc(100% - 280px)">
+      <el-table
+        :data="columnList"
+        border
+        size="mini"
+        style="width: 100%"
+        height="100%"
+      >
         <el-table-column label="字段名称">
           <template slot-scope="scope">
             <div class="">
@@ -46,6 +58,13 @@
           <template slot-scope="scope">
             <div class="">
               <el-input v-model="scope.row.value" type="text" />
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="重复使用次数">
+          <template slot-scope="scope">
+            <div class="">
+              <el-input v-model="scope.row.reuseNumber" type="text" />
             </div>
           </template>
         </el-table-column>
@@ -123,7 +142,43 @@
           </template>
           <div class="mgt-5">
             <span class="color-grey pdr-10">
-              数据 总数/成功/失败：
+              数据准备 总数 / 成功 / 失败：
+              <span>
+                {{ task.strategyData.dataNumber }}
+                /
+                <span class="color-green">
+                  {{ task.strategyData.dataSuccessCount }}
+                </span>
+                /
+                <span class="color-red">
+                  {{ task.strategyData.dataErrorCount }}
+                </span>
+              </span>
+            </span>
+            <template v-if="task.strategyData.useTime > 0">
+              <span class="color-grey pdr-10">
+                耗时：
+                <span class="color-green">
+                  {{ task.strategyData.useTime }} 毫秒
+                </span>
+              </span>
+              <span class="color-grey pdr-10">
+                平均：
+                <span class="color-green">
+                  {{
+                    (
+                      (task.strategyData.dataCount * 1000) /
+                      task.strategyData.useTime
+                    ).toFixed(2)
+                  }}
+                  / 秒
+                </span>
+              </span>
+            </template>
+          </div>
+          <div class="mgt-5">
+            <span class="color-grey pdr-10">
+              数据导入 总数 / 成功 / 失败：
               <span>
                 {{ task.dataCount }}
                 /
@@ -136,6 +191,19 @@
                 </span>
               </span>
             </span>
+            <template v-if="task.useTime > 0">
+              <span class="color-grey pdr-10">
+                耗时：
+                <span class="color-green"> {{ task.useTime }} 毫秒 </span>
+              </span>
+              <span class="color-grey pdr-10">
+                平均：
+                <span class="color-green">
+                  {{ ((task.dataCount * 1000) / task.useTime).toFixed(2) }}
+                  / 秒
+                </span>
+              </span>
+            </template>
             <template v-if="task.isEnd">
               <div @click="taskClean()" class="color-orange tm-link mgr-10">
                 删除
@@ -160,7 +228,7 @@
 <script>
 export default {
   components: {},
-  props: ["source", "toolboxWorker", "actived", "extend", "indexName"],
+  props: ["source", "toolboxWorker", "tabId", "actived", "extend", "indexName"],
   data() {
     return {
       ready: false,
@@ -196,6 +264,15 @@ export default {
       this.formData.indexName = this.indexName;
       this.formData.id = "'id-' + (_$index + 0)";
       this.ready = true;
+      if (this.extend) {
+        if (this.extend.columnList) {
+          this.columnList = this.extend.columnList;
+        }
+        if (this.extend.formData) {
+          Object.assign(this.formData, this.extend.formData);
+        }
+      }
+      this.autoSaveSql();
     },
     upImportColumn(importColumn) {
       this.tool.up(this, "columnList", importColumn);
@@ -207,7 +284,7 @@ export default {
       importColumn = importColumn || {};
       importColumn.name = importColumn.name || "name";
       importColumn.value = importColumn.value || "'name-' + (_$index + 0)";
-
+      importColumn.reuseNumber = 1;
       let appendIndex = this.columnList.indexOf(after);
       if (appendIndex < 0) {
         appendIndex = this.columnList.length;
@@ -221,6 +298,28 @@ export default {
       if (findIndex >= 0) {
         this.columnList.splice(findIndex, 1);
       }
+    },
+    showColumnListCode() {
+      this.tool.showJSONData(this.columnList, {
+        onSave: (res) => {
+          if (res.jsonError) {
+            this.tool.error(res.jsonError);
+            return;
+          }
+          res.jsonData = res.jsonData || [];
+          if (!res.jsonData.forEach) {
+            this.tool.error("非有效JSON");
+            return;
+          }
+          this.columnList.splice(0, this.columnList.length);
+          res.jsonData.forEach((one) => {
+            one.name = one.name || "";
+            one.value = one.value || "";
+            one.reuseNumber = one.reuseNumber || 1;
+            this.columnList.push(one);
+          });
+        },
+      });
     },
     async toDo() {
       if (this.task != null) {
@@ -245,6 +344,7 @@ export default {
       }
       param.columnList = [];
       this.columnList.forEach((one) => {
+        one.reuseNumber = Number(one.reuseNumber);
         param.columnList.push(one);
       });
 
@@ -294,6 +394,31 @@ export default {
       this.task = null;
       this.taskId = null;
       await this.server.elasticsearch.taskClean(param);
+    },
+    async autoSaveSql() {
+      if (this.isDestroyed) {
+        return;
+      }
+      if (this.autoSaveSqlIng) {
+        return;
+      }
+      this.autoSaveSqlIng = true;
+      let keyValueMap = {};
+      let columnListStr = JSON.stringify(this.columnList);
+      if (this.columnListStr != columnListStr) {
+        this.columnListStr = columnListStr;
+        keyValueMap.columnList = this.columnList;
+      }
+      let formDataStr = JSON.stringify(this.formData);
+      if (this.formDataStr != formDataStr) {
+        this.formDataStr = formDataStr;
+        keyValueMap.formData = this.formData;
+      }
+      if (Object.keys(keyValueMap).length > 0) {
+        await this.toolboxWorker.updateOpenTabExtend(this.tabId, keyValueMap);
+      }
+      this.autoSaveSqlIng = false;
+      setTimeout(this.autoSaveSql, 300);
     },
   },
   created() {},

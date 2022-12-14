@@ -23,7 +23,7 @@ func (this_ *cronLogger) Error(err error, msg string, keysAndValues ...interface
 var (
 	taskCron        *cron.Cron
 	cronTaskMap     = map[string]*CronTask{}
-	cronTaskMapLock sync.Mutex
+	cronTaskMapLock = &sync.Mutex{}
 )
 
 func init() {

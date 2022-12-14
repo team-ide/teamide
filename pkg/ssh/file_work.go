@@ -22,7 +22,7 @@ func newFileService(config *Config) *fileService {
 
 var (
 	fileServiceCache     = make(map[string]*fileService)
-	fileServiceCacheLock sync.Mutex
+	fileServiceCacheLock = &sync.Mutex{}
 )
 
 func CreateOrGetClient(key string, config *Config) (res *fileService) {

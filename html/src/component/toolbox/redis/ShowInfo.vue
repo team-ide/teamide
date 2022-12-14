@@ -14,7 +14,7 @@ export default {
   methods: {
     async show() {
       let infoData = await this.loadInfo();
-      this.toolboxWorker.showJSONData(infoData);
+      this.tool.showJSONData(infoData);
     },
     async loadInfo() {
       let param = this.toolboxWorker.getWorkParam({});

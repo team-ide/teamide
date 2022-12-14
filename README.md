@@ -144,10 +144,13 @@ Team IDE 团队在线开发工具
 
 > #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/temeide`下
 
-**服务端模式目前存在问题，请大家先单机运行，后续将完善服务端模式**
-
 > #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
 
+#### Docker 运行
+
+```shell
+docker run -itd --name teamide-21080 -m 64m -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:1.9.0
+```
 
 ```shell
 conf/           # 配置文件

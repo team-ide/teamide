@@ -162,7 +162,7 @@
             <div class="pdtb-20">
               <div
                 class="tm-btn bg-grey-7"
-                @click="toolboxWorker.showJSONData(form.value)"
+                @click="tool.showJSONData(form.value)"
               >
                 预览值
               </div>

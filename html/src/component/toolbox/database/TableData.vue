@@ -3,7 +3,7 @@
     <template v-if="ready">
       <tm-layout height="100%">
         <tm-layout height="120px" style="overflow: hidden">
-          <tm-layout width="400px">
+          <tm-layout width="auto">
             <ul class="part-box app-scroll-bar mg-0" v-if="tableDetail != null">
               <template v-for="(one, index) in form.wheres">
                 <li :key="index">
@@ -121,7 +121,7 @@
             </ul>
           </tm-layout>
           <!-- <tm-layout-bar right></tm-layout-bar> -->
-          <tm-layout width="400px">
+          <tm-layout width="300px">
             <ul class="part-box app-scroll-bar mg-0">
               <template v-for="(one, index) in form.orders">
                 <li :key="index">
@@ -166,12 +166,6 @@
                   添加排序
                 </div>
               </li>
-            </ul>
-          </tm-layout>
-          <!-- <tm-layout-bar right></tm-layout-bar> -->
-          <tm-layout>
-            <ul class="part-box app-scroll-bar mg-0" v-if="tableDetail != null">
-              <li></li>
             </ul>
           </tm-layout>
         </tm-layout>
@@ -713,6 +707,9 @@ export default {
         };
         menus.push(menu_w_2);
         setTimeout(async () => {
+          if (navigator.clipboard == null || navigator.permissions == null) {
+            return;
+          }
           let readResult = await this.tool.readClipboardText();
           if (!readResult.success) {
             menu_w_1.text += "(请允许访问剪贴板)";
@@ -747,14 +744,14 @@ export default {
         menus.push({
           text: "查看列数据",
           onClick: () => {
-            this.toolboxWorker.showJSONData(row[name]);
+            this.tool.showJSONData(row[name]);
           },
         });
       }
       menus.push({
         text: "查看行数据",
         onClick: () => {
-          this.toolboxWorker.showJSONData(row);
+          this.tool.showJSONData(row);
         },
       });
       let dataCache = this.getCacheData(row);

@@ -74,7 +74,7 @@ export default {
       menus.push({
         text: "查看行数据",
         onClick: () => {
-          this.toolboxWorker.showJSONData(row);
+          this.tool.showJSONData(row);
         },
       });
 

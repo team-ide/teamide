@@ -64,7 +64,7 @@
             <div class="pdlr-10">
               <div
                 class="tm-btn bg-grey-7"
-                @click="toolboxWorker.showJSONData(form.value)"
+                @click="tool.showJSONData(form.value)"
               >
                 预览值
               </div>
@@ -120,7 +120,7 @@
                   <el-col :span="4">
                     <a
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toolboxWorker.showJSONData(one.value)"
+                      @click="tool.showJSONData(one.value)"
                       title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>
@@ -185,7 +185,7 @@
                   <el-col :span="4">
                     <a
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toolboxWorker.showJSONData(one.value)"
+                      @click="tool.showJSONData(one.value)"
                       title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>
@@ -251,7 +251,7 @@
                   <el-col :span="4">
                     <a
                       class="tm-link color-grey ft-15 mgt-30"
-                      @click="toolboxWorker.showJSONData(one.value)"
+                      @click="tool.showJSONData(one.value)"
                       title="预览值"
                     >
                       <i class="mdi mdi-eye"></i>

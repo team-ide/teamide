@@ -299,6 +299,19 @@
     background: #172029;
 }
 
+.toolbox-editor .el-table__fixed-right-patch {
+    background-color: #172029;
+}
+
+.toolbox-editor .el-table tr {
+    background: #172029;
+}
+
+.toolbox-editor .el-table--border th.el-table__cell,
+.toolbox-editor .el-table__fixed-right-patch {
+    border-bottom: 1px solid #404040;
+}
+
 .toolbox-editor .el-table .el-table__row:hover td.el-table__cell,
 .toolbox-editor .el-table .el-table__row:hover td.el-table__cell,
 .toolbox-editor .el-table .el-table__row.hover-row td.el-table__cell {

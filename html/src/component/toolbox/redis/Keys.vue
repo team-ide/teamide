@@ -202,6 +202,9 @@ export default {
         param.size = 50;
       }
       param.size = Number(param.size);
+      if (this.tool.isEmpty(param.pattern)) {
+        this.tool.warn("请输入“*”或“user*”等关键字模糊搜索");
+      }
       let res = await this.server.redis.keys(param);
       if (res.code == 0) {
         let keysData = res.data || {};

@@ -12,7 +12,7 @@ import (
 
 var (
 	taskCache     = map[string]*Task{}
-	taskCacheLock sync.Mutex
+	taskCacheLock = &sync.Mutex{}
 )
 
 func StartImportTask(task *ImportTask) {
@@ -64,21 +64,22 @@ func CleanTask(taskKey string) *Task {
 }
 
 type Task struct {
-	IndexName        string     `json:"indexName,omitempty"`
-	TaskId           string     `json:"taskId,omitempty"`
-	DataCount        int        `json:"dataCount"`
-	DataReadyCount   int        `json:"dataReadyCount"`
-	DataSuccessCount int        `json:"dataSuccessCount"`
-	DataErrorCount   int        `json:"DataErrorCount"`
-	IsEnd            bool       `json:"isEnd,omitempty"`
-	StartTime        time.Time  `json:"startTime,omitempty"`
-	EndTime          time.Time  `json:"endTime,omitempty"`
-	Error            string     `json:"error,omitempty"`
-	UseTime          int64      `json:"useTime"`
-	IsStop           bool       `json:"isStop"`
-	Service          *V7Service `json:"-"`
-	taskList         []*data_engine.StrategyTask
-	toDo             func() (err error)
+	*data_engine.DataStatistics
+
+	IndexName string `json:"indexName,omitempty"`
+	TaskId    string `json:"taskId,omitempty"`
+
+	IsEnd     bool       `json:"isEnd"`
+	StartTime time.Time  `json:"startTime,omitempty"`
+	EndTime   time.Time  `json:"endTime,omitempty"`
+	Error     string     `json:"error,omitempty"`
+	IsStop    bool       `json:"isStop"`
+	Service   *V7Service `json:"-"`
+	taskList  []*data_engine.StrategyTask
+
+	StrategyData *data_engine.StrategyData `json:"strategyData"`
+
+	toDo func() (err error)
 }
 
 func (this_ *Task) Stop() {
@@ -89,6 +90,9 @@ func (this_ *Task) Stop() {
 }
 
 func (this_ *Task) Start() {
+	if this_.DataStatistics == nil {
+		this_.DataStatistics = &data_engine.DataStatistics{}
+	}
 	this_.StartTime = time.Now()
 	var err error
 	defer func() {
@@ -101,7 +105,6 @@ func (this_ *Task) Start() {
 		}
 		this_.EndTime = time.Now()
 		this_.IsEnd = true
-		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 	}()
 
 	if this_.IndexName == "" {

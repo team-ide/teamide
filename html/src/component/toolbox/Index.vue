@@ -86,7 +86,6 @@
         </Page>
       </template>
     </template>
-    <JSONDataDialog ref="JSONDataDialog" :source="source"></JSONDataDialog>
   </div>
 </template>
 
@@ -97,7 +96,7 @@ import Page from "./Page.vue";
 import NodeEditor from "./node/Index.vue";
 import FileManagerEditor from "./file-manager/Index.vue";
 import TerminalEditor from "./terminal/Index.vue";
-import toolboxWorker_ from './toolboxWorker.js';
+import toolboxWorker_ from "./toolboxWorker.js";
 
 export default {
   components: {
@@ -139,9 +138,6 @@ export default {
         return;
       }
       this.inited = true;
-      this.toolboxWorker.showJSONData = (data) => {
-        this.$refs.JSONDataDialog.show(data);
-      };
       await this.toolboxWorker.init();
       this.ready = true;
     },

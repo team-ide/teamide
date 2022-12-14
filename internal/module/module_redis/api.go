@@ -487,57 +487,57 @@ func (this_ *api) persist(requestBean *base.RequestBean, c *gin.Context) (res in
 }
 
 func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(*config)
-	if err != nil {
-		return
-	}
+	//config, err := this_.getConfig(requestBean, c)
+	//if err != nil {
+	//	return
+	//}
+	//service, err := getService(*config)
+	//if err != nil {
+	//	return
+	//}
+	//
+	//request := &redis.ImportTask{}
+	//if !base.RequestJSON(request, c) {
+	//	return
+	//}
+	//taskKey := util.UUID()
+	//
+	//request.Key = taskKey
+	//request.Service = service
+	//
+	//redis.StartImportTask(request)
 
-	request := &redis.ImportTask{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	taskKey := util.UUID()
-
-	request.Key = taskKey
-	request.Service = service
-
-	redis.StartImportTask(request)
-
-	res = taskKey
+	//res = taskKey
 	return
 }
 
 func (this_ *api) importStatus(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	res = redis.GetImportTask(request.TaskKey)
+	//request := &BaseRequest{}
+	//if !base.RequestJSON(request, c) {
+	//	return
+	//}
+	//res = redis.GetImportTask(request.TaskKey)
 	return
 }
 
 func (this_ *api) importStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	redis.StopImportTask(request.TaskKey)
+	//request := &BaseRequest{}
+	//if !base.RequestJSON(request, c) {
+	//	return
+	//}
+	//redis.StopImportTask(request.TaskKey)
 	return
 }
 
 func (this_ *api) importClean(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	redis.CleanImportTask(request.TaskKey)
+	//request := &BaseRequest{}
+	//if !base.RequestJSON(request, c) {
+	//	return
+	//}
+	//redis.CleanImportTask(request.TaskKey)
 	return
 }
 

@@ -116,7 +116,7 @@
                 <template slot-scope="scope">
                   <div
                     class="tm-btn color-grey tm-btn-xs"
-                    @click="toolboxWorker.showJSONData(scope.row)"
+                    @click="tool.showJSONData(scope.row)"
                   >
                     查看
                   </div>
@@ -197,7 +197,7 @@ export default {
       }
     },
     rowDbClick(data) {
-      this.toolboxWorker.showJSONData(data);
+      this.tool.showJSONData(data);
     },
     toPush() {
       let data = {
