@@ -61,7 +61,11 @@ let server = {
         if (serverSocket != null) { return }
         let url = source.api;
         url = url.substring(url.indexOf(":"));
-        url = "ws" + url + "websocket";
+        if (location.protocol.indexOf("https") == 0) {
+            url = "wss" + url + "websocket";
+        } else {
+            url = "ws" + url + "websocket";
+        }
         url += "?id=" + tool.md5("serverSocket:" + new Date().getTime());
         url += "&jwt=" + encodeURIComponent(tool.getJWT());
         serverSocket = new WebSocket(url);

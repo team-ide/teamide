@@ -71,7 +71,11 @@ const newWorker = function (workerOption) {
             this.closeSocket();
             let url = source.api;
             url = url.substring(url.indexOf(":"));
-            url = "ws" + url + "api/terminal/websocket";
+            if (location.protocol.indexOf("https") == 0) {
+                url = "wss" + url + "api/terminal/websocket";
+            } else {
+                url = "ws" + url + "api/terminal/websocket";
+            }
             url += "?key=" + encodeURIComponent(worker.key);
             url += "&jwt=" + encodeURIComponent(tool.getJWT());
             url += "&place=" + encodeURIComponent(worker.place);
@@ -138,7 +142,11 @@ const newWorker = function (workerOption) {
         newUploadSocket() {
             let url = source.api;
             url = url.substring(url.indexOf(":"));
-            url = "ws" + url + "api/terminal/uploadWebsocket";
+            if (location.protocol.indexOf("https") == 0) {
+                url = "wss" + url + "api/terminal/uploadWebsocket";
+            } else {
+                url = "ws" + url + "api/terminal/uploadWebsocket";
+            }
             url += "?key=" + encodeURIComponent(worker.key);
             url += "&jwt=" + encodeURIComponent(tool.getJWT());
             let uploadSocket = new WebSocket(url);
