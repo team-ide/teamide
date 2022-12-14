@@ -58,8 +58,10 @@ func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 		return false
 	}
 
+	c.Header("Cache-Control", "max-age=3600")
 	if strings.HasSuffix(name, ".html") {
 		c.Header("Content-Type", "text/html")
+		c.Header("Cache-Control", "no-cache")
 	} else if strings.HasSuffix(name, ".css") {
 		c.Header("Content-Type", "text/css")
 	} else if strings.HasSuffix(name, ".js") {
