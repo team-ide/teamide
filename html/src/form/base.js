@@ -24,8 +24,8 @@ let rule = {
         },
         {
             minLength: 3,
-            maxLength: 20,
-            message: `邮箱长度必须大于3位小于20位!`
+            maxLength: 50,
+            message: `邮箱长度必须大于3位小于50位!`
         },
         {
             pattern: pattern.email,
