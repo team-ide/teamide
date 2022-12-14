@@ -149,7 +149,7 @@ Team IDE 团队在线开发工具
 #### Docker 运行
 
 ```shell
-docker run -itd --name teamide-21080 -m 64m -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:1.9.0
+docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:1.9.0
 ```
 
 ```shell
