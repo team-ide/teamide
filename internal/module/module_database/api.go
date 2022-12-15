@@ -683,7 +683,7 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 	res = task
 
 	if task != nil {
-		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		addWorkerTask(request.WorkerId, task.TaskId)
 	}
 	return
 }
@@ -717,7 +717,7 @@ func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res int
 	res = task
 
 	if task != nil {
-		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		addWorkerTask(request.WorkerId, task.TaskId)
 	}
 	return
 }
@@ -843,7 +843,7 @@ func (this_ *api) sync(requestBean *base.RequestBean, c *gin.Context) (res inter
 	res = task
 
 	if task != nil {
-		addDatabaseWorkerTask(request.WorkerId, task.TaskId)
+		addWorkerTask(request.WorkerId, task.TaskId)
 	}
 	return
 }
@@ -899,27 +899,27 @@ func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	removeDatabaseWorkerTasks(request.WorkerId)
+	removeWorkerTasks(request.WorkerId)
 	return
 }
 
-var databaseWorkerTasksCache = map[string][]string{}
-var databaseWorkerTasksCacheLock = &sync.Mutex{}
+var workerTasksCache = map[string][]string{}
+var workerTasksCacheLock = &sync.Mutex{}
 
-func addDatabaseWorkerTask(workerId string, taskId string) {
-	databaseWorkerTasksCacheLock.Lock()
-	defer databaseWorkerTasksCacheLock.Unlock()
-	taskIds := databaseWorkerTasksCache[workerId]
+func addWorkerTask(workerId string, taskId string) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+	taskIds := workerTasksCache[workerId]
 	if util.ContainsString(taskIds, taskId) < 0 {
 		taskIds = append(taskIds, taskId)
-		databaseWorkerTasksCache[workerId] = taskIds
+		workerTasksCache[workerId] = taskIds
 	}
 	return
 }
-func removeDatabaseWorkerTasks(workerId string) {
-	databaseWorkerTasksCacheLock.Lock()
-	defer databaseWorkerTasksCacheLock.Unlock()
-	taskIds := databaseWorkerTasksCache[workerId]
+func removeWorkerTasks(workerId string) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+	taskIds := workerTasksCache[workerId]
 	for _, taskId := range taskIds {
 		task := worker.GetTask(taskId)
 		if task != nil {
@@ -934,6 +934,6 @@ func removeDatabaseWorkerTasks(workerId string) {
 			worker.ClearTask(taskId)
 		}
 	}
-	delete(databaseWorkerTasksCache, workerId)
+	delete(workerTasksCache, workerId)
 	return
 }

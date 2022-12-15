@@ -3,6 +3,7 @@ package module_elasticsearch
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"sync"
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/elasticsearch"
@@ -36,6 +37,7 @@ var (
 	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "ES复制索引", ShouldLogin: true, StandAlone: true, Parent: Power})
 	importPower      = base.AppendPower(&base.PowerAction{Action: "import", Text: "ES导入", ShouldLogin: true, StandAlone: true, Parent: Power})
 	exportPower      = base.AppendPower(&base.PowerAction{Action: "export", Text: "ES导出", ShouldLogin: true, StandAlone: true, Parent: Power})
+	taskListPower    = base.AppendPower(&base.PowerAction{Action: "taskList", Text: "ES任务列表", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStatusPower  = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "ES任务状态", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStopPower    = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "ES任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskCleanPower   = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "ES任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -59,6 +61,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: importPower, Do: this_._import})
 	apis = append(apis, &base.ApiWorker{Power: exportPower, Do: this_.export})
 	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: taskListPower, Do: this_.taskList})
 	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
 	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
@@ -118,6 +121,7 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 }
 
 type BaseRequest struct {
+	WorkerId        string                 `json:"workerId"`
 	IndexName       string                 `json:"indexName"`
 	Id              string                 `json:"id"`
 	Mapping         map[string]interface{} `json:"mapping"`
@@ -410,6 +414,11 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 		return
 	}
 
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
 	var task = &elasticsearch.ImportTask{}
 	if !base.RequestJSON(task, c) {
 		return
@@ -417,6 +426,7 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 
 	task.Service = service
 	elasticsearch.StartImportTask(task)
+	addWorkerTask(request.WorkerId, task.TaskId)
 	res = task
 
 	return
@@ -473,10 +483,90 @@ func (this_ *api) taskClean(requestBean *base.RequestBean, c *gin.Context) (res 
 		return
 	}
 
-	elasticsearch.CleanTask(request.TaskId)
+	removeWorkerTask(request.WorkerId, request.TaskId)
+	return
+}
+
+func (this_ *api) taskList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res = getWorkerTasks(request.WorkerId)
 	return
 }
 
 func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	removeWorkerTasks(request.WorkerId)
+	return
+}
+
+var (
+	workerTasksCache     = map[string][]string{}
+	workerTasksCacheLock = &sync.Mutex{}
+)
+
+func addWorkerTask(workerId string, taskId string) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+	taskIds := workerTasksCache[workerId]
+	if util.ContainsString(taskIds, taskId) < 0 {
+		taskIds = append(taskIds, taskId)
+		workerTasksCache[workerId] = taskIds
+	}
+	return
+}
+
+func getWorkerTasks(workerId string) (taskList []*elasticsearch.Task) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+	taskIds := workerTasksCache[workerId]
+	for _, id := range taskIds {
+		task := elasticsearch.GetTask(id)
+		if task != nil {
+			taskList = append(taskList, task)
+		}
+	}
+	return
+}
+
+func removeWorkerTasks(workerId string) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+	taskIds := workerTasksCache[workerId]
+	for _, taskId := range taskIds {
+		elasticsearch.StopTask(taskId)
+		elasticsearch.CleanTask(taskId)
+	}
+	delete(workerTasksCache, workerId)
+	return
+}
+
+func removeWorkerTask(workerId string, taskId string) {
+	workerTasksCacheLock.Lock()
+	defer workerTasksCacheLock.Unlock()
+
+	elasticsearch.StopTask(taskId)
+	elasticsearch.CleanTask(taskId)
+
+	taskIds := workerTasksCache[workerId]
+	var newIds []string
+	for _, id := range taskIds {
+		if id != taskId {
+			newIds = append(newIds, id)
+		}
+	}
+	taskIds = newIds
+	if len(taskIds) == 0 {
+		delete(workerTasksCache, workerId)
+	} else {
+		workerTasksCache[workerId] = taskIds
+	}
 	return
 }

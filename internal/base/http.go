@@ -42,6 +42,9 @@ func RequestJSON(data interface{}, c *gin.Context) bool {
 }
 
 func ResponseJSON(data interface{}, err error, c *gin.Context) {
+	if _, exists := c.Get("request-data-bind-json-error"); exists {
+		return
+	}
 	response := HttpResponse{
 		Code: "0",
 		Data: data,
@@ -57,5 +60,6 @@ func ResponseJSON(data interface{}, err error, c *gin.Context) {
 	} else {
 		response.Data = data
 	}
+	c.Set("request-data-bind-json-error", 1)
 	c.JSON(http.StatusOK, response)
 }

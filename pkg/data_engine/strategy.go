@@ -41,6 +41,7 @@ func (this_ *DataStatistics) IncrDataErrorCount(num int, useTime int64) {
 
 type StrategyData struct {
 	DataNumber  int                  `json:"dataNumber,omitempty"`
+	StartIndex  int                  `json:"startIndex,omitempty"`
 	BatchNumber int                  `json:"batchNumber,omitempty"`
 	IndexName   string               `json:"indexName,omitempty"`
 	DataName    string               `json:"dataName,omitempty"`
@@ -149,8 +150,13 @@ func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error
 			return
 		}
 
+		var dataIndex = index
+		if this_.StartIndex > 0 {
+			dataIndex = dataIndex + this_.StartIndex
+		}
+
 		var startTime = time.Now()
-		data, err = this_.doStrategyDataFieldList(index, strategyData.IndexName, script, strategyData.FieldList)
+		data, err = this_.doStrategyDataFieldList(dataIndex, strategyData.IndexName, script, strategyData.FieldList)
 		var endTime = time.Now()
 		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 		if err != nil {

@@ -69,6 +69,10 @@ type Task struct {
 	IndexName string `json:"indexName,omitempty"`
 	TaskId    string `json:"taskId,omitempty"`
 
+	DataNumber   int `json:"dataNumber,omitempty"`
+	BatchNumber  int `json:"batchNumber,omitempty"`
+	ThreadNumber int `json:"threadNumber,omitempty"`
+
 	IsEnd     bool       `json:"isEnd"`
 	StartTime time.Time  `json:"startTime,omitempty"`
 	EndTime   time.Time  `json:"endTime,omitempty"`
@@ -77,7 +81,7 @@ type Task struct {
 	Service   *V7Service `json:"-"`
 	taskList  []*data_engine.StrategyTask
 
-	StrategyData *data_engine.StrategyData `json:"strategyData"`
+	ReadyDataStatistics *data_engine.DataStatistics `json:"readyDataStatistics"`
 
 	toDo func() (err error)
 }

@@ -49,6 +49,9 @@ let elasticsearch = {
     sync(param) {
         return http.post('api/elasticsearch/sync', param);
     },
+    taskList(param) {
+        return http.post('api/elasticsearch/taskList', param);
+    },
     taskStatus(param) {
         return http.post('api/elasticsearch/taskStatus', param);
     },

@@ -2,6 +2,9 @@ package elasticsearch
 
 import (
 	"errors"
+	"fmt"
+	"go.uber.org/zap"
+	"sync"
 	"teamide/pkg/data_engine"
 	"teamide/pkg/util"
 	"time"
@@ -9,11 +12,10 @@ import (
 
 type ImportTask struct {
 	*Task
-	ImportType  string                `json:"importType,omitempty"`
-	Count       int                   `json:"count,omitempty"`
-	BatchNumber int                   `json:"batchNumber,omitempty"`
-	Id          string                `json:"id,omitempty"`
-	ColumnList  []*StrategyDataColumn `json:"columnList"`
+	ImportType string `json:"importType,omitempty"`
+
+	Id         string                `json:"id,omitempty"`
+	ColumnList []*StrategyDataColumn `json:"columnList"`
 }
 
 type StrategyDataColumn struct {
@@ -37,7 +39,63 @@ func (this_ *ImportTask) doStrategy() (err error) {
 		err = errors.New("必须配置indexName")
 		return
 	}
-	if this_.Count <= 0 {
+	if this_.DataNumber <= 0 {
+		return
+	}
+	if this_.needStop() {
+		return
+	}
+	var threadNumber = this_.ThreadNumber
+	var dataNumber = this_.DataNumber
+	if threadNumber < 1 {
+		threadNumber = 1
+	}
+	var eachThreadDataCount = dataNumber / threadNumber
+	if eachThreadDataCount < 1 {
+		eachThreadDataCount = 1
+	}
+
+	var batchNumber = this_.BatchNumber
+	if batchNumber <= 0 {
+		batchNumber = 200
+	}
+
+	this_.ReadyDataStatistics = &data_engine.DataStatistics{}
+
+	var waitGroupForStop = &sync.WaitGroup{}
+
+	waitGroupForStop.Add(threadNumber)
+
+	var startIndex int
+	for threadIndex := 0; threadIndex < threadNumber; threadIndex++ {
+		var threadDataCount = eachThreadDataCount
+		if dataNumber < threadDataCount {
+			threadDataCount = dataNumber
+		}
+		go this_.doThreadStrategy(waitGroupForStop, threadIndex, startIndex, threadDataCount, batchNumber)
+		dataNumber = dataNumber - threadDataCount
+		startIndex = startIndex + threadDataCount
+	}
+
+	waitGroupForStop.Wait()
+
+	return
+}
+
+func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, threadIndex int, startIndex int, threadDataCount int, batchNumber int) {
+
+	var err error
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		if err != nil {
+			util.Logger.Error("doThreadStrategy error", zap.Error(err))
+		}
+		waitGroupForStop.Done()
+	}()
+	if threadDataCount <= 0 {
 		return
 	}
 	if this_.needStop() {
@@ -46,11 +104,11 @@ func (this_ *ImportTask) doStrategy() (err error) {
 
 	task := &data_engine.StrategyTask{}
 
-	this_.StrategyData = &data_engine.StrategyData{}
+	task.StrategyData = &data_engine.StrategyData{
+		DataStatistics: this_.ReadyDataStatistics,
+	}
 
-	task.StrategyData = this_.StrategyData
-
-	this_.StrategyData.AddField(&data_engine.StrategyDataField{
+	task.StrategyData.AddField(&data_engine.StrategyDataField{
 		Name:  "id",
 		Value: this_.Id,
 	})
@@ -58,7 +116,7 @@ func (this_ *ImportTask) doStrategy() (err error) {
 		if column.Name == "" {
 			continue
 		}
-		this_.StrategyData.AddField(&data_engine.StrategyDataField{
+		task.StrategyData.AddField(&data_engine.StrategyDataField{
 			Name:        column.Name,
 			Value:       column.Value,
 			ReuseNumber: column.ReuseNumber,
@@ -71,12 +129,9 @@ func (this_ *ImportTask) doStrategy() (err error) {
 
 	this_.taskList = append(this_.taskList, task)
 
-	var batchNumber = this_.BatchNumber
-	if batchNumber <= 0 {
-		batchNumber = 200
-	}
-	this_.StrategyData.DataNumber = this_.Count
-	this_.StrategyData.BatchNumber = batchNumber
+	task.StartIndex = startIndex
+	task.DataNumber = threadDataCount
+	task.BatchNumber = batchNumber
 
 	task.OnDataList = func(dataList []map[string]interface{}) (err error) {
 
