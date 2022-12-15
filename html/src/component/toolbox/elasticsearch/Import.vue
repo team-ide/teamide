@@ -17,7 +17,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="索引">
-              <el-input v-model="formData.indexName" style="width: 200px">
+              <el-input v-model="formData.indexName" style="width: 250px">
               </el-input>
             </el-form-item>
             <el-form-item label="导入数量">
@@ -35,6 +35,9 @@
             <el-form-item label="ID">
               <el-input v-model="formData.id" style="width: 300px"> </el-input>
             </el-form-item>
+            <el-checkbox v-model="formData.errorContinue">
+              有错继续
+            </el-checkbox>
           </el-form>
         </div>
         <div class="pdlr-10 mgt--10">
@@ -176,20 +179,16 @@
                     <span class="color-grey pdr-10">
                       耗时：
                       <span class="color-green">
-                        {{ task.readyDataStatistics.useTime }} 毫秒
+                        {{ task.readyDataStatistics.useTime }}
                       </span>
+                      毫秒
                     </span>
                     <span class="color-grey pdr-10">
                       平均：
                       <span class="color-green">
-                        {{
-                          (
-                            (task.readyDataStatistics.dataCount * 1000) /
-                            task.readyDataStatistics.useTime
-                          ).toFixed(2)
-                        }}
-                        / 秒
+                        {{ task.readyDataStatistics.dataAverage }}
                       </span>
+                      个 / 秒
                     </span>
                   </template>
                 </div>
@@ -197,30 +196,31 @@
                   <span class="color-grey pdr-10">
                     数据导入 总数 / 成功 / 失败：
                     <span>
-                      {{ task.dataCount }}
+                      {{ task.doDataStatistics.dataCount }}
                       /
                       <span class="color-green">
-                        {{ task.dataSuccessCount }}
+                        {{ task.doDataStatistics.dataSuccessCount }}
                       </span>
                       /
                       <span class="color-red">
-                        {{ task.dataErrorCount }}
+                        {{ task.doDataStatistics.dataErrorCount }}
                       </span>
                     </span>
                   </span>
-                  <template v-if="task.useTime > 0">
+                  <template v-if="task.doDataStatistics.useTime > 0">
                     <span class="color-grey pdr-10">
                       耗时：
-                      <span class="color-green"> {{ task.useTime }} 毫秒 </span>
+                      <span class="color-green">
+                        {{ task.doDataStatistics.useTime }}
+                      </span>
+                      毫秒
                     </span>
                     <span class="color-grey pdr-10">
                       平均：
                       <span class="color-green">
-                        {{
-                          ((task.dataCount * 1000) / task.useTime).toFixed(2)
-                        }}
-                        / 秒
+                        {{ task.doDataStatistics.dataAverage }}
                       </span>
+                      个 / 秒
                     </span>
                   </template>
                   <template v-if="task.isEnd">
@@ -268,6 +268,7 @@ export default {
         dataNumber: 1,
         batchNumber: 200,
         threadNumber: 1,
+        errorContinue: true,
         id: "",
       },
       columnList: [],

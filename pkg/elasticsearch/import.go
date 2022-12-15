@@ -60,8 +60,6 @@ func (this_ *ImportTask) doStrategy() (err error) {
 		batchNumber = 200
 	}
 
-	this_.ReadyDataStatistics = &data_engine.DataStatistics{}
-
 	var waitGroupForStop = &sync.WaitGroup{}
 
 	waitGroupForStop.Add(threadNumber)
@@ -105,8 +103,12 @@ func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, thre
 	task := &data_engine.StrategyTask{}
 
 	task.StrategyData = &data_engine.StrategyData{
-		DataStatistics: this_.ReadyDataStatistics,
+		DataStatistics: &data_engine.DataStatistics{},
 	}
+
+	this_.ReadyDataStatisticsList = append(this_.ReadyDataStatisticsList, task.DataStatistics)
+	doDataStatistics := &data_engine.DataStatistics{}
+	this_.DoDataStatisticsList = append(this_.DoDataStatisticsList, doDataStatistics)
 
 	task.StrategyData.AddField(&data_engine.StrategyDataField{
 		Name:  "id",
@@ -148,7 +150,12 @@ func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, thre
 			}
 			doc.Id, err = util.GetStringValue(data["id"])
 			if err != nil {
-				this_.IncrDataErrorCount(1, 0)
+				doDataStatistics.IncrDataErrorCount(1, 0)
+				util.Logger.Error("get id value error", zap.Any("data", data), zap.Error(err))
+				if this_.ErrorContinue {
+					err = nil
+					continue
+				}
 				return
 			}
 
@@ -163,10 +170,14 @@ func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, thre
 		var endTime = time.Now()
 		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 		if err != nil {
-			this_.IncrDataErrorCount(size, useTime)
+			doDataStatistics.IncrDataErrorCount(size, useTime)
+			util.Logger.Error("BatchInsertNotWait error", zap.Any("size", size), zap.Any("useTime", useTime), zap.Error(err))
+			if this_.ErrorContinue {
+				err = nil
+			}
 			return
 		}
-		this_.IncrDataSuccessCount(size, useTime)
+		doDataStatistics.IncrDataSuccessCount(size, useTime)
 
 		return
 	}

@@ -38,6 +38,9 @@ func GetTask(taskKey string) *Task {
 	defer taskCacheLock.Unlock()
 
 	task := taskCache[taskKey]
+	if task != nil {
+		task.Statistics()
+	}
 	return task
 }
 
@@ -64,14 +67,13 @@ func CleanTask(taskKey string) *Task {
 }
 
 type Task struct {
-	*data_engine.DataStatistics
-
 	IndexName string `json:"indexName,omitempty"`
 	TaskId    string `json:"taskId,omitempty"`
 
-	DataNumber   int `json:"dataNumber,omitempty"`
-	BatchNumber  int `json:"batchNumber,omitempty"`
-	ThreadNumber int `json:"threadNumber,omitempty"`
+	DataNumber    int  `json:"dataNumber,omitempty"`
+	BatchNumber   int  `json:"batchNumber,omitempty"`
+	ThreadNumber  int  `json:"threadNumber,omitempty"`
+	ErrorContinue bool `json:"errorContinue"`
 
 	IsEnd     bool       `json:"isEnd"`
 	StartTime time.Time  `json:"startTime,omitempty"`
@@ -81,9 +83,50 @@ type Task struct {
 	Service   *V7Service `json:"-"`
 	taskList  []*data_engine.StrategyTask
 
+	ReadyDataStatisticsList []*data_engine.DataStatistics `json:"readyDataStatisticsList"`
+	DoDataStatisticsList    []*data_engine.DataStatistics `json:"doDataStatisticsList"`
+
 	ReadyDataStatistics *data_engine.DataStatistics `json:"readyDataStatistics"`
+	DoDataStatistics    *data_engine.DataStatistics `json:"doDataStatistics"`
 
 	toDo func() (err error)
+}
+
+func (this_ *Task) Statistics() {
+	this_.ReadyDataStatistics = this_.StatisticsList(this_.ReadyDataStatisticsList)
+	this_.DoDataStatistics = this_.StatisticsList(this_.DoDataStatisticsList)
+
+	if this_.ReadyDataStatistics.UseTime > 0 {
+		var dataAverage float64
+		dataAverage = float64(this_.ReadyDataStatistics.DataCount*1000) / float64(this_.ReadyDataStatistics.UseTime)
+		this_.ReadyDataStatistics.DataAverage = fmt.Sprintf("%.2f", dataAverage)
+	}
+
+	if this_.DoDataStatistics.UseTime > 0 {
+		var dataAverage float64
+		dataAverage = float64(this_.DoDataStatistics.DataCount*1000) / float64(this_.DoDataStatistics.UseTime)
+		this_.DoDataStatistics.DataAverage = fmt.Sprintf("%.2f", dataAverage)
+	}
+
+}
+
+func (this_ *Task) StatisticsList(list []*data_engine.DataStatistics) (statistics *data_engine.DataStatistics) {
+
+	statistics = &data_engine.DataStatistics{}
+	if len(list) > 0 {
+		var successCount = 0
+		var errorCount = 0
+		var useTime int64
+		for _, one := range list {
+			successCount += one.DataSuccessCount
+			errorCount += one.DataErrorCount
+			useTime += one.UseTime
+		}
+		statistics.IncrDataSuccessCount(successCount, useTime/int64(len(list)))
+		statistics.IncrDataErrorCount(errorCount, 0)
+	}
+	return
+
 }
 
 func (this_ *Task) Stop() {
@@ -94,9 +137,7 @@ func (this_ *Task) Stop() {
 }
 
 func (this_ *Task) Start() {
-	if this_.DataStatistics == nil {
-		this_.DataStatistics = &data_engine.DataStatistics{}
-	}
+
 	this_.StartTime = time.Now()
 	var err error
 	defer func() {

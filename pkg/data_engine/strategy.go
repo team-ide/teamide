@@ -11,10 +11,11 @@ import (
 )
 
 type DataStatistics struct {
-	DataCount        int   `json:"dataCount"`
-	DataSuccessCount int   `json:"dataSuccessCount"`
-	DataErrorCount   int   `json:"dataErrorCount"`
-	UseTime          int64 `json:"useTime"`
+	DataCount        int    `json:"dataCount"`
+	DataSuccessCount int    `json:"dataSuccessCount"`
+	DataErrorCount   int    `json:"dataErrorCount"`
+	UseTime          int64  `json:"useTime"`
+	DataAverage      string `json:"dataAverage"`
 
 	StartTime time.Time `json:"startTime,omitempty"`
 	EndTime   time.Time `json:"endTime,omitempty"`
@@ -69,13 +70,14 @@ type StrategyDataField struct {
 
 type StrategyTask struct {
 	*StrategyData
-	IsEnd      bool   `json:"isEnd,omitempty"`
-	Error      string `json:"error,omitempty"`
-	IsStop     bool   `json:"isStop"`
-	IsError    bool   `json:"isError"`
-	OnDataList func(dataList []map[string]interface{}) (err error)
-	OnError    func(err error)
-	OnEnd      func()
+	ErrorContinue bool   `json:"errorContinue"`
+	IsEnd         bool   `json:"isEnd,omitempty"`
+	Error         string `json:"error,omitempty"`
+	IsStop        bool   `json:"isStop"`
+	IsError       bool   `json:"isError"`
+	OnDataList    func(dataList []map[string]interface{}) (err error)
+	OnError       func(err error)
+	OnEnd         func()
 }
 
 func (this_ *StrategyTask) Stop() {
@@ -161,6 +163,11 @@ func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error
 		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
 		if err != nil {
 			strategyData.IncrDataErrorCount(1, useTime)
+			util.Logger.Error("doStrategyDataFieldList error", zap.Any("dataIndex", dataIndex), zap.Any("indexName", strategyData.IndexName), zap.Any("fieldList", strategyData.FieldList), zap.Error(err))
+			if this_.ErrorContinue {
+				err = nil
+				continue
+			}
 			return
 		}
 		strategyData.IncrDataSuccessCount(1, useTime)
