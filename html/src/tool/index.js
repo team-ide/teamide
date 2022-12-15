@@ -238,16 +238,44 @@ tool.formatSize = function (data, name, sizeName, sizeUnitName) {
         { size: 1024 * 1024, unit: "MB" },
         { size: 1024, unit: "KB" },
     ];
+    data[sizeName] = null;
+    data[sizeUnitName] = null;
 
+    var find = false
     sizeMap.forEach((one) => {
         if (!data[sizeUnitName] && data[name] >= one.size) {
+            find = true
             data[sizeName] = Number(data[name] / one.size).toFixed(2);
             data[sizeUnitName] = one.unit;
         }
     });
-    if (!data[sizeUnitName]) {
+    if (!find) {
         data[sizeName] = data[name];
         data[sizeUnitName] = "B";
+    }
+};
+tool.formatTime = function (data, name, timeName, timeUnitName) {
+    data[name] = data[name] || 0;
+    let sizeMap = [
+        { size: 1000 * 60 * 60 * 24, unit: "天" },
+        { size: 1000 * 60 * 60, unit: "时" },
+        { size: 1000 * 60, unit: "分" },
+        { size: 1000, unit: "秒" },
+    ];
+    data[timeName] = null;
+    data[timeUnitName] = null;
+
+    var find = false
+    sizeMap.forEach((one) => {
+        if (!data[timeUnitName] && data[name] >= one.size) {
+            find = true
+            data[timeName] = Number(data[name] / one.size).toFixed(2);
+            data[timeUnitName] = one.unit;
+        }
+    });
+    if (!find) {
+        data[timeName] = data[name];
+        data[timeUnitName] = "毫秒";
     }
 };
 tool.preNUm = function (data) {
