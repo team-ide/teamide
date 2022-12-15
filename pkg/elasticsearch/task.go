@@ -70,13 +70,15 @@ type Task struct {
 	IndexName string `json:"indexName,omitempty"`
 	TaskId    string `json:"taskId,omitempty"`
 
-	DataNumber    int  `json:"dataNumber,omitempty"`
-	BatchNumber   int  `json:"batchNumber,omitempty"`
-	ThreadNumber  int  `json:"threadNumber,omitempty"`
-	ErrorContinue bool `json:"errorContinue"`
+	DataNumber    int   `json:"dataNumber,omitempty"`
+	BatchNumber   int   `json:"batchNumber,omitempty"`
+	ThreadNumber  int   `json:"threadNumber,omitempty"`
+	ErrorContinue bool  `json:"errorContinue"`
+	UseTime       int64 `json:"useTime"`
 
 	IsEnd     bool       `json:"isEnd"`
 	StartTime time.Time  `json:"startTime,omitempty"`
+	NowTime   time.Time  `json:"nowTime,omitempty"`
 	EndTime   time.Time  `json:"endTime,omitempty"`
 	Error     string     `json:"error,omitempty"`
 	IsStop    bool       `json:"isStop"`
@@ -107,6 +109,8 @@ func (this_ *Task) Statistics() {
 		dataAverage = float64(this_.DoDataStatistics.DataCount*1000) / float64(this_.DoDataStatistics.UseTime)
 		this_.DoDataStatistics.DataAverage = fmt.Sprintf("%.2f", dataAverage)
 	}
+	this_.NowTime = time.Now()
+	this_.UseTime = util.GetTimeTime(this_.NowTime) - util.GetTimeTime(this_.StartTime)
 
 }
 
@@ -149,6 +153,7 @@ func (this_ *Task) Start() {
 			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 		this_.EndTime = time.Now()
+		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
 		this_.IsEnd = true
 	}()
 
