@@ -151,10 +151,27 @@
                       }}
                     </span>
                   </span>
+                </template>
+                <template v-if="!task.isEnd">
                   <span class="color-grey pdr-10">
-                    耗时： <span>{{ task.useTime }} 毫秒</span>
+                    当前：
+                    <span>
+                      {{
+                        tool.formatDate(
+                          new Date(task.nowTime),
+                          "yyyy-MM-dd hh:mm:ss"
+                        )
+                      }}
+                    </span>
                   </span>
                 </template>
+                <span class="color-grey pdr-10">
+                  耗时：
+                  <span class="color-green">
+                    {{ task.useTimeValue }}
+                  </span>
+                  {{ task.useTimeUnit }}
+                </span>
                 <template v-if="!task.isEnd">
                   <div @click="stopTask(task)" class="color-red tm-link mgr-10">
                     停止执行
@@ -179,9 +196,9 @@
                     <span class="color-grey pdr-10">
                       耗时：
                       <span class="color-green">
-                        {{ task.readyDataStatistics.useTime }}
+                        {{ task.readyDataStatistics.useTimeValue }}
                       </span>
-                      毫秒
+                      {{ task.readyDataStatistics.useTimeUnit }}
                     </span>
                     <span class="color-grey pdr-10">
                       平均：
@@ -211,9 +228,9 @@
                     <span class="color-grey pdr-10">
                       耗时：
                       <span class="color-green">
-                        {{ task.doDataStatistics.useTime }}
+                        {{ task.doDataStatistics.useTimeValue }}
                       </span>
-                      毫秒
+                      {{ task.doDataStatistics.useTimeUnit }}
                     </span>
                     <span class="color-grey pdr-10">
                       平均：
@@ -405,6 +422,20 @@ export default {
       let taskList = res.data || [];
       this.taskList = taskList;
       taskList.forEach((one) => {
+        this.tool.formatTime(one, "useTime", "useTimeValue", "useTimeUnit");
+        this.tool.formatTime(
+          one.readyDataStatistics,
+          "useTime",
+          "useTimeValue",
+          "useTimeUnit"
+        );
+        this.tool.formatTime(
+          one.doDataStatistics,
+          "useTime",
+          "useTimeValue",
+          "useTimeUnit"
+        );
+
         this.loadTaskStatus(one);
       });
     },
@@ -431,6 +462,20 @@ export default {
       }
       Object.assign(task, res.data || {});
       delete task.taskStatusIng;
+
+      this.tool.formatTime(task, "useTime", "useTimeValue", "useTimeUnit");
+      this.tool.formatTime(
+        task.readyDataStatistics,
+        "useTime",
+        "useTimeValue",
+        "useTimeUnit"
+      );
+      this.tool.formatTime(
+        task.doDataStatistics,
+        "useTime",
+        "useTimeValue",
+        "useTimeUnit"
+      );
       setTimeout(() => {
         this.loadTaskStatus(task);
       }, 100);
