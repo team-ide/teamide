@@ -36,6 +36,9 @@
           </Pack>
           <el-checkbox v-model="formData.exportStruct">导出结构体 </el-checkbox>
           <el-checkbox v-model="formData.exportData">导出数据 </el-checkbox>
+          <el-checkbox v-model="formData.formatIndexName">
+            重新定义索引名称
+          </el-checkbox>
           <template v-if="formData.exportData">
             <el-checkbox v-model="formData.exportBatchSql"
               >导出批量插入语句
@@ -389,6 +392,7 @@ export default {
         exportStruct: true,
         exportData: true,
         exportBatchSql: true,
+        formatIndexName: false,
         errorContinue: true,
         batchNumber: 200,
 

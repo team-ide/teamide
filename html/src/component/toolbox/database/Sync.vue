@@ -11,6 +11,9 @@
         <el-checkbox v-model="formData.errorContinue"> 有错继续</el-checkbox>
         <el-checkbox v-model="formData.syncStruct"> 同步结构体</el-checkbox>
         <el-checkbox v-model="formData.syncData"> 同步数据</el-checkbox>
+        <el-checkbox v-model="formData.formatIndexName">
+          重新定义索引名称
+        </el-checkbox>
       </el-form>
       <el-form :model="formData" size="mini" inline>
         <template v-if="ownerList == null || owners.length == 0">
@@ -348,6 +351,7 @@ export default {
       formData: {
         syncStruct: true,
         syncData: true,
+        formatIndexName: false,
         errorContinue: true,
         batchNumber: 200,
         ownerCreateIfNotExist: true,

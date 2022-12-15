@@ -339,6 +339,7 @@ export default {
       this.initData();
       this.$nextTick(() => {
         this.canLoadSql = true;
+        this.toLoad();
       });
     },
     initData() {

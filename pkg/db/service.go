@@ -8,6 +8,7 @@ import (
 	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
 	"os"
+	"strings"
 	"teamide/pkg/util"
 	"time"
 )
@@ -215,12 +216,12 @@ type UpdateTableParam struct {
 type UpdateTableColumn struct {
 	*dialect.ColumnModel
 	OldColumn *dialect.ColumnModel `json:"oldColumn"`
-	Delete    bool                 `json:"delete"`
+	Deleted   bool                 `json:"deleted"`
 }
 type UpdateTableIndex struct {
 	*dialect.IndexModel
 	OldIndex *dialect.IndexModel `json:"oldIndex"`
-	Delete   bool                `json:"delete"`
+	Deleted  bool                `json:"deleted"`
 }
 
 func (this_ *Service) TableUpdateSql(param *Param, ownerName string, tableName string, updateTableParam *UpdateTableParam) (sqlList []string, err error) {
@@ -244,9 +245,9 @@ func (this_ *Service) TableUpdateSql(param *Param, ownerName string, tableName s
 				oldPrimaryKeys = append(oldPrimaryKeys, one.OldColumn.ColumnName)
 			}
 		}
-		if one.Delete {
-			if one.OldColumn == nil {
-				sqlList_, err = this_.GetTargetDialect(param).ColumnDeleteSql(param.ParamModel, ownerName, tableName, one.ColumnName)
+		if one.Deleted {
+			if one.OldColumn != nil {
+				sqlList_, err = this_.GetTargetDialect(param).ColumnDeleteSql(param.ParamModel, ownerName, tableName, one.OldColumn.ColumnName)
 				if err != nil {
 					return
 				}
@@ -294,6 +295,41 @@ func (this_ *Service) TableUpdateSql(param *Param, ownerName string, tableName s
 				return
 			}
 			sqlList = append(sqlList, sqlList_...)
+		}
+	}
+
+	for _, one := range updateTableParam.IndexList {
+
+		if one.Deleted {
+			if one.OldIndex != nil {
+				sqlList_, err = this_.GetTargetDialect(param).IndexDeleteSql(param.ParamModel, ownerName, tableName, one.OldIndex.IndexName)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+			}
+		} else if one.OldIndex == nil {
+			sqlList_, err = this_.GetTargetDialect(param).IndexAddSql(param.ParamModel, ownerName, tableName, one.IndexModel)
+			if err != nil {
+				return
+			}
+			sqlList = append(sqlList, sqlList_...)
+		} else {
+			if one.IndexName != one.OldIndex.IndexName ||
+				one.IndexType != one.OldIndex.IndexType ||
+				one.IndexComment != one.OldIndex.IndexComment ||
+				strings.Join(one.ColumnNames, ",") != strings.Join(one.OldIndex.ColumnNames, ",") {
+				sqlList_, err = this_.GetTargetDialect(param).IndexDeleteSql(param.ParamModel, ownerName, tableName, one.OldIndex.IndexName)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+				sqlList_, err = this_.GetTargetDialect(param).IndexAddSql(param.ParamModel, ownerName, tableName, one.IndexModel)
+				if err != nil {
+					return
+				}
+				sqlList = append(sqlList, sqlList_...)
+			}
 		}
 	}
 	return
@@ -506,6 +542,30 @@ func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportPa
 		}
 	}
 
+	exportParam.FormatIndexName = func(ownerName string, tableName string, index *dialect.IndexModel) (indexNameFormat string) {
+		if index.IndexName != "" && !param.FormatIndexName {
+			indexNameFormat = index.IndexName
+			return
+		}
+		if ownerName != "" {
+			indexNameFormat += ownerName + "_"
+			//indexNameFormat += sortName(ownerName, 4) + "_"
+		}
+		if tableName != "" {
+			indexNameFormat += tableName + "_"
+			//indexNameFormat += sortName(tableName, 4) + "_"
+		}
+		if index.IndexType != "" && !strings.EqualFold(index.IndexType, "index") {
+			indexNameFormat += index.IndexType + "_"
+			//indexNameFormat += sortName(index.IndexType, 4) + "_"
+		}
+		indexNameFormat += strings.Join(index.ColumnNames, "_")
+		if this_.DatabaseWorker.Dialect.DialectType() == dialect.TypeOracle {
+			indexNameFormat = sortName(indexNameFormat, 30)
+		}
+		return
+	}
+
 	targetDialect := this_.GetTargetDialect(param)
 	task_ := worker.NewTaskExport(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, targetDialect, exportParam)
 	task_.Param = param.ParamModel
@@ -615,6 +675,29 @@ func (this_ *Service) StartSync(param *Param, syncParam *worker.TaskSyncParam) (
 			util.Logger.Error("sync task progress error", zap.Any("progress", progress), zap.Error(err))
 		}
 	}
+	syncParam.FormatIndexName = func(ownerName string, tableName string, index *dialect.IndexModel) (indexNameFormat string) {
+		if index.IndexName != "" && !param.FormatIndexName {
+			indexNameFormat = index.IndexName
+			return
+		}
+		if ownerName != "" {
+			indexNameFormat += ownerName + "_"
+			//indexNameFormat += sortName(ownerName, 4) + "_"
+		}
+		if tableName != "" {
+			indexNameFormat += tableName + "_"
+			//indexNameFormat += sortName(tableName, 4) + "_"
+		}
+		if index.IndexType != "" && !strings.EqualFold(index.IndexType, "index") {
+			indexNameFormat += index.IndexType + "_"
+			//indexNameFormat += sortName(index.IndexType, 4) + "_"
+		}
+		indexNameFormat += strings.Join(index.ColumnNames, "_")
+		if targetDatabaseWorker.Dialect.DialectType() == dialect.TypeOracle {
+			indexNameFormat = sortName(indexNameFormat, 30)
+		}
+		return
+	}
 	var workDbs []*sql.DB
 
 	task_ := worker.NewTaskSync(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, targetDatabaseWorker.db, targetDatabaseWorker.Dialect,
@@ -673,4 +756,48 @@ type Param struct {
 	ImportType           string          `json:"importType"`
 	TargetDatabaseConfig *DatabaseConfig `json:"targetDatabaseConfig"`
 	ModelType            string          `json:"modelType"`
+
+	FormatIndexName bool `json:"formatIndexName"`
+}
+
+func sortName(name string, size int) (res string) {
+	name = strings.TrimSpace(name)
+	if len(name) <= size {
+		res = name
+		return
+	}
+	if strings.Contains(name, "_") {
+		ss := strings.Split(name, "_")
+		var names []string
+
+		for _, s := range ss {
+			if strings.TrimSpace(s) == "" {
+				continue
+			}
+			names = append(names, strings.TrimSpace(s))
+		}
+		rSize := size / len(names)
+
+		for i, s := range ss {
+			if len(res) >= size {
+				break
+			}
+			if i < len(ss)-1 {
+				if rSize >= len(s)-1 {
+					res += s + "_"
+				} else {
+					res += s[0:rSize-1] + "_"
+				}
+			} else {
+				if rSize >= len(s) {
+					res += s
+				} else {
+					res += s[0:rSize]
+				}
+			}
+		}
+	} else {
+		res += name[0:size]
+	}
+	return
 }
