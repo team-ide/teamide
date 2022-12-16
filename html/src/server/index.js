@@ -57,123 +57,90 @@ let server = {
     updateCheck(param) {
         return http.post('api/updateCheck', param,);
     },
-    openWebsocket() {
-        if (serverSocket != null) { return }
-        let url = source.api;
-        url = url.substring(url.indexOf(":"));
-        if (location.protocol.indexOf("https") == 0) {
-            url = "wss" + url + "websocket";
-        } else {
-            url = "ws" + url + "websocket";
-        }
-        url += "?id=" + tool.md5("serverSocket:" + new Date().getTime());
-        url += "&jwt=" + encodeURIComponent(tool.getJWT());
-        serverSocket = new WebSocket(url);
-        serverSocket.onopen = () => {
-            serverSocketIsOpen = true;
-            serverSocketOnOpen();
-        };
-        serverSocket.onmessage = (event) => {
-            serverSocketOnMessage(event)
-        };
-        serverSocket.onclose = () => {
-            serverSocketIsOpen = false;
-            serverSocket = null;
-            serverSocketOnClose();
-            window.setTimeout(() => {
-                server.openWebsocket()
-            }, 1000)
-        };
-        serverSocket.onerror = () => {
-            serverSocketOnError();
-        };
-
+    listen(param) {
+        return http.post('api/listen', param || {},);
     },
-    closeWebsocket() {
-        if (serverSocket == null) { return }
-        serverSocket.close()
-    },
-    websocketSendText(text) {
-        if (serverSocket == null) { return }
-        serverSocket.send(text)
-    },
-    addServerSocketOnEvent(event, call) {
+    addListenOnEvent(event, call) {
         if (call == null) { return }
-        serverSocketOnEventList[event] = serverSocketOnEventList[event] || []
-        serverSocketOnEventList[event].push(call)
+        listenOnEventList[event] = listenOnEventList[event] || []
+        listenOnEventList[event].push(call)
     },
-    removeServerSocketOnEvent(event, call) {
+    removeListenOnEvent(event, call) {
         if (call == null) { return }
-        let list = serverSocketOnEventList[event] || []
+        let list = listenOnEventList[event] || []
         let newList = [];
         list.forEach(one => {
             if (one != call) {
                 newList.push(one)
             }
         })
-        serverSocketOnEventList[event] = newList
-    },
-    addServerSocketOnOpen(call) {
-        if (call == null) { return }
-        if (serverSocketIsOpen) {
-            call()
-        }
-        serverSocketOnOpenList.push(call)
+        listenOnEventList[event] = newList
     },
 };
+var listenStartInt = false
+const listenStart = async (errorCount) => {
+    if (listenStartInt) {
+        return
+    }
+    listenStartInt = true
+    var isError = false
+    var isDataError = false
+    var startTime = new Date().getTime()
+    try {
+        let res = await server.listen({})
+        if (res.code != 0) {
+            isDataError = true
+        } else {
+            let data = res.data || {}
+            let events = data.events || []
+            try {
+                listenOnEvents(events)
+            } catch (error) {
 
-let serverSocket = null;
-let serverSocketIsOpen = false;
-const serverSocketOnOpenList = []
-const serverSocketOnEventList = {}
-const serverSocketOnCloseList = []
-const getServerSocketOnEventList = (event) => {
-    return serverSocketOnEventList[event] || []
-}
-
-const serverSocketOnOpen = () => {
-    serverSocketOnOpenList.forEach(one => {
-        if (one == null) { return }
-        one()
-    })
-}
-
-const serverSocketOnClose = () => {
-    serverSocketOnCloseList.forEach(one => {
-        if (one == null) { return }
-        one()
-    })
-}
-
-const serverSocketOnError = () => {
-
-}
-
-const serverSocketOnMessage = (event) => {
-    let message = event.data;
-    let json = JSON.parse(message)
-    if (json == null) { return }
-    if (json.isMessage) {
-        if (tool.isNotEmpty(json.errorMessage)) {
-            tool.error(json.errorMessage)
+            }
         }
-        if (tool.isNotEmpty(json.warnMessage)) {
-            tool.warn(json.warnMessage)
-        }
-        if (tool.isNotEmpty(json.infoMessage)) {
-            tool.info(json.infoMessage)
-        }
-        if (tool.isNotEmpty(json.successMessage)) {
-            tool.success(json.successMessage)
+    } catch (error) {
+        isError = true
+    }
+    if (isError || isDataError) {
+        errorCount = errorCount || 0
+        errorCount++
+        window.setTimeout(() => {
+            listenStartInt = false
+            listenStart(errorCount)
+        }, errorCount * 1000 * 5)
+    } else {
+        var endTime = new Date().getTime()
+        var useTime = endTime - startTime
+        var timout = 1000 - (useTime)
+        if (timout > 0) {
+            window.setTimeout(() => {
+                listenStartInt = false
+                listenStart()
+            }, timout)
+        } else {
+            listenStartInt = false
+            listenStart()
         }
     }
-    if (json.isEvent) {
-        let list = getServerSocketOnEventList(json.event,)
+}
+server.listenStart = listenStart;
+
+const listenOnEventList = {}
+const getListenOnEventList = (event) => {
+    return listenOnEventList[event] || []
+}
+
+const listenOnEvents = (events) => {
+    events = events || []
+    events.forEach(event => {
+        event = event || {}
+        let list = getListenOnEventList(event.event,)
         list.forEach(one => {
             if (one == null) { return }
-            one(json.data)
+            one(event.data)
         })
-    }
+    })
 }
 
 export default server;

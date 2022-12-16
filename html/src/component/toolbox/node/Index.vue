@@ -74,10 +74,7 @@ export default {
       }
       this.toolboxWorker.initNodeContext = this.initNodeContext;
       await this.initNodeContext();
-      this.server.addServerSocketOnEvent(
-        "node-data-change",
-        this.onNodeDataChange
-      );
+      this.server.addListenOnEvent("node-data-change", this.onNodeDataChange);
     },
     onNodeDataChange(data) {
       try {
@@ -162,10 +159,7 @@ export default {
     this.init();
   },
   deactivated() {
-    this.server.removeServerSocketOnEvent(
-      "node-data-change",
-      this.onNodeDataChange
-    );
+    this.server.removeListenOnEvent("node-data-change", this.onNodeDataChange);
   },
 };
 </script>

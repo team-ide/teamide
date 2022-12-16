@@ -17,8 +17,8 @@ func newNodeCountData() *NodeCountData {
 	}
 }
 
-func (this_ *NodeContext) callNodeCountDataChange(data *NodeCountData) {
-	context.ServerWebsocketOutEvent("node-data-change", data)
+func (this_ *NodeContext) callNodeCountDataChange(userId int64, data *NodeCountData) {
+	context.CallUserEvent(userId, context.NewListenEvent("node-data-change", data))
 }
 
 type NodeListChange struct {
@@ -26,11 +26,11 @@ type NodeListChange struct {
 	NodeList []*NodeModel `json:"nodeList,omitempty"`
 }
 
-func (this_ *NodeContext) callNodeListChange(nodeList []*NodeModel) {
-	context.ServerWebsocketOutEvent("node-data-change", &NodeListChange{
+func (this_ *NodeContext) callNodeListChange(userId int64, nodeList []*NodeModel) {
+	context.CallUserEvent(userId, context.NewListenEvent("node-data-change", &NodeListChange{
 		Type:     "node-list",
 		NodeList: nodeList,
-	})
+	}))
 }
 
 type NetProxyListChange struct {
@@ -38,9 +38,9 @@ type NetProxyListChange struct {
 	NetProxyList []*NetProxyModel `json:"netProxyList,omitempty"`
 }
 
-func (this_ *NodeContext) callNetProxyListChange(netProxyList []*NetProxyModel) {
-	context.ServerWebsocketOutEvent("node-data-change", &NetProxyListChange{
+func (this_ *NodeContext) callNetProxyListChange(userId int64, netProxyList []*NetProxyModel) {
+	context.CallUserEvent(userId, context.NewListenEvent("node-data-change", &NetProxyListChange{
 		Type:         "net-proxy-list",
 		NetProxyList: netProxyList,
-	})
+	}))
 }

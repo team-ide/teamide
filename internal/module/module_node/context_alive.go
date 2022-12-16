@@ -27,7 +27,7 @@ func (this_ *NodeContext) doAlive() {
 		}()
 	}()
 
-	if this_.root == nil || this_.server == nil {
+	if len(this_.localNodeList) == 0 || len(this_.serverList) == 0 {
 		return
 	}
 	//this_.Logger.Info("node do alive")
@@ -70,10 +70,11 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 		}
 		countData.NodeCount++
 
-		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
-		if len(lineNodeIdList) > 0 {
+		localServerId, lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
+		server := this_.GetServer(localServerId)
+		if len(lineNodeIdList) > 0 && server != nil {
 			//this_.Logger.Info("toAddNodeModel", zap.Any("to node", nodeModel.ServerId), zap.Any("lineNodeIdList", lineNodeIdList))
-			status := this_.server.GetNodeStatus(lineNodeIdList)
+			status := server.GetNodeStatus(lineNodeIdList)
 			find.Status = status
 			find.IsStarted = status == node.StatusStarted
 			if find.IsStarted {
@@ -94,9 +95,10 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 			continue
 		}
 
-		lineNodeIdList := this_.GetNodeLineTo(find.InnerServerId)
-		if len(lineNodeIdList) > 0 {
-			status := this_.server.GetNetProxyInnerStatus(lineNodeIdList, find.Code)
+		localServerId, lineNodeIdList := this_.GetNodeLineTo(find.InnerServerId)
+		server := this_.GetServer(localServerId)
+		if len(lineNodeIdList) > 0 && server != nil {
+			status := server.GetNetProxyInnerStatus(lineNodeIdList, find.Code)
 
 			find.InnerStatus = status
 			find.InnerIsStarted = status == node.StatusStarted
@@ -107,9 +109,10 @@ func (this_ *NodeContext) doCountData(countData *NodeCountData) {
 			find.InnerStatus = 0
 		}
 
-		lineNodeIdList = this_.GetNodeLineTo(find.OuterServerId)
-		if len(lineNodeIdList) > 0 {
-			status := this_.server.GetNetProxyOuterStatus(lineNodeIdList, find.Code)
+		localServerId, lineNodeIdList = this_.GetNodeLineTo(find.OuterServerId)
+		server = this_.GetServer(localServerId)
+		if len(lineNodeIdList) > 0 && server != nil {
+			status := server.GetNetProxyOuterStatus(lineNodeIdList, find.Code)
 			find.OuterStatus = status
 			find.OuterIsStarted = status == node.StatusStarted
 			if find.OuterIsStarted {
@@ -138,6 +141,20 @@ func (this_ *NodeContext) getNodeModelList() []*NodeModel {
 	return nodeModelList
 }
 
+func (this_ *NodeContext) getUserNodeModelList(userId int64) []*NodeModel {
+	var nodeModelList []*NodeModel
+
+	var list = this_.getNodeModelList()
+
+	for _, one := range list {
+		if one.UserId != userId {
+			continue
+		}
+		nodeModelList = append(nodeModelList, one)
+	}
+	return nodeModelList
+}
+
 func (this_ *NodeContext) getNetProxyModelList() []*NetProxyModel {
 	var netProxyModelList []*NetProxyModel
 
@@ -148,6 +165,20 @@ func (this_ *NodeContext) getNetProxyModelList() []*NetProxyModel {
 			continue
 		}
 		netProxyModelList = append(netProxyModelList, find)
+	}
+	return netProxyModelList
+}
+
+func (this_ *NodeContext) getUserNetProxyModelList(userId int64) []*NetProxyModel {
+	var netProxyModelList []*NetProxyModel
+
+	var list = this_.getNetProxyModelList()
+
+	for _, one := range list {
+		if one.UserId != userId {
+			continue
+		}
+		netProxyModelList = append(netProxyModelList, one)
 	}
 	return netProxyModelList
 }

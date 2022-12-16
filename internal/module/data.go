@@ -7,6 +7,7 @@ import (
 	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/db"
+	"teamide/pkg/util"
 )
 
 type DataRequest struct {
@@ -15,10 +16,12 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url      string `json:"url"`
-	Api      string `json:"api"`
-	FilesUrl string `json:"filesUrl"`
-	IsServer bool   `json:"isServer"`
+	Url          string `json:"url"`
+	Api          string `json:"api"`
+	FilesUrl     string `json:"filesUrl"`
+	IsServer     bool   `json:"isServer"`
+	ClientKey    string `json:"clientKey"`
+	ClientTabKey string `json:"clientTabKey"`
 
 	ToolboxTypes             []*module_toolbox.ToolboxType      `json:"toolboxTypes"`
 	SqlConditionalOperations []*db.SqlConditionalOperation      `json:"sqlConditionalOperations"`
@@ -55,6 +58,17 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.SqlConditionalOperations = db.GetSqlConditionalOperations()
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()
+
+	if requestBean.ClientKey == "" {
+		response.ClientKey = util.UUID()
+	} else {
+		response.ClientKey = requestBean.ClientKey
+	}
+	if requestBean.ClientTabKey == "" {
+		response.ClientTabKey = util.UUID()
+	} else {
+		response.ClientTabKey = requestBean.ClientTabKey
+	}
 
 	res = response
 	return

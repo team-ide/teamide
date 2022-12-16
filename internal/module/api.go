@@ -101,7 +101,7 @@ var (
 	PowerAutoLogin   = base.AppendPower(&base.PowerAction{Action: "autoLogin", Text: "自动登录", StandAlone: false})
 	PowerUpload      = base.AppendPower(&base.PowerAction{Action: "upload", Text: "上传", StandAlone: true})
 	PowerUpdateCheck = base.AppendPower(&base.PowerAction{Action: "updateCheck", Text: "更新检测", ShouldPower: true, ShouldLogin: true, StandAlone: true})
-	PowerWebsocket   = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "WebSocket", StandAlone: true})
+	listenPower      = base.AppendPower(&base.PowerAction{Action: "listen", Text: "监听事件", StandAlone: true})
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
@@ -113,7 +113,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Power: PowerSession, Do: this_.apiSession, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: PowerUpload, Do: this_.apiUpload, IsUpload: true})
 	apis = append(apis, &base.ApiWorker{Power: PowerUpdateCheck, Do: this_.apiUpdateCheck, NotRecodeLog: true})
-	apis = append(apis, &base.ApiWorker{Power: PowerWebsocket, Do: this_.apiWebsocket, IsWebSocket: true, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: listenPower, Do: this_.listen, NotRecodeLog: true})
 
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
@@ -181,6 +181,8 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	}
 	requestBean := this_.getRequestBean(c)
 	requestBean.Path = path
+	requestBean.ClientKey = c.GetHeader("key1")
+	requestBean.ClientTabKey = c.GetHeader("key2")
 	if !this_.checkPower(api, requestBean.JWT, c) {
 		return true
 	}

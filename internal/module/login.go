@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/base"
+	"teamide/internal/context"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_user"
 	"teamide/pkg/util"
@@ -90,16 +91,28 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
+
+	listener := context.GetListener(request.ClientTabKey)
+	if listener != nil && listener.UserId != loginUser.UserId {
+		context.ChangeListenerUserId(listener, loginUser.UserId)
+	}
 	return
 }
 
 func (this_ *Api) apiLogout(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	listener := context.GetListener(request.ClientTabKey)
+	if listener != nil && listener.UserId != 0 {
+		context.ChangeListenerUserId(listener, 0)
+	}
+
 	if request.JWT == nil {
 		return
 	}
 	if request.JWT.LoginId != 0 {
 		_, _ = this_.loginService.Logout(request.JWT.LoginId)
 	}
+
 	return
 }
 

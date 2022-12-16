@@ -266,7 +266,6 @@ export default {
     },
     init() {
       this.initUserData();
-      this.server.addServerSocketOnOpen(() => {});
     },
     openNodeContext() {
       this.tool.openByExtend({

@@ -162,13 +162,13 @@ export default {
       this.bindTerminalWorkProgress();
     },
     bindTerminalWorkProgress() {
-      this.server.addServerSocketOnEvent(
+      this.server.addListenOnEvent(
         "terminal-work-progress",
         this.onFileWorkProgress
       );
     },
     unbindTerminalWorkProgress() {
-      this.server.removeServerSocketOnEvent(
+      this.server.removeListenOnEvent(
         "terminal-work-progress",
         this.onTerminalWorkProgress
       );

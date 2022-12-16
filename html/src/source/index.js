@@ -298,6 +298,8 @@ source.init = (data) => {
                 }
             }
         });
+        tool.setClientKey(data.clientKey)
+        tool.setClientTabKey(data.clientTabKey)
     } else {
         source.status = "error";
         source.ready = false;

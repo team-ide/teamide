@@ -78,11 +78,11 @@ func (this_ *NodeContext) onAddNodeModel(nodeModel *NodeModel) {
 	}
 	this_.addNodeModel(nodeModel)
 	var err error
-	if nodeModel.IsROOT() {
-		this_.Logger.Info("onAddNodeModel init root")
-		err = this_.initRoot(nodeModel)
+	if nodeModel.IsLocalNode() {
+		this_.Logger.Info("onAddNodeModel init local node")
+		err = this_.appendLocalNode(nodeModel)
 		if err != nil {
-			this_.Logger.Error("node context init root error", zap.Error(err))
+			this_.Logger.Error("node context append local node error", zap.Error(err))
 		}
 	}
 	this_.cleanNodeLine()
@@ -96,10 +96,11 @@ func (this_ *NodeContext) onUpdateNodeModel(nodeModel *NodeModel) {
 	}
 	this_.addNodeModel(nodeModel)
 	var err error
-	if nodeModel.IsROOT() {
-		err = this_.initRoot(nodeModel)
+	if nodeModel.IsLocalNode() {
+		this_.Logger.Info("onUpdateNodeModel append local node")
+		err = this_.appendLocalNode(nodeModel)
 		if err != nil {
-			this_.Logger.Error("node context init root error", zap.Error(err))
+			this_.Logger.Error("node context append local node error", zap.Error(err))
 		}
 	}
 
@@ -120,10 +121,13 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 	var newConnServerIdList = nodeModel.ConnServerIdList
 	for _, oldConnServerId := range oldConnServerIdList {
 		if util.ContainsString(newConnServerIdList, oldConnServerId) < 0 {
-			lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
-			_ = this_.server.RemoveToNodeList(lineNodeIdList, []string{
-				oldConnServerId,
-			})
+			localServerId, lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
+			server := this_.GetServer(localServerId)
+			if server != nil {
+				_ = server.RemoveToNodeList(lineNodeIdList, []string{
+					oldConnServerId,
+				})
+			}
 		}
 	}
 
@@ -140,8 +144,11 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 			Enabled:     toNodeModel.Enabled,
 		})
 	}
-	lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
-	_ = this_.server.AddToNodeList(lineNodeIdList, toNodeList)
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
+	server := this_.GetServer(localServerId)
+	if server != nil {
+		_ = server.AddToNodeList(lineNodeIdList, toNodeList)
+	}
 	this_.cleanNodeLine()
 	this_.doAlive()
 }
@@ -179,11 +186,14 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 		find.ConnServerIds = GetListToString(connServerIdList)
 		find.ConnServerIdList = connServerIdList
 
-		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
+		localServerId, lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
 
-		_ = this_.server.RemoveToNodeList(lineNodeIdList, []string{
-			nodeModel.ServerId,
-		})
+		server := this_.GetServer(localServerId)
+		if server != nil {
+			_ = server.RemoveToNodeList(lineNodeIdList, []string{
+				nodeModel.ServerId,
+			})
+		}
 	}
 	this_.removeNodeModel(nodeModel.NodeId)
 	this_.removeNodeModelByServerId(nodeModel.ServerId)
@@ -229,29 +239,45 @@ func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {
 			continue
 		}
 
-		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
-		_ = this_.server.AddToNodeList(lineNodeIdList, []*node.ToNode{
-			{
-				Id:          nodeModel.ServerId,
-				ConnAddress: nodeModel.ConnAddress,
-				ConnToken:   nodeModel.ConnToken,
-				Enabled:     nodeModel.Enabled,
-			},
-		})
+		localServerId, lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
+
+		server := this_.GetServer(localServerId)
+		if server != nil {
+
+			_ = server.AddToNodeList(lineNodeIdList, []*node.ToNode{
+				{
+					Id:          nodeModel.ServerId,
+					ConnAddress: nodeModel.ConnAddress,
+					ConnToken:   nodeModel.ConnToken,
+					Enabled:     nodeModel.Enabled,
+				},
+			})
+		}
 	}
 }
 
 func (this_ *NodeContext) SystemGetInfo(nodeId string) (info *system.Info) {
-	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	return this_.server.SystemGetInfo(lineNodeIdList)
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	server := this_.GetServer(localServerId)
+	if server != nil {
+		return server.SystemGetInfo(lineNodeIdList)
+	}
+	return nil
 }
 
 func (this_ *NodeContext) SystemQueryMonitorData(nodeId string, request *system.QueryRequest) (info *system.QueryResponse) {
-	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	return this_.server.SystemQueryMonitorData(lineNodeIdList, request)
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	server := this_.GetServer(localServerId)
+	if server != nil {
+		return server.SystemQueryMonitorData(lineNodeIdList, request)
+	}
+	return nil
 }
 
 func (this_ *NodeContext) SystemCleanMonitorData(nodeId string) {
-	lineNodeIdList := this_.GetNodeLineTo(nodeId)
-	this_.server.SystemCleanMonitorData(lineNodeIdList)
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(nodeId)
+	server := this_.GetServer(localServerId)
+	if server != nil {
+		server.SystemCleanMonitorData(lineNodeIdList)
+	}
 }

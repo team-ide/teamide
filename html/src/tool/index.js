@@ -22,6 +22,7 @@ tool.init = function () {
         if (res.code == 0) {
             let data = res.data;
             source.init(data);
+            server.listenStart()
             tool.initSession();
         } else {
             tool.error(res.msg);
@@ -180,6 +181,29 @@ tool.getJWT = function () {
         return source.jwt;
     }
     return tool.getCookie("team-ide-jwt");
+}
+tool.getClientTabKey = function () {
+    if (tool.isNotEmpty(source.clientTabKey)) {
+        return source.clientTabKey;
+    }
+    return;
+}
+tool.setClientTabKey = function (clientTabKey) {
+    source.clientTabKey = clientTabKey;
+}
+tool.getClientKey = function () {
+    if (tool.isNotEmpty(source.clientKey)) {
+        return source.clientKey;
+    }
+    return tool.getCookie("team-ide-client-key");
+}
+tool.setClientKey = function (clientKey) {
+    source.clientKey = clientKey;
+    if (tool.isNotEmpty(clientKey)) {
+        tool.setCookie("team-ide-client-key", clientKey, 60);
+    } else {
+        tool.setCookie("team-ide-client-key", clientKey, 0);
+    }
 }
 tool.setCookie = function (cname, cvalue, exms) {
     var d = new Date();

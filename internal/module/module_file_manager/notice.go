@@ -9,9 +9,7 @@ import (
 )
 
 type Progress struct {
-	Place             string                 `json:"place"`
-	PlaceId           string                 `json:"placeId"`
-	WorkerId          string                 `json:"workerId"`
+	*BaseParam
 	ProgressId        string                 `json:"progressId"`
 	StartTime         int64                  `json:"startTime"`
 	EndTime           int64                  `json:"endTime"`
@@ -53,7 +51,7 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 	this_.WaitActionIng = true
 	this_.WaitActionMessage = waitActionMessage
 	this_.WaitActionList = waitActionList
-	context.ServerWebsocketOutEvent("file-work-progress", this_)
+	context.CallClientTabKeyEvent(this_.ClientTabKey, context.NewListenEvent("file-work-progress", this_))
 
 	action = <-this_.waitActionChan
 
@@ -124,12 +122,17 @@ func removeProgress(progressId string) {
 	return
 }
 
-func newProgress(workerId string, place string, placeId string, work string, callStop func()) (progress *Progress) {
+type BaseParam struct {
+	Place        string `json:"place"`
+	PlaceId      string `json:"placeId"`
+	WorkerId     string `json:"workerId"`
+	ClientTabKey string `json:"clientTabKey"`
+}
+
+func newProgress(param *BaseParam, work string, callStop func()) (progress *Progress) {
 	var ProgressId = util.UUID()
 	progress = &Progress{}
-	progress.Place = place
-	progress.PlaceId = placeId
-	progress.WorkerId = workerId
+	progress.BaseParam = param
 	progress.Work = work
 	progress.ProgressId = ProgressId
 	progress.StartTime = util.GetNowTime()
@@ -151,11 +154,11 @@ func newProgress(workerId string, place string, placeId string, work string, cal
 			time.Sleep(200 * time.Millisecond)
 			if progress.IsEnd {
 				progress.Timestamp = util.GetNowTime()
-				context.ServerWebsocketOutEvent("file-work-progress", progress)
+				context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
 				break
 			}
 			progress.Timestamp = util.GetNowTime()
-			context.ServerWebsocketOutEvent("file-work-progress", progress)
+			context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
 		}
 	}()
 

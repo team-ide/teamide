@@ -34,17 +34,19 @@ func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (
 		if netProxyInfo == nil {
 			continue
 		}
-		innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.InnerServerId)
-		outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.OuterServerId)
+		innerLocalServerId, innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.InnerServerId)
+		outerLocalServerId, outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.OuterServerId)
 
+		innerServer := this_.NodeService.nodeContext.GetServer(innerLocalServerId)
+		outerServer := this_.NodeService.nodeContext.GetServer(outerLocalServerId)
 		one := &NetProxyMonitorData{
 			Id: id,
 		}
-		if len(innerLineNodeIdList) > 0 {
-			one.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
+		if len(innerLineNodeIdList) > 0 && innerServer != nil {
+			one.InnerMonitorData = ToMonitorDataFormat(innerServer.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
 		}
-		if len(outerLineNodeIdList) > 0 {
-			one.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.server.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
+		if len(outerLineNodeIdList) > 0 && outerServer != nil {
+			one.OuterMonitorData = ToMonitorDataFormat(outerServer.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
 		}
 		response.NetProxyMonitorDataList = append(response.NetProxyMonitorDataList, one)
 	}
@@ -60,7 +62,7 @@ type NetProxyListResponse struct {
 	NetProxyList []*NetProxyModel `json:"netProxyList,omitempty"`
 }
 
-func (this_ *NodeApi) netProxyList(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *NodeApi) netProxyList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &NetProxyListRequest{}
 	if !base.RequestJSON(request, c) {
@@ -68,7 +70,7 @@ func (this_ *NodeApi) netProxyList(_ *base.RequestBean, c *gin.Context) (res int
 	}
 	response := &NetProxyListResponse{}
 
-	var netProxyModelList = this_.NodeService.nodeContext.getNetProxyModelList()
+	var netProxyModelList = this_.NodeService.nodeContext.getUserNetProxyModelList(requestBean.JWT.UserId)
 	response.NetProxyList = netProxyModelList
 
 	res = response

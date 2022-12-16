@@ -33,9 +33,10 @@ func (this_ *NodeService) InitContext() {
 }
 
 type NodeContext struct {
-	server *node.Server
+	serverList []*node.Server
 	*NodeService
-	root *NodeModel
+
+	localNodeList []*NodeModel
 
 	oldNodeListStr         string
 	nodeModelIdList        []int64
@@ -65,8 +66,18 @@ type NodeContext struct {
 	countData       *NodeCountData
 }
 
-func (this_ *NodeContext) GetServer() *node.Server {
-	return this_.server
+func (this_ *NodeContext) GetServerList() []*node.Server {
+	return this_.serverList
+
+}
+func (this_ *NodeContext) GetServer(localServerId string) *node.Server {
+	serverList := this_.serverList
+	for _, one := range serverList {
+		if one.Id == localServerId {
+			return one
+		}
+	}
+	return nil
 
 }
 
@@ -79,8 +90,15 @@ func (this_ *NodeContext) cleanNodeLine() {
 
 }
 
-func (this_ *NodeContext) GetNodeLineTo(nodeId string) (lineIdList []string) {
-	lineIdList = this_.GetNodeLineByFromTo(this_.root.ServerId, nodeId)
+func (this_ *NodeContext) GetNodeLineTo(nodeId string) (localServerId string, lineIdList []string) {
+	var localNodeList = this_.localNodeList
+	for _, one := range localNodeList {
+		lineIdList = this_.GetNodeLineByFromTo(one.ServerId, nodeId)
+		if len(lineIdList) > 0 {
+			localServerId = one.ServerId
+			return
+		}
+	}
 	return
 }
 
@@ -103,33 +121,35 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 		}
 		nodeIdConnNodeIdListCache[find.ServerId] = find.ConnServerIdList
 	}
-	this_.Logger.Info("GetNodeLineByFromTo", zap.Any("nodeIdConnNodeIdListCache", nodeIdConnNodeIdListCache))
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
+	this_.Logger.Info("GetNodeLineByFromTo", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId), zap.Any("lineIdList", lineIdList))
 	if len(lineIdList) > 0 &&
 		util.ContainsString(lineIdList, fromNodeId) >= 0 &&
 		util.ContainsString(lineIdList, toNodeId) >= 0 {
 		this_.lineNodeIdListCache[key] = lineIdList
 	}
-
 	return
 }
 
 func (this_ *NodeContext) initContext() (err error) {
 	var list []*NodeModel
 	list, _ = this_.Query(&NodeModel{})
+	var localNodeList []*NodeModel
 	for _, one := range list {
 		this_.setNodeModel(one.NodeId, one)
 		this_.setNodeModelByServerId(one.ServerId, one)
-		if one.IsROOT() {
-			this_.root = one
+		if one.IsLocalNode() {
+			localNodeList = append(localNodeList, one)
 		}
 	}
+	this_.localNodeList = localNodeList
 
-	if this_.root != nil {
-		this_.onAddNodeModel(this_.root)
+	for _, one := range localNodeList {
+		this_.onAddNodeModel(one)
 	}
+
 	for _, one := range list {
-		if !one.IsROOT() {
+		if !one.IsLocalNode() {
 			this_.addNodeModel(one)
 		}
 	}
@@ -144,20 +164,37 @@ func (this_ *NodeContext) initContext() (err error) {
 	return
 }
 
-func (this_ *NodeContext) initRoot(root *NodeModel) (err error) {
-	if this_.server != nil {
-		this_.server.Stop()
+func (this_ *NodeContext) appendLocalNode(localNode *NodeModel) (err error) {
+	serverList := this_.serverList
+	var newServerList []*node.Server
+	for _, one := range serverList {
+		if one.Id == localNode.ServerId {
+			one.Stop()
+		} else {
+			newServerList = append(newServerList, one)
+		}
 	}
-	this_.root = root
-	this_.server = &node.Server{
-		Id:          this_.root.ServerId,
-		BindToken:   this_.root.BindToken,
-		BindAddress: this_.root.BindAddress,
+	localNodeList := this_.localNodeList
+	var newLocalNodeList []*NodeModel
+	for _, one := range localNodeList {
+		if one.ServerId != localNode.ServerId {
+			newLocalNodeList = append(newLocalNodeList, one)
+		}
 	}
-	err = this_.server.Start()
+	server := &node.Server{
+		Id:          localNode.ServerId,
+		BindToken:   localNode.BindToken,
+		BindAddress: localNode.BindAddress,
+	}
+	err = server.Start()
 	if err != nil {
 		return
 	}
+	newLocalNodeList = append(newLocalNodeList, localNode)
+	newServerList = append(newServerList, server)
+
+	this_.localNodeList = newLocalNodeList
+	this_.serverList = newServerList
 
 	return
 }

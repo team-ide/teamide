@@ -127,9 +127,10 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 		this_.Logger.Error("toAddNetProxyModel formatNetProxy error", zap.Error(err))
 		return
 	}
-	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
-	if len(lineNodeIdList) > 0 {
-		err = this_.server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+	server := this_.GetServer(localServerId)
+	if len(lineNodeIdList) > 0 && server != nil {
+		err = server.AddNetProxyInnerList(lineNodeIdList, []*node.NetProxyInner{
 			{
 				Id:             netProxyModel.Code,
 				NodeId:         netProxyModel.InnerServerId,
@@ -143,9 +144,10 @@ func (this_ *NodeContext) toAddNetProxyModel(netProxyModel *NetProxyModel) {
 			this_.Logger.Error("toAddNetProxyModel AddNetProxyInnerList error", zap.Error(err))
 		}
 	}
-	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
-	if len(lineNodeIdList) > 0 {
-		err = this_.server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
+	localServerId, lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+	server = this_.GetServer(localServerId)
+	if len(lineNodeIdList) > 0 && server != nil {
+		err = server.AddNetProxyOuterList(lineNodeIdList, []*node.NetProxyOuter{
 			{
 				Id:                    netProxyModel.Code,
 				NodeId:                netProxyModel.OuterServerId,
@@ -189,15 +191,17 @@ func (this_ *NodeContext) toRemoveNetProxyModel(netProxyModel *NetProxyModel) {
 		return
 	}
 
-	lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
-	if len(lineNodeIdList) > 0 {
-		_ = this_.server.RemoveNetProxyInnerList(lineNodeIdList, []string{
+	localServerId, lineNodeIdList := this_.GetNodeLineTo(netProxyModel.InnerServerId)
+	server := this_.GetServer(localServerId)
+	if len(lineNodeIdList) > 0 && server != nil {
+		_ = server.RemoveNetProxyInnerList(lineNodeIdList, []string{
 			netProxyModel.Code,
 		})
 	}
-	lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
-	if len(lineNodeIdList) > 0 {
-		_ = this_.server.RemoveNetProxyOuterList(lineNodeIdList, []string{
+	localServerId, lineNodeIdList = this_.GetNodeLineTo(netProxyModel.OuterServerId)
+	server = this_.GetServer(localServerId)
+	if len(lineNodeIdList) > 0 && server != nil {
+		_ = server.RemoveNetProxyOuterList(lineNodeIdList, []string{
 			netProxyModel.Code,
 		})
 	}

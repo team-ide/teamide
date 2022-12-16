@@ -16,6 +16,14 @@ axiosInstance.interceptors.request.use(function (config) {
 	if (tool.isNotEmpty(JWT)) {
 		config.headers['JWT'] = JWT;
 	}
+	let clientKey = tool.getClientKey();
+	if (tool.isNotEmpty(clientKey)) {
+		config.headers['key1'] = clientKey;
+	}
+	let clientTabKey = tool.getClientTabKey();
+	if (tool.isNotEmpty(clientTabKey)) {
+		config.headers['key2'] = clientTabKey;
+	}
 	return config;
 }, function (error) {
 	// 对请求错误做些什么

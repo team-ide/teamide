@@ -60,7 +60,7 @@ func GetListToString(list []string) string {
 	return ""
 }
 
-func (entity *NodeModel) IsROOT() bool {
+func (entity *NodeModel) IsLocalNode() bool {
 	return entity.IsLocal == 1
 }
 

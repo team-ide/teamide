@@ -87,7 +87,7 @@ type ContextResponse struct {
 	NetProxyList []*NetProxyModel `json:"netProxyList,omitempty"`
 }
 
-func (this_ *NodeApi) context(_ *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
+func (this_ *NodeApi) context(requestBean *base.RequestBean, _ *gin.Context) (res interface{}, err error) {
 
 	response := &ContextResponse{}
 
@@ -96,8 +96,8 @@ func (this_ *NodeApi) context(_ *base.RequestBean, _ *gin.Context) (res interfac
 		response.LocalIpList = append(response.LocalIpList, ip.String())
 	}
 
-	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
-	var netProxyModelList = this_.NodeService.nodeContext.getNetProxyModelList()
+	var nodeModelList = this_.NodeService.nodeContext.getUserNodeModelList(requestBean.JWT.UserId)
+	var netProxyModelList = this_.NodeService.nodeContext.getUserNetProxyModelList(requestBean.JWT.UserId)
 
 	response.CountData = this_.NodeService.nodeContext.countData
 	response.NodeList = nodeModelList

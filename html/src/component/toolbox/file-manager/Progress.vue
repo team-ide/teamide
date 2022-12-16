@@ -165,13 +165,13 @@ export default {
       this.bindFileWorkProgress();
     },
     bindFileWorkProgress() {
-      this.server.addServerSocketOnEvent(
+      this.server.addListenOnEvent(
         "file-work-progress",
         this.onFileWorkProgress
       );
     },
     unbindFileWorkProgress() {
-      this.server.removeServerSocketOnEvent(
+      this.server.removeListenOnEvent(
         "file-work-progress",
         this.onFileWorkProgress
       );

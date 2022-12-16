@@ -64,18 +64,6 @@ export default {
         }
       }
     },
-    "source.login.userId"() {
-      var info = "change userId:";
-      if (this.source.login.userId != null) {
-        info += this.source.login.userId;
-      }
-      this.server.websocketSendText(info);
-    },
-    "source.ready"() {
-      if (this.source.ready) {
-        this.server.openWebsocket();
-      }
-    },
   },
   methods: {
     init() {

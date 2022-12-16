@@ -8,9 +8,11 @@ import (
 )
 
 type RequestBean struct {
-	JWT    *JWTBean
-	Path   string
-	Action string
+	JWT          *JWTBean
+	Path         string
+	Action       string
+	ClientKey    string
+	ClientTabKey string
 }
 
 var (

@@ -67,11 +67,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 }
 
 type FileRequest struct {
-	WorkerId      string `json:"workerId,omitempty"`
 	FileWorkerKey string `json:"fileWorkerKey,omitempty"`
 	Dir           string `json:"dir,omitempty"`
-	Place         string `json:"place,omitempty"`
-	PlaceId       string `json:"placeId,omitempty"`
 	Path          string `json:"path,omitempty"`
 	OldPath       string `json:"oldPath,omitempty"`
 	NewPath       string `json:"newPath,omitempty"`
@@ -83,6 +80,7 @@ type FileRequest struct {
 	ProgressId    string `json:"progressId,omitempty"`
 	Action        string `json:"action,omitempty"`
 	Force         bool   `json:"force,omitempty"`
+	*BaseParam
 }
 
 func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -95,38 +93,41 @@ func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	return
 }
 
-func (this_ *api) create(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) create(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = this_.Create(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path, request.IsDir)
+	request.ClientTabKey = r.ClientTabKey
+	res, err = this_.Create(request.BaseParam, request.FileWorkerKey, request.Path, request.IsDir)
 	return
 }
 
-func (this_ *api) file(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) file(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = this_.File(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path)
+	request.ClientTabKey = r.ClientTabKey
+	res, err = this_.File(request.BaseParam, request.FileWorkerKey, request.Path)
 	return
 }
 
-func (this_ *api) files(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) files(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
 
+	request.ClientTabKey = r.ClientTabKey
 	var data = map[string]interface{}{}
-	data["dir"], data["files"], err = this_.Files(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Dir)
+	data["dir"], data["files"], err = this_.Files(request.BaseParam, request.FileWorkerKey, request.Dir)
 
 	res = data
 	return
 }
 
-func (this_ *api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) read(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
@@ -134,8 +135,9 @@ func (this_ *api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 
 	response := map[string]interface{}{}
 	res = response
+	request.ClientTabKey = r.ClientTabKey
 
-	fileInfo, err := this_.File(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path)
+	fileInfo, err := this_.File(request.BaseParam, request.FileWorkerKey, request.Path)
 	if err != nil {
 		return
 	}
@@ -153,7 +155,7 @@ func (this_ *api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	}
 
 	writer := &bytes2.Buffer{}
-	_, err = this_.Read(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path, writer)
+	_, err = this_.Read(request.BaseParam, request.FileWorkerKey, request.Path, writer)
 	if err != nil {
 		return
 	}
@@ -164,53 +166,58 @@ func (this_ *api) read(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	return
 }
 
-func (this_ *api) write(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) write(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
 
+	request.ClientTabKey = r.ClientTabKey
 	reader := strings.NewReader(request.Text)
-	res, err = this_.Write(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path, reader, reader.Len())
+	res, err = this_.Write(request.BaseParam, request.FileWorkerKey, request.Path, reader, reader.Len())
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *api) rename(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) rename(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = this_.Rename(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.OldPath, request.NewPath)
+	request.ClientTabKey = r.ClientTabKey
+	res, err = this_.Rename(request.BaseParam, request.FileWorkerKey, request.OldPath, request.NewPath)
 	return
 }
 
-func (this_ *api) remove(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) remove(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = this_.Remove(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path)
+	request.ClientTabKey = r.ClientTabKey
+	err = this_.Remove(request.BaseParam, request.FileWorkerKey, request.Path)
 	return
 }
 
-func (this_ *api) move(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) move(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	err = this_.Move(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.OldPath, request.NewPath)
+	request.ClientTabKey = r.ClientTabKey
+	err = this_.Move(request.BaseParam, request.FileWorkerKey, request.OldPath, request.NewPath)
 	return
 }
 
-func (this_ *api) copy(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) copy(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &FileRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	go this_.Copy(request.WorkerId, request.FileWorkerKey, request.Place, request.PlaceId, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
+	request.ClientTabKey = r.ClientTabKey
+	go this_.Copy(request.BaseParam, request.FileWorkerKey, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
 	return
 }
 
@@ -262,7 +269,11 @@ func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	}
 	fileList := mF.File["file"]
 
-	res, err = this_.Upload(workerId, fileWorkerKey, place, placeId, dir, fullPath, fileList)
+	res, err = this_.Upload(&BaseParam{
+		Place:    place,
+		PlaceId:  placeId,
+		WorkerId: workerId,
+	}, fileWorkerKey, dir, fullPath, fileList)
 	return
 }
 
@@ -290,7 +301,11 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	placeId := data["placeId"]
 	path := data["path"]
 
-	fileInfo, err := this_.File(workerId, fileWorkerKey, place, placeId, path)
+	fileInfo, err := this_.File(&BaseParam{
+		Place:    place,
+		PlaceId:  placeId,
+		WorkerId: workerId,
+	}, fileWorkerKey, path)
 	if err != nil {
 		return
 	}
@@ -301,7 +316,11 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	//c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
 	c.Header("download-file-name", fileInfo.Name)
 
-	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, &cWriter{
+	_, err = this_.Read(&BaseParam{
+		Place:    place,
+		PlaceId:  placeId,
+		WorkerId: workerId,
+	}, fileWorkerKey, path, &cWriter{
 		c: c,
 	})
 	if err != nil {
@@ -347,7 +366,11 @@ func (this_ *api) open(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	placeId := data["placeId"]
 	path := data["path"]
 
-	_, err = this_.Read(workerId, fileWorkerKey, place, placeId, path, &cWriter{
+	_, err = this_.Read(&BaseParam{
+		Place:    place,
+		PlaceId:  placeId,
+		WorkerId: workerId,
+	}, fileWorkerKey, path, &cWriter{
 		c: c,
 	})
 	if err != nil {

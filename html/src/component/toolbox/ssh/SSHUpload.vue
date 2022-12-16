@@ -62,13 +62,10 @@ export default {
     bindSSHRZUpload() {
       this.lastRZUploadFileSize = null;
       this.lastRZUploadedSize = null;
-      this.server.addServerSocketOnEvent("ssh-rz-upload", this.onSSHRZUpload);
+      this.server.addListenOnEvent("ssh-rz-upload", this.onSSHRZUpload);
     },
     unbindSSHRZUpload() {
-      this.server.removeServerSocketOnEvent(
-        "ssh-rz-upload",
-        this.onSSHRZUpload
-      );
+      this.server.removeListenOnEvent("ssh-rz-upload", this.onSSHRZUpload);
     },
     onSSHRZUpload(data) {
       try {

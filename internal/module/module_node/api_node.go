@@ -15,7 +15,7 @@ type ListResponse struct {
 	NodeList []*NodeModel `json:"nodeList,omitempty"`
 }
 
-func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *NodeApi) list(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &ListRequest{}
 	if !base.RequestJSON(request, c) {
@@ -23,7 +23,7 @@ func (this_ *NodeApi) list(_ *base.RequestBean, c *gin.Context) (res interface{}
 	}
 	response := &ListResponse{}
 
-	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
+	var nodeModelList = this_.NodeService.nodeContext.getUserNodeModelList(requestBean.JWT.UserId)
 	response.NodeList = nodeModelList
 	if err != nil {
 		return
@@ -55,7 +55,7 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 
 	var parentNodeModel *NodeModel
 	var toNodeModel *NodeModel
-	if !node.IsROOT() {
+	if !node.IsLocalNode() {
 		if request.ParentServerId != "" {
 			parentNodeModel = this_.NodeService.nodeContext.getNodeModelByServerId(request.ParentServerId)
 			if parentNodeModel == nil {
