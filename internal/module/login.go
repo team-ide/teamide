@@ -217,6 +217,10 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		if err != nil {
 			return
 		}
+		listener := context.GetListener(request.ClientTabKey)
+		if listener != nil && listener.UserId != response.User.UserId {
+			context.ChangeListenerUserId(listener, response.User.UserId)
+		}
 	}
 
 	jsonString := util.ToJSON(response)

@@ -355,7 +355,7 @@ const newWorker = function (workerOption) {
         async download(path) {
             let url = source.api + "fileManager/download?";
             url += "workerId=" + (this.workerId || "");
-            url += "&jwt=" + encodeURIComponent(tool.getJWT());
+            url = tool.appendUrlBaseParam(url);
             url += "&fileWorkerKey=" + (this.fileWorkerKey || "");
             url += "&place=" + (this.place || "");
             url += "&placeId=" + (this.placeId || "");

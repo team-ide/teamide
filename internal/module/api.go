@@ -158,6 +158,12 @@ func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 func (this_ *Api) getRequestBean(c *gin.Context) (request *base.RequestBean) {
 	request = &base.RequestBean{}
 	request.JWT = this_.getJWT(c)
+	request.ClientKey = c.GetHeader("key1")
+	request.ClientTabKey = c.GetHeader("key2")
+	if strings.EqualFold(c.Request.Method, "get") {
+		request.ClientKey = c.Query("key1")
+		request.ClientTabKey = c.Query("key2")
+	}
 	return
 }
 
@@ -181,8 +187,6 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	}
 	requestBean := this_.getRequestBean(c)
 	requestBean.Path = path
-	requestBean.ClientKey = c.GetHeader("key1")
-	requestBean.ClientTabKey = c.GetHeader("key2")
 	if !this_.checkPower(api, requestBean.JWT, c) {
 		return true
 	}

@@ -77,7 +77,7 @@ const newWorker = function (workerOption) {
                 url = "ws" + url + "api/terminal/websocket";
             }
             url += "?key=" + encodeURIComponent(worker.key);
-            url += "&jwt=" + encodeURIComponent(tool.getJWT());
+            url = tool.appendUrlBaseParam(url);
             url += "&place=" + encodeURIComponent(worker.place);
             url += "&placeId=" + encodeURIComponent(worker.placeId);
             url += "&workerId=" + encodeURIComponent(worker.workerId);
@@ -148,7 +148,7 @@ const newWorker = function (workerOption) {
                 url = "ws" + url + "api/terminal/uploadWebsocket";
             }
             url += "?key=" + encodeURIComponent(worker.key);
-            url += "&jwt=" + encodeURIComponent(tool.getJWT());
+            url = tool.appendUrlBaseParam(url);
             let uploadSocket = new WebSocket(url);
             worker.uploadSocket = uploadSocket;
             uploadSocket.binaryType = "arraybuffer"

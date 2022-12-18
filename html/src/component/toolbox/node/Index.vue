@@ -78,8 +78,7 @@ export default {
     },
     onNodeDataChange(data) {
       try {
-        if (data.type == "count") {
-        } else if (data.type == "node-list") {
+        if (data.type == "node-list") {
           this.initNodeList(data.nodeList);
         } else if (data.type == "net-proxy-list") {
           this.initNodeNetProxyList(data.netProxyList);

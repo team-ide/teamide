@@ -621,9 +621,8 @@ export default {
       let url =
         this.source.api +
         "api/toolbox/database/download?taskId=" +
-        encodeURIComponent(this.task.taskId) +
-        "&jwt=" +
-        encodeURIComponent(this.tool.getJWT());
+        encodeURIComponent(this.task.taskId) ;
+      url = this.tool.appendUrlBaseParam(url);
       window.location.href = url;
     },
   },

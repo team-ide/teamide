@@ -347,11 +347,11 @@ func (this_ *ClientTabListener) Listen() []*ListenEvent {
 			select {
 			case event := <-this_.events: //如果有数据，下面打印。但是有可能ch一直没数据
 				events = append(events, event)
-				if len(this_.events) == 0 {
-					break
-				}
+				quit <- true //写入
+				break
 			case <-time.After(timeout): //上面的ch如果一直没数据会阻塞，那么select也会检测其他case条件，检测到后 x 秒后超时
 				quit <- true //写入
+				break
 			}
 		}
 	}()

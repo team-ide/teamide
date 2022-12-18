@@ -239,7 +239,7 @@ func (this_ *api) callStop(_ *base.RequestBean, c *gin.Context) (res interface{}
 	return
 }
 
-func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) upload(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	workerId := c.PostForm("workerId")
 	if workerId == "" {
@@ -270,14 +270,15 @@ func (this_ *api) upload(_ *base.RequestBean, c *gin.Context) (res interface{}, 
 	fileList := mF.File["file"]
 
 	res, err = this_.Upload(&BaseParam{
-		Place:    place,
-		PlaceId:  placeId,
-		WorkerId: workerId,
+		Place:        place,
+		PlaceId:      placeId,
+		WorkerId:     workerId,
+		ClientTabKey: r.ClientTabKey,
 	}, fileWorkerKey, dir, fullPath, fileList)
 	return
 }
 
-func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) download(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Transfer-Encoding", "binary")
 
@@ -302,9 +303,10 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	path := data["path"]
 
 	fileInfo, err := this_.File(&BaseParam{
-		Place:    place,
-		PlaceId:  placeId,
-		WorkerId: workerId,
+		Place:        place,
+		PlaceId:      placeId,
+		WorkerId:     workerId,
+		ClientTabKey: r.ClientTabKey,
 	}, fileWorkerKey, path)
 	if err != nil {
 		return
@@ -317,9 +319,10 @@ func (this_ *api) download(_ *base.RequestBean, c *gin.Context) (res interface{}
 	c.Header("download-file-name", fileInfo.Name)
 
 	_, err = this_.Read(&BaseParam{
-		Place:    place,
-		PlaceId:  placeId,
-		WorkerId: workerId,
+		Place:        place,
+		PlaceId:      placeId,
+		WorkerId:     workerId,
+		ClientTabKey: r.ClientTabKey,
 	}, fileWorkerKey, path, &cWriter{
 		c: c,
 	})
@@ -342,7 +345,7 @@ func (this_ *cWriter) Write(buf []byte) (n int, err error) {
 	return
 }
 
-func (this_ *api) open(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) open(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Transfer-Encoding", "binary")
 
@@ -367,9 +370,10 @@ func (this_ *api) open(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 	path := data["path"]
 
 	_, err = this_.Read(&BaseParam{
-		Place:    place,
-		PlaceId:  placeId,
-		WorkerId: workerId,
+		Place:        place,
+		PlaceId:      placeId,
+		WorkerId:     workerId,
+		ClientTabKey: r.ClientTabKey,
 	}, fileWorkerKey, path, &cWriter{
 		c: c,
 	})

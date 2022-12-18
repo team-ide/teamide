@@ -667,9 +667,8 @@ export default {
       let url =
         this.source.api +
         "api/database/exportDownload?taskId=" +
-        encodeURIComponent(this.task.taskId) +
-        "&jwt=" +
-        encodeURIComponent(this.tool.getJWT());
+        encodeURIComponent(this.task.taskId);
+      url = this.tool.appendUrlBaseParam(url);
       window.location.href = url;
     },
   },

@@ -168,6 +168,12 @@ tool.stopEvent = function (event) {
         event.preventDefault && event.preventDefault();
     }
 };
+tool.appendUrlBaseParam = (url) => {
+    url += "&jwt=" + encodeURIComponent(tool.getJWT());
+    url += "&key1=" + encodeURIComponent(tool.getClientKey());
+    url += "&key2=" + encodeURIComponent(tool.getClientTabKey());
+    return url;
+}
 tool.setJWT = function (jwt) {
     source.jwt = jwt;
     if (tool.isNotEmpty(jwt)) {

@@ -20,8 +20,6 @@ func (this_ *NodeService) InitContext() {
 			codeModelCache:       make(map[string]*NetProxyModel),
 
 			lineNodeIdListCache: make(map[string][]string),
-
-			countData: newNodeCountData(),
 		}
 	}
 	err := this_.nodeContext.initContext()
@@ -61,9 +59,6 @@ type NodeContext struct {
 
 	doAliveIng  bool
 	doAliveLock sync.Mutex
-
-	oldCountDataStr string
-	countData       *NodeCountData
 }
 
 func (this_ *NodeContext) GetServerList() []*node.Server {
@@ -122,7 +117,7 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 		nodeIdConnNodeIdListCache[find.ServerId] = find.ConnServerIdList
 	}
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
-	this_.Logger.Info("GetNodeLineByFromTo", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId), zap.Any("lineIdList", lineIdList))
+	//this_.Logger.Info("GetNodeLineByFromTo", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId), zap.Any("lineIdList", lineIdList))
 	if len(lineIdList) > 0 &&
 		util.ContainsString(lineIdList, fromNodeId) >= 0 &&
 		util.ContainsString(lineIdList, toNodeId) >= 0 {

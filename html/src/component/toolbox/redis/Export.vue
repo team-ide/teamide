@@ -207,9 +207,9 @@ export default {
       let url =
         this.source.api +
         "api/toolbox/redis/export/download?taskKey=" +
-        encodeURIComponent(this.task.key) +
-        "&jwt=" +
-        encodeURIComponent(this.tool.getJWT());
+        encodeURIComponent(this.task.key);
+
+      url = this.tool.appendUrlBaseParam(url);
       window.location.href = url;
     },
   },

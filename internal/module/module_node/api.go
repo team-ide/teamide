@@ -82,7 +82,6 @@ func (this_ *NodeApi) GetApis() (apis []*base.ApiWorker) {
 
 type ContextResponse struct {
 	LocalIpList  []string         `json:"localIpList,omitempty"`
-	CountData    *NodeCountData   `json:"countData,omitempty"`
 	NodeList     []*NodeModel     `json:"nodeList,omitempty"`
 	NetProxyList []*NetProxyModel `json:"netProxyList,omitempty"`
 }
@@ -99,7 +98,6 @@ func (this_ *NodeApi) context(requestBean *base.RequestBean, _ *gin.Context) (re
 	var nodeModelList = this_.NodeService.nodeContext.getUserNodeModelList(requestBean.JWT.UserId)
 	var netProxyModelList = this_.NodeService.nodeContext.getUserNetProxyModelList(requestBean.JWT.UserId)
 
-	response.CountData = this_.NodeService.nodeContext.countData
 	response.NodeList = nodeModelList
 	response.NetProxyList = netProxyModelList
 	res = response
