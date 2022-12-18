@@ -621,7 +621,7 @@ export default {
       let url =
         this.source.api +
         "api/toolbox/database/download?taskId=" +
-        encodeURIComponent(this.task.taskId) ;
+        encodeURIComponent(this.task.taskId);
       url = this.tool.appendUrlBaseParam(url);
       window.location.href = url;
     },
