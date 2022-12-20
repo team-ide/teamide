@@ -37,12 +37,26 @@ func (this_ *PowerUserService) Insert(powerUser *PowerUserModel) (rowsAffected i
 		powerUser.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + TablePowerUser + `(powerUserId, userId, createTime) VALUES (?, ?, ?) `
+	sql := `INSERT INTO ` + TablePowerUser + `(powerUserId, userId, powerRoleId, createTime) VALUES (?, ?, ?, ?) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{powerUser.PowerUserId, powerUser.UserId, time.Now()})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{powerUser.PowerUserId, powerUser.UserId, powerUser.PowerRoleId, time.Now()})
 	if err != nil {
 		return
 	}
 
+	return
+}
+
+// QueryPowerRolesByUserId 根据 用户ID 查询角色
+func (this_ *PowerUserService) QueryPowerRolesByUserId(userId int64) (res []*PowerRoleModel, err error) {
+	var values []interface{}
+	sql := `SELECT * FROM ` + TablePowerRole + ` WHERE powerRoleId IN `
+	sql += `(SELECT powerRoleId FROM ` + TablePowerUser + ` WHERE userId=?)`
+	values = append(values, userId)
+
+	err = this_.DatabaseWorker.Query(sql, values, &res)
+	if err != nil {
+		return
+	}
 	return
 }

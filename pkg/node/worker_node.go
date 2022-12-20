@@ -148,8 +148,8 @@ func (this_ *Worker) connNodeListener(pool *MessageListenerPool, connAddress, co
 	var msg = &Message{
 		Method: methodOK,
 		ConnData: &ConnData{
-			ConnIndex: connIndex,
-			NodeId:    this_.server.Id,
+			ConnIndex:  connIndex,
+			NodeIdList: this_.server.GetLocalNodeIdList(),
 		},
 	}
 

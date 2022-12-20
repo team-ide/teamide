@@ -31,7 +31,7 @@ func (this_ *NodeService) InitContext() {
 }
 
 type NodeContext struct {
-	serverList []*node.Server
+	server *node.Server
 	*NodeService
 
 	localNodeList []*NodeModel
@@ -61,18 +61,8 @@ type NodeContext struct {
 	doAliveLock sync.Mutex
 }
 
-func (this_ *NodeContext) GetServerList() []*node.Server {
-	return this_.serverList
-
-}
-func (this_ *NodeContext) GetServer(localServerId string) *node.Server {
-	serverList := this_.serverList
-	for _, one := range serverList {
-		if one.Id == localServerId {
-			return one
-		}
-	}
-	return nil
+func (this_ *NodeContext) GetServer() *node.Server {
+	return this_.server
 
 }
 
@@ -85,13 +75,16 @@ func (this_ *NodeContext) cleanNodeLine() {
 
 }
 
-func (this_ *NodeContext) GetNodeLineTo(nodeId string) (localServerId string, lineIdList []string) {
+func (this_ *NodeContext) GetNodeLineTo(nodeId string) (lineIdList []string) {
 	var localNodeList = this_.localNodeList
 	for _, one := range localNodeList {
+		if nodeId == one.ServerId {
+			lineIdList = append(lineIdList, nodeId)
+			break
+		}
 		lineIdList = this_.GetNodeLineByFromTo(one.ServerId, nodeId)
 		if len(lineIdList) > 0 {
-			localServerId = one.ServerId
-			return
+			break
 		}
 	}
 	return
@@ -127,6 +120,12 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 }
 
 func (this_ *NodeContext) initContext() (err error) {
+
+	if this_.server == nil {
+		this_.server = &node.Server{}
+		this_.server.Start()
+	}
+
 	var list []*NodeModel
 	list, _ = this_.Query(&NodeModel{})
 	var localNodeList []*NodeModel
@@ -160,15 +159,8 @@ func (this_ *NodeContext) initContext() (err error) {
 }
 
 func (this_ *NodeContext) appendLocalNode(localNode *NodeModel) (err error) {
-	serverList := this_.serverList
-	var newServerList []*node.Server
-	for _, one := range serverList {
-		if one.Id == localNode.ServerId {
-			one.Stop()
-		} else {
-			newServerList = append(newServerList, one)
-		}
-	}
+	this_.GetServer().RemoveLocalNode(localNode.ServerId)
+
 	localNodeList := this_.localNodeList
 	var newLocalNodeList []*NodeModel
 	for _, one := range localNodeList {
@@ -176,20 +168,16 @@ func (this_ *NodeContext) appendLocalNode(localNode *NodeModel) (err error) {
 			newLocalNodeList = append(newLocalNodeList, one)
 		}
 	}
-	server := &node.Server{
+	serverLocalNode := &node.LocalNode{
 		Id:          localNode.ServerId,
 		BindToken:   localNode.BindToken,
 		BindAddress: localNode.BindAddress,
 	}
-	err = server.Start()
-	if err != nil {
-		return
-	}
+	this_.GetServer().AddLocalNode(serverLocalNode)
+
 	newLocalNodeList = append(newLocalNodeList, localNode)
-	newServerList = append(newServerList, server)
 
 	this_.localNodeList = newLocalNodeList
-	this_.serverList = newServerList
 
 	return
 }

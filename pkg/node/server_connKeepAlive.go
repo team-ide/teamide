@@ -2,7 +2,7 @@ package node
 
 func (this_ *Server) connNodeListenerKeepAlive(connAddress, connToken string, connSize int) {
 	if connAddress == "" {
-		Logger.Warn(this_.GetServerInfo() + " 连接 [" + connAddress + "] 连接地址为空")
+		Logger.Warn("连接 [" + connAddress + "] 连接地址为空")
 		return
 	}
 	this_.connNodeListenerKeepAliveLock.Lock()

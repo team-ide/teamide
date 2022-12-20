@@ -3,6 +3,7 @@ package module_node
 import (
 	"encoding/json"
 	"go.uber.org/zap"
+	"teamide/pkg/node"
 	"time"
 )
 
@@ -26,7 +27,7 @@ func (this_ *NodeContext) doAlive() {
 		}()
 	}()
 
-	if len(this_.localNodeList) == 0 || len(this_.serverList) == 0 {
+	if len(this_.localNodeList) == 0 {
 		return
 	}
 	//this_.Logger.Info("node do alive")
@@ -48,6 +49,49 @@ func (this_ *NodeContext) doAlive() {
 			continue
 		}
 		this_.toAddNetProxyModel(find)
+	}
+
+	for _, id := range nodeModelIdList {
+		find := this_.getNodeModel(id)
+		if find == nil {
+			continue
+		}
+
+		lineNodeIdList := this_.GetNodeLineTo(find.ServerId)
+		if len(lineNodeIdList) > 0 {
+			//this_.Logger.Info("toAddNodeModel", zap.Any("to node", nodeModel.ServerId), zap.Any("lineNodeIdList", lineNodeIdList))
+			status := this_.GetServer().GetNodeStatus(lineNodeIdList)
+			find.Status = status
+			find.IsStarted = status == node.StatusStarted
+		} else {
+			find.Status = 0
+		}
+	}
+
+	for _, id := range netProxyModelIdList {
+		find := this_.getNetProxyModel(id)
+		if find == nil {
+			continue
+		}
+
+		lineNodeIdList := this_.GetNodeLineTo(find.InnerServerId)
+		if len(lineNodeIdList) > 0 {
+			status := this_.GetServer().GetNetProxyInnerStatus(lineNodeIdList, find.Code)
+
+			find.InnerStatus = status
+			find.InnerIsStarted = status == node.StatusStarted
+		} else {
+			find.InnerStatus = 0
+		}
+
+		lineNodeIdList = this_.GetNodeLineTo(find.OuterServerId)
+		if len(lineNodeIdList) > 0 {
+			status := this_.GetServer().GetNetProxyOuterStatus(lineNodeIdList, find.Code)
+			find.OuterStatus = status
+			find.OuterIsStarted = status == node.StatusStarted
+		} else {
+			find.OuterStatus = 0
+		}
 	}
 
 	this_.checkChangeOut()

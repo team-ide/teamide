@@ -325,7 +325,16 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 		err = errors.New("节点线不存在")
 		return
 	}
-	var thisNodeIndex = util.ContainsString(lineNodeIdList, this_.server.Id)
+	var thisNodeIndex = -1
+	for _, localNode := range this_.server.localNodeList {
+		index := util.ContainsString(lineNodeIdList, localNode.Id)
+		if index >= 0 {
+			thisNodeIndex = index
+			if index == len(lineNodeIdList)-1 {
+				break
+			}
+		}
+	}
 	if thisNodeIndex < 0 {
 		err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + util.ToJSON(lineNodeIdList) + "] 暂无通讯渠道")
 		return

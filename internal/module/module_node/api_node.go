@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"net"
 	"teamide/internal/base"
 	"teamide/pkg/util"
 )
@@ -74,6 +75,14 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 			err = errors.New("需要关联节点")
 			return
 		}
+	} else {
+		var listener net.Listener
+		listener, err = net.Listen("tcp", node.BindAddress)
+		if err != nil {
+			err = errors.New("本地节点地址[" + node.BindAddress + "]绑定失败，" + err.Error())
+			return
+		}
+		_ = listener.Close()
 	}
 
 	_, err = this_.NodeService.Insert(node)

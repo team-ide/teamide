@@ -29,7 +29,7 @@ export default {
     toInsertLocal() {
       this.tool.stopEvent();
       let data = {
-        name: "本地节点",
+        name: this.source.login.user.name + "-本地节点",
         bindAddress: ":21090",
         bindToken: this.tool.md5("bindToken" + new Date().getTime()),
       };

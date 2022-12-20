@@ -241,7 +241,9 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 			}
 		}()
 
-		this_.Logger.Info("处理操作", zap.String("action", action))
+		if !api.NotRecodeLog {
+			this_.Logger.Info("处理操作", zap.String("action", action))
+		}
 		res, err := api.Do(requestBean, c)
 		if err != nil {
 			this_.Logger.Error("操作异常", zap.String("action", action), zap.Any("error", err.Error()))

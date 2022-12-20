@@ -24,7 +24,6 @@ type PowerRoleModel struct {
 	ExpirationTime time.Time `json:"expirationTime,omitempty"`
 	CreateTime     time.Time `json:"createTime,omitempty"`
 	UpdateTime     time.Time `json:"updateTime,omitempty"`
-	IsSuper        bool      `json:"isSuper"`
 }
 
 // PowerRouteModel 权限路由模型，和权限路由表对应

@@ -25,16 +25,16 @@ func (this_ *fileService) getServer() (server *node.Server, err error) {
 		err = errors.New("node上下文未初始化")
 		return
 	}
+	server = this_.nodeService.GetContext().GetServer()
 
-	localServerId, nodeLine := this_.nodeService.GetContext().GetNodeLineTo(this_.nodeId)
+	nodeLine := this_.nodeService.GetContext().GetNodeLineTo(this_.nodeId)
 
-	server = this_.nodeService.GetContext().GetServer(localServerId)
-
-	if len(nodeLine) == 0 || server == nil {
+	if len(nodeLine) == 0 {
 		err = errors.New("无法连接到节点[" + this_.nodeId + "]")
 		return
 	}
 	this_.nodeLine = nodeLine
+
 	return
 }
 

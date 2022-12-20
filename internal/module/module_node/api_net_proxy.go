@@ -34,19 +34,17 @@ func (this_ *NodeApi) netProxyMonitorData(_ *base.RequestBean, c *gin.Context) (
 		if netProxyInfo == nil {
 			continue
 		}
-		innerLocalServerId, innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.InnerServerId)
-		outerLocalServerId, outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.OuterServerId)
+		innerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.InnerServerId)
+		outerLineNodeIdList := this_.NodeService.nodeContext.GetNodeLineTo(netProxyInfo.OuterServerId)
 
-		innerServer := this_.NodeService.nodeContext.GetServer(innerLocalServerId)
-		outerServer := this_.NodeService.nodeContext.GetServer(outerLocalServerId)
 		one := &NetProxyMonitorData{
 			Id: id,
 		}
-		if len(innerLineNodeIdList) > 0 && innerServer != nil {
-			one.InnerMonitorData = ToMonitorDataFormat(innerServer.GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
+		if len(innerLineNodeIdList) > 0 {
+			one.InnerMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.GetServer().GetNetProxyInnerMonitorData(innerLineNodeIdList, id))
 		}
-		if len(outerLineNodeIdList) > 0 && outerServer != nil {
-			one.OuterMonitorData = ToMonitorDataFormat(outerServer.GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
+		if len(outerLineNodeIdList) > 0 {
+			one.OuterMonitorData = ToMonitorDataFormat(this_.NodeService.nodeContext.GetServer().GetNetProxyOuterMonitorData(outerLineNodeIdList, id))
 		}
 		response.NetProxyMonitorDataList = append(response.NetProxyMonitorDataList, one)
 	}

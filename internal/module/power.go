@@ -43,12 +43,12 @@ func (this_ *Api) getPowersByJWT(JWT *base.JWTBean) (powers []*base.PowerAction)
 		userId = JWT.UserId
 	}
 	ps := base.GetPowers()
-	psStrs := this_.getPowersByUserId(userId)
-	if len(psStrs) == 0 {
+	psStr := this_.getPowersByUserId(userId)
+	if len(psStr) == 0 {
 		return
 	}
 	for _, power := range ps {
-		if util.ContainsString(psStrs, power.Action) >= 0 {
+		if util.ContainsString(psStr, power.Action) >= 0 {
 			powers = append(powers, power)
 		}
 	}
@@ -74,17 +74,26 @@ func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
 	}
 	if userId != 0 {
 		var userPowers []string
+
+		var isSuperRole bool
+		roles, _ := this_.powerUserService.QueryPowerRolesByUserId(userId)
+		for _, role := range roles {
+			if role.RoleType == base.SuperRoleType {
+				isSuperRole = true
+			} else {
+
+			}
+		}
 		for _, power := range ps {
-			if !power.ShouldLogin {
+			if util.ContainsString(powers, power.Action) >= 0 {
 				continue
 			}
-			if !power.ShouldPower {
+			if !power.ShouldPower || isSuperRole {
 				powers = append(powers, power.Action)
 				continue
 			}
 			if util.ContainsString(userPowers, power.Action) >= 0 {
 				powers = append(powers, power.Action)
-			} else {
 			}
 		}
 	}

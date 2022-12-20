@@ -38,9 +38,10 @@ type Message struct {
 }
 
 type ConnData struct {
-	ConnIndex int    `json:"connIndex,omitempty"`
-	NodeId    string `json:"nodeId,omitempty"`
-	NodeToken string `json:"nodeToken,omitempty"`
+	ConnIndex  int      `json:"connIndex,omitempty"`
+	NodeId     string   `json:"nodeId,omitempty"`
+	NodeToken  string   `json:"nodeToken,omitempty"`
+	NodeIdList []string `json:"nodeIdList,omitempty"`
 }
 
 type SystemData struct {

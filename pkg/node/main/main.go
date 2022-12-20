@@ -19,7 +19,6 @@ func main() {
 			return
 		}
 	}
-	var err error
 
 	var id string
 	var address string
@@ -52,7 +51,9 @@ func main() {
 		panic("请设置 -connToken")
 	}
 
-	worker := &node.Server{
+	server := &node.Server{}
+	server.Start()
+	localNode := &node.LocalNode{
 		Id:          id,
 		BindAddress: address,
 		BindToken:   token,
@@ -60,11 +61,7 @@ func main() {
 		ConnToken:   connToken,
 	}
 	println("启动节点 [" + id + "][" + address + "] 开始")
-	err = worker.Start()
-	if err != nil {
-		println("启动节点 [" + id + "][" + address + "] 异常")
-		panic(err)
-	}
+	server.AddLocalNode(localNode)
 	println("启动节点 [" + id + "][" + address + "] 成功")
 
 	waitGroupForStop.Add(1)
