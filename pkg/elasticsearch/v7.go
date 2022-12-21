@@ -344,8 +344,8 @@ func (this_ *V7Service) Search(indexName string, pageIndex int, pageSize int, wh
 			break
 		}
 	}
-	ss, _ := query.Source()
-	util.Logger.Info("es search", zap.Any("query", ss))
+	//ss, _ := query.Source()
+	//util.Logger.Info("es search", zap.Any("query", ss))
 
 	doer.TrackTotalHits(true)
 
