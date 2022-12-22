@@ -580,3 +580,26 @@ func (this_ *V7Service) Scroll(indexName string, scrollId string, pageSize int, 
 
 	return
 }
+
+type IndexAliasResponse struct {
+	*elastic.AliasResult
+}
+
+func (this_ *V7Service) IndexAlias(indexName string, aliasName string) (res *IndexAliasResponse, err error) {
+	client, err := this_.GetClient()
+	if err != nil {
+		return
+	}
+	//defer client.Stop()
+
+	doer := client.Alias()
+	aliasResult, err := doer.Add(indexName, aliasName).Do(context.Background())
+	if err != nil {
+		return
+	}
+	res = &IndexAliasResponse{
+		AliasResult: aliasResult,
+	}
+
+	return
+}

@@ -35,6 +35,7 @@ var (
 	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "updateData", Text: "ES修改数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "ES删除数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "ES复制索引", ShouldLogin: true, StandAlone: true, Parent: Power})
+	indexAliasPower  = base.AppendPower(&base.PowerAction{Action: "indexAlias", Text: "ES索引别名", ShouldLogin: true, StandAlone: true, Parent: Power})
 	importPower      = base.AppendPower(&base.PowerAction{Action: "import", Text: "ES导入", ShouldLogin: true, StandAlone: true, Parent: Power})
 	exportPower      = base.AppendPower(&base.PowerAction{Action: "export", Text: "ES导出", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskListPower    = base.AppendPower(&base.PowerAction{Action: "taskList", Text: "ES任务列表", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -58,6 +59,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: updateDataPower, Do: this_.updateData})
 	apis = append(apis, &base.ApiWorker{Power: deleteDataPower, Do: this_.deleteData})
 	apis = append(apis, &base.ApiWorker{Power: reindexPower, Do: this_.reindex})
+	apis = append(apis, &base.ApiWorker{Power: indexAliasPower, Do: this_.indexAlias})
 	apis = append(apis, &base.ApiWorker{Power: importPower, Do: this_._import})
 	apis = append(apis, &base.ApiWorker{Power: exportPower, Do: this_.export})
 	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
@@ -131,6 +133,7 @@ type BaseRequest struct {
 	Doc             interface{}            `json:"doc"`
 	SourceIndexName string                 `json:"sourceIndexName"`
 	DestIndexName   string                 `json:"destIndexName"`
+	AliasName       string                 `json:"aliasName"`
 	WhereList       []*elasticsearch.Where `json:"whereList"`
 	OrderList       []*elasticsearch.Order `json:"orderList"`
 	TaskId          string                 `json:"taskId"`
@@ -398,6 +401,27 @@ func (this_ *api) reindex(requestBean *base.RequestBean, c *gin.Context) (res in
 	}
 
 	res, err = service.Reindex(request.SourceIndexName, request.DestIndexName)
+	if err != nil {
+		return
+	}
+	return
+}
+func (this_ *api) indexAlias(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.IndexAlias(request.IndexName, request.DestIndexName)
 	if err != nil {
 		return
 	}
