@@ -152,9 +152,19 @@ func GetNowTime() int64 {
 	return GetTimeTime(time.Now())
 }
 
+// GetNowTimeSecond 获取当前时间戳 秒
+func GetNowTimeSecond() int64 {
+	return GetTimeSecond(time.Now())
+}
+
 // GetTimeTime 获取当前时间戳
 func GetTimeTime(time time.Time) int64 {
 	return time.UnixNano() / 1e6
+}
+
+// GetTimeSecond 获取当前时间秒
+func GetTimeSecond(time time.Time) int64 {
+	return time.Unix()
 }
 
 // Now 获取当前时间

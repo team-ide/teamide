@@ -336,19 +336,19 @@ const newWorker = function (workerOption) {
                 tool.error(res.msg);
                 return false;
             } else {
-                let files = res.data || [];
-                files.forEach(one => {
-                    if (!this.pathIsSubfile(one.path)) {
-                        return
-                    }
-                    this.formatFile(one);
-                    let index = this.getFileIndex(one.path);
-                    if (index >= 0) {
-                        this.fileList.splice(index, 1, one)
-                    } else {
-                        this.fileList.push(one)
-                    }
-                })
+                // let files = res.data || [];
+                // files.forEach(one => {
+                //     if (!this.pathIsSubfile(one.path)) {
+                //         return
+                //     }
+                //     this.formatFile(one);
+                //     let index = this.getFileIndex(one.path);
+                //     if (index >= 0) {
+                //         this.fileList.splice(index, 1, one)
+                //     } else {
+                //         this.fileList.push(one)
+                //     }
+                // })
                 return true;
             }
         },

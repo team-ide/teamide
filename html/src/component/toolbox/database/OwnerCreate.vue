@@ -110,8 +110,7 @@ export default {
     },
     async toLoad() {
       this.showSQL = "";
-      let res = await this.loadSqls();
-      let sqlList = res.sqlList || [];
+      let sqlList = await this.loadSqls();
       sqlList.forEach((sql) => {
         this.showSQL += sql + ";\n\n";
       });
@@ -125,7 +124,7 @@ export default {
         this.error = res.msg;
         return;
       }
-      return res.data || {};
+      return res.data || [];
     },
     init() {},
   },

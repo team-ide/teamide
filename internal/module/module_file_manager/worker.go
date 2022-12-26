@@ -312,8 +312,9 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 		if len(fullPath) > 0 {
 			path = dir + fullPath
 		}
-		var false_ = false
-		var callStop *bool = &false_
+		var callStop = new(bool)
+		*callStop = false
+
 		var openF multipart.File
 		progress := newProgress(param, "upload", func() {
 			if openF != nil {
@@ -336,7 +337,7 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 
 		if exist {
 			var action string
-			action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
+			action, err = progress.waitAction("文件["+one.Filename+"]已存在，是否覆盖？",
 				[]*Action{
 					newAction("是", "yes", "color-green"),
 					newAction("否", "no", "color-orange"),

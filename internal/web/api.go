@@ -6,9 +6,9 @@ import (
 	"regexp"
 )
 
-func (this_ *Server) bindApi(gouterGroup *gin.RouterGroup) (err error) {
+func (this_ *Server) bindApi(routerGroup *gin.RouterGroup) (err error) {
 
-	gouterGroup.POST("*path", func(c *gin.Context) {
+	routerGroup.POST("*path", func(c *gin.Context) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")

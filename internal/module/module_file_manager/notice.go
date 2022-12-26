@@ -1,6 +1,8 @@
 package module_file_manager
 
 import (
+	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/internal/context"
@@ -42,8 +44,9 @@ func newAction(text, value, color string) *Action {
 func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Action) (action string, err error) {
 
 	defer func() {
-		if err := recover(); err != nil {
-			util.Logger.Error("waitAction error", zap.Any("error", err))
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("waitAction error", zap.Any("error", e))
 		}
 	}()
 
@@ -53,22 +56,47 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 	this_.WaitActionList = waitActionList
 	context.CallClientTabKeyEvent(this_.ClientTabKey, context.NewListenEvent("file-work-progress", this_))
 
+	var isEnd bool
+	var startTime = time.Now()
+	go func() {
+		for {
+			if isEnd || this_.IsEnd {
+				break
+			}
+			time.Sleep(1 * time.Second)
+			if isEnd || this_.IsEnd {
+				break
+			}
+			var nowTime = time.Now()
+			// 10 分钟超时
+			waitTime := util.GetTimeTime(nowTime) - util.GetTimeTime(startTime)
+			if waitTime >= int64(10*60*1000) {
+				err = errors.New("等待动作超时，等待时间[" + fmt.Sprint(waitTime/1000) + "]秒")
+				this_.waitActionChan <- ""
+				break
+			}
+		}
+	}()
+
 	action = <-this_.waitActionChan
+	isEnd = true
+
+	context.CallClientTabKeyEvent(this_.ClientTabKey, context.NewListenEvent("file-work-progress", this_))
 
 	this_.closeCallAction()
 	return
 }
 
 func (this_ *Progress) closeCallAction() {
-	this_.WaitActionIng = false
-	if this_.waitActionChan != nil {
+	if this_.WaitActionIng {
+		this_.WaitActionIng = false
 		close(this_.waitActionChan)
 		this_.waitActionChan = nil
 	}
 }
 
 func (this_ *Progress) callAction(action string) {
-	if this_.waitActionChan != nil {
+	if this_.WaitActionIng {
 		this_.waitActionChan <- action
 	}
 }
@@ -91,6 +119,7 @@ var (
 func getProgress(progressId string) (progress *Progress) {
 	progressCacheLock.Lock()
 	defer progressCacheLock.Unlock()
+
 	progress = progressCache[progressId]
 	return
 }
@@ -98,6 +127,7 @@ func getProgress(progressId string) (progress *Progress) {
 func getProgressList(workerId string) (progressList []*Progress) {
 	progressCacheLock.Lock()
 	defer progressCacheLock.Unlock()
+
 	for _, one := range progressCache {
 		if one.WorkerId == workerId {
 			progressList = append(progressList, one)

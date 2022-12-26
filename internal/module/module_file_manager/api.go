@@ -263,18 +263,21 @@ func (this_ *api) upload(r *base.RequestBean, c *gin.Context) (res interface{}, 
 	}
 	placeId := c.PostForm("placeId")
 	fullPath := c.PostForm("fullPath")
+
 	mF, err := c.MultipartForm()
 	if err != nil {
 		return
 	}
 	fileList := mF.File["file"]
+	go func() {
+		res, err = this_.Upload(&BaseParam{
+			Place:        place,
+			PlaceId:      placeId,
+			WorkerId:     workerId,
+			ClientTabKey: r.ClientTabKey,
+		}, fileWorkerKey, dir, fullPath, fileList)
+	}()
 
-	res, err = this_.Upload(&BaseParam{
-		Place:        place,
-		PlaceId:      placeId,
-		WorkerId:     workerId,
-		ClientTabKey: r.ClientTabKey,
-	}, fileWorkerKey, dir, fullPath, fileList)
 	return
 }
 

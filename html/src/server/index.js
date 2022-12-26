@@ -85,7 +85,6 @@ const listenStart = async (errorCount) => {
     listenStartInt = true
     var isError = false
     var isDataError = false
-    var startTime = new Date().getTime()
     try {
         let res = await server.listen({})
         if (res.code != 0) {
@@ -110,18 +109,8 @@ const listenStart = async (errorCount) => {
             listenStart(errorCount)
         }, errorCount * 1000 * 5)
     } else {
-        var endTime = new Date().getTime()
-        var useTime = endTime - startTime
-        var timout = 1000 - (useTime)
-        if (timout > 0) {
-            window.setTimeout(() => {
-                listenStartInt = false
-                listenStart()
-            }, timout)
-        } else {
-            listenStartInt = false
-            listenStart()
-        }
+        listenStartInt = false
+        listenStart()
     }
 }
 server.listenStart = listenStart;

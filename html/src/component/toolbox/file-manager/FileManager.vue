@@ -394,6 +394,9 @@ export default {
       }
     },
     uploadEntryFile(putDir, entry) {
+      if (entry == null) {
+        return;
+      }
       if (entry.isFile) {
         entry.file(
           (file) => {

@@ -168,6 +168,10 @@ func (this_ *Api) getRequestBean(c *gin.Context) (request *base.RequestBean) {
 }
 
 func (this_ *Api) DoApi(path string, c *gin.Context) bool {
+	//fmt.Println("do api start path:", path)
+	//defer func() {
+	//	fmt.Println("do api end path:", path)
+	//}()
 
 	index := strings.LastIndex(path, "api/")
 	if index < 0 {

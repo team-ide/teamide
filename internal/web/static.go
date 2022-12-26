@@ -13,8 +13,8 @@ import (
 	"teamide/pkg/util"
 )
 
-func (this_ *Server) bindGet(gouterGroup *gin.RouterGroup) {
-	gouterGroup.GET("*path", func(c *gin.Context) {
+func (this_ *Server) bindGet(routerGroup *gin.RouterGroup) {
+	routerGroup.GET("*path", func(c *gin.Context) {
 		re, _ := regexp.Compile("/+")
 		path := c.Params.ByName("path")
 		path = re.ReplaceAllLiteralString(path, "/")

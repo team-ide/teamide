@@ -77,7 +77,7 @@ func ChangeListenerUserId(listener *ClientTabListener, userId int64) {
 		listenerCacheForUserId[userId] = newList
 	}
 
-	listener.AddEvent(&ListenEvent{})
+	go listener.AddEvent(&ListenEvent{})
 }
 
 func ChangeListenerClientKey(listener *ClientTabListener, clientKey string) {
@@ -114,7 +114,7 @@ func ChangeListenerClientKey(listener *ClientTabListener, clientKey string) {
 		}
 		listenerCacheForClientKey[listener.ClientKey] = newList
 	}
-	listener.AddEvent(&ListenEvent{})
+	go listener.AddEvent(&ListenEvent{})
 }
 
 func AddListener(listener *ClientTabListener) {
@@ -185,7 +185,7 @@ func RemoveListener(listener *ClientTabListener) {
 	listenerCacheLock.Lock()
 	defer listenerCacheLock.Unlock()
 
-	listener.AddEvent(&ListenEvent{})
+	go listener.AddEvent(&ListenEvent{})
 
 	var newList []*ClientTabListener
 	list := listenerCache
@@ -257,20 +257,29 @@ func listenerInit() {
 }
 
 func checkListener() {
+	startTimeSecond := util.GetNowTimeSecond()
 
 	defer func() {
-		time.Sleep(time.Second * 60)
+		endTimeSecond := util.GetNowTimeSecond()
+		useSecond := endTimeSecond - startTimeSecond
+		waitSecond := 60 - useSecond
+		if waitSecond > 0 {
+			time.Sleep(time.Second * time.Duration(waitSecond))
+		}
 		checkListener()
 	}()
 
 	list := GetListeners()
 	for _, one := range list {
-		nowTime := util.GetNowTime()
+		nowTimeSecond := util.GetNowTimeSecond()
 
 		// 最后监听时间 在此 之前的 都为超时
-		outTime := nowTime - int64(listenerLastListenTimeout)
-		lastListenTime := util.GetTimeTime(one.lastListenTime)
-		if lastListenTime > outTime {
+		outTimeSecond := nowTimeSecond - int64(listenerLastListenTimeoutSecond)
+		lastListenTimeSecond := util.GetTimeSecond(one.lastListenTime)
+		if lastListenTimeSecond > outTimeSecond {
+			if one.listenIng {
+				go one.AddEvent(&ListenEvent{})
+			}
 			continue
 		}
 		RemoveListener(one)
@@ -296,19 +305,16 @@ func NewClientTabListener(clientKey string, clientTabKey string, userId int64) (
 		ClientTabKey: clientTabKey,
 		ClientKey:    clientKey,
 		UserId:       userId,
-		events:       make(chan *ListenEvent),
-		lock:         &sync.Mutex{},
+		events:       make(chan *ListenEvent, 100),
+		listenLock:   &sync.Mutex{},
+		eventsLock:   &sync.Mutex{},
 	}
-	listener.ListenTimeout = defaultListenTimeout
 	listener.lastListenTime = time.Now()
 	return
 }
 
-// 客户端 监听 数据 默认超时时间 10 分钟
-var defaultListenTimeout = 10 * 60 * time.Second
-
 // 监听程序 最后监听时间 超时时间 超过这个时间 未监听 则移除监听器
-var listenerLastListenTimeout = 5 * 60 * time.Second
+var listenerLastListenTimeoutSecond = 10 * 60
 
 type ClientTabListener struct {
 	ClientKey      string `json:"clientKey"`
@@ -316,46 +322,38 @@ type ClientTabListener struct {
 	UserId         int64  `json:"userId"`
 	lastListenTime time.Time
 	events         chan *ListenEvent
-	lock           sync.Locker
-	ListenTimeout  time.Duration `json:"listenTimeout"`
+	listenLock     sync.Locker
+	eventsLock     sync.Locker
 	listenIng      bool
 }
 
 func (this_ *ClientTabListener) AddEvent(event *ListenEvent) {
+	if event == nil {
+		return
+	}
+	this_.eventsLock.Lock()
+	defer this_.eventsLock.Unlock()
+
 	this_.events <- event
 }
 
-func (this_ *ClientTabListener) Listen() []*ListenEvent {
-	this_.lock.Lock()
-	defer this_.lock.Unlock()
+func (this_ *ClientTabListener) Listen() (events []*ListenEvent) {
+	this_.listenLock.Lock()
+	defer this_.listenLock.Unlock()
+	//fmt.Println("Listen start")
+
 	this_.listenIng = true
 	this_.lastListenTime = time.Now()
 	defer func() {
+		//fmt.Println("Listen end")
 		this_.listenIng = false
 		this_.lastListenTime = time.Now()
 	}()
-	var timeout = this_.ListenTimeout
-	if timeout <= 0 {
-		timeout = defaultListenTimeout
+
+	event := <-this_.events
+	if event != nil && event.Event != "" {
+		events = append(events, event)
 	}
 
-	var events []*ListenEvent
-	quit := make(chan bool)
-	//新开一个协程
-	go func() {
-		for {
-			select {
-			case event := <-this_.events: //如果有数据，下面打印。但是有可能ch一直没数据
-				events = append(events, event)
-				quit <- true //写入
-				break
-			case <-time.After(timeout): //上面的ch如果一直没数据会阻塞，那么select也会检测其他case条件，检测到后 x 秒后超时
-				quit <- true //写入
-				break
-			}
-		}
-	}()
-	<-quit //这里暂时阻塞，直到可读
-
-	return events
+	return
 }
