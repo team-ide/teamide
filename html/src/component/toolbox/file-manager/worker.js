@@ -352,6 +352,21 @@ const newWorker = function (workerOption) {
                 return true;
             }
         },
+        onUploadFileInfo(fileInfo) {
+            if (fileInfo == null) {
+                return
+            }
+            if (!this.pathIsSubfile(fileInfo.path)) {
+                return
+            }
+            this.formatFile(fileInfo);
+            let index = this.getFileIndex(fileInfo.path);
+            if (index >= 0) {
+                this.fileList.splice(index, 1, fileInfo)
+            } else {
+                this.fileList.push(fileInfo)
+            }
+        },
         async download(path) {
             let url = source.api + "fileManager/download?";
             url += "workerId=" + (this.workerId || "");

@@ -150,6 +150,9 @@ export default {
   },
   methods: {
     init() {
+      this.toolboxWorker.onUploadFileInfo = (arg) => {
+        this.fileWorker.onUploadFileInfo(arg);
+      };
       this.fileWorker.refresh();
     },
     onFocus() {

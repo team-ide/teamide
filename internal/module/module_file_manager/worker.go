@@ -291,7 +291,7 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 	return
 }
 
-func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, fullPath string, fileList []*multipart.FileHeader) (fileInfoList []*filework.FileInfo, err error) {
+func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, fullPath string, fileList []*multipart.FileHeader) (err error) {
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -306,7 +306,7 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 		fullPath = fullPath[1:]
 	}
 
-	upload := func(one *multipart.FileHeader) (fileInfo *filework.FileInfo, err error) {
+	upload := func(one *multipart.FileHeader) (err error) {
 
 		path := dir + one.Filename
 		if len(fullPath) > 0 {
@@ -354,6 +354,11 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 			return
 		}
 
+		pathDir := path[0:strings.LastIndex(path, "/")]
+
+		var pathDirExist bool
+		pathDirExist, _ = service.Exist(pathDir)
+
 		err = service.Write(path, openF, func(readSize int64, writeSize int64) {
 			progress.Data["successSize"] = writeSize
 		}, callStop)
@@ -361,18 +366,17 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 			return
 		}
 
-		fileInfo, err = service.File(path)
+		progress.Data["fileInfo"], err = service.File(path)
+		if !pathDirExist {
+			progress.Data["fileDir"], _ = service.File(pathDir)
+		}
 		return
 	}
 
 	for _, one := range fileList {
-		var fileInfo *filework.FileInfo
-		fileInfo, err = upload(one)
+		err = upload(one)
 		if err != nil {
 			return
-		}
-		if fileInfo != nil {
-			fileInfoList = append(fileInfoList, fileInfo)
 		}
 	}
 

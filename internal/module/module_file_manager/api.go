@@ -270,7 +270,7 @@ func (this_ *api) upload(r *base.RequestBean, c *gin.Context) (res interface{}, 
 	}
 	fileList := mF.File["file"]
 	go func() {
-		res, err = this_.Upload(&BaseParam{
+		err = this_.Upload(&BaseParam{
 			Place:        place,
 			PlaceId:      placeId,
 			WorkerId:     workerId,

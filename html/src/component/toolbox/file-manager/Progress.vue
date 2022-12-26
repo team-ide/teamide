@@ -261,6 +261,19 @@ export default {
         }
       }
 
+      if (progress.isEnd && progress.work == "upload") {
+        if (progress.data) {
+          if (progress.data.fileInfo) {
+            this.toolboxWorker.onUploadFileInfo &&
+              this.toolboxWorker.onUploadFileInfo(progress.data.fileInfo);
+          }
+          if (progress.data.fileDir) {
+            this.toolboxWorker.onUploadFileInfo &&
+              this.toolboxWorker.onUploadFileInfo(progress.data.fileDir);
+          }
+        }
+      }
+
       let find = this.getProgress(progress.progressId);
       if (find) {
         Object.assign(find, progress);
