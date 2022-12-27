@@ -413,6 +413,11 @@ tool.clipboardWrite = async function (text) {
                     success: true,
                 })
             }).catch(e => {
+                if (tool.copyByEditor) {
+                    let res = tool.copyByEditor(text)
+                    resolve(res)
+                    return
+                }
                 // tool.warn('复制失败，请允许访问剪贴板！')
                 resolve({ success: false })
             })
@@ -462,6 +467,19 @@ tool.readClipboardText = function () {
                     text: text,
                 })
             }).catch(e => {
+                if (tool.showText) {
+                    tool.showText("", {
+                        title: "请粘贴文案",
+                        saveText: "确认",
+                        onSave(res) {
+                            resolve({ success: true, text: res.text })
+                        },
+                        onCancel() {
+                            resolve({ success: false, })
+                        }
+                    })
+                    return
+                }
                 // tool.jQuery(span).remove()
                 // tool.warn('读取失败，请允许访问剪贴板！')
                 resolve({ success: false })
