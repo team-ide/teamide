@@ -72,6 +72,17 @@
               >
               </el-input>
             </template>
+            <template v-else-if="field.type == 'datetime'">
+              <el-date-picker
+                v-model="formData[field.name]"
+                type="datetime"
+                placeholder="选择日期时间"
+                @input="valueChange(field)"
+                @change="valueChange(field)"
+                style="width: 100%"
+              >
+              </el-date-picker>
+            </template>
             <template v-else-if="field.type == 'json'">
               <el-input
                 type="textarea"

@@ -10,6 +10,13 @@
   >
     <div class="workspace-header">
       <div class="workspace-header-nav-box">
+        <!-- 
+        <div class="workspace-header-title">
+          <a class="tm-link color-white" href="https://github.com/team-ide" target="_blank">
+            Team · IDE
+          </a>
+        </div> 
+        -->
         <div
           v-if="source.hasPower('toolbox')"
           class="workspace-header-nav"
@@ -605,6 +612,12 @@ export default {
   display: flex;
   white-space: nowrap;
   padding: 0px 0px;
+}
+.workspace-header-title {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0px 10px;
+  cursor: pointer;
 }
 .workspace-header-nav {
   height: 100%;

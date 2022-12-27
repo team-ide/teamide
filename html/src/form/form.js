@@ -121,6 +121,56 @@ let toolbox = {
             ],
         },
     ],
+    share: {
+        fields: [
+            {
+                label: "分享对象",
+                name: "targetUserId",
+                type: "select",
+                options: [
+                    { text: "任意用户", value: "0" },
+                ],
+                defaultValue: "0",
+            },
+            {
+                label: "权限",
+                name: "power",
+                type: "select",
+                options: [
+                    { text: "只读", value: "1" },
+                    { text: "所有操作", value: "2" },
+                ],
+                defaultValue: "1",
+                rules: [
+                    {
+                        required: true,
+                        message: `权限不能为空!`
+                    },
+
+                ],
+            },
+            {
+                label: "说明",
+                name: "comment",
+                rules: [
+                ],
+            },
+            {
+                label: "开始时间（可不填写）",
+                name: "endTime",
+                type: "datetime",
+                rules: [
+                ],
+            },
+            {
+                label: "结束时间（可不填写）",
+                name: "endTime",
+                type: "datetime",
+                rules: [
+                ],
+            },
+        ],
+    },
     group: {
         fields: [
             {

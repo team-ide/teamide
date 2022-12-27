@@ -164,6 +164,12 @@
       :onSave="doUpdate"
     ></FormDialog>
     <FormDialog
+      ref="ShareToolbox"
+      :source="source"
+      title="分享Toolbox"
+      :onSave="doShare"
+    ></FormDialog>
+    <FormDialog
       ref="InsertToolboxGroup"
       :source="source"
       title="新增工具分组"
@@ -432,6 +438,12 @@ export default {
             this.toCopy(toolboxType, toolboxData);
           },
         });
+        // menus.push({
+        //   text: "分享工具",
+        //   onClick: () => {
+        //     this.toShare(toolboxType, toolboxData);
+        //   },
+        // });
         menus.push({
           text: "复制到剪切板",
           onClick: () => {
@@ -563,7 +575,6 @@ export default {
     },
     toUpdate(toolboxType, toolboxData) {
       this.tool.stopEvent();
-      this.updateData = toolboxData;
 
       let optionsJSON = this.tool.getOptionJSON(toolboxData.option);
 
@@ -572,7 +583,37 @@ export default {
         form: [this.form.toolbox, toolboxType.configForm],
         data: [toolboxData, optionsJSON],
         toolboxType,
+        toolboxData,
       });
+    },
+    toShare(toolboxType, toolboxData) {
+      this.tool.stopEvent();
+
+      this.$refs.ShareToolbox.show({
+        title: `分享[${toolboxType.text}][${toolboxData.name}]工具`,
+        form: [this.form.toolbox.share],
+        data: [{}],
+        toolboxType,
+        toolboxData,
+      });
+    },
+    async doShare(dataList, config) {
+      let data = dataList[0];
+      data.toolboxId = config.toolboxData.toolboxId;
+      let res = await this.server.toolbox.share(data);
+      if (res.code == 0) {
+        res.data = res.data || {};
+        let clipboardWriteRes = await this.tool.clipboardWrite(res.data.url);
+        if (clipboardWriteRes.success) {
+          this.tool.success("分享成功，连接已复制到剪切板！");
+        } else {
+          this.tool.alert("分享失败，请允许访问剪贴板！");
+        }
+        return true;
+      } else {
+        this.tool.error(res.msg);
+        return false;
+      }
     },
     toDelete(toolboxType, toolboxData) {
       this.tool.stopEvent();
@@ -605,7 +646,7 @@ export default {
       let optionJSON = dataList[1];
       let toolboxType = config.toolboxType;
       toolboxData.toolboxType = toolboxType.name;
-      toolboxData.toolboxId = this.updateData.toolboxId;
+      toolboxData.toolboxId = config.toolboxData.toolboxId;
       toolboxData.option = JSON.stringify(optionJSON);
       let res = await this.server.toolbox.update(toolboxData);
       if (res.code == 0) {
