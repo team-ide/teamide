@@ -18,11 +18,3 @@ type PreferencesModel struct {
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 }
-
-func (entity *PreferencesModel) GetTableName() string {
-	return TablePreferences
-}
-
-func (entity *PreferencesModel) GetPKColumnName() string {
-	return ""
-}

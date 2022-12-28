@@ -40,14 +40,6 @@ type ToolboxModel struct {
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
 }
 
-func (entity *ToolboxModel) GetTableName() string {
-	return TableToolbox
-}
-
-func (entity *ToolboxModel) GetPKColumnName() string {
-	return ""
-}
-
 // ToolboxOpenModel 工具箱打开模型，和工具箱打开表对应
 type ToolboxOpenModel struct {
 	OpenId         int64     `json:"openId,omitempty"`
@@ -63,14 +55,6 @@ type ToolboxOpenModel struct {
 	OpenTime       time.Time `json:"openTime,omitempty"`
 }
 
-func (entity *ToolboxOpenModel) GetTableName() string {
-	return TableToolboxOpen
-}
-
-func (entity *ToolboxOpenModel) GetPKColumnName() string {
-	return ""
-}
-
 // ToolboxOpenTabModel 工具箱打开模型，和工具箱打开表对应
 type ToolboxOpenTabModel struct {
 	TabId      int64     `json:"tabId,omitempty"`
@@ -81,14 +65,6 @@ type ToolboxOpenTabModel struct {
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 	OpenTime   time.Time `json:"openTime,omitempty"`
-}
-
-func (entity *ToolboxOpenTabModel) GetTableName() string {
-	return TableToolboxOpenTab
-}
-
-func (entity *ToolboxOpenTabModel) GetPKColumnName() string {
-	return ""
 }
 
 // ToolboxGroupModel 工具箱分组模型，和工具箱分组表对应
@@ -102,14 +78,6 @@ type ToolboxGroupModel struct {
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 }
 
-func (entity *ToolboxGroupModel) GetTableName() string {
-	return TableToolboxGroup
-}
-
-func (entity *ToolboxGroupModel) GetPKColumnName() string {
-	return ""
-}
-
 // ToolboxQuickCommandModel 工具箱快速命令
 type ToolboxQuickCommandModel struct {
 	QuickCommandId   int64     `json:"quickCommandId,omitempty"`
@@ -120,12 +88,4 @@ type ToolboxQuickCommandModel struct {
 	UserId           int64     `json:"userId,omitempty"`
 	CreateTime       time.Time `json:"createTime,omitempty"`
 	UpdateTime       time.Time `json:"updateTime,omitempty"`
-}
-
-func (entity *ToolboxQuickCommandModel) GetTableName() string {
-	return TableToolboxQuickCommand
-}
-
-func (entity *ToolboxQuickCommandModel) GetPKColumnName() string {
-	return ""
 }

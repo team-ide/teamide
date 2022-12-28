@@ -64,14 +64,6 @@ func (entity *NodeModel) IsLocalNode() bool {
 	return entity.IsLocal == 1
 }
 
-func (entity *NodeModel) GetTableName() string {
-	return TableNode
-}
-
-func (entity *NodeModel) GetPKColumnName() string {
-	return ""
-}
-
 // NetProxyModel 节点网络代理
 type NetProxyModel struct {
 	NetProxyId    int64     `json:"netProxyId,omitempty"`
@@ -100,12 +92,4 @@ type NetProxyModel struct {
 	OuterIsStarted        bool     `json:"outerIsStarted"`
 	LineNodeIdList        []string `json:"lineNodeIdList,omitempty"`
 	ReverseLineNodeIdList []string `json:"reverseLineNodeIdList,omitempty"`
-}
-
-func (entity *NetProxyModel) GetTableName() string {
-	return TableNodeNetProxy
-}
-
-func (entity *NetProxyModel) GetPKColumnName() string {
-	return ""
 }
