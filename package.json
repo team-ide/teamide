@@ -1,3 +1,5 @@
 {
-  "version": "1.9.3"
+  "name": "teamide",
+  "version": "1.9.3",
+  "main": "./dist/main/main.js"
 }

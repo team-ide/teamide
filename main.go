@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -112,44 +111,6 @@ func main() {
 				serverContext.Logger.Error("启动失败", zap.Any("error", e))
 			}
 			waitGroupForStop.Done()
-		}
-	}()
-
-	// 开启 cpu 采集分析：
-	if isServerDev {
-		var f *os.File
-		//-cpu-profile=cpu.pprof -mem-profile=mem.pprof
-		f, err = os.Create("cpu.pprof")
-		if err != nil {
-			util.Logger.Error("could not create CPU profile", zap.Error(err))
-			return
-		}
-		defer func() { _ = f.Close() }()
-
-		util.Logger.Info("CPU profile create success")
-		if err = pprof.StartCPUProfile(f); err != nil {
-			util.Logger.Error("could not start CPU profile", zap.Error(err))
-		}
-		defer pprof.StopCPUProfile()
-	}
-
-	defer func() {
-
-		if isServerDev {
-			var f *os.File
-			f, err = os.Create("mem.pprof")
-			if err != nil {
-				util.Logger.Error("could not create memory profile", zap.Error(err))
-				return
-			}
-			defer func() { _ = f.Close() }()
-			util.Logger.Info("memory profile create success")
-
-			runtime.GC()
-
-			if err = pprof.WriteHeapProfile(f); err != nil {
-				util.Logger.Error("could not write memory profile", zap.Error(err))
-			}
 		}
 	}()
 
