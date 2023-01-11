@@ -4,7 +4,7 @@ on:
     # tags: # 当我们提交代码为tag 是以'v'开头的时候才会触发自动部署到服务端 如 git push tag v0.1.0
     #   - 'v*'
     branches:
-      - main-
+      - main
     #   - dev
     # package.json 更改后再触发发布
     # paths: [ "package.json" ]
@@ -16,16 +16,54 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: package.json
+          property: version
+
+      - id: release_check
+        run: |
+          echo "::set-output name=RELEASE_STATUS::$(curl -I -m 10 -o /dev/null -s -w %{http_code} https://github.com/team-ide/teamide/releases/tag/v${{ steps.release_version.outputs.value }})"
+
+      # 读取发布说明
+      - name: Read Release Description
+        id: release_body
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: RELEASE.md
+
+      # 发布
+      - name: Create Release
+        id: create_release
+        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{steps.release_version.outputs.value}}
+          release_name: ${{steps.release_version.outputs.value}}
+          body: ${{steps.release_body.outputs.content}}
+          draft: true # 是否是草稿
+          prerelease: false # 是否是预发布
+
       # 准备 electron-template
       - run: |
           chmod +x ./desktop/install-electron-template.sh
           ./desktop/install-electron-template.sh
+          mkdir -p electron-template/assets/server/lib
+          echo '依赖DLL、so库等' > electron-template/assets/server/lib/README.md
 
       # 打包构建 html
       - name: Install Node and NPM
         uses: actions/setup-node@v1
         with:
           node-version: 16
+
       # npm install
       - run: |
           cd html 
@@ -50,17 +88,20 @@ jobs:
           mkdir release/teamide-server-linux-x64/conf
           cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
+      - name: Build Server
+        uses: actions/setup-go@v2
+        with:
+          go-version: "^1.19"
+      # 将静态资源打包html.go
+      - run: |
+          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+          mv teamide/internal/static/html.go release/html.go
+
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
           name: release
           path: release
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: html
-          path: html/dist
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -85,8 +126,8 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: electron-template
+          path: electron-template
 
       # 读取发布版本
       - name: Read Release Version
@@ -104,9 +145,8 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-darwin-x64 .
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
+          mv release/html.go teamide/internal/static/html.go
+          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -117,20 +157,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          chmod +x electron/teamide-darwin-x64
-          cd electron
+          cd electron-template
+          chmod +x assets/server/server
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --mac
-      - run: |
-          mv electron/release/build/TeamIDE-mac-1.0.0.dmg release/TeamIDE-mac.dmg
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
+          npm exec electron-builder -- --mac -p always
 
   buildLinux:
     needs: buildStatic
@@ -150,8 +182,8 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: electron-template
+          path: electron-template
 
       # 读取发布版本
       - name: Read Release Version
@@ -169,8 +201,8 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-linux-x64 .
+          mv release/html.go teamide/internal/static/html.go
+          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       - run: |
@@ -213,16 +245,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp -rf lib/shentong/linux64/libaci.so electron/lib/libaci.so
+          cp -rf lib/shentong/linux64/libaci.so ./electron-template/assets/server/lib/libaci.so
           
-          chmod +x electron/teamide-linux-x64
-          cd electron
+          cd electron-template
+          chmod +x assets/server/server
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --linux
-      - run: |
-          mv electron/release/build/TeamIDE-linux-x64-1.0.0.AppImage release/TeamIDE-linux-x64.AppImage
+          npm exec electron-builder -- --linux -p always
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -247,8 +277,8 @@ jobs:
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
-          name: html
-          path: html/dist
+          name: electron-template
+          path: electron-template
 
       # 读取发布版本
       - name: Read Release Version
@@ -267,10 +297,8 @@ jobs:
       # 将静态资源打包html.go
       # -H=windowsgui
       - run: |
-          go mod tidy
-          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-windows-x64.exe .
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-windows-x64/teamide-node.exe teamide/pkg/node/main
+          mv release/html.go teamide/internal/static/html.go
+          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -283,22 +311,14 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          move lib/shentong/win64/aci.dll electron/lib/aci.dll
-          move lib/shentong/win64/aci.lib electron/lib/aci.lib
+          move lib/shentong/win64/aci.dll electron-template/assets/server/lib/aci.dll
+          move lib/shentong/win64/aci.lib electron-template/assets/server/lib/aci.lib
 
-          cd electron
+          cd electron-template
           npm install
           npm run postinstall
           npm run build
-          npm exec electron-builder -- --win
-      - run: |
-          move electron/release/build/TeamIDE-windows-x64-1.0.0.exe release/TeamIDE-windows-x64.exe
-
-      # 上传共享资源
-      - uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: release
+          npm exec electron-builder -- --win -p always
 
   release:
     needs:
@@ -359,48 +379,7 @@ jobs:
         with:
           path: release/RELEASE.md
 
-      # 发布
-      - name: Create Release
-        id: create_release
-        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{steps.release_version.outputs.value}}
-          release_name: v${{steps.release_version.outputs.value}}
-          body: ${{steps.release_body.outputs.content}}
-          draft: false # 是否是草稿
-          prerelease: false # 是否是预发布
-
       # 上传 到 Release
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/TeamIDE-windows-x64.exe
-          asset_name: TeamIDE-windows-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
-          asset_content_type: application/zip
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/TeamIDE-mac.dmg
-          asset_name: TeamIDE-mac-${{steps.release_version.outputs.value}}.dmg # 上传后的文件名
-          asset_content_type: application/zip
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/TeamIDE-linux-x64.AppImage
-          asset_name: TeamIDE-linux-x64-${{steps.release_version.outputs.value}}.AppImage # 上传后的文件名
-          asset_content_type: application/zip
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
         env:
@@ -409,24 +388,6 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
           asset_path: release/teamide-linux-x64/teamide-node
           asset_name: teamide-node-linux-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
-          asset_content_type: application/zip
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/teamide-darwin-x64/teamide-node
-          asset_name: teamide-node-darwin-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
-          asset_content_type: application/zip
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: actions/upload-release-asset@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
-          asset_path: release/teamide-windows-x64/teamide-node.exe
-          asset_name: teamide-node-windows-x64-${{steps.release_version.outputs.value}}.exe # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         uses: actions/upload-release-asset@master
