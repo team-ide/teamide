@@ -5,7 +5,7 @@ EXPOSE 21080/tcp
 COPY release/teamide-server/teamide /opt/teamide/teamide
 COPY release/teamide-server/conf /opt/teamide/conf
 COPY release/teamide-server/lib /opt/teamide/lib
-COPY docker-entrypoint.sh /opt/teamide/docker-entrypoint.sh
+COPY docker/docker-entrypoint.sh /opt/teamide/docker-entrypoint.sh
 COPY docker/server.sh /opt/teamide/server.sh
 
 RUN chmod +x /opt/teamide/server.sh
