@@ -145,7 +145,7 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          mv release/html.go teamide/internal/static/html.go
+          mv release/html.go internal/static/html.go
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
 
       - name: Install Node and NPM
@@ -201,7 +201,7 @@ jobs:
 
       # 将静态资源打包html.go
       - run: |
-          mv release/html.go teamide/internal/static/html.go
+          mv release/html.go internal/static/html.go
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
@@ -297,7 +297,7 @@ jobs:
       # 将静态资源打包html.go
       # -H=windowsgui
       - run: |
-          mv release/html.go teamide/internal/static/html.go
+          mv release/html.go internal/static/html.go
           go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
 
       - name: Install Node and NPM
