@@ -28,7 +28,7 @@ echo 'config.ts info'
 cat $templateDir/src/main/config.ts
 
 # 设置 应用 变量
-productName='teamide'
+productName='TeamIDE'
 publisherName='ZhuLiang'
 publishProvider='github'
 publishOwner='team-ide'

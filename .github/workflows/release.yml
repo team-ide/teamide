@@ -88,6 +88,14 @@ jobs:
           mkdir release/teamide-server-linux-x64/conf
           cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
+      - run: |
+          echo '{"upload_url":""}' > release.json
+
+      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+        run: |
+          echo '${{ steps.create_release.outputs.upload_url }}'
+          echo '{"upload_url":"${{ steps.create_release.outputs.upload_url }}"}' > release.json
+
       - name: Build Server
         uses: actions/setup-go@v2
         with:
@@ -347,54 +355,33 @@ jobs:
           path: release
 
       # 读取发布版本
-      - name: Read Release Version
-        id: release_version
+      - name: Read Release Upload Url
+        id: release_upload_url
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: release/package.json
-          property: version
-
-      - id: release_check
-        run: |
-          echo "::set-output name=RELEASE_STATUS::$(curl -I -m 10 -o /dev/null -s -w %{http_code} https://github.com/team-ide/teamide/releases/tag/v${{ steps.release_version.outputs.value }})"
-
-      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-      #        run: cd release && zip -q -r teamide-linux-x64.zip teamide-linux-x64
-      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-      #        run: cd release && zip -q -r teamide-server-linux-x64.zip teamide-server-linux-x64
-      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-      #        run: cd release && zip -q -r teamide-darwin-x64.zip teamide-darwin-x64
-      #      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-      #        run: cd release && zip -q -r teamide-windows-x64.zip teamide-windows-x64
+          path: release/release.json
+          property: upload_url
 
       - run: |
           cd release
           zip -q -r teamide-server.zip teamide-server
 
-      # 读取发布说明
-      - name: Read Release Description
-        id: release_body
-        if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: release/RELEASE.md
-
       # 上传 到 Release
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      - if: ${{ steps.release_upload_url.outputs.upload_url != '' }}
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          upload_url: ${{ steps.release_upload_url.outputs.upload_url }} # 上传地址，通过创建Release获取到的
           asset_path: release/teamide-linux-x64/teamide-node
           asset_name: teamide-node-linux-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
-      - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
+      - if: ${{ steps.release_upload_url.outputs.upload_url != '' }}
         uses: actions/upload-release-asset@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # 上传地址，通过创建Release获取到的
+          upload_url: ${{ steps.release_upload_url.outputs.upload_url }} # 上传地址，通过创建Release获取到的
           asset_path: release/teamide-server.zip
           asset_name: teamide-server-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
