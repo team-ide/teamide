@@ -89,12 +89,12 @@ jobs:
           cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
       - run: |
-          echo '{"upload_url":""}' > release.json
+          echo '{"upload_url":""}' > release/release.json
 
       - if: ${{ steps.release_check.outputs.RELEASE_STATUS == 404 }}
         run: |
           echo '${{ steps.create_release.outputs.upload_url }}'
-          echo '{"upload_url":"${{ steps.create_release.outputs.upload_url }}"}' > release.json
+          echo '{"upload_url":"${{ steps.create_release.outputs.upload_url }}"}' > release/release.json
 
       - name: Build Server
         uses: actions/setup-go@v2
