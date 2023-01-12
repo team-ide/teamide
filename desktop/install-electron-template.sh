@@ -29,7 +29,8 @@ cat $templateDir/src/main/config.ts
 
 # 设置 应用 变量
 productName='TeamIDE'
-publisherName='ZhuLiang'
+appId='com.teamide.desktop'
+publisherName='TeamIDE'
 publishProvider='github'
 publishOwner='team-ide'
 publishRepo='teamide'
@@ -45,6 +46,9 @@ echo 'set publishRepo='$publishRepo
 # 设置 项目名称
 echo 'replace productName'
 sed -i 's/<productName>/'$productName'/g' $templateDir/package.json
+
+echo 'replace appId'
+sed -i 's/<appId>/'appId'/g' $templateDir/package.json
 
 # 设置 项目 发布者
 echo 'replace publisherName'
