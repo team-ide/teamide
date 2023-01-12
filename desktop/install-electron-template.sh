@@ -36,6 +36,7 @@ publishOwner='team-ide'
 publishRepo='teamide'
 
 echo 'set productName='$productName
+echo 'set appId='$appId
 echo 'set publisherName='$publisherName
 echo 'set publishProvider='$publishProvider
 echo 'set publishOwner='$publishOwner
