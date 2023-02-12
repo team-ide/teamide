@@ -125,6 +125,9 @@ func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
 	if config.Password != "" {
 		key += "-" + util.GetMd5String(key+config.Password)
 	}
+	if config.OdbcParams != "" {
+		key += "-" + util.GetMd5String(key+config.OdbcParams)
+	}
 	var service util.Service
 	service, err = util.GetService(key, func() (res util.Service, err error) {
 		var s *db.Service

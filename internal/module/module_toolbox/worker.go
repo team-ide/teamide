@@ -338,6 +338,7 @@ func databaseWorker() *ToolboxType {
 						{Required: true, Message: "OdbcName不能为空"},
 					},
 				},
+				{Label: "Odbc参数（key1=value1;key2=value2;）", Name: "odbcParams", VIf: `type == 'odbc'`},
 				{Label: "OdbcDialectName", Name: "odbcDialectName", Type: "select", VIf: `type == 'odbc'`,
 					Options: []*form.Option{
 						{Text: "默认", Value: ""},

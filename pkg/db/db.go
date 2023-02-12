@@ -167,6 +167,7 @@ type DatabaseConfig struct {
 	Password        string `json:"password,omitempty"`
 	OdbcName        string `json:"odbcName,omitempty"`
 	OdbcDialectName string `json:"odbcDialectName,omitempty"`
+	OdbcParams      string `json:"odbcParams,omitempty"`
 
 	Schema       string `json:"schema,omitempty"`
 	Sid          string `json:"sid,omitempty"`
