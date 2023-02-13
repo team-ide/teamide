@@ -132,7 +132,7 @@ func init() {
 		DialectName: db_postgresql.GetDialect(),
 		matches:     []string{"postgresql", "ps"},
 	})
-
+	initGBaseDatabase()
 	initOdbcDatabase()
 }
 

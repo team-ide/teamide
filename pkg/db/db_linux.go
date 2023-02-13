@@ -4,11 +4,28 @@ package db
 
 import (
 	"database/sql"
+	"github.com/team-ide/go-driver/db_gbase"
 	"github.com/team-ide/go-driver/db_odbc"
 	"github.com/team-ide/go-driver/db_oracle"
 	"github.com/team-ide/go-driver/db_shentong"
 	"strings"
 )
+
+func initGBaseDatabase() {
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_gbase.GetDSN(config.OdbcName, config.Username, config.Password, config.Database)
+			if !strings.HasSuffix(dsn, ";") {
+				dsn += ";"
+			}
+			dsn += config.OdbcParams
+			db, err = db_gbase.Open(dsn)
+			return
+		},
+		DialectName: db_gbase.GetDialect(),
+		matches:     []string{"gbase"},
+	})
+}
 
 func initOdbcDatabase() {
 	addDatabaseType(&DatabaseType{

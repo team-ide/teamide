@@ -32,6 +32,9 @@ func newWorkDb(databaseType *DatabaseType, config DatabaseConfig, username strin
 	case "mysql":
 		config.Database = ownerName
 		break
+	case "gbase":
+		config.Database = ownerName
+		break
 	default:
 		config.Schema = ownerName
 		break
@@ -78,6 +81,13 @@ func (this_ *executeTask) run(sqlContent string) (executeList []map[string]inter
 				return
 			}
 			break
+		case "gbase":
+			_, _ = conn.QueryContext(cxt, "database "+this_.ownerName)
+			//if err != nil {
+			//	util.Logger.Error("QueryContext GBase change database error", zap.Error(err))
+			//	return
+			//}
+			break
 		}
 	}
 	var hasError bool
@@ -93,6 +103,9 @@ func (this_ *executeTask) run(sqlContent string) (executeList []map[string]inter
 				err = tx.Rollback()
 			} else {
 				err = tx.Commit()
+				if err != nil && strings.Contains(err.Error(), "Not in transaction") {
+					err = nil
+				}
 			}
 		}()
 		query = tx.Query

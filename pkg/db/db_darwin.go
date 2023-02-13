@@ -31,6 +31,18 @@ func initOracleDatabase() {
 	})
 }
 
+func initGBaseDatabase() {
+
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			err = errors.New("darwin can not support [GBase] database.")
+			return
+		},
+		DialectName: "gbase",
+		matches:     []string{"gbase"},
+	})
+}
+
 func initOdbcDatabase() {
 
 	addDatabaseType(&DatabaseType{

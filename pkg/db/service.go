@@ -98,8 +98,8 @@ func (this_ *Service) OwnerDataTrim(param *Param, ownerName string) (err error) 
 		return
 	}
 	for _, table := range tables {
-		sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerNamePack(param.ParamModel, ownerName) + "." + this_.DatabaseWorker.TableNamePack(param.ParamModel, table.TableName)
-		_, err = worker.DoExec(this_.DatabaseWorker.db, sqlInfo, nil)
+		sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerTablePack(param.ParamModel, ownerName, table.TableName)
+		_, _, _, err = worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, this_.DatabaseWorker.db, ownerName, []string{sqlInfo}, [][]interface{}{nil})
 		if err != nil {
 			return
 		}
@@ -191,8 +191,8 @@ func (this_ *Service) TableDelete(param *Param, ownerName string, tableName stri
 }
 
 func (this_ *Service) TableDataTrim(param *Param, ownerName string, tableName string) (err error) {
-	sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerNamePack(param.ParamModel, ownerName) + "." + this_.DatabaseWorker.TableNamePack(param.ParamModel, tableName)
-	_, err = worker.DoExec(this_.DatabaseWorker.db, sqlInfo, nil)
+	sqlInfo := "DELETE FROM " + this_.DatabaseWorker.OwnerTablePack(param.ParamModel, ownerName, tableName)
+	_, _, _, err = worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, this_.DatabaseWorker.db, ownerName, []string{sqlInfo}, [][]interface{}{nil})
 	return
 }
 
@@ -340,7 +340,7 @@ func (this_ *Service) TableUpdate(param *Param, ownerName string, tableName stri
 	if err != nil {
 		return
 	}
-	_, errSql, _, err := worker.DoExecs(this_.DatabaseWorker.db, sqlList, nil)
+	_, errSql, _, err := worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, this_.DatabaseWorker.db, ownerName, sqlList, nil)
 	if err != nil {
 		err = errors.New("sql:" + errSql + ",error:" + err.Error())
 		util.Logger.Error("TableUpdate error:", zap.Error(err))
@@ -429,7 +429,7 @@ func (this_ *Service) DataListExec(param *Param, ownerName string, tableName str
 		sqlList = append(sqlList, sqlList_...)
 		valuesList = append(valuesList, valuesList_...)
 	}
-	_, errSql, errArgs, err := worker.DoExecs(this_.DatabaseWorker.db, sqlList, valuesList)
+	_, errSql, errArgs, err := worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, this_.DatabaseWorker.db, appendOwnerName, sqlList, valuesList)
 	if err != nil {
 		util.Logger.Error("DataListExec error", zap.Any("errSql", errSql), zap.Any("errArgs", errArgs), zap.Error(err))
 		return
@@ -466,9 +466,17 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 	if err != nil {
 		return
 	}
+	var names []string
+	for _, column := range columnList {
+		names = append(names, strings.ToLower(column.ColumnName))
+	}
 	for _, one := range listMap {
 		for k, v := range one {
 			if v == nil {
+				continue
+			}
+			if util.ContainsString(names, strings.ToLower(k)) < 0 {
+				delete(one, k)
 				continue
 			}
 			switch tV := v.(type) {

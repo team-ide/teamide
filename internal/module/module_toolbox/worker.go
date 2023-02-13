@@ -297,6 +297,7 @@ func databaseWorker() *ToolboxType {
 						{Text: "神通", Value: "shentong"},
 						{Text: "Oracle", Value: "oracle"},
 						{Text: "Postgresql", Value: "postgresql"},
+						{Text: "GBase", Value: "gbase"},
 						{Text: "Odbc", Value: "odbc"},
 					},
 					Rules: []*form.Rule{
@@ -304,20 +305,20 @@ func databaseWorker() *ToolboxType {
 					},
 				},
 				{
-					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite' && type != 'odbc'`,
+					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite' && type != 'odbc' && type != 'gbase'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接地址不能为空"},
 					},
 				},
 				{
-					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: 3306, VIf: `type != 'sqlite' && type != 'odbc'`,
+					Label: "Port（3306）", Name: "port", IsNumber: true, DefaultValue: 3306, VIf: `type != 'sqlite' && type != 'odbc' && type != 'gbase'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
 				},
 				{Label: "Username", Name: "username", VIf: `type != 'sqlite'`},
 				{Label: "Password", Name: "password", Type: "password", VIf: `type != 'sqlite'`},
-				{Label: "Database", Name: "database", VIf: `type == 'mysql'`},
+				{Label: "Database", Name: "database", VIf: `type == 'mysql' || type == 'gbase'`},
 				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "SID不能为空"},
@@ -333,12 +334,12 @@ func databaseWorker() *ToolboxType {
 						{Required: true, Message: "数据库文件路径不能为空"},
 					},
 				},
-				{Label: "OdbcName", Name: "odbcName", VIf: `type == 'odbc'`,
+				{Label: "OdbcName", Name: "odbcName", VIf: `type == 'odbc' || type == 'gbase'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "OdbcName不能为空"},
 					},
 				},
-				{Label: "Odbc参数（key1=value1;key2=value2;）", Name: "odbcParams", VIf: `type == 'odbc'`},
+				{Label: "Odbc参数（key1=value1;key2=value2;）", Name: "odbcParams", VIf: `type == 'odbc' || type == 'gbase'`},
 				{Label: "OdbcDialectName", Name: "odbcDialectName", Type: "select", VIf: `type == 'odbc'`,
 					Options: []*form.Option{
 						{Text: "默认", Value: ""},
@@ -348,6 +349,7 @@ func databaseWorker() *ToolboxType {
 						{Text: "金仓", Value: "kingbase"},
 						{Text: "神通", Value: "shentong"},
 						{Text: "Oracle", Value: "oracle"},
+						{Text: "GBase", Value: "gbase"},
 						{Text: "Postgresql", Value: "postgresql"},
 					},
 				},
