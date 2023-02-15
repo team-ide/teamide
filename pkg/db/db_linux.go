@@ -8,17 +8,12 @@ import (
 	"github.com/team-ide/go-driver/db_odbc"
 	"github.com/team-ide/go-driver/db_oracle"
 	"github.com/team-ide/go-driver/db_shentong"
-	"strings"
 )
 
 func initGBaseDatabase() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			dsn := db_gbase.GetDSN(config.OdbcName, config.Username, config.Password, config.Database)
-			if !strings.HasSuffix(dsn, ";") {
-				dsn += ";"
-			}
-			dsn += config.OdbcParams
+			dsn := config.OdbcDsn
 			db, err = db_gbase.Open(dsn)
 			return
 		},
@@ -30,11 +25,7 @@ func initGBaseDatabase() {
 func initOdbcDatabase() {
 	addDatabaseType(&DatabaseType{
 		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
-			dsn := db_odbc.GetDSN(config.OdbcName, config.Username, config.Password)
-			if !strings.HasSuffix(dsn, ";") {
-				dsn += ";"
-			}
-			dsn += config.OdbcParams
+			dsn := config.OdbcDsn
 			db, err = db_odbc.Open(dsn)
 			return
 		},

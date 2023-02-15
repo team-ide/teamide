@@ -32,9 +32,6 @@ func newWorkDb(databaseType *DatabaseType, config DatabaseConfig, username strin
 	case "mysql":
 		config.Database = ownerName
 		break
-	case "gbase":
-		config.Database = ownerName
-		break
 	default:
 		config.Schema = ownerName
 		break

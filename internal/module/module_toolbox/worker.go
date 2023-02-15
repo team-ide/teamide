@@ -316,9 +316,9 @@ func databaseWorker() *ToolboxType {
 						{Required: true, Message: "数据库连接端口不能为空"},
 					},
 				},
-				{Label: "Username", Name: "username", VIf: `type != 'sqlite'`},
-				{Label: "Password", Name: "password", Type: "password", VIf: `type != 'sqlite'`},
-				{Label: "Database", Name: "database", VIf: `type == 'mysql' || type == 'gbase'`},
+				{Label: "Username", Name: "username", VIf: `type != 'sqlite' && type != 'odbc' && type != 'gbase'`},
+				{Label: "Password", Name: "password", Type: "password", VIf: `type != 'sqlite' && type != 'odbc' && type != 'gbase'`},
+				{Label: "Database", Name: "database", VIf: `type == 'mysql'`},
 				{Label: "SID", Name: "sid", VIf: `type == 'oracle'`,
 					Rules: []*form.Rule{
 						{Required: true, Message: "SID不能为空"},
@@ -334,12 +334,11 @@ func databaseWorker() *ToolboxType {
 						{Required: true, Message: "数据库文件路径不能为空"},
 					},
 				},
-				{Label: "OdbcName", Name: "odbcName", VIf: `type == 'odbc' || type == 'gbase'`,
+				{Label: "OdbcDsn", Name: "odbcDsn", VIf: `type == 'odbc' || type == 'gbase'`,
 					Rules: []*form.Rule{
-						{Required: true, Message: "OdbcName不能为空"},
+						{Required: true, Message: "OdbcDsn不能为空"},
 					},
 				},
-				{Label: "Odbc参数（key1=value1;key2=value2;）", Name: "odbcParams", VIf: `type == 'odbc' || type == 'gbase'`},
 				{Label: "OdbcDialectName", Name: "odbcDialectName", Type: "select", VIf: `type == 'odbc'`,
 					Options: []*form.Option{
 						{Text: "默认", Value: ""},
