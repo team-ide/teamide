@@ -151,7 +151,7 @@ Team IDE 团队在线开发工具
 ```shell
 
 # 最新版本 至 https://hub.docker.com/repository/docker/teamide/teamide-server/tags?page=1&ordering=last_updated 查看
-docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:1.9.5
+docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:1.9.9
 ```
 
 ```shell
@@ -228,6 +228,8 @@ go mod tidy
 # 打包单机运行，需要本地安装谷歌浏览器，用于单个人员使用
 # 不需要conf目录
 go build .
+
+go build -ldflags "-w -s -X teamide/pkg/util.version=2.0.0" -o server.exe .
 ```
 
 **作为服务部署打包**
