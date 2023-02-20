@@ -319,13 +319,13 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          move lib/shentong/win64/aci.dll electron-template/assets/server/lib/aci.dll
-          move lib/shentong/win64/aci.lib electron-template/assets/server/lib/aci.lib
-          move lib/shentong/win64/pthreadVC2_x64.dll electron-template/assets/server/lib/pthreadVC2_x64.dll
+          cp lib/shentong/win64/aci.dll electron-template/assets/server/lib/aci.dll
+          cp lib/shentong/win64/aci.lib electron-template/assets/server/lib/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll electron-template/assets/server/lib/pthreadVC2_x64.dll
           
-          move lib/shentong/win64/aci.dll electron-template/assets/server/aci.dll
-          move lib/shentong/win64/aci.lib electron-template/assets/server/aci.lib
-          move lib/shentong/win64/pthreadVC2_x64.dll electron-template/assets/server/pthreadVC2_x64.dll
+          cp lib/shentong/win64/aci.dll electron-template/assets/server/aci.dll
+          cp lib/shentong/win64/aci.lib electron-template/assets/server/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll electron-template/assets/server/pthreadVC2_x64.dll
 
           cd electron-template
           npm install
