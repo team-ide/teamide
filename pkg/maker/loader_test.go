@@ -34,7 +34,7 @@ func TestLoader(t *testing.T) {
 		return
 	}
 
-	bs, err := json.Marshal(app)
+	bs, err := json.MarshalIndent(app, "", "  ")
 	if err != nil {
 		util.Logger.Error("app to json error", zap.Error(err))
 		return

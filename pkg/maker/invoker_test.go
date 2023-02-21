@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"go.uber.org/zap"
 	"teamide/pkg/maker/invokers"
+	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
 	"testing"
 )
@@ -19,7 +20,7 @@ func TestInvoker(t *testing.T) {
 
 	invokeData := invokers.NewInvokeData(app)
 
-	err = invokeData.AddArg("userId", 1, "i64")
+	err = invokeData.AddArg("userId", 1, modelers.ValueTypeInt64)
 	if err != nil {
 		util.Logger.Error("invoke data add arg error", zap.Error(err))
 		return

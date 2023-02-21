@@ -23,10 +23,9 @@ func NewInvokeData(app *modelers.Application) (data *InvokeData) {
 }
 
 type InvokeVar struct {
-	Name            string      `json:"name"`
-	Value           interface{} `json:"value"`
-	ValueType       string      `json:"valueType"`
-	valueTypeStruct *modelers.StructModel
+	Name      string              `json:"name"`
+	Value     interface{}         `json:"value"`
+	ValueType *modelers.ValueType `json:"valueType"`
 }
 
 func (this_ *InvokeData) GetArgs() (args []*InvokeVar) {
@@ -39,7 +38,20 @@ func (this_ *InvokeData) GetVars() (vars []*InvokeVar) {
 	return
 }
 
-func (this_ *InvokeData) AddArg(name string, value interface{}, valueType string) (err error) {
+func (this_ *InvokeData) AddArg(name string, value interface{}, valueType *modelers.ValueType) (err error) {
+	err = this_.addArg(&InvokeVar{
+		Name:      name,
+		Value:     value,
+		ValueType: valueType,
+	})
+	return
+}
+
+func (this_ *InvokeData) AddStructArg(name string, value interface{}, structName string) (err error) {
+	valueType := &modelers.ValueType{
+		Name: structName,
+	}
+	valueType.Struct = this_.app.GetStruct(valueType.Name)
 	err = this_.addArg(&InvokeVar{
 		Name:      name,
 		Value:     value,
@@ -77,10 +89,6 @@ func (this_ *InvokeData) addVar(var_ *InvokeVar) (err error) {
 }
 
 func (this_ *InvokeData) formatInvokeVar(invokeVar *InvokeVar) (err error) {
-
-	if invokeVar.ValueType != "" {
-		invokeVar.valueTypeStruct = this_.app.GetStruct(invokeVar.ValueType)
-	}
 
 	return
 }
