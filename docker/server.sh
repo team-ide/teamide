@@ -5,7 +5,7 @@ cd `dirname $0`
 
 echo `pwd`
 
-export LD_LIBRARY_PATH=$(pwd)/lib/
+export LD_LIBRARY_PATH=$(pwd)/lib:$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 
 mkdir -p log
@@ -15,6 +15,8 @@ function start(){
     echo "start..."
 
     chmod +x teamide
+    echo " ldd teamide"
+    ldd teamide
     nohup ./teamide TeamIDE-Server > log/start.log 2>&1 &
 
     echo "start successful"
