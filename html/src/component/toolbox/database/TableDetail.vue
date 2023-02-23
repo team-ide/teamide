@@ -461,12 +461,13 @@ export default {
       if (!this.canLoadSql) {
         return;
       }
-      this.showSQL = "";
       let sqlList = await this.loadSqls();
+      let showSQL = "";
       sqlList.forEach((sql) => {
-        this.showSQL += sql + ";\n\n";
+        showSQL += sql + ";\n\n";
       });
-      this.$refs.Editor.setValue(this.showSQL);
+      this.showSQL = showSQL;
+      this.$refs.Editor.setValue(showSQL);
     },
     async loadSqls() {
       let data = this.getFormData();

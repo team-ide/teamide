@@ -165,6 +165,7 @@
                 :type="field.type"
                 :placeholder="field.placeholder"
                 :required="field.required"
+                autocomplete="new-password"
                 @input="valueChange(field)"
                 @change="valueChange(field)"
               >

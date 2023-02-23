@@ -19,14 +19,27 @@
     <div class="mglr-30 pdt-20">
       <el-form size="mini" @submit.native.prevent>
         <el-form-item label="原密码">
-          <el-input type="password" v-model="passwordForm.oldPassword">
+          <el-input
+            type="password"
+            autocomplete="new-password"
+            v-model="passwordForm.oldPassword"
+          >
           </el-input>
         </el-form-item>
         <el-form-item label="密码">
-          <el-input type="password" v-model="passwordForm.password"> </el-input>
+          <el-input
+            type="password"
+            autocomplete="new-password"
+            v-model="passwordForm.password"
+          >
+          </el-input>
         </el-form-item>
         <el-form-item label="确认密码">
-          <el-input type="password" v-model="passwordForm.repassword">
+          <el-input
+            type="password"
+            autocomplete="new-password"
+            v-model="passwordForm.repassword"
+          >
           </el-input>
         </el-form-item>
       </el-form>

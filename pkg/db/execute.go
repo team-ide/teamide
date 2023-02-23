@@ -28,9 +28,32 @@ func newWorkDb(databaseType *DatabaseType, config DatabaseConfig, username strin
 	if password != "" {
 		config.Password = password
 	}
-	switch databaseType.DialectName {
-	case "mysql":
+	switch databaseType.dia.DialectType() {
+	case dialect.TypeMysql:
 		config.Database = ownerName
+		break
+	case dialect.TypeGBase:
+
+		if ownerName != "" {
+			var keyL = len("db=")
+			index := strings.Index(strings.ToLower(config.OdbcDsn), "db=")
+
+			if index < 0 {
+				index = strings.Index(strings.ToLower(config.OdbcDsn), "database=")
+				keyL = len("database=")
+			}
+			if index >= 0 {
+				beforeStr := config.OdbcDsn[0 : index+keyL]
+				afterStr := ""
+				str := config.OdbcDsn[index+keyL:]
+				index = strings.Index(str, ";")
+				if index >= 0 {
+					afterStr = str[index:]
+				}
+				config.OdbcDsn = beforeStr + ownerName + afterStr
+			}
+		}
+
 		break
 	default:
 		config.Schema = ownerName
@@ -62,31 +85,6 @@ func (this_ *executeTask) run(sqlContent string) (executeList []map[string]inter
 	defer func() {
 		_ = conn.Close()
 	}()
-	if this_.ownerName != "" {
-		switch this_.databaseType.DialectName {
-		case "mysql":
-			_, err = conn.ExecContext(cxt, " USE "+this_.ownerName)
-			if err != nil {
-				util.Logger.Error("ExecuteSQL mysql change schema error", zap.Error(err))
-				return
-			}
-			break
-		case "oracle":
-			_, err = conn.ExecContext(cxt, "ALTER SESSION SET CURRENT_SCHEMA="+this_.ownerName)
-			if err != nil {
-				util.Logger.Error("ExecuteSQL oracle change schema error", zap.Error(err))
-				return
-			}
-			break
-		case "gbase":
-			_, _ = conn.QueryContext(cxt, "database "+this_.ownerName)
-			//if err != nil {
-			//	util.Logger.Error("QueryContext GBase change database error", zap.Error(err))
-			//	return
-			//}
-			break
-		}
-	}
 	var hasError bool
 	if this_.OpenTransaction {
 		var tx *sql.Tx

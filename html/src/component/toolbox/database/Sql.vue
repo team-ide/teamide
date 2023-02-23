@@ -35,6 +35,7 @@
             <el-input
               type="password"
               v-model="form.execPassword"
+              autocomplete="new-password"
               style="width: 80px"
             >
             </el-input>

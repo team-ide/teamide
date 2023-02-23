@@ -19,7 +19,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.1
 	github.com/tealeg/xlsx v1.0.5
-	github.com/team-ide/go-dialect v1.8.3
+	github.com/team-ide/go-dialect v1.8.4
 	github.com/team-ide/go-driver v1.1.8
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.6.0

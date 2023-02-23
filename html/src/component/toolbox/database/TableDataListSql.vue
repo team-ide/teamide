@@ -132,12 +132,13 @@ export default {
       this.showDialog = false;
     },
     async toLoad() {
-      this.showSQL = "";
+      let showSQL = "";
       let sqlList = await this.loadSqls();
       sqlList.forEach((sql) => {
-        this.showSQL += sql + ";\n\n";
+        showSQL += sql + ";\n\n";
       });
-      this.$refs.Editor.setValue(this.showSQL);
+      this.showSQL = showSQL;
+      this.$refs.Editor.setValue(showSQL);
     },
     async loadSqls() {
       let data = Object.assign({}, this.form);

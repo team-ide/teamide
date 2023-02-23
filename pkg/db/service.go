@@ -181,12 +181,26 @@ func (this_ *Service) Model(param *Param, ownerName string, tableName string) (c
 	return
 }
 func (this_ *Service) TableCreate(param *Param, ownerName string, table *dialect.TableModel) (err error) {
-	err = worker.TableCreate(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, table)
+	workDb, err := newWorkDb(this_.DatabaseWorker.databaseType, *this_.DatabaseWorker.config, "", "", ownerName)
+	if err != nil {
+		util.Logger.Error("TableCreate new db pool error", zap.Error(err))
+		return
+	}
+	defer func() { _ = workDb.Close() }()
+
+	err = worker.TableCreate(workDb, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, table)
 	return
 }
 
 func (this_ *Service) TableDelete(param *Param, ownerName string, tableName string) (err error) {
-	err = worker.TableDelete(this_.DatabaseWorker.db, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, tableName)
+	workDb, err := newWorkDb(this_.DatabaseWorker.databaseType, *this_.DatabaseWorker.config, "", "", ownerName)
+	if err != nil {
+		util.Logger.Error("TableDelete new db pool error", zap.Error(err))
+		return
+	}
+	defer func() { _ = workDb.Close() }()
+
+	err = worker.TableDelete(workDb, this_.DatabaseWorker.Dialect, param.ParamModel, ownerName, tableName)
 	return
 }
 
@@ -340,7 +354,15 @@ func (this_ *Service) TableUpdate(param *Param, ownerName string, tableName stri
 	if err != nil {
 		return
 	}
-	_, errSql, _, err := worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, this_.DatabaseWorker.db, ownerName, sqlList, nil)
+
+	workDb, err := newWorkDb(this_.DatabaseWorker.databaseType, *this_.DatabaseWorker.config, "", "", ownerName)
+	if err != nil {
+		util.Logger.Error("TableUpdate new db pool error", zap.Error(err))
+		return
+	}
+	defer func() { _ = workDb.Close() }()
+
+	_, errSql, _, err := worker.DoOwnerExecs(this_.DatabaseWorker.Dialect, workDb, ownerName, sqlList, nil)
 	if err != nil {
 		err = errors.New("sql:" + errSql + ",error:" + err.Error())
 		util.Logger.Error("TableUpdate error:", zap.Error(err))

@@ -109,12 +109,13 @@ export default {
       return res.data || {};
     },
     async toLoad() {
-      this.showSQL = "";
+      let showSQL = "";
       let sqlList = await this.loadSqls();
       sqlList.forEach((sql) => {
-        this.showSQL += sql + ";\n\n";
+        showSQL += sql + ";\n\n";
       });
-      this.$refs.Editor.setValue(this.showSQL);
+      this.showSQL = showSQL;
+      this.$refs.Editor.setValue(showSQL);
     },
     async loadSqls() {
       let param = this.toolboxWorker.getWorkParam(Object.assign({}, this.form));
