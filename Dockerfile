@@ -1,4 +1,4 @@
-FROM teamide/build:0.7
+FROM teamide/build:0.8
 
 EXPOSE 21080/tcp
 
@@ -8,6 +8,7 @@ COPY release/teamide-server/lib /opt/teamide/lib
 COPY docker/docker-entrypoint.sh /opt/teamide/docker-entrypoint.sh
 COPY docker/server.sh /opt/teamide/server.sh
 
+ENV LD_LIBRARY_PATH=/opt/teamide/lib:$LD_LIBRARY_PATH
 RUN chmod +x /opt/teamide/server.sh
 RUN chmod +x /opt/teamide/docker-entrypoint.sh
 # RUN yum install -y unixODBC libtool unixODBC-devel
