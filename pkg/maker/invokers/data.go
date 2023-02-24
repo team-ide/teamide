@@ -23,9 +23,9 @@ func NewInvokeData(app *modelers.Application) (data *InvokeData) {
 }
 
 type InvokeVar struct {
-	Name      string              `json:"name"`
-	Value     interface{}         `json:"value"`
-	ValueType *modelers.ValueType `json:"valueType"`
+	Name      string              `json:"name,omitempty"`
+	Value     interface{}         `json:"value,omitempty"`
+	ValueType *modelers.ValueType `json:"valueType,omitempty"`
 }
 
 func (this_ *InvokeData) GetArgs() (args []*InvokeVar) {

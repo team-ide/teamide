@@ -2,6 +2,7 @@ package invokers
 
 import (
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"teamide/pkg/maker/modelers"
 	"teamide/pkg/util"
@@ -21,13 +22,15 @@ type Invoker struct {
 func (this_ *Invoker) InvokeServiceByName(name string, invokeData *InvokeData) (res interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("invoke service by name error", zap.Any("error", e))
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke service by name error", zap.Any("error", err))
 		}
 	}()
 
 	service := this_.app.GetService(name)
 	if service == nil {
 		err = errors.New("service [" + name + "] is not exist")
+		util.Logger.Error("invoke service by name error", zap.Any("error", err))
 		return
 	}
 	res, err = this_.InvokeService(service, invokeData)
@@ -37,7 +40,8 @@ func (this_ *Invoker) InvokeServiceByName(name string, invokeData *InvokeData) (
 func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *InvokeData) (res interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("invoke service error", zap.Any("error", e))
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke service error", zap.Any("error", err))
 		}
 	}()
 	if service == nil {
@@ -45,7 +49,7 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 		return
 	}
 	defer func() {
-		util.Logger.Info("invoke service end", zap.Any("name", service.Name), zap.Any("args", invokeData.args))
+		util.Logger.Info("invoke service end", zap.Any("name", service.Name), zap.Any("args", invokeData.args), zap.Any("vars", invokeData.vars))
 	}()
 	if invokeData == nil {
 		invokeData = NewInvokeData(this_.app)
@@ -53,50 +57,108 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 	if invokeData.app == nil {
 		invokeData.app = this_.app
 	}
-	util.Logger.Info("invoke service start", zap.Any("name", service.Name), zap.Any("args", invokeData.args))
+	util.Logger.Info("invoke service start", zap.Any("name", service.Name), zap.Any("args", invokeData.args), zap.Any("vars", invokeData.vars))
+
+	err = this_.InvokeSteps(service.Steps, invokeData)
+	if err != nil {
+		return
+	}
 
 	return
 }
 
-func (this_ *Invoker) InvokeStep(step interface{}, invokeData *InvokeData) (err error) {
+func (this_ *Invoker) InvokeDaoByName(name string, invokeData *InvokeData) (res interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("invoke step error", zap.Any("error", e))
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke dao by name error", zap.Any("error", err))
 		}
 	}()
-	if step == nil {
-		err = errors.New("invoke step error,step is null")
+
+	dao := this_.app.GetDao(name)
+	if dao == nil {
+		err = errors.New("dao [" + name + "] is not exist")
+		util.Logger.Error("invoke dao by name error", zap.Any("error", err))
+		return
+	}
+	res, err = this_.InvokeDao(dao, invokeData)
+	return
+}
+
+func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) (res interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke dao error", zap.Any("error", err))
+		}
+	}()
+	if dao == nil {
+		err = errors.New("invoke dao error,service is null")
+		return
+	}
+	defer func() {
+		util.Logger.Info("invoke dao end", zap.Any("name", dao.Name), zap.Any("args", invokeData.args), zap.Any("vars", invokeData.vars))
+	}()
+	if invokeData == nil {
+		invokeData = NewInvokeData(this_.app)
+	}
+	if invokeData.app == nil {
+		invokeData.app = this_.app
+	}
+	util.Logger.Info("invoke dao start", zap.Any("name", dao.Name), zap.Any("args", invokeData.args), zap.Any("vars", invokeData.vars))
+
+	err = this_.InvokeSteps(dao.Steps, invokeData)
+	if err != nil {
 		return
 	}
 
-	var stepModel *modelers.StepModel
-	var ok bool
+	return
+}
 
-	switch s := step.(type) {
-	case *modelers.StepModel:
-		stepModel = s
-		ok, err = this_.invokeStep(stepModel, invokeData)
+func (this_ *Invoker) InvokeSteps(steps []interface{}, invokeData *InvokeData) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke steps error", zap.Any("error", err))
+		}
+	}()
+
+	for _, step := range steps {
+		err = this_.InvokeStep(step, invokeData)
 		if err != nil {
 			return
 		}
-		if !ok {
-			return
-		}
-		break
-	default:
-		err = errors.New("invoke step [" + util.GetRefType(step).Name() + "] can not be support")
-		return
 	}
-
-	defer func() {
-		util.Logger.Info("invoke step end", zap.Any("args", invokeData.args))
-	}()
-	util.Logger.Info("invoke service start", zap.Any("args", invokeData.args))
 
 	return
 }
 
-func (this_ *Invoker) invokeStep(step *modelers.StepModel, invokeData *InvokeData) (ok bool, err error) {
-	ok = true
+func (this_ *Invoker) InvokeScript(script string, invokeData *InvokeData) (res interface{}, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("invoke script error", zap.Any("script", script), zap.Any("error", err))
+		}
+	}()
+
+	if script == "" {
+		return
+	}
+	return
+}
+
+func (this_ *Invoker) GetNameByRule(rule string, invokeData *InvokeData) (res string, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("get name by rule error", zap.Any("rule", rule), zap.Any("error", err))
+		}
+	}()
+
+	if rule == "" {
+		return
+	}
+
+	res = rule
 	return
 }

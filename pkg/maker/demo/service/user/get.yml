@@ -9,7 +9,7 @@ steps:
     setVarType: user
 
   - if: user == null
-    dao: user.get
+    dao: user/get
     args:
       - userId
     setVar: user

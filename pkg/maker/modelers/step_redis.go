@@ -31,6 +31,7 @@ type StepRedisType struct {
 var (
 	StepRedisTypes []*StepRedisType
 	RedisGet       = appendStepRedisType("get", "")
+	RedisSet       = appendStepRedisType("set", "")
 )
 
 func appendStepRedisType(value string, text string) *StepRedisType {

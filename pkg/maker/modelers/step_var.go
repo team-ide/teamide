@@ -31,12 +31,12 @@ func init() {
 }
 
 type ValueType struct {
-	Name     string       `json:"name"`
-	Comment  string       `json:"comment"`
-	IsNumber bool         `json:"isNumber"`
-	Match    []string     `json:"match"`
-	Struct   *StructModel `json:"struct"`
-	isBase   bool         `json:"isBase"`
+	Name     string       `json:"name,omitempty"`
+	Comment  string       `json:"comment,omitempty"`
+	IsNumber bool         `json:"isNumber,omitempty"`
+	Match    []string     `json:"match,omitempty"`
+	Struct   *StructModel `json:"struct,omitempty"`
+	isBase   bool         `json:"isBase,omitempty"`
 }
 
 func (this_ *ValueType) IsBase() bool {
