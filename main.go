@@ -29,6 +29,7 @@ var (
 	rootDir     = ""
 	userHomeDir = ""
 	isElectron  = false
+	passWindow  = false
 )
 
 func init() {
@@ -55,6 +56,9 @@ func init() {
 		}
 		if v == "--isElectron" {
 			isElectron = true
+		}
+		if v == "--passWindow" {
+			passWindow = true
 		}
 
 	}
@@ -175,12 +179,14 @@ func main() {
 		}()
 	} else {
 		if !serverContext.IsServer {
-			err = window.Start(serverUrl, func() {
-				util.Logger.Info("TeamIDE stopped")
-				waitGroupForStop.Done()
-			})
-			if err != nil {
-				panic(err)
+			if !passWindow {
+				err = window.Start(serverUrl, func() {
+					util.Logger.Info("TeamIDE stopped")
+					waitGroupForStop.Done()
+				})
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}

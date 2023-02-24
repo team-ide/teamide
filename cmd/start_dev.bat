@@ -2,6 +2,6 @@
 
 cd ../
 
-go run . --isDev
+go run . --isDev --passWindow
 
 pause

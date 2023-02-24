@@ -222,66 +222,15 @@
           </div>
         </tm-layout>
         <tm-layout height="auto" v-loading="dataList_loading">
-          <div @keyup="tableKeyUp" style="height: 100%">
-            <el-table
-              :data="dataList"
-              :border="true"
-              height="100%"
-              style="width: 100%"
-              size="mini"
-              @row-contextmenu="rowContextmenu"
-            >
-              <el-table-column width="70" label="序号" fixed>
-                <template slot-scope="scope">
-                  <!-- :checked="selects.indexOf(scope.row) >= 0" -->
-                  <input
-                    type="checkbox"
-                    class="mgl-5"
-                    style="width: auto"
-                    v-model="selects"
-                    :value="scope.row"
-                  />
-                  <span class="mgl-5">{{ scope.$index + 1 }}</span>
-                  <template v-if="updates.indexOf(scope.row) >= 0">
-                    <i
-                      class="mgl-5 mdi mdi-database-edit-outline"
-                      style="vertical-align: 0px"
-                    ></i>
-                  </template>
-                  <template v-if="inserts.indexOf(scope.row) >= 0">
-                    <i
-                      class="mgl-5 mdi mdi-database-plus-outline"
-                      style="vertical-align: 0px"
-                    ></i>
-                  </template>
-                </template>
-              </el-table-column>
-              <template v-for="(column, index) in form.columnList">
-                <template v-if="column.checked">
-                  <el-table-column
-                    :key="index"
-                    :prop="column.columnName"
-                    :label="column.columnName"
-                  >
-                    <template slot-scope="scope">
-                      <div class="">
-                        <input
-                          v-model="scope.row[column.columnName]"
-                          :name="column.columnName"
-                          @change="inputValueChange(scope.row, column, $event)"
-                          @input="inputValueChange(scope.row, column, $event)"
-                          :placeholder="
-                            scope.row[column.columnName] == null ? 'NULL' : ''
-                          "
-                          type="text"
-                        />
-                      </div>
-                    </template>
-                  </el-table-column>
-                </template>
-              </template>
-            </el-table>
-          </div>
+          <DataTable
+            ref="DataTable"
+            :source="source"
+            :selects="selects"
+            :inserts="inserts"
+            :updates="updates"
+            @keyup="tableKeyUp"
+          >
+          </DataTable>
         </tm-layout>
         <!-- <tm-layout-bar top></tm-layout-bar> -->
         <tm-layout height="50px" class="app-scroll-bar">
@@ -623,7 +572,24 @@ export default {
         this.dataListCache.push(Object.assign({}, data));
         this.dataListCacheForIndex.push(data);
       });
+
+      let options = {};
+      options.dataList = dataList;
+
+      options.columnList = [];
+      columnList.forEach((one) => {
+        let column = Object.assign({}, one);
+        column.name = column.columnName;
+        options.columnList.push(column);
+      });
+      options.getRowMenus = this.getRowMenus;
+      options.inputValueChange = this.inputValueChange;
+      options.checkboxChange = this.checkboxChange;
+      this.$nextTick(() => {
+        this.$refs.DataTable.build(options);
+      });
       this.dataList = dataList;
+
       this.sql = res.data.sql;
       this.total = Number(res.data.total || 0);
       this.args = res.data.args || [];
@@ -642,7 +608,15 @@ export default {
         });
       }
     },
-    inputValueChange(data) {
+    checkboxChange(data) {
+      let index = this.selects.indexOf(data);
+      if (index >= 0) {
+        this.selects.splice(index, 1);
+      } else {
+        this.selects.push(data);
+      }
+    },
+    inputValueChange(data, column) {
       if (this.inserts.indexOf(data) >= 0) {
         return;
       }
@@ -675,7 +649,7 @@ export default {
     toUnselectAll() {
       this.selects.splice(0, this.selects.length);
     },
-    rowContextmenu(row, column, event) {
+    getRowMenus(row, column, event) {
       let menus = [];
       if (event.target.tagName == "INPUT") {
         let input = this.tool.jQuery(event.target);
@@ -791,17 +765,12 @@ export default {
       let deleteList = [deleteData];
 
       menus.push({
-        text: "查看新增、修改、删除记录SQL",
+        text: "查看SQL",
         onClick: () => {
-          this.toolboxWorker.showTableDataListExecSql(
+          this.toolboxWorker.showTableDataListSql(
             this.ownerName,
             this.tableDetail,
-            {
-              insertList,
-              updateList,
-              updateWhereList,
-              deleteList,
-            }
+            [row]
           );
         },
       });
@@ -853,9 +822,7 @@ export default {
         },
       });
 
-      if (menus.length > 0) {
-        this.tool.showContextmenu(menus);
-      }
+      return menus;
     },
     tableKeyUp(event) {
       event = event || window.event;
@@ -919,6 +886,8 @@ export default {
           this.selects.splice(this.selects.indexOf(data), 1);
         }
       });
+
+      this.$refs.DataTable.refreshData();
     },
     getDeleteList() {
       let deleteList = this.getDeleteListByDatas(this.selects);
@@ -1085,6 +1054,11 @@ export default {
       if (this.dataList.indexOf(data) >= 0) {
         this.dataList.splice(this.dataList.indexOf(data), 1);
       }
+      if (this.selects.indexOf(data) >= 0) {
+        this.selects.splice(this.selects.indexOf(data), 1);
+      }
+
+      this.$refs.DataTable.refreshData();
     },
     toInsert(data, row) {
       data = data || {};
@@ -1099,6 +1073,8 @@ export default {
       } else {
         this.dataList.push(data);
       }
+
+      this.$refs.DataTable.refreshData();
     },
     showTableDataListSql() {
       this.toolboxWorker.showTableDataListSql(
