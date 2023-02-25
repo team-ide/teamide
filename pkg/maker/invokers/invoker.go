@@ -4,19 +4,60 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"sync"
+	"teamide/pkg/db"
+	"teamide/pkg/elasticsearch"
+	"teamide/pkg/filework"
+	"teamide/pkg/javascript"
+	"teamide/pkg/kafka"
 	"teamide/pkg/maker/modelers"
+	"teamide/pkg/redis"
+	"teamide/pkg/task"
 	"teamide/pkg/util"
+	"teamide/pkg/zookeeper"
 )
 
 func NewInvoker(app *modelers.Application) (runner *Invoker) {
 	runner = &Invoker{
-		app: app,
+		app:                        app,
+		redisServiceCache:          make(map[string]redis.Service),
+		redisServiceCacheLock:      &sync.Mutex{},
+		esServiceCache:             make(map[string]elasticsearch.Service),
+		esServiceCacheLock:         &sync.Mutex{},
+		zkServiceCache:             make(map[string]zookeeper.Service),
+		zkServiceCacheLock:         &sync.Mutex{},
+		dbServiceCache:             make(map[string]*db.Service),
+		dbServiceCacheLock:         &sync.Mutex{},
+		kafkaServiceCache:          make(map[string]kafka.Service),
+		kafkaServiceCacheLock:      &sync.Mutex{},
+		javascriptServiceCache:     make(map[string]javascript.Service),
+		javascriptServiceCacheLock: &sync.Mutex{},
+		fileServiceCache:           make(map[string]filework.Service),
+		fileServiceCacheLock:       &sync.Mutex{},
+		taskServiceCache:           make(map[string]task.Service),
+		taskServiceCacheLock:       &sync.Mutex{},
 	}
 	return
 }
 
 type Invoker struct {
-	app *modelers.Application
+	app                        *modelers.Application
+	redisServiceCache          map[string]redis.Service
+	redisServiceCacheLock      sync.Locker
+	esServiceCache             map[string]elasticsearch.Service
+	esServiceCacheLock         sync.Locker
+	zkServiceCache             map[string]zookeeper.Service
+	zkServiceCacheLock         sync.Locker
+	dbServiceCache             map[string]*db.Service
+	dbServiceCacheLock         sync.Locker
+	kafkaServiceCache          map[string]kafka.Service
+	kafkaServiceCacheLock      sync.Locker
+	javascriptServiceCache     map[string]javascript.Service
+	javascriptServiceCacheLock sync.Locker
+	fileServiceCache           map[string]filework.Service
+	fileServiceCacheLock       sync.Locker
+	taskServiceCache           map[string]task.Service
+	taskServiceCacheLock       sync.Locker
 }
 
 func (this_ *Invoker) InvokeServiceByName(name string, invokeData *InvokeData) (res interface{}, err error) {

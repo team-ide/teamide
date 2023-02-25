@@ -20,6 +20,10 @@ type Application struct {
 	funcCache          map[string]*FuncModel
 	LoadErrors         []*LoadError             `json:"loadErrors"`
 	LanguageJavascript *LanguageJavascriptModel `json:"languageJavascript"`
+	ConfigRedisList    []*ConfigRedisModel      `json:"configRedisList"`
+	configRedisCache   map[string]*ConfigRedisModel
+	ConfigDbList       []*ConfigDbModel `json:"configDbList"`
+	configDbCache      map[string]*ConfigDbModel
 }
 
 type LoadError struct {
@@ -104,6 +108,46 @@ func (this_ *Application) AppendDao(model *DaoModel) (err error) {
 func (this_ *Application) GetDao(name string) (model *DaoModel) {
 	if this_.daoCache != nil {
 		model = this_.daoCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendConfigRedis(model *ConfigRedisModel) (err error) {
+	if this_.configRedisCache == nil {
+		this_.configRedisCache = make(map[string]*ConfigRedisModel)
+	}
+	if this_.configRedisCache[model.Name] != nil {
+		err = errors.New("redis model [" + model.Name + "] already exist")
+		return
+	}
+	this_.ConfigRedisList = append(this_.ConfigRedisList, model)
+	this_.configRedisCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetConfigRedis(name string) (model *ConfigRedisModel) {
+	if this_.configRedisCache != nil {
+		model = this_.configRedisCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendConfigDb(model *ConfigDbModel) (err error) {
+	if this_.configDbCache == nil {
+		this_.configDbCache = make(map[string]*ConfigDbModel)
+	}
+	if this_.configDbCache[model.Name] != nil {
+		err = errors.New("db model [" + model.Name + "] already exist")
+		return
+	}
+	this_.ConfigDbList = append(this_.ConfigDbList, model)
+	this_.configDbCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetConfigDb(name string) (model *ConfigDbModel) {
+	if this_.configDbCache != nil {
+		model = this_.configDbCache[name]
 	}
 	return
 }

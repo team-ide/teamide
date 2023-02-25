@@ -5,7 +5,8 @@ import "strings"
 type StepRedisModel struct {
 	*StepModel `json:",inline"`
 
-	Redis      string `json:"redis,omitempty"` // redis操作
+	Redis      string `json:"redis,omitempty"`      // redis操作
+	Datasource string `json:"datasource,omitempty"` //
 	Key        string `json:"key,omitempty"`
 	Field      string `json:"field,omitempty"`
 	Value      string `json:"value,omitempty"`
@@ -52,6 +53,7 @@ func init() {
 		Name: docTemplateStepRedisName,
 		Fields: []*docTemplateField{
 			{Name: "redis", Comment: "redis操作"},
+			{Name: "datasource", Comment: ""},
 			{Name: "key", Comment: "操作的Key"}, {Name: "field", Comment: "Hash的Key"},
 			{Name: "value", Comment: "操作的Value"},
 			{Name: "setVar", Comment: "设置变量"},

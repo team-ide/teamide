@@ -232,11 +232,69 @@ var (
 			return
 		},
 	}
+
+	TypeConfigRedis = &Type{
+		Name:    "configRedis",
+		Comment: "Redis配置",
+		Dir:     "config/redis",
+		toModel: func(text string) (model interface{}, err error) {
+			model = &ConfigRedisModel{}
+			err = yaml.Unmarshal([]byte(text), model)
+			if err != nil {
+				util.Logger.Error("yaml to config redis error", zap.Any("yaml", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			bytes, err := yaml.Marshal(model)
+			if err != nil {
+				util.Logger.Error("config redis to yaml error", zap.Any("errors", model), zap.Error(err))
+				return
+			}
+			text = string(bytes)
+			return
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			err = app.AppendConfigRedis(model.(*ConfigRedisModel))
+			return
+		},
+	}
+
+	TypeConfigDb = &Type{
+		Name:    "configDb",
+		Comment: "Database配置",
+		Dir:     "config/database",
+		toModel: func(text string) (model interface{}, err error) {
+			model = &ConfigDbModel{}
+			err = yaml.Unmarshal([]byte(text), model)
+			if err != nil {
+				util.Logger.Error("yaml to config db error", zap.Any("yaml", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			bytes, err := yaml.Marshal(model)
+			if err != nil {
+				util.Logger.Error("config db to yaml error", zap.Any("errors", model), zap.Error(err))
+				return
+			}
+			text = string(bytes)
+			return
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			err = app.AppendConfigDb(model.(*ConfigDbModel))
+			return
+		},
+	}
 )
 
 func init() {
 	Types = append(Types, TypeConstant)
 	Types = append(Types, TypeStruct)
+	Types = append(Types, TypeConfigRedis)
+	Types = append(Types, TypeConfigDb)
 	Types = append(Types, TypeService)
 	Types = append(Types, TypeDao)
 	Types = append(Types, TypeError)

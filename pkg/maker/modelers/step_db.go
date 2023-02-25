@@ -7,12 +7,12 @@ import (
 type StepDbModel struct {
 	*StepModel `json:",inline"`
 
-	Db       string `json:"db,omitempty"`       // 数据库操作
-	Database string `json:"database,omitempty"` // 库名
-	Sql      string `json:"sql,omitempty"`      // 自定义SQL
-	Table    string `json:"table,omitempty"`    // 表
-	Alias    string `json:"alias,omitempty"`    // 表别名
-	Distinct bool   `json:"distinct,omitempty"` // SELECT DISTINCT 语句  列出不同的值
+	Db         string `json:"db,omitempty"`         // 数据库操作
+	Datasource string `json:"datasource,omitempty"` // 库名
+	Sql        string `json:"sql,omitempty"`        // 自定义SQL
+	Table      string `json:"table,omitempty"`      // 表
+	Alias      string `json:"alias,omitempty"`      // 表别名
+	Distinct   bool   `json:"distinct,omitempty"`   // SELECT DISTINCT 语句  列出不同的值
 
 	Columns   []*StepDbColumn    `json:"columns,omitempty"`   // 字段
 	Into      []*StepDbInto      `json:"into,omitempty"`      // SELECT INTO 复制表
@@ -89,7 +89,7 @@ func init() {
 		Name: docTemplateStepDbName,
 		Fields: []*docTemplateField{
 			{Name: "db", Comment: "数据库操作"},
-			{Name: "database", Comment: "数据库"},
+			{Name: "datasource", Comment: "DB数据源"},
 			{Name: "sql", Comment: "自定义SQL"},
 			{Name: "table", Comment: "表"},
 			{Name: "alias", Comment: "别名"},
