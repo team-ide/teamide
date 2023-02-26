@@ -57,8 +57,8 @@ type StepDbType struct {
 }
 
 var (
-	StepDbTypes []*StepDbType
-	DbGet       = appendStepDbType("get", "")
+	StepDbTypes    []*StepDbType
+	DbSelectOneOne = appendStepDbType("selectOne", "")
 )
 
 func appendStepDbType(value string, text string) *StepDbType {
