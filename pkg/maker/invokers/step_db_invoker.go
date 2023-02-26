@@ -28,16 +28,16 @@ func (this_ *Invoker) invokeDbStep(step *modelers.StepDbModel, invokeData *Invok
 	var res interface{}
 
 	switch step.GetType() {
-	case modelers.DbGet:
+	case modelers.DbSelectOneOne:
 
-		util.Logger.Debug("invoke db get start", zap.Any("table", step.Table))
+		util.Logger.Debug("invoke db select one start", zap.Any("table", step.Table))
 		res, err = dbService.DatabaseWorker.QueryMap(`select 1`, []interface{}{})
 		if err != nil {
-			util.Logger.Error("db get error", zap.Any("datasource", step.Datasource), zap.Any("error", err))
+			util.Logger.Error("db select one error", zap.Any("datasource", step.Datasource), zap.Any("error", err))
 			return
 		}
 
-		util.Logger.Debug("invoke db get end", zap.Any("table", step.Table), zap.Any("res", res))
+		util.Logger.Debug("invoke db select one end", zap.Any("table", step.Table), zap.Any("res", res))
 		break
 	}
 
