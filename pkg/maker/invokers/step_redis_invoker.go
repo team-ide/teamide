@@ -54,6 +54,10 @@ func (this_ *Invoker) invokeRedisStep(step *modelers.StepRedisModel, invokeData 
 		break
 	case modelers.RedisSet:
 		break
+	default:
+		err = errors.New("invoke redis [" + step.Redis + "] can not be support")
+		util.Logger.Error("invoke redis error", zap.Any("error", err))
+		return
 	}
 
 	ok = true

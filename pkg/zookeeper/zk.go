@@ -32,12 +32,15 @@ type ZKService struct {
 	username    string
 	password    string
 	zkConn      *zk.Conn        //zk连接
-	zkConnEvent <-chan zk.Event // zk事件通知管道
+	zkEvent     <-chan zk.Event // zk事件通知管道
 	lastUseTime int64
 }
 
+func (this_ *ZKService) GetZkEvent() <-chan zk.Event {
+	return this_.zkEvent
+}
 func (this_ *ZKService) init() (err error) {
-	this_.zkConn, this_.zkConnEvent, err = zk.Connect(this_.GetServers(), time.Second*10, func(c *zk.Conn) {
+	this_.zkConn, this_.zkEvent, err = zk.Connect(this_.GetServers(), time.Second*10, func(c *zk.Conn) {
 		c.SetLogger(defaultLogger{})
 	})
 	if err != nil {

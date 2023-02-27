@@ -24,6 +24,8 @@ type Application struct {
 	configRedisCache   map[string]*ConfigRedisModel
 	ConfigDbList       []*ConfigDbModel `json:"configDbList"`
 	configDbCache      map[string]*ConfigDbModel
+	ConfigZkList       []*ConfigZkModel `json:"configZkList"`
+	configZkCache      map[string]*ConfigZkModel
 }
 
 type LoadError struct {
@@ -148,6 +150,26 @@ func (this_ *Application) AppendConfigDb(model *ConfigDbModel) (err error) {
 func (this_ *Application) GetConfigDb(name string) (model *ConfigDbModel) {
 	if this_.configDbCache != nil {
 		model = this_.configDbCache[name]
+	}
+	return
+}
+
+func (this_ *Application) AppendConfigZk(model *ConfigZkModel) (err error) {
+	if this_.configZkCache == nil {
+		this_.configZkCache = make(map[string]*ConfigZkModel)
+	}
+	if this_.configZkCache[model.Name] != nil {
+		err = errors.New("zk model [" + model.Name + "] already exist")
+		return
+	}
+	this_.ConfigZkList = append(this_.ConfigZkList, model)
+	this_.configZkCache[model.Name] = model
+	return
+}
+
+func (this_ *Application) GetConfigZk(name string) (model *ConfigZkModel) {
+	if this_.configZkCache != nil {
+		model = this_.configZkCache[name]
 	}
 	return
 }

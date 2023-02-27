@@ -39,6 +39,10 @@ func (this_ *Invoker) invokeDbStep(step *modelers.StepDbModel, invokeData *Invok
 
 		util.Logger.Debug("invoke db select one end", zap.Any("table", step.Table), zap.Any("res", res))
 		break
+	default:
+		err = errors.New("invoke db [" + step.Db + "] can not be support")
+		util.Logger.Error("invoke db error", zap.Any("error", err))
+		return
 	}
 
 	ok = true

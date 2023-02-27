@@ -288,6 +288,34 @@ var (
 			return
 		},
 	}
+
+	TypeConfigZk = &Type{
+		Name:    "configZk",
+		Comment: "Zookeeper配置",
+		Dir:     "config/zookeeper",
+		toModel: func(text string) (model interface{}, err error) {
+			model = &ConfigZkModel{}
+			err = yaml.Unmarshal([]byte(text), model)
+			if err != nil {
+				util.Logger.Error("yaml to config zk error", zap.Any("yaml", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			bytes, err := yaml.Marshal(model)
+			if err != nil {
+				util.Logger.Error("config zk to yaml error", zap.Any("errors", model), zap.Error(err))
+				return
+			}
+			text = string(bytes)
+			return
+		},
+		append: func(app *Application, model interface{}) (err error) {
+			err = app.AppendConfigZk(model.(*ConfigZkModel))
+			return
+		},
+	}
 )
 
 func init() {
@@ -295,6 +323,7 @@ func init() {
 	Types = append(Types, TypeStruct)
 	Types = append(Types, TypeConfigRedis)
 	Types = append(Types, TypeConfigDb)
+	Types = append(Types, TypeConfigZk)
 	Types = append(Types, TypeService)
 	Types = append(Types, TypeDao)
 	Types = append(Types, TypeError)

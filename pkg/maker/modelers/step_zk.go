@@ -5,12 +5,14 @@ import "strings"
 type StepZkModel struct {
 	*StepModel `json:",inline"`
 
-	Zk         string `json:"zk,omitempty"` // ZK操作
-	Path       string `json:"path,omitempty"`
-	Value      string `json:"value,omitempty"`
-	Ephemeral  bool   `json:"ephemeral,omitempty"`
-	SetVar     string `json:"setVar,omitempty"`
-	SetVarType string `json:"setVarType,omitempty"`
+	Zk                    string `json:"zk,omitempty"`         // ZK操作
+	Datasource            string `json:"datasource,omitempty"` //
+	Path                  string `json:"path,omitempty"`
+	CreatePathIfNotExists bool   `json:"createPathIfNotExists,omitempty"`
+	Value                 string `json:"value,omitempty"`
+	Ephemeral             bool   `json:"ephemeral,omitempty"`
+	SetVar                string `json:"setVar,omitempty"`
+	SetVarType            string `json:"setVarType,omitempty"`
 }
 
 func (this_ *StepZkModel) GetType() *StepZKType {
@@ -28,16 +30,16 @@ type StepZKType struct {
 }
 
 var (
-	StepZKTypes []*StepZKType
-	ZkGet       = appendStepZKType("get", "")
-	ZkCreate    = appendStepZKType("create", "")
-	ZkSet       = appendStepZKType("set", "")
-	ZkStat      = appendStepZKType("stat", "")
-	ZkChildren  = appendStepZKType("children", "")
-	ZkDelete    = appendStepZKType("delete", "")
-	ZkExists    = appendStepZKType("exists", "")
-	ZkGetW      = appendStepZKType("getW", "")
-	ZkChildrenW = appendStepZKType("childrenW", "")
+	StepZKTypes     []*StepZKType
+	ZkGet           = appendStepZKType("get", "")
+	ZkCreate        = appendStepZKType("create", "")
+	ZkSet           = appendStepZKType("set", "")
+	ZkStat          = appendStepZKType("stat", "")
+	ZkChildren      = appendStepZKType("children", "")
+	ZkDelete        = appendStepZKType("delete", "")
+	ZkExists        = appendStepZKType("exists", "")
+	ZkGetW          = appendStepZKType("getW", "")
+	ZkWatchChildren = appendStepZKType("watchChildren", "")
 )
 
 func appendStepZKType(value string, text string) *StepZKType {
@@ -58,7 +60,9 @@ func init() {
 		Name: docTemplateStepZkName,
 		Fields: []*docTemplateField{
 			{Name: "zk", Comment: "ZK操作"},
+			{Name: "datasource", Comment: ""},
 			{Name: "path", Comment: "路径"},
+			{Name: "createPathIfNotExists", Comment: "如果路径不存在，则创建"},
 			{Name: "value", Comment: "操作的Value"},
 			{Name: "ephemeral", Comment: "是否是临时"},
 			{Name: "setVar", Comment: "设置变量"},

@@ -86,6 +86,23 @@ func (this_ *Invoker) InvokeStep(step interface{}, invokeData *InvokeData) (err 
 			return
 		}
 		break
+	case *modelers.StepZkModel:
+		stepModel = s.StepModel
+		ok, err = this_.invokeStep(stepModel, invokeData)
+		if err != nil {
+			return
+		}
+		if !ok {
+			return
+		}
+		ok, err = this_.invokeZkStep(s, invokeData)
+		if err != nil {
+			return
+		}
+		if !ok {
+			return
+		}
+		break
 	default:
 		err = errors.New("invoke step [" + util.GetRefType(step).Name() + "] can not be support")
 		util.Logger.Error("invoke step error", zap.Any("error", err))
