@@ -128,6 +128,7 @@ import "xterm/css/xterm.css";
 import Zmodem from "@/component/zmodem.js";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
+import { SearchAddon } from "xterm-addon-search";
 // import { AttachAddon } from "xterm-addon-attach";
 
 // https://juejin.cn/post/6918911964009725959
@@ -201,6 +202,8 @@ export default {
       if (this.tool.isEmpty(this.searchText)) {
         return;
       }
+      this.searchAddon.findNext(this.searchText);
+      console.log(this.searchAddon);
 
       let size = this.xtermRows.children.length;
       for (let i = 0; i < size; i++) {
@@ -208,9 +211,20 @@ export default {
         if (!row) {
           break;
         }
-        if (row.children.length == 0) {
+        let colSize = row.children.length;
+        if (colSize == 0) {
           return;
         }
+        let lineText = ``;
+        for (let colIndex = 0; colIndex < colSize; colIndex++) {
+          let col = row.children[colIndex];
+          if (!col) {
+            break;
+          }
+          let colText = col.innerHTML;
+          lineText += colText;
+        }
+        console.log(lineText);
         console.log(row.innerText);
       }
     },
@@ -310,8 +324,8 @@ export default {
       }
 
       this.term = new Terminal({
-        rendererType: "dom",
-        // rendererType: "canvas", //渲染类型
+        // rendererType: "dom",
+        rendererType: "canvas", //渲染类型
         useStyle: true,
         cursorBlink: true, //光标闪烁
         cursorStyle: "underline", // 光标样式 'block' | 'underline' | 'bar'
@@ -336,6 +350,9 @@ export default {
       this.fitAddon = new FitAddon();
       this.term.loadAddon(this.fitAddon);
       this.fitAddon.fit();
+
+      this.searchAddon = new SearchAddon();
+      this.term.loadAddon(this.searchAddon);
 
       this.term.focus();
       this.worker.cols = this.term.cols;
