@@ -2,6 +2,33 @@
   <div class="toolbox-terminal-box">
     <tm-layout height="100%">
       <tm-layout height="auto">
+        <div v-show="showSearch" class="terminal-search-box">
+          <input
+            ref="searchInput"
+            class="terminal-search-input"
+            v-model="searchText"
+            @change="doSearch()"
+          />
+          <span class="pdlr-5 terminal-search-text">
+            <template v-if="searchList.length == 0">
+              <span class="color-orange">暂无匹配</span>
+            </template>
+            <template v-else>
+              <span class="">
+                第
+                <span class="color- pdlr-2">
+                  <template v-if="searchList.indexOf(searchSelect) >= 0">
+                    {{ searchList.indexOf(searchSelect) }}
+                  </template>
+                  <template v-else> ? </template>
+                </span>
+                项，共
+                <span class="color- pdlr-2">{{ searchList.length }}</span>
+                项
+              </span>
+            </template>
+          </span>
+        </div>
         <div
           class="terminal-xterm-box"
           ref="terminalXtermBox"
@@ -131,10 +158,18 @@ export default {
 
       isOpenFTP: false,
       isShowFTP: true,
+      showSearch: false,
+      searchText: "",
+      searchList: [],
+      searchSelect: null,
     };
   },
   computed: {},
-  watch: {},
+  watch: {
+    // searchText() {
+    // this.doSearch();
+    // },
+  },
   methods: {
     async init() {
       this.$nextTick(() => {
@@ -146,6 +181,43 @@ export default {
       this.term && this.term.focus();
     },
     refresh() {},
+    toShowSearch() {
+      if (this.showSearch) {
+      } else {
+        this.showSearch = true;
+      }
+      this.$nextTick(() => {
+        this.$refs.searchInput.focus();
+      });
+      this.doSearch();
+    },
+    toHideSearch() {
+      this.showSearch = false;
+      this.clearSearch();
+    },
+    doSearch() {
+      this.searchSelect = null;
+      this.searchList.splice(0, this.searchList.length);
+      if (this.tool.isEmpty(this.searchText)) {
+        return;
+      }
+
+      let size = this.xtermRows.children.length;
+      for (let i = 0; i < size; i++) {
+        let row = this.xtermRows.children[i];
+        if (!row) {
+          break;
+        }
+        if (row.children.length == 0) {
+          return;
+        }
+        console.log(row.innerText);
+      }
+    },
+    getLines() {
+      console.log(this.xtermRows.length);
+    },
+    clearSearch() {},
     onChangeOpenDir(openDir) {
       let data = this.extend || {};
       if (this.tool.isEmpty(openDir)) {
@@ -238,10 +310,11 @@ export default {
       }
 
       this.term = new Terminal({
+        rendererType: "dom",
+        // rendererType: "canvas", //渲染类型
         useStyle: true,
         cursorBlink: true, //光标闪烁
         cursorStyle: "underline", // 光标样式 'block' | 'underline' | 'bar'
-        rendererType: "canvas", //渲染类型
         width: 500,
         height: 400,
         windowsMode: true,
@@ -310,6 +383,8 @@ export default {
       );
 
       this.changeSizeTimer();
+      this.xtermRows =
+        this.$refs.terminalXtermBox.getElementsByClassName("xterm-rows")[0];
     },
     NewSentry() {
       let worker = this.worker;
@@ -371,6 +446,9 @@ export default {
       // console.log(key);
       if (this.tool.keyIsCtrlC(e)) {
         this.doEventCopy();
+      } else if (this.tool.keyIsCtrlF(e)) {
+        // 搜索
+        this.toShowSearch();
       } else {
         if (
           !this.tool.keyIsCtrl(e) &&
@@ -648,5 +726,35 @@ export default {
 }
 .toolbox-terminal-file-manager-box-body {
   height: calc(100% - 30px);
+}
+
+.terminal-search-box {
+  position: absolute;
+  right: 10px;
+  top: 0px;
+  height: 30px;
+  background: #303030;
+  z-index: 10;
+  font-size: 12px;
+  user-select: text;
+}
+
+.terminal-search-box .terminal-search-input {
+  color: #ffffff;
+  width: 200px;
+  border: 1px solid #4e4e4e;
+  background-color: transparent;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 5px;
+  padding-right: 5px;
+  box-sizing: border-box;
+  outline: none;
+  font-size: 13px;
+  margin: 0px 5px 0px 0px;
+}
+.terminal-search-box .terminal-search-text {
+  line-height: 30px;
+  vertical-align: -1px;
 }
 </style>
