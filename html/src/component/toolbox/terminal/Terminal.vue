@@ -10,23 +10,42 @@
             @change="doSearch()"
           />
           <span class="pdlr-5 terminal-search-text">
-            <template v-if="searchList.length == 0">
+            <template v-if="searchCount <= 0">
               <span class="color-orange">暂无匹配</span>
             </template>
             <template v-else>
               <span class="">
                 第
                 <span class="color- pdlr-2">
-                  <template v-if="searchList.indexOf(searchSelect) >= 0">
-                    {{ searchList.indexOf(searchSelect) }}
+                  <template v-if="searchIndex >= 0">
+                    {{ searchIndex + 1 }}
                   </template>
                   <template v-else> ? </template>
                 </span>
                 项，共
-                <span class="color- pdlr-2">{{ searchList.length }}</span>
+                <span class="color- pdlr-2">{{ searchCount }}</span>
                 项
               </span>
             </template>
+          </span>
+          <span class="terminal-search-navs">
+            <template v-if="searchCount > 0">
+              <i
+                class="terminal-search-nav mdi mdi-arrow-up-thin"
+                title="匹配上一个"
+                @click="toSearchUp()"
+              ></i>
+              <i
+                class="terminal-search-nav mdi mdi-arrow-down-thin"
+                title="匹配下一个"
+                @click="toSearchDown()"
+              ></i>
+            </template>
+            <i
+              class="terminal-search-nav mdi mdi-close"
+              title="关闭搜索"
+              @click="toHideSearch()"
+            ></i>
           </span>
         </div>
         <div
@@ -163,13 +182,33 @@ export default {
       searchText: "",
       searchList: [],
       searchSelect: null,
+      searchIndex: -1,
+      searchCount: -1,
+      searchOptions: {
+        decorations: {
+          // 匹配的背景色，必须使用#RRGGBB格式
+          matchBackground: "#00B8F5",
+          // 匹配的边框颜色
+          matchBorder: "",
+          // 匹配的概览标尺颜色
+          matchOverviewRuler: "#00B8F5",
+          // 当前活动匹配的背景色，必须使用#RRGGBB格式
+          activeMatchBackground: "#FF8000",
+          // 当前活动匹配的边框颜色
+          activeMatchBorder: "",
+          // 当前活动匹配的概览标尺颜色
+          activeMatchColorOverviewRuler: "#FF8000",
+        },
+      },
     };
   },
   computed: {},
   watch: {
-    // searchText() {
-    // this.doSearch();
-    // },
+    searchText() {
+      if (this.showSearch) {
+        this.doSearch();
+      }
+    },
   },
   methods: {
     async init() {
@@ -183,6 +222,10 @@ export default {
     },
     refresh() {},
     toShowSearch() {
+      let copiedText = this.term.getSelection();
+      if (this.tool.isNotEmpty(copiedText)) {
+        this.searchText = copiedText;
+      }
       if (this.showSearch) {
       } else {
         this.showSearch = true;
@@ -197,41 +240,117 @@ export default {
       this.clearSearch();
     },
     doSearch() {
-      this.searchSelect = null;
-      this.searchList.splice(0, this.searchList.length);
-      if (this.tool.isEmpty(this.searchText)) {
-        return;
-      }
-      this.searchAddon.findNext(this.searchText);
-      console.log(this.searchAddon);
-
-      let size = this.xtermRows.children.length;
-      for (let i = 0; i < size; i++) {
-        let row = this.xtermRows.children[i];
-        if (!row) {
-          break;
-        }
-        let colSize = row.children.length;
-        if (colSize == 0) {
+      try {
+        if (this.doSearchIng) {
           return;
         }
-        let lineText = ``;
-        for (let colIndex = 0; colIndex < colSize; colIndex++) {
-          let col = row.children[colIndex];
-          if (!col) {
-            break;
-          }
-          let colText = col.innerHTML;
-          lineText += colText;
+        this.doSearchIng = true;
+        this.searchSelect = null;
+        this.searchList.splice(0, this.searchList.length);
+        let searchText = this.searchText;
+
+        if (this.tool.isEmpty(searchText)) {
+          this.clearSearch();
+          return;
         }
-        console.log(lineText);
-        console.log(row.innerText);
+        if (this.searchAddon != null) {
+          // 销毁
+          this.searchAddon.dispose();
+        }
+        // this.term.options({ allowProposedApi: true });
+        this.term.options.allowProposedApi = true;
+        this.searchAddon = new SearchAddon();
+        this.term.loadAddon(this.searchAddon);
+        this.searchAddon.onDidChangeResults((result) => {
+          result = result || {};
+          this.searchIndex = result.resultIndex;
+          this.searchCount = result.resultCount;
+        });
+        this.searchAddon.findNext(searchText, this.searchOptions);
+      } catch (error) {
+      } finally {
+        this.doSearchIng = false;
       }
+
+      // let bufferActive = this.term.buffer.active;
+      // let maxRows = bufferActive.baseY + this.term.rows;
+      // console.log(bufferActive);
+      // console.log(this.term.buffer);
+
+      // for (let i = 0; i < maxRows; i++) {
+      //   let line = bufferActive.getLine(i);
+      //   if (!line) {
+      //     break;
+      //   }
+      //   let lineText = line._line.translateToString();
+      //   if (this.tool.isEmpty(lineText) || lineText.trim().length == 0) {
+      //     continue;
+      //   }
+      //   let reg = new RegExp(searchText, "g", "i", "m");
+      //   let text = lineText;
+      //   let res = reg.exec(text);
+      //   while (res) {
+      //     let matchData = {};
+      //     matchData.lineIndex = i;
+      //     matchData.str = res[0];
+      //     matchData.start = res.index;
+      //     matchData.end = matchData.start + matchData.str.length;
+      //     this.searchList.push(matchData);
+      //     res = reg.exec(lineText);
+      //   }
+      // }
+      // this.toSearchUp();
     },
-    getLines() {
-      console.log(this.xtermRows.length);
+    toSearchDown() {
+      let searchText = this.searchText;
+      this.searchAddon.findNext(searchText, this.searchOptions);
+      // let index = this.searchList.indexOf(this.searchSelect);
+      // index++;
+      // if (index >= this.searchList.length) {
+      //   index = 0;
+      // }
+      // this.toSearchSelect(this.searchList[index]);
     },
-    clearSearch() {},
+    toSearchUp() {
+      let searchText = this.searchText;
+      this.searchAddon.findPrevious(searchText, this.searchOptions);
+      // let index = this.searchList.indexOf(this.searchSelect);
+      // index--;
+      // if (index < 0) {
+      //   index = this.searchList.length - 1;
+      // }
+      // this.toSearchSelect(this.searchList[index]);
+    },
+    toSearchSelect(select) {
+      this.searchSelect = select;
+      console.log(this.term);
+      console.log(select);
+      if (!select) {
+        return;
+      }
+      let line = this.term.buffer.active.getLine(select.lineIndex);
+      if (!line) {
+        return;
+      }
+      console.log(line);
+      this.term.scrollToLine(select.lineIndex);
+      this.term.select(
+        select.start,
+        select.lineIndex,
+        select.end - select.start
+      );
+    },
+    clearSearch() {
+      if (this.searchAddon != null) {
+        // 销毁
+        this.searchAddon.dispose();
+        this.searchAddon = null;
+      }
+      this.searchCount = -1;
+      this.searchIndex = -1;
+      this.term.options.allowProposedApi = false;
+      // this.term.options({ allowProposedApi: false });
+    },
     onChangeOpenDir(openDir) {
       let data = this.extend || {};
       if (this.tool.isEmpty(openDir)) {
@@ -351,9 +470,6 @@ export default {
       this.term.loadAddon(this.fitAddon);
       this.fitAddon.fit();
 
-      this.searchAddon = new SearchAddon();
-      this.term.loadAddon(this.searchAddon);
-
       this.term.focus();
       this.worker.cols = this.term.cols;
       this.worker.rows = this.term.rows;
@@ -464,6 +580,7 @@ export default {
       if (this.tool.keyIsCtrlC(e)) {
         this.doEventCopy();
       } else if (this.tool.keyIsCtrlF(e)) {
+        this.tool.stopEvent(e);
         // 搜索
         this.toShowSearch();
       } else {
@@ -753,7 +870,7 @@ export default {
   background: #303030;
   z-index: 10;
   font-size: 12px;
-  user-select: text;
+  user-select: none;
 }
 
 .terminal-search-box .terminal-search-input {
@@ -769,8 +886,22 @@ export default {
   outline: none;
   font-size: 13px;
   margin: 0px 5px 0px 0px;
+  user-select: text;
+  vertical-align: 1px;
 }
 .terminal-search-box .terminal-search-text {
+  line-height: 30px;
+  vertical-align: 0px;
+}
+
+.terminal-search-box .terminal-search-navs {
+  line-height: 30px;
+  padding-right: 5px;
+}
+.terminal-search-box .terminal-search-navs .terminal-search-nav {
+  font-size: 16px;
+  padding: 0px 2px;
+  cursor: pointer;
   line-height: 30px;
   vertical-align: -1px;
 }
