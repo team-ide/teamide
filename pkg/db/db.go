@@ -9,6 +9,7 @@ import (
 	"github.com/team-ide/go-driver/db_dm"
 	"github.com/team-ide/go-driver/db_kingbase_v8r6"
 	"github.com/team-ide/go-driver/db_mysql"
+	"github.com/team-ide/go-driver/db_opengauss"
 	"github.com/team-ide/go-driver/db_postgresql"
 	"github.com/team-ide/go-driver/db_sqlite3"
 	"go.uber.org/zap"
@@ -131,6 +132,15 @@ func init() {
 		},
 		DialectName: db_postgresql.GetDialect(),
 		matches:     []string{"postgresql", "ps"},
+	})
+	addDatabaseType(&DatabaseType{
+		newDb: func(config *DatabaseConfig) (db *sql.DB, err error) {
+			dsn := db_opengauss.GetDSN(config.Username, config.Password, config.Host, config.Port, config.DbName)
+			db, err = db_opengauss.Open(dsn)
+			return
+		},
+		DialectName: db_opengauss.GetDialect(),
+		matches:     []string{"opengauss"},
 	})
 	initGBaseDatabase()
 	initOdbcDatabase()
