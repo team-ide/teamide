@@ -192,19 +192,44 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 			item := make(map[string]interface{})
 			for index, data := range cache {
 				name := columnTypes[index].Name()
+				var v interface{}
 				switch tV := data.(type) {
 				case time.Time:
 					if tV.IsZero() {
-						item[name] = nil
+						v = nil
 					} else {
-						item[name] = util.GetTimeTime(tV)
+						v = util.GetTimeTime(tV)
 					}
-				case float64, float32:
-					item[name] = fmt.Sprintf("%f", tV)
-				case int64:
-					item[name] = fmt.Sprintf("%d", tV)
 				default:
-					item[name] = worker.GetSqlValue(columnTypes[index], data)
+					v = worker.GetSqlValue(columnTypes[index], data)
+				}
+				if v == nil {
+					item[name] = v
+				} else {
+					switch tV := v.(type) {
+					case time.Time:
+						if tV.IsZero() {
+							item[name] = nil
+						} else {
+							item[name] = util.GetTimeTime(tV)
+						}
+					case float64:
+						if tV >= float64(9007199254740991) || tV <= float64(-9007199254740991) {
+							item[name] = fmt.Sprintf("%f", tV)
+						} else {
+							item[name] = tV
+						}
+					case int64:
+						if tV >= int64(9007199254740991) || tV <= int64(-9007199254740991) {
+							item[name] = fmt.Sprintf("%d", tV)
+						} else {
+							item[name] = tV
+						}
+					case int, int8, int16, int32:
+						item[name] = tV
+					default:
+						item[name] = fmt.Sprint(tV)
+					}
 				}
 			}
 			dataList = append(dataList, item)

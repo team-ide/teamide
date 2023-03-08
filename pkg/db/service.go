@@ -508,10 +508,20 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 				} else {
 					item[name] = util.GetTimeTime(tV)
 				}
-			case float64, float32:
-				item[name] = fmt.Sprintf("%f", tV)
+			case float64:
+				if tV >= float64(9007199254740991) || tV <= float64(-9007199254740991) {
+					item[name] = fmt.Sprintf("%f", tV)
+				} else {
+					item[name] = tV
+				}
 			case int64:
-				item[name] = fmt.Sprintf("%d", tV)
+				if tV >= int64(9007199254740991) || tV <= int64(-9007199254740991) {
+					item[name] = fmt.Sprintf("%d", tV)
+				} else {
+					item[name] = tV
+				}
+			case int, int8, int16, int32:
+				item[name] = tV
 			default:
 				item[name] = fmt.Sprint(tV)
 			}
