@@ -4,7 +4,7 @@ Team IDE 团队在线开发工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![GitHub Release Latest](https://img.shields.io/badge/Release-V2.0.0-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![GitHub Release Latest](https://img.shields.io/badge/Release-V2.0.2-brightgreen)](https://github.com/team-ide/teamide/releases)
 
 ## Team · IDE 功能模块
 
@@ -151,7 +151,7 @@ Team IDE 团队在线开发工具
 ```shell
 
 # 最新版本 至 https://hub.docker.com/repository/docker/teamide/teamide-server/tags?page=1&ordering=last_updated 查看
-docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:2.0.1
+docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:2.0.2
 ```
 
 ```shell
