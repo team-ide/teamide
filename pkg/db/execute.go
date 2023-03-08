@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
 	"go.uber.org/zap"
@@ -198,6 +199,10 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 					} else {
 						item[name] = util.GetTimeTime(tV)
 					}
+				case float64, float32:
+					item[name] = fmt.Sprintf("%f", tV)
+				case int64:
+					item[name] = fmt.Sprintf("%d", tV)
 				default:
 					item[name] = worker.GetSqlValue(columnTypes[index], data)
 				}

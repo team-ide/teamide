@@ -492,24 +492,28 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 	for _, column := range columnList {
 		names = append(names, strings.ToLower(column.ColumnName))
 	}
-	for _, one := range listMap {
-		for k, v := range one {
+	for _, item := range listMap {
+		for name, v := range item {
 			if v == nil {
 				continue
 			}
-			if util.ContainsString(names, strings.ToLower(k)) < 0 {
-				delete(one, k)
+			if util.ContainsString(names, strings.ToLower(name)) < 0 {
+				delete(item, name)
 				continue
 			}
 			switch tV := v.(type) {
 			case time.Time:
 				if tV.IsZero() {
-					one[k] = nil
+					item[name] = nil
 				} else {
-					one[k] = util.GetTimeTime(tV)
+					item[name] = util.GetTimeTime(tV)
 				}
+			case float64, float32:
+				item[name] = fmt.Sprintf("%f", tV)
+			case int64:
+				item[name] = fmt.Sprintf("%d", tV)
 			default:
-				one[k] = fmt.Sprint(tV)
+				item[name] = fmt.Sprint(tV)
 			}
 		}
 	}
