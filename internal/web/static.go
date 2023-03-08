@@ -33,16 +33,7 @@ func (this_ *Server) bindGet(routerGroup *gin.RouterGroup) {
 }
 
 func (this_ *Server) toIndex(c *gin.Context) bool {
-
-	bytes := static.Asset("index.html")
-	if bytes == nil {
-		return false
-	}
-
-	c.Header("Content-Type", "text/html")
-	c.Writer.Write(bytes)
-	c.Status(http.StatusOK)
-	return true
+	return this_.toStaticByName("index.html", c)
 }
 
 func (this_ *Server) toStatic(path string, c *gin.Context) bool {
@@ -53,11 +44,10 @@ func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 	}
 	name := path[index:]
 
-	bytes := static.Asset(name)
-	if bytes == nil {
-		return false
-	}
+	return this_.toStaticByName(name, c)
+}
 
+func (this_ *Server) setHeaderByName(name string, c *gin.Context) {
 	c.Header("Cache-Control", "max-age=3600")
 	if strings.HasSuffix(name, ".html") {
 		c.Header("Content-Type", "text/html")
@@ -67,7 +57,36 @@ func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 	} else if strings.HasSuffix(name, ".js") {
 		c.Header("Content-Type", "application/javascript")
 	}
-	c.Writer.Write(bytes)
+}
+
+func (this_ *Server) toStaticByName(name string, c *gin.Context) bool {
+
+	// 查看本地文件是否有静态文件
+
+	filePath := this_.RootDir + "statics/" + name
+	exist, _ := util.PathExists(filePath)
+	if exist {
+		fileInfo, err := os.Open(filePath)
+		if err != nil {
+			base.ResponseJSON(nil, err, c)
+			return true
+		}
+		defer fileInfo.Close()
+		this_.setHeaderByName(name, c)
+		_, err = io.Copy(c.Writer, fileInfo)
+		if err != nil {
+			base.ResponseJSON(nil, err, c)
+			return true
+		}
+	} else {
+		bytes := static.Asset(name)
+		if bytes == nil {
+			return false
+		}
+		this_.setHeaderByName(name, c)
+		c.Writer.Write(bytes)
+	}
+
 	c.Status(http.StatusOK)
 	return true
 }
@@ -93,7 +112,7 @@ func (this_ *Server) toFiles(path string, c *gin.Context) bool {
 		return true
 	}
 	fileInfo, err := os.Open(filePath)
-	if fileInfo == nil {
+	if err != nil {
 		base.ResponseJSON(nil, err, c)
 		return true
 	}

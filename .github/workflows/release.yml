@@ -81,12 +81,10 @@ jobs:
           cp -rf CHANGELOG.md release/base/CHANGELOG.md
           
           cp -rf release/base release/teamide-linux-x64
-          cp -rf release/base release/teamide-server-linux-x64
           cp -rf release/base release/teamide-darwin-x64
           cp -rf release/base release/teamide-windows-x64
+          cp -rf html/dist release/statics
           
-          mkdir release/teamide-server-linux-x64/conf
-          cp -rf conf/release/* release/teamide-server-linux-x64/conf/
 
       - run: |
           echo '{"upload_url":""}' > release/release.json
@@ -96,14 +94,14 @@ jobs:
           echo '${{ steps.create_release.outputs.upload_url }}'
           echo '{"upload_url":"${{ steps.create_release.outputs.upload_url }}"}' > release/release.json
 
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.19"
+#      - name: Build Server
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: "^1.19"
       # 将静态资源打包html.go
-      - run: |
-          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          mv internal/static/html.go release/html.go
+#      - run: |
+#          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
+#          mv internal/static/html.go release/html.go
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -152,8 +150,9 @@ jobs:
           go-version: "^1.19"
 
       # 将静态资源打包html.go
+      #          mv release/html.go internal/static/html.go
       - run: |
-          mv release/html.go internal/static/html.go
+          mv release/statics ./electron-template/assets/server/statics
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
 
       - name: Install Node and NPM
@@ -208,13 +207,15 @@ jobs:
           go-version: "^1.19"
 
       # 将静态资源打包html.go
+      #          mv release/html.go internal/static/html.go
       - run: |
-          mv release/html.go internal/static/html.go
+          cp -rf release/statics ./electron-template/assets/server/statics
           go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
           CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       - run: |
           mkdir -p release/teamide-server/lib
+          cp -rf release/statics release/teamide-server/statics
           cp -rf conf/release release/teamide-server/conf
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/lib/libaci.so
           cp -rf docker/server.sh release/teamide-server/server.sh
@@ -304,8 +305,9 @@ jobs:
 
       # 将静态资源打包html.go
       # -H=windowsgui
+#          mv release/html.go internal/static/html.go
       - run: |
-          mv release/html.go internal/static/html.go
+          mv release/statics ./electron-template/assets/server/statics
           go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
 
       - name: Install Node and NPM

@@ -3,6 +3,7 @@ FROM teamide/build:0.8
 EXPOSE 21080/tcp
 
 COPY release/teamide-server/teamide /opt/teamide/teamide
+COPY release/teamide-server/statics /opt/teamide/statics
 COPY release/teamide-server/conf /opt/teamide/conf
 COPY release/teamide-server/lib /opt/teamide/lib
 COPY docker/docker-entrypoint.sh /opt/teamide/docker-entrypoint.sh
