@@ -2,10 +2,10 @@ package module_node
 
 import (
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
+	"github.com/team-ide/go-tool/util"
 	"teamide/internal/context"
+	"teamide/pkg/base"
 	"teamide/pkg/system"
-	"teamide/pkg/util"
 )
 
 type NodeApi struct {

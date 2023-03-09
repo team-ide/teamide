@@ -2,12 +2,12 @@ package module_elasticsearch
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/elasticsearch"
-	"teamide/pkg/util"
 )
 
 type api struct {
@@ -83,17 +83,17 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
 	key := "elasticsearch-" + esConfig.Url
 	if esConfig.Username != "" {
-		key += "-" + util.GetMd5String(key+esConfig.Username)
+		key += "-" + base.GetMd5String(key+esConfig.Username)
 	}
 	if esConfig.Password != "" {
-		key += "-" + util.GetMd5String(key+esConfig.Password)
+		key += "-" + base.GetMd5String(key+esConfig.Password)
 	}
 	if esConfig.CertPath != "" {
-		key += "-" + util.GetMd5String(key+esConfig.CertPath)
+		key += "-" + base.GetMd5String(key+esConfig.CertPath)
 	}
 
-	var service util.Service
-	service, err = util.GetService(key, func() (res util.Service, err error) {
+	var service base.Service
+	service, err = base.GetService(key, func() (res base.Service, err error) {
 		var s *elasticsearch.V7Service
 		s, err = elasticsearch.CreateESService(esConfig)
 		if err != nil {
@@ -540,7 +540,7 @@ func addWorkerTask(workerId string, taskId string) {
 	workerTasksCacheLock.Lock()
 	defer workerTasksCacheLock.Unlock()
 	taskIds := workerTasksCache[workerId]
-	if util.ContainsString(taskIds, taskId) < 0 {
+	if util.StringIndexOf(taskIds, taskId) < 0 {
 		taskIds = append(taskIds, taskId)
 		workerTasksCache[workerId] = taskIds
 	}

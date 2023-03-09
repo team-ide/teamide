@@ -3,8 +3,8 @@ package module_node
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
-	"teamide/pkg/util"
+	"github.com/team-ide/go-tool/util"
+	"teamide/pkg/base"
 )
 
 type netProxyMonitorDataRequest struct {
@@ -92,7 +92,7 @@ func (this_ *NodeApi) netProxyInsert(requestBean *base.RequestBean, c *gin.Conte
 
 	netProxy := request.NetProxyModel
 	netProxy.UserId = requestBean.JWT.UserId
-	netProxy.Code = util.UUID()
+	netProxy.Code = util.GetUUID()
 
 	err = this_.NodeService.nodeContext.formatNetProxy(netProxy)
 	if err != nil {

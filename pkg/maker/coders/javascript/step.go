@@ -3,11 +3,12 @@ package javascript
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/base"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
-	"teamide/pkg/util"
 )
 
 type stepCoder struct {
@@ -127,7 +128,7 @@ func GetJavascriptByStep(app *modelers.Application, step interface{}, tab int) (
 
 		stepJavascript, err = getJavascriptByStepScript(app, step_, tab)
 	default:
-		err = errors.New("GetJavascriptByStep step type [" + util.GetRefType(step).String() + "] is not support")
+		err = errors.New("GetJavascriptByStep step type [" + base.GetRefType(step).String() + "] is not support")
 		util.Logger.Error("GetJavascriptByStep error", zap.Any("step", step), zap.Error(err))
 		return
 	}
@@ -150,14 +151,14 @@ func GetJavascriptByStep(app *modelers.Application, step interface{}, tab int) (
 
 	if util.IsNotEmpty(stepModel.Return) {
 		if stepModel.Return != "-" {
-			util.AppendLine(&javascript, "return "+stepModel.Return, tab)
+			base.AppendLine(&javascript, "return "+stepModel.Return, tab)
 		} else {
-			util.AppendLine(&javascript, "return", tab)
+			base.AppendLine(&javascript, "return", tab)
 		}
 	}
 	if hasIf {
 		tab--
-		util.AppendLine(&javascript, "} ", tab)
+		base.AppendLine(&javascript, "} ", tab)
 	}
 	return
 }
@@ -165,47 +166,47 @@ func GetJavascriptByStep(app *modelers.Application, step interface{}, tab int) (
 func getJavascriptByStep(app *modelers.Application, step *modelers.StepModel, tab *int) (javascript string, hasIf bool) {
 
 	if util.IsNotEmpty(step.Note) {
-		util.AppendLine(&javascript, "// "+step.Note, *tab)
+		base.AppendLine(&javascript, "// "+step.Note, *tab)
 	} else if util.IsNotEmpty(step.Comment) {
-		util.AppendLine(&javascript, "// "+step.Comment, *tab)
+		base.AppendLine(&javascript, "// "+step.Comment, *tab)
 	}
 	if util.IsNotEmpty(step.If) {
 		hasIf = true
-		util.AppendLine(&javascript, "if ("+step.If+") { ", *tab)
+		base.AppendLine(&javascript, "if ("+step.If+") { ", *tab)
 		*tab++
 	}
 	return
 }
 
 func getJavascriptByStepError(app *modelers.Application, step *modelers.StepErrorModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// 异常 操作", tab)
+	base.AppendLine(&javascript, "// 异常 操作", tab)
 
 	errorModel := app.GetError(step.Error)
 	if errorModel == nil {
-		util.AppendLine(&javascript, "throw new Error(\""+step.Error+"\")", tab)
+		base.AppendLine(&javascript, "throw new Error(\""+step.Error+"\")", tab)
 	} else {
-		util.AppendLine(&javascript, "throw app.Errors."+errorModel.Name+"", tab)
+		base.AppendLine(&javascript, "throw app.Errors."+errorModel.Name+"", tab)
 	}
 	return
 }
 
 func getJavascriptByStepVar(app *modelers.Application, step *modelers.StepVarModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// 定义变量 "+step.Var+" ", tab)
+	base.AppendLine(&javascript, "// 定义变量 "+step.Var+" ", tab)
 
 	return
 }
 
 func getJavascriptByStepLock(app *modelers.Application, step *modelers.StepLockModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// 锁 "+step.Lock+" 操作", tab)
+	base.AppendLine(&javascript, "// 锁 "+step.Lock+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepDb(app *modelers.Application, step *modelers.StepDbModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// DB "+step.Db+" 操作", tab)
+	base.AppendLine(&javascript, "// DB "+step.Db+" 操作", tab)
 
-	util.AppendLine(&javascript, "sql = \"\"", tab)
-	util.AppendLine(&javascript, "sqlParams = []", tab)
+	base.AppendLine(&javascript, "sql = \"\"", tab)
+	base.AppendLine(&javascript, "sqlParams = []", tab)
 
 	var isSelect bool
 	var isInsert bool
@@ -214,110 +215,110 @@ func getJavascriptByStepDb(app *modelers.Application, step *modelers.StepDbModel
 	switch step.Db {
 	case "select":
 		isSelect = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
 		break
 	case "selectOne":
 		isSelect = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
 		break
 	case "selectPage":
 		isSelect = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "SELECT %s"`, step.Table), tab)
 		break
 	case "insert":
 		isInsert = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "INSERT %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "INSERT %s"`, step.Table), tab)
 		break
 	case "update":
 		isUpdate = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "UPDATE %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "UPDATE %s"`, step.Table), tab)
 		break
 	case "delete":
 		isDelete = true
-		util.AppendLine(&javascript, fmt.Sprintf(`sql += "DELETE %s"`, step.Table), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`sql += "DELETE %s"`, step.Table), tab)
 		break
 	}
 	if isSelect {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.select(sql, sqlParams)`, step.SetVar), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.select(sql, sqlParams)`, step.SetVar), tab)
 	} else if isInsert {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.insert(sql, sqlParams)`, step.SetVar), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.insert(sql, sqlParams)`, step.SetVar), tab)
 	} else if isUpdate {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.update(sql, sqlParams)`, step.SetVar), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.update(sql, sqlParams)`, step.SetVar), tab)
 	} else if isDelete {
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.delete(sql, sqlParams)`, step.SetVar), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`%s = dbHandler.delete(sql, sqlParams)`, step.SetVar), tab)
 	}
 	return
 }
 
 func getJavascriptByStepRedis(app *modelers.Application, step *modelers.StepRedisModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Redis "+step.Redis+" 操作", tab)
+	base.AppendLine(&javascript, "// Redis "+step.Redis+" 操作", tab)
 	switch strings.ToLower(step.Redis) {
 	case "get":
-		util.AppendLine(&javascript, fmt.Sprintf(`%s = redisHandler.get("%s")`, step.SetVar, step.Key), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`%s = redisHandler.get("%s")`, step.SetVar, step.Key), tab)
 		break
 	case "set":
-		util.AppendLine(&javascript, fmt.Sprintf(`redisHandler.set("%s", "%s")`, step.Key, step.Value), tab)
+		base.AppendLine(&javascript, fmt.Sprintf(`redisHandler.set("%s", "%s")`, step.Key, step.Value), tab)
 		break
 	}
 	return
 }
 
 func getJavascriptByStepEs(app *modelers.Application, step *modelers.StepEsModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// ES "+step.Es+" 操作", tab)
+	base.AppendLine(&javascript, "// ES "+step.Es+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepZk(app *modelers.Application, step *modelers.StepZkModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// ZK "+step.Zk+" 操作", tab)
+	base.AppendLine(&javascript, "// ZK "+step.Zk+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepCache(app *modelers.Application, step *modelers.StepCacheModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Cache "+step.Cache+" 操作", tab)
+	base.AppendLine(&javascript, "// Cache "+step.Cache+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepFile(app *modelers.Application, step *modelers.StepFileModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// File "+step.File+" 操作", tab)
+	base.AppendLine(&javascript, "// File "+step.File+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepCommand(app *modelers.Application, step *modelers.StepCommandModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Command "+step.Command+" 操作", tab)
+	base.AppendLine(&javascript, "// Command "+step.Command+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepService(app *modelers.Application, step *modelers.StepServiceModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Service "+step.Service+" 操作", tab)
+	base.AppendLine(&javascript, "// Service "+step.Service+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepDao(app *modelers.Application, step *modelers.StepDaoModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Dao "+step.Dao+" 操作", tab)
+	base.AppendLine(&javascript, "// Dao "+step.Dao+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepScript(app *modelers.Application, step *modelers.StepScriptModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Script "+step.Script+" 操作", tab)
+	base.AppendLine(&javascript, "// Script "+step.Script+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepMq(app *modelers.Application, step *modelers.StepMqModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// MQ "+step.Mq+" 操作", tab)
+	base.AppendLine(&javascript, "// MQ "+step.Mq+" 操作", tab)
 
 	return
 }
 
 func getJavascriptByStepHttp(app *modelers.Application, step *modelers.StepHttpModel, tab int) (javascript string, err error) {
-	util.AppendLine(&javascript, "// Http "+step.Http+" 操作", tab)
+	base.AppendLine(&javascript, "// Http "+step.Http+" 操作", tab)
 
 	return
 }

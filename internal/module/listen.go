@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/base"
 )
 
 type ListenResponse struct {

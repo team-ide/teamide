@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
-	"teamide/internal/base"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 type api struct {
@@ -65,7 +65,7 @@ func (this_ *api) key(_ *base.RequestBean, c *gin.Context) (res interface{}, err
 	if err != nil {
 		return
 	}
-	data["key"] = util.UUID()
+	data["key"] = util.GetUUID()
 	res = data
 	return
 }

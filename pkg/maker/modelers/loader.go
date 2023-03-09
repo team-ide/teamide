@@ -1,11 +1,11 @@
 package modelers
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"teamide/pkg/util"
 )
 
 func newApplication() (app *Application) {

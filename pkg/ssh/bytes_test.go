@@ -3,8 +3,8 @@ package ssh
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/pkg/util"
 	"testing"
 )
 

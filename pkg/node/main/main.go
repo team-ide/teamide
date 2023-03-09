@@ -4,8 +4,8 @@ import (
 	"flag"
 	"os"
 	"sync"
+	"teamide/pkg/base"
 	"teamide/pkg/node"
-	"teamide/pkg/util"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 func main() {
 	for _, v := range os.Args {
 		if v == "-version" || v == "-v" {
-			println(util.GetVersion())
+			println(base.GetVersion())
 			return
 		}
 	}

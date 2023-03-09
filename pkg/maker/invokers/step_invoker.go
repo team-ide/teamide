@@ -3,9 +3,10 @@ package invokers
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	"teamide/pkg/base"
 	"teamide/pkg/maker/modelers"
-	"teamide/pkg/util"
 )
 
 func (this_ *Invoker) InvokeStep(step interface{}, invokeData *InvokeData) (err error) {
@@ -104,7 +105,7 @@ func (this_ *Invoker) InvokeStep(step interface{}, invokeData *InvokeData) (err 
 		}
 		break
 	default:
-		err = errors.New("invoke step [" + util.GetRefType(step).Name() + "] can not be support")
+		err = errors.New("invoke step [" + base.GetRefType(step).Name() + "] can not be support")
 		util.Logger.Error("invoke step error", zap.Any("error", err))
 		return
 	}

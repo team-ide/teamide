@@ -3,7 +3,7 @@ package module_toolbox
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
+	"teamide/pkg/base"
 )
 
 type OpenTabRequest struct {

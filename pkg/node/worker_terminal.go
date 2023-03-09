@@ -2,9 +2,9 @@ package node
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.Size, readKey string) (key string, err error) {
@@ -38,7 +38,7 @@ func (this_ *Worker) workTerminalStart(lineNodeIdList []string, size *terminal.S
 
 	Logger.Info("local service start success")
 
-	key = util.UUID()
+	key = util.GetUUID()
 
 	this_.addTerminalService(key, service)
 

@@ -2,10 +2,10 @@ package module_node
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 func NewTerminalService(nodeId string, nodeService *NodeService) (res *terminalService) {

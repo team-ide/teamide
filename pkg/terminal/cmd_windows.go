@@ -1,9 +1,9 @@
 package terminal
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os/exec"
-	"teamide/pkg/util"
 )
 
 func IsWindows() bool {

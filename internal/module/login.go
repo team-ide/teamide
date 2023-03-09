@@ -5,13 +5,13 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/mssola/user_agent"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_user"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type LoginRequest struct {
@@ -159,7 +159,7 @@ func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) (jwtStr 
 		return
 	}
 	jwt := &base.JWTBean{
-		Sign:    util.UUID(),
+		Sign:    util.GetUUID(),
 		UserId:  user.UserId,
 		Name:    user.Name,
 		Account: user.Account,
@@ -223,7 +223,8 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		}
 	}
 
-	jsonString := util.ToJSON(response)
+	bs, _ := json.Marshal(response)
+	jsonString := string(bs)
 	res, err = util.AesEncryptCBCByKey(jsonString, this_.HttpAesKey)
 	if err != nil {
 		return

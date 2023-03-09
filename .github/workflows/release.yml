@@ -153,7 +153,7 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           mv release/statics ./electron-template/assets/server/statics
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
+          go build -ldflags="-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -210,8 +210,8 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
-          go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
-          CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
+          go build -ldflags="-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
+          CGO_ENABLED=0 go build -ldflags="-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       - run: |
           mkdir -p release/teamide-server/lib
@@ -220,7 +220,7 @@ jobs:
           cp -rf lib/shentong/linux64/libaci.so release/teamide-server/lib/libaci.so
           cp -rf docker/server.sh release/teamide-server/server.sh
           chmod +x release/teamide-server/server.sh
-          go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
+          go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
 
       - run: |
           cd release/teamide-server
@@ -308,7 +308,7 @@ jobs:
 #          mv release/html.go internal/static/html.go
       - run: |
           mv release/statics ./electron-template/assets/server/statics
-          go build -ldflags "-w -s -X teamide/pkg/util.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
+          go build -ldflags "-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1

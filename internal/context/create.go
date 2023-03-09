@@ -3,15 +3,16 @@ package context
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"net"
 	"os"
 	"strings"
 	"teamide/internal/config"
+	"teamide/pkg/base"
 	"teamide/pkg/db"
 	"teamide/pkg/node"
-	"teamide/pkg/util"
 )
 
 type ServerConf struct {
@@ -182,7 +183,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger = newZapLogger(serverConfig)
 	}
 	util.Logger = this_.Logger
-	util.TempDir = serverConfig.Server.TempDir
+	base.TempDir = serverConfig.Server.TempDir
 	node.Logger = this_.Logger
 	db.FileUploadDir = this_.GetFilesDir()
 

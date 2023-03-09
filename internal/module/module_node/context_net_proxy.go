@@ -3,9 +3,9 @@ package module_node
 import (
 	"encoding/json"
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/node"
-	"teamide/pkg/util"
 )
 
 func (this_ *NodeContext) getNetProxyModel(id int64) (res *NetProxyModel) {
@@ -100,7 +100,7 @@ func (this_ *NodeContext) addNetProxyModel(netProxyModel *NetProxyModel) {
 	this_.setNetProxyModelByCode(netProxyModel.Code, netProxyModel)
 
 	var list = this_.netProxyModelIdList
-	if util.ContainsInt64(list, netProxyModel.NetProxyId) < 0 {
+	if util.Int64IndexOf(list, netProxyModel.NetProxyId) < 0 {
 		list = append(list, netProxyModel.NetProxyId)
 	}
 	this_.netProxyModelIdList = list

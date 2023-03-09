@@ -3,11 +3,11 @@ package module_redis
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/redis"
-	"teamide/pkg/util"
 )
 
 type api struct {
@@ -77,20 +77,20 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 func getServiceKey(redisConfig redis.Config) (key string) {
 	key = "redis-" + redisConfig.Address
 	if redisConfig.Username != "" {
-		key += "-" + util.GetMd5String(key+redisConfig.Username)
+		key += "-" + base.GetMd5String(key+redisConfig.Username)
 	}
 	if redisConfig.Auth != "" {
-		key += "-" + util.GetMd5String(key+redisConfig.Auth)
+		key += "-" + base.GetMd5String(key+redisConfig.Auth)
 	}
 	if redisConfig.CertPath != "" {
-		key += "-" + util.GetMd5String(key+redisConfig.CertPath)
+		key += "-" + base.GetMd5String(key+redisConfig.CertPath)
 	}
 	return
 }
 func getService(redisConfig redis.Config) (res redis.Service, err error) {
 	key := getServiceKey(redisConfig)
-	var service util.Service
-	service, err = util.GetService(key, func() (res util.Service, err error) {
+	var service base.Service
+	service, err = base.GetService(key, func() (res base.Service, err error) {
 		var s redis.Service
 		s, err = redis.CreateService(redisConfig)
 		if err != nil {
@@ -500,7 +500,7 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 	//if !base.RequestJSON(request, c) {
 	//	return
 	//}
-	//taskKey := util.UUID()
+	//taskKey := util.GetUUID()
 	//
 	//request.Key = taskKey
 	//request.Service = service

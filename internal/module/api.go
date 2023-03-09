@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/context"
 	"teamide/internal/module/module_database"
 	"teamide/internal/module/module_elasticsearch"
@@ -24,7 +24,7 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
 	"teamide/internal/module/module_zookeeper"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
@@ -196,7 +196,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	}
 	if api.Do != nil {
 		var err error
-		var startTime = util.Now()
+		var startTime = util.GetNow()
 		var logRecode *module_log.LogModel = nil
 		if !api.NotRecodeLog {
 			userAgentStr := c.Request.UserAgent()
@@ -240,7 +240,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 
 		defer func() {
 			if logRecode != nil {
-				logRecode.EndTime = util.Now()
+				logRecode.EndTime = util.GetNow()
 				_ = this_.logService.Insert(logRecode, err)
 			}
 		}()

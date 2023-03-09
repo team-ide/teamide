@@ -3,10 +3,10 @@ package elasticsearch
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/pkg/data_engine"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func StartImportTask(task *ImportTask) {
 	task.toDo = task.do
 
 	if task.TaskId == "" {
-		task.TaskId = util.UUID()
+		task.TaskId = util.GetUUID()
 	}
 
 	taskCache[task.TaskId] = task.Task
@@ -110,7 +110,7 @@ func (this_ *Task) Statistics() {
 		this_.DoDataStatistics.DataAverage = fmt.Sprintf("%.2f", dataAverage)
 	}
 	this_.NowTime = time.Now()
-	this_.UseTime = util.GetTimeTime(this_.NowTime) - util.GetTimeTime(this_.StartTime)
+	this_.UseTime = util.GetTimeByTime(this_.NowTime) - util.GetTimeByTime(this_.StartTime)
 
 }
 
@@ -153,7 +153,7 @@ func (this_ *Task) Start() {
 			util.Logger.Error("任务执行异常", zap.Any("error", err))
 		}
 		this_.EndTime = time.Now()
-		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
+		this_.UseTime = util.GetTimeByTime(this_.EndTime) - util.GetTimeByTime(this_.StartTime)
 		this_.IsEnd = true
 	}()
 

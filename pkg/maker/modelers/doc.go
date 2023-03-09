@@ -3,12 +3,13 @@ package modelers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"
 	"sync"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type docTemplate struct {
@@ -197,7 +198,7 @@ func appendNodeFieldValue(node *yaml.Node, value interface{}, docFieldStruct *do
 		}
 	}
 
-	str, _ := util.GetStringValue(value)
+	str := util.GetStringValue(value)
 	node.Content = append(node.Content, &yaml.Node{
 		Kind:  8,
 		Value: str,
@@ -275,7 +276,7 @@ func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct
 					return
 				}
 			} else {
-				str, _ := util.GetStringValue(value)
+				str := util.GetStringValue(value)
 				listNode.Content = append(listNode.Content, &yaml.Node{
 					Kind:  8,
 					Value: str,
@@ -284,7 +285,7 @@ func appendNodeFieldValues(node *yaml.Node, values []interface{}, docFieldStruct
 		}
 	} else {
 		for _, value := range values {
-			str, _ := util.GetStringValue(value)
+			str := util.GetStringValue(value)
 			listNode.Content = append(listNode.Content, &yaml.Node{
 				Kind:  8,
 				Value: str,
@@ -311,7 +312,7 @@ func appendNodeValue(node *yaml.Node, value map[string]interface{}, docTemplateN
 			}
 		}
 		if canNotOutCount == len(docStruct.Fields)-1 {
-			str, _ := util.GetStringValue(value[docStruct.Abbreviation])
+			str := util.GetStringValue(value[docStruct.Abbreviation])
 			node.Content = append(node.Content, &yaml.Node{
 				Kind:  8,
 				Value: str,
@@ -346,7 +347,7 @@ func appendNodeValue(node *yaml.Node, value map[string]interface{}, docTemplateN
 }
 
 func canNotOut(value interface{}) bool {
-	if value == nil || value == "" || value == 0 || value == false || util.IsZero(value) {
+	if value == nil || value == "" || value == 0 || value == false || base.IsZero(value) {
 		return true
 	}
 	return false

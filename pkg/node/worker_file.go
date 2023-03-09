@@ -2,10 +2,10 @@ package node
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
 	"teamide/pkg/filework"
-	"teamide/pkg/util"
 )
 
 type FileInfo struct {
@@ -251,7 +251,7 @@ func (this_ *Worker) workFileWrite(lineNodeIdList []string, path string) (sendKe
 		return
 	}
 
-	sendKey = util.UUID()
+	sendKey = util.GetUUID()
 
 	var file *os.File
 	this_.addOnBytesCache(sendKey, &OnBytes{

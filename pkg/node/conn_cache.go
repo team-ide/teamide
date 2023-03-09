@@ -1,9 +1,9 @@
 package node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"net"
 	"sync"
-	"teamide/pkg/util"
 )
 
 type connCache struct {
@@ -69,11 +69,11 @@ func (this_ *connCache) send(connId string, bytes []byte) (err error) {
 		writeLock.Lock()
 		defer writeLock.Unlock()
 
-		start := util.Now().UnixNano()
+		start := util.GetNow().UnixNano()
 
 		_, err = conn.Write(bytes)
 
-		end := util.Now().UnixNano()
+		end := util.GetNow().UnixNano()
 		this_.MonitorData.monitorWrite(int64(len(bytes)), end-start)
 		//Logger.Info(this_.server.GetServerInfo() + " 代理服务 " + this_.netProxy.Inner.GetInfoStr() + " 连接 [" + connId + "] 发送 [" + fmt.Sprint(len(bytes)) + "]")
 	} else {

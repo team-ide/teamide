@@ -1,8 +1,8 @@
 package node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/pkg/util"
 )
 
 func (this_ *Worker) doAddNetProxyInnerList(netProxyList []*NetProxyInner) (err error) {
@@ -118,7 +118,7 @@ func (this_ *Worker) doRemoveNetProxyInnerList(removeNetProxyIdList []string) (e
 	var list = this_.netProxyInnerList
 	var newList []*NetProxyInner
 	for _, one := range list {
-		if util.ContainsString(removeNetProxyIdList, one.Id) >= 0 {
+		if util.StringIndexOf(removeNetProxyIdList, one.Id) >= 0 {
 		} else {
 			newList = append(newList, one)
 		}
@@ -143,7 +143,7 @@ func (this_ *Worker) doRemoveNetProxyOuterList(removeNetProxyIdList []string) (e
 	var list = this_.netProxyOuterList
 	var newList []*NetProxyOuter
 	for _, one := range list {
-		if util.ContainsString(removeNetProxyIdList, one.Id) >= 0 {
+		if util.StringIndexOf(removeNetProxyIdList, one.Id) >= 0 {
 		} else {
 			newList = append(newList, one)
 		}

@@ -1,9 +1,9 @@
 package modelers
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-	"teamide/pkg/util"
 )
 
 type Type struct {

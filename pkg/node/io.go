@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"net"
@@ -11,7 +12,6 @@ import (
 	"teamide/pkg/filework"
 	"teamide/pkg/system"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 var (
@@ -227,7 +227,7 @@ func WriteMessage(writer io.Writer, message *Message, MonitorData *MonitorData) 
 
 func ReadBytes(reader io.Reader, MonitorData *MonitorData) (bytes []byte, err error) {
 
-	start := util.Now().UnixNano()
+	start := util.GetNow().UnixNano()
 
 	var buf []byte
 	var n int
@@ -268,7 +268,7 @@ func ReadBytes(reader io.Reader, MonitorData *MonitorData) (bytes []byte, err er
 			}
 		}
 	}
-	end := util.Now().UnixNano()
+	end := util.GetNow().UnixNano()
 	MonitorData.monitorWrite(int64(length+4), end-start)
 	return
 }
@@ -277,7 +277,7 @@ func WriteBytes(writer io.Writer, bytes []byte, MonitorData *MonitorData) (err e
 	var n int
 	var length = len(bytes)
 
-	start := util.Now().UnixNano()
+	start := util.GetNow().UnixNano()
 
 	writeBytes := []byte{0, 0, 0, 0}
 	binary.LittleEndian.PutUint32(writeBytes, uint32(length))
@@ -300,7 +300,7 @@ func WriteBytes(writer io.Writer, bytes []byte, MonitorData *MonitorData) (err e
 		err = LengthError
 		return
 	}
-	end := util.Now().UnixNano()
+	end := util.GetNow().UnixNano()
 	MonitorData.monitorWrite(int64(length), end-start)
 	return
 }

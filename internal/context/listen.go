@@ -1,8 +1,8 @@
 package context
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"sync"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -257,10 +257,10 @@ func listenerInit() {
 }
 
 func checkListener() {
-	startTimeSecond := util.GetNowTimeSecond()
+	startTimeSecond := util.GetNowSecond()
 
 	defer func() {
-		endTimeSecond := util.GetNowTimeSecond()
+		endTimeSecond := util.GetNowSecond()
 		useSecond := endTimeSecond - startTimeSecond
 		waitSecond := 60 - useSecond
 		if waitSecond > 0 {
@@ -271,11 +271,11 @@ func checkListener() {
 
 	list := GetListeners()
 	for _, one := range list {
-		nowTimeSecond := util.GetNowTimeSecond()
+		nowTimeSecond := util.GetNowSecond()
 
 		// 最后监听时间 在此 之前的 都为超时
 		outTimeSecond := nowTimeSecond - int64(listenerLastListenTimeoutSecond)
-		lastListenTimeSecond := util.GetTimeSecond(one.lastListenTime)
+		lastListenTimeSecond := util.GetSecondByTime(one.lastListenTime)
 		if lastListenTimeSecond > outTimeSecond {
 			if one.listenIng {
 				go one.AddEvent(&ListenEvent{})

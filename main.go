@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"sync"
 	"teamide/internal"
 	"teamide/internal/context"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 	"teamide/pkg/window"
 )
 
@@ -102,7 +103,7 @@ func init() {
 func main() {
 	for _, v := range os.Args {
 		if v == "-version" || v == "-v" {
-			println(util.GetVersion())
+			println(base.GetVersion())
 			return
 		}
 	}
@@ -122,7 +123,7 @@ func main() {
 	waitGroupForStop.Add(1)
 
 	serverConf := &context.ServerConf{
-		Version:     util.GetVersion(),
+		Version:     base.GetVersion(),
 		IsServer:    isServer,
 		IsHtmlDev:   isHtmlDev,
 		IsServerDev: isServerDev,

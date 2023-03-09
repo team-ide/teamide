@@ -3,10 +3,10 @@ package elasticsearch
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/pkg/data_engine"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -148,16 +148,16 @@ func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, thre
 			doc := &InsertDoc{
 				IndexName: this_.IndexName,
 			}
-			doc.Id, err = util.GetStringValue(data["id"])
-			if err != nil {
-				doDataStatistics.IncrDataErrorCount(1, 0)
-				util.Logger.Error("get id value error", zap.Any("data", data), zap.Error(err))
-				if this_.ErrorContinue {
-					err = nil
-					continue
-				}
-				return
-			}
+			doc.Id = util.GetStringValue(data["id"])
+			//if err != nil {
+			//	doDataStatistics.IncrDataErrorCount(1, 0)
+			//	util.Logger.Error("get id value error", zap.Any("data", data), zap.Error(err))
+			//	if this_.ErrorContinue {
+			//		err = nil
+			//		continue
+			//	}
+			//	return
+			//}
 
 			doc.Doc = data
 
@@ -168,7 +168,7 @@ func (this_ *ImportTask) doThreadStrategy(waitGroupForStop *sync.WaitGroup, thre
 
 		_, err = this_.Service.BatchInsertNotWait(docs)
 		var endTime = time.Now()
-		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+		var useTime = util.GetTimeByTime(endTime) - util.GetTimeByTime(startTime)
 		if err != nil {
 			doDataStatistics.IncrDataErrorCount(size, useTime)
 			util.Logger.Error("BatchInsertNotWait error", zap.Any("size", size), zap.Any("useTime", useTime), zap.Error(err))

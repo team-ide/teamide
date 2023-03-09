@@ -3,10 +3,10 @@ package module_file_manager
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/internal/context"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -69,7 +69,7 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 			}
 			var nowTime = time.Now()
 			// 10 分钟超时
-			waitTime := util.GetTimeTime(nowTime) - util.GetTimeTime(startTime)
+			waitTime := util.GetTimeByTime(nowTime) - util.GetTimeByTime(startTime)
 			if waitTime >= int64(10*60*1000) {
 				err = errors.New("等待动作超时，等待时间[" + fmt.Sprint(waitTime/1000) + "]秒")
 				this_.waitActionChan <- ""
@@ -160,7 +160,7 @@ type BaseParam struct {
 }
 
 func newProgress(param *BaseParam, work string, callStop func()) (progress *Progress) {
-	var ProgressId = util.UUID()
+	var ProgressId = util.GetUUID()
 	progress = &Progress{}
 	progress.BaseParam = param
 	progress.Work = work

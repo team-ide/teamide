@@ -3,6 +3,7 @@ package invokers
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/pkg/db"
@@ -13,7 +14,6 @@ import (
 	"teamide/pkg/maker/modelers"
 	"teamide/pkg/redis"
 	"teamide/pkg/task"
-	"teamide/pkg/util"
 	"teamide/pkg/zookeeper"
 )
 

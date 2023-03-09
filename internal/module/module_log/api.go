@@ -2,8 +2,8 @@ package module_log
 
 import (
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/base"
 	"time"
 )
 

@@ -3,10 +3,10 @@ package context
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
 	"strings"
-	"teamide/pkg/util"
 )
 
 func NewDefaultDecryption(logger *zap.Logger) (res *Decryption, err error) {
@@ -144,7 +144,7 @@ func (this_ *Decryption) init() (err error) {
 
 // Encrypt 加密
 func (this_ *Decryption) Encrypt(data string) (ciphertext string, err error) {
-	ciphertext, err = util.RSAEncryptByKey(data, this_.rsaPublicKey)
+	ciphertext, err = util.RsaEncryptByKey(data, this_.rsaPublicKey)
 	if err != nil {
 		this_.Logger.Error("加密失败", zap.Any("dataLength", len(data)), zap.Error(err))
 		return
@@ -154,7 +154,7 @@ func (this_ *Decryption) Encrypt(data string) (ciphertext string, err error) {
 
 // Decrypt 解密
 func (this_ *Decryption) Decrypt(ciphertext string) (data string, err error) {
-	data, err = util.RSADecryptByKey(ciphertext, this_.rsaPrivateKey)
+	data, err = util.RsaDecryptByKey(ciphertext, this_.rsaPrivateKey)
 	if err != nil {
 		this_.Logger.Error("解密失败", zap.Any("ciphertextLength", len(ciphertext)), zap.Error(err))
 		return
@@ -164,7 +164,7 @@ func (this_ *Decryption) Decrypt(ciphertext string) (data string, err error) {
 
 // IsEncrypt 解密
 func (this_ *Decryption) IsEncrypt(ciphertext string) (res bool) {
-	_, err := util.RSADecryptByKey(ciphertext, this_.rsaPrivateKey)
+	_, err := util.RsaDecryptByKey(ciphertext, this_.rsaPrivateKey)
 	if err != nil {
 		return false
 	}

@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/ssh"
 	"teamide/pkg/vitess/bytes2"
 )

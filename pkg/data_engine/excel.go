@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/tealeg/xlsx"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func (this_ *ExcelTask) Start() {
 		}
 		this_.EndTime = time.Now()
 		this_.IsEnd = true
-		this_.UseTime = util.GetTimeTime(this_.EndTime) - util.GetTimeTime(this_.StartTime)
+		this_.UseTime = util.GetTimeByTime(this_.EndTime) - util.GetTimeByTime(this_.StartTime)
 		util.Logger.Info("数据读取结束")
 		this_.OnEnd()
 	}()

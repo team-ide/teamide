@@ -3,10 +3,10 @@ package data_engine
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/javascript"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
-	"teamide/pkg/javascript"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -160,7 +160,7 @@ func (this_ *StrategyTask) doStrategyData(strategyData *StrategyData) (err error
 		var startTime = time.Now()
 		data, err = this_.doStrategyDataFieldList(dataIndex, strategyData.IndexName, script, strategyData.FieldList)
 		var endTime = time.Now()
-		var useTime = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+		var useTime = util.GetTimeByTime(endTime) - util.GetTimeByTime(startTime)
 		if err != nil {
 			strategyData.IncrDataErrorCount(1, useTime)
 			util.Logger.Error("doStrategyDataFieldList error", zap.Any("dataIndex", dataIndex), zap.Any("indexName", strategyData.IndexName), zap.Any("fieldList", strategyData.FieldList), zap.Error(err))

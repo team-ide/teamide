@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/olivere/elastic/v7"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
 	"sort"
 	"strings"
 	"sync"
-	"teamide/pkg/util"
 )
 
 type Config struct {

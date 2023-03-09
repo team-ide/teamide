@@ -3,9 +3,9 @@ package redis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sort"
-	"teamide/pkg/util"
 	"time"
 )
 

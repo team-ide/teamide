@@ -1,11 +1,12 @@
 package javascript
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/base"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
-	"teamide/pkg/util"
 )
 
 type daoCoder struct {
@@ -19,7 +20,7 @@ func (this_ *daoCoder) Gen(code *common.Code, model *modelers.DaoModel) (err err
 
 func GetDaoMethodName(name string) (methodName string) {
 	methodName = GetFormatMethodName(name)
-	methodName = "dao" + util.Capitalize(methodName)
+	methodName = "dao" + util.FirstToUpper(methodName)
 	return
 }
 
@@ -48,9 +49,9 @@ func GetDaoJavascript(app *modelers.Application, dao *modelers.DaoModel) (javasc
 
 	if util.IsNotEmpty(dao.Return) {
 		if dao.Return != "-" {
-			util.AppendLine(&javascript, "return "+dao.Return, 1)
+			base.AppendLine(&javascript, "return "+dao.Return, 1)
 		} else {
-			util.AppendLine(&javascript, "return", 1)
+			base.AppendLine(&javascript, "return", 1)
 		}
 	}
 

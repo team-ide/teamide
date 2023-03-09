@@ -1,9 +1,9 @@
 package module_metadata
 
 import (
+	"encoding/json"
 	"fmt"
-	"teamide/internal/base"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 // MetadataField 元数据结构体字段
@@ -98,7 +98,8 @@ func NewMetadataField(name string, comment string, code int, fieldType int, defa
 func checkMetadata(field *MetadataField, out bool) {
 	if out {
 		fmt.Println("----------字段（", field.Comment, "）----------")
-		fmt.Println(util.ToJSON(field))
+		bs, _ := json.Marshal(field)
+		fmt.Println(string(bs))
 	}
 	_, ok := MetadataFieldCodeCache[field.Code]
 	if ok {

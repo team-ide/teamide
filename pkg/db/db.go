@@ -12,9 +12,9 @@ import (
 	"github.com/team-ide/go-driver/db_opengauss"
 	"github.com/team-ide/go-driver/db_postgresql"
 	"github.com/team-ide/go-driver/db_sqlite3"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
-	"teamide/pkg/util"
 )
 
 type SqlConditionalOperation struct {

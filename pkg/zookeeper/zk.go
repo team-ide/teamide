@@ -3,10 +3,10 @@ package zookeeper
 import (
 	"errors"
 	"github.com/go-zookeeper/zk"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
-	"teamide/pkg/util"
 	"time"
 )
 

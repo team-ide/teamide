@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"strings"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type modelGen struct {
@@ -39,7 +39,7 @@ func (this_ *modelGen) append(table *dialect.TableModel) (err error) {
 }
 func (this_ *modelGen) appendTableModel(table *dialect.TableModel) (err error) {
 	name := strings.ToLower(table.TableName)
-	name = util.Marshal(name)
+	name = base.Marshal(name)
 	this_.content += "" + name + "Model = &dialect.TableModel{" + "\n"
 	this_.content += "\t" + "TableName: `" + table.TableName + "`," + "\n"
 	this_.content += "\t" + "TableComment: `" + table.TableComment + "`," + "\n"

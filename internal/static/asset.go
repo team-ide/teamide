@@ -2,9 +2,9 @@ package static
 
 import (
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
-	"teamide/pkg/util"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 func Asset(name string) []byte {
 	bs, ok := staticCache[name]
 	if ok {
-		unzipBS, err := util.UGZipBytes(bs)
+		unzipBS, err := util.UnGzipBytes(bs)
 		if err != nil {
 			util.Logger.Error("Asset["+name+"]异常", zap.Error(err))
 			return nil
@@ -25,8 +25,7 @@ func Asset(name string) []byte {
 }
 
 func SetAsset(dir string, saveFile string) (err error) {
-	var fileMap map[string][]byte = map[string][]byte{}
-	err = util.LoadDirFiles(fileMap, dir)
+	fileMap, err := util.LoadDirFiles(dir)
 	if err != nil {
 		return
 	}
@@ -53,7 +52,7 @@ func SetAsset(dir string, saveFile string) (err error) {
 	f.WriteString("\n")
 	f.WriteString("func init() {" + "\n")
 	for filename, bs := range fileMap {
-		zipBS, err := util.GZipBytes(bs)
+		zipBS, err := util.GzipBytes(bs)
 		if err != nil {
 			util.Logger.Error("SetAsset["+filename+"]异常", zap.Error(err))
 			return err

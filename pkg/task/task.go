@@ -1,8 +1,8 @@
 package task
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/pkg/util"
 )
 
 type Task struct {

@@ -1,8 +1,8 @@
 package module_toolbox
 
 import (
-	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/base"
 )
 
 type ToolboxApi struct {

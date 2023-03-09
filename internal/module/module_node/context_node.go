@@ -1,10 +1,10 @@
 package module_node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"teamide/pkg/system"
-	"teamide/pkg/util"
 )
 
 func (this_ *NodeContext) getNodeModel(id int64) (res *NodeModel) {
@@ -67,7 +67,7 @@ func (this_ *NodeContext) addNodeModel(nodeModel *NodeModel) {
 	this_.setNodeModelByServerId(nodeModel.ServerId, nodeModel)
 
 	var list = this_.nodeModelIdList
-	if util.ContainsInt64(list, nodeModel.NodeId) < 0 {
+	if util.Int64IndexOf(list, nodeModel.NodeId) < 0 {
 		list = append(list, nodeModel.NodeId)
 	}
 	this_.nodeModelIdList = list
@@ -120,7 +120,7 @@ func (this_ *NodeContext) onUpdateNodeConnServerIds(nodeId int64, connServerIds 
 
 	var newConnServerIdList = nodeModel.ConnServerIdList
 	for _, oldConnServerId := range oldConnServerIdList {
-		if util.ContainsString(newConnServerIdList, oldConnServerId) < 0 {
+		if util.StringIndexOf(newConnServerIdList, oldConnServerId) < 0 {
 			lineNodeIdList := this_.GetNodeLineTo(nodeModel.ServerId)
 
 			_ = this_.GetServer().RemoveToNodeList(lineNodeIdList, []string{
@@ -170,7 +170,7 @@ func (this_ *NodeContext) onRemoveNodeModel(id int64) {
 		if find == nil {
 			continue
 		}
-		if util.ContainsString(find.ConnServerIdList, nodeModel.ServerId) < 0 {
+		if util.StringIndexOf(find.ConnServerIdList, nodeModel.ServerId) < 0 {
 			continue
 		}
 		var connServerIdList []string
@@ -227,7 +227,7 @@ func (this_ *NodeContext) toAddNodeModel(nodeModel *NodeModel) {
 		if find == nil {
 			continue
 		}
-		if util.ContainsString(find.ConnServerIdList, nodeModel.ServerId) < 0 {
+		if util.StringIndexOf(find.ConnServerIdList, nodeModel.ServerId) < 0 {
 			continue
 		}
 

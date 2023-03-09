@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"strconv"
-	"teamide/internal/base"
+	"teamide/pkg/base"
 	"teamide/pkg/db"
 	"teamide/pkg/elasticsearch"
 	"teamide/pkg/form"

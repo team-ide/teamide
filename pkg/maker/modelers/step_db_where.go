@@ -1,8 +1,8 @@
 package modelers
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"strings"
-	"teamide/pkg/util"
 )
 
 type StepDbWhere struct {

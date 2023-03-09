@@ -1,8 +1,10 @@
 package node
 
 import (
+	"encoding/json"
 	"errors"
-	"teamide/pkg/util"
+	"github.com/team-ide/go-tool/util"
+	"teamide/pkg/base"
 )
 
 type Worker struct {
@@ -34,7 +36,7 @@ func (this_ *Worker) getVersion(lineNodeIdList []string) (version string) {
 		}
 		return
 	}
-	version = util.GetVersion()
+	version = base.GetVersion()
 	return
 }
 
@@ -327,7 +329,7 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 	}
 	var thisNodeIndex = -1
 	for _, localNode := range this_.server.localNodeList {
-		index := util.ContainsString(lineNodeIdList, localNode.Id)
+		index := util.StringIndexOf(lineNodeIdList, localNode.Id)
 		if index >= 0 {
 			thisNodeIndex = index
 			if index == len(lineNodeIdList)-1 {
@@ -336,7 +338,8 @@ func (this_ *Worker) sendToNext(lineNodeIdList []string, key string, doSend func
 		}
 	}
 	if thisNodeIndex < 0 {
-		err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + util.ToJSON(lineNodeIdList) + "] 暂无通讯渠道")
+		bs, _ := json.Marshal(lineNodeIdList)
+		err = errors.New(this_.server.GetServerInfo() + " 与节点 [" + string(bs) + "] 暂无通讯渠道")
 		return
 	}
 	if thisNodeIndex != len(lineNodeIdList)-1 {

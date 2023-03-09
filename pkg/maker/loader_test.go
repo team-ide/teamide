@@ -2,11 +2,11 @@ package maker
 
 import (
 	"encoding/json"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
 	"teamide/pkg/maker/modelers"
-	"teamide/pkg/util"
 	"testing"
 )
 

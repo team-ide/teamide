@@ -2,10 +2,10 @@ package module_zookeeper
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 	"teamide/pkg/zookeeper"
 )
 
@@ -52,13 +52,13 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
 	key := "zookeeper-" + zkConfig.Address
 	if zkConfig.Username != "" {
-		key += "-" + util.GetMd5String(key+zkConfig.Username)
+		key += "-" + base.GetMd5String(key+zkConfig.Username)
 	}
 	if zkConfig.Password != "" {
-		key += "-" + util.GetMd5String(key+zkConfig.Password)
+		key += "-" + base.GetMd5String(key+zkConfig.Password)
 	}
-	var service util.Service
-	service, err = util.GetService(key, func() (res util.Service, err error) {
+	var service base.Service
+	service, err = base.GetService(key, func() (res base.Service, err error) {
 		var s *zookeeper.ZKService
 		s, err = zookeeper.CreateZKService(zkConfig)
 		if err != nil {

@@ -2,11 +2,12 @@ package filework
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"io"
 	"os"
 	"sort"
 	"strings"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 func NewLocalService() *localService {
@@ -79,7 +80,7 @@ func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSi
 
 	err = util.Read(reader, buf, func(n int) (e error) {
 		if *callStop {
-			e = util.ProgressCallStoppedError
+			e = base.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -121,7 +122,7 @@ func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSiz
 
 	err = util.Read(f, buf, func(n int) (e error) {
 		if *callStop {
-			e = util.ProgressCallStoppedError
+			e = base.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -349,7 +350,7 @@ func getFileInfoByStat(path string, stat os.FileInfo) (fileInfo *FileInfo) {
 		Name:     stat.Name(),
 		Path:     path,
 		IsDir:    stat.IsDir(),
-		ModTime:  util.GetTimeTime(stat.ModTime()),
+		ModTime:  util.GetTimeByTime(stat.ModTime()),
 		FileMode: stat.Mode().String(),
 		Size:     stat.Size(),
 	}

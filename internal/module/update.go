@@ -4,7 +4,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"teamide/internal/base"
+	"teamide/pkg/base"
 )
 
 const (

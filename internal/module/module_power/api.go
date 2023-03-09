@@ -2,8 +2,8 @@ package module_power
 
 import (
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
 	"teamide/internal/context"
+	"teamide/pkg/base"
 )
 
 type Api struct {

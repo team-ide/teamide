@@ -3,6 +3,7 @@ package ssh
 import (
 	"errors"
 	"github.com/pkg/sftp"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -10,8 +11,8 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"teamide/pkg/base"
 	"teamide/pkg/filework"
-	"teamide/pkg/util"
 )
 
 func newFileService(config *Config) *fileService {
@@ -197,7 +198,7 @@ func (this_ *fileService) Write(path string, reader io.Reader, onDo func(readSiz
 
 	err = util.Read(reader, buf, func(n int) (e error) {
 		if *callStop {
-			e = util.ProgressCallStoppedError
+			e = base.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -250,7 +251,7 @@ func (this_ *fileService) Read(path string, writer io.Writer, onDo func(readSize
 
 	err = util.Read(f, buf, func(n int) (e error) {
 		if *callStop {
-			e = util.ProgressCallStoppedError
+			e = base.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -468,7 +469,7 @@ func getFileInfoByStat(path string, stat os.FileInfo) (fileInfo *filework.FileIn
 		Name:     stat.Name(),
 		Path:     path,
 		IsDir:    stat.IsDir(),
-		ModTime:  util.GetTimeTime(stat.ModTime()),
+		ModTime:  util.GetTimeByTime(stat.ModTime()),
 		FileMode: stat.Mode().String(),
 		Size:     stat.Size(),
 	}

@@ -1,13 +1,13 @@
 package node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 func (this_ *Server) TerminalStart(lineNodeIdList []string, size *terminal.Size, onRead func(buf []byte) (err error)) (key string, err error) {
-	readKey := util.UUID()
+	readKey := util.GetUUID()
 	this_.addOnBytesCache(readKey, &OnBytes{
 		start: func() (err error) {
 			Logger.Info("terminal start read byte start", zap.Any("readKey", readKey), zap.Any("lineNodeIdList", lineNodeIdList))

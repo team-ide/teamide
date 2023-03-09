@@ -2,7 +2,7 @@ package module_toolbox
 
 import (
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
+	"teamide/pkg/base"
 )
 
 type ListGroupRequest struct {

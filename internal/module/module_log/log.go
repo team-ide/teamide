@@ -2,9 +2,9 @@ package module_log
 
 import (
 	"github.com/team-ide/go-dialect/worker"
+	"github.com/team-ide/go-tool/util"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
-	"teamide/pkg/util"
 )
 
 // NewLogService 根据库配置创建LogService
@@ -40,7 +40,7 @@ func (this_ *LogService) Insert(log *LogModel, errLog error) (err error) {
 		log.Status = 2
 		log.Error = errLog.Error()
 	}
-	log.UseTime = int(util.GetTimeTime(log.EndTime) - util.GetTimeTime(log.StartTime))
+	log.UseTime = int(util.GetTimeByTime(log.EndTime) - util.GetTimeByTime(log.StartTime))
 
 	sql := `INSERT INTO ` + TableLog + `(logId, loginId, userId, userName, userAccount, ip, action, method, param, data, userAgent, status, error, useTime, startTime, endTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
 

@@ -3,11 +3,11 @@ package ssh
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"sync"
-	"teamide/pkg/util"
 	"time"
 )
 

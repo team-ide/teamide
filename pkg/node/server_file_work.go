@@ -1,10 +1,11 @@
 package node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"io"
 	"sync"
+	"teamide/pkg/base"
 	"teamide/pkg/filework"
-	"teamide/pkg/util"
 )
 
 func (this_ *Server) FileWorkExist(lineNodeIdList []string, path string) (exist bool, err error) {
@@ -55,7 +56,7 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 	var buf = make([]byte, 1024*32)
 	err = util.Read(reader, buf, func(n int) (e error) {
 		if *callStop {
-			e = util.ProgressCallStoppedError
+			e = base.ProgressCallStoppedError
 			return
 		}
 		readSize += int64(n)
@@ -76,7 +77,7 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 
 func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error) {
 
-	sendKey := util.UUID()
+	sendKey := util.GetUUID()
 
 	var waitGroupForStop sync.WaitGroup
 	waitGroupForStop.Add(1)
@@ -89,7 +90,7 @@ func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer i
 		on: func(buf []byte) (err error) {
 
 			if *callStop {
-				err = util.ProgressCallStoppedError
+				err = base.ProgressCallStoppedError
 				return
 			}
 			n := len(buf)

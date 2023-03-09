@@ -1,12 +1,12 @@
 package ssh
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"sync"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 func NewTerminalService(config *Config) (res *terminalService) {

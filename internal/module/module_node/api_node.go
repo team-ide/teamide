@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"net"
-	"teamide/internal/base"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type ListRequest struct {
@@ -103,7 +103,7 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 		if parentNodeModel.ConnServerIds != "" {
 			_ = json.Unmarshal([]byte(parentNodeModel.ConnServerIds), &connNodeIdList)
 		}
-		if util.ContainsString(connNodeIdList, node.ServerId) < 0 {
+		if util.StringIndexOf(connNodeIdList, node.ServerId) < 0 {
 			connNodeIdList = append(connNodeIdList, node.ServerId)
 		}
 		bs, _ := json.Marshal(connNodeIdList)
@@ -231,7 +231,7 @@ func (this_ *NodeApi) delete(requestBean *base.RequestBean, c *gin.Context) (res
 	var nodeModelList = this_.NodeService.nodeContext.getNodeModelList()
 
 	for _, one := range nodeModelList {
-		if util.ContainsString(one.ConnServerIdList, find.ServerId) >= 0 {
+		if util.StringIndexOf(one.ConnServerIdList, find.ServerId) >= 0 {
 			var connServerIdList []string
 			for _, id := range one.ConnServerIdList {
 				if id != find.ServerId {

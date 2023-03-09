@@ -2,9 +2,9 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/internal/base"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 func (this_ *Api) checkPower(api *base.ApiWorker, JWT *base.JWTBean, c *gin.Context) bool {
@@ -48,7 +48,7 @@ func (this_ *Api) getPowersByJWT(JWT *base.JWTBean) (powers []*base.PowerAction)
 		return
 	}
 	for _, power := range ps {
-		if util.ContainsString(psStr, power.Action) >= 0 {
+		if util.StringIndexOf(psStr, power.Action) >= 0 {
 			powers = append(powers, power)
 		}
 	}
@@ -85,14 +85,14 @@ func (this_ *Api) getPowersByUserId(userId int64) (powers []string) {
 			}
 		}
 		for _, power := range ps {
-			if util.ContainsString(powers, power.Action) >= 0 {
+			if util.StringIndexOf(powers, power.Action) >= 0 {
 				continue
 			}
 			if !power.ShouldPower || isSuperRole {
 				powers = append(powers, power.Action)
 				continue
 			}
-			if util.ContainsString(userPowers, power.Action) >= 0 {
+			if util.StringIndexOf(userPowers, power.Action) >= 0 {
 				powers = append(powers, power.Action)
 			}
 		}

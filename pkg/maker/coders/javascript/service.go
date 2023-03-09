@@ -1,11 +1,12 @@
 package javascript
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/base"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
-	"teamide/pkg/util"
 )
 
 type serviceCoder struct {
@@ -41,7 +42,7 @@ func GetFormatMethodName(name string) (methodName string) {
 
 func GetServiceMethodName(name string) (methodName string) {
 	methodName = GetFormatMethodName(name)
-	methodName = "service" + util.Capitalize(methodName)
+	methodName = "service" + util.FirstToUpper(methodName)
 	return
 }
 
@@ -70,9 +71,9 @@ func GetServiceJavascript(app *modelers.Application, service *modelers.ServiceMo
 
 	if util.IsNotEmpty(service.Return) {
 		if service.Return != "-" {
-			util.AppendLine(&javascript, "return "+service.Return, 1)
+			base.AppendLine(&javascript, "return "+service.Return, 1)
 		} else {
-			util.AppendLine(&javascript, "return", 1)
+			base.AppendLine(&javascript, "return", 1)
 		}
 	}
 

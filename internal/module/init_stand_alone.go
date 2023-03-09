@@ -1,8 +1,8 @@
 package module
 
 import (
-	"teamide/internal/base"
 	"teamide/internal/module/module_register"
+	"teamide/pkg/base"
 )
 
 func (this_ *Api) initStandAlone() (err error) {

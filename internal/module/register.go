@@ -2,9 +2,9 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
+	"github.com/team-ide/go-tool/util"
 	"teamide/internal/module/module_register"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type RegisterRequest struct {

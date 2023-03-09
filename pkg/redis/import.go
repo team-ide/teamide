@@ -7,7 +7,7 @@ package redis
 //	"fmt"
 //	"go.uber.org/zap"
 //	"teamide/pkg/data_engine"
-//	"teamide/pkg/util"
+//	"github.com/team-ide/go-tool/util"
 //	"time"
 //)
 //

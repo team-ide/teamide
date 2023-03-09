@@ -1,11 +1,11 @@
 package module_node
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"teamide/pkg/node"
-	"teamide/pkg/util"
 )
 
 func (this_ *NodeService) InitContext() {
@@ -112,8 +112,8 @@ func (this_ *NodeContext) GetNodeLineByFromTo(fromNodeId, toNodeId string) (line
 	lineIdList = getNodeLineByFromTo(fromNodeId, toNodeId, nodeIdConnNodeIdListCache)
 	//this_.Logger.Info("GetNodeLineByFromTo", zap.Any("fromNodeId", fromNodeId), zap.Any("toNodeId", toNodeId), zap.Any("lineIdList", lineIdList))
 	if len(lineIdList) > 0 &&
-		util.ContainsString(lineIdList, fromNodeId) >= 0 &&
-		util.ContainsString(lineIdList, toNodeId) >= 0 {
+		util.StringIndexOf(lineIdList, fromNodeId) >= 0 &&
+		util.StringIndexOf(lineIdList, toNodeId) >= 0 {
 		this_.lineNodeIdListCache[key] = lineIdList
 	}
 	return
@@ -188,14 +188,14 @@ func appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine
 		var line []string
 		line = append(line, parentLine...)
 
-		if util.ContainsString(line, nodeId) >= 0 {
+		if util.StringIndexOf(line, nodeId) >= 0 {
 			continue
 		}
 		line = append(line, nodeId)
 
 		*lineList = append(*lineList, line)
 
-		if util.ContainsString(*loadedIdList, nodeId) >= 0 {
+		if util.StringIndexOf(*loadedIdList, nodeId) >= 0 {
 			continue
 		}
 		*loadedIdList = append(*loadedIdList, nodeId)
@@ -205,7 +205,7 @@ func appendNodeLineList(loadedIdList *[]string, lineList *[][]string, parentLine
 
 		var parentIdList []string
 		for cacheNodeId, cacheConnNodeIdList := range nodeIdConnNodeIdListCache {
-			if util.ContainsString(cacheConnNodeIdList, nodeId) >= 0 {
+			if util.StringIndexOf(cacheConnNodeIdList, nodeId) >= 0 {
 				parentIdList = append(parentIdList, cacheNodeId)
 			}
 		}
@@ -225,7 +225,7 @@ func findNodeLineList(nodeId string, nodeIdConnNodeIdListCache map[string][]stri
 
 	var parentIdList []string
 	for cacheNodeId, cacheConnNodeIdList := range nodeIdConnNodeIdListCache {
-		if util.ContainsString(cacheConnNodeIdList, nodeId) >= 0 {
+		if util.StringIndexOf(cacheConnNodeIdList, nodeId) >= 0 {
 			parentIdList = append(parentIdList, cacheNodeId)
 		}
 	}
@@ -244,7 +244,7 @@ func getNodeLineByFromTo(fromNodeId, toNodeId string, nodeIdConnNodeIdListCache 
 	var lineList = findNodeLineList(fromNodeId, nodeIdConnNodeIdListCache)
 
 	for _, line := range lineList {
-		if util.ContainsString(line, toNodeId) >= 0 {
+		if util.StringIndexOf(line, toNodeId) >= 0 {
 			if len(lineIdList) == 0 || len(line) < len(lineIdList) {
 				lineIdList = line
 			}

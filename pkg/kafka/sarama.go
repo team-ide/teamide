@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Shopify/sarama"
+	"github.com/team-ide/go-tool/util"
 	"io/ioutil"
 	"sort"
 	"strconv"
 	"strings"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -108,7 +108,9 @@ func (this_ *SaramaService) getClient() (saramaClient sarama.Client, err error) 
 
 	saramaClient, err = sarama.NewClient(this_.GetServers(), config)
 	if err != nil {
-		_ = saramaClient.Close()
+		if saramaClient != nil {
+			_ = saramaClient.Close()
+		}
 		return
 	}
 	return

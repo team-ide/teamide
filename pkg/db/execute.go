@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"strings"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -137,15 +137,15 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 ) (executeData map[string]interface{}, err error) {
 
 	executeData = map[string]interface{}{}
-	var startTime = util.Now()
+	var startTime = util.GetNow()
 	executeData["sql"] = executeSql
-	executeData["startTime"] = util.Format(startTime)
+	executeData["startTime"] = util.GetFormatByTime(startTime)
 
 	defer func() {
 		var endTime = time.Now()
-		executeData["endTime"] = util.Format(endTime)
+		executeData["endTime"] = util.GetFormatByTime(endTime)
 		executeData["isEnd"] = true
-		executeData["useTime"] = util.GetTimeTime(endTime) - util.GetTimeTime(startTime)
+		executeData["useTime"] = util.GetTimeByTime(endTime) - util.GetTimeByTime(startTime)
 		if err != nil {
 			executeData["error"] = err.Error()
 			return
@@ -198,7 +198,7 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 					if tV.IsZero() {
 						v = nil
 					} else {
-						v = util.GetTimeTime(tV)
+						v = util.GetTimeByTime(tV)
 					}
 				default:
 					v = worker.GetSqlValue(columnTypes[index], data)
@@ -211,7 +211,7 @@ func (this_ *executeTask) execExecuteSQL(executeSql string,
 						if tV.IsZero() {
 							item[name] = nil
 						} else {
-							item[name] = util.GetTimeTime(tV)
+							item[name] = util.GetTimeByTime(tV)
 						}
 					case float64:
 						if tV >= float64(9007199254740991) || tV <= float64(-9007199254740991) {

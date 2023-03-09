@@ -1,10 +1,10 @@
 package maker
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/maker/coders"
 	"teamide/pkg/maker/coders/javascript"
-	"teamide/pkg/util"
 	"testing"
 )
 

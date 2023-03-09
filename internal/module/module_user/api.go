@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"teamide/internal/base"
+	"github.com/team-ide/go-tool/util"
 	"teamide/internal/context"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 type Api struct {

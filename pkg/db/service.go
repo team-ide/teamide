@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
 	"strings"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 	"time"
 )
 
@@ -497,7 +498,7 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 			if v == nil {
 				continue
 			}
-			if util.ContainsString(names, strings.ToLower(name)) < 0 {
+			if util.StringIndexOf(names, strings.ToLower(name)) < 0 {
 				delete(item, name)
 				continue
 			}
@@ -506,7 +507,7 @@ func (this_ *Service) TableData(param *Param, ownerName string, tableName string
 				if tV.IsZero() {
 					item[name] = nil
 				} else {
-					item[name] = util.GetTimeTime(tV)
+					item[name] = util.GetTimeByTime(tV)
 				}
 			case float64:
 				if tV >= float64(9007199254740991) || tV <= float64(-9007199254740991) {
@@ -570,9 +571,9 @@ var (
 )
 
 func (this_ *Service) StartExport(param *Param, exportParam *worker.TaskExportParam) (task *worker.Task, err error) {
-	downloadPath := "export/" + util.UUID()
+	downloadPath := "export/" + util.GetUUID()
 	var exportDir string
-	exportDir, err = util.GetTempDir()
+	exportDir, err = base.GetTempDir()
 	if err != nil {
 		return
 	}

@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"os"
 	"sync"
-	"teamide/pkg/util"
 )
 
 func main() {

@@ -2,7 +2,6 @@ package base
 
 import (
 	"fmt"
-	"teamide/pkg/util"
 )
 
 type baseError struct {
@@ -15,7 +14,7 @@ func (e *baseError) Error() string {
 }
 
 var (
-	baseErrorType = util.GetRefValue(NewBaseError("")).Type()
+	baseErrorType = GetRefValue(NewBaseError("")).Type()
 )
 
 const (
@@ -41,7 +40,7 @@ func NewValidateError(args ...interface{}) *baseError {
 }
 
 func IsBaseError(err error) bool {
-	errValue := util.GetRefValue(err)
+	errValue := GetRefValue(err)
 	return errValue.Type() == baseErrorType
 }
 

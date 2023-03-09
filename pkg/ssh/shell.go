@@ -2,11 +2,11 @@ package ssh
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"teamide/pkg/terminal"
-	"teamide/pkg/util"
 )
 
 type ShellClient struct {

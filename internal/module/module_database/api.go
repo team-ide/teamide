@@ -6,16 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"sync"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/db"
-	"teamide/pkg/util"
 )
 
 type api struct {
@@ -120,13 +120,13 @@ func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
 		key += "-" + config.OdbcDialectName
 	}
 	if config.Username != "" {
-		key += "-" + util.GetMd5String(key+config.Username)
+		key += "-" + base.GetMd5String(key+config.Username)
 	}
 	if config.Password != "" {
-		key += "-" + util.GetMd5String(key+config.Password)
+		key += "-" + base.GetMd5String(key+config.Password)
 	}
-	var service util.Service
-	service, err = util.GetService(key, func() (res util.Service, err error) {
+	var service base.Service
+	service, err = base.GetService(key, func() (res base.Service, err error) {
 		var s *db.Service
 		s, err = db.CreateService(config)
 		if err != nil {
@@ -745,7 +745,7 @@ func (this_ *api) exportDownload(_ *base.RequestBean, c *gin.Context) (res inter
 		err = errors.New("任务导出文件丢失")
 		return
 	}
-	tempDir, err := util.GetTempDir()
+	tempDir, err := base.GetTempDir()
 	if err != nil {
 		return
 	}
@@ -910,7 +910,7 @@ func addWorkerTask(workerId string, taskId string) {
 	workerTasksCacheLock.Lock()
 	defer workerTasksCacheLock.Unlock()
 	taskIds := workerTasksCache[workerId]
-	if util.ContainsString(taskIds, taskId) < 0 {
+	if util.StringIndexOf(taskIds, taskId) < 0 {
 		taskIds = append(taskIds, taskId)
 		workerTasksCache[workerId] = taskIds
 	}

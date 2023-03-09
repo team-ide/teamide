@@ -3,14 +3,14 @@ package web
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/static"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 func (this_ *Server) bindGet(routerGroup *gin.RouterGroup) {

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"regexp"
-	"teamide/pkg/util"
 )
 
 type ServerConfig struct {

@@ -20,10 +20,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"regexp"
 	"strings"
-	"teamide/pkg/util"
 
 	"teamide/pkg/vitess/hack"
 	"teamide/pkg/vitess/vterrors"
@@ -336,7 +336,7 @@ func (node *AliasedTableExpr) RemoveHints() *AliasedTableExpr {
 	return &noHints
 }
 
-//TableName returns a TableName pointing to this table expr
+// TableName returns a TableName pointing to this table expr
 func (node *AliasedTableExpr) TableName() (TableName, error) {
 	if !node.As.IsEmpty() {
 		return TableName{Name: node.As}, nil
@@ -574,7 +574,7 @@ func NewColNameWithQualifier(identifier string, table TableName) *ColName {
 	}
 }
 
-//NewSelect is used to create a select statement
+// NewSelect is used to create a select statement
 func NewSelect(comments Comments, exprs SelectExprs, selectOptions []string, into *SelectInto, from TableExprs, where *Where, groupBy GroupBy, having *Where) *Select {
 	var cache *bool
 	var distinct, straightJoinHint, sqlFoundRows bool

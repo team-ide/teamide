@@ -2,12 +2,12 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"regexp"
 	"strings"
-	"teamide/internal/base"
 	"teamide/internal/module/module_toolbox"
+	"teamide/pkg/base"
 	"teamide/pkg/db"
-	"teamide/pkg/util"
 )
 
 type DataRequest struct {
@@ -60,12 +60,12 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()
 
 	if requestBean.ClientKey == "" {
-		response.ClientKey = util.UUID()
+		response.ClientKey = util.GetUUID()
 	} else {
 		response.ClientKey = requestBean.ClientKey
 	}
 	if requestBean.ClientTabKey == "" {
-		response.ClientTabKey = util.UUID()
+		response.ClientTabKey = util.GetUUID()
 	} else {
 		response.ClientTabKey = requestBean.ClientTabKey
 	}

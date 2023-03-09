@@ -2,9 +2,9 @@ package terminal
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
-	"teamide/pkg/util"
 )
 
 func NewLocalService() (res *localService) {

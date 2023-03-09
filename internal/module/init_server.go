@@ -3,12 +3,12 @@ package module
 import (
 	"encoding/json"
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
-	"teamide/internal/base"
 	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_register"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 )
 
 func (this_ *Api) initServer() (err error) {
@@ -72,7 +72,7 @@ func (this_ *Api) initServerUser() (err error) {
 		return
 	}
 	if len(users) == 0 {
-		password := util.UUID()[0:10]
+		password := util.GetUUID()[0:10]
 		register := &module_register.RegisterModel{
 			Name:       base.SuperUserAccount,
 			Account:    base.SuperUserAccount,

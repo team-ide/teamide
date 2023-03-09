@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"io"
 	"os"
 	"path"
-	"teamide/internal/base"
-	"teamide/pkg/util"
+	"teamide/pkg/base"
 	"time"
 )
 
@@ -37,7 +37,7 @@ func (this_ *Api) apiUpload(requestBean *base.RequestBean, c *gin.Context) (res 
 		return
 	}
 	nowTime := time.Now()
-	filePath := fmt.Sprintf("%s/%d/%d/%d/%s", place, nowTime.Year(), nowTime.Month(), nowTime.Day(), util.UUID())
+	filePath := fmt.Sprintf("%s/%d/%d/%d/%s", place, nowTime.Year(), nowTime.Month(), nowTime.Day(), util.GetUUID())
 
 	fileDir := this_.GetFilesFile(filePath)
 

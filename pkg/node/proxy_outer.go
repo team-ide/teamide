@@ -2,9 +2,9 @@ package node
 
 import (
 	"errors"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"net"
-	"teamide/pkg/util"
 )
 
 type OuterListener struct {
@@ -57,14 +57,14 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 
 		var buf = make([]byte, 1024*32)
 
-		start := util.Now().UnixNano()
+		start := util.GetNow().UnixNano()
 		err = util.Read(conn, buf, func(n int) (e error) {
 			if this_.isStopped() {
 				e = errors.New("proxy outer is stopped")
 				return
 			}
 
-			end := util.Now().UnixNano()
+			end := util.GetNow().UnixNano()
 			this_.MonitorData.monitorRead(int64(n), end-start)
 
 			e = this_.worker.netProxySend(true, this_.netProxy.ReverseLineNodeIdList, netProxyId, connId, buf[:n])
@@ -72,7 +72,7 @@ func (this_ *OuterListener) newConn(connId string) (err error) {
 				Logger.Error(this_.netProxy.GetInfoStr()+" 连接 发送异常", zap.Error(e))
 				return
 			}
-			start = util.Now().UnixNano()
+			start = util.GetNow().UnixNano()
 			return
 		})
 

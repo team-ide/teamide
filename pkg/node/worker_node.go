@@ -2,9 +2,9 @@ package node
 
 import (
 	"fmt"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"net"
-	"teamide/pkg/util"
 	"time"
 )
 
@@ -73,7 +73,7 @@ func (this_ *Worker) doRemoveToNodeList(removeToNodeIdList []string) (err error)
 		this_.removeToNodeListenerPool(nodeId)
 	}
 	for _, one := range list {
-		if util.ContainsString(removeToNodeIdList, one.Id) >= 0 {
+		if util.StringIndexOf(removeToNodeIdList, one.Id) >= 0 {
 		} else {
 			newList = append(newList, one)
 		}

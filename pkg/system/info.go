@@ -8,11 +8,11 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
 	"sync"
 	"teamide/pkg/task"
-	"teamide/pkg/util"
 	"time"
 )
 
