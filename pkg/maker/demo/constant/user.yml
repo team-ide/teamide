@@ -1,3 +1,0 @@
-- name: USER_REDIS_EXPIRE
-  type: i64
-  value: 60

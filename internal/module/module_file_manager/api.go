@@ -1,6 +1,7 @@
 package module_file_manager
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,6 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 	"teamide/pkg/ssh"
-	"teamide/pkg/vitess/bytes2"
 )
 
 type api struct {
@@ -154,7 +154,7 @@ func (this_ *api) read(r *base.RequestBean, c *gin.Context) (res interface{}, er
 		}
 	}
 
-	writer := &bytes2.Buffer{}
+	writer := &bytes.Buffer{}
 	_, err = this_.Read(request.BaseParam, request.FileWorkerKey, request.Path, writer)
 	if err != nil {
 		return
