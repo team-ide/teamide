@@ -1,13 +1,12 @@
 package module_redis
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/redis"
 )
 
 type api struct {
@@ -87,12 +86,12 @@ func getServiceKey(redisConfig redis.Config) (key string) {
 	}
 	return
 }
-func getService(redisConfig redis.Config) (res redis.Service, err error) {
+func getService(redisConfig redis.Config) (res redis.IService, err error) {
 	key := getServiceKey(redisConfig)
-	var service base.Service
-	service, err = base.GetService(key, func() (res base.Service, err error) {
-		var s redis.Service
-		s, err = redis.CreateService(redisConfig)
+	var serviceInfo *base.ServiceInfo
+	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
+		var s redis.IService
+		s, err = redis.New(redisConfig)
 		if err != nil {
 			util.Logger.Error("getRedisService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -101,8 +100,7 @@ func getService(redisConfig redis.Config) (res redis.Service, err error) {
 			return
 		}
 
-		ctx := context.TODO()
-		_, err = s.Exists(ctx, 0, "_")
+		_, err = s.Exists(&redis.Param{}, "_")
 		if err != nil {
 			util.Logger.Error("getRedisService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -110,14 +108,19 @@ func getService(redisConfig redis.Config) (res redis.Service, err error) {
 			}
 			return
 		}
-		res = s
+		res = &base.ServiceInfo{
+			WaitTime:    10 * 60 * 1000,
+			LastUseTime: util.GetNowTime(),
+			Service:     s,
+			Stop:        s.Stop,
+		}
 		return
 	})
 	if err != nil {
 		return
 	}
-	res = service.(redis.Service)
-	res.SetLastUseTime()
+	res = serviceInfo.Service.(redis.IService)
+	serviceInfo.SetLastUseTime()
 
 	return
 }
@@ -148,8 +151,7 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	ctx := context.TODO()
-	res, err = service.Info(ctx)
+	res, err = service.Info(&redis.Param{})
 	if err != nil {
 		return
 	}
@@ -170,8 +172,7 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.Get(ctx, request.Database, request.Key, request.ValueStart, request.ValueSize)
+	res, err = service.GetValueInfo(&redis.Param{Database: request.Database}, request.Key, request.ValueStart, request.ValueSize)
 	if err != nil {
 		return
 	}
@@ -192,8 +193,8 @@ func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.Keys(ctx, request.Database, request.Pattern, request.Size)
+
+	res, err = service.Keys(&redis.Param{Database: request.Database}, request.Pattern, request.Size)
 	if err != nil {
 		return
 	}
@@ -214,13 +215,13 @@ func (this_ *api) set(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.Set(ctx, request.Database, request.Key, request.Value)
+
+	err = service.Set(&redis.Param{Database: request.Database}, request.Key, request.Value)
 	if err != nil {
 		return
 	}
 	if request.Expire > 0 {
-		_, err = service.Expire(ctx, request.Database, request.Key, request.Expire)
+		_, err = service.Expire(&redis.Param{Database: request.Database}, request.Key, request.Expire)
 	}
 	return
 }
@@ -239,8 +240,8 @@ func (this_ *api) sadd(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.SAdd(ctx, request.Database, request.Key, request.Value)
+
+	err = service.SAdd(&redis.Param{Database: request.Database}, request.Key, request.Value)
 	return
 }
 
@@ -258,8 +259,8 @@ func (this_ *api) srem(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.SRem(ctx, request.Database, request.Key, request.Value)
+
+	err = service.SRem(&redis.Param{Database: request.Database}, request.Key, request.Value)
 	return
 }
 func (this_ *api) lpush(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -276,8 +277,8 @@ func (this_ *api) lpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.LPush(ctx, request.Database, request.Key, request.Value)
+
+	err = service.LPush(&redis.Param{Database: request.Database}, request.Key, request.Value)
 	return
 }
 
@@ -295,8 +296,8 @@ func (this_ *api) rpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.RPush(ctx, request.Database, request.Key, request.Value)
+
+	err = service.RPush(&redis.Param{Database: request.Database}, request.Key, request.Value)
 	return
 }
 
@@ -314,8 +315,8 @@ func (this_ *api) lset(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.LSet(ctx, request.Database, request.Key, request.Index, request.Value)
+
+	err = service.LSet(&redis.Param{Database: request.Database}, request.Key, request.Index, request.Value)
 	return
 }
 
@@ -333,8 +334,8 @@ func (this_ *api) lrem(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.LRem(ctx, request.Database, request.Key, request.Count, request.Value)
+
+	err = service.LRem(&redis.Param{Database: request.Database}, request.Key, request.Count, request.Value)
 	return
 }
 
@@ -352,8 +353,8 @@ func (this_ *api) hset(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.HSet(ctx, request.Database, request.Key, request.Field, request.Value)
+
+	err = service.HSet(&redis.Param{Database: request.Database}, request.Key, request.Field, request.Value)
 	return
 }
 
@@ -371,8 +372,8 @@ func (this_ *api) hdel(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	err = service.HDel(ctx, request.Database, request.Key, request.Field)
+
+	err = service.HDel(&redis.Param{Database: request.Database}, request.Key, request.Field)
 	return
 }
 
@@ -390,8 +391,8 @@ func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res int
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.Del(ctx, request.Database, request.Key)
+
+	res, err = service.Del(&redis.Param{Database: request.Database}, request.Key)
 	if err != nil {
 		return
 	}
@@ -412,8 +413,8 @@ func (this_ *api) deletePattern(requestBean *base.RequestBean, c *gin.Context) (
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.DelPattern(ctx, request.Database, request.Pattern)
+
+	res, err = service.DelPattern(&redis.Param{Database: request.Database}, request.Pattern)
 	if err != nil {
 		return
 	}
@@ -434,8 +435,8 @@ func (this_ *api) expire(requestBean *base.RequestBean, c *gin.Context) (res int
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.Expire(ctx, request.Database, request.Key, request.Expire)
+
+	res, err = service.Expire(&redis.Param{Database: request.Database}, request.Key, request.Expire)
 	if err != nil {
 		return
 	}
@@ -456,8 +457,8 @@ func (this_ *api) ttl(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.TTL(ctx, request.Database, request.Key)
+
+	res, err = service.TTL(&redis.Param{Database: request.Database}, request.Key)
 	if err != nil {
 		return
 	}
@@ -478,8 +479,8 @@ func (this_ *api) persist(requestBean *base.RequestBean, c *gin.Context) (res in
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	ctx := context.TODO()
-	res, err = service.Persist(ctx, request.Database, request.Key)
+
+	res, err = service.Persist(&redis.Param{Database: request.Database}, request.Key)
 	if err != nil {
 		return
 	}

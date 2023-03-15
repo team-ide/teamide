@@ -1,9 +1,9 @@
 package context
 
 import (
+	"github.com/team-ide/go-tool/db"
 	"go.uber.org/zap"
 	"teamide/internal/config"
-	"teamide/pkg/db"
 )
 
 type ServerContext struct {
@@ -13,12 +13,12 @@ type ServerContext struct {
 	ServerPort     int
 	ServerUrl      string
 	ServerConfig   *config.ServerConfig
-	DatabaseWorker *db.DatabaseWorker
-	DatabaseConfig *db.DatabaseConfig `json:"-" yaml:"-"`
-	Logger         *zap.Logger        `json:"-" yaml:"-"`
-	Decryption     *Decryption        `json:"-" yaml:"-"`
-	HttpAesKey     string             `json:"-" yaml:"-"`
-	JWTAesKey      string             `json:"-" yaml:"-"`
+	DatabaseWorker db.IService
+	DatabaseConfig *db.Config  `json:"-" yaml:"-"`
+	Logger         *zap.Logger `json:"-" yaml:"-"`
+	Decryption     *Decryption `json:"-" yaml:"-"`
+	HttpAesKey     string      `json:"-" yaml:"-"`
+	JWTAesKey      string      `json:"-" yaml:"-"`
 	IsServer       bool
 	IsHtmlDev      bool
 	IsServerDev    bool

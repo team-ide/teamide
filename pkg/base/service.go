@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	serviceCache     = map[string]Service{}
+	serviceCache     = map[string]*ServiceInfo{}
 	serviceCacheLock = &sync.Mutex{}
 	lockCacheLock    = &sync.Mutex{}
 	lockCache        = map[string]sync.Locker{}
@@ -33,7 +33,7 @@ func removeLockCache(key string) {
 	delete(lockCache, key)
 }
 
-func GetService(key string, create func() (Service, error)) (Service, error) {
+func GetService(key string, create func() (serviceInfo *ServiceInfo, err error)) (*ServiceInfo, error) {
 	res, ok := FindService(key)
 	if ok {
 		return res, nil
@@ -42,7 +42,7 @@ func GetService(key string, create func() (Service, error)) (Service, error) {
 	return res, err
 }
 
-func createService(key string, create func() (Service, error)) (Service, error) {
+func createService(key string, create func() (serviceInfo *ServiceInfo, err error)) (*ServiceInfo, error) {
 	lock := getLockCache(key)
 	lock.Lock()
 	defer removeLockCache(key)
@@ -64,7 +64,7 @@ func createService(key string, create func() (Service, error)) (Service, error) 
 	return res, err
 }
 
-func FindService(key string) (Service, bool) {
+func FindService(key string) (*ServiceInfo, bool) {
 	serviceCacheLock.Lock()
 	defer serviceCacheLock.Unlock()
 
@@ -75,17 +75,22 @@ func FindService(key string) (Service, bool) {
 	return nil, false
 }
 
-func setService(key string, ser Service) {
+func setService(key string, ser *ServiceInfo) {
 	serviceCacheLock.Lock()
 	defer serviceCacheLock.Unlock()
 
 	serviceCache[key] = ser
 }
 
-type Service interface {
-	GetWaitTime() int64
-	GetLastUseTime() int64
-	Stop()
+type ServiceInfo struct {
+	WaitTime    int64
+	LastUseTime int64
+	Service     interface{}
+	Stop        func()
+}
+
+func (this_ *ServiceInfo) SetLastUseTime() {
+	this_.LastUseTime = util.GetNowTime()
 }
 
 func startServiceTimer() {
@@ -100,14 +105,16 @@ func cleanCache() {
 	defer serviceCacheLock.Unlock()
 	nowTime := util.GetNowTime()
 	for key, one := range serviceCache {
-		if one.GetWaitTime() <= 0 {
+		if one.WaitTime <= 0 {
 			continue
 		}
-		t := nowTime - one.GetLastUseTime()
-		if t >= one.GetWaitTime() {
+		t := nowTime - one.LastUseTime
+		if t >= one.WaitTime {
 			delete(serviceCache, key)
-			go one.Stop()
-			util.Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.GetWaitTime()), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.GetLastUseTime()))
+			if one.Stop != nil {
+				go one.Stop()
+			}
+			util.Logger.Info("缓存服务回收", zap.Any("Key", key), zap.Any("WaitTime", one.WaitTime), zap.Any("NowTime", nowTime), zap.Any("LastUseTime", one.LastUseTime))
 		}
 	}
 }

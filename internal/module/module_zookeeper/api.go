@@ -3,10 +3,10 @@ package module_zookeeper
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/util"
+	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/zookeeper"
 )
 
 type api struct {
@@ -49,7 +49,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error) {
+func getService(zkConfig zookeeper.Config) (res zookeeper.IService, err error) {
 	key := "zookeeper-" + zkConfig.Address
 	if zkConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+zkConfig.Username)
@@ -57,10 +57,10 @@ func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error)
 	if zkConfig.Password != "" {
 		key += "-" + base.GetMd5String(key+zkConfig.Password)
 	}
-	var service base.Service
-	service, err = base.GetService(key, func() (res base.Service, err error) {
-		var s *zookeeper.ZKService
-		s, err = zookeeper.CreateZKService(zkConfig)
+	var serviceInfo *base.ServiceInfo
+	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
+		var s zookeeper.IService
+		s, err = zookeeper.New(zkConfig)
 		if err != nil {
 			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -76,14 +76,19 @@ func getService(zkConfig zookeeper.Config) (res *zookeeper.ZKService, err error)
 			}
 			return
 		}
-		res = s
+		res = &base.ServiceInfo{
+			WaitTime:    10 * 60 * 1000,
+			LastUseTime: util.GetNowTime(),
+			Service:     s,
+			Stop:        s.Stop,
+		}
 		return
 	})
 	if err != nil {
 		return
 	}
-	res = service.(*zookeeper.ZKService)
-	res.SetLastUseTime()
+	res = serviceInfo.Service.(zookeeper.IService)
+	serviceInfo.SetLastUseTime()
 	return
 }
 
@@ -150,7 +155,7 @@ func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 	if isEx {
-		err = service.SetData(request.Path, []byte(request.Data))
+		err = service.Set(request.Path, []byte(request.Data))
 	} else {
 		err = service.CreateIfNotExists(request.Path, []byte(request.Data))
 	}

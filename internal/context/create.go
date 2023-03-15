@@ -3,6 +3,7 @@ package context
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
@@ -10,8 +11,6 @@ import (
 	"os"
 	"strings"
 	"teamide/internal/config"
-	"teamide/pkg/base"
-	"teamide/pkg/db"
 	"teamide/pkg/node"
 )
 
@@ -183,7 +182,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger = newZapLogger(serverConfig)
 	}
 	util.Logger = this_.Logger
-	base.TempDir = serverConfig.Server.TempDir
+	util.SetTempDir(serverConfig.Server.TempDir)
 	node.Logger = this_.Logger
 	db.FileUploadDir = this_.GetFilesDir()
 
@@ -200,9 +199,9 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
 	}
 
-	var databaseConfig *db.DatabaseConfig
+	var databaseConfig *db.Config
 	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
-		databaseConfig = &db.DatabaseConfig{
+		databaseConfig = &db.Config{
 			Type:         "sqlite",
 			DatabasePath: serverConfig.Server.Data + "database",
 		}
@@ -211,7 +210,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 			return
 		}
 	} else {
-		databaseConfig = &db.DatabaseConfig{
+		databaseConfig = &db.Config{
 			Type:     "mysql",
 			Host:     serverConfig.Mysql.Host,
 			Port:     serverConfig.Mysql.Port,
@@ -222,7 +221,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	this_.DatabaseConfig = databaseConfig
-	this_.DatabaseWorker, err = db.NewDatabaseWorker(databaseConfig)
+	this_.DatabaseWorker, err = db.New(*databaseConfig)
 	if err != nil {
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return
@@ -234,7 +233,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 }
 
 // backupSqlite 备份
-func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, databaseConfig *db.DatabaseConfig) (err error) {
+func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, databaseConfig *db.Config) (err error) {
 	databasePath := databaseConfig.DatabasePath
 	exist, err := util.PathExists(databasePath)
 	if err != nil {

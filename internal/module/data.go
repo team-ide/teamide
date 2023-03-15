@@ -2,12 +2,12 @@ package module
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/util"
 	"regexp"
 	"strings"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/db"
 )
 
 type DataRequest struct {

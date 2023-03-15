@@ -4,22 +4,16 @@ go 1.18
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/Shopify/sarama v1.38.1
 	github.com/creack/pty v1.1.18
 	github.com/gin-gonic/gin v1.8.2
-	github.com/go-redis/redis/v8 v8.11.5
-	github.com/go-zookeeper/zk v1.0.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/mssola/user_agent v0.6.0
-	github.com/olivere/elastic/v7 v7.0.32
 	github.com/pkg/sftp v1.13.5
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.1
-	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/go-dialect v1.9.0
-	github.com/team-ide/go-driver v1.2.0
-	github.com/team-ide/go-tool v0.0.3
+	github.com/team-ide/go-tool v0.1.1
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.6.0
 	golang.org/x/net v0.7.0
@@ -31,6 +25,7 @@ require (
 	gitee.com/chunanyong/dm v1.8.10 // indirect
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.4 // indirect
 	github.com/Chain-Zhang/pinyin v0.1.3 // indirect
+	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -47,8 +42,10 @@ require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/go-zookeeper/zk v1.0.3 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/godror/godror v0.36.0 // indirect
 	github.com/godror/knownpb v0.1.0 // indirect
@@ -74,11 +71,15 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/olivere/elastic/v7 v7.0.32 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/tealeg/xlsx v1.0.5 // indirect
+	github.com/team-ide/go-driver v1.2.1 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect

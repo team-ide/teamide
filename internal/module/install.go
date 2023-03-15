@@ -35,9 +35,9 @@ type InstallService struct {
 // Check 检测基础配置是否完整，如基础表
 func (this_ *InstallService) Check() (err error) {
 	var isExist bool
-	switch strings.ToLower(this_.DatabaseWorker.GetConfig().Type) {
+	switch strings.ToLower(this_.DatabaseConfig.Type) {
 	case "mysql":
-		sql := "SELECT count(1) FROM information_schema.TABLES WHERE table_schema='" + this_.DatabaseWorker.GetConfig().Database + "' AND table_name ='" + install.TableInstall + "'"
+		sql := "SELECT count(1) FROM information_schema.TABLES WHERE table_schema='" + this_.DatabaseConfig.Database + "' AND table_name ='" + install.TableInstall + "'"
 		var count int64
 		count, err = this_.DatabaseWorker.Count(sql, []interface{}{})
 		if err != nil {
@@ -218,7 +218,7 @@ func (this_ *InstallService) execStage(historyStageDetails *StageDetails, stage 
 // execStage 执行阶段
 func (this_ *InstallService) execStageSql(historyStageDetails *StageDetails, stageSql *install.StageSqlModel) (exeSQLs []string, err error) {
 	var sqs []string
-	switch strings.ToLower(this_.DatabaseWorker.GetConfig().Type) {
+	switch strings.ToLower(this_.DatabaseConfig.Type) {
 	case "mysql":
 		sqs = stageSql.Mysql
 	case "sqlite":

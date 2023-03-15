@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/db"
+	"github.com/team-ide/go-tool/elasticsearch"
+	"github.com/team-ide/go-tool/kafka"
+	"github.com/team-ide/go-tool/redis"
+	"github.com/team-ide/go-tool/zookeeper"
 	"strconv"
 	"teamide/pkg/base"
-	"teamide/pkg/db"
-	"teamide/pkg/elasticsearch"
 	"teamide/pkg/form"
-	"teamide/pkg/kafka"
-	"teamide/pkg/redis"
 	"teamide/pkg/ssh"
-	"teamide/pkg/zookeeper"
 )
 
 // EncryptOptionAttr 加密属性
@@ -205,7 +205,7 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 		return
 	}
 	switch conf := config.(type) {
-	case *db.DatabaseConfig:
+	case *db.Config:
 		conf.Password = this_.DecryptOptionAttr(conf.Password)
 		break
 	case *redis.Config:

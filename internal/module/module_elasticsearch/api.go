@@ -2,12 +2,12 @@ package module_elasticsearch
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/elasticsearch"
 )
 
 type api struct {
@@ -80,7 +80,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, err error) {
+func getService(esConfig elasticsearch.Config) (res elasticsearch.IService, err error) {
 	key := "elasticsearch-" + esConfig.Url
 	if esConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+esConfig.Username)
@@ -92,10 +92,10 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 		key += "-" + base.GetMd5String(key+esConfig.CertPath)
 	}
 
-	var service base.Service
-	service, err = base.GetService(key, func() (res base.Service, err error) {
-		var s *elasticsearch.V7Service
-		s, err = elasticsearch.CreateESService(esConfig)
+	var serviceInfo *base.ServiceInfo
+	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
+		var s elasticsearch.IService
+		s, err = elasticsearch.New(esConfig)
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -103,7 +103,7 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 			}
 			return
 		}
-		_, err = s.GetClient()
+		_, err = s.Info()
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -111,14 +111,19 @@ func getService(esConfig elasticsearch.Config) (res *elasticsearch.V7Service, er
 			}
 			return
 		}
-		res = s
+		res = &base.ServiceInfo{
+			WaitTime:    10 * 60 * 1000,
+			LastUseTime: util.GetNowTime(),
+			Service:     s,
+			Stop:        s.Stop,
+		}
 		return
 	})
 	if err != nil {
 		return
 	}
-	res = service.(*elasticsearch.V7Service)
-	res.SetLastUseTime()
+	res = serviceInfo.Service.(elasticsearch.IService)
+	serviceInfo.SetLastUseTime()
 	return
 }
 

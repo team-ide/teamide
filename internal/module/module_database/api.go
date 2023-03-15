@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-dialect/worker"
+	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
@@ -15,7 +16,6 @@ import (
 	"sync"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/db"
 )
 
 type api struct {
@@ -93,8 +93,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	return
 }
 
-func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *db.DatabaseConfig, err error) {
-	config = &db.DatabaseConfig{}
+func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *db.Config, err error) {
+	config = &db.Config{}
 	err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
@@ -102,7 +102,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
+func getService(config *db.Config) (res db.IService, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
 	if config.DatabasePath != "" {
 		key += "-" + config.DatabasePath
@@ -125,10 +125,11 @@ func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
 	if config.Password != "" {
 		key += "-" + base.GetMd5String(key+config.Password)
 	}
-	var service base.Service
-	service, err = base.GetService(key, func() (res base.Service, err error) {
-		var s *db.Service
-		s, err = db.CreateService(config)
+
+	var serviceInfo *base.ServiceInfo
+	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
+		var s db.IService
+		s, err = db.New(*config)
 		if err != nil {
 			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -136,14 +137,19 @@ func getService(config *db.DatabaseConfig) (res *db.Service, err error) {
 			}
 			return
 		}
-		res = s
+		res = &base.ServiceInfo{
+			WaitTime:    10 * 60 * 1000,
+			LastUseTime: util.GetNowTime(),
+			Service:     s,
+			Stop:        s.Stop,
+		}
 		return
 	})
 	if err != nil {
 		return
 	}
-	res = service.(*db.Service)
-	res.SetLastUseTime()
+	res = serviceInfo.Service.(db.IService)
+	serviceInfo.SetLastUseTime()
 	return
 }
 
@@ -282,7 +288,7 @@ func (this_ *api) ownerCreateSql(requestBean *base.RequestBean, c *gin.Context) 
 	if !base.RequestJSON(owner, c) {
 		return
 	}
-	res, err = service.DatabaseWorker.OwnerCreateSql(param.ParamModel, owner)
+	res, err = service.OwnerCreateSql(param, owner)
 	if err != nil {
 		return
 	}
@@ -745,7 +751,7 @@ func (this_ *api) exportDownload(_ *base.RequestBean, c *gin.Context) (res inter
 		err = errors.New("任务导出文件丢失")
 		return
 	}
-	tempDir, err := base.GetTempDir()
+	tempDir, err := util.GetTempDir()
 	if err != nil {
 		return
 	}

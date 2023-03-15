@@ -2,11 +2,11 @@ package module_kafka
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/kafka"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
-	"teamide/pkg/kafka"
 )
 
 type api struct {
@@ -59,7 +59,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) {
+func getService(kafkaConfig kafka.Config) (res kafka.IService, err error) {
 	key := "kafka-" + kafkaConfig.Address
 	if kafkaConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+kafkaConfig.Username)
@@ -70,10 +70,10 @@ func getService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) 
 	if kafkaConfig.CertPath != "" {
 		key += "-" + base.GetMd5String(key+kafkaConfig.CertPath)
 	}
-	var service base.Service
-	service, err = base.GetService(key, func() (res base.Service, err error) {
-		var s *kafka.SaramaService
-		s, err = kafka.CreateKafkaService(kafkaConfig)
+	var serviceInfo *base.ServiceInfo
+	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
+		var s kafka.IService
+		s, err = kafka.New(kafkaConfig)
 		if err != nil {
 			util.Logger.Error("getKafkaService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -89,13 +89,19 @@ func getService(kafkaConfig kafka.Config) (res *kafka.SaramaService, err error) 
 			}
 			return
 		}
-		res = s
+		res = &base.ServiceInfo{
+			WaitTime:    10 * 60 * 1000,
+			LastUseTime: util.GetNowTime(),
+			Service:     s,
+			Stop:        s.Stop,
+		}
 		return
 	})
 	if err != nil {
 		return
 	}
-	res = service.(*kafka.SaramaService)
+	res = serviceInfo.Service.(kafka.IService)
+	serviceInfo.SetLastUseTime()
 	return
 }
 
