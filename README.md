@@ -156,7 +156,6 @@ docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/t
 
 ```shell
 conf/           # 配置文件
-html/           # 前端，vue工程
 internal/       # 服务源码
 pkg/            # 工具等
 ```
@@ -168,8 +167,9 @@ pkg/            # 工具等
 ```shell
 # 前端打包
 
+git clone https://github.com/team-ide/teamide-html
 # 进入html目录
-cd html
+cd teamide-html
 
 # 安装依赖
 npm install
@@ -198,8 +198,9 @@ go run . --isDev
 ```shell
 # 前端打包
 
+git clone https://github.com/team-ide/teamide-html
 # 进入html目录
-cd html
+cd teamide-html
 
 # 安装依赖
 npm install
@@ -240,7 +241,7 @@ go mod tidy
 
 # 作为服务端部署，通过浏览器打开，可供团队使用
 # 需要conf目录
-go build -ldflags "-X main.buildFlags=--isServer" .
+go build -ldflags "-s -X main.buildFlags=--isServer" .
 ```
 
 ## Toolbox 模块

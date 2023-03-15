@@ -1,6 +1,6 @@
 @echo off
 
-cd ../html
+cd ../../teamide-html
 
 npm run serve
 
