@@ -229,7 +229,7 @@ go mod tidy
 # 不需要conf目录
 go build .
 
-go build -ldflags "-w -s -X teamide/pkg/base.version=2.0.0" -o server.exe .
+go build -ldflags "-s -X teamide/pkg/base.version=2.0.0" -o server.exe .
 ```
 
 **作为服务部署打包**

@@ -23,4 +23,4 @@ CMD ["/opt/teamide/docker-entrypoint.sh"]
 # install
 # npm run build
 # go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-# go build -ldflags "-w -s -X main.buildFlags=--isServer -X teamide/pkg/base.version=1.8.9" .
+# go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=1.8.9" .

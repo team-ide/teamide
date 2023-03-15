@@ -94,8 +94,8 @@ jobs:
       # 将静态资源打包html.go
       - run: |
           go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
-          go build -ldflags="-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-darwin-x64 .
-          go build -ldflags="-w -s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
+          go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron/teamide-darwin-x64 .
+          go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-darwin-x64/teamide-node teamide/pkg/node/main
       - run: |
           cd release/teamide-darwin-x64
           nohup ./teamide-node -id teamide-test-mac -address :51091 -token teamide-token -connAddress teamide.com:51091 -connToken teamide-token  > start.log 2>&1 &
