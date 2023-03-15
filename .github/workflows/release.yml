@@ -66,7 +66,8 @@ jobs:
 
       # npm install
       - run: |
-          cd html 
+          git clone https://github.com/team-ide/teamide-html
+          cd teamide-html
           npm install
           npm run build
 
@@ -83,7 +84,7 @@ jobs:
           cp -rf release/base release/teamide-linux-x64
           cp -rf release/base release/teamide-darwin-x64
           cp -rf release/base release/teamide-windows-x64
-          cp -rf html/dist release/statics
+          cp -rf teamide-html/dist release/statics
           
 
       - run: |
