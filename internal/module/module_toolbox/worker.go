@@ -452,6 +452,56 @@ func kafkaWorker() *ToolboxType {
 					},
 				},
 			},
+			"commit": {
+				Fields: []*form.Field{
+					{
+						Label: "Group（消费组）", Name: "groupId", DefaultValue: "test-group",
+						Rules: []*form.Rule{
+							{Required: true, Message: "Group不能为空"},
+						},
+					},
+					{
+						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
+						Rules: []*form.Rule{
+							{Required: true, Message: "主题不能为空"},
+						},
+					},
+					{
+						Label: "Partition（分区）", Name: "partition", DefaultValue: 0, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "分区不能为空"},
+						},
+					},
+					{
+						Label: "Offset", Name: "offset", DefaultValue: 0, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "Offset不能为空"},
+						},
+					},
+				},
+			},
+			"deleteRecord": {
+				Fields: []*form.Field{
+					{
+						Label: "Topic（主题）", Name: "topic", DefaultValue: "topic_xxx",
+						Rules: []*form.Rule{
+							{Required: true, Message: "主题不能为空"},
+						},
+					},
+					{
+						Label: "Partition（分区）", Name: "partition", DefaultValue: 0, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "分区不能为空"},
+						},
+					},
+					{
+						Label: "Offset", Name: "offset", DefaultValue: 0, IsNumber: true,
+						Rules: []*form.Rule{
+							{Required: true, Message: "Offset不能为空"},
+						},
+					},
+				},
+			},
 			"push": {
 				Fields: []*form.Field{
 					{

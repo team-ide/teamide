@@ -23,6 +23,7 @@ var (
 	Power                 = base.AppendPower(&base.PowerAction{Action: "kafka", Text: "Kafka", ShouldLogin: true, StandAlone: true})
 	infoPower             = base.AppendPower(&base.PowerAction{Action: "info", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	topicsPower           = base.AppendPower(&base.PowerAction{Action: "topics", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
+	topicPower            = base.AppendPower(&base.PowerAction{Action: "topic", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	commitPower           = base.AppendPower(&base.PowerAction{Action: "commit", Text: "Kafka提交", ShouldLogin: true, StandAlone: true, Parent: Power})
 	pullPower             = base.AppendPower(&base.PowerAction{Action: "pull", Text: "Kafka拉取", ShouldLogin: true, StandAlone: true, Parent: Power})
 	pushPower             = base.AppendPower(&base.PowerAction{Action: "push", Text: "Kafka推送", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -37,6 +38,7 @@ var (
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: topicsPower, Do: this_.topics})
+	apis = append(apis, &base.ApiWorker{Power: topicPower, Do: this_.topic})
 	apis = append(apis, &base.ApiWorker{Power: commitPower, Do: this_.commit})
 	apis = append(apis, &base.ApiWorker{Power: pullPower, Do: this_.pull})
 	apis = append(apis, &base.ApiWorker{Power: pushPower, Do: this_.push})
@@ -108,6 +110,7 @@ func getService(kafkaConfig kafka.Config) (res kafka.IService, err error) {
 type BaseRequest struct {
 	GroupId           string `json:"groupId"`
 	Topic             string `json:"topic"`
+	Time              int64  `json:"time"`
 	PullSize          int    `json:"pullSize"`
 	PullTimeout       int    `json:"pullTimeout"`
 	Partition         int32  `json:"partition"`
@@ -148,6 +151,28 @@ func (this_ *api) topics(requestBean *base.RequestBean, c *gin.Context) (res int
 	}
 
 	res, err = service.GetTopics()
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) topic(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.GetTopic(request.Topic, request.Time)
 	if err != nil {
 		return
 	}

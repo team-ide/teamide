@@ -132,9 +132,6 @@ func getService(config *db.Config) (res db.IService, err error) {
 		s, err = db.New(*config)
 		if err != nil {
 			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
-			if s != nil {
-				s.Stop()
-			}
 			return
 		}
 		res = &base.ServiceInfo{
