@@ -23,6 +23,7 @@ var (
 	// Power 工具基本 权限
 	Power          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具箱", ShouldLogin: true, StandAlone: true})
 	PowerList      = base.AppendPower(&base.PowerAction{Action: "list", Text: "工具箱列表", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerGet       = base.AppendPower(&base.PowerAction{Action: "get", Text: "工具箱查询", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerCount     = base.AppendPower(&base.PowerAction{Action: "count", Text: "工具箱统计", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerInsert    = base.AppendPower(&base.PowerAction{Action: "insert", Text: "工具箱新增", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerUpdate    = base.AppendPower(&base.PowerAction{Action: "update", Text: "工具箱修改", Parent: Power, ShouldLogin: true, StandAlone: true})
@@ -38,6 +39,7 @@ var (
 
 	PowerOpen                = base.AppendPower(&base.PowerAction{Action: "open", Text: "打开工具箱工具", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerUpdateOpenExtend    = base.AppendPower(&base.PowerAction{Action: "updateOpenExtend", Text: "更新工具箱工具扩展", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerUpdateOpenSequence  = base.AppendPower(&base.PowerAction{Action: "updateOpenSequence", Text: "更新工具箱排序", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerQueryOpens          = base.AppendPower(&base.PowerAction{Action: "queryOpens", Text: "查询打开的工具箱工具", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerGetOpen             = base.AppendPower(&base.PowerAction{Action: "getOpen", Text: "查询工具箱工具打开信息", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerClose               = base.AppendPower(&base.PowerAction{Action: "close", Text: "工具箱工具关闭", Parent: Power, ShouldLogin: true, StandAlone: true})
@@ -55,6 +57,7 @@ var (
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: PowerList, Do: this_.list})
+	apis = append(apis, &base.ApiWorker{Power: PowerGet, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: PowerCount, Do: this_.count})
 	apis = append(apis, &base.ApiWorker{Power: PowerInsert, Do: this_.insert})
 	apis = append(apis, &base.ApiWorker{Power: PowerUpdate, Do: this_.update})
@@ -72,6 +75,7 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: PowerQueryOpens, Do: this_.queryOpens})
 	apis = append(apis, &base.ApiWorker{Power: PowerClose, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Power: PowerUpdateOpenExtend, Do: this_.updateOpenExtend})
+	apis = append(apis, &base.ApiWorker{Power: PowerUpdateOpenSequence, Do: this_.UpdateOpenSequence})
 	apis = append(apis, &base.ApiWorker{Power: PowerQueryOpenTabs, Do: this_.queryOpenTabs})
 	apis = append(apis, &base.ApiWorker{Power: PowerOpenTab, Do: this_.openTab})
 	apis = append(apis, &base.ApiWorker{Power: PowerCloseTab, Do: this_.closeTab})

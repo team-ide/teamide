@@ -50,6 +50,7 @@ type ToolboxOpenModel struct {
 	ToolboxComment string    `json:"toolboxComment,omitempty"`
 	ToolboxGroupId int64     `json:"toolboxGroupId,omitempty"`
 	Extend         string    `json:"extend,omitempty"`
+	Sequence       int64     `json:"sequence,omitempty"`
 	CreateTime     time.Time `json:"createTime,omitempty"`
 	UpdateTime     time.Time `json:"updateTime,omitempty"`
 	OpenTime       time.Time `json:"openTime,omitempty"`

@@ -191,6 +191,9 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 	if toolboxOpen.CreateTime.IsZero() {
 		toolboxOpen.CreateTime = time.Now()
 	}
+	if toolboxOpen.Sequence == 0 {
+		toolboxOpen.Sequence = time.Now().UnixMilli()
+	}
 	if toolboxOpen.OpenTime.IsZero() {
 		toolboxOpen.OpenTime = time.Now()
 	}
@@ -211,9 +214,9 @@ func (this_ *ToolboxService) Open(toolboxOpen *ToolboxOpenModel) (rowsAffected i
 			return
 		}
 
-		sql := `INSERT INTO ` + TableToolboxOpen + `(openId, userId, toolboxId, extend, createTime, openTime) VALUES (?, ?, ?, ?, ?, ?) `
+		sql := `INSERT INTO ` + TableToolboxOpen + `(openId, userId, toolboxId, extend, sequence, createTime, openTime) VALUES (?, ?, ?, ?, ?, ?, ?) `
 
-		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenId, toolboxOpen.UserId, toolboxOpen.ToolboxId, toolboxOpen.Extend, toolboxOpen.CreateTime, toolboxOpen.OpenTime})
+		rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.OpenId, toolboxOpen.UserId, toolboxOpen.ToolboxId, toolboxOpen.Extend, toolboxOpen.Sequence, toolboxOpen.CreateTime, toolboxOpen.OpenTime})
 		if err != nil {
 			this_.Logger.Error("Open Error", zap.Error(err))
 			return
@@ -229,7 +232,7 @@ func (this_ *ToolboxService) QueryOpens(userId int64) (res []*ToolboxOpenModel, 
 	sql := `SELECT T_O.*,T_T.groupId toolboxGroupId,T_T.toolboxType toolboxType,T_T.name toolboxName ,T_T.comment toolboxComment
 FROM ` + TableToolboxOpen + ` T_O 
 LEFT JOIN ` + TableToolbox + ` T_T ON T_O.toolboxId = T_T.toolboxId 
-WHERE T_O.userId=? ORDER BY T_O.createTime ASC `
+WHERE T_O.userId=? ORDER BY T_O.sequence ASC `
 	err = this_.DatabaseWorker.Query(sql, []interface{}{userId}, &res)
 	if err != nil {
 		this_.Logger.Error("QueryOpens Error", zap.Error(err))
@@ -290,10 +293,32 @@ func (this_ *ToolboxService) Close(openId int64) (rowsAffected int64, err error)
 
 // UpdateOpenExtend 新增
 func (this_ *ToolboxService) UpdateOpenExtend(toolboxOpen *ToolboxOpenModel) (rowsAffected int64, err error) {
+
+	if toolboxOpen.UpdateTime.IsZero() {
+		toolboxOpen.UpdateTime = time.Now()
+	}
+
 	sql := `UPDATE ` + TableToolboxOpen + ` SET extend=?,updateTime=? WHERE openId=? `
 	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.Extend, toolboxOpen.UpdateTime, toolboxOpen.OpenId})
 	if err != nil {
 		this_.Logger.Error("UpdateOpenExtend Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// UpdateOpenSequence 新增
+func (this_ *ToolboxService) UpdateOpenSequence(toolboxOpen *ToolboxOpenModel) (rowsAffected int64, err error) {
+
+	if toolboxOpen.UpdateTime.IsZero() {
+		toolboxOpen.UpdateTime = time.Now()
+	}
+
+	sql := `UPDATE ` + TableToolboxOpen + ` SET sequence=?,updateTime=? WHERE openId=? `
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxOpen.Sequence, toolboxOpen.UpdateTime, toolboxOpen.OpenId})
+	if err != nil {
+		this_.Logger.Error("UpdateOpenSequence Error", zap.Error(err))
 		return
 	}
 

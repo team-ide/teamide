@@ -235,6 +235,25 @@ CREATE TABLE ` + TableToolboxQuickCommand + ` (
 		},
 
 		/** 给工具箱添加 快速命令 结束 **/
+
+		// 工具表 打开 添加顺序号
+		{
+			Version: "1.0.3",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolboxOpen + `]添加顺序号[sequence]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolboxOpen + ` ADD COLUMN sequence bigint(20) DEFAULT NULL COMMENT '顺序号' AFTER extend;`,
+					`ALTER TABLE ` + TableToolboxOpen + ` ADD INDEX ` + TableToolboxOpen + `_index_sequence (sequence);`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolboxOpen + ` ADD sequence bigint(20);`,
+					`CREATE INDEX ` + TableToolboxOpen + `_index_sequence on ` + TableToolboxOpen + ` (sequence);`,
+				},
+			},
+		},
+
+		/** 工具表添加顺序号 结束 **/
 	}
 
 }

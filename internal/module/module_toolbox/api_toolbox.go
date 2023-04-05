@@ -66,6 +66,25 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 	return
 }
 
+type GetRequest struct {
+	ToolboxId int64 `json:"toolboxId,omitempty"`
+}
+
+func (this_ *ToolboxApi) get(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &GetRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.ToolboxService.Get(request.ToolboxId)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 type InsertRequest struct {
 	*ToolboxModel
 }
@@ -329,7 +348,7 @@ type GetOpenResponse struct {
 	Open *ToolboxOpenModel `json:"open,omitempty"`
 }
 
-func (this_ *ToolboxApi) getOpen(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) getOpen(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	request := &GetOpenRequest{}
 	if !base.RequestJSON(request, c) {
@@ -414,6 +433,44 @@ func (this_ *ToolboxApi) updateOpenExtend(requestBean *base.RequestBean, c *gin.
 	}
 
 	_, err = this_.ToolboxService.UpdateOpenExtend(request.ToolboxOpenModel)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+type UpdateOpenSequenceRequest struct {
+	*ToolboxOpenModel
+}
+
+type UpdateOpenSequenceResponse struct {
+}
+
+func (this_ *ToolboxApi) UpdateOpenSequence(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateOpenSequenceRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateOpenSequenceResponse{}
+
+	if request.OpenId != 0 {
+		var find *ToolboxOpenModel
+		find, err = this_.ToolboxService.GetOpen(request.OpenId)
+		if err != nil {
+			return
+		}
+		if find != nil && find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+
+	_, err = this_.ToolboxService.UpdateOpenSequence(request.ToolboxOpenModel)
 	if err != nil {
 		return
 	}
