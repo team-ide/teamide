@@ -263,7 +263,7 @@ func init() {
 	*toolboxTypes = append(*toolboxTypes, zookeeperWorker_)
 	*toolboxTypes = append(*toolboxTypes, elasticsearchWorker_)
 	*toolboxTypes = append(*toolboxTypes, kafkaWorker_)
-	*toolboxTypes = append(*toolboxTypes, otherWorker_)
+	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
 
 func GetToolboxTypes() (res []*ToolboxType) {

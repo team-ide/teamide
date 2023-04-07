@@ -58,9 +58,9 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
-	if request.ToolboxType == "" {
-		response.ToolboxList = append(response.ToolboxList, Others...)
-	}
+	//if request.ToolboxType == "" {
+	//	response.ToolboxList = append(response.ToolboxList, Others...)
+	//}
 
 	res = response
 	return
