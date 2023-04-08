@@ -13,6 +13,7 @@ import (
 	"teamide/internal/module/module_database"
 	"teamide/internal/module/module_elasticsearch"
 	"teamide/internal/module/module_file_manager"
+	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_kafka"
 	"teamide/internal/module/module_log"
 	"teamide/internal/module/module_login"
@@ -20,8 +21,10 @@ import (
 	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_redis"
 	"teamide/internal/module/module_register"
+	"teamide/internal/module/module_setting"
 	"teamide/internal/module/module_terminal"
 	"teamide/internal/module/module_toolbox"
+	"teamide/internal/module/module_tools"
 	"teamide/internal/module/module_user"
 	"teamide/internal/module/module_zookeeper"
 	"teamide/pkg/base"
@@ -41,6 +44,8 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		powerRouteService: module_power.NewPowerRouteService(ServerContext),
 		powerUserService:  module_power.NewPowerUserService(ServerContext),
 		logService:        module_log.NewLogService(ServerContext),
+		settingService:    module_setting.NewSettingService(ServerContext),
+		idService:         module_id.NewIDService(ServerContext),
 		apiCache:          make(map[string]*base.ApiWorker),
 	}
 	var apis []*base.ApiWorker
@@ -59,6 +64,12 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	if err != nil {
 		return
 	}
+
+	err = api.InitSetting()
+	if err != nil {
+		return
+	}
+
 	if ServerContext.IsServer {
 		err = api.initServer()
 		if err != nil {
@@ -74,6 +85,23 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 	return
 }
 
+// InitSetting 查询
+func (this_ *Api) InitSetting() (err error) {
+
+	list, err := this_.settingService.Query()
+	if err != nil {
+		return
+	}
+	for _, one := range list {
+		_, e := this_.Setting.Set(one.Name, one.Value)
+		if e != nil {
+			this_.Logger.Error("init setting error", zap.Any("setting", one), zap.Error(e))
+		}
+	}
+
+	return
+}
+
 // Api ID服务
 type Api struct {
 	*context.ServerContext
@@ -86,6 +114,8 @@ type Api struct {
 	powerRouteService *module_power.PowerRouteService
 	powerUserService  *module_power.PowerUserService
 	logService        *module_log.LogService
+	settingService    *module_setting.SettingService
+	idService         *module_id.IDService
 	installService    *InstallService
 	apiCache          map[string]*base.ApiWorker
 }
@@ -127,6 +157,8 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_elasticsearch.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_log.NewApi(this_.logService).GetApis()...)
 	apis = append(apis, module_power.NewApi(this_.powerRoleService).GetApis()...)
+	apis = append(apis, module_tools.NewApi(this_.ServerContext).GetApis()...)
+	apis = append(apis, module_setting.NewApi(this_.settingService).GetApis()...)
 
 	return
 }

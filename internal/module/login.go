@@ -15,8 +15,9 @@ import (
 )
 
 type LoginRequest struct {
-	Account  string `json:"account,omitempty"`
-	Password string `json:"password,omitempty"`
+	Account   string `json:"account,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Anonymous bool   `json:"anonymous,omitempty"`
 }
 
 func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -27,52 +28,70 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 
 	var loginUser *module_user.UserModel
 	var loginId int64
+	var source string
+	userAgentStr := c.Request.UserAgent()
+	if userAgentStr != "" {
+		userAgent := user_agent.New(userAgentStr)
+		source += userAgent.OS()
+		s1, s2 := userAgent.Browser()
+		source += ";" + s1 + "@" + s2
+		s1, s2 = userAgent.Engine()
+		source += ";" + s1 + "@" + s2
+	}
+
 	if this_.IsServer {
+		// 匿名登录
+		if loginRequest.Anonymous {
+			if this_.Setting.LoginAnonymousEnable {
+				loginUser, err = this_.userService.Get(this_.Setting.AnonymousUserId)
+				if err != nil {
+					return
+				}
+				if loginUser == nil {
+					err = base.NewValidateError("匿名用户信息不存在!")
+					return
+				}
+			} else {
+				err = base.NewValidateError("匿名登录暂未开启，无法登录!")
+				return
+			}
+		} else {
+			if loginRequest.Account == "" {
+				err = base.NewValidateError("登录账号不能为空!")
+				return
+			}
+			if loginRequest.Password == "" {
+				err = base.NewValidateError("登录密码不能为空!")
+				return
+			}
+			var pwd string
+			pwd, err = util.AesDecryptCBCByKey(loginRequest.Password, this_.HttpAesKey)
+			if err != nil {
+				return
+			}
+			if pwd == "" {
+				err = base.NewValidateError("用户名或密码错误!")
+				return
+			}
 
-		if loginRequest.Account == "" {
-			err = base.NewValidateError("登录账号不能为空!")
-			return
-		}
-		if loginRequest.Password == "" {
-			err = base.NewValidateError("登录密码不能为空!")
-			return
-		}
-		var pwd string
-		pwd, err = util.AesDecryptCBCByKey(loginRequest.Password, this_.HttpAesKey)
-		if err != nil {
-			return
-		}
-		if pwd == "" {
-			err = base.NewValidateError("用户名或密码错误!")
-			return
-		}
-		userAgentStr := c.Request.UserAgent()
+			login := &module_login.LoginModel{
+				Account:    loginRequest.Account,
+				Password:   pwd,
+				Ip:         c.ClientIP(),
+				SourceType: module_login.SourceTypeWeb,
+				Source:     source,
+				UserAgent:  userAgentStr,
+			}
 
-		var source string
-		if userAgentStr != "" {
-			userAgent := user_agent.New(userAgentStr)
-			source += userAgent.OS()
-			s1, s2 := userAgent.Browser()
-			source += ";" + s1 + "@" + s2
-			s1, s2 = userAgent.Engine()
-			source += ";" + s1 + "@" + s2
-		}
-		login := &module_login.LoginModel{
-			Account:    loginRequest.Account,
-			Password:   pwd,
-			Ip:         c.ClientIP(),
-			SourceType: module_login.SourceTypeWeb,
-			Source:     source,
-			UserAgent:  userAgentStr,
+			loginUser, err = this_.loginService.Login(login)
+			if err != nil {
+				return
+			}
+			loginId = login.LoginId
 		}
 
-		loginUser, err = this_.loginService.Login(login)
-		if err != nil {
-			return
-		}
-		loginId = login.LoginId
 	} else {
-		loginUser, err = this_.userService.Get(base.StandAloneUserId)
+		loginUser, err = this_.userService.Get(this_.Setting.StandAloneUserId)
 		if err != nil {
 			return
 		}
@@ -85,6 +104,22 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 	if loginUser == nil {
 		err = base.NewValidateError("用户名或密码错误!")
 		return
+	}
+
+	if loginId == 0 {
+		login := &module_login.LoginModel{
+			Account:    loginUser.Account,
+			Ip:         c.ClientIP(),
+			SourceType: module_login.SourceTypeWeb,
+			Source:     source,
+			UserAgent:  userAgentStr,
+			UserId:     loginUser.UserId,
+		}
+		_, err = this_.loginService.Insert(login)
+		if err != nil {
+			return
+		}
+		loginId = login.LoginId
 	}
 
 	res, err = this_.getJWTStr(loginId, loginUser)
@@ -200,7 +235,7 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 			loginId = request.JWT.LoginId
 		}
 	} else {
-		userId = base.StandAloneUserId
+		userId = this_.Setting.StandAloneUserId
 	}
 	if userId > 0 {
 		var find *module_user.UserModel

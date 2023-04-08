@@ -3,8 +3,6 @@ package base
 import "os/user"
 
 var (
-	// StandAloneUserId 单机版本 用户 ID
-	StandAloneUserId   int64  = 1
 	SystemUserUid      string // 用户的 ID
 	SystemUserGid      string // 用户所属组的 ID，如果属于多个组，那么此 ID 为主组的 ID
 	SystemUserUsername string // 用户名
@@ -15,8 +13,11 @@ var (
 	SuperRoleType = 1
 	// SuperRoleName 超管 角色 名称
 	SuperRoleName = "超管"
-	// SuperUserAccount 超管用户账号
-	SuperUserAccount = "admin"
+
+	// AnonymousRoleType 匿名用户 角色 类型
+	AnonymousRoleType = 2
+	// AnonymousRoleName 匿名用户 角色 名称
+	AnonymousRoleName = "匿名用户"
 )
 
 func init() {

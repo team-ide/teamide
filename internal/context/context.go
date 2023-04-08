@@ -24,6 +24,7 @@ type ServerContext struct {
 	IsServerDev    bool
 	RootDir        string
 	UserHomeDir    string
+	Setting        *Setting
 }
 
 func (this_ *ServerContext) GetFilesDir() string {

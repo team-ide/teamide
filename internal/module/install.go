@@ -13,6 +13,7 @@ import (
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_register"
+	"teamide/internal/module/module_setting"
 	"teamide/internal/module/module_terminal"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_user"
@@ -82,6 +83,11 @@ func (this_ *InstallService) Install() (err error) {
 	}
 
 	err = this_.InstallSteps(module_id.GetInstallStages())
+	if err != nil {
+		return
+	}
+
+	err = this_.InstallSteps(module_setting.GetInstallStages())
 	if err != nil {
 		return
 	}

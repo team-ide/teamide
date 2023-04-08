@@ -1,7 +1,9 @@
 package module
 
 import (
+	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_register"
+	"teamide/internal/module/module_user"
 	"teamide/pkg/base"
 )
 
@@ -16,13 +18,40 @@ func (this_ *Api) initStandAlone() (err error) {
 // 初始化 单机用户
 func (this_ *Api) initStandAloneUser() (err error) {
 
-	user, err := this_.userService.Get(base.StandAloneUserId)
-	if err != nil {
-		return
+	// 单机版用户 ID
+
+	var standAloneUserId = this_.Setting.StandAloneUserId
+
+	var user *module_user.UserModel
+	if standAloneUserId == 0 {
+		user, err = this_.userService.Get(1)
+		if err != nil {
+			return
+		}
+		if user == nil {
+			standAloneUserId, err = this_.idService.GetNextID(module_id.IDTypeUser)
+			if err != nil {
+				return
+			}
+		} else {
+			standAloneUserId = user.UserId
+		}
+		err = this_.settingService.Save(map[string]interface{}{
+			"standAloneUserId": standAloneUserId,
+		})
+		if err != nil {
+			return
+		}
+	} else {
+		user, err = this_.userService.Get(standAloneUserId)
+		if err != nil {
+			return
+		}
 	}
+
 	if user == nil {
 		register := &module_register.RegisterModel{
-			UserId:     base.StandAloneUserId,
+			UserId:     standAloneUserId,
 			Name:       base.SystemUserName,
 			Account:    "admin",
 			Email:      "admin@teamide.com",

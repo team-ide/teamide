@@ -6,6 +6,7 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"regexp"
 	"strings"
+	"teamide/internal/context"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 )
@@ -16,12 +17,13 @@ type DataRequest struct {
 }
 
 type DataResponse struct {
-	Url          string `json:"url"`
-	Api          string `json:"api"`
-	FilesUrl     string `json:"filesUrl"`
-	IsServer     bool   `json:"isServer"`
-	ClientKey    string `json:"clientKey"`
-	ClientTabKey string `json:"clientTabKey"`
+	Url          string           `json:"url"`
+	Api          string           `json:"api"`
+	FilesUrl     string           `json:"filesUrl"`
+	IsServer     bool             `json:"isServer"`
+	ClientKey    string           `json:"clientKey"`
+	ClientTabKey string           `json:"clientTabKey"`
+	Setting      *context.Setting `json:"setting"`
 
 	ToolboxTypes             []*module_toolbox.ToolboxType      `json:"toolboxTypes"`
 	SqlConditionalOperations []*db.SqlConditionalOperation      `json:"sqlConditionalOperations"`
@@ -58,6 +60,8 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	response.SqlConditionalOperations = db.GetSqlConditionalOperations()
 	response.DatabaseTypes = db.DatabaseTypes
 	response.QuickCommandTypes = module_toolbox.GetQuickCommandTypes()
+
+	response.Setting = this_.Setting
 
 	if requestBean.ClientKey == "" {
 		response.ClientKey = util.GetUUID()

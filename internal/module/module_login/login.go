@@ -68,7 +68,7 @@ func (this_ *LoginService) Login(login *LoginModel) (user *module_user.UserModel
 	}
 	login.UserId = user.UserId
 
-	_, err = this_.insert(login)
+	_, err = this_.Insert(login)
 	if err != nil {
 		return
 	}
@@ -76,8 +76,8 @@ func (this_ *LoginService) Login(login *LoginModel) (user *module_user.UserModel
 	return
 }
 
-// insert 新增
-func (this_ *LoginService) insert(login *LoginModel) (rowsAffected int64, err error) {
+// Insert 新增
+func (this_ *LoginService) Insert(login *LoginModel) (rowsAffected int64, err error) {
 
 	if login.LoginId == 0 {
 		login.LoginId, err = this_.idService.GetNextID(module_id.IDTypeLogin)

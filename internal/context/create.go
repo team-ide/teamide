@@ -34,6 +34,7 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 		RootDir:     serverConf.RootDir,
 		UserHomeDir: serverConf.UserHomeDir,
 		Version:     serverConf.Version,
+		Setting:     NewSetting(),
 	}
 	context.HttpAesKey = "Q56hFAauWk18Gy2i"
 	context.JWTAesKey = "eE4ah2jeScRmL8sM"

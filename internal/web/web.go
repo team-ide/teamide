@@ -19,8 +19,9 @@ type Server struct {
 	toolboxService *module_toolbox.ToolboxService
 }
 
-func NewWebServer(ServerContext *context.ServerContext) (webServer *Server) {
+func NewWebServer(ServerContext *context.ServerContext, api *module.Api) (webServer *Server) {
 	webServer = &Server{
+		api:            api,
 		ServerContext:  ServerContext,
 		toolboxService: module_toolbox.NewToolboxService(ServerContext),
 	}
@@ -28,11 +29,6 @@ func NewWebServer(ServerContext *context.ServerContext) (webServer *Server) {
 }
 
 func (this_ *Server) Start() (serverUrl string, err error) {
-
-	this_.api, err = module.NewApi(this_.ServerContext)
-	if err != nil {
-		return
-	}
 
 	gin.DefaultWriter = &nullWriter{}
 
