@@ -9,7 +9,7 @@ func NewSetting() (setting *Setting) {
 	setting = &Setting{}
 
 	// 启用 匿名登录 默认关闭
-	setting.LoginAnonymousEnable = true
+	setting.LoginAnonymousEnable = false
 
 	setting.RegisterEnable = true
 
