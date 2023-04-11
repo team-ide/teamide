@@ -25,8 +25,11 @@ func (this_ *Api) initStandAloneUser() (err error) {
 
 	var user *module_user.UserModel
 	this_.Logger.Info("检测单机用户")
+
+	account := "admin"
 	if standAloneUserId == 0 {
-		user, err = this_.userService.Get(1)
+
+		user, err = this_.userService.QueryByAccount(account)
 		if err != nil {
 			return
 		}
@@ -60,7 +63,7 @@ func (this_ *Api) initStandAloneUser() (err error) {
 		register := &module_register.RegisterModel{
 			UserId:     standAloneUserId,
 			Name:       base.SystemUserName,
-			Account:    "admin",
+			Account:    account,
 			Email:      "admin@teamide.com",
 			Password:   "admin123",
 			SourceType: 1,

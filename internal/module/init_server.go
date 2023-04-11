@@ -87,11 +87,11 @@ func (this_ *Api) initPowerUser(roleType int, roleName string, name string, acco
 		err = errors.New("role [" + roleName + "] not found")
 		return
 	}
-	users, err := this_.userService.QueryByAccount(account)
+	user, err := this_.userService.QueryByAccount(account)
 	if err != nil {
 		return
 	}
-	if len(users) == 0 {
+	if user == nil {
 		password := util.GetUUID()[0:10]
 		register := &module_register.RegisterModel{
 			Name:       name,
@@ -107,8 +107,8 @@ func (this_ *Api) initPowerUser(roleType int, roleName string, name string, acco
 			return
 		}
 
-		users, err = this_.userService.QueryByAccount(account)
-		if len(users) == 0 {
+		user, err = this_.userService.QueryByAccount(account)
+		if user == nil {
 			err = errors.New("rule [" + roleName + "] user account not found")
 			return
 		}
@@ -131,7 +131,7 @@ func (this_ *Api) initPowerUser(roleType int, roleName string, name string, acco
 			this_.Logger.Info("rule [" + roleName + "] user account create success,user password saved to:" + userInfoFile)
 		}
 	}
-	userId = users[0].UserId
+	userId = user.UserId
 	powerUser := &module_power.PowerUserModel{
 		PowerRoleId: powerRoles[0].PowerRoleId,
 		UserId:      userId,
