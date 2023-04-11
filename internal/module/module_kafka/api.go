@@ -32,7 +32,16 @@ var (
 	createTopicPower      = base.AppendPower(&base.PowerAction{Action: "createTopic", Text: "Kafka创建Topic", ShouldLogin: true, StandAlone: true, Parent: Power})
 	createPartitionsPower = base.AppendPower(&base.PowerAction{Action: "createPartitions", Text: "Kafka创建分区", ShouldLogin: true, StandAlone: true, Parent: Power})
 	deleteRecordsPower    = base.AppendPower(&base.PowerAction{Action: "deleteRecords", Text: "Kafka删除记录", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower            = base.AppendPower(&base.PowerAction{Action: "close", Text: "Kafka关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	topicDescribe         = base.AppendPower(&base.PowerAction{Action: "topicDescribe", Text: "Topic详情", ShouldLogin: true, StandAlone: true, Parent: Power})
+
+	group              = base.AppendPower(&base.PowerAction{Action: "group", Text: "Kafka组", ShouldLogin: true, StandAlone: true, Parent: Power})
+	groupList          = base.AppendPower(&base.PowerAction{Action: "list", Text: "组列表", ShouldLogin: true, StandAlone: true, Parent: group})
+	groupDescribe      = base.AppendPower(&base.PowerAction{Action: "describe", Text: "组详情", ShouldLogin: true, StandAlone: true, Parent: group})
+	groupOffsets       = base.AppendPower(&base.PowerAction{Action: "offsets", Text: "组Offsets", ShouldLogin: true, StandAlone: true, Parent: group})
+	groupDeleteOffsets = base.AppendPower(&base.PowerAction{Action: "deleteOffsets", Text: "删除组Offsets", ShouldLogin: true, StandAlone: true, Parent: group})
+	groupDelete        = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除组", ShouldLogin: true, StandAlone: true, Parent: group})
+
+	closePower = base.AppendPower(&base.PowerAction{Action: "close", Text: "Kafka关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -47,6 +56,14 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: createTopicPower, Do: this_.createTopic})
 	apis = append(apis, &base.ApiWorker{Power: createPartitionsPower, Do: this_.createPartitions})
 	apis = append(apis, &base.ApiWorker{Power: deleteRecordsPower, Do: this_.deleteRecords})
+	apis = append(apis, &base.ApiWorker{Power: topicDescribe, Do: this_.topicDescribe})
+
+	apis = append(apis, &base.ApiWorker{Power: groupList, Do: this_.groupList})
+	apis = append(apis, &base.ApiWorker{Power: groupDescribe, Do: this_.groupDescribe})
+	apis = append(apis, &base.ApiWorker{Power: groupOffsets, Do: this_.groupOffsets})
+	apis = append(apis, &base.ApiWorker{Power: groupDeleteOffsets, Do: this_.groupDeleteOffsets})
+	apis = append(apis, &base.ApiWorker{Power: groupDelete, Do: this_.groupDelete})
+
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -117,6 +134,8 @@ type BaseRequest struct {
 	NumPartitions     int32  `json:"numPartitions"`
 	ReplicationFactor int16  `json:"replicationFactor"`
 
+	TopicPartitions map[string][]int32 `json:"topicPartitions"`
+
 	Offset    int64  `json:"offset"`
 	Count     int32  `json:"count"`
 	KeyType   string `json:"keyType"`
@@ -175,6 +194,33 @@ func (this_ *api) topic(requestBean *base.RequestBean, c *gin.Context) (res inte
 	res, err = service.GetTopic(request.Topic, request.Time)
 	if err != nil {
 		return
+	}
+	return
+}
+
+func (this_ *api) topicDescribe(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	list, err := service.DescribeTopics([]string{request.Topic})
+	if err != nil {
+		return
+	}
+	if len(list) > 0 {
+		res = list[0]
+	} else {
+		res = nil
 	}
 	return
 }
@@ -353,6 +399,121 @@ func (this_ *api) deleteRecords(requestBean *base.RequestBean, c *gin.Context) (
 	err = service.DeleteRecords(request.Topic, partitionOffsets)
 	if err != nil {
 		return
+	}
+	return
+}
+
+func (this_ *api) groupList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.ListConsumerGroups()
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) groupOffsets(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.ListConsumerGroupOffsets(request.GroupId, request.TopicPartitions)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) groupDeleteOffsets(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	err = service.DeleteConsumerGroupOffset(request.GroupId, request.Topic, request.Partition)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) groupDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	err = service.DeleteConsumerGroup(request.GroupId)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) groupDescribe(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(*config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	list, err := service.DescribeConsumerGroups([]string{request.GroupId})
+	if err != nil {
+		return
+	}
+	if len(list) > 0 {
+		res = list[0]
+	} else {
+		res = nil
 	}
 	return
 }
