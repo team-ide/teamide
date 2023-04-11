@@ -75,6 +75,7 @@ func (this_ *RegisterService) Register(register *RegisterModel) (rowsAffected in
 		return
 	}
 	user := &module_user.UserModel{
+		UserId:  register.UserId,
 		Name:    register.Name,
 		Account: register.Account,
 		Email:   register.Email,

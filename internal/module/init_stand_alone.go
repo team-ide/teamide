@@ -1,6 +1,7 @@
 package module
 
 import (
+	"go.uber.org/zap"
 	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_user"
@@ -23,6 +24,7 @@ func (this_ *Api) initStandAloneUser() (err error) {
 	var standAloneUserId = this_.Setting.StandAloneUserId
 
 	var user *module_user.UserModel
+	this_.Logger.Info("检测单机用户")
 	if standAloneUserId == 0 {
 		user, err = this_.userService.Get(1)
 		if err != nil {
@@ -33,9 +35,12 @@ func (this_ *Api) initStandAloneUser() (err error) {
 			if err != nil {
 				return
 			}
+			this_.Logger.Info("生成单机用户ID", zap.Any("standAloneUserId", standAloneUserId))
 		} else {
 			standAloneUserId = user.UserId
+			this_.Logger.Info("已有用户，使用该用户作为单机用户", zap.Any("standAloneUserId", standAloneUserId))
 		}
+		this_.Logger.Info("保存单机用户ID", zap.Any("standAloneUserId", standAloneUserId))
 		err = this_.settingService.Save(map[string]interface{}{
 			"standAloneUserId": standAloneUserId,
 		})
@@ -43,6 +48,7 @@ func (this_ *Api) initStandAloneUser() (err error) {
 			return
 		}
 	} else {
+		this_.Logger.Info("已有单机用户ID，查询用户", zap.Any("standAloneUserId", standAloneUserId))
 		user, err = this_.userService.Get(standAloneUserId)
 		if err != nil {
 			return
@@ -50,6 +56,7 @@ func (this_ *Api) initStandAloneUser() (err error) {
 	}
 
 	if user == nil {
+		this_.Logger.Info("单机用户不存在，插入用户", zap.Any("standAloneUserId", standAloneUserId))
 		register := &module_register.RegisterModel{
 			UserId:     standAloneUserId,
 			Name:       base.SystemUserName,
