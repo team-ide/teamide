@@ -21,6 +21,7 @@ type Config struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	PublicKey string `json:"publicKey"`
+	Command   string `json:"command"`
 }
 
 type Client struct {

@@ -581,6 +581,7 @@ func sshWorker() *ToolboxType {
 				{Label: "Username", Name: "username"},
 				{Label: "Password", Name: "password", Type: "password"},
 				{Label: "PublicKey", Name: "publicKey", Type: "file", Placeholder: "请上传PublicKey文件"},
+				{Label: "连接后执行命令(回车执行多条，sleep 5，表示等待5秒执行下一条)", Name: "command", Type: "textarea", Placeholder: "请上传PublicKey文件"},
 			},
 		},
 	}

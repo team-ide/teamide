@@ -54,7 +54,7 @@ func (this_ *api) key(_ *base.RequestBean, c *gin.Context) (res interface{}, err
 		return
 	}
 
-	service, err := this_.createService(request.Place, request.PlaceId)
+	service, _, err := this_.createService(request.Place, request.PlaceId)
 	if err != nil {
 		return
 	}

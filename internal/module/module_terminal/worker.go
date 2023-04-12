@@ -13,6 +13,7 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/ssh"
 	"teamide/pkg/terminal"
+	"time"
 )
 
 func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
@@ -42,7 +43,7 @@ func (this_ *worker) GetService(key string) (res terminal.Service) {
 	return
 }
 
-func (this_ *worker) createService(place string, placeId string) (service terminal.Service, err error) {
+func (this_ *worker) createService(place string, placeId string) (service terminal.Service, command string, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -75,6 +76,12 @@ func (this_ *worker) createService(place string, placeId string) (service termin
 
 		var config *ssh.Config
 		config, err = this_.toolboxService.GetSSHConfig(tD.Option)
+		if err != nil {
+			return
+		}
+		if config != nil {
+			command = config.Command
+		}
 
 		service = ssh.NewTerminalService(config)
 	case "node":
@@ -108,8 +115,8 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 		err = errors.New("会话服务[" + key + "]已存在")
 		return
 	}
-
-	service, err = this_.createService(place, placeId)
+	var command string
+	service, command, err = this_.createService(place, placeId)
 	if err != nil {
 		return
 	}
@@ -121,6 +128,37 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 	if err != nil {
 		return
 	}
+	if command != "" {
+		go func() {
+			command = strings.ReplaceAll(command, "\n\r", "\n")
+			this_.Logger.Info("SSH start run command", zap.Any("command", command))
+			commands := strings.Split(command, "\n")
+			for _, c := range commands {
+				c = strings.TrimSpace(c)
+				if c == "" {
+					continue
+				}
+				this_.Logger.Info("SSH start run line command", zap.Any("line", c))
+				if strings.HasPrefix(c, "sleep ") {
+					t, _ := strconv.Atoi(strings.TrimSpace(c[len("sleep "):]))
+					this_.Logger.Info("SSH start run line sleep", zap.Any("time", t))
+					if t > 0 {
+						time.Sleep(time.Second * time.Duration(t))
+
+					}
+					continue
+				}
+				_, err = service.Write([]byte(c + "\n"))
+				if err != nil {
+					this_.Logger.Error("SSH start run line error", zap.Error(err))
+				}
+			}
+		}()
+
+	}
+
+	// 执行配置的命令
+
 	go this_.startReadWS(key, isWindow, ws, service, baseLog)
 	go this_.startReadService(key, isWindow, ws, service)
 
