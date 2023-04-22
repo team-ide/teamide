@@ -23,6 +23,7 @@ import (
 	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_setting"
 	"teamide/internal/module/module_terminal"
+	"teamide/internal/module/module_thrift"
 	"teamide/internal/module/module_toolbox"
 	"teamide/internal/module/module_tools"
 	"teamide/internal/module/module_user"
@@ -159,6 +160,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_power.NewApi(this_.powerRoleService).GetApis()...)
 	apis = append(apis, module_tools.NewApi(this_.ServerContext).GetApis()...)
 	apis = append(apis, module_setting.NewApi(this_.settingService).GetApis()...)
+	apis = append(apis, module_thrift.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }

@@ -253,6 +253,7 @@ var (
 	zookeeperWorker_     = zookeeperWorker()
 	elasticsearchWorker_ = elasticsearchWorker()
 	kafkaWorker_         = kafkaWorker()
+	thriftWorker_        = thriftWorker()
 	otherWorker_         = otherWorker()
 )
 
@@ -263,6 +264,7 @@ func init() {
 	*toolboxTypes = append(*toolboxTypes, zookeeperWorker_)
 	*toolboxTypes = append(*toolboxTypes, elasticsearchWorker_)
 	*toolboxTypes = append(*toolboxTypes, kafkaWorker_)
+	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
 	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
 
@@ -624,6 +626,25 @@ func zookeeperWorker() *ToolboxType {
 				},
 				{Label: "Username", Name: "username"},
 				{Label: "Password", Name: "password", Type: "password"},
+			},
+		},
+	}
+
+	return worker_
+}
+
+func thriftWorker() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "thrift",
+		Text: "Thrift",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "Thrift文件目录", Name: "thriftDir",
+					Rules: []*form.Rule{
+						{Required: true, Message: "Thrift文件目录不能为空"},
+					},
+				},
 			},
 		},
 	}
