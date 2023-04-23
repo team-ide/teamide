@@ -117,7 +117,14 @@ func (this_ *api) getMethodArgFields(requestBean *base.RequestBean, c *gin.Conte
 	}
 	var structCache = map[string]*thrift.Struct{}
 
-	data["argFields"] = service.GetFields(filename, methodNode.Params, structCache)
+	argFields := service.GetFields(filename, methodNode.Params, structCache)
+	var argDemoDataList []interface{}
+	for _, argField := range argFields {
+		bs, _ := json.MarshalIndent(service.GetFieldDemoData(filename, argField), "", "  ")
+		argDemoDataList = append(argDemoDataList, string(bs))
+	}
+	data["argFields"] = argFields
+	data["argDemoDataList"] = argDemoDataList
 	data["structCache"] = structCache
 	return
 }
@@ -173,12 +180,13 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		data["writeEnd"] = param.WriteEnd.UnixMilli()
 		data["readStart"] = param.ReadStart.UnixMilli()
 		data["readEnd"] = param.ReadEnd.UnixMilli()
-		data["result"] = param.Result
-		if param.Result != nil {
-			bs, e := json.MarshalIndent(param.Result, "", "  ")
-			if e == nil {
-				data["result"] = string(bs)
-			}
+		var result = map[string]interface{}{}
+		result["args"] = param.Args
+		result["result"] = param.Result
+		result["exceptions"] = param.Exceptions
+		bs, e := json.MarshalIndent(result, "", "  ")
+		if e == nil {
+			data["result"] = string(bs)
 		}
 	}
 	return
