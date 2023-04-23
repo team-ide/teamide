@@ -1,11 +1,13 @@
 package module_thrift
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/thrift"
 	"sync"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"time"
 )
 
 type api struct {
@@ -122,7 +124,27 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 	}
 
 	filename := service.GetFormatDir() + "/" + request.RelativePath
-	res, err = service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, request.Args...)
+
+	data := map[string]interface{}{}
+	res = data
+	data["start"] = time.Now().UnixMilli()
+	defer func() {
+		data["end"] = time.Now().UnixMilli()
+	}()
+	param, err := service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, request.Args...)
+	if param != nil {
+		data["writeStart"] = param.WriteStart.UnixMilli()
+		data["writeEnd"] = param.WriteEnd.UnixMilli()
+		data["readStart"] = param.ReadStart.UnixMilli()
+		data["readEnd"] = param.ReadEnd.UnixMilli()
+		data["result"] = param.Result
+		if param.Result != nil {
+			bs, e := json.MarshalIndent(param.Result, "", "  ")
+			if e == nil {
+				data["result"] = string(bs)
+			}
+		}
+	}
 	return
 }
 
