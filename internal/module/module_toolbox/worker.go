@@ -8,6 +8,7 @@ import (
 	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/kafka"
 	"github.com/team-ide/go-tool/redis"
+	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"strconv"
 	"teamide/pkg/base"
@@ -62,7 +63,8 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	}
 	optionBytes := []byte(toolboxData.Option)
 	optionMap := map[string]interface{}{}
-	err = json.Unmarshal(optionBytes, &optionMap)
+	// 使用JSONDecodeUseNumber 防止精度丢失
+	err = util.JSONDecodeUseNumber(optionBytes, &optionMap)
 	if err != nil {
 		return
 	}
@@ -186,7 +188,8 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 
 	if len(optionBytes) > 0 {
 		optionData := map[string]interface{}{}
-		e := json.Unmarshal(optionBytes, &optionData)
+		// 使用JSONDecodeUseNumber 防止精度丢失
+		e := util.JSONDecodeUseNumber(optionBytes, &optionData)
 		if e == nil {
 			strV, strVOk := optionData["port"].(string)
 			if strVOk {

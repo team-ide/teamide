@@ -2,8 +2,11 @@ package module_thrift
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/thrift"
+	"github.com/team-ide/go-tool/util"
+	"strings"
 	"sync"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
@@ -51,12 +54,12 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 }
 
 type BaseRequest struct {
-	RelativePath  string        `json:"relativePath"`
-	ServiceName   string        `json:"serviceName"`
-	MethodName    string        `json:"methodName"`
-	Args          []interface{} `json:"args"`
-	ServerAddress string        `json:"serverAddress"`
-	Reload        bool          `json:"reload"`
+	RelativePath  string   `json:"relativePath"`
+	ServiceName   string   `json:"serviceName"`
+	MethodName    string   `json:"methodName"`
+	Args          []string `json:"args"`
+	ServerAddress string   `json:"serverAddress"`
+	Reload        bool     `json:"reload"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -131,7 +134,29 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 	defer func() {
 		data["end"] = time.Now().UnixMilli()
 	}()
-	param, err := service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, request.Args...)
+
+	var argsJSON = "["
+	for i, arg := range request.Args {
+		if i > 0 {
+			argsJSON += ","
+		}
+		trimS := strings.TrimSpace(arg)
+		if strings.HasPrefix(trimS, "[") || strings.HasPrefix(trimS, "{") {
+			argsJSON += arg
+		} else {
+			argsJSON += `"` + arg + `"`
+		}
+	}
+	argsJSON += "]"
+
+	var args []interface{}
+	err = util.JSONDecodeUseNumber([]byte(argsJSON), &args)
+	if err != nil {
+		err = errors.New("args json " + argsJSON + " to args error:" + err.Error())
+		return
+	}
+
+	param, err := service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, args...)
 	if param != nil {
 		data["writeStart"] = param.WriteStart.UnixMilli()
 		data["writeEnd"] = param.WriteEnd.UnixMilli()
