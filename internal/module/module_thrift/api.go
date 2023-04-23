@@ -107,7 +107,18 @@ func (this_ *api) getMethodArgFields(requestBean *base.RequestBean, c *gin.Conte
 	res = data
 
 	filename := service.GetFormatDir() + "/" + request.RelativePath
-	data["argFields"], data["structCache"], err = service.GetMethodArgFields(filename, request.ServiceName, request.MethodName)
+
+	filename = util.FormatPath(filename)
+
+	methodNode := service.GetServiceMethod(filename, request.ServiceName, request.MethodName)
+	if methodNode == nil {
+		err = errors.New("service method node [" + filename + "][" + request.ServiceName + "][" + request.MethodName + "] not found")
+		return
+	}
+	var structCache = map[string]*thrift.Struct{}
+
+	data["argFields"] = service.GetFields(filename, methodNode.Params, structCache)
+	data["structCache"] = structCache
 	return
 }
 

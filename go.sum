@@ -222,10 +222,10 @@ github.com/team-ide/go-dialect v1.9.0 h1:wex1TOEXBF+aFRp5h2qmuMTwcj13jYckq8wuyt8
 github.com/team-ide/go-dialect v1.9.0/go.mod h1:l/IaNr4q1p4S0k4EzkqIlUUu1TCMtUBRyFQyBpGt/Eg=
 github.com/team-ide/go-driver v1.2.1 h1:1VWQNjey9n0RMGpLdW3JRhZtFn8LtI7BBwx4rq2qoF0=
 github.com/team-ide/go-driver v1.2.1/go.mod h1:ET7rN/x7e4bILu0voxwtdHbwSGu5ezahVPFK25rLrnA=
-github.com/team-ide/go-interpreter v0.0.1 h1:o4GRHm4gmZRZCeFJzJR0mIytok9QZ3lahRUO5ivamfg=
-github.com/team-ide/go-interpreter v0.0.1/go.mod h1:yvSIoCUic0dPDxfaIWK1ISzny3oZhYPv0gYBlKOahp8=
-github.com/team-ide/go-tool v0.3.1 h1:l86O5k3gW9ADLX8GPuNlBe9slPbc20MTEyWMu1VzoxU=
-github.com/team-ide/go-tool v0.3.1/go.mod h1:Vm6gVV+fim1+X7ZjBFihK22UvneXZaiROSKkAbf28rY=
+github.com/team-ide/go-interpreter v0.0.4 h1:yKVmhm/YQ1yki6ssKtS3tGZ96vFk4YH1wEikOKiMOjA=
+github.com/team-ide/go-interpreter v0.0.4/go.mod h1:yvSIoCUic0dPDxfaIWK1ISzny3oZhYPv0gYBlKOahp8=
+github.com/team-ide/go-tool v0.3.3 h1:1FDzs1khLE8s1iuXGRsSm1ePwofjM265Wl1NSOpPIgI=
+github.com/team-ide/go-tool v0.3.3/go.mod h1:jzAaNA7lPuxIqEAuZpi52CxbSh9pkKpNJxoE4Tm7gAI=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=
 github.com/tjfoc/gmsm v1.4.1/go.mod h1:j4INPkHWMrhJb38G+J6W4Tw0AbuN8Thu3PbdVYhVcTE=
 github.com/tklauser/go-sysconf v0.3.11 h1:89WgdJhk5SNwJfu+GKyYveZ4IaJ7xAkecBo+KdJV0CM=
