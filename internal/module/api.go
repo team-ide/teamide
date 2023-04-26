@@ -179,6 +179,7 @@ func (this_ *Api) appendApi(apis ...*base.ApiWorker) (err error) {
 			return
 		}
 
+		//fmt.Println("action:", api.Power.Action)
 		_, find := this_.apiCache[api.Power.Action]
 		if find {
 			err = errors.New(fmt.Sprint("API映射路径[", api.Power.Action, "]已存在!", api))
@@ -214,9 +215,11 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	action := path[index+len("api/"):]
 
 	api := this_.apiCache[action]
+	//fmt.Println("do api start action:", action)
 	if api == nil {
 		return false
 	}
+	//fmt.Println("do api start api:", api)
 	if api.IsGet && !strings.EqualFold(c.Request.Method, "get") {
 		return false
 	}

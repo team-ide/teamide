@@ -6,11 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/metric"
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/thrift"
 	"github.com/team-ide/go-tool/util"
+	"io"
 	"io/fs"
+	"net/http"
+	"net/url"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"teamide/internal/module/module_toolbox"
@@ -34,18 +39,25 @@ var (
 	getMethodArgFields    = base.AppendPower(&base.PowerAction{Action: "getMethodArgFields", Text: "上下文", ShouldLogin: true, StandAlone: true, Parent: Power})
 	invokeByServerAddress = base.AppendPower(&base.PowerAction{Action: "invokeByServerAddress", Text: "上下文", ShouldLogin: true, StandAlone: true, Parent: Power})
 	invokeReports         = base.AppendPower(&base.PowerAction{Action: "invokeReports", Text: "执行报告", ShouldLogin: true, StandAlone: true, Parent: Power})
+	invokeReportDelete    = base.AppendPower(&base.PowerAction{Action: "invokeReportDelete", Text: "执行报告", ShouldLogin: true, StandAlone: true, Parent: Power})
 	invokeStop            = base.AppendPower(&base.PowerAction{Action: "invokeStop", Text: "执行停止", ShouldLogin: true, StandAlone: true, Parent: Power})
 	invokeInfo            = base.AppendPower(&base.PowerAction{Action: "invokeInfo", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	downloadRecords       = base.AppendPower(&base.PowerAction{Action: "downloadRecords", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	invokeMetric          = base.AppendPower(&base.PowerAction{Action: "invokeMetric", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower            = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
+
 	apis = append(apis, &base.ApiWorker{Power: contextPower, Do: this_.context})
 	apis = append(apis, &base.ApiWorker{Power: getMethodArgFields, Do: this_.getMethodArgFields})
 	apis = append(apis, &base.ApiWorker{Power: invokeByServerAddress, Do: this_.invokeByServerAddress})
 	apis = append(apis, &base.ApiWorker{Power: invokeReports, Do: this_.invokeReports})
+	apis = append(apis, &base.ApiWorker{Power: invokeReportDelete, Do: this_.invokeReportDelete})
+	apis = append(apis, &base.ApiWorker{Power: downloadRecords, Do: this_.downloadRecords, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Power: invokeStop, Do: this_.invokeStop})
 	apis = append(apis, &base.ApiWorker{Power: invokeInfo, Do: this_.invokeInfo})
+	apis = append(apis, &base.ApiWorker{Power: invokeMetric, Do: this_.invokeMetric})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -78,6 +90,8 @@ type BaseRequest struct {
 	Duration      int      `json:"duration"`
 	Frequency     int      `json:"frequency"`
 	Timeout       int      `json:"timeout"`
+	Minute        bool     `json:"minute"`
+	Second        bool     `json:"second"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -210,8 +224,8 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 			}
 		}
 	} else {
-		var dir string
-		dir, err = this_.invokeTaskDir(request)
+		var parentDir string
+		parentDir, err = this_.getTaskParentDir(request)
 		if err != nil {
 			return
 		}
@@ -225,7 +239,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 			service:      service,
 		}
 		t, err = task.New(&task.Options{
-			Key:       util.GetUUID(),
+			Key:       fmt.Sprintf("%d", time.Now().UnixNano()),
 			Worker:    request.Worker,
 			Frequency: request.Frequency,
 			Duration:  request.Duration,
@@ -234,15 +248,16 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		if err != nil {
 			return
 		}
-		taskDir := dir + "" + t.Key
-		_ = this_.saveTaskInfo(taskDir, t)
+		executor.taskDir = parentDir + "" + t.Key
+		_ = this_.saveTaskInfo(executor, request, t)
 		go func() {
 			defer func() {
-				_ = this_.saveTaskInfo(taskDir, t)
+				removeTask(t.Key)
+				_ = this_.saveTaskInfo(executor, request, t)
 				executor.stop()
 			}()
 			for !t.IsEnd {
-				_ = this_.saveTaskInfo(taskDir, t)
+				_ = this_.saveTaskInfo(executor, request, t)
 				time.Sleep(time.Second * 1)
 			}
 		}()
@@ -259,6 +274,25 @@ type invokeExecutor struct {
 	workerClient     map[int]*thrift.ServiceClient
 	workerClientLock sync.Mutex
 	service          *thrift.Workspace
+	taskDir          string
+	paramList        []*thrift.MethodParam
+	paramListLock    sync.Mutex
+}
+
+func (this_ *invokeExecutor) getAndCleanParamList() (paramList []*thrift.MethodParam) {
+	this_.paramListLock.Lock()
+	defer this_.paramListLock.Unlock()
+	paramList = this_.paramList
+	this_.paramList = []*thrift.MethodParam{}
+	return
+}
+
+func (this_ *invokeExecutor) addParam(param *thrift.MethodParam) {
+	this_.paramListLock.Lock()
+	defer this_.paramListLock.Unlock()
+
+	this_.paramList = append(this_.paramList, param)
+	return
 }
 
 func (this_ *invokeExecutor) stop() {
@@ -312,6 +346,7 @@ func (this_ *invokeExecutor) Execute(param *task.ExecutorParam) (err error) {
 	methodParam := param.Extend.(*thrift.MethodParam)
 
 	_, err = client.Send(context.Background(), methodParam)
+	this_.addParam(methodParam)
 	return
 }
 
@@ -320,9 +355,9 @@ func (this_ *invokeExecutor) After(param *task.ExecutorParam) (err error) {
 	return
 }
 
-func (this_ *api) invokeTaskDir(request *BaseRequest) (taskDir string, err error) {
+func (this_ *api) getTaskParentDir(request *BaseRequest) (taskDir string, err error) {
 	taskDir = this_.toolboxService.GetFilesDir()
-	taskDir += fmt.Sprintf("%s/toolbox-%d/%s", "thrift-tasks", request.ToolboxId, request.RelativePath) + "/" + request.ServiceName + "/" + request.MethodName + "/"
+	taskDir += this_.getTaskParentDirRelativePath(request)
 
 	ex, err := util.PathExists(taskDir)
 	if err != nil {
@@ -335,24 +370,62 @@ func (this_ *api) invokeTaskDir(request *BaseRequest) (taskDir string, err error
 	return
 }
 
-func (this_ *api) saveTaskInfo(taskDir string, task *task.Task) (err error) {
-	ex, err := util.PathExists(taskDir)
+func (this_ *api) getTaskParentDirRelativePath(request *BaseRequest) (taskDir string) {
+	taskDir = fmt.Sprintf("%s/toolbox-%d/%s", "thrift-tasks", request.ToolboxId, request.RelativePath) + "/" + request.ServiceName + "/" + request.MethodName + "/"
+
+	return
+}
+
+func (this_ *api) saveTaskInfo(executor *invokeExecutor, request *BaseRequest, task *task.Task) (err error) {
+	ex, err := util.PathExists(executor.taskDir)
 	if err != nil {
 		return
 	}
 	if !ex {
-		err = os.MkdirAll(taskDir, fs.ModePerm)
+		err = os.MkdirAll(executor.taskDir, fs.ModePerm)
 	}
-	bs, _ := json.MarshalIndent(task, "", "  ")
-	err = util.WriteFile(taskDir+"/task.json", bs)
+
+	bs, _ := json.Marshal(request)
+	requestMd5 := util.GetMD5(string(bs))
+	data := map[string]interface{}{}
+	data["requestMd5"] = requestMd5
+	data["request"] = request
+	data["task"] = task
+	data["taskKey"] = task.Key
+	c := task.Metric.Count()
+	topItems := c.TopItems
+	c.TopItems = []*metric.Item{}
+	data["metric"] = c
+	bs, _ = json.MarshalIndent(data, "", "  ")
+	err = util.WriteFile(executor.taskDir+"/info.json", bs)
 	if err != nil {
 		return
 	}
-	bs, _ = json.MarshalIndent(task.Metric.Count(), "", "  ")
-	err = util.WriteFile(taskDir+"/metric.json", bs)
-	if err != nil {
-		return
+	c.TopItems = topItems
+	bs, _ = json.MarshalIndent(c, "", "  ")
+	_ = util.WriteFile(executor.taskDir+"/metric.json", bs)
+	bs, _ = json.MarshalIndent(task.Metric.CountMinute(), "", "  ")
+	_ = util.WriteFile(executor.taskDir+"/metric.minute.json", bs)
+	bs, _ = json.MarshalIndent(task.Metric.CountSecond(), "", "  ")
+	_ = util.WriteFile(executor.taskDir+"/metric.second.json", bs)
+
+	paramList := executor.getAndCleanParamList()
+	var recordsFile *os.File
+	if ex, _ = util.PathExists(executor.taskDir + "/records.txt"); ex {
+		recordsFile, _ = os.OpenFile(executor.taskDir+"/records.txt", os.O_WRONLY|os.O_APPEND, 0666)
+	} else {
+		recordsFile, _ = os.Create(executor.taskDir + "/records.txt")
 	}
+	if recordsFile != nil {
+		defer func() { _ = recordsFile.Close() }()
+
+		for _, param := range paramList {
+			bs, _ = json.Marshal(param)
+			_, _ = recordsFile.Write(bs)
+			_, _ = recordsFile.WriteString("\n")
+		}
+	}
+
 	return
 }
 func (this_ *api) loadTask(taskDir string) (data map[string]interface{}, err error) {
@@ -364,27 +437,24 @@ func (this_ *api) loadTask(taskDir string) (data map[string]interface{}, err err
 	data = map[string]interface{}{}
 
 	var bs []byte
-	if ex, _ := util.PathExists(taskDir + "/task.json"); ex {
-		if bs, err = os.ReadFile(taskDir + "/task.json"); err != nil {
+	if ex, _ := util.PathExists(taskDir + "/info.json"); ex {
+		if bs, err = os.ReadFile(taskDir + "/info.json"); err != nil {
 			return
 		}
-		t := map[string]interface{}{}
-		err = util.JSONDecodeUseNumber(bs, &t)
+		err = util.JSONDecodeUseNumber(bs, &data)
 		if err != nil {
 			return
 		}
-		data["task"] = t
-	}
-	if ex, _ := util.PathExists(taskDir + "/metric.json"); ex {
-		if bs, err = os.ReadFile(taskDir + "/metric.json"); err != nil {
-			return
+		if data["taskKey"] != nil {
+			taskKey := util.GetStringValue(data["taskKey"])
+			t := getTask(taskKey)
+			if t != nil {
+				data["isEnd"] = false
+			} else {
+				data["isEnd"] = true
+			}
 		}
-		metric := map[string]interface{}{}
-		err = util.JSONDecodeUseNumber(bs, &metric)
-		if err != nil {
-			return
-		}
-		data["metric"] = metric
+
 	}
 
 	return
@@ -397,33 +467,105 @@ func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (
 		return
 	}
 
-	dir, err := this_.invokeTaskDir(request)
+	parentDir, err := this_.getTaskParentDir(request)
 	if err != nil {
 		return
 	}
 
-	fileList, err := os.ReadDir(dir)
+	parentDirRelativePath := this_.getTaskParentDirRelativePath(request)
+
+	fileList, err := os.ReadDir(parentDir)
 	if err != nil {
 		return
 	}
 	var taskInfo map[string]interface{}
 	var taskList []map[string]interface{}
+	var names []string
 	for _, f := range fileList {
 		if !f.IsDir() {
 			continue
 		}
-		taskKey := f.Name()
-		taskInfo, err = this_.loadTask(dir + f.Name())
+		names = append(names, f.Name())
+
+	}
+	sort.Strings(names)
+	size := len(names)
+	for i := size - 1; i >= 0; i-- {
+		taskInfo, err = this_.loadTask(parentDir + names[i])
 		if err != nil {
 			return
 		}
 		if taskInfo != nil {
-			taskInfo["taskKey"] = taskKey
+			taskInfo["taskRelativePath"] = parentDirRelativePath + names[i]
 			taskList = append(taskList, taskInfo)
 		}
-
 	}
 	res = taskList
+	return
+}
+
+func (this_ *api) downloadRecords(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	this_.toolboxService.Logger.Info("下载执行记录 start")
+	res = base.HttpNotResponse
+	defer func() {
+		if err != nil {
+			_, _ = c.Writer.WriteString(err.Error())
+		}
+	}()
+
+	request := map[string]string{}
+
+	err = c.Bind(&request)
+	if err != nil {
+		return
+	}
+
+	fileName := "" + request["serviceName"] + "." + request["methodName"] + "-执行记录.txt"
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename*=utf-8''%s", url.QueryEscape(fileName)))
+
+	// 此处不设置 文件大小，如果设置文件大小，将无法终止下载
+	//c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
+	c.Header("download-file-name", fileName)
+
+	taskDir := this_.toolboxService.GetFilesDir() + request["taskRelativePath"]
+
+	if ex, _ := util.PathExists(taskDir + "/records.txt"); ex {
+		var f *os.File
+		f, err = os.Open(taskDir + "/records.txt")
+		if err != nil {
+			return
+		}
+		defer func() { _ = f.Close() }()
+		_, err = io.Copy(c.Writer, f)
+	}
+	c.Status(http.StatusOK)
+	return
+}
+func (this_ *api) invokeReportDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	taskParentDir, err := this_.getTaskParentDir(request)
+	if err != nil {
+		return
+	}
+
+	t := getTask(request.TaskKey)
+
+	if t != nil {
+		t.Stop()
+	}
+	taskDir := taskParentDir + "" + request.TaskKey
+
+	if ex, _ := util.PathExists(taskDir); ex {
+		err = os.RemoveAll(taskDir)
+	}
 	return
 }
 
@@ -472,12 +614,53 @@ func (this_ *api) invokeInfo(requestBean *base.RequestBean, c *gin.Context) (res
 		return
 	}
 
-	dir, err := this_.invokeTaskDir(request)
+	taskParentDir, err := this_.getTaskParentDir(request)
 	if err != nil {
 		return
 	}
 
-	res, err = this_.loadTask(dir + request.TaskKey)
+	res, err = this_.loadTask(taskParentDir + request.TaskKey)
+
+	return
+}
+
+func (this_ *api) invokeMetric(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	taskParentDir, err := this_.getTaskParentDir(request)
+	if err != nil {
+		return
+	}
+
+	taskDir := taskParentDir + request.TaskKey
+	var data []*metric.Count
+	var bs []byte
+	if request.Minute {
+		if ex, _ := util.PathExists(taskDir + "/metric.minute.json"); ex {
+			if bs, err = os.ReadFile(taskDir + "/metric.minute.json"); err != nil {
+				return
+			}
+			err = util.JSONDecodeUseNumber(bs, &data)
+			if err != nil {
+				return
+			}
+		}
+	} else if request.Second {
+		if ex, _ := util.PathExists(taskDir + "/metric.second.json"); ex {
+			if bs, err = os.ReadFile(taskDir + "/metric.second.json"); err != nil {
+				return
+			}
+			err = util.JSONDecodeUseNumber(bs, &data)
+			if err != nil {
+				return
+			}
+		}
+	}
+	res = data
 
 	return
 }
