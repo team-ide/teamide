@@ -1,7 +1,6 @@
 package module_thrift
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -225,10 +224,11 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		var param *thrift.MethodParam
 		param, err = service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, args...)
 		if param != nil {
-			data["writeStart"] = param.WriteStart.UnixMilli()
-			data["writeEnd"] = param.WriteEnd.UnixMilli()
-			data["readStart"] = param.ReadStart.UnixMilli()
-			data["readEnd"] = param.ReadEnd.UnixMilli()
+			data["writeStart"] = param.WriteStart
+			data["writeEnd"] = param.WriteEnd
+			data["readStart"] = param.ReadStart
+			data["readEnd"] = param.ReadEnd
+			data["useTime"] = param.UseTime
 			var result = map[string]interface{}{}
 			result["args"] = param.Args
 			result["result"] = param.Result
@@ -279,94 +279,6 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		go t.Run()
 		addTask(t)
 	}
-	return
-}
-
-type invokeExecutor struct {
-	*BaseRequest
-	filename         string
-	args             []interface{}
-	workerClient     map[int]*thrift.ServiceClient
-	workerClientLock sync.Mutex
-	service          *thrift.Workspace
-	taskDir          string
-	paramList        []*thrift.MethodParam
-	paramListLock    sync.Mutex
-}
-
-func (this_ *invokeExecutor) getAndCleanParamList() (paramList []*thrift.MethodParam) {
-	this_.paramListLock.Lock()
-	defer this_.paramListLock.Unlock()
-	paramList = this_.paramList
-	this_.paramList = []*thrift.MethodParam{}
-	return
-}
-
-func (this_ *invokeExecutor) addParam(param *thrift.MethodParam) {
-	this_.paramListLock.Lock()
-	defer this_.paramListLock.Unlock()
-
-	this_.paramList = append(this_.paramList, param)
-	return
-}
-
-func (this_ *invokeExecutor) stop() {
-	this_.workerClientLock.Lock()
-	defer this_.workerClientLock.Unlock()
-
-	for _, client := range this_.workerClient {
-		client.Stop()
-	}
-
-}
-func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrift.ServiceClient, err error) {
-	this_.workerClientLock.Lock()
-	defer this_.workerClientLock.Unlock()
-
-	client = this_.workerClient[param.WorkerIndex]
-	if client != nil {
-		return
-	}
-
-	client, err = thrift.NewServiceClientByAddress(this_.ServerAddress)
-	if err != nil {
-		return
-	}
-	this_.workerClient[param.WorkerIndex] = client
-	return
-}
-
-func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
-	_, err = this_.getClient(param)
-	if err != nil {
-		return
-	}
-
-	methodParam, err := this_.service.GetMethodParam(this_.filename, this_.ServiceName, this_.MethodName, this_.args...)
-	if err != nil {
-		return
-	}
-	param.Extend = methodParam
-
-	//util.Logger.Info("test Before", zap.Any("param", param))
-	return
-}
-
-func (this_ *invokeExecutor) Execute(param *task.ExecutorParam) (err error) {
-	client, err := this_.getClient(param)
-	if err != nil {
-		return
-	}
-	//util.Logger.Info("test Execute", zap.Any("param", param))
-	methodParam := param.Extend.(*thrift.MethodParam)
-
-	_, err = client.Send(context.Background(), methodParam)
-	this_.addParam(methodParam)
-	return
-}
-
-func (this_ *invokeExecutor) After(param *task.ExecutorParam) (err error) {
-	//util.Logger.Info("test After", zap.Any("param", param))
 	return
 }
 
@@ -435,6 +347,9 @@ func (this_ *api) saveTaskInfo(executor *invokeExecutor, request *BaseRequest, t
 		defer func() { _ = recordsFile.Close() }()
 
 		for _, param := range paramList {
+			param.ArgFields = nil
+			param.ResultType = nil
+			param.ExceptionFields = nil
 			bs, _ = json.Marshal(param)
 			_, _ = recordsFile.Write(bs)
 			_, _ = recordsFile.WriteString("\n")
