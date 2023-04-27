@@ -116,7 +116,17 @@ func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res in
 	data := map[string]interface{}{}
 	res = data
 
-	data["serviceList"] = service.ServiceList
+	var list = service.ServiceList
+	sort.Slice(list, func(i, j int) bool {
+		return strings.ToLower(list[i].Name) < strings.ToLower(list[j].Name) //升序  即前面的值比后面的小  忽略大小写排序
+	})
+	for _, one := range list {
+		sort.Slice(one.Methods, func(i, j int) bool {
+			return strings.ToLower(one.Methods[i].Name) < strings.ToLower(one.Methods[j].Name) //升序  即前面的值比后面的小  忽略大小写排序
+		})
+	}
+
+	data["serviceList"] = list
 	return
 }
 
@@ -153,7 +163,12 @@ func (this_ *api) getMethodArgFields(requestBean *base.RequestBean, c *gin.Conte
 	var argDemoDataList []interface{}
 	for _, argField := range argFields {
 		bs, _ := json.MarshalIndent(service.GetFieldDemoData(filename, argField), "", "  ")
-		argDemoDataList = append(argDemoDataList, string(bs))
+		str := string(bs)
+		if str == `""` {
+			argDemoDataList = append(argDemoDataList, "")
+		} else {
+			argDemoDataList = append(argDemoDataList, string(bs))
+		}
 	}
 	data["argFields"] = argFields
 	data["argDemoDataList"] = argDemoDataList
@@ -488,7 +503,10 @@ func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (
 		names = append(names, f.Name())
 
 	}
-	sort.Strings(names)
+
+	sort.Slice(names, func(i, j int) bool {
+		return strings.ToLower(names[i]) < strings.ToLower(names[j]) //升序  即前面的值比后面的小 忽略大小写排序
+	})
 	size := len(names)
 	for i := size - 1; i >= 0; i-- {
 		taskInfo, err = this_.loadTask(parentDir + names[i])

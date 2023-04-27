@@ -422,8 +422,12 @@ func (this_ *fileService) Files(dir string) (parentPath string, files []*filewor
 		}
 	}
 
-	sort.Strings(dirNames)
-	sort.Strings(fileNames)
+	sort.Slice(dirNames, func(i, j int) bool {
+		return strings.ToLower(dirNames[i]) < strings.ToLower(dirNames[j]) //升序  即前面的值比后面的小 忽略大小写排序
+	})
+	sort.Slice(fileNames, func(i, j int) bool {
+		return strings.ToLower(fileNames[i]) < strings.ToLower(fileNames[j]) //升序  即前面的值比后面的小 忽略大小写排序
+	})
 
 	for _, one := range dirNames {
 		fileOne := getFileInfoByStat(parentPath+one, fMap[one])
