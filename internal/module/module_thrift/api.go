@@ -43,6 +43,7 @@ var (
 	invokeInfo            = base.AppendPower(&base.PowerAction{Action: "invokeInfo", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	downloadRecords       = base.AppendPower(&base.PowerAction{Action: "downloadRecords", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	invokeMetric          = base.AppendPower(&base.PowerAction{Action: "invokeMetric", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	invokeMarkdown        = base.AppendPower(&base.PowerAction{Action: "invokeMarkdown", Text: "执行信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower            = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
@@ -57,6 +58,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: invokeStop, Do: this_.invokeStop})
 	apis = append(apis, &base.ApiWorker{Power: invokeInfo, Do: this_.invokeInfo})
 	apis = append(apis, &base.ApiWorker{Power: invokeMetric, Do: this_.invokeMetric})
+	apis = append(apis, &base.ApiWorker{Power: invokeMarkdown, Do: this_.invokeMarkdown})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -390,8 +392,7 @@ func (this_ *api) loadTask(taskDir string) (data map[string]interface{}, err err
 	return
 }
 
-func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
+func (this_ *api) loadTasks(requestBean *base.RequestBean, c *gin.Context) (taskList []map[string]interface{}, err error) {
 	request := &BaseRequest{}
 	if !base.RequestJSON(request, c) {
 		return
@@ -409,7 +410,6 @@ func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (
 		return
 	}
 	var taskInfo map[string]interface{}
-	var taskList []map[string]interface{}
 	var names []string
 	for _, f := range fileList {
 		if !f.IsDir() {
@@ -433,10 +433,24 @@ func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (
 			taskList = append(taskList, taskInfo)
 		}
 	}
-	res = taskList
+	return
+}
+func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	res, err = this_.loadTasks(requestBean, c)
+
 	return
 }
 
+func (this_ *api) invokeMarkdown(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	taskList, err := this_.loadTasks(requestBean, c)
+	if err != nil {
+		return
+	}
+	res = toMarkdown(taskList)
+	return
+}
 func (this_ *api) downloadRecords(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Transfer-Encoding", "binary")
