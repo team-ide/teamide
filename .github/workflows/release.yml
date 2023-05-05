@@ -259,7 +259,7 @@ jobs:
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
           cp -rf release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
-          apt install -y zip unzip
+          sudo apt-get install -y zip unzip
           zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
 
       # 上传 到 Release
