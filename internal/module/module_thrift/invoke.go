@@ -1,7 +1,6 @@
 package module_thrift
 
 import (
-	"crypto/tls"
 	"errors"
 	go_thrift "github.com/apache/thrift/lib/go/thrift"
 	"github.com/team-ide/go-tool/task"
@@ -48,18 +47,11 @@ func (this_ *invokeExecutor) stop() {
 	}
 
 }
-func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrift.ServiceClient, err error) {
-	this_.workerClientLock.Lock()
-	defer this_.workerClientLock.Unlock()
 
-	client = this_.workerClient[param.WorkerIndex]
-	if client != nil {
-		return
-	}
-
+func NewClient(request *BaseRequest) (client *thrift.ServiceClient, err error) {
 	var protocolFactory go_thrift.TProtocolFactory
 
-	switch this_.ProtocolFactory {
+	switch request.ProtocolFactory {
 	case "compact":
 		protocolFactory = go_thrift.NewTCompactProtocolFactoryConf(nil)
 	case "simpleJSON":
@@ -73,26 +65,24 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 	}
 
 	var transportFactory go_thrift.TTransportFactory
-	cfg := &go_thrift.TConfiguration{
-		TLSConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	}
-	if this_.Buffered {
+	if request.Buffered {
 		transportFactory = go_thrift.NewTBufferedTransportFactory(8192)
 	} else {
 		transportFactory = go_thrift.NewTTransportFactory()
 	}
 
-	if this_.Framed {
-		transportFactory = go_thrift.NewTFramedTransportFactoryConf(transportFactory, cfg)
+	if request.Framed {
+		transportFactory = go_thrift.NewTFramedTransportFactoryConf(transportFactory, nil)
 	}
 
-	transport := go_thrift.NewTSocketConf(this_.ServerAddress, &go_thrift.TConfiguration{
-		ConnectTimeout: time.Millisecond * time.Duration(this_.Timeout),
-		SocketTimeout:  time.Millisecond * time.Duration(this_.Timeout),
-	})
+	transport := go_thrift.NewTSocketConf(request.ServerAddress, nil)
+	_ = transport.SetConnTimeout(time.Millisecond * time.Duration(request.Timeout))
+	_ = transport.SetSocketTimeout(time.Millisecond * time.Duration(request.Timeout))
 
+	if err = transport.Open(); err != nil {
+		err = errors.New("opening socket to " + request.ServerAddress + " error:" + err.Error())
+		return
+	}
 	var useTransport go_thrift.TTransport
 	useTransport, err = transportFactory.GetTransport(transport)
 	if err != nil {
@@ -100,8 +90,20 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 		return
 	}
 	client = thrift.NewServiceClientFactory(useTransport, protocolFactory)
-	if err = transport.Open(); err != nil {
-		err = errors.New("opening socket to " + this_.ServerAddress + " error:" + err.Error())
+	return
+}
+
+func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrift.ServiceClient, err error) {
+	this_.workerClientLock.Lock()
+	defer this_.workerClientLock.Unlock()
+
+	client = this_.workerClient[param.WorkerIndex]
+	if client != nil {
+		return
+	}
+
+	client, err = NewClient(this_.BaseRequest)
+	if err != nil {
 		return
 	}
 
@@ -110,11 +112,6 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 }
 
 func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
-	_, err = this_.getClient(param)
-	if err != nil {
-		param.Error = err
-		return
-	}
 
 	methodParam, err := this_.service.GetMethodParam(this_.filename, this_.ServiceName, this_.MethodName, this_.args...)
 	if err != nil {
@@ -122,21 +119,28 @@ func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
 	}
 	param.Extend = methodParam
 
+	_, err = this_.getClient(param)
+	if err != nil {
+		methodParam.Error = err.Error()
+		return
+	}
+
 	//util.Logger.Info("test Before", zap.Any("param", param))
 	return
 }
 
 func (this_ *invokeExecutor) Execute(param *task.ExecutorParam) (err error) {
+	methodParam := param.Extend.(*thrift.MethodParam)
 	client, err := this_.getClient(param)
 	if err != nil {
+		methodParam.Error = err.Error()
 		return
 	}
 	//util.Logger.Info("test Execute", zap.Any("param", param))
-	methodParam := param.Extend.(*thrift.MethodParam)
 
 	_, err = client.Send(context.Background(), methodParam)
 	if err != nil {
-		methodParam.Error = err
+		methodParam.Error = err.Error()
 	}
 	this_.addParam(methodParam)
 	return

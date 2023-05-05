@@ -9,6 +9,7 @@ import (
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/thrift"
 	"github.com/team-ide/go-tool/util"
+	"golang.org/x/net/context"
 	"io"
 	"io/fs"
 	"net/http"
@@ -228,7 +229,28 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 	}
 	if !request.IsTest {
 		var param *thrift.MethodParam
-		param, err = service.InvokeByServerAddress(request.ServerAddress, filename, request.ServiceName, request.MethodName, args...)
+
+		param, err = service.GetMethodParam(filename, request.ServiceName, request.MethodName, args...)
+		if err != nil {
+			err = errors.New("GetMethodParam error:" + err.Error())
+			return
+		}
+
+		var client *thrift.ServiceClient
+		client, err = NewClient(request)
+		if err != nil {
+			err = errors.New("NewClient error:" + err.Error())
+			return
+		}
+		defer func() {
+			_ = client.TTransport.Close()
+		}()
+
+		_, err = client.Send(context.Background(), param)
+		if err != nil {
+			err = errors.New("client Send error:" + err.Error())
+		}
+
 		if param != nil {
 			data["writeStart"] = param.WriteStart
 			data["writeEnd"] = param.WriteEnd
@@ -239,6 +261,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 			result["args"] = param.Args
 			result["result"] = param.Result
 			result["exceptions"] = param.Exceptions
+			result["error"] = param.Error
 			bs, e := json.MarshalIndent(result, "", "  ")
 			if e == nil {
 				data["result"] = string(bs)
