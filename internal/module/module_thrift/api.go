@@ -78,21 +78,25 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 }
 
 type BaseRequest struct {
-	RelativePath  string   `json:"relativePath"`
-	ServiceName   string   `json:"serviceName"`
-	MethodName    string   `json:"methodName"`
-	Args          []string `json:"args"`
-	ServerAddress string   `json:"serverAddress"`
-	Reload        bool     `json:"reload"`
-	TaskKey       string   `json:"taskKey"`
+	RelativePath  string   `json:"relativePath,omitempty"`
+	ServiceName   string   `json:"serviceName,omitempty"`
+	MethodName    string   `json:"methodName,omitempty"`
+	Args          []string `json:"args,omitempty"`
+	ServerAddress string   `json:"serverAddress,omitempty"`
+	Reload        bool     `json:"reload,omitempty"`
+	TaskKey       string   `json:"taskKey,omitempty"`
 	ToolboxId     int64    `json:"toolboxId,omitempty"`
-	IsTest        bool     `json:"isTest"`
-	Worker        int      `json:"worker"`
-	Duration      int      `json:"duration"`
-	Frequency     int      `json:"frequency"`
-	Timeout       int      `json:"timeout"`
-	Minute        bool     `json:"minute"`
-	Second        bool     `json:"second"`
+	IsTest        bool     `json:"isTest,omitempty"`
+	Worker        int      `json:"worker,omitempty"`
+	Duration      int      `json:"duration,omitempty"`
+	Frequency     int      `json:"frequency,omitempty"`
+	Timeout       int      `json:"timeout,omitempty"`
+	Minute        bool     `json:"minute,omitempty"`
+	Second        bool     `json:"second,omitempty"`
+
+	ProtocolFactory string `json:"protocolFactory,omitempty"`
+	Buffered        bool   `json:"buffered,omitempty"`
+	Framed          bool   `json:"framed,omitempty"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

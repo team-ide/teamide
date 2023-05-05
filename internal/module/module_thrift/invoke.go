@@ -1,10 +1,14 @@
 package module_thrift
 
 import (
+	"crypto/tls"
+	"errors"
+	go_thrift "github.com/apache/thrift/lib/go/thrift"
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/thrift"
 	"golang.org/x/net/context"
 	"sync"
+	"time"
 )
 
 type invokeExecutor struct {
@@ -53,10 +57,54 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 		return
 	}
 
-	client, err = thrift.NewServiceClientByAddress(this_.ServerAddress)
+	var protocolFactory go_thrift.TProtocolFactory
+
+	switch this_.ProtocolFactory {
+	case "compact":
+		protocolFactory = go_thrift.NewTCompactProtocolFactoryConf(nil)
+	case "simpleJSON":
+		protocolFactory = go_thrift.NewTSimpleJSONProtocolFactoryConf(nil)
+	case "json":
+		protocolFactory = go_thrift.NewTJSONProtocolFactory()
+	case "binary":
+		protocolFactory = go_thrift.NewTBinaryProtocolFactoryConf(nil)
+	default:
+		protocolFactory = go_thrift.NewTBinaryProtocolFactoryConf(nil)
+	}
+
+	var transportFactory go_thrift.TTransportFactory
+	cfg := &go_thrift.TConfiguration{
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	if this_.Buffered {
+		transportFactory = go_thrift.NewTBufferedTransportFactory(8192)
+	} else {
+		transportFactory = go_thrift.NewTTransportFactory()
+	}
+
+	if this_.Framed {
+		transportFactory = go_thrift.NewTFramedTransportFactoryConf(transportFactory, cfg)
+	}
+
+	transport := go_thrift.NewTSocketConf(this_.ServerAddress, &go_thrift.TConfiguration{
+		ConnectTimeout: time.Millisecond * time.Duration(this_.Timeout),
+		SocketTimeout:  time.Millisecond * time.Duration(this_.Timeout),
+	})
+
+	var useTransport go_thrift.TTransport
+	useTransport, err = transportFactory.GetTransport(transport)
 	if err != nil {
+		err = errors.New("transportFactory.GetTransport error:" + err.Error())
 		return
 	}
+	client = thrift.NewServiceClientFactory(useTransport, protocolFactory)
+	if err = transport.Open(); err != nil {
+		err = errors.New("opening socket to " + this_.ServerAddress + " error:" + err.Error())
+		return
+	}
+
 	this_.workerClient[param.WorkerIndex] = client
 	return
 }
@@ -64,6 +112,7 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
 	_, err = this_.getClient(param)
 	if err != nil {
+		param.Error = err
 		return
 	}
 

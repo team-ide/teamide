@@ -57,8 +57,11 @@ func groupToMarkdown(index int, group []map[string]interface{}) (content string)
 	} else {
 		content += fmt.Sprintf("* 执行时长：%d  \n", request.Duration)
 	}
-	content += fmt.Sprintf("* 超时时长：%d  \n", request.Timeout)
 	content += fmt.Sprintf("* 测试地址：%s  \n", request.ServerAddress)
+	content += fmt.Sprintf("* 超时时长：%d  \n", request.Timeout)
+	content += fmt.Sprintf("* ProtocolFactory类型：%s  \n", request.ProtocolFactory)
+	content += fmt.Sprintf("* Buffered：%v  \n", request.Buffered)
+	content += fmt.Sprintf("* Framed：%v  \n", request.Framed)
 
 	content += fmt.Sprintf("\n")
 	for i, arg := range request.Args {

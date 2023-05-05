@@ -1,6 +1,6 @@
-# 2.2.0
+# 2.2.1
 
-## Version 2.2.0 （2023/4/28）
+## Version 2.2.1 （2023/5/5）
 
 发布功能
 
@@ -14,6 +14,7 @@
 8. thrift添加性能测试，测试报告，图表展示TPS、AVG、Min、Max、T90、T99等
 9. thrift加载的服务、方法根据名称排序
 10. thrift接口并发测试可输出markdown文件，可在线预览
+11. thrift添加ProtocolFactory类型、Buffered、Framed、超时时间配置等
 
 # 2.1.2
 
