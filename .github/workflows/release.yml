@@ -259,7 +259,7 @@ jobs:
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
           cp -rf release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
+#          zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -278,7 +278,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: teamide-server-${{steps.release_version.outputs.value}}.zip
+          asset_path: teamide-server-${{steps.release_version.outputs.value}}
           asset_name: teamide-server-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
