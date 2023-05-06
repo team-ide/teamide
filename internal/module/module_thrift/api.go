@@ -98,6 +98,11 @@ type BaseRequest struct {
 	ProtocolFactory string `json:"protocolFactory,omitempty"`
 	Buffered        bool   `json:"buffered,omitempty"`
 	Framed          bool   `json:"framed,omitempty"`
+
+	PrometheusMetricsScheme     string `json:"prometheusMetricsScheme,omitempty"`
+	PrometheusMetricsAddress    string `json:"prometheusMetricsAddress,omitempty"`
+	PrometheusSummaryCountMatch string `json:"prometheusSummaryCountMatch,omitempty"`
+	PrometheusSummarySumMatch   string `json:"prometheusSummarySumMatch,omitempty"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -299,6 +304,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 				removeTask(t.Key)
 				_ = this_.saveTaskInfo(executor, request, t)
 				executor.stop()
+				_ = this_.saveTaskInfo(executor, request, t)
 			}()
 			for !t.IsEnd {
 				_ = this_.saveTaskInfo(executor, request, t)
