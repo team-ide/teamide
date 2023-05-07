@@ -2,7 +2,6 @@ package module_thrift
 
 import (
 	"bufio"
-	"github.com/team-ide/go-tool/util"
 	"io"
 	"net/http"
 	"strings"
@@ -26,7 +25,7 @@ func (this_ *prometheusDataCollect) start() {
 
 func (this_ *prometheusDataCollect) collect() {
 
-	nowTime := util.GetNow()
+	//nowTime := util.GetNow()
 
 	res, err := http.Get(this_.PrometheusMetricsAddress)
 	if err != nil {
