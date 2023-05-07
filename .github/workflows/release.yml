@@ -262,7 +262,7 @@ jobs:
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
           cp -rf release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
-          ll
+          ls
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
