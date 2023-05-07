@@ -181,6 +181,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - run: |
+          yum install -y zip unzip
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
@@ -258,9 +260,9 @@ jobs:
       - run: |
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          cp -rf release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
-          yum install -y zip unzip
+          cp release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
+          ll
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
