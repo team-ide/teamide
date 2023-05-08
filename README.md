@@ -44,7 +44,7 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
   * 双击方法运行测试 **完成**
   * 性能测试，测试报告，图表展示TPS、AVG、Min、Max、T90、T99等 **完成**
 * SSH隧道
-  * Mysql、Redis、Zookeeper支持SSH隧道连接，选择SSH后，填写127.0.0.1则连接到SSH本地相应资源
+  * Mysql、Redis、Zookeeper支持SSH隧道连接，选择SSH后，填写127.0.0.1则连接到SSH本地相应资源 **完成**
 
 ## 语言
 
