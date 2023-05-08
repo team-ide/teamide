@@ -71,7 +71,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 
 func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *kafka.Config, err error) {
 	config = &kafka.Config{}
-	err = this_.toolboxService.BindConfig(requestBean, c, config)
+	_, err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
 	}

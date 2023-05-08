@@ -14,6 +14,7 @@ type Field struct {
 	IsNumber     bool        `json:"isNumber,omitempty"`
 	Rules        []*Rule     `json:"rules,omitempty"`
 	Options      []*Option   `json:"options,omitempty"`
+	OptionsName  string      `json:"optionsName,omitempty"`
 	VIf          string      `json:"vIf,omitempty"`
 	Fields       []*Field    `json:"fields,omitempty"`
 }

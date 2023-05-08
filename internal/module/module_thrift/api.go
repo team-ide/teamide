@@ -71,7 +71,7 @@ type Config struct {
 
 func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *Config, err error) {
 	config = &Config{}
-	err = this_.toolboxService.BindConfig(requestBean, c, config)
+	_, err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
 	}

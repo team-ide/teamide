@@ -10,6 +10,7 @@ import (
 	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
+	"go.uber.org/zap"
 	"strconv"
 	"teamide/pkg/base"
 	"teamide/pkg/form"
@@ -160,7 +161,7 @@ type BindConfigRequest struct {
 	ToolboxType string `json:"toolboxType,omitempty"`
 }
 
-func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (err error) {
+func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (sshConfig *ssh.Config, err error) {
 	bindConfigRequest := &BindConfigRequest{}
 	if !base.RequestJSON(bindConfigRequest, c) {
 		return
@@ -183,6 +184,7 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	if find != nil {
 		option = find.Option
 	}
+	sshConfig = nil
 
 	optionBytes := []byte(option)
 
@@ -199,6 +201,28 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 					optionData["port"], _ = strconv.Atoi(strV)
 				}
 				optionBytes, _ = json.Marshal(optionData)
+			}
+		}
+		if optionData["sshToolboxId"] != nil {
+			s := util.GetStringValue(optionData["sshToolboxId"])
+			if s != "" {
+				sshToolboxId, _ := strconv.ParseInt(s, 10, 64)
+				if sshToolboxId > 0 {
+					var sshToolbox *ToolboxModel
+					sshToolbox, err = this_.Get(sshToolboxId)
+					if err != nil {
+						err = errors.New("ssh toolbox get error:" + err.Error())
+						return
+					}
+					if sshToolbox != nil {
+						sshConfig, err = this_.GetSSHConfig(sshToolbox.Option)
+						if err != nil {
+							err = errors.New("ssh toolbox config error:" + err.Error())
+							return
+						}
+						this_.Logger.Info("BindConfig find sshConfig", zap.Any("sshConfig", sshConfig))
+					}
+				}
 			}
 		}
 	}
@@ -309,6 +333,11 @@ func databaseWorker() *ToolboxType {
 					Rules: []*form.Rule{
 						{Required: true, Message: "数据库类型不能为空"},
 					},
+				},
+				{
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select", VIf: `type == 'mysql'`,
+					OptionsName: "sshToolboxOptions",
+					Rules:       []*form.Rule{},
 				},
 				{
 					Label: "Host（127.0.0.1）", Name: "host", DefaultValue: "127.0.0.1", VIf: `type != 'sqlite' && type != 'odbc' && type != 'gbase'`,
@@ -600,6 +629,11 @@ func redisWorker() *ToolboxType {
 		Text: "Redis",
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
+				{
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select",
+					OptionsName: "sshToolboxOptions",
+					Rules:       []*form.Rule{},
+				},
 				{Label: "连接地址（127.0.0.1:6379）", Name: "address", DefaultValue: "127.0.0.1:6379",
 					Rules: []*form.Rule{
 						{Required: true, Message: "连接地址不能为空"},
@@ -621,6 +655,11 @@ func zookeeperWorker() *ToolboxType {
 		Text: "Zookeeper",
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
+				{
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select",
+					OptionsName: "sshToolboxOptions",
+					Rules:       []*form.Rule{},
+				},
 				{
 					Label: "连接地址（127.0.0.1:2181）", Name: "address", DefaultValue: "127.0.0.1:2181",
 					Rules: []*form.Rule{

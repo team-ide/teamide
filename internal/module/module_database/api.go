@@ -16,6 +16,7 @@ import (
 	"sync"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"teamide/pkg/ssh"
 )
 
 type api struct {
@@ -93,16 +94,16 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	return
 }
 
-func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *db.Config, err error) {
+func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *db.Config, sshConfig *ssh.Config, err error) {
 	config = &db.Config{}
-	err = this_.toolboxService.BindConfig(requestBean, c, config)
+	sshConfig, err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func getService(config *db.Config) (res db.IService, err error) {
+func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err error) {
 	key := fmt.Sprint("database-", config.Type, "-", config.Host, "-", config.Port)
 	if config.DatabasePath != "" {
 		key += "-" + config.DatabasePath
@@ -125,10 +126,21 @@ func getService(config *db.Config) (res db.IService, err error) {
 	if config.Password != "" {
 		key += "-" + base.GetMd5String(key+config.Password)
 	}
+	if sshConfig != nil {
+		key += "-ssh-" + sshConfig.Address
+		key += "-ssh-" + sshConfig.Username
+	}
 
 	var serviceInfo *base.ServiceInfo
 	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
 		var s db.IService
+		if sshConfig != nil {
+			config.SSHClient, err = ssh.NewClient(*sshConfig)
+			if err != nil {
+				util.Logger.Error("getDatabaseService ssh NewClient error", zap.Any("key", key), zap.Error(err))
+				return
+			}
+		}
 		s, err = db.New(*config)
 		if err != nil {
 			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
@@ -170,11 +182,11 @@ type BaseRequest struct {
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -187,11 +199,11 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 }
 
 func (this_ *api) data(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -206,11 +218,11 @@ func (this_ *api) data(requestBean *base.RequestBean, c *gin.Context) (res inter
 }
 
 func (this_ *api) owners(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -225,11 +237,11 @@ func (this_ *api) owners(requestBean *base.RequestBean, c *gin.Context) (res int
 }
 
 func (this_ *api) ownerCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -247,11 +259,11 @@ func (this_ *api) ownerCreate(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) ownerDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -270,11 +282,11 @@ func (this_ *api) ownerDelete(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) ownerCreateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -293,11 +305,11 @@ func (this_ *api) ownerCreateSql(requestBean *base.RequestBean, c *gin.Context) 
 }
 
 func (this_ *api) ddl(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -316,11 +328,11 @@ func (this_ *api) ddl(requestBean *base.RequestBean, c *gin.Context) (res interf
 }
 
 func (this_ *api) model(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -339,11 +351,11 @@ func (this_ *api) model(requestBean *base.RequestBean, c *gin.Context) (res inte
 }
 
 func (this_ *api) tables(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -362,11 +374,11 @@ func (this_ *api) tables(requestBean *base.RequestBean, c *gin.Context) (res int
 }
 
 func (this_ *api) tableDetail(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -385,11 +397,11 @@ func (this_ *api) tableDetail(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) tableCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -413,11 +425,11 @@ func (this_ *api) tableCreate(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) tableCreateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -441,11 +453,11 @@ func (this_ *api) tableCreateSql(requestBean *base.RequestBean, c *gin.Context) 
 }
 
 func (this_ *api) tableUpdate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -469,11 +481,11 @@ func (this_ *api) tableUpdate(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) tableUpdateSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -497,11 +509,11 @@ func (this_ *api) tableUpdateSql(requestBean *base.RequestBean, c *gin.Context) 
 }
 
 func (this_ *api) tableDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -520,11 +532,11 @@ func (this_ *api) tableDelete(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) tableDataTrim(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -543,11 +555,11 @@ func (this_ *api) tableDataTrim(requestBean *base.RequestBean, c *gin.Context) (
 }
 
 func (this_ *api) tableData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -566,11 +578,11 @@ func (this_ *api) tableData(requestBean *base.RequestBean, c *gin.Context) (res 
 }
 
 func (this_ *api) dataListSql(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -606,11 +618,11 @@ func (this_ *api) getParam(requestBean *base.RequestBean, c *gin.Context) (param
 }
 
 func (this_ *api) dataListExec(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -633,11 +645,11 @@ func (this_ *api) dataListExec(requestBean *base.RequestBean, c *gin.Context) (r
 }
 
 func (this_ *api) executeSQL(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -658,11 +670,11 @@ func (this_ *api) executeSQL(requestBean *base.RequestBean, c *gin.Context) (res
 }
 
 func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -692,11 +704,11 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 }
 
 func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -818,11 +830,11 @@ func (this_ *api) exportDownload(_ *base.RequestBean, c *gin.Context) (res inter
 }
 
 func (this_ *api) sync(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}

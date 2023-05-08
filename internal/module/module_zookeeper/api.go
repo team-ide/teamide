@@ -5,8 +5,10 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
+	goSSH "golang.org/x/crypto/ssh"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"teamide/pkg/ssh"
 )
 
 type api struct {
@@ -40,16 +42,16 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	return
 }
 
-func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *zookeeper.Config, err error) {
+func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *zookeeper.Config, sshConfig *ssh.Config, err error) {
 	config = &zookeeper.Config{}
-	err = this_.toolboxService.BindConfig(requestBean, c, config)
+	sshConfig, err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func getService(zkConfig zookeeper.Config) (res zookeeper.IService, err error) {
+func getService(zkConfig zookeeper.Config, sshConfig *ssh.Config) (res zookeeper.IService, err error) {
 	key := "zookeeper-" + zkConfig.Address
 	if zkConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+zkConfig.Username)
@@ -57,10 +59,24 @@ func getService(zkConfig zookeeper.Config) (res zookeeper.IService, err error) {
 	if zkConfig.Password != "" {
 		key += "-" + base.GetMd5String(key+zkConfig.Password)
 	}
+	if sshConfig != nil {
+		key += "-ssh-" + sshConfig.Address
+		key += "-ssh-" + sshConfig.Username
+	}
 	var serviceInfo *base.ServiceInfo
 	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
 		var s zookeeper.IService
-		s, err = zookeeper.New(zkConfig)
+		if sshConfig != nil {
+			var sshClient *goSSH.Client
+			sshClient, err = ssh.NewClient(*sshConfig)
+			if err != nil {
+				util.Logger.Error("getZKService ssh NewClient error", zap.Any("key", key), zap.Error(err))
+				return
+			}
+			s, err = zookeeper.NewForSSH(zkConfig, sshClient)
+		} else {
+			s, err = zookeeper.New(zkConfig)
+		}
 		if err != nil {
 			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -98,11 +114,11 @@ type BaseRequest struct {
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(*config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -115,11 +131,11 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 }
 
 func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(*config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -136,11 +152,11 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 }
 
 func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(*config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -166,11 +182,11 @@ func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res inter
 }
 
 func (this_ *api) getChildren(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(*config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -218,11 +234,11 @@ func (this_ *api) getChildren(requestBean *base.RequestBean, c *gin.Context) (re
 }
 
 func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
+	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(*config, sshConfig)
 	if err != nil {
 		return
 	}
