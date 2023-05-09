@@ -141,7 +141,7 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 				return
 			}
 		}
-		s, err = db.New(*config)
+		s, err = db.New(config)
 		if err != nil {
 			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
 			return

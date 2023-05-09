@@ -80,7 +80,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(esConfig elasticsearch.Config) (res elasticsearch.IService, err error) {
+func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err error) {
 	key := "elasticsearch-" + esConfig.Url
 	if esConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+esConfig.Username)
@@ -149,7 +149,7 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -166,7 +166,7 @@ func (this_ *api) indexes(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -183,7 +183,7 @@ func (this_ *api) indexStat(requestBean *base.RequestBean, c *gin.Context) (res 
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -206,7 +206,7 @@ func (this_ *api) createIndex(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -227,7 +227,7 @@ func (this_ *api) deleteIndex(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -248,7 +248,7 @@ func (this_ *api) getMapping(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -269,7 +269,7 @@ func (this_ *api) putMapping(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -290,7 +290,7 @@ func (this_ *api) search(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -311,7 +311,7 @@ func (this_ *api) scroll(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -332,7 +332,7 @@ func (this_ *api) insertData(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -353,7 +353,7 @@ func (this_ *api) updateData(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -374,7 +374,7 @@ func (this_ *api) deleteData(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -395,7 +395,7 @@ func (this_ *api) reindex(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -416,7 +416,7 @@ func (this_ *api) indexAlias(requestBean *base.RequestBean, c *gin.Context) (res
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -438,7 +438,7 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -466,7 +466,7 @@ func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res int
 	//if err != nil {
 	//	return
 	//}
-	//service, err := getService(*config)
+	//service, err := getService(config)
 	//if err != nil {
 	//	return
 	//}

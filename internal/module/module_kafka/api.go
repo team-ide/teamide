@@ -78,7 +78,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(kafkaConfig kafka.Config) (res kafka.IService, err error) {
+func getService(kafkaConfig *kafka.Config) (res kafka.IService, err error) {
 	key := "kafka-" + kafkaConfig.Address
 	if kafkaConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+kafkaConfig.Username)
@@ -147,7 +147,7 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -164,7 +164,7 @@ func (this_ *api) topics(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -181,7 +181,7 @@ func (this_ *api) topic(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -203,7 +203,7 @@ func (this_ *api) topicDescribe(requestBean *base.RequestBean, c *gin.Context) (
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -230,7 +230,7 @@ func (this_ *api) commit(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -252,7 +252,7 @@ func (this_ *api) pull(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -274,7 +274,7 @@ func (this_ *api) push(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -296,7 +296,7 @@ func (this_ *api) reset(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -318,7 +318,7 @@ func (this_ *api) deleteTopic(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -340,7 +340,7 @@ func (this_ *api) createTopic(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -362,7 +362,7 @@ func (this_ *api) createPartitions(requestBean *base.RequestBean, c *gin.Context
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -384,7 +384,7 @@ func (this_ *api) deleteRecords(requestBean *base.RequestBean, c *gin.Context) (
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -408,7 +408,7 @@ func (this_ *api) groupList(requestBean *base.RequestBean, c *gin.Context) (res 
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -430,7 +430,7 @@ func (this_ *api) groupOffsets(requestBean *base.RequestBean, c *gin.Context) (r
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -452,7 +452,7 @@ func (this_ *api) groupDeleteOffsets(requestBean *base.RequestBean, c *gin.Conte
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -474,7 +474,7 @@ func (this_ *api) groupDelete(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}
@@ -496,7 +496,7 @@ func (this_ *api) groupDescribe(requestBean *base.RequestBean, c *gin.Context) (
 	if err != nil {
 		return
 	}
-	service, err := getService(*config)
+	service, err := getService(config)
 	if err != nil {
 		return
 	}

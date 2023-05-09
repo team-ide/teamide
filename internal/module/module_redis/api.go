@@ -75,7 +75,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getServiceKey(redisConfig redis.Config, sshConfig *ssh.Config) (key string) {
+func getServiceKey(redisConfig *redis.Config, sshConfig *ssh.Config) (key string) {
 	key = "redis-" + redisConfig.Address
 	if redisConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+redisConfig.Username)
@@ -92,7 +92,7 @@ func getServiceKey(redisConfig redis.Config, sshConfig *ssh.Config) (key string)
 	}
 	return
 }
-func getService(redisConfig redis.Config, sshConfig *ssh.Config) (res redis.IService, err error) {
+func getService(redisConfig *redis.Config, sshConfig *ssh.Config) (res redis.IService, err error) {
 	key := getServiceKey(redisConfig, sshConfig)
 	var serviceInfo *base.ServiceInfo
 	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
@@ -104,10 +104,9 @@ func getService(redisConfig redis.Config, sshConfig *ssh.Config) (res redis.ISer
 				util.Logger.Error("getZKService ssh NewClient error", zap.Any("key", key), zap.Error(err))
 				return
 			}
-			s, err = redis.NewRedisServiceForSSH(redisConfig.Address, redisConfig.Username, redisConfig.Auth, redisConfig.CertPath, sshClient)
-		} else {
-			s, err = redis.New(redisConfig)
+			redisConfig.SSHClient = sshClient
 		}
+		s, err = redis.New(redisConfig)
 		if err != nil {
 			util.Logger.Error("getRedisService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -162,7 +161,7 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -179,7 +178,7 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -200,7 +199,7 @@ func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -222,7 +221,7 @@ func (this_ *api) set(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -247,7 +246,7 @@ func (this_ *api) sadd(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -266,7 +265,7 @@ func (this_ *api) srem(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -284,7 +283,7 @@ func (this_ *api) lpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -303,7 +302,7 @@ func (this_ *api) rpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -322,7 +321,7 @@ func (this_ *api) lset(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -341,7 +340,7 @@ func (this_ *api) lrem(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -360,7 +359,7 @@ func (this_ *api) hset(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -379,7 +378,7 @@ func (this_ *api) hdel(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -398,7 +397,7 @@ func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -420,7 +419,7 @@ func (this_ *api) deletePattern(requestBean *base.RequestBean, c *gin.Context) (
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -442,7 +441,7 @@ func (this_ *api) expire(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -464,7 +463,7 @@ func (this_ *api) ttl(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -486,7 +485,7 @@ func (this_ *api) persist(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -508,7 +507,7 @@ func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res in
 	//if err != nil {
 	//	return
 	//}
-	//service, err := getService(*config,sshConfig)
+	//service, err := getService(config,sshConfig)
 	//if err != nil {
 	//	return
 	//}

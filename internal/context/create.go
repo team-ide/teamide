@@ -222,7 +222,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	this_.DatabaseConfig = databaseConfig
-	this_.DatabaseWorker, err = db.New(*databaseConfig)
+	this_.DatabaseWorker, err = db.New(databaseConfig)
 	if err != nil {
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return

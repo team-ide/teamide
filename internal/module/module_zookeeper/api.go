@@ -51,7 +51,7 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(zkConfig zookeeper.Config, sshConfig *ssh.Config) (res zookeeper.IService, err error) {
+func getService(zkConfig *zookeeper.Config, sshConfig *ssh.Config) (res zookeeper.IService, err error) {
 	key := "zookeeper-" + zkConfig.Address
 	if zkConfig.Username != "" {
 		key += "-" + base.GetMd5String(key+zkConfig.Username)
@@ -73,10 +73,9 @@ func getService(zkConfig zookeeper.Config, sshConfig *ssh.Config) (res zookeeper
 				util.Logger.Error("getZKService ssh NewClient error", zap.Any("key", key), zap.Error(err))
 				return
 			}
-			s, err = zookeeper.NewForSSH(zkConfig, sshClient)
-		} else {
-			s, err = zookeeper.New(zkConfig)
+			zkConfig.SSHClient = sshClient
 		}
+		s, err = zookeeper.New(zkConfig)
 		if err != nil {
 			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -118,7 +117,7 @@ func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -135,7 +134,7 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -156,7 +155,7 @@ func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -186,7 +185,7 @@ func (this_ *api) getChildren(requestBean *base.RequestBean, c *gin.Context) (re
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
@@ -238,7 +237,7 @@ func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res int
 	if err != nil {
 		return
 	}
-	service, err := getService(*config, sshConfig)
+	service, err := getService(config, sshConfig)
 	if err != nil {
 		return
 	}
