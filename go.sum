@@ -225,8 +225,8 @@ github.com/team-ide/go-driver v1.2.1 h1:1VWQNjey9n0RMGpLdW3JRhZtFn8LtI7BBwx4rq2q
 github.com/team-ide/go-driver v1.2.1/go.mod h1:ET7rN/x7e4bILu0voxwtdHbwSGu5ezahVPFK25rLrnA=
 github.com/team-ide/go-interpreter v0.0.4 h1:yKVmhm/YQ1yki6ssKtS3tGZ96vFk4YH1wEikOKiMOjA=
 github.com/team-ide/go-interpreter v0.0.4/go.mod h1:yvSIoCUic0dPDxfaIWK1ISzny3oZhYPv0gYBlKOahp8=
-github.com/team-ide/go-tool v0.4.5 h1:nenC4JMhoqkD+SU0RZivBUuK0bK2GEG/BWIVOCWRRHM=
-github.com/team-ide/go-tool v0.4.5/go.mod h1:gCLK7y5R7b71HVDcybSmU1OB9CrI1RDiu4j7avRzRLA=
+github.com/team-ide/go-tool v0.4.6 h1:x126Jb/gveSBhJpw6gCrskL4J0drMSPXo/+L6XY1/4M=
+github.com/team-ide/go-tool v0.4.6/go.mod h1:gCLK7y5R7b71HVDcybSmU1OB9CrI1RDiu4j7avRzRLA=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=
 github.com/tjfoc/gmsm v1.4.1/go.mod h1:j4INPkHWMrhJb38G+J6W4Tw0AbuN8Thu3PbdVYhVcTE=
 github.com/tklauser/go-sysconf v0.3.11 h1:89WgdJhk5SNwJfu+GKyYveZ4IaJ7xAkecBo+KdJV0CM=
