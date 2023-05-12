@@ -175,14 +175,12 @@ jobs:
   buildLinux:
     needs: buildStatic
     runs-on: ubuntu-latest
-    container: docker.io/teamide/build:0.6
+    container: docker.io/teamide/build:0.9
     steps:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - run: |
-          yum install -y zip unzip
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
