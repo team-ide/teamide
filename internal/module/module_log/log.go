@@ -40,7 +40,7 @@ func (this_ *LogService) Insert(log *LogModel, errLog error) (err error) {
 		log.Status = 2
 		log.Error = errLog.Error()
 	}
-	log.UseTime = int(util.GetTimeByTime(log.EndTime) - util.GetTimeByTime(log.StartTime))
+	log.UseTime = int(util.GetMilliByTime(log.EndTime) - util.GetMilliByTime(log.StartTime))
 
 	sql := `INSERT INTO ` + TableLog + `(logId, loginId, userId, userName, userAccount, ip, action, method, param, data, userAgent, status, error, useTime, startTime, endTime, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) `
 

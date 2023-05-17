@@ -69,7 +69,7 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 			}
 			var nowTime = time.Now()
 			// 10 分钟超时
-			waitTime := util.GetTimeByTime(nowTime) - util.GetTimeByTime(startTime)
+			waitTime := util.GetMilliByTime(nowTime) - util.GetMilliByTime(startTime)
 			if waitTime >= int64(10*60*1000) {
 				err = errors.New("等待动作超时，等待时间[" + fmt.Sprint(waitTime/1000) + "]秒")
 				this_.waitActionChan <- ""
@@ -107,7 +107,7 @@ func (this_ *Progress) end(err error) {
 		this_.Error = err.Error()
 	}
 	this_.WaitActionIng = false
-	this_.EndTime = util.GetNowTime()
+	this_.EndTime = util.GetNowMilli()
 	this_.IsEnd = true
 }
 
@@ -165,7 +165,7 @@ func newProgress(param *BaseParam, work string, callStop func()) (progress *Prog
 	progress.BaseParam = param
 	progress.Work = work
 	progress.ProgressId = ProgressId
-	progress.StartTime = util.GetNowTime()
+	progress.StartTime = util.GetNowMilli()
 	progress.Data = map[string]interface{}{}
 
 	setProgress(progress)
@@ -183,11 +183,11 @@ func newProgress(param *BaseParam, work string, callStop func()) (progress *Prog
 
 			time.Sleep(200 * time.Millisecond)
 			if progress.IsEnd {
-				progress.Timestamp = util.GetNowTime()
+				progress.Timestamp = util.GetNowMilli()
 				context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
 				break
 			}
-			progress.Timestamp = util.GetNowTime()
+			progress.Timestamp = util.GetNowMilli()
 			context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
 		}
 	}()

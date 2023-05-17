@@ -180,7 +180,7 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	}
 	if this_.IsServer {
 		// 超过两小时
-		if res.Time < (util.GetNowTime() - 1000*60*60*2) {
+		if res.Time < (util.GetNowMilli() - 1000*60*60*2) {
 
 			return nil
 		}
@@ -198,7 +198,7 @@ func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) (jwtStr 
 		UserId:  user.UserId,
 		Name:    user.Name,
 		Account: user.Account,
-		Time:    util.GetNowTime(),
+		Time:    util.GetNowMilli(),
 		LoginId: loginId,
 	}
 	jwtJSONBytes, err := json.Marshal(jwt)

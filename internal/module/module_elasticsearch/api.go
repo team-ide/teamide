@@ -99,7 +99,7 @@ func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
-				s.Stop()
+				s.Close()
 			}
 			return
 		}
@@ -107,15 +107,15 @@ func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
-				s.Stop()
+				s.Close()
 			}
 			return
 		}
 		res = &base.ServiceInfo{
 			WaitTime:    10 * 60 * 1000,
-			LastUseTime: util.GetNowTime(),
+			LastUseTime: util.GetNowMilli(),
 			Service:     s,
-			Stop:        s.Stop,
+			Stop:        s.Close,
 		}
 		return
 	})

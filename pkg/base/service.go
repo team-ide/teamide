@@ -90,7 +90,7 @@ type ServiceInfo struct {
 }
 
 func (this_ *ServiceInfo) SetLastUseTime() {
-	this_.LastUseTime = util.GetNowTime()
+	this_.LastUseTime = util.GetNowMilli()
 }
 
 func startServiceTimer() {
@@ -103,7 +103,7 @@ func startServiceTimer() {
 func cleanCache() {
 	serviceCacheLock.Lock()
 	defer serviceCacheLock.Unlock()
-	nowTime := util.GetNowTime()
+	nowTime := util.GetNowMilli()
 	for key, one := range serviceCache {
 		if one.WaitTime <= 0 {
 			continue

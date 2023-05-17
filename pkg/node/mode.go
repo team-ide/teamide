@@ -30,7 +30,7 @@ func (this_ *MonitorData) monitorRead(bytesSize int64, useTime int64) {
 	this_.readLock.Lock()
 	defer this_.readLock.Unlock()
 
-	var nowTime = util.GetNowTime()
+	var nowTime = util.GetNowMilli()
 	if this_.ReadLastTimestamp == 0 {
 		this_.ReadLastTimestamp = nowTime
 	}
@@ -51,7 +51,7 @@ func (this_ *MonitorData) monitorWrite(bytesSize int64, useTime int64) {
 	this_.writeLock.Lock()
 	defer this_.writeLock.Unlock()
 
-	var nowTime = util.GetNowTime()
+	var nowTime = util.GetNowMilli()
 	if this_.WriteLastTimestamp == 0 {
 		this_.WriteLastTimestamp = nowTime
 	}

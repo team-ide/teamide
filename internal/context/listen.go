@@ -274,7 +274,7 @@ func checkListener() {
 		nowTimeSecond := util.GetNowSecond()
 
 		// 最后监听时间 在此 之前的 都为超时
-		outTimeSecond := nowTimeSecond - int64(listenerLastListenTimeoutSecond)
+		outTimeSecond := nowTimeSecond - listenerLastListenTimeoutSecond
 		lastListenTimeSecond := util.GetSecondByTime(one.lastListenTime)
 		if lastListenTimeSecond > outTimeSecond {
 			if one.listenIng {

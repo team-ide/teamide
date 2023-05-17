@@ -75,7 +75,7 @@ func (this_ *SettingService) Save(data map[string]interface{}) (err error) {
 func (this_ *SettingService) Insert(setting *SettingModel) (err error) {
 
 	if setting.CreateTime == 0 {
-		setting.CreateTime = util.GetNowTime()
+		setting.CreateTime = util.GetNowMilli()
 	}
 
 	sql := `INSERT INTO ` + TableSetting + `(name, value, createTime) VALUES (?, ?, ?) `
@@ -89,7 +89,7 @@ func (this_ *SettingService) Insert(setting *SettingModel) (err error) {
 
 func (this_ *SettingService) Update(setting *SettingModel) (err error) {
 
-	setting.UpdateTime = util.GetNowTime()
+	setting.UpdateTime = util.GetNowMilli()
 
 	_, err = this_.DatabaseWorker.Exec(`UPDATE `+TableSetting+` SET value=? , updateTime=? WHERE name=? `, []interface{}{setting.Value, setting.UpdateTime, setting.Name})
 	if err != nil {

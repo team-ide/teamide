@@ -473,7 +473,7 @@ func getFileInfoByStat(path string, stat os.FileInfo) (fileInfo *filework.FileIn
 		Name:     stat.Name(),
 		Path:     path,
 		IsDir:    stat.IsDir(),
-		ModTime:  util.GetTimeByTime(stat.ModTime()),
+		ModTime:  util.GetMilliByTime(stat.ModTime()),
 		FileMode: stat.Mode().String(),
 		Size:     stat.Size(),
 	}

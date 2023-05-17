@@ -79,7 +79,7 @@ func getService(zkConfig *zookeeper.Config, sshConfig *ssh.Config) (res zookeepe
 		if err != nil {
 			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
-				s.Stop()
+				s.Close()
 			}
 			return
 		}
@@ -87,15 +87,15 @@ func getService(zkConfig *zookeeper.Config, sshConfig *ssh.Config) (res zookeepe
 		if err != nil {
 			util.Logger.Error("getZKService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
-				s.Stop()
+				s.Close()
 			}
 			return
 		}
 		res = &base.ServiceInfo{
 			WaitTime:    10 * 60 * 1000,
-			LastUseTime: util.GetNowTime(),
+			LastUseTime: util.GetNowMilli(),
 			Service:     s,
-			Stop:        s.Stop,
+			Stop:        s.Close,
 		}
 		return
 	})
@@ -170,9 +170,9 @@ func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 	if isEx {
-		err = service.Set(request.Path, []byte(request.Data))
+		err = service.Set(request.Path, request.Data)
 	} else {
-		err = service.CreateIfNotExists(request.Path, []byte(request.Data))
+		err = service.CreateIfNotExists(request.Path, request.Data)
 	}
 	if err != nil {
 		return

@@ -235,7 +235,14 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 	if !request.IsTest {
 		var param *thrift.MethodParam
 
-		param, err = service.GetMethodParam(filename, request.ServiceName, request.MethodName, args...)
+		var fArgs []interface{}
+		fArgs, err = formatArgs(args, nil)
+		if err != nil {
+			err = errors.New("formatArgs error:" + err.Error())
+			return
+		}
+
+		param, err = service.GetMethodParam(filename, request.ServiceName, request.MethodName, fArgs...)
 		if err != nil {
 			err = errors.New("GetMethodParam error:" + err.Error())
 			return

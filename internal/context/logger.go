@@ -1,10 +1,13 @@
 package context
 
 import (
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"strings"
 	"teamide/internal/config"
+	"time"
 )
 
 // newZapLogger creator a new zap logger
@@ -20,16 +23,30 @@ func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
 	}
 
 	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.TimeEncoderOfLayout("2006-01-02 15:04:05.000"),
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
+		TimeKey:       "time",
+		LevelKey:      "level",
+		NameKey:       "logger",
+		CallerKey:     "caller",
+		MessageKey:    "msg",
+		StacktraceKey: "S",
+		//FunctionKey:      "F",
+		ConsoleSeparator: "] [",
+		LineEnding:       "]\n",
+		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString("[" + t.Format("2006-01-02 15:04:05.000"))
+		},
+		EncodeLevel: func(l zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(util.StrPadRight(strings.ToUpper(l.String()), 5, " "))
+		},
+		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendFloat64(float64(d) / float64(time.Second))
+		},
+		EncodeCaller: func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(caller.TrimmedPath())
+		},
+		EncodeName: func(s string, enc zapcore.PrimitiveArrayEncoder) {
+			enc.AppendString(strings.ToUpper(s))
+		},
 	}
 	var level zapcore.Level
 	switch serverConfig.Log.Level {
@@ -44,10 +61,19 @@ func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
 	default:
 		level = zapcore.DebugLevel
 	}
-	atomicLevel := zap.NewAtomicLevelAt(level)
-	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.AddSync(hook), atomicLevel)
-	caller := zap.AddCaller()
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(encoderConfig),
+		zapcore.AddSync(hook),
+		zap.NewAtomicLevelAt(level),
+	)
+	res := zap.New(
+		core,
+		// 表示 输出 文件名 以及 行号
+		zap.AddCaller(),
+		// 表示 输出 堆栈跟踪 传入 level 表示 在哪个级别下输出
+		zap.AddStacktrace(zapcore.ErrorLevel),
+		//zap.AddCallerSkip(0),
+	)
 
-	return zap.New(core, caller)
+	return res
 }

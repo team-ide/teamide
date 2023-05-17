@@ -3,9 +3,12 @@ package module_thrift
 import (
 	"errors"
 	go_thrift "github.com/apache/thrift/lib/go/thrift"
+	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/thrift"
+	"github.com/team-ide/go-tool/util"
 	"golang.org/x/net/context"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -110,10 +113,116 @@ func (this_ *invokeExecutor) getClient(param *task.ExecutorParam) (client *thrif
 	this_.workerClient[param.WorkerIndex] = client
 	return
 }
+func scriptValue(script string, param *task.ExecutorParam) (res string, err error) {
+	if script == "" {
+		return
+	}
+	scriptContext := javascript.NewContext()
+	if param == nil {
+		param = &task.ExecutorParam{}
+	}
+	scriptContext["index"] = param.Index
+	scriptContext["workerIndex"] = param.WorkerIndex
 
+	v, err := javascript.Run(script, scriptContext)
+	if err != nil {
+		err = errors.New("get scriptValue error:" + err.Error())
+		return
+	}
+	res = util.GetStringValue(v)
+
+	return
+}
+func stringArg(arg string, param *task.ExecutorParam) (res interface{}, err error) {
+	if arg == "" {
+		res = ""
+		return
+	}
+	text := ""
+	var re *regexp.Regexp
+	re, _ = regexp.Compile(`[$]+{(.+?)}`)
+	indexList := re.FindAllIndex([]byte(arg), -1)
+	var lastIndex int = 0
+	for _, indexes := range indexList {
+		text += arg[lastIndex:indexes[0]]
+
+		lastIndex = indexes[1]
+
+		script := arg[indexes[0]+2 : indexes[1]-1]
+		v := ""
+		v, err = scriptValue(script, param)
+		if err != nil {
+			return
+		}
+		text += v
+	}
+	text += arg[lastIndex:]
+
+	res = text
+	return
+}
+func formatArg(arg interface{}, param *task.ExecutorParam) (res interface{}, err error) {
+	if arg == nil {
+		return
+	}
+	switch tV := arg.(type) {
+	case string:
+		res, err = stringArg(tV, param)
+		break
+	case []interface{}:
+		var list []interface{}
+		for _, one := range tV {
+			var v interface{}
+			v, err = formatArg(one, param)
+			if err != nil {
+				return
+			}
+			list = append(list, v)
+		}
+		res = list
+		break
+	case map[string]interface{}:
+		var data = map[string]interface{}{}
+		for key, one := range tV {
+			var v interface{}
+			v, err = formatArg(one, param)
+			if err != nil {
+				return
+			}
+			data[key] = v
+		}
+		res = data
+		break
+	default:
+		res = tV
+		break
+	}
+
+	return
+}
+
+func formatArgs(args []interface{}, param *task.ExecutorParam) (res []interface{}, err error) {
+	if len(args) == 0 {
+		return
+	}
+	for _, arg := range args {
+		var v interface{}
+		v, err = formatArg(arg, param)
+		if err != nil {
+			return
+		}
+		res = append(res, v)
+	}
+
+	return
+}
 func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
+	args, err := formatArgs(this_.args, param)
+	if err != nil {
+		return
+	}
 
-	methodParam, err := this_.service.GetMethodParam(this_.filename, this_.ServiceName, this_.MethodName, this_.args...)
+	methodParam, err := this_.service.GetMethodParam(this_.filename, this_.ServiceName, this_.MethodName, args...)
 	if err != nil {
 		return
 	}

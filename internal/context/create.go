@@ -173,9 +173,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	if this_.IsServerDev {
-		loggerConfig := zap.NewDevelopmentConfig()
-		loggerConfig.Development = false
-		this_.Logger, err = loggerConfig.Build()
+		this_.Logger = util.Logger
 		if err != nil {
 			return
 		}

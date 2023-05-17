@@ -148,9 +148,9 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 		}
 		res = &base.ServiceInfo{
 			WaitTime:    10 * 60 * 1000,
-			LastUseTime: util.GetNowTime(),
+			LastUseTime: util.GetNowMilli(),
 			Service:     s,
-			Stop:        s.Stop,
+			Stop:        s.Close,
 		}
 		return
 	})

@@ -96,9 +96,9 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 			panic(err)
 		}
 	}()
-	var checkStartTime = util.GetNowTime()
+	var checkStartTime = util.GetNowMilli()
 	for {
-		var newTime = util.GetNowTime()
+		var newTime = util.GetNowMilli()
 		if (newTime - checkStartTime) > 1000*5 {
 			this_.Logger.Warn("服务启动检查超过5秒，不再检测")
 			break

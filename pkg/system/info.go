@@ -262,10 +262,10 @@ func GetInfo() (info *Info) {
 
 func GetMonitorData() (monitorData *MonitorData, err error) {
 	monitorData = &MonitorData{
-		StartTime: util.GetNowTime(),
+		StartTime: util.GetNowMilli(),
 	}
 	defer func() {
-		monitorData.EndTime = util.GetNowTime()
+		monitorData.EndTime = util.GetNowMilli()
 	}()
 
 	monitorData.CpuPercents, err = cpu.Percent(time.Second, true)
