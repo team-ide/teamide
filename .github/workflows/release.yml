@@ -264,7 +264,7 @@ jobs:
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
-        uses: actions/upload-release-asset@master
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -274,7 +274,7 @@ jobs:
           asset_content_type: application/zip
 
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
-        uses: actions/upload-release-asset@master
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
