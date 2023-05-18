@@ -1,9 +1,7 @@
-# 2.2.5
+# 2.2.6
 
-## Version 2.2.5 （2023/5/18）
+## Version 2.2.6 （2023/5/18）
 
 发布功能
 
-1. thrift 接口测试，输入的参数支持表达式
-   * 使用 `${ 表达式 }` 来实现动态参数
-2. 修改zookeeper中值显示问题
+1. 小工具添加JavaScript在线执行，在线运行代码，如连接redis、database、zookeeper、elasticsearch、kafka等
