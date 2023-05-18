@@ -143,7 +143,7 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = service.Get(request.Path)
+	res, err = service.GetInfo(request.Path)
 	if err != nil {
 		return
 	}
