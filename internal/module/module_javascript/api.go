@@ -103,13 +103,17 @@ type JavascriptRun struct {
 }
 
 func (this_ *JavascriptRun) run() {
+	this_.buffer = &bytes.Buffer{}
+	logger := newLogger(this_.buffer)
+	logger.Debug("javascript run start")
 	var err error
 	this_.StartTime = time.Now()
 	this_.Start = this_.StartTime.UnixMilli()
 	defer func() {
+		logger.Debug("javascript run end")
 		if e := recover(); e != nil {
 			err = errors.New(fmt.Sprint(e))
-			util.Logger.Error("javascript run error", zap.Error(err))
+			logger.Error("javascript run panic", zap.Error(err))
 		}
 		if err != nil {
 			this_.Error = err.Error()
@@ -120,9 +124,6 @@ func (this_ *JavascriptRun) run() {
 	}()
 
 	scriptContext := javascript.NewContext()
-
-	this_.buffer = &bytes.Buffer{}
-	logger := newLogger(this_.buffer)
 
 	scriptContext["logger"] = map[string]interface{}{
 		"debug": func(args ...interface{}) {
@@ -148,6 +149,7 @@ func (this_ *JavascriptRun) run() {
 
 	this_.Result, err = javascript.RunScript(this_.Javascript, scriptContext)
 	if err != nil {
+		logger.Error("javascript run error", zap.Error(err))
 		return
 	}
 
