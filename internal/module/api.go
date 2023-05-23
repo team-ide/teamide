@@ -230,6 +230,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	}
 	requestBean := this_.getRequestBean(c)
 	requestBean.Path = path
+	requestBean.Power = api.Power
 	if !this_.checkPower(api, requestBean.JWT, c) {
 		return true
 	}

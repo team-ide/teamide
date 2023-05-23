@@ -3,6 +3,7 @@ package base
 import (
 	"github.com/gin-gonic/gin/binding"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,30 @@ type RequestBean struct {
 	Action       string
 	ClientKey    string
 	ClientTabKey string
+	extends      map[string]interface{}
+	extendsLock  sync.Mutex
+	Power        *PowerAction
+}
+
+func (this_ *RequestBean) GetExtend(key string) interface{} {
+	if this_.extends == nil {
+		return nil
+	}
+
+	this_.extendsLock.Lock()
+	defer this_.extendsLock.Unlock()
+	return this_.extends[key]
+}
+
+func (this_ *RequestBean) SetExtend(key string, value interface{}) {
+	this_.extendsLock.Lock()
+	defer this_.extendsLock.Unlock()
+
+	if this_.extends == nil {
+		this_.extends = map[string]interface{}{}
+	}
+
+	this_.extends[key] = value
 }
 
 var (

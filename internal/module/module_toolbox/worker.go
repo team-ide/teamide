@@ -161,7 +161,23 @@ type BindConfigRequest struct {
 	ToolboxType string `json:"toolboxType,omitempty"`
 }
 
-func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (sshConfig *ssh.Config, err error) {
+func (this_ *ToolboxService) CheckPower(requestBean *base.RequestBean) (err error) {
+	if v := requestBean.GetExtend("toolboxModel"); v != nil {
+		find := v.(*ToolboxModel)
+		if find.UserId != 0 {
+			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+	}
+	return
+}
+
+func (this_ *ToolboxService) initExtent(requestBean *base.RequestBean, c *gin.Context) (err error) {
+	if requestBean.GetExtend("toolboxModel") != nil {
+		return
+	}
 	bindConfigRequest := &BindConfigRequest{}
 	if !base.RequestJSON(bindConfigRequest, c) {
 		return
@@ -171,19 +187,32 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	if err != nil {
 		return
 	}
-	if find != nil && find.UserId != 0 {
-		if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
-			err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
-			return
-		}
-	}
 	if find == nil {
 		find = this_.GetOtherToolbox(bindConfigRequest.ToolboxId)
 	}
-	option := ""
 	if find != nil {
+		requestBean.SetExtend("toolboxModel", find)
+	}
+	return
+}
+
+func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (sshConfig *ssh.Config, err error) {
+	err = this_.initExtent(requestBean, c)
+	if err != nil {
+		return
+	}
+
+	err = this_.CheckPower(requestBean)
+	if err != nil {
+		return
+	}
+
+	option := ""
+	if v := requestBean.GetExtend("toolboxModel"); v != nil {
+		find := v.(*ToolboxModel)
 		option = find.Option
 	}
+
 	sshConfig = nil
 
 	optionBytes := []byte(option)
