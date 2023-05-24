@@ -45,12 +45,13 @@ var (
 )
 
 type JWTBean struct {
-	Sign    string `json:"sign,omitempty"`
-	UserId  int64  `json:"userId,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Account string `json:"account,omitempty"`
-	Time    int64  `json:"time,omitempty"`
-	LoginId int64  `json:"loginId,omitempty"`
+	Sign        string `json:"sign,omitempty"`
+	UserId      int64  `json:"userId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Account     string `json:"account,omitempty"`
+	Time        int64  `json:"time,omitempty"`
+	LoginId     int64  `json:"loginId,omitempty"`
+	IsAnonymous bool   `json:"isAnonymous,omitempty"`
 }
 
 type HttpResponse struct {

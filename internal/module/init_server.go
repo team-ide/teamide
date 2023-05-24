@@ -26,19 +26,6 @@ func (this_ *Api) initServer() (err error) {
 		return
 	}
 
-	if this_.Setting.AnonymousUserId == 0 {
-		var anonymousUserId int64
-		anonymousUserId, err = this_.initPowerUser(base.AnonymousRoleType, base.AnonymousRoleName, "匿名用户", "anonymous", "anonymous@teamide.com", false)
-		if err != nil {
-			return
-		}
-		err = this_.settingService.Save(map[string]interface{}{
-			"anonymousUserId": anonymousUserId,
-		})
-		if err != nil {
-			return
-		}
-	}
 	return
 }
 

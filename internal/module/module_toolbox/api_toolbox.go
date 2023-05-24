@@ -50,10 +50,17 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 	}
 	response := &ListResponse{}
 
-	response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
-		UserId:      requestBean.JWT.UserId,
-		ToolboxType: request.ToolboxType,
-	})
+	// 如果 开启 工具箱 共享 则可以 使用所有工具
+	if this_.Setting.ToolboxShare {
+		response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
+			ToolboxType: request.ToolboxType,
+		})
+	} else {
+		response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
+			UserId:      requestBean.JWT.UserId,
+			ToolboxType: request.ToolboxType,
+		})
+	}
 	if err != nil {
 		return
 	}
@@ -292,7 +299,10 @@ func (this_ *ToolboxApi) open(requestBean *base.RequestBean, c *gin.Context) (re
 			return
 		}
 		if find != nil && find.UserId != 0 {
-			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+			// 如果 开启 工具箱 共享 则不验证用户 所有用户都可以使用
+			if this_.Setting.ToolboxShare {
+
+			} else if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
 				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
 				return
 			}

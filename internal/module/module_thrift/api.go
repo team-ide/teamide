@@ -204,6 +204,12 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 
 	filename := service.GetFormatDir() + "/" + request.RelativePath
 
+	var argFormat_ *argFormat
+	argFormat_, err = newArgFormat()
+	if err != nil {
+		err = errors.New("newArgFormat error:" + err.Error())
+		return
+	}
 	data := map[string]interface{}{}
 	res = data
 	data["isTest"] = request.IsTest
@@ -236,7 +242,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		var param *thrift.MethodParam
 
 		var fArgs []interface{}
-		fArgs, err = formatArgs(args, nil)
+		fArgs, err = argFormat_.formatArgs(args, nil)
 		if err != nil {
 			err = errors.New("formatArgs error:" + err.Error())
 			return
@@ -288,6 +294,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		var t *task.Task
 
 		executor := &invokeExecutor{
+			argFormat:    argFormat_,
 			BaseRequest:  request,
 			filename:     filename,
 			args:         args,

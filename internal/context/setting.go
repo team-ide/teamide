@@ -21,11 +21,12 @@ func NewSetting() (setting *Setting) {
 
 	setting.LogRetentionDays = 0
 
+	setting.ToolboxShare = false
 	return
 }
 
 type Setting struct {
-	LoginAnonymousEnable bool `json:"loginAnonymousEnable"` // 启用 匿名登录 默认关闭
+	LoginAnonymousEnable bool `json:"loginAnonymousEnable"` // 启用 匿名登录 开启后 将自动创建匿名用户 由客户端存放匿名用户ID 默认关闭
 
 	RegisterEnable bool `json:"registerEnable"` // 启用 注册 默认开启
 
@@ -37,8 +38,9 @@ type Setting struct {
 
 	LogRetentionDays int `json:"logRetentionDays"` // 日志 保留天数 默认 0 一直保留
 
+	ToolboxShare bool `json:"toolboxShare"` // 启用 开启后 所有人都可以看到所有工具配置
+
 	StandAloneUserId int64 `json:"standAloneUserId"` // StandAloneUserId 单机版本 用户 ID
-	AnonymousUserId  int64 `json:"anonymousUserId"`  // AnonymousUserId 匿名 用户 ID
 }
 
 func (this_ *Setting) Set(name string, value interface{}) (find bool, err error) {
@@ -72,19 +74,17 @@ func (this_ *Setting) Set(name string, value interface{}) (find bool, err error)
 		}
 		this_.LogRetentionDays, err = strconv.Atoi(sv)
 		break
+
+	case "toolboxShare":
+		this_.ToolboxShare = util.IsTrue(value)
+		break
+
 	case "standAloneUserId":
 		sv := util.GetStringValue(value)
 		if sv == "" {
 			sv = "0"
 		}
 		this_.StandAloneUserId, err = strconv.ParseInt(sv, 10, 64)
-		break
-	case "anonymousUserId":
-		sv := util.GetStringValue(value)
-		if sv == "" {
-			sv = "0"
-		}
-		this_.AnonymousUserId, err = strconv.ParseInt(sv, 10, 64)
 		break
 	default:
 		find = false

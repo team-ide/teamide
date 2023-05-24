@@ -9,15 +9,19 @@ import (
 	"go.uber.org/zap"
 	"strings"
 	"teamide/internal/context"
+	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_login"
+	"teamide/internal/module/module_register"
 	"teamide/internal/module/module_user"
 	"teamide/pkg/base"
 )
 
 type LoginRequest struct {
-	Account   string `json:"account,omitempty"`
-	Password  string `json:"password,omitempty"`
-	Anonymous bool   `json:"anonymous,omitempty"`
+	Account           string `json:"account,omitempty"`
+	Password          string `json:"password,omitempty"`
+	Anonymous         bool   `json:"anonymous,omitempty"`
+	AnonymousUserId   int64  `json:"anonymousUserId,omitempty"`
+	AnonymousUserName string `json:"anonymousUserName,omitempty"`
 }
 
 func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -39,11 +43,39 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 		source += ";" + s1 + "@" + s2
 	}
 
+	var isAnonymous bool
 	if this_.IsServer {
 		// 匿名登录
 		if loginRequest.Anonymous {
 			if this_.Setting.LoginAnonymousEnable {
-				loginUser, err = this_.userService.Get(this_.Setting.AnonymousUserId)
+				isAnonymous = true
+				if loginRequest.AnonymousUserId == 0 {
+					loginRequest.AnonymousUserId, err = this_.idService.GetNextID(module_id.IDTypeUser)
+					if err != nil {
+						return
+					}
+					// 这里插入 匿名 用户
+					password := util.GetUUID()[0:10]
+					idStr := util.StrPadLeft(util.GetStringValue(loginRequest.AnonymousUserId), 5, "0")
+					name := loginRequest.AnonymousUserName
+					if name == "" {
+						name = "匿名用户" + idStr
+					}
+					register := &module_register.RegisterModel{
+						UserId:     loginRequest.AnonymousUserId,
+						Name:       name,
+						Account:    "anonymous" + idStr,
+						Email:      "anonymous" + idStr + "@anonymous.com",
+						Password:   password,
+						SourceType: 1,
+						Ip:         c.ClientIP(),
+					}
+					_, err = this_.registerService.Register(register)
+					if err != nil {
+						return
+					}
+				}
+				loginUser, err = this_.userService.Get(loginRequest.AnonymousUserId)
 				if err != nil {
 					return
 				}
@@ -122,7 +154,7 @@ func (this_ *Api) apiLogin(request *base.RequestBean, c *gin.Context) (res inter
 		loginId = login.LoginId
 	}
 
-	res, err = this_.getJWTStr(loginId, loginUser)
+	res, err = this_.getJWTStr(loginId, loginUser, isAnonymous)
 	if err != nil {
 		return
 	}
@@ -188,18 +220,19 @@ func (this_ *Api) getJWT(c *gin.Context) *base.JWTBean {
 	return res
 }
 
-func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) (jwtStr string, err error) {
+func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel, isAnonymous bool) (jwtStr string, err error) {
 	if user == nil {
 		err = errors.New("用户信息不存在")
 		return
 	}
 	jwt := &base.JWTBean{
-		Sign:    util.GetUUID(),
-		UserId:  user.UserId,
-		Name:    user.Name,
-		Account: user.Account,
-		Time:    util.GetNowMilli(),
-		LoginId: loginId,
+		Sign:        util.GetUUID(),
+		UserId:      user.UserId,
+		Name:        user.Name,
+		Account:     user.Account,
+		Time:        util.GetNowMilli(),
+		LoginId:     loginId,
+		IsAnonymous: isAnonymous,
 	}
 	jwtJSONBytes, err := json.Marshal(jwt)
 	if err != nil {
@@ -218,9 +251,10 @@ func (this_ *Api) getJWTStr(loginId int64, user *module_user.UserModel) (jwtStr 
 }
 
 type SessionResponse struct {
-	User   *module_user.UserModel `json:"user,omitempty"`
-	Powers []string               `json:"powers,omitempty"`
-	JWT    string                 `json:"JWT,omitempty"`
+	User        *module_user.UserModel `json:"user,omitempty"`
+	Powers      []string               `json:"powers,omitempty"`
+	JWT         string                 `json:"JWT,omitempty"`
+	IsAnonymous bool                   `json:"isAnonymous,omitempty"`
 }
 
 func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -228,11 +262,13 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 
 	var userId int64 = 0
 	var loginId int64 = 0
+	var isAnonymous bool
 
 	if this_.IsServer {
 		if request.JWT != nil {
 			userId = request.JWT.UserId
 			loginId = request.JWT.LoginId
+			isAnonymous = request.JWT.IsAnonymous
 		}
 	} else {
 		userId = this_.Setting.StandAloneUserId
@@ -246,9 +282,10 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		response.User = find
 	}
 	response.Powers = this_.getPowersByUserId(userId)
+	response.IsAnonymous = isAnonymous
 
 	if response.User != nil {
-		response.JWT, err = this_.getJWTStr(loginId, response.User)
+		response.JWT, err = this_.getJWTStr(loginId, response.User, isAnonymous)
 		if err != nil {
 			return
 		}

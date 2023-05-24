@@ -165,7 +165,11 @@ func (this_ *ToolboxService) CheckPower(requestBean *base.RequestBean) (err erro
 	if v := requestBean.GetExtend("toolboxModel"); v != nil {
 		find := v.(*ToolboxModel)
 		if find.UserId != 0 {
-			if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
+
+			// 如果 开启 工具箱 共享 则不验证用户 所有用户都可以使用
+			if this_.Setting.ToolboxShare {
+
+			} else if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
 				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
 				return
 			}
