@@ -7,6 +7,7 @@ import (
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/util"
 	"regexp"
+	"sync"
 )
 
 func newArgFormat() (res *argFormat, err error) {
@@ -27,12 +28,17 @@ func newArgFormat() (res *argFormat, err error) {
 type argFormat struct {
 	runtime       *goja.Runtime
 	scriptContext map[string]interface{}
+	lock          sync.Mutex
 }
 
 func (this_ *argFormat) scriptValue(script string, param *task.ExecutorParam) (res string, err error) {
 	if script == "" {
 		return
 	}
+
+	this_.lock.Lock()
+	defer this_.lock.Unlock()
+
 	if param == nil {
 		param = &task.ExecutorParam{}
 	}
