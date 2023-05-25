@@ -48,14 +48,17 @@ func (this_ *Server) toStatic(path string, c *gin.Context) bool {
 }
 
 func (this_ *Server) setHeaderByName(name string, c *gin.Context) {
-	c.Header("Cache-Control", "max-age=3600")
 	if strings.HasSuffix(name, ".html") {
 		c.Header("Content-Type", "text/html")
 		c.Header("Cache-Control", "no-cache")
 	} else if strings.HasSuffix(name, ".css") {
 		c.Header("Content-Type", "text/css")
+		// max-age 缓存 过期时间 秒为单位
+		c.Header("Cache-Control", "max-age=31536000")
 	} else if strings.HasSuffix(name, ".js") {
 		c.Header("Content-Type", "application/javascript")
+		// max-age 缓存 过期时间 秒为单位
+		c.Header("Cache-Control", "max-age=31536000")
 	}
 }
 
