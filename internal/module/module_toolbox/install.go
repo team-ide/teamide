@@ -252,8 +252,27 @@ CREATE TABLE ` + TableToolboxQuickCommand + ` (
 				},
 			},
 		},
-
 		/** 工具表添加顺序号 结束 **/
+
+		/** 工具表 添加 可见性 开始**/
+		{
+			Version: "1.0.4",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolbox + `]添加可见性[visibility]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN visibility int(3) DEFAULT '2' COMMENT '可见性' AFTER sequence;`,
+					`ALTER TABLE ` + TableToolbox + ` ADD INDEX ` + TableToolbox + `_index_visibility (visibility);`,
+					`UPDATE ` + TableToolbox + ` SET visibility=2 WHERE visibility=0 OR visibility IS NULL;`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD visibility int(3) DEFAULT '2';`,
+					`CREATE INDEX ` + TableToolbox + `_index_visibility on ` + TableToolbox + ` (visibility);`,
+					`UPDATE ` + TableToolbox + ` SET visibility=2 WHERE visibility=0 OR visibility IS NULL;`,
+				},
+			},
+		},
+		/** 工具表 添加 可见性 结束**/
 	}
 
 }

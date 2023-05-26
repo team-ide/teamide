@@ -33,6 +33,7 @@ type ToolboxModel struct {
 	Comment      string    `json:"comment,omitempty"`
 	Option       string    `json:"option,omitempty"`
 	UserId       int64     `json:"userId,omitempty"`
+	Visibility   int       `json:"visibility,omitempty"`
 	DeleteUserId int64     `json:"deleteUserId,omitempty"`
 	Deleted      int8      `json:"deleted,omitempty"`
 	CreateTime   time.Time `json:"createTime,omitempty"`

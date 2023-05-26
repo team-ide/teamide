@@ -45,11 +45,21 @@ func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error)
 	return
 }
 
-// Query 查询
-func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
+var visibilityOpen = 1
+
+// QueryVisibility 查询 可见工具
+func (this_ *ToolboxService) QueryVisibility(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
 
 	var values []interface{}
 	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 `
+	sql += " AND ("
+	sql += " visibility = ?"
+	values = append(values, visibilityOpen)
+	if toolbox.UserId != 0 {
+		sql += " OR userId = ?"
+		values = append(values, toolbox.UserId)
+	}
+	sql += " ) "
 	if toolbox.ToolboxType != "" {
 		sql += " AND toolboxType = ?"
 		values = append(values, toolbox.ToolboxType)
@@ -57,10 +67,6 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 	if toolbox.GroupId != 0 {
 		sql += " AND groupId = ?"
 		values = append(values, toolbox.GroupId)
-	}
-	if toolbox.UserId != 0 {
-		sql += " AND userId = ?"
-		values = append(values, toolbox.UserId)
 	}
 	if toolbox.Name != "" {
 		sql += " AND name like ?"
@@ -77,11 +83,19 @@ func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, 
 	return
 }
 
-// Count 查询
-func (this_ *ToolboxService) Count(toolbox *ToolboxModel) (res int64, err error) {
+// CountVisibility 查询
+func (this_ *ToolboxService) CountVisibility(toolbox *ToolboxModel) (res int64, err error) {
 
 	var values []interface{}
 	sql := `SELECT COUNT(1) FROM ` + TableToolbox + ` WHERE deleted=2 `
+	sql += " AND ("
+	sql += " visibility = ?"
+	values = append(values, visibilityOpen)
+	if toolbox.UserId != 0 {
+		sql += " OR userId = ?"
+		values = append(values, toolbox.UserId)
+	}
+	sql += " ) "
 	if toolbox.ToolboxType != "" {
 		sql += " AND toolboxType = ?"
 		values = append(values, toolbox.ToolboxType)
@@ -89,10 +103,6 @@ func (this_ *ToolboxService) Count(toolbox *ToolboxModel) (res int64, err error)
 	if toolbox.GroupId != 0 {
 		sql += " AND groupId = ?"
 		values = append(values, toolbox.GroupId)
-	}
-	if toolbox.UserId != 0 {
-		sql += " AND userId = ?"
-		values = append(values, toolbox.UserId)
 	}
 	if toolbox.Name != "" {
 		sql += " AND name like ?"
@@ -161,8 +171,8 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 		toolbox.CreateTime = time.Now()
 	}
 
-	var columns = "toolboxId, toolboxType, name, comment, option, userId, createTime"
-	var values = "?, ?, ?, ?, ?, ?, ?"
+	var columns = "toolboxId, toolboxType, name, comment, visibility, option, userId, createTime"
+	var values = "?, ?, ?, ?, ?, ?, ?, ?"
 
 	if toolbox.GroupId > 0 {
 		columns += ", groupId"
@@ -176,7 +186,7 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 
 	sql := `INSERT INTO ` + TableToolbox + `(` + columns + `) VALUES (` + values + `) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolbox.ToolboxId, toolbox.ToolboxType, toolbox.Name, toolbox.Comment, toolbox.Option, toolbox.UserId, toolbox.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolbox.ToolboxId, toolbox.ToolboxType, toolbox.Name, toolbox.Comment, toolbox.Visibility, toolbox.Option, toolbox.UserId, toolbox.CreateTime})
 	if err != nil {
 		this_.Logger.Error("Insert Error", zap.Error(err))
 		return
@@ -375,6 +385,11 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 	if toolbox.Option != "" {
 		sql += "option=?,"
 		values = append(values, toolbox.Option)
+	}
+
+	if toolbox.Visibility != 0 {
+		sql += "visibility=?,"
+		values = append(values, toolbox.Visibility)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")

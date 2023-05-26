@@ -21,14 +21,14 @@ func (this_ *ToolboxApi) count(requestBean *base.RequestBean, c *gin.Context) (r
 	}
 	response := &CountResponse{}
 
-	response.Count, err = this_.ToolboxService.Count(&ToolboxModel{
+	response.Count, err = this_.ToolboxService.CountVisibility(&ToolboxModel{
 		UserId: requestBean.JWT.UserId,
 	})
 	if err != nil {
 		return
 	}
 
-	response.Count += int64(len(Others))
+	//response.Count += int64(len(Others))
 
 	res = response
 	return
@@ -50,17 +50,10 @@ func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (re
 	}
 	response := &ListResponse{}
 
-	// 如果 开启 工具箱 共享 则可以 使用所有工具
-	if this_.Setting.ToolboxShare {
-		response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
-			ToolboxType: request.ToolboxType,
-		})
-	} else {
-		response.ToolboxList, err = this_.ToolboxService.Query(&ToolboxModel{
-			UserId:      requestBean.JWT.UserId,
-			ToolboxType: request.ToolboxType,
-		})
-	}
+	response.ToolboxList, err = this_.ToolboxService.QueryVisibility(&ToolboxModel{
+		UserId:      requestBean.JWT.UserId,
+		ToolboxType: request.ToolboxType,
+	})
 	if err != nil {
 		return
 	}
@@ -298,12 +291,9 @@ func (this_ *ToolboxApi) open(requestBean *base.RequestBean, c *gin.Context) (re
 		if err != nil {
 			return
 		}
-		if find != nil && find.UserId != 0 {
-			// 如果 开启 工具箱 共享 则不验证用户 所有用户都可以使用
-			if this_.Setting.ToolboxShare {
-
-			} else if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
-				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
+		if find != nil {
+			err = this_.ToolboxService.CheckToolboxPower(requestBean, find)
+			if err != nil {
 				return
 			}
 		}

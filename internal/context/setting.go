@@ -21,7 +21,6 @@ func NewSetting() (setting *Setting) {
 
 	setting.LogRetentionDays = 0
 
-	setting.ToolboxShare = false
 	return
 }
 
@@ -37,8 +36,6 @@ type Setting struct {
 	FileManagerNodeEnable  bool `json:"fileManagerNodeEnable"`  // 启用 节点文件管理器 默认启用
 
 	LogRetentionDays int `json:"logRetentionDays"` // 日志 保留天数 默认 0 一直保留
-
-	ToolboxShare bool `json:"toolboxShare"` // 启用 开启后 所有人都可以看到所有工具配置
 
 	StandAloneUserId int64 `json:"standAloneUserId"` // StandAloneUserId 单机版本 用户 ID
 }
@@ -73,10 +70,6 @@ func (this_ *Setting) Set(name string, value interface{}) (find bool, err error)
 			sv = "0"
 		}
 		this_.LogRetentionDays, err = strconv.Atoi(sv)
-		break
-
-	case "toolboxShare":
-		this_.ToolboxShare = util.IsTrue(value)
 		break
 
 	case "standAloneUserId":

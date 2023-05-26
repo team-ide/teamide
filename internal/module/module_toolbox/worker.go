@@ -161,18 +161,30 @@ type BindConfigRequest struct {
 	ToolboxType string `json:"toolboxType,omitempty"`
 }
 
+func (this_ *ToolboxService) CheckToolboxPower(requestBean *base.RequestBean, toolboxModel *ToolboxModel) (err error) {
+
+	if toolboxModel.UserId != 0 {
+		// 如果是 开放的 则都可以操作
+		if toolboxModel.Visibility == visibilityOpen {
+
+		} else {
+			// 验证创建者是否是当前用户
+			if requestBean.JWT == nil || toolboxModel.UserId != requestBean.JWT.UserId {
+				err = errors.New("工具[" + toolboxModel.Name + "]不属于当前用户，无法操作")
+				return
+			}
+		}
+
+	}
+	return
+}
+
 func (this_ *ToolboxService) CheckPower(requestBean *base.RequestBean) (err error) {
 	if v := requestBean.GetExtend("toolboxModel"); v != nil {
 		find := v.(*ToolboxModel)
-		if find.UserId != 0 {
-
-			// 如果 开启 工具箱 共享 则不验证用户 所有用户都可以使用
-			if this_.Setting.ToolboxShare {
-
-			} else if requestBean.JWT == nil || find.UserId != requestBean.JWT.UserId {
-				err = errors.New("工具[" + find.Name + "]不属于当前用户，无法操作")
-				return
-			}
+		err = this_.CheckToolboxPower(requestBean, find)
+		if err != nil {
+			return
 		}
 	}
 	return
