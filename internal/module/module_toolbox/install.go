@@ -261,12 +261,12 @@ CREATE TABLE ` + TableToolboxQuickCommand + ` (
 			Stage:   `工具箱[` + TableToolbox + `]添加可见性[visibility]`,
 			Sql: &install.StageSqlModel{
 				Mysql: []string{
-					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN visibility int(3) DEFAULT '2' COMMENT '可见性' AFTER sequence;`,
+					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN visibility int(10) DEFAULT '2' COMMENT '可见性' AFTER sequence;`,
 					`ALTER TABLE ` + TableToolbox + ` ADD INDEX ` + TableToolbox + `_index_visibility (visibility);`,
 					`UPDATE ` + TableToolbox + ` SET visibility=2 WHERE visibility=0 OR visibility IS NULL;`,
 				},
 				Sqlite: []string{
-					`ALTER TABLE ` + TableToolbox + ` ADD visibility int(3) DEFAULT '2';`,
+					`ALTER TABLE ` + TableToolbox + ` ADD visibility int(10) DEFAULT '2';`,
 					`CREATE INDEX ` + TableToolbox + `_index_visibility on ` + TableToolbox + ` (visibility);`,
 					`UPDATE ` + TableToolbox + ` SET visibility=2 WHERE visibility=0 OR visibility IS NULL;`,
 				},
