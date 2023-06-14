@@ -19,15 +19,15 @@ type invokeExecutor struct {
 	workerClientLock sync.Mutex
 	service          *thrift.Workspace
 	taskDir          string
-	paramList        []*thrift.MethodParam
+	paramList        *[]*thrift.MethodParam
 	paramListLock    sync.Mutex
 }
 
-func (this_ *invokeExecutor) getAndCleanParamList() (paramList []*thrift.MethodParam) {
+func (this_ *invokeExecutor) getAndCleanParamList() (paramList *[]*thrift.MethodParam) {
 	this_.paramListLock.Lock()
 	defer this_.paramListLock.Unlock()
 	paramList = this_.paramList
-	this_.paramList = []*thrift.MethodParam{}
+	this_.paramList = &[]*thrift.MethodParam{}
 	return
 }
 
@@ -35,7 +35,7 @@ func (this_ *invokeExecutor) addParam(param *thrift.MethodParam) {
 	this_.paramListLock.Lock()
 	defer this_.paramListLock.Unlock()
 
-	this_.paramList = append(this_.paramList, param)
+	*this_.paramList = append(*this_.paramList, param)
 	return
 }
 

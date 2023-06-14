@@ -92,8 +92,7 @@ type BaseRequest struct {
 	Duration      int      `json:"duration,omitempty"`
 	Frequency     int      `json:"frequency,omitempty"`
 	Timeout       int      `json:"timeout,omitempty"`
-	Minute        bool     `json:"minute,omitempty"`
-	Second        bool     `json:"second,omitempty"`
+	CountSecond   int      `json:"countSecond,omitempty"` // 统计间隔秒 如 每秒统计 输入 1 默认 10 秒统计
 
 	ProtocolFactory string `json:"protocolFactory,omitempty"`
 	Buffered        bool   `json:"buffered,omitempty"`
@@ -299,6 +298,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 			filename:     filename,
 			args:         args,
 			workerClient: make(map[int]*thrift.ServiceClient),
+			paramList:    &[]*thrift.MethodParam{},
 			service:      service,
 		}
 		t, err = task.New(&task.Options{
@@ -310,6 +310,9 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		})
 		if err != nil {
 			return
+		}
+		if request.CountSecond > 0 {
+			t.Metric.SetCountSecond(request.CountSecond)
 		}
 		executor.taskDir = parentDir + "" + t.Key
 		_ = this_.saveTaskInfo(executor, request, t)
@@ -368,21 +371,16 @@ func (this_ *api) saveTaskInfo(executor *invokeExecutor, request *BaseRequest, t
 	data["request"] = request
 	data["task"] = task
 	data["taskKey"] = task.Key
-	c := task.Metric.Count()
-	topItems := c.TopItems
-	c.TopItems = []*metric.Item{}
+	c := task.Metric.GetCount()
 	data["metric"] = c
 	bs, _ = json.MarshalIndent(data, "", "  ")
 	err = util.WriteFile(executor.taskDir+"/info.json", bs)
 	if err != nil {
 		return
 	}
-	c.TopItems = topItems
 	bs, _ = json.MarshalIndent(c, "", "  ")
 	_ = util.WriteFile(executor.taskDir+"/metric.json", bs)
-	bs, _ = json.MarshalIndent(task.Metric.CountMinute(), "", "  ")
-	_ = util.WriteFile(executor.taskDir+"/metric.minute.json", bs)
-	bs, _ = json.MarshalIndent(task.Metric.CountSecond(), "", "  ")
+	bs, _ = json.MarshalIndent(task.Metric.GetSecondCounts(), "", "  ")
 	_ = util.WriteFile(executor.taskDir+"/metric.second.json", bs)
 
 	paramList := executor.getAndCleanParamList()
@@ -395,7 +393,7 @@ func (this_ *api) saveTaskInfo(executor *invokeExecutor, request *BaseRequest, t
 	if recordsFile != nil {
 		defer func() { _ = recordsFile.Close() }()
 
-		for _, param := range paramList {
+		for _, param := range *paramList {
 			param.ArgFields = nil
 			param.ResultType = nil
 			param.ExceptionFields = nil
@@ -414,6 +412,7 @@ func (this_ *api) loadTask(taskDir string) (data map[string]interface{}, err err
 		}
 	}()
 	data = map[string]interface{}{}
+	data["isEnd"] = true
 
 	var bs []byte
 	if ex, _ := util.PathExists(taskDir + "/info.json"); ex {
@@ -423,6 +422,9 @@ func (this_ *api) loadTask(taskDir string) (data map[string]interface{}, err err
 		err = util.JSONDecodeUseNumber(bs, &data)
 		if err != nil {
 			return
+		}
+		if data["metric"] == nil {
+			data["metric"] = &metric.Count{}
 		}
 		if data["taskKey"] != nil {
 			taskKey := util.GetStringValue(data["taskKey"])
@@ -597,6 +599,12 @@ func (this_ *api) invokeStop(requestBean *base.RequestBean, c *gin.Context) (res
 
 	if t != nil {
 		t.Stop()
+		for {
+			find := getTask(request.TaskKey)
+			if find == nil {
+				break
+			}
+		}
 	}
 	return
 }
@@ -633,25 +641,14 @@ func (this_ *api) invokeMetric(requestBean *base.RequestBean, c *gin.Context) (r
 	taskDir := taskParentDir + request.TaskKey
 	var data []*metric.Count
 	var bs []byte
-	if request.Minute {
-		if ex, _ := util.PathExists(taskDir + "/metric.minute.json"); ex {
-			if bs, err = os.ReadFile(taskDir + "/metric.minute.json"); err != nil {
-				return
-			}
-			err = util.JSONDecodeUseNumber(bs, &data)
-			if err != nil {
-				return
-			}
+
+	if ex, _ := util.PathExists(taskDir + "/metric.second.json"); ex {
+		if bs, err = os.ReadFile(taskDir + "/metric.second.json"); err != nil {
+			return
 		}
-	} else if request.Second {
-		if ex, _ := util.PathExists(taskDir + "/metric.second.json"); ex {
-			if bs, err = os.ReadFile(taskDir + "/metric.second.json"); err != nil {
-				return
-			}
-			err = util.JSONDecodeUseNumber(bs, &data)
-			if err != nil {
-				return
-			}
+		err = util.JSONDecodeUseNumber(bs, &data)
+		if err != nil {
+			return
 		}
 	}
 	res = data
