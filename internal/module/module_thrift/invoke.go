@@ -1,11 +1,16 @@
 package module_thrift
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
 	go_thrift "github.com/apache/thrift/lib/go/thrift"
 	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/thrift"
+	"github.com/team-ide/go-tool/util"
 	"golang.org/x/net/context"
+	"io/fs"
+	"os"
 	"sync"
 	"time"
 )
@@ -19,26 +24,110 @@ type invokeExecutor struct {
 	workerClientLock sync.Mutex
 	service          *thrift.Workspace
 	taskDir          string
-	paramList        *[]*thrift.MethodParam
 	paramListLock    sync.Mutex
+	recordsFile      *os.File
+	paramList        []*thrift.MethodParam
+	t                *task.Task
 }
 
-func (this_ *invokeExecutor) getAndCleanParamList() (paramList *[]*thrift.MethodParam) {
+func (this_ *invokeExecutor) startSaveRecords() {
+	if !this_.SaveRecords {
+		return
+	}
+	defer func() {
+		this_.doSaveRecords()
+		if this_.recordsFile != nil {
+			_ = this_.recordsFile.Close()
+		}
+	}()
+	go func() {
+		for !this_.t.IsEnd {
+			time.Sleep(time.Millisecond * 500)
+			this_.doSaveRecords()
+		}
+	}()
+}
+
+func (this_ *invokeExecutor) doSaveRecords() {
+	params := this_.getAndCleanParams()
+	size := len(params)
+	for size > 0 {
+		if size > 10000 {
+			this_.saveRecords(params[0:10000])
+			params = params[10000:]
+			size = len(params)
+		} else {
+			this_.saveRecords(params)
+			break
+		}
+	}
+}
+
+func (this_ *invokeExecutor) getAndCleanParams() (params []*thrift.MethodParam) {
 	this_.paramListLock.Lock()
 	defer this_.paramListLock.Unlock()
-	paramList = this_.paramList
-	this_.paramList = &[]*thrift.MethodParam{}
+	params = this_.paramList
+	this_.paramList = []*thrift.MethodParam{}
 	return
 }
 
 func (this_ *invokeExecutor) addParam(param *thrift.MethodParam) {
+
+	if !this_.SaveRecords {
+		return
+	}
+
 	this_.paramListLock.Lock()
 	defer this_.paramListLock.Unlock()
 
-	*this_.paramList = append(*this_.paramList, param)
+	this_.paramList = append(this_.paramList, param)
+
 	return
 }
 
+func (this_ *invokeExecutor) saveRecords(params []*thrift.MethodParam) {
+
+	if !this_.SaveRecords {
+		return
+	}
+
+	if this_.recordsFile == nil {
+		ex, err := util.PathExists(this_.taskDir)
+		if err != nil {
+			return
+		}
+		if !ex {
+			err = os.MkdirAll(this_.taskDir, fs.ModePerm)
+		}
+		if ex, _ = util.PathExists(this_.taskDir + "/records.txt"); ex {
+			this_.recordsFile, _ = os.OpenFile(this_.taskDir+"/records.txt", os.O_WRONLY|os.O_APPEND, 0666)
+		} else {
+			this_.recordsFile, _ = os.Create(this_.taskDir + "/records.txt")
+		}
+	}
+	if this_.recordsFile == nil {
+		return
+	}
+	writer := bufio.NewWriter(this_.recordsFile)
+	for _, param := range params {
+		param.ArgFields = nil
+		param.ResultType = nil
+		param.ExceptionFields = nil
+		bs, _ := json.Marshal(param)
+
+		_, err := writer.Write(bs)
+		if err != nil {
+			if this_.recordsFile != nil {
+				_ = this_.recordsFile.Close()
+			}
+			this_.recordsFile = nil
+			break
+		}
+		_ = writer.WriteByte('\n')
+	}
+	_ = writer.Flush()
+	return
+}
 func (this_ *invokeExecutor) stop() {
 	this_.workerClientLock.Lock()
 	defer this_.workerClientLock.Unlock()
@@ -135,6 +224,7 @@ func (this_ *invokeExecutor) Before(param *task.ExecutorParam) (err error) {
 
 func (this_ *invokeExecutor) Execute(param *task.ExecutorParam) (err error) {
 	methodParam := param.Extend.(*thrift.MethodParam)
+
 	client, err := this_.getClient(param)
 	if err != nil {
 		methodParam.Error = err.Error()
@@ -146,11 +236,13 @@ func (this_ *invokeExecutor) Execute(param *task.ExecutorParam) (err error) {
 	if err != nil {
 		methodParam.Error = err.Error()
 	}
-	this_.addParam(methodParam)
 	return
 }
 
 func (this_ *invokeExecutor) After(param *task.ExecutorParam) (err error) {
 	//util.Logger.Info("test After", zap.Any("param", param))
+	methodParam := param.Extend.(*thrift.MethodParam)
+
+	this_.addParam(methodParam)
 	return
 }

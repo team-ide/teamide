@@ -93,6 +93,8 @@ type BaseRequest struct {
 	Frequency     int      `json:"frequency,omitempty"`
 	Timeout       int      `json:"timeout,omitempty"`
 	CountSecond   int      `json:"countSecond,omitempty"` // 统计间隔秒 如 每秒统计 输入 1 默认 10 秒统计
+	SaveRecords   bool     `json:"saveRecords,omitempty"`
+	CountTop      bool     `json:"countTop,omitempty"`
 
 	ProtocolFactory string `json:"protocolFactory,omitempty"`
 	Buffered        bool   `json:"buffered,omitempty"`
@@ -298,7 +300,6 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 			filename:     filename,
 			args:         args,
 			workerClient: make(map[int]*thrift.ServiceClient),
-			paramList:    &[]*thrift.MethodParam{},
 			service:      service,
 		}
 		t, err = task.New(&task.Options{
@@ -314,7 +315,11 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 		if request.CountSecond > 0 {
 			t.Metric.SetCountSecond(request.CountSecond)
 		}
+		if request.CountTop {
+			t.Metric.SetCountTop(request.CountTop)
+		}
 		executor.taskDir = parentDir + "" + t.Key
+		executor.t = t
 		_ = this_.saveTaskInfo(executor, request, t)
 		go func() {
 			defer func() {
@@ -328,6 +333,7 @@ func (this_ *api) invokeByServerAddress(requestBean *base.RequestBean, c *gin.Co
 				time.Sleep(time.Second * 1)
 			}
 		}()
+		executor.startSaveRecords()
 		go t.Run()
 		addTask(t)
 	}
@@ -373,35 +379,15 @@ func (this_ *api) saveTaskInfo(executor *invokeExecutor, request *BaseRequest, t
 	data["taskKey"] = task.Key
 	c := task.Metric.GetCount()
 	data["metric"] = c
-	bs, _ = json.MarshalIndent(data, "", "  ")
+	bs, _ = json.Marshal(data)
 	err = util.WriteFile(executor.taskDir+"/info.json", bs)
 	if err != nil {
 		return
 	}
-	bs, _ = json.MarshalIndent(c, "", "  ")
+	bs, _ = json.Marshal(c)
 	_ = util.WriteFile(executor.taskDir+"/metric.json", bs)
-	bs, _ = json.MarshalIndent(task.Metric.GetSecondCounts(), "", "  ")
+	bs, _ = json.Marshal(task.Metric.GetSecondCounts())
 	_ = util.WriteFile(executor.taskDir+"/metric.second.json", bs)
-
-	paramList := executor.getAndCleanParamList()
-	var recordsFile *os.File
-	if ex, _ = util.PathExists(executor.taskDir + "/records.txt"); ex {
-		recordsFile, _ = os.OpenFile(executor.taskDir+"/records.txt", os.O_WRONLY|os.O_APPEND, 0666)
-	} else {
-		recordsFile, _ = os.Create(executor.taskDir + "/records.txt")
-	}
-	if recordsFile != nil {
-		defer func() { _ = recordsFile.Close() }()
-
-		for _, param := range *paramList {
-			param.ArgFields = nil
-			param.ResultType = nil
-			param.ExceptionFields = nil
-			bs, _ = json.Marshal(param)
-			_, _ = recordsFile.Write(bs)
-			_, _ = recordsFile.WriteString("\n")
-		}
-	}
 
 	return
 }
@@ -536,6 +522,8 @@ func (this_ *api) downloadRecords(requestBean *base.RequestBean, c *gin.Context)
 		}
 		defer func() { _ = f.Close() }()
 		_, err = io.Copy(c.Writer, f)
+	} else {
+		_, err = c.Writer.WriteString("暂无执行记录")
 	}
 	c.Status(http.StatusOK)
 	return

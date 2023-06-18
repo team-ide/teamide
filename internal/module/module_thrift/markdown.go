@@ -74,9 +74,15 @@ func groupToMarkdown(index int, group []map[string]interface{}) (content string)
 
 	content += fmt.Sprintf("\n\n")
 	content += fmt.Sprintf("#### 测试记录  \n\n")
+	content += fmt.Sprintf("* 任务用时：任务的开始时间~结束时间耗时； \n")
+	content += fmt.Sprintf("* 执行用时：单个线程执行用时累计，取最大；（这里的用时是调用接口耗时，去除了额外开销，所以执行用时小于任务执行时间，两者相差越大，则表示额外开销越多） \n")
+	content += fmt.Sprintf("* 累计用时：所有执行用时累计 \n")
+	content += fmt.Sprintf("* TPS：总次数 / 执行用时 \n")
 
-	content += fmt.Sprintf("| 任务时间 | 总/成功/失败 |执行用时|累计用时 |TPS |Avg |Min |Max |T50 |T80 | T90 | T99 |  \n")
-	content += fmt.Sprintf("| :------: | :------: |:------: |:------:|:------: |:------: |:------: |:------: |:------: |:------: | :------: | :------: |  \n")
+	content += fmt.Sprintf("\n")
+
+	content += fmt.Sprintf("| 任务时间 | 总/成功/失败 |任务用时|执行用时|累计用时 |TPS |Avg |Min |Max |T50 |T80 | T90 | T99 |  \n")
+	content += fmt.Sprintf("| :------: | :------: |:------: |:------: |:------:|:------: |:------: |:------: |:------: |:------: |:------: | :------: | :------: |  \n")
 
 	for _, task := range group {
 		bs, _ = json.Marshal(task["metric"])
@@ -90,6 +96,7 @@ func groupToMarkdown(index int, group []map[string]interface{}) (content string)
 		)
 		content += fmt.Sprintf(" %d <br> <font color='green'>%d</font> <br> <font color='red'>%d</font> |", count.Count, count.SuccessCount, count.ErrorCount)
 		content += fmt.Sprintf(" %s |", toTime(count.TotalTime/1000000))
+		content += fmt.Sprintf(" %s |", toTime(count.ExecuteTime/1000000))
 		content += fmt.Sprintf(" %s |", toTime(count.UseTime/1000000))
 		content += fmt.Sprintf(" %s |", count.Tps)
 		content += fmt.Sprintf(" %s |", count.Avg)
@@ -106,7 +113,7 @@ func groupToMarkdown(index int, group []map[string]interface{}) (content string)
 }
 
 type tS struct {
-	Size float64
+	Size int64
 	Unit string
 }
 
@@ -121,18 +128,17 @@ var (
 
 func toTime(size int64) (v string) {
 
-	var timeUnit string
-	var timeV = float64(size)
+	var timeV = size
 
 	for _, s := range tList {
-		if timeUnit == "" && timeV >= s.Size {
-			timeV = timeV / s.Size
-			timeUnit = s.Unit
+		if timeV >= s.Size {
+			tV := timeV / s.Size
+			timeV -= tV * s.Size
+			v += fmt.Sprintf("%d%s", tV, s.Unit)
 		}
 	}
-	if timeUnit == "" {
-		timeUnit = "毫秒"
+	if timeV > 0 {
+		v += fmt.Sprintf("%d%s", timeV, "毫秒")
 	}
-	v = fmt.Sprintf("%.2f%s", timeV, timeUnit)
 	return
 }
