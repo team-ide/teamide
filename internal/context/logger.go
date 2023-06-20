@@ -42,7 +42,19 @@ func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
 			enc.AppendFloat64(float64(d) / float64(time.Second))
 		},
 		EncodeCaller: func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString(caller.TrimmedPath())
+			str := caller.TrimmedPath()
+			method := caller.Function
+			dot := strings.LastIndex(method, ".")
+			if dot > 0 {
+				method = method[dot+1:]
+				index := strings.LastIndex(str, ":")
+				if index > 0 {
+					str = str[0:index] + ":" + method + str[index:]
+				} else {
+					str += ":" + method
+				}
+			}
+			enc.AppendString(str)
 		},
 		EncodeName: func(s string, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendString(strings.ToUpper(s))
