@@ -1,10 +1,16 @@
 package module_terminal
 
 import (
+	"bufio"
 	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
+	"io/fs"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,41 +22,41 @@ import (
 	"time"
 )
 
-func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
-	return &worker{
+func NewWorkerFactory(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *WorkerFactory {
+	return &WorkerFactory{
 		ServerContext:      toolboxService_.ServerContext,
 		toolboxService:     toolboxService_,
 		nodeService:        nodeService_,
 		terminalLogService: NewTerminalLogService(toolboxService_.ServerContext),
-		serviceCache:       make(map[string]terminal.Service),
+		workerCache:        make(map[string]*Worker),
 	}
 }
 
-type worker struct {
+type WorkerFactory struct {
 	*context.ServerContext
 	toolboxService     *module_toolbox.ToolboxService
 	nodeService        *module_node.NodeService
 	terminalLogService *TerminalLogService
-	serviceCache       map[string]terminal.Service
-	serviceCacheLock   sync.Mutex
+	workerCache        map[string]*Worker
+	workerCacheLock    sync.Mutex
 }
 
-func (this_ *worker) GetService(key string) (res terminal.Service) {
-	this_.serviceCacheLock.Lock()
-	defer this_.serviceCacheLock.Unlock()
+func (this_ *WorkerFactory) GetService(key string) (res *Worker) {
+	this_.workerCacheLock.Lock()
+	defer this_.workerCacheLock.Unlock()
 
-	res = this_.serviceCache[key]
+	res = this_.workerCache[key]
 	return
 }
 
-func (this_ *worker) createService(place string, placeId string) (service terminal.Service, command string, err error) {
+func (this_ *WorkerFactory) createService(place string, placeId string, workerId string) (worker *Worker, command string, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
 			this_.Logger.Error("createService error", zap.Any("error", e))
 		}
 	}()
-
+	var service terminal.Service
 	switch place {
 	case "local":
 		service = terminal.NewLocalService()
@@ -96,10 +102,18 @@ func (this_ *worker) createService(place string, placeId string) (service termin
 		return
 	}
 
+	worker = &Worker{
+		place:         place,
+		placeId:       placeId,
+		workerId:      workerId,
+		service:       service,
+		WorkerFactory: this_,
+	}
+	worker.init()
 	return
 }
 
-func (this_ *worker) Start(key string, place string, placeId string, size *terminal.Size, ws *websocket.Conn, baseLog *TerminalLogModel) (err error) {
+func (this_ *WorkerFactory) Start(key string, place string, placeId string, workerId string, size *terminal.Size, ws *websocket.Conn, baseLog *TerminalLogModel) (err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -107,24 +121,26 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 		}
 	}()
 
-	this_.serviceCacheLock.Lock()
-	defer this_.serviceCacheLock.Unlock()
+	this_.workerCacheLock.Lock()
+	defer this_.workerCacheLock.Unlock()
 
-	service := this_.serviceCache[key]
-	if service != nil {
+	worker := this_.workerCache[key]
+	if worker != nil {
 		err = errors.New("会话服务[" + key + "]已存在")
 		return
 	}
 	var command string
-	service, command, err = this_.createService(place, placeId)
+	worker, command, err = this_.createService(place, placeId, workerId)
 	if err != nil {
 		return
 	}
-	isWindow, err := service.IsWindows()
+	// 执行配置的命令
+	worker.ws = ws
+	isWindow, err := worker.service.IsWindows()
 	if err != nil {
 		return
 	}
-	err = service.Start(size)
+	err = worker.service.Start(size)
 	if err != nil {
 		return
 	}
@@ -148,7 +164,7 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 					}
 					continue
 				}
-				_, err = service.Write([]byte(c + "\n"))
+				_, err = worker.service.Write([]byte(c + "\n"))
 				if err != nil {
 					this_.Logger.Error("SSH start run line error", zap.Error(err))
 				}
@@ -157,12 +173,40 @@ func (this_ *worker) Start(key string, place string, placeId string, size *termi
 
 	}
 
-	// 执行配置的命令
+	go worker.startReadWS(isWindow, baseLog)
+	go worker.startReadService(isWindow)
 
-	go this_.startReadWS(key, isWindow, ws, service, baseLog)
-	go this_.startReadService(key, isWindow, ws, service)
+	this_.workerCache[key] = worker
+	return
+}
 
-	this_.serviceCache[key] = service
+type Worker struct {
+	key      string
+	place    string
+	placeId  string
+	workerId string
+	dir      string
+	*WorkerFactory
+	service        terminal.Service
+	ws             *websocket.Conn
+	commandLogFile *os.File
+}
+
+func (this_ *Worker) init() {
+	dir := this_.GetFilesDir()
+	dir += fmt.Sprintf("%s/toolbox-%s/%s", "toolbox-workers", this_.placeId, this_.workerId) + "/"
+
+	ex, err := util.PathExists(dir)
+	if err != nil {
+		return
+	}
+	if !ex {
+		err = os.MkdirAll(dir, fs.ModePerm)
+	}
+	if err != nil {
+		return
+	}
+	this_.dir = dir
 	return
 }
 
@@ -170,7 +214,7 @@ type logContext struct {
 	commandBytes []byte
 }
 
-func (this_ *worker) onCommand(logContext *logContext, commandBytes []byte, log TerminalLogModel) {
+func (this_ *Worker) onCommand(logContext *logContext, commandBytes []byte, log TerminalLogModel) {
 
 	logContext.commandBytes = append(logContext.commandBytes, commandBytes...)
 
@@ -184,7 +228,58 @@ func (this_ *worker) onCommand(logContext *logContext, commandBytes []byte, log 
 	}
 
 }
-func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, service terminal.Service, baseLog *TerminalLogModel) {
+
+func (this_ *Worker) onServiceRead(bs []byte) {
+	if this_.dir == "" {
+		return
+	}
+	if this_.commandLogFile == nil {
+		ex, err := util.PathExists(this_.dir)
+		if err != nil {
+			return
+		}
+		if !ex {
+			err = os.MkdirAll(this_.dir, fs.ModePerm)
+		}
+		if ex, _ = util.PathExists(this_.dir + "/command.log"); ex {
+			this_.commandLogFile, _ = os.OpenFile(this_.dir+"/command.log", os.O_WRONLY|os.O_APPEND, 0666)
+		} else {
+			this_.commandLogFile, _ = os.Create(this_.dir + "/command.log")
+		}
+	}
+	if this_.commandLogFile == nil {
+		return
+	}
+	str := string(bs)
+	// 配色
+	re, err := regexp.Compile("\u001B\\[[0-9]+[;0-9]*m")
+	if err != nil {
+		this_.Logger.Error("regexp.Compile error", zap.Error(err))
+	} else {
+		str = re.ReplaceAllString(str, "")
+	}
+	str = strings.ReplaceAll(str, "\u001B]0;", "")
+	str = strings.ReplaceAll(str, "\a", "")
+	str = strings.ReplaceAll(str, "\u001B[C", "")
+	if err != nil {
+		this_.Logger.Error("regexp.Compile error", zap.Error(err))
+	} else {
+		str = re.ReplaceAllString(str, "")
+	}
+	writer := bufio.NewWriter(this_.commandLogFile)
+	_, err = writer.WriteString(str)
+
+	if err != nil {
+		if this_.commandLogFile != nil {
+			_ = this_.commandLogFile.Close()
+		}
+		this_.commandLogFile = nil
+		return
+	}
+	_ = writer.Flush()
+}
+
+func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -192,19 +287,19 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 		}
 	}()
 
-	defer func() { this_.stopAll(key, ws, service) }()
+	defer func() { this_.stopAll() }()
 	logContext_ := &logContext{}
 	var buf []byte
 	var readErr error
 	var writeErr error
 	for {
-		_, buf, readErr = ws.ReadMessage()
+		_, buf, readErr = this_.ws.ReadMessage()
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
 		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
 		this_.onCommand(logContext_, buf, *baseLog)
-		_, writeErr = service.Write(buf)
+		_, writeErr = this_.service.Write(buf)
 
 		if writeErr != nil {
 			break
@@ -215,7 +310,7 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 		}
 	}
 
-	if this_.GetService(key) == nil {
+	if this_.GetService(this_.key) == nil {
 		return
 	}
 
@@ -232,23 +327,23 @@ func (this_ *worker) startReadWS(key string, isWindow bool, ws *websocket.Conn, 
 	return
 }
 
-func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.Conn, service terminal.Service) {
+func (this_ *Worker) startReadService(isWindow bool) {
 
 	defer func() {
 		if e := recover(); e != nil {
 			this_.Logger.Error("startReadService error", zap.Any("error", e))
 		}
-		this_.Logger.Info("service read end", zap.Any("key", key))
+		this_.Logger.Info("service read end", zap.Any("key", this_.key))
 	}()
 
-	defer func() { this_.stopAll(key, ws, service) }()
+	defer func() { this_.stopAll() }()
 
 	var n int
 	var buf = make([]byte, 1024*32)
 	var readErr error
 	var writeErr error
 	for {
-		n, readErr = service.Read(buf)
+		n, readErr = this_.service.Read(buf)
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
@@ -260,7 +355,8 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 		//}
 
 		if n > 0 {
-			writeErr = ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+			this_.onServiceRead(buf[:n])
+			writeErr = this_.ws.WriteMessage(websocket.BinaryMessage, buf[:n])
 			if writeErr != nil {
 				break
 			}
@@ -271,7 +367,7 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 		}
 	}
 
-	if this_.GetService(key) == nil {
+	if this_.GetService(this_.key) == nil {
 		return
 	}
 
@@ -288,7 +384,7 @@ func (this_ *worker) startReadService(key string, isWindow bool, ws *websocket.C
 	return
 }
 
-func (this_ *worker) stopService(key string) {
+func (this_ *WorkerFactory) stopService(key string) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -296,19 +392,19 @@ func (this_ *worker) stopService(key string) {
 		}
 	}()
 
-	this_.serviceCacheLock.Lock()
-	defer this_.serviceCacheLock.Unlock()
+	this_.workerCacheLock.Lock()
+	defer this_.workerCacheLock.Unlock()
 
-	service := this_.serviceCache[key]
-	if service == nil {
+	find := this_.workerCache[key]
+	if find == nil {
 		return
 	}
-	delete(this_.serviceCache, key)
+	delete(this_.workerCache, key)
 	this_.Logger.Info("stop service", zap.Any("key", key))
-	service.Stop()
+	find.service.Stop()
 }
 
-func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Service) {
+func (this_ *Worker) stopAll() {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -316,12 +412,15 @@ func (this_ *worker) stopAll(key string, ws *websocket.Conn, service terminal.Se
 		}
 	}()
 
-	this_.Logger.Info("stopAll", zap.Any("key", key))
-	this_.stopService(key)
-	if service != nil {
-		service.Stop()
+	this_.Logger.Info("stopAll", zap.Any("key", this_.key))
+	this_.stopService(this_.key)
+	if this_ != nil {
+		this_.service.Stop()
 	}
-	if ws != nil {
-		_ = ws.Close()
+	if this_.ws != nil {
+		_ = this_.ws.Close()
+	}
+	if this_.commandLogFile != nil {
+		_ = this_.commandLogFile.Close()
 	}
 }

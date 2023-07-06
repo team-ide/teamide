@@ -17,12 +17,12 @@ import (
 )
 
 type api struct {
-	*worker
+	*WorkerFactory
 }
 
 func NewApi(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *api {
 	return &api{
-		worker: NewWorker(toolboxService_, nodeService_),
+		WorkerFactory: NewWorkerFactory(toolboxService_, nodeService_),
 	}
 }
 
@@ -54,14 +54,14 @@ func (this_ *api) key(_ *base.RequestBean, c *gin.Context) (res interface{}, err
 		return
 	}
 
-	service, _, err := this_.createService(request.Place, request.PlaceId)
+	service, _, err := this_.createService(request.Place, request.PlaceId, request.WorkerId)
 	if err != nil {
 		return
 	}
 
 	data := make(map[string]interface{})
 
-	data["isWindows"], err = service.IsWindows()
+	data["isWindows"], err = service.service.IsWindows()
 	if err != nil {
 		return
 	}
@@ -136,7 +136,7 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	baseLog.UserName = request.JWT.Name
 	baseLog.UserAccount = request.JWT.Account
 	baseLog.LoginId = request.JWT.LoginId
-	err = this_.Start(key, place, placeId, &terminal.Size{
+	err = this_.Start(key, place, placeId, workerId, &terminal.Size{
 		Cols: cols,
 		Rows: rows,
 	}, ws, baseLog)
@@ -194,7 +194,7 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 				break
 			}
 			//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-			n, writeErr = service.Write(buf)
+			n, writeErr = service.service.Write(buf)
 			if writeErr != nil {
 				break
 			}
@@ -224,9 +224,10 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 }
 
 type Request struct {
-	Place   string `json:"place,omitempty"`
-	PlaceId string `json:"placeId,omitempty"`
-	Key     string `json:"key,omitempty"`
+	Place    string `json:"place,omitempty"`
+	PlaceId  string `json:"placeId,omitempty"`
+	Key      string `json:"key,omitempty"`
+	WorkerId string `json:"workerId"`
 	*terminal.Size
 }
 
@@ -246,7 +247,7 @@ func (this_ *api) changeSize(_ *base.RequestBean, c *gin.Context) (res interface
 	}
 	service := this_.GetService(request.Key)
 	if service != nil {
-		err = service.ChangeSize(request.Size)
+		err = service.service.ChangeSize(request.Size)
 	}
 	return
 }
