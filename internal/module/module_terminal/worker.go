@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -180,6 +181,82 @@ func (this_ *WorkerFactory) Start(key string, place string, placeId string, work
 	return
 }
 
+func (this_ *WorkerFactory) getParentDir(placeId string) (dir string) {
+	dir = this_.GetFilesDir()
+	dir += fmt.Sprintf("%s/toolbox-%s/", "toolbox-workers", placeId)
+	return
+}
+
+type LogInfo struct {
+	PlaceId  string `json:"placeId"`
+	WorkerId string `json:"workerId"`
+	Path     string `json:"path"`
+	Size     int64  `json:"size"`
+	ModTime  int64  `json:"modTime,omitempty"`
+}
+
+func (this_ *WorkerFactory) getLogs(placeId string) (logs []*LogInfo, err error) {
+	parentDir := this_.getParentDir(placeId)
+
+	ex, _ := util.PathExists(parentDir)
+	if !ex {
+		return
+	}
+
+	fileList, err := os.ReadDir(parentDir)
+	if err != nil {
+		return
+	}
+	var names []string
+	for _, f := range fileList {
+		if !f.IsDir() {
+			continue
+		}
+		names = append(names, f.Name())
+	}
+
+	sort.Slice(names, func(i, j int) bool {
+		return strings.ToLower(names[i]) < strings.ToLower(names[j]) //升序  即前面的值比后面的小 忽略大小写排序
+	})
+	size := len(names)
+	for i := size - 1; i >= 0; i-- {
+		log, _ := this_.getLog(placeId, names[i])
+		if log == nil {
+			continue
+		}
+		logs = append(logs, log)
+	}
+
+	return
+}
+
+func (this_ *WorkerFactory) getLog(placeId string, workerId string) (log *LogInfo, err error) {
+	path := this_.getLogPath(placeId, workerId)
+
+	if ex, _ := util.PathExists(path); !ex {
+		return
+	}
+	stat, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	log = &LogInfo{
+		PlaceId:  placeId,
+		WorkerId: workerId,
+		Size:     stat.Size(),
+		Path:     path,
+		ModTime:  util.GetMilliByTime(stat.ModTime()),
+	}
+	return
+}
+
+func (this_ *WorkerFactory) getLogPath(placeId string, workerId string) (path string) {
+	parentDir := this_.getParentDir(placeId)
+
+	path = parentDir + workerId + "/command.log"
+	return
+}
+
 type Worker struct {
 	key      string
 	place    string
@@ -193,8 +270,8 @@ type Worker struct {
 }
 
 func (this_ *Worker) init() {
-	dir := this_.GetFilesDir()
-	dir += fmt.Sprintf("%s/toolbox-%s/%s", "toolbox-workers", this_.placeId, this_.workerId) + "/"
+	dir := this_.getParentDir(this_.placeId)
+	dir += this_.workerId + "/"
 
 	ex, err := util.PathExists(dir)
 	if err != nil {
@@ -233,6 +310,13 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 	if this_.dir == "" {
 		return
 	}
+
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("onServiceRead error", zap.Any("err", e))
+		}
+	}()
+
 	if this_.commandLogFile == nil {
 		ex, err := util.PathExists(this_.dir)
 		if err != nil {
@@ -241,10 +325,11 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 		if !ex {
 			err = os.MkdirAll(this_.dir, fs.ModePerm)
 		}
-		if ex, _ = util.PathExists(this_.dir + "/command.log"); ex {
-			this_.commandLogFile, _ = os.OpenFile(this_.dir+"/command.log", os.O_WRONLY|os.O_APPEND, 0666)
+		path := this_.getLogPath(this_.placeId, this_.workerId)
+		if ex, _ = util.PathExists(path); ex {
+			this_.commandLogFile, _ = os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
 		} else {
-			this_.commandLogFile, _ = os.Create(this_.dir + "/command.log")
+			this_.commandLogFile, _ = os.Create(path)
 		}
 	}
 	if this_.commandLogFile == nil {

@@ -9,6 +9,8 @@ import (
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
@@ -36,6 +38,10 @@ var (
 	keyPower             = base.AppendPower(&base.PowerAction{Action: "key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
 	changeSizePower      = base.AppendPower(&base.PowerAction{Action: "changeSize", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
 	uploadWebsocketPower = base.AppendPower(&base.PowerAction{Action: "uploadWebsocket", Text: "终端上传WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getLogs              = base.AppendPower(&base.PowerAction{Action: "getLogs", Text: "getLogs", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteLog            = base.AppendPower(&base.PowerAction{Action: "deleteLog", Text: "deleteLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	cleanLog             = base.AppendPower(&base.PowerAction{Action: "cleanLog", Text: "cleanLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	downloadLog          = base.AppendPower(&base.PowerAction{Action: "downloadLog", Text: "downloadLog", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -44,6 +50,10 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: changeSizePower, Do: this_.changeSize})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
+	apis = append(apis, &base.ApiWorker{Power: getLogs, Do: this_.getLogs})
+	apis = append(apis, &base.ApiWorker{Power: deleteLog, Do: this_.deleteLog})
+	apis = append(apis, &base.ApiWorker{Power: cleanLog, Do: this_.cleanLog})
+	apis = append(apis, &base.ApiWorker{Power: downloadLog, Do: this_.downloadLog})
 
 	return
 }
@@ -249,5 +259,87 @@ func (this_ *api) changeSize(_ *base.RequestBean, c *gin.Context) (res interface
 	if service != nil {
 		err = service.service.ChangeSize(request.Size)
 	}
+	return
+}
+
+func (this_ *api) getLogs(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.WorkerFactory.getLogs(request.PlaceId)
+	return
+}
+
+func (this_ *api) deleteLog(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	path := this_.WorkerFactory.getLogPath(request.PlaceId, request.WorkerId)
+	if ex, _ := util.PathExists(path); ex {
+		err = os.Remove(path)
+	}
+	return
+}
+
+func (this_ *api) cleanLog(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	path := this_.WorkerFactory.getLogPath(request.PlaceId, request.WorkerId)
+	if ex, _ := util.PathExists(path); !ex {
+		return
+	}
+	f, err := os.Create(path)
+	defer func() { _ = f.Close() }()
+	_, err = f.WriteString("")
+	return
+}
+
+func (this_ *api) downloadLog(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	this_.Logger.Info("下载日志记录 start")
+	res = base.HttpNotResponse
+	defer func() {
+		if err != nil {
+			_, _ = c.Writer.WriteString(err.Error())
+		}
+	}()
+
+	request := map[string]string{}
+
+	err = c.Bind(&request)
+	if err != nil {
+		return
+	}
+
+	fileName := "" + request["fileName"] + ".log"
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename*=utf-8''%s", url.QueryEscape(fileName)))
+
+	// 此处不设置 文件大小，如果设置文件大小，将无法终止下载
+	//c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
+	c.Header("download-file-name", fileName)
+
+	path := this_.WorkerFactory.getLogPath(request["placeId"], request["workerId"])
+
+	if ex, _ := util.PathExists(path); ex {
+		var f *os.File
+		f, err = os.Open(path)
+		if err != nil {
+			return
+		}
+		defer func() { _ = f.Close() }()
+		_, err = io.Copy(c.Writer, f)
+	} else {
+		_, err = c.Writer.WriteString("暂无日志记录")
+	}
+	c.Status(http.StatusOK)
 	return
 }
