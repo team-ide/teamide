@@ -181,9 +181,9 @@ func (this_ *WorkerFactory) Start(key string, place string, placeId string, work
 	return
 }
 
-func (this_ *WorkerFactory) getParentDir(placeId string) (dir string) {
+func (this_ *WorkerFactory) getParentDir(place string, placeId string) (dir string) {
 	dir = this_.GetFilesDir()
-	dir += fmt.Sprintf("%s/toolbox-%s/", "toolbox-workers", placeId)
+	dir += fmt.Sprintf("toolbox-workers/toolbox-%s-%s/", place, placeId)
 	return
 }
 
@@ -195,8 +195,8 @@ type LogInfo struct {
 	ModTime  int64  `json:"modTime,omitempty"`
 }
 
-func (this_ *WorkerFactory) getLogs(placeId string) (logs []*LogInfo, err error) {
-	parentDir := this_.getParentDir(placeId)
+func (this_ *WorkerFactory) getLogs(place string, placeId string) (logs []*LogInfo, err error) {
+	parentDir := this_.getParentDir(place, placeId)
 
 	ex, _ := util.PathExists(parentDir)
 	if !ex {
@@ -220,7 +220,7 @@ func (this_ *WorkerFactory) getLogs(placeId string) (logs []*LogInfo, err error)
 	})
 	size := len(names)
 	for i := size - 1; i >= 0; i-- {
-		log, _ := this_.getLog(placeId, names[i])
+		log, _ := this_.getLog(place, placeId, names[i])
 		if log == nil {
 			continue
 		}
@@ -230,8 +230,8 @@ func (this_ *WorkerFactory) getLogs(placeId string) (logs []*LogInfo, err error)
 	return
 }
 
-func (this_ *WorkerFactory) getLog(placeId string, workerId string) (log *LogInfo, err error) {
-	path := this_.getLogPath(placeId, workerId)
+func (this_ *WorkerFactory) getLog(place string, placeId string, workerId string) (log *LogInfo, err error) {
+	path := this_.getLogPath(place, placeId, workerId)
 
 	if ex, _ := util.PathExists(path); !ex {
 		return
@@ -250,8 +250,8 @@ func (this_ *WorkerFactory) getLog(placeId string, workerId string) (log *LogInf
 	return
 }
 
-func (this_ *WorkerFactory) getLogPath(placeId string, workerId string) (path string) {
-	parentDir := this_.getParentDir(placeId)
+func (this_ *WorkerFactory) getLogPath(place string, placeId string, workerId string) (path string) {
+	parentDir := this_.getParentDir(place, placeId)
 
 	path = parentDir + workerId + "/command.log"
 	return
@@ -270,7 +270,7 @@ type Worker struct {
 }
 
 func (this_ *Worker) init() {
-	dir := this_.getParentDir(this_.placeId)
+	dir := this_.getParentDir(this_.place, this_.placeId)
 	dir += this_.workerId + "/"
 
 	ex, err := util.PathExists(dir)
@@ -325,7 +325,7 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 		if !ex {
 			err = os.MkdirAll(this_.dir, fs.ModePerm)
 		}
-		path := this_.getLogPath(this_.placeId, this_.workerId)
+		path := this_.getLogPath(this_.place, this_.placeId, this_.workerId)
 		if ex, _ = util.PathExists(path); ex {
 			this_.commandLogFile, _ = os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0666)
 		} else {

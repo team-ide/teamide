@@ -268,7 +268,7 @@ func (this_ *api) getLogs(_ *base.RequestBean, c *gin.Context) (res interface{},
 		return
 	}
 
-	res, err = this_.WorkerFactory.getLogs(request.PlaceId)
+	res, err = this_.WorkerFactory.getLogs(request.Place, request.PlaceId)
 	return
 }
 
@@ -278,7 +278,7 @@ func (this_ *api) deleteLog(_ *base.RequestBean, c *gin.Context) (res interface{
 		return
 	}
 
-	path := this_.WorkerFactory.getLogPath(request.PlaceId, request.WorkerId)
+	path := this_.WorkerFactory.getLogPath(request.Place, request.PlaceId, request.WorkerId)
 	if ex, _ := util.PathExists(path); ex {
 		err = os.Remove(path)
 	}
@@ -291,7 +291,7 @@ func (this_ *api) cleanLog(_ *base.RequestBean, c *gin.Context) (res interface{}
 		return
 	}
 
-	path := this_.WorkerFactory.getLogPath(request.PlaceId, request.WorkerId)
+	path := this_.WorkerFactory.getLogPath(request.Place, request.PlaceId, request.WorkerId)
 	if ex, _ := util.PathExists(path); !ex {
 		return
 	}
@@ -327,7 +327,7 @@ func (this_ *api) downloadLog(_ *base.RequestBean, c *gin.Context) (res interfac
 	//c.Header("Content-Length", fmt.Sprint(fileInfo.Size))
 	c.Header("download-file-name", fileName)
 
-	path := this_.WorkerFactory.getLogPath(request["placeId"], request["workerId"])
+	path := this_.WorkerFactory.getLogPath(request["place"], request["placeId"], request["workerId"])
 
 	if ex, _ := util.PathExists(path); ex {
 		var f *os.File
