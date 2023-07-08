@@ -2,6 +2,7 @@ package module_terminal
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -99,7 +100,7 @@ func (this_ *WorkerFactory) createService(place string, placeId string, workerId
 		service = module_node.NewTerminalService(placeId, this_.nodeService)
 	}
 	if service == nil {
-		err = errors.New("[" + place + "]文件服务不存在")
+		err = errors.New("[" + place + "]终端服务不存在")
 		return
 	}
 
@@ -267,6 +268,9 @@ type Worker struct {
 	service        terminal.Service
 	ws             *websocket.Conn
 	commandLogFile *os.File
+	isRz           bool
+	isSz           bool
+	isLastSzEnd    bool
 }
 
 func (this_ *Worker) init() {
@@ -306,6 +310,38 @@ func (this_ *Worker) onCommand(logContext *logContext, commandBytes []byte, log 
 
 }
 
+var (
+	// sshSZStart sz fmt.Sprintf("%+q", "rz\r**\x18B00000000000000\r\x8a\x11")
+	//sshSZStart = []byte{13, 42, 42, 24, 66, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 13, 138, 17}
+	sshSZStart = []byte{42, 42, 24, 66, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 13, 138, 17}
+	// sshSZEnd sz 结束 fmt.Sprintf("%+q", "\r**\x18B0800000000022d\r\x8a")
+	//sshSZEnd = []byte{13, 42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+	sshSZEnd = []byte{42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+	// sshSZEndOO sz 结束后可能还会发送两个 OO，但是经过测试发现不一定每次都会发送 fmt.Sprintf("%+q", "OO")
+	sshSZEndOO = []byte{79, 79}
+
+	// rz fmt.Sprintf("%+q", "**\x18B0100000023be50\r\x8a\x11")
+	sshRZStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 50, 51, 98, 101, 53, 48, 13, 138, 17}
+	// rz -e fmt.Sprintf("%+q", "**\x18B0100000063f694\r\x8a\x11")
+	sshRZEStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 48, 54, 51, 102, 54, 57, 52, 13, 138, 17}
+	// rz -S fmt.Sprintf("%+q", "**\x18B0100000223d832\r\x8a\x11")
+	sshRZSStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 50, 50, 51, 100, 56, 51, 50, 13, 138, 17}
+	// rz -e -S fmt.Sprintf("%+q", "**\x18B010000026390f6\r\x8a\x11")
+	sshRZESStart = []byte{42, 42, 24, 66, 48, 49, 48, 48, 48, 48, 48, 50, 54, 51, 57, 48, 102, 54, 13, 138, 17}
+	// rz 结束 fmt.Sprintf("%+q", "**\x18B0800000000022d\r\x8a")
+	sshRZEnd = []byte{42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 138}
+
+	// **\x18B0
+	sshRZCtrlStart = []byte{42, 42, 24, 66, 48}
+	// \r\x8a\x11
+	sshRZCtrlEnd1 = []byte{13, 138, 17}
+	// \r\x8a
+	sshRZCtrlEnd2 = []byte{13, 138}
+
+	// zmodem 取消 \x18\x18\x18\x18\x18\x08\x08\x08\x08\x08
+	sshCancel = []byte{24, 24, 24, 24, 24, 8, 8, 8, 8, 8}
+)
+
 func (this_ *Worker) onServiceRead(bs []byte) {
 	if this_.dir == "" {
 		return
@@ -316,6 +352,30 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 			util.Logger.Error("onServiceRead error", zap.Any("err", e))
 		}
 	}()
+
+	if !this_.isRz && (bytes.Contains(bs, sshRZStart) || bytes.Contains(bs, sshRZSStart) || bytes.Contains(bs, sshRZEStart) || bytes.Contains(bs, sshRZESStart)) {
+		this_.isRz = true
+		bs = []byte(fmt.Sprintf("\n开始上传文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
+
+	} else if this_.isRz && bytes.Contains(bs, sshRZEnd) {
+		this_.isRz = false
+		bs = []byte(fmt.Sprintf("\n结束上传文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
+	} else if !this_.isSz && bytes.Contains(bs, sshSZStart) {
+		this_.isSz = true
+		bs = []byte(fmt.Sprintf("\n开始下载文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
+	} else if this_.isSz && bytes.Contains(bs, sshSZEnd) {
+		this_.isSz = false
+		this_.isLastSzEnd = true
+		bs = []byte(fmt.Sprintf("\n结束下载文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
+	} else {
+		if this_.isSz || this_.isRz {
+			return
+		}
+		if this_.isLastSzEnd && bytes.Equal(bs, sshSZEndOO) {
+			return
+		}
+		this_.isLastSzEnd = false
+	}
 
 	if this_.commandLogFile == nil {
 		ex, err := util.PathExists(this_.dir)
@@ -421,12 +481,16 @@ func (this_ *Worker) startReadService(isWindow bool) {
 		this_.Logger.Info("service read end", zap.Any("key", this_.key))
 	}()
 
-	defer func() { this_.stopAll() }()
+	defer func() {
+		this_.onServiceRead([]byte(fmt.Sprintf("\n\n结束时间:%s\n\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000"))))
+		this_.stopAll()
+	}()
 
 	var n int
 	var buf = make([]byte, 1024*32)
 	var readErr error
 	var writeErr error
+	this_.onServiceRead([]byte(fmt.Sprintf("\n\n开始时间:%s\n\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000"))))
 	for {
 		n, readErr = this_.service.Read(buf)
 		if readErr != nil && readErr != io.EOF {

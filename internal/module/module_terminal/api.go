@@ -105,10 +105,6 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 	placeId := c.Query("placeId")
-	if placeId == "" {
-		err = errors.New("placeId获取失败")
-		return
-	}
 	workerId := c.Query("workerId")
 	if workerId == "" {
 		err = errors.New("workerId获取失败")
