@@ -4,7 +4,7 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
-[![GitHub Release Latest](https://img.shields.io/badge/Release-V2.1.0-brightgreen)](https://github.com/team-ide/teamide/releases)
+[![GitHub Release Latest](https://img.shields.io/badge/Release-V2.3.4-brightgreen)](https://github.com/team-ide/teamide/releases)
 
 ## Team · IDE 功能模块
 

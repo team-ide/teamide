@@ -104,6 +104,8 @@ type BaseRequest struct {
 	PrometheusMetricsAddress    string `json:"prometheusMetricsAddress,omitempty"`
 	PrometheusSummaryCountMatch string `json:"prometheusSummaryCountMatch,omitempty"`
 	PrometheusSummarySumMatch   string `json:"prometheusSummarySumMatch,omitempty"`
+
+	RequestMd5 string `json:"requestMd5,omitempty"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -478,12 +480,16 @@ func (this_ *api) invokeReports(requestBean *base.RequestBean, c *gin.Context) (
 }
 
 func (this_ *api) invokeMarkdown(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
 
 	taskList, err := this_.loadTasks(requestBean, c)
 	if err != nil {
 		return
 	}
-	res = toMarkdown(taskList)
+	res = toMarkdown(request.RequestMd5, taskList)
 	return
 }
 func (this_ *api) downloadRecords(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -540,16 +546,35 @@ func (this_ *api) invokeReportDelete(requestBean *base.RequestBean, c *gin.Conte
 		return
 	}
 
-	t := getTask(request.TaskKey)
-
-	if t != nil {
-		t.Stop()
+	var removeKeys []string
+	if request.RequestMd5 == "" {
+		removeKeys = append(removeKeys, request.TaskKey)
+	} else {
+		var taskList []map[string]interface{}
+		taskList, err = this_.loadTasks(requestBean, c)
+		if err != nil {
+			return
+		}
+		for _, t := range taskList {
+			if t["requestMd5"] == nil {
+				continue
+			}
+			if t["requestMd5"].(string) == request.RequestMd5 {
+				removeKeys = append(removeKeys, t["taskKey"].(string))
+			}
+		}
 	}
-	taskDir := taskParentDir + "" + request.TaskKey
-
-	if ex, _ := util.PathExists(taskDir); ex {
-		err = os.RemoveAll(taskDir)
+	for _, removeKey := range removeKeys {
+		t := getTask(removeKey)
+		if t != nil {
+			t.Stop()
+		}
+		taskDir := taskParentDir + "" + removeKey
+		if ex, _ := util.PathExists(taskDir); ex {
+			err = os.RemoveAll(taskDir)
+		}
 	}
+
 	return
 }
 

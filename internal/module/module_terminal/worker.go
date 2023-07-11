@@ -403,9 +403,18 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 	} else {
 		str = re.ReplaceAllString(str, "")
 	}
+	re, err = regexp.Compile("\u001B\\[[0-9]+[XABD]+")
+	if err != nil {
+		this_.Logger.Error("regexp.Compile error", zap.Error(err))
+	} else {
+		str = re.ReplaceAllString(str, "")
+	}
 	str = strings.ReplaceAll(str, "\u001B]0;", "")
 	str = strings.ReplaceAll(str, "\a", "")
 	str = strings.ReplaceAll(str, "\u001B[C", "")
+	str = strings.ReplaceAll(str, "\u001B(B", "")
+	str = strings.ReplaceAll(str, "\u001B[K", "")
+	str = strings.ReplaceAll(str, "\u001B[m", "")
 	if err != nil {
 		this_.Logger.Error("regexp.Compile error", zap.Error(err))
 	} else {

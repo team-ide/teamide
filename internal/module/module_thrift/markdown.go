@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/team-ide/go-tool/metric"
-	"github.com/team-ide/go-tool/util"
-	"time"
 )
 
-func toMarkdown(taskList []map[string]interface{}) (content string) {
+func toMarkdown(requestMd5 string, taskList []map[string]interface{}) (content string) {
 
 	var groupList []*[]map[string]interface{}
 	groupCache := map[string]*[]map[string]interface{}{}
@@ -16,8 +14,11 @@ func toMarkdown(taskList []map[string]interface{}) (content string) {
 		if one["requestMd5"] == nil {
 			continue
 		}
-		requestMd5 := one["requestMd5"].(string)
-		group := groupCache[requestMd5]
+		requestMd5_ := one["requestMd5"].(string)
+		if requestMd5 != "" && requestMd5 != requestMd5_ {
+			continue
+		}
+		group := groupCache[requestMd5_]
 		if group == nil {
 			group = &[]map[string]interface{}{}
 			groupCache[requestMd5] = group
@@ -77,37 +78,21 @@ func groupToMarkdown(index int, group []map[string]interface{}) (content string)
 	content += fmt.Sprintf("* 任务用时：任务的开始时间~结束时间耗时； \n")
 	content += fmt.Sprintf("* 执行用时：单个线程执行用时累计，取最大；（这里的用时是调用接口耗时，去除了额外开销，所以执行用时小于任务执行时间，两者相差越大，则表示额外开销越多） \n")
 	content += fmt.Sprintf("* 累计用时：所有执行用时累计 \n")
-	content += fmt.Sprintf("* TPS：总次数 / 执行用时 \n")
+	content += fmt.Sprintf("* TPS：总次数 / 任务用时 \n")
 
 	content += fmt.Sprintf("\n")
 
-	content += fmt.Sprintf("| 任务时间 | 总/成功/失败 |任务用时|执行用时|累计用时 |TPS |Avg |Min |Max |T50 |T80 | T90 | T99 |  \n")
-	content += fmt.Sprintf("| :------: | :------: |:------: |:------: |:------:|:------: |:------: |:------: |:------: |:------: |:------: | :------: | :------: |  \n")
-
+	var cs []*metric.Count
 	for _, task := range group {
 		bs, _ = json.Marshal(task["metric"])
 		count := &metric.Count{}
 		_ = json.Unmarshal(bs, count)
-
-		content += fmt.Sprintf("|")
-		content += fmt.Sprintf(" %s <br>-<br> %s |",
-			util.TimeFormat(time.UnixMilli(count.StartTime/int64(time.Millisecond)), "2006-01-02 15:04:05.000"),
-			util.TimeFormat(time.UnixMilli(count.EndTime/int64(time.Millisecond)), "2006-01-02 15:04:05.000"),
-		)
-		content += fmt.Sprintf(" %d <br> <font color='green'>%d</font> <br> <font color='red'>%d</font> |", count.Count, count.SuccessCount, count.ErrorCount)
-		content += fmt.Sprintf(" %s |", toTime(count.TotalTime/1000000))
-		content += fmt.Sprintf(" %s |", toTime(count.ExecuteTime/1000000))
-		content += fmt.Sprintf(" %s |", toTime(count.UseTime/1000000))
-		content += fmt.Sprintf(" %s |", count.Tps)
-		content += fmt.Sprintf(" %s |", count.Avg)
-		content += fmt.Sprintf(" %s |", count.Min)
-		content += fmt.Sprintf(" %s |", count.Max)
-		content += fmt.Sprintf(" %s |", count.T50)
-		content += fmt.Sprintf(" %s |", count.T80)
-		content += fmt.Sprintf(" %s |", count.T90)
-		content += fmt.Sprintf(" %s |", count.T99)
-		content += fmt.Sprintf("\n")
+		cs = append(cs, count)
 	}
+	content += metric.MarkdownTable(cs, &metric.Options{
+		AddHtmlFormat: true,
+		WarnUseTime:   1000,
+	})
 	content += fmt.Sprintf("\n\n")
 	return
 }
