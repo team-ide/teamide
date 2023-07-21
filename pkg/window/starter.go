@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 	"io"
 	"io/ioutil"
@@ -46,9 +48,11 @@ func startWindow(webUrl string, onClose func()) (err error) {
 		err = errors.New("未检测到谷歌浏览器")
 		return
 	}
+	util.Logger.Info("start window", zap.Any("webUrl", webUrl))
 	var tmpDir string
 	tmpDir, err = ioutil.TempDir("", "TeamIDE")
 	if err != nil {
+		util.Logger.Error("start window temp dir error", zap.Error(err))
 		return
 	}
 	var listener net.Listener
@@ -93,8 +97,10 @@ func startWindow(webUrl string, onClose func()) (err error) {
 	}
 
 	if err = b.cmd.Start(); err != nil {
+		util.Logger.Error("start window cmd start error", zap.Any("locateChrome", locateChrome), zap.Any("args", args), zap.Error(err))
 		return
 	}
+	util.Logger.Info("start window cmd start success", zap.Any("locateChrome", locateChrome), zap.Any("args", args))
 
 	re := regexp.MustCompile(`^DevTools listening on (ws://.*?)\r?\n$`)
 	var m []string
@@ -105,13 +111,14 @@ func startWindow(webUrl string, onClose func()) (err error) {
 	}
 	wsURL := m[1]
 
-	//fmt.Println("wsURL:", wsURL)
+	util.Logger.Info("start window match websocket", zap.Any("wsURL", wsURL))
 	// Open a websocket
-	b.ws, err = websocket.Dial(wsURL, "", "http://127.0.0.1")
-	if err != nil {
-		b.kill()
-		return
-	}
+	//b.ws, err = websocket.Dial(wsURL, "", "http://127.0.0.1")
+	//if err != nil {
+	//	util.Logger.Error("start window websocket error", zap.Any("wsURL", wsURL), zap.Error(err))
+	//	b.kill()
+	//	return
+	//}
 
 	go func() {
 		err = b.cmd.Wait()
