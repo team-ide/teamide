@@ -59,6 +59,12 @@ func (this_ *Server) setHeaderByName(name string, c *gin.Context) {
 		c.Header("Content-Type", "application/javascript")
 		// max-age 缓存 过期时间 秒为单位
 		c.Header("Cache-Control", "max-age=31536000")
+	} else if strings.HasSuffix(name, ".woff") ||
+		strings.HasSuffix(name, ".ttf") ||
+		strings.HasSuffix(name, ".woff2") ||
+		strings.HasSuffix(name, ".eot") {
+		// max-age 缓存 过期时间 秒为单位
+		c.Header("Cache-Control", "max-age=31536000")
 	}
 }
 
