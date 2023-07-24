@@ -19,7 +19,7 @@ func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
 		MaxSize:    serverConfig.Log.MaxSize,
 		MaxAge:     serverConfig.Log.MaxAge,
 		MaxBackups: serverConfig.Log.MaxBackups,
-		Compress:   false,
+		Compress:   true,
 	}
 
 	encoderConfig := zapcore.EncoderConfig{
