@@ -154,6 +154,7 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           mv release/statics ./electron-template/assets/server/statics
+          go mod tidy
           go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
 
       - name: Install Node and NPM
@@ -211,6 +212,7 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
+          go mod tidy
           go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
           CGO_ENABLED=0 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
@@ -221,6 +223,7 @@ jobs:
           cp -rf lib/shentong/x86/libaci.so release/teamide-server/lib/libaci.so
           cp -rf docker/server.sh release/teamide-server/server.sh
           chmod +x release/teamide-server/server.sh
+          go mod tidy
           go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
 
       - run: |
@@ -347,6 +350,7 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           mv release/statics ./electron-template/assets/server/statics
+          go mod tidy
           go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
 
       - name: Install Node and NPM
