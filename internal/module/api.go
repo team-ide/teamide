@@ -30,6 +30,7 @@ import (
 	"teamide/internal/module/module_user"
 	"teamide/internal/module/module_zookeeper"
 	"teamide/pkg/base"
+	"time"
 )
 
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
@@ -207,7 +208,10 @@ func (this_ *Api) getRequestBean(c *gin.Context) (request *base.RequestBean) {
 func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	//fmt.Println("do api start path:", path)
 	//defer func() {
-	//	fmt.Println("do api end path:", path)
+	//if e := recover(); e != nil {
+	//	fmt.Println(e)
+	//}
+	//fmt.Println("do api end path:", path)
 	//}()
 
 	index := strings.LastIndex(path, "api/")
@@ -232,6 +236,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	requestBean.Path = path
 	requestBean.Power = api.Power
 	if !this_.checkPower(api, requestBean.JWT, c) {
+		this_.Logger.Warn("no power", zap.Any("action", action))
 		return true
 	}
 	if api.Do != nil {
@@ -285,12 +290,15 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 			}
 		}()
 
-		if !api.NotRecodeLog {
-			this_.Logger.Info("处理操作", zap.String("action", action))
-		}
+		//if !api.NotRecodeLog {
+		//	this_.Logger.Info("处理操作", zap.String("action", action))
+		//}
 		res, err := api.Do(requestBean, c)
+		useTime := time.Now().UnixMilli() - startTime.UnixMilli()
 		if err != nil {
-			this_.Logger.Error("操作异常", zap.String("action", action), zap.Any("error", err.Error()))
+			this_.Logger.Error("处理操作异常", zap.Any("action", action), zap.Any("useTime", useTime), zap.Any("error", err.Error()))
+		} else {
+			this_.Logger.Debug("处理操作", zap.Any("action", action), zap.Any("useTime", useTime))
 		}
 		if res == base.HttpNotResponse {
 			return true
