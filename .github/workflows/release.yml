@@ -218,7 +218,7 @@ jobs:
           mkdir -p release/teamide-server/lib
           cp -rf release/statics release/teamide-server/statics
           cp -rf conf/release release/teamide-server/conf
-          cp -rf lib/shentong/linux64/libaci.so release/teamide-server/lib/libaci.so
+          cp -rf lib/shentong/x86/libaci.so release/teamide-server/lib/libaci.so
           cp -rf docker/server.sh release/teamide-server/server.sh
           chmod +x release/teamide-server/server.sh
           go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
@@ -293,7 +293,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp -rf lib/shentong/linux64/libaci.so ./electron-template/assets/server/lib/libaci.so
+          cp -rf lib/shentong/x86/libaci.so ./electron-template/assets/server/lib/libaci.so
           
           cd electron-template
           chmod +x assets/server/server
