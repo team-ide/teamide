@@ -46,10 +46,13 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		powerRoleService:  module_power.NewPowerRoleService(ServerContext),
 		powerRouteService: module_power.NewPowerRouteService(ServerContext),
 		powerUserService:  module_power.NewPowerUserService(ServerContext),
-		logService:        module_log.NewLogService(ServerContext),
 		settingService:    module_setting.NewSettingService(ServerContext),
 		idService:         module_id.NewIDService(ServerContext),
 		apiCache:          make(map[string]*base.ApiWorker),
+	}
+	api.logService, err = module_log.NewLogService(ServerContext)
+	if err != nil {
+		return
 	}
 	var apis []*base.ApiWorker
 	apis, err = api.GetApis()

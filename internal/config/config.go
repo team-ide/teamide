@@ -13,9 +13,10 @@ import (
 )
 
 type ServerConfig struct {
-	Server *server `json:"server,omitempty" yaml:"server,omitempty"`
-	Mysql  *mysql  `json:"mysql,omitempty" yaml:"mysql,omitempty"`
-	Log    *log    `json:"log,omitempty" yaml:"log,omitempty"`
+	Server          *server `json:"server,omitempty" yaml:"server,omitempty"`
+	Mysql           *mysql  `json:"mysql,omitempty" yaml:"mysql,omitempty"`
+	Log             *log    `json:"log,omitempty" yaml:"log,omitempty"`
+	LogDataSaveDays int     `json:"logDataSaveDays,omitempty" yaml:"logDataSaveDays,omitempty"`
 }
 
 type server struct {
@@ -45,7 +46,9 @@ type log struct {
 
 func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 
-	config = &ServerConfig{}
+	config = &ServerConfig{
+		LogDataSaveDays: 15,
+	}
 	if configPath != "" {
 		var exists bool
 		exists, err = util.PathExists(configPath)
@@ -74,6 +77,10 @@ func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 			return
 		}
 		formatMap(configMap)
+
+		if configMap["logDataSaveDays"] == nil {
+			configMap["logDataSaveDays"] = 15
+		}
 
 		bs, err = json.Marshal(configMap)
 		if err != nil {

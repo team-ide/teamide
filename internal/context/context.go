@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/robfig/cron/v3"
 	"github.com/team-ide/go-tool/db"
 	"go.uber.org/zap"
 	"teamide/internal/config"
@@ -25,6 +26,7 @@ type ServerContext struct {
 	RootDir        string
 	UserHomeDir    string
 	Setting        *Setting
+	CronHandler    *cron.Cron
 }
 
 func (this_ *ServerContext) GetFilesDir() string {

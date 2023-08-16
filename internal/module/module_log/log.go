@@ -3,12 +3,14 @@ package module_log
 import (
 	"github.com/team-ide/go-dialect/worker"
 	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
 	"teamide/internal/context"
 	"teamide/internal/module/module_id"
+	"time"
 )
 
 // NewLogService 根据库配置创建LogService
-func NewLogService(ServerContext *context.ServerContext) (res *LogService) {
+func NewLogService(ServerContext *context.ServerContext) (res *LogService, err error) {
 
 	idService := module_id.NewIDService(ServerContext)
 
@@ -16,6 +18,7 @@ func NewLogService(ServerContext *context.ServerContext) (res *LogService) {
 		ServerContext: ServerContext,
 		idService:     idService,
 	}
+	err = res.init()
 	return
 }
 
@@ -23,6 +26,37 @@ func NewLogService(ServerContext *context.ServerContext) (res *LogService) {
 type LogService struct {
 	*context.ServerContext
 	idService *module_id.IDService
+}
+
+func (this_ *LogService) init() (err error) {
+
+	this_.cleanTask()
+	// 每天 2 点执行
+	_, _ = this_.CronHandler.AddFunc("0 0 2 * * ?", this_.cleanTask)
+	return
+}
+
+func (this_ *LogService) cleanTask() {
+	saveDays := this_.ServerConfig.LogDataSaveDays
+	var deleteCount int64
+	this_.Logger.Info("log data clean task start", zap.Any("saveDays", saveDays))
+	defer func() {
+		this_.Logger.Info("log data clean task end", zap.Any("saveDays", saveDays), zap.Any("deleteCount", deleteCount))
+	}()
+	if saveDays <= 0 {
+		return
+	}
+	deleteBeforeTime := time.Now().AddDate(0, 0, -saveDays)
+	this_.Logger.Info("log data clean task info", zap.Any("saveDays", saveDays), zap.Any("deleteBeforeTime", deleteBeforeTime))
+	var sql string
+	var values []interface{}
+
+	sql += "DELETE FROM " + TableLog + " WHERE createTime<? "
+	values = append(values, deleteBeforeTime)
+	deleteCount, _ = this_.DatabaseWorker.Exec(sql, values)
+
+	_, _ = this_.DatabaseWorker.GetDb().Exec("VACUUM")
+	return
 }
 
 // Insert 新增
@@ -96,9 +130,10 @@ func (this_ *LogService) clean(log *LogModel) (err error) {
 		sql += " AND userId=?"
 		values = append(values, log.UserId)
 	}
-	_, err = this_.DatabaseWorker.Exec(sql, values)
+	_, err = this_.DatabaseWorker.GetDb().Exec(sql, values)
 	if err != nil {
 		return
 	}
+	_, _ = this_.DatabaseWorker.GetDb().Exec("VACUUM")
 	return
 }

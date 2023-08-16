@@ -3,6 +3,7 @@ package context
 import (
 	"errors"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
@@ -66,6 +67,10 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 
 // Init 格式化配置，填充默认值
 func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) {
+
+	this_.CronHandler = cron.New(cron.WithSeconds())
+	this_.CronHandler.Start()
+
 	if this_.IsServer {
 		if serverConfig.Server.Port == 0 {
 			err = errors.New("请检查Server配置是否正确")
@@ -202,6 +207,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	if serverConfig.Mysql == nil || serverConfig.Mysql.Host == "" || serverConfig.Mysql.Port == 0 {
 		databaseConfig = &db.Config{
 			Type:         "sqlite",
+			Dsn:          serverConfig.Server.Data + "database",
 			DatabasePath: serverConfig.Server.Data + "database",
 		}
 		err = this_.backupSqlite(serverConfig, databaseConfig)
