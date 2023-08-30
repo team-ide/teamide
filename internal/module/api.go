@@ -131,6 +131,7 @@ var (
 	//PowerRegister 基础权限
 	PowerRegister    = base.AppendPower(&base.PowerAction{Action: "register", Text: "注册", StandAlone: false})
 	PowerData        = base.AppendPower(&base.PowerAction{Action: "data", Text: "数据", StandAlone: true})
+	showPlaintext    = base.AppendPower(&base.PowerAction{Action: "showPlaintext", Text: "数据", StandAlone: true})
 	PowerSession     = base.AppendPower(&base.PowerAction{Action: "session", Text: "会话", StandAlone: true})
 	PowerLogin       = base.AppendPower(&base.PowerAction{Action: "login", Text: "登录", StandAlone: false})
 	PowerLogout      = base.AppendPower(&base.PowerAction{Action: "logout", Text: "登出", StandAlone: false})
@@ -142,6 +143,7 @@ var (
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, &base.ApiWorker{Power: PowerData, Do: this_.apiData, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: showPlaintext, Do: this_.apiShowPlaintext})
 	apis = append(apis, &base.ApiWorker{Power: PowerLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Power: PowerAutoLogin, Do: this_.apiLogin})
 	apis = append(apis, &base.ApiWorker{Power: PowerLogout, Do: this_.apiLogout})

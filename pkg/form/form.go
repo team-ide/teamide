@@ -5,18 +5,20 @@ type Form struct {
 }
 
 type Field struct {
-	Label        string      `json:"label,omitempty"`
-	Name         string      `json:"name,omitempty"`
-	BindName     string      `json:"bindName,omitempty"`
-	Placeholder  string      `json:"placeholder,omitempty"`
-	Type         string      `json:"type,omitempty"`
-	DefaultValue interface{} `json:"defaultValue,omitempty"`
-	IsNumber     bool        `json:"isNumber,omitempty"`
-	Rules        []*Rule     `json:"rules,omitempty"`
-	Options      []*Option   `json:"options,omitempty"`
-	OptionsName  string      `json:"optionsName,omitempty"`
-	VIf          string      `json:"vIf,omitempty"`
-	Fields       []*Field    `json:"fields,omitempty"`
+	Label            string      `json:"label,omitempty"`
+	Name             string      `json:"name,omitempty"`
+	BindName         string      `json:"bindName,omitempty"`
+	Placeholder      string      `json:"placeholder,omitempty"`
+	Type             string      `json:"type,omitempty"`
+	DefaultValue     interface{} `json:"defaultValue,omitempty"`
+	IsNumber         bool        `json:"isNumber,omitempty"`
+	Rules            []*Rule     `json:"rules,omitempty"`
+	Options          []*Option   `json:"options,omitempty"`
+	OptionsName      string      `json:"optionsName,omitempty"`
+	VIf              string      `json:"vIf,omitempty"`
+	Fields           []*Field    `json:"fields,omitempty"`
+	Col              int         `json:"col"`
+	ShowPlaintextBtn bool        `json:"showPlaintextBtn"`
 }
 
 type Rule struct {

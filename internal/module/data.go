@@ -14,6 +14,7 @@ import (
 type DataRequest struct {
 	Origin   string `json:"origin,omitempty"`
 	Pathname string `json:"pathname,omitempty"`
+	Text     string `json:"text,omitempty"`
 }
 
 type DataResponse struct {
@@ -75,5 +76,15 @@ func (this_ *Api) apiData(requestBean *base.RequestBean, c *gin.Context) (res in
 	}
 
 	res = response
+	return
+}
+
+func (this_ *Api) apiShowPlaintext(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &DataRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res = this_.toolboxService.DecryptOptionAttr(request.Text)
 	return
 }
