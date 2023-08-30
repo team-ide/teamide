@@ -41,6 +41,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power               = base.AppendPower(&base.PowerAction{Action: "database", Text: "数据库", ShouldLogin: true, StandAlone: true})
+	test                = base.AppendPower(&base.PowerAction{Action: "test", Text: "数据库测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower           = base.AppendPower(&base.PowerAction{Action: "info", Text: "数据库信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	dataPower           = base.AppendPower(&base.PowerAction{Action: "data", Text: "数据库基础数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	ownersPower         = base.AppendPower(&base.PowerAction{Action: "owners", Text: "数据库查询", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -72,6 +73,7 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
+	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: dataPower, Do: this_.data, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: ownersPower, Do: this_.owners})
@@ -189,6 +191,19 @@ type BaseRequest struct {
 	UpdateList      []map[string]interface{} `json:"updateList"`
 	UpdateWhereList []map[string]interface{} `json:"updateWhereList"`
 	DeleteList      []map[string]interface{} `json:"deleteList"`
+}
+
+func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, sshConfig, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	_, err = getService(config, sshConfig)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

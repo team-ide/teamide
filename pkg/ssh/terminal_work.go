@@ -67,6 +67,18 @@ func (this_ *terminalService) ChangeSize(size *terminal.Size) (err error) {
 	return
 }
 
+func (this_ *terminalService) TestClient() (err error) {
+
+	sshClient, err := NewClient(*this_.config)
+	if err != nil {
+		util.Logger.Error("SSH NewClient error", zap.Error(err))
+		return
+	}
+	defer func() {
+		_ = sshClient.Close()
+	}()
+	return
+}
 func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 
 	this_.sshClient, err = NewClient(*this_.config)

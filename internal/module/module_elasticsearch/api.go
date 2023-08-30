@@ -22,6 +22,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power            = base.AppendPower(&base.PowerAction{Action: "elasticsearch", Text: "ES", ShouldLogin: true, StandAlone: true})
+	test             = base.AppendPower(&base.PowerAction{Action: "test", Text: "ES测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "ES信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	indexesPower     = base.AppendPower(&base.PowerAction{Action: "indexes", Text: "ES索引查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	indexStatPower   = base.AppendPower(&base.PowerAction{Action: "indexStat", Text: "ES索引状态", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -46,6 +47,7 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
+	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: indexesPower, Do: this_.indexes})
 	apis = append(apis, &base.ApiWorker{Power: indexStatPower, Do: this_.indexStat})
@@ -142,6 +144,19 @@ type BaseRequest struct {
 	WhereList       []*elasticsearch.Where `json:"whereList"`
 	OrderList       []*elasticsearch.Order `json:"orderList"`
 	TaskId          string                 `json:"taskId"`
+}
+
+func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	_, err = getService(config)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

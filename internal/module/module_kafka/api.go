@@ -21,6 +21,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power                 = base.AppendPower(&base.PowerAction{Action: "kafka", Text: "Kafka", ShouldLogin: true, StandAlone: true})
+	test                  = base.AppendPower(&base.PowerAction{Action: "test", Text: "Kafka测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower             = base.AppendPower(&base.PowerAction{Action: "info", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	topicsPower           = base.AppendPower(&base.PowerAction{Action: "topics", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	topicPower            = base.AppendPower(&base.PowerAction{Action: "topic", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -45,6 +46,7 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
+	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: topicsPower, Do: this_.topics})
 	apis = append(apis, &base.ApiWorker{Power: topicPower, Do: this_.topic})
@@ -100,7 +102,7 @@ func getService(kafkaConfig *kafka.Config) (res kafka.IService, err error) {
 			}
 			return
 		}
-		_, err = s.GetTopics()
+		_, err = s.GetTopic("toolbox-kafka-test-topic", -2)
 		if err != nil {
 			util.Logger.Error("getKafkaService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -140,6 +142,19 @@ type BaseRequest struct {
 	Count     int32  `json:"count"`
 	KeyType   string `json:"keyType"`
 	ValueType string `json:"valueType"`
+}
+
+func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	_, err = getService(config)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

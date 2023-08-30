@@ -15,6 +15,7 @@ import (
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"teamide/pkg/ssh"
 	"teamide/pkg/terminal"
 )
 
@@ -34,6 +35,7 @@ var (
 	// Power 文件管理器 基本 权限
 	Power                = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "终端", ShouldLogin: true, StandAlone: true})
 	websocketPower       = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	test                 = base.AppendPower(&base.PowerAction{Action: "test", Text: "终端测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower           = base.AppendPower(&base.PowerAction{Action: "close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 	keyPower             = base.AppendPower(&base.PowerAction{Action: "key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
 	changeSizePower      = base.AppendPower(&base.PowerAction{Action: "changeSize", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -48,6 +50,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: keyPower, Do: this_.key})
 	apis = append(apis, &base.ApiWorker{Power: websocketPower, Do: this_.websocket, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Power: changeSizePower, Do: this_.changeSize})
+	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 	apis = append(apis, &base.ApiWorker{Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Power: getLogs, Do: this_.getLogs})
@@ -235,6 +238,29 @@ type Request struct {
 	Key      string `json:"key,omitempty"`
 	WorkerId string `json:"workerId"`
 	*terminal.Size
+}
+
+func (this_ *api) test(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &module_toolbox.ToolboxModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if request.Option == "" {
+		err = errors.New("SSH 配置不存在")
+		return
+	}
+
+	var config *ssh.Config
+	config, err = this_.toolboxService.GetSSHConfig(request.Option)
+	if err != nil {
+		return
+	}
+
+	service := ssh.NewTerminalService(config)
+
+	err = service.TestClient()
+	return
 }
 
 func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
