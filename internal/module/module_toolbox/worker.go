@@ -158,7 +158,8 @@ func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, er
 
 type BindConfigRequest struct {
 	ToolboxToTest string `json:"toolboxToTest,omitempty"`
-	*ToolboxModel
+	ToolboxId     int64  `json:"toolboxId,omitempty"`
+	ToolboxType   string `json:"toolboxType,omitempty"`
 }
 
 func (this_ *ToolboxService) CheckToolboxPower(requestBean *base.RequestBean, toolboxModel *ToolboxModel) (err error) {
@@ -199,11 +200,15 @@ func (this_ *ToolboxService) initExtent(requestBean *base.RequestBean, c *gin.Co
 		return
 	}
 	if bindConfigRequest.ToolboxToTest == "1" {
-		if bindConfigRequest.ToolboxModel == nil {
+		toolboxModel := &ToolboxModel{}
+		if !base.RequestJSON(toolboxModel, c) {
+			return
+		}
+		if toolboxModel.Option == "" {
 			err = errors.New("toolbox info is null")
 			return
 		}
-		requestBean.SetExtend("toolboxModel", bindConfigRequest.ToolboxModel)
+		requestBean.SetExtend("toolboxModel", toolboxModel)
 		return
 	}
 
