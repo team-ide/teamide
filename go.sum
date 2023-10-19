@@ -220,10 +220,10 @@ github.com/team-ide/go-dialect v1.9.8 h1:vRV+YKB0GXU47B2k6OJxqvvl+zsWLPWgC67Gf72
 github.com/team-ide/go-dialect v1.9.8/go.mod h1:ho1lgryfyCsQlfueIXEMmrb6etfaLQ/Rm2fBkIcCcqg=
 github.com/team-ide/go-driver v1.3.1 h1:xea79xQawjpFemxLoTgZdddrud6z1dD5TQhcjtMspo8=
 github.com/team-ide/go-driver v1.3.1/go.mod h1:A8z8/plW4IESmxq2iRUpOwyHWPuGoQESYHfXMvTZKMg=
-github.com/team-ide/go-interpreter v0.1.0 h1:2x+eS/uQ/OxaUu8wst7LG2kytvjWGAZGizpY6z9lvdo=
-github.com/team-ide/go-interpreter v0.1.0/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
-github.com/team-ide/go-tool v0.8.5 h1:Oe8QOaGRDAh/WFWFFdVc+PCCUgn4WfukKdgiFBO/38I=
-github.com/team-ide/go-tool v0.8.5/go.mod h1:woF0yn0Fd7pCVMhkVRrN0etwJK8mTNGXdi01YLKxajw=
+github.com/team-ide/go-interpreter v0.1.1 h1:RS3sJv8ZmpWXELJvlTGzuxAanubcG/luTzunkdr5U7Q=
+github.com/team-ide/go-interpreter v0.1.1/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
+github.com/team-ide/go-tool v0.9.0 h1:rOqj4sCQVgR34+p7W+SNbIHtAHdhn8A+JKxYR1MX9Fk=
+github.com/team-ide/go-tool v0.9.0/go.mod h1:0b6Bw4no1BOU5Vlt6EZLzswNOyi4WD6uLLjalpxTJy4=
 github.com/team-ide/goja v1.0.2 h1:AyTbZ+9JKPSAsq90YDEV7g6htbuwN/gntYQptfbAQTo=
 github.com/team-ide/goja v1.0.2/go.mod h1:Sd/GNJgfOpBvXEGIy2JgJden3hW+WWayjZwC8EATRTM=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=

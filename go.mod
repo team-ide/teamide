@@ -14,7 +14,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.1
 	github.com/team-ide/go-dialect v1.9.8
-	github.com/team-ide/go-tool v0.8.5
+	github.com/team-ide/go-tool v0.9.0
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.9.0
@@ -85,7 +85,7 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/tealeg/xlsx v1.0.5 // indirect
 	github.com/team-ide/go-driver v1.3.1 // indirect
-	github.com/team-ide/go-interpreter v0.1.0 // indirect
+	github.com/team-ide/go-interpreter v0.1.1 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect
