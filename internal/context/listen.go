@@ -314,7 +314,7 @@ func NewClientTabListener(clientKey string, clientTabKey string, userId int64) (
 }
 
 // 监听程序 最后监听时间 超时时间 超过这个时间 未监听 则移除监听器
-var listenerLastListenTimeoutSecond = 10 * 60
+var listenerLastListenTimeoutSecond int64 = 10 * 60
 
 type ClientTabListener struct {
 	ClientKey      string `json:"clientKey"`
