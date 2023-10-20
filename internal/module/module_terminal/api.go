@@ -67,7 +67,13 @@ func (this_ *api) key(_ *base.RequestBean, c *gin.Context) (res interface{}, err
 		return
 	}
 
-	service, _, err := this_.createService(request.Place, request.PlaceId, request.WorkerId)
+	service, _, err := this_.createService(&CreateParam{
+		place:    request.Place,
+		placeId:  request.PlaceId,
+		workerId: request.WorkerId,
+		lastUser: request.LastUser,
+		lastDir:  request.LastDir,
+	})
 	if err != nil {
 		return
 	}
@@ -145,10 +151,18 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	baseLog.UserName = request.JWT.Name
 	baseLog.UserAccount = request.JWT.Account
 	baseLog.LoginId = request.JWT.LoginId
-	err = this_.Start(key, place, placeId, workerId, &terminal.Size{
-		Cols: cols,
-		Rows: rows,
-	}, ws, baseLog)
+	err = this_.Start(key,
+		&CreateParam{
+			place:    place,
+			placeId:  placeId,
+			workerId: workerId,
+			lastUser: c.Query("lastUser"),
+			lastDir:  c.Query("lastDir"),
+		},
+		&terminal.Size{
+			Cols: cols,
+			Rows: rows,
+		}, ws, baseLog)
 	if err != nil {
 		_ = ws.WriteMessage(websocket.BinaryMessage, []byte("start error:"+err.Error()))
 		this_.Logger.Error("websocket start error", zap.Error(err))
@@ -237,6 +251,8 @@ type Request struct {
 	PlaceId  string `json:"placeId,omitempty"`
 	Key      string `json:"key,omitempty"`
 	WorkerId string `json:"workerId"`
+	LastUser string `json:"lastUser,omitempty"`
+	LastDir  string `json:"lastDir,omitempty"`
 	*terminal.Size
 }
 
@@ -257,7 +273,7 @@ func (this_ *api) test(_ *base.RequestBean, c *gin.Context) (res interface{}, er
 		return
 	}
 
-	service := ssh.NewTerminalService(config)
+	service := ssh.NewTerminalService(config, "", "")
 
 	err = service.TestClient()
 	return

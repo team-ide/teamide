@@ -51,7 +51,15 @@ func (this_ *WorkerFactory) GetService(key string) (res *Worker) {
 	return
 }
 
-func (this_ *WorkerFactory) createService(place string, placeId string, workerId string) (worker *Worker, command string, err error) {
+type CreateParam struct {
+	place    string
+	placeId  string
+	workerId string
+	lastUser string
+	lastDir  string
+}
+
+func (this_ *WorkerFactory) createService(param *CreateParam) (worker *Worker, command string, err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -59,16 +67,16 @@ func (this_ *WorkerFactory) createService(place string, placeId string, workerId
 		}
 	}()
 	var service terminal.Service
-	switch place {
+	switch param.place {
 	case "local":
 		service = terminal.NewLocalService()
 	case "ssh":
-		if placeId == "" {
+		if param.placeId == "" {
 			err = errors.New("SSH配置不能为空")
 			return
 		}
 		var id int64
-		id, err = strconv.ParseInt(placeId, 10, 64)
+		id, err = strconv.ParseInt(param.placeId, 10, 64)
 		if err != nil {
 			return
 		}
@@ -78,7 +86,7 @@ func (this_ *WorkerFactory) createService(place string, placeId string, workerId
 			return
 		}
 		if tD == nil || tD.Option == "" {
-			err = errors.New("SSH[" + placeId + "]配置不存在")
+			err = errors.New("SSH[" + param.placeId + "]配置不存在")
 			return
 		}
 
@@ -91,23 +99,23 @@ func (this_ *WorkerFactory) createService(place string, placeId string, workerId
 			command = config.Command
 		}
 
-		service = ssh.NewTerminalService(config)
+		service = ssh.NewTerminalService(config, param.lastUser, param.lastDir)
 	case "node":
-		if placeId == "" {
+		if param.placeId == "" {
 			err = errors.New("node配置不能为空")
 			return
 		}
-		service = module_node.NewTerminalService(placeId, this_.nodeService)
+		service = module_node.NewTerminalService(param.placeId, this_.nodeService)
 	}
 	if service == nil {
-		err = errors.New("[" + place + "]终端服务不存在")
+		err = errors.New("[" + param.place + "]终端服务不存在")
 		return
 	}
 
 	worker = &Worker{
-		place:         place,
-		placeId:       placeId,
-		workerId:      workerId,
+		place:         param.place,
+		placeId:       param.placeId,
+		workerId:      param.workerId,
 		service:       service,
 		WorkerFactory: this_,
 	}
@@ -115,7 +123,7 @@ func (this_ *WorkerFactory) createService(place string, placeId string, workerId
 	return
 }
 
-func (this_ *WorkerFactory) Start(key string, place string, placeId string, workerId string, size *terminal.Size, ws *websocket.Conn, baseLog *TerminalLogModel) (err error) {
+func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal.Size, ws *websocket.Conn, baseLog *TerminalLogModel) (err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -132,7 +140,7 @@ func (this_ *WorkerFactory) Start(key string, place string, placeId string, work
 		return
 	}
 	var command string
-	worker, command, err = this_.createService(place, placeId, workerId)
+	worker, command, err = this_.createService(param)
 	if err != nil {
 		return
 	}

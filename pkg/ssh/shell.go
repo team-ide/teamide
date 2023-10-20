@@ -77,6 +77,7 @@ func NewSSHShell(terminalSize *terminal.Size, sshSession *ssh.Session) (err erro
 		ssh.ECHO:          1,
 		ssh.TTY_OP_ISPEED: 14400,
 		ssh.TTY_OP_OSPEED: 14400,
+		ssh.VINTR:         '\x03',
 	}
 	var modeList []byte
 	for k, v := range modes {

@@ -16,12 +16,16 @@ var (
 )
 
 type Config struct {
-	Type      string `json:"type"`
-	Address   string `json:"address"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	PublicKey string `json:"publicKey"`
-	Command   string `json:"command"`
+	Type         string `json:"type"`
+	Address      string `json:"address"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	PublicKey    string `json:"publicKey"`
+	Command      string `json:"command"`
+	Timeout      int    `json:"timeout"`
+	IdleSendOpen bool   `json:"idleSendOpen"`
+	IdleSendTime int    `json:"idleSendTime"`
+	IdleSendChar string `json:"idleSendChar"`
 }
 
 type Client struct {
@@ -160,10 +164,14 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 	sshConfig = ssh.Config{
 		Ciphers: Ciphers,
 	}
+	var timeout = 5 * time.Second
+	if config.Timeout > 0 {
+		timeout = time.Duration(config.Timeout) * time.Second
+	}
 	clientConfig = &ssh.ClientConfig{
 		User:            config.Username,
 		Auth:            auth,
-		Timeout:         5 * time.Second,
+		Timeout:         timeout,
 		Config:          sshConfig,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
 	}
