@@ -69,6 +69,11 @@ var (
 	taskStatusPower     = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "数据库任务状态查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStopPower       = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "数据库任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskCleanPower      = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "数据库任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testTaskStart       = base.AppendPower(&base.PowerAction{Action: "testTaskStart", Text: "测试开始", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testTaskInfo        = base.AppendPower(&base.PowerAction{Action: "testTaskInfo", Text: "测试任务信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testTaskStop        = base.AppendPower(&base.PowerAction{Action: "testTaskStop", Text: "测试停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testTaskList        = base.AppendPower(&base.PowerAction{Action: "testTaskList", Text: "测试任务", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testTaskDelete      = base.AppendPower(&base.PowerAction{Action: "testTaskDelete", Text: "测试删除", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower          = base.AppendPower(&base.PowerAction{Action: "close", Text: "数据库关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
@@ -101,6 +106,13 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
 	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
+
+	apis = append(apis, &base.ApiWorker{Power: testTaskStart, Do: this_.testTaskStart})
+	apis = append(apis, &base.ApiWorker{Power: testTaskInfo, Do: this_.testTaskInfo})
+	apis = append(apis, &base.ApiWorker{Power: testTaskList, Do: this_.testTaskList})
+	apis = append(apis, &base.ApiWorker{Power: testTaskStop, Do: this_.testTaskStop})
+	apis = append(apis, &base.ApiWorker{Power: testTaskDelete, Do: this_.testTaskDelete})
+
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -175,6 +187,7 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 }
 
 type BaseRequest struct {
+	ToolboxId    int64                  `json:"toolboxId,omitempty"`
 	WorkerId     string                 `json:"workerId"`
 	OwnerName    string                 `json:"ownerName"`
 	TableName    string                 `json:"tableName"`
@@ -186,6 +199,8 @@ type BaseRequest struct {
 	PageNo       int                    `json:"pageNo"`
 	PageSize     int                    `json:"pageSize"`
 	DatabaseType string                 `json:"databaseType"`
+
+	ShowDataMaxSize int `json:"showDataMaxSize"`
 
 	InsertList      []map[string]interface{} `json:"insertList"`
 	UpdateList      []map[string]interface{} `json:"updateList"`
@@ -684,9 +699,10 @@ func (this_ *api) executeSQL(requestBean *base.RequestBean, c *gin.Context) (res
 		return
 	}
 	param := this_.getParam(requestBean, c)
-
 	data := make(map[string]interface{})
-	data["executeList"], data["error"], err = service.ExecuteSQL(param, request.OwnerName, request.ExecuteSQL)
+	data["executeList"], data["error"], err = service.ExecuteSQL(param, request.OwnerName, request.ExecuteSQL, &db.ExecuteOptions{
+		SelectDataMax: request.ShowDataMaxSize,
+	})
 	if err != nil {
 		return
 	}
@@ -975,5 +991,60 @@ func removeWorkerTasks(workerId string) {
 		}
 	}
 	delete(workerTasksCache, workerId)
+	return
+}
+
+func (this_ *api) testTaskStart(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) testTaskInfo(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) testTaskList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) testTaskStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) testTaskDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	var request = &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) getTestTasksDir(request *BaseRequest) (taskDir string) {
+	taskDir = fmt.Sprintf("%s/toolbox-%d/", "database-test-tasks", request.ToolboxId)
 	return
 }

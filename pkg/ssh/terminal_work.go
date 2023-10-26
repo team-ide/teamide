@@ -125,15 +125,15 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 		return
 	}
 	this_.lastActive = time.Now()
-	if this_.lastUser != "" {
-		if this_.lastUser != this_.config.Username {
-			_, _ = this_.Write([]byte("sudo -i\n"))
-			_, _ = this_.Write([]byte("su " + this_.lastUser + "\n"))
-		}
-	}
-	if this_.lastDir != "" {
-		_, _ = this_.Write([]byte("cd " + this_.lastDir + "\n"))
-	}
+	//if this_.lastUser != "" {
+	//	if this_.lastUser != this_.config.Username {
+	//		_, _ = this_.Write([]byte("sudo -i\n"))
+	//		_, _ = this_.Write([]byte("su " + this_.lastUser + "\n"))
+	//	}
+	//}
+	//if this_.lastDir != "" {
+	//	_, _ = this_.Write([]byte("cd " + this_.lastDir + "\n"))
+	//}
 	// 开启空闲自动发送
 	if this_.config.IdleSendOpen {
 		idleSendTime := int64(this_.config.IdleSendTime)

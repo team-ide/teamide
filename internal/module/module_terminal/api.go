@@ -206,12 +206,16 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 				this_.Logger.Error("uploadWebsocket error", zap.Any("error", e))
 			}
 		}()
-
+		var isClosed bool
+		ws.SetCloseHandler(func(code int, text string) error {
+			isClosed = true
+			return nil
+		})
 		var buf []byte
 		var readErr error
 		var writeErr error
 		var n int
-		for {
+		for !isClosed {
 			_, buf, readErr = ws.ReadMessage()
 			if readErr != nil && readErr != io.EOF {
 				break
@@ -233,11 +237,11 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 			}
 		}
 
-		if readErr != nil {
+		if readErr != nil && !isClosed {
 			this_.Logger.Error("uploadWebsocket read error", zap.Error(readErr))
 		}
 
-		if writeErr != nil {
+		if writeErr != nil && !isClosed {
 			this_.Logger.Error("uploadWebsocket write error", zap.Error(writeErr))
 		}
 	}()

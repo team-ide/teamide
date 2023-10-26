@@ -454,7 +454,13 @@ func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
 	var buf []byte
 	var readErr error
 	var writeErr error
-	for {
+
+	var isClosed bool
+	this_.ws.SetCloseHandler(func(code int, text string) error {
+		isClosed = true
+		return nil
+	})
+	for !isClosed {
 		_, buf, readErr = this_.ws.ReadMessage()
 		if readErr != nil && readErr != io.EOF {
 			break
@@ -476,11 +482,11 @@ func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
 		return
 	}
 
-	if readErr != nil {
+	if readErr != nil && !isClosed {
 		this_.Logger.Error("ws read error", zap.Error(readErr))
 	}
 
-	if writeErr != nil {
+	if writeErr != nil && !isClosed {
 		this_.Logger.Error("service write error", zap.Error(writeErr))
 	}
 
