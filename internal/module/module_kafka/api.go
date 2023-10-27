@@ -21,7 +21,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power                 = base.AppendPower(&base.PowerAction{Action: "kafka", Text: "Kafka", ShouldLogin: true, StandAlone: true})
-	test                  = base.AppendPower(&base.PowerAction{Action: "test", Text: "Kafka测试", ShouldLogin: true, StandAlone: true, Parent: Power})
+	check                 = base.AppendPower(&base.PowerAction{Action: "check", Text: "Kafka测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower             = base.AppendPower(&base.PowerAction{Action: "info", Text: "Kafka信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	topicsPower           = base.AppendPower(&base.PowerAction{Action: "topics", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	topicPower            = base.AppendPower(&base.PowerAction{Action: "topic", Text: "Kafka Topic查询", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -46,7 +46,7 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
+	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: topicsPower, Do: this_.topics})
 	apis = append(apis, &base.ApiWorker{Power: topicPower, Do: this_.topic})
@@ -144,7 +144,7 @@ type BaseRequest struct {
 	ValueType string `json:"valueType"`
 }
 
-func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return

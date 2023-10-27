@@ -41,7 +41,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power               = base.AppendPower(&base.PowerAction{Action: "database", Text: "数据库", ShouldLogin: true, StandAlone: true})
-	test                = base.AppendPower(&base.PowerAction{Action: "test", Text: "数据库测试", ShouldLogin: true, StandAlone: true, Parent: Power})
+	check               = base.AppendPower(&base.PowerAction{Action: "check", Text: "数据库测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower           = base.AppendPower(&base.PowerAction{Action: "info", Text: "数据库信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	dataPower           = base.AppendPower(&base.PowerAction{Action: "data", Text: "数据库基础数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	ownersPower         = base.AppendPower(&base.PowerAction{Action: "owners", Text: "数据库查询", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -69,16 +69,17 @@ var (
 	taskStatusPower     = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "数据库任务状态查询", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskStopPower       = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "数据库任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
 	taskCleanPower      = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "数据库任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testTaskStart       = base.AppendPower(&base.PowerAction{Action: "testTaskStart", Text: "测试开始", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testTaskInfo        = base.AppendPower(&base.PowerAction{Action: "testTaskInfo", Text: "测试任务信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testTaskStop        = base.AppendPower(&base.PowerAction{Action: "testTaskStop", Text: "测试停止", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testTaskList        = base.AppendPower(&base.PowerAction{Action: "testTaskList", Text: "测试任务", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testTaskDelete      = base.AppendPower(&base.PowerAction{Action: "testTaskDelete", Text: "测试删除", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower          = base.AppendPower(&base.PowerAction{Action: "close", Text: "数据库关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+
+	testStart  = base.AppendPower(&base.PowerAction{Action: "testStart", Text: "测试开始", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testInfo   = base.AppendPower(&base.PowerAction{Action: "testInfo", Text: "测试任务信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testStop   = base.AppendPower(&base.PowerAction{Action: "testStop", Text: "测试停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testList   = base.AppendPower(&base.PowerAction{Action: "testList", Text: "测试任务", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testDelete = base.AppendPower(&base.PowerAction{Action: "testDelete", Text: "测试删除", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
+	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: dataPower, Do: this_.data, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: ownersPower, Do: this_.owners})
@@ -107,11 +108,11 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
 	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
 
-	apis = append(apis, &base.ApiWorker{Power: testTaskStart, Do: this_.testTaskStart})
-	apis = append(apis, &base.ApiWorker{Power: testTaskInfo, Do: this_.testTaskInfo})
-	apis = append(apis, &base.ApiWorker{Power: testTaskList, Do: this_.testTaskList})
-	apis = append(apis, &base.ApiWorker{Power: testTaskStop, Do: this_.testTaskStop})
-	apis = append(apis, &base.ApiWorker{Power: testTaskDelete, Do: this_.testTaskDelete})
+	apis = append(apis, &base.ApiWorker{Power: testStart, Do: this_.testStart})
+	apis = append(apis, &base.ApiWorker{Power: testInfo, Do: this_.testInfo})
+	apis = append(apis, &base.ApiWorker{Power: testList, Do: this_.testList})
+	apis = append(apis, &base.ApiWorker{Power: testStop, Do: this_.testStop})
+	apis = append(apis, &base.ApiWorker{Power: testDelete, Do: this_.testDelete})
 
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
@@ -188,27 +189,38 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 
 type BaseRequest struct {
 	ToolboxId    int64                  `json:"toolboxId,omitempty"`
-	WorkerId     string                 `json:"workerId"`
-	OwnerName    string                 `json:"ownerName"`
-	TableName    string                 `json:"tableName"`
-	TaskId       string                 `json:"taskId"`
-	ExecuteSQL   string                 `json:"executeSQL"`
-	ColumnList   []*dialect.ColumnModel `json:"columnList"`
-	Wheres       []*dialect.Where       `json:"wheres"`
-	Orders       []*dialect.Order       `json:"orders"`
-	PageNo       int                    `json:"pageNo"`
-	PageSize     int                    `json:"pageSize"`
-	DatabaseType string                 `json:"databaseType"`
+	WorkerId     string                 `json:"workerId,omitempty"`
+	OwnerName    string                 `json:"ownerName,omitempty"`
+	TableName    string                 `json:"tableName,omitempty"`
+	TaskId       string                 `json:"taskId,omitempty"`
+	ExecuteSQL   string                 `json:"executeSQL,omitempty"`
+	ColumnList   []*dialect.ColumnModel `json:"columnList,omitempty"`
+	Wheres       []*dialect.Where       `json:"wheres,omitempty"`
+	Orders       []*dialect.Order       `json:"orders,omitempty"`
+	PageNo       int                    `json:"pageNo,omitempty"`
+	PageSize     int                    `json:"pageSize,omitempty"`
+	DatabaseType string                 `json:"databaseType,omitempty"`
 
-	ShowDataMaxSize int `json:"showDataMaxSize"`
+	IsBatch     bool   `json:"isBatch,omitempty"`
+	BatchSize   int64  `json:"batchSize,omitempty"`
+	TestType    string `json:"testType,omitempty"`
+	TaskKey     string `json:"taskKey,omitempty"`
+	IsCallOnce  bool   `json:"isCallOnce,omitempty"` // 调用一次
+	Worker      int    `json:"worker,omitempty"`
+	Duration    int    `json:"duration,omitempty"`
+	Frequency   int    `json:"frequency,omitempty"`
+	CountSecond int    `json:"countSecond,omitempty"` // 统计间隔秒 如 每秒统计 输入 1 默认 10 秒统计
+	CountTop    bool   `json:"countTop,omitempty"`
 
-	InsertList      []map[string]interface{} `json:"insertList"`
-	UpdateList      []map[string]interface{} `json:"updateList"`
-	UpdateWhereList []map[string]interface{} `json:"updateWhereList"`
-	DeleteList      []map[string]interface{} `json:"deleteList"`
+	ShowDataMaxSize int `json:"showDataMaxSize,omitempty"`
+
+	InsertList      []map[string]interface{} `json:"insertList,omitempty"`
+	UpdateList      []map[string]interface{} `json:"updateList,omitempty"`
+	UpdateWhereList []map[string]interface{} `json:"updateWhereList,omitempty"`
+	DeleteList      []map[string]interface{} `json:"deleteList,omitempty"`
 }
 
-func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
@@ -991,60 +1003,5 @@ func removeWorkerTasks(workerId string) {
 		}
 	}
 	delete(workerTasksCache, workerId)
-	return
-}
-
-func (this_ *api) testTaskStart(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	return
-}
-
-func (this_ *api) testTaskInfo(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	return
-}
-
-func (this_ *api) testTaskList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	return
-}
-
-func (this_ *api) testTaskStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	return
-}
-
-func (this_ *api) testTaskDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	return
-}
-
-func (this_ *api) getTestTasksDir(request *BaseRequest) (taskDir string) {
-	taskDir = fmt.Sprintf("%s/toolbox-%d/", "database-test-tasks", request.ToolboxId)
 	return
 }

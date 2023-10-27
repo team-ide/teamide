@@ -23,7 +23,7 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 
 var (
 	Power              = base.AppendPower(&base.PowerAction{Action: "redis", Text: "Redis", ShouldLogin: true, StandAlone: true})
-	test               = base.AppendPower(&base.PowerAction{Action: "test", Text: "Redis测试", ShouldLogin: true, StandAlone: true, Parent: Power})
+	check              = base.AppendPower(&base.PowerAction{Action: "check", Text: "Redis测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	infoPower          = base.AppendPower(&base.PowerAction{Action: "info", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	getPower           = base.AppendPower(&base.PowerAction{Action: "get", Text: "Redis获取Key值", ShouldLogin: true, StandAlone: true, Parent: Power})
 	keysPower          = base.AppendPower(&base.PowerAction{Action: "keys", Text: "Redis查询Keys", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -45,7 +45,7 @@ var (
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Power: test, Do: this_.test})
+	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: getPower, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: keysPower, Do: this_.keys})
@@ -158,7 +158,7 @@ type BaseRequest struct {
 	Expire     int64  `json:"expire"`
 }
 
-func (this_ *api) test(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, sshConfig, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
