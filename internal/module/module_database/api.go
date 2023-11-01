@@ -71,11 +71,11 @@ var (
 	taskCleanPower      = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "数据库任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower          = base.AppendPower(&base.PowerAction{Action: "close", Text: "数据库关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 
-	testStart  = base.AppendPower(&base.PowerAction{Action: "testStart", Text: "测试开始", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testInfo   = base.AppendPower(&base.PowerAction{Action: "testInfo", Text: "测试任务信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testStop   = base.AppendPower(&base.PowerAction{Action: "testStop", Text: "测试停止", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testList   = base.AppendPower(&base.PowerAction{Action: "testList", Text: "测试任务", ShouldLogin: true, StandAlone: true, Parent: Power})
-	testDelete = base.AppendPower(&base.PowerAction{Action: "testDelete", Text: "测试删除", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testStart  = base.AppendPower(&base.PowerAction{Action: "test/start", Text: "测试开始", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testInfo   = base.AppendPower(&base.PowerAction{Action: "test/info", Text: "测试任务信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testStop   = base.AppendPower(&base.PowerAction{Action: "test/stop", Text: "测试停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testList   = base.AppendPower(&base.PowerAction{Action: "test/list", Text: "测试任务", ShouldLogin: true, StandAlone: true, Parent: Power})
+	testDelete = base.AppendPower(&base.PowerAction{Action: "test/delete", Text: "测试删除", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -202,7 +202,7 @@ type BaseRequest struct {
 	DatabaseType string                 `json:"databaseType,omitempty"`
 
 	IsBatch     bool   `json:"isBatch,omitempty"`
-	BatchSize   int64  `json:"batchSize,omitempty"`
+	BatchSize   int    `json:"batchSize,omitempty"`
 	TestType    string `json:"testType,omitempty"`
 	TaskKey     string `json:"taskKey,omitempty"`
 	IsCallOnce  bool   `json:"isCallOnce,omitempty"` // 调用一次
@@ -212,12 +212,20 @@ type BaseRequest struct {
 	CountSecond int    `json:"countSecond,omitempty"` // 统计间隔秒 如 每秒统计 输入 1 默认 10 秒统计
 	CountTop    bool   `json:"countTop,omitempty"`
 
+	MaxIdleConn int `json:"maxIdleConn,omitempty"`
+	MaxOpenConn int `json:"maxOpenConn,omitempty"`
+
 	ShowDataMaxSize int `json:"showDataMaxSize,omitempty"`
 
 	InsertList      []map[string]interface{} `json:"insertList,omitempty"`
 	UpdateList      []map[string]interface{} `json:"updateList,omitempty"`
 	UpdateWhereList []map[string]interface{} `json:"updateWhereList,omitempty"`
 	DeleteList      []map[string]interface{} `json:"deleteList,omitempty"`
+
+	Username   string          `json:"username,omitempty"`
+	Password   string          `json:"password,omitempty"`
+	TestSql    string          `json:"testSql,omitempty"`
+	ScriptVars []*db.ScriptVar `json:"scriptVars,omitempty"`
 }
 
 func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
