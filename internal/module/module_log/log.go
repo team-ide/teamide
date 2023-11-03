@@ -130,7 +130,7 @@ func (this_ *LogService) clean(log *LogModel) (err error) {
 		sql += " AND userId=?"
 		values = append(values, log.UserId)
 	}
-	_, err = this_.DatabaseWorker.GetDb().Exec(sql, values)
+	_, err = this_.DatabaseWorker.Exec(sql, values)
 	if err != nil {
 		return
 	}

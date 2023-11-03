@@ -2,6 +2,11 @@ module teamide
 
 go 1.18
 
+//replace (
+//	github.com/team-ide/go-tool v1.1.3 => ../go-tool
+//	github.com/team-ide/go-dialect v1.9.11 => ../go-dialect
+//)
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/apache/thrift v0.17.0
@@ -13,8 +18,8 @@ require (
 	github.com/pkg/sftp v1.13.5
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.1
-	github.com/team-ide/go-dialect v1.9.8
-	github.com/team-ide/go-tool v1.0.6
+	github.com/team-ide/go-dialect v1.9.11
+	github.com/team-ide/go-tool v1.1.4
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.14.0

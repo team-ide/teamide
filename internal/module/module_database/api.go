@@ -956,10 +956,10 @@ func (this_ *api) taskClean(requestBean *base.RequestBean, c *gin.Context) (res 
 	task := worker.GetTask(request.TaskId)
 	if task != nil {
 		if task.Extend != nil {
-			if task.Extend["dirPath"] != "" {
+			if task.Extend["dirPath"] != nil && task.Extend["dirPath"] != "" {
 				_ = os.RemoveAll(task.Extend["dirPath"].(string))
 			}
-			if task.Extend["zipPath"] != "" {
+			if task.Extend["zipPath"] != nil && task.Extend["zipPath"] != "" {
 				_ = os.Remove(task.Extend["zipPath"].(string))
 			}
 		}
