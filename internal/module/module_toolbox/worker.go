@@ -393,7 +393,7 @@ func databaseWorker() *ToolboxType {
 					},
 				},
 				{
-					Label: "SSH隧道", Name: "sshToolboxId", Type: "select", VIf: `type == 'mysql'`,
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select", VIf: `type == 'mysql' || type == 'kingbase' || type == 'postgresql' || type == 'opengauss'`,
 					OptionsName: "sshToolboxOptions",
 					Rules:       []*form.Rule{},
 				},

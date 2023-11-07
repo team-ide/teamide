@@ -102,6 +102,11 @@ func (this_ *Server) toStaticByName(name string, c *gin.Context) bool {
 
 func (this_ *Server) toFiles(path string, c *gin.Context) bool {
 
+	if c.Query("isDownload") == "true" || c.Query("isDownload") == "1" {
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Transfer-Encoding", "binary")
+	}
+
 	index := strings.LastIndex(path, "files/")
 	if index < 0 {
 		return false

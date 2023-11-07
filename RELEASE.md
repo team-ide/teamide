@@ -1,12 +1,10 @@
-# 2.4.6
+# 2.4.7
 
-## Version 2.4.6 （2023/11/3）
+## Version 2.4.7 （2023/11/7）
 
 发布功能
 
-* 修复日志无法删除问题
-* 数据库
-  * 重构 mysql profiles信息查看，改为弹窗
-  * 数据库查询的数据可以通过右击导出
-    * 可以导出 SQL、Excel、CSV、Txt
-  * 数据导出 Excel、CSV、Txt 第一行导出列名
+* KingBase、OpenGauss、Postgresql 数据库添加 SSH隧道支持
+* SSH配置中上传的 `PublicKey` 点击进行下载
+* 数据库识别 `date`、`datetime`、`timestamp` 或 `值长度为13且转日期成功` 数据列表使用日期控件渲染
+  * 可以通过 `开启日期识别`、`关闭日期识别` 来启用、停用
