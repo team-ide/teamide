@@ -255,6 +255,7 @@ type SessionResponse struct {
 	Powers      []string               `json:"powers,omitempty"`
 	JWT         string                 `json:"JWT,omitempty"`
 	IsAnonymous bool                   `json:"isAnonymous,omitempty"`
+	UserSetting map[string]string      `json:"userSetting,omitempty"`
 }
 
 func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -292,6 +293,10 @@ func (this_ *Api) apiSession(request *base.RequestBean, c *gin.Context) (res int
 		listener := context.GetListener(request.ClientTabKey)
 		if listener != nil && listener.UserId != response.User.UserId {
 			context.ChangeListenerUserId(listener, response.User.UserId)
+		}
+		response.UserSetting, err = this_.userSettingService.Query(response.User.UserId)
+		if err != nil {
+			return
 		}
 	}
 

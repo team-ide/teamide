@@ -36,19 +36,20 @@ import (
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
 	api = &Api{
-		ServerContext:     ServerContext,
-		userService:       module_user.NewUserService(ServerContext),
-		registerService:   module_register.NewRegisterService(ServerContext),
-		loginService:      module_login.NewLoginService(ServerContext),
-		installService:    NewInstallService(ServerContext),
-		toolboxService:    module_toolbox.NewToolboxService(ServerContext),
-		nodeService:       module_node.NewNodeService(ServerContext),
-		powerRoleService:  module_power.NewPowerRoleService(ServerContext),
-		powerRouteService: module_power.NewPowerRouteService(ServerContext),
-		powerUserService:  module_power.NewPowerUserService(ServerContext),
-		settingService:    module_setting.NewSettingService(ServerContext),
-		idService:         module_id.NewIDService(ServerContext),
-		apiCache:          make(map[string]*base.ApiWorker),
+		ServerContext:      ServerContext,
+		userService:        module_user.NewUserService(ServerContext),
+		userSettingService: module_user.NewUserSettingService(ServerContext),
+		registerService:    module_register.NewRegisterService(ServerContext),
+		loginService:       module_login.NewLoginService(ServerContext),
+		installService:     NewInstallService(ServerContext),
+		toolboxService:     module_toolbox.NewToolboxService(ServerContext),
+		nodeService:        module_node.NewNodeService(ServerContext),
+		powerRoleService:   module_power.NewPowerRoleService(ServerContext),
+		powerRouteService:  module_power.NewPowerRouteService(ServerContext),
+		powerUserService:   module_power.NewPowerUserService(ServerContext),
+		settingService:     module_setting.NewSettingService(ServerContext),
+		idService:          module_id.NewIDService(ServerContext),
+		apiCache:           make(map[string]*base.ApiWorker),
 	}
 	api.logService, err = module_log.NewLogService(ServerContext)
 	if err != nil {
@@ -111,19 +112,20 @@ func (this_ *Api) InitSetting() (err error) {
 // Api ID服务
 type Api struct {
 	*context.ServerContext
-	toolboxService    *module_toolbox.ToolboxService
-	nodeService       *module_node.NodeService
-	userService       *module_user.UserService
-	registerService   *module_register.RegisterService
-	loginService      *module_login.LoginService
-	powerRoleService  *module_power.PowerRoleService
-	powerRouteService *module_power.PowerRouteService
-	powerUserService  *module_power.PowerUserService
-	logService        *module_log.LogService
-	settingService    *module_setting.SettingService
-	idService         *module_id.IDService
-	installService    *InstallService
-	apiCache          map[string]*base.ApiWorker
+	toolboxService     *module_toolbox.ToolboxService
+	nodeService        *module_node.NodeService
+	userService        *module_user.UserService
+	userSettingService *module_user.UserSettingService
+	registerService    *module_register.RegisterService
+	loginService       *module_login.LoginService
+	powerRoleService   *module_power.PowerRoleService
+	powerRouteService  *module_power.PowerRouteService
+	powerUserService   *module_power.PowerUserService
+	logService         *module_log.LogService
+	settingService     *module_setting.SettingService
+	idService          *module_id.IDService
+	installService     *InstallService
+	apiCache           map[string]*base.ApiWorker
 }
 
 var (

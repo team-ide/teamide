@@ -13,6 +13,7 @@ type Api struct {
 	*context.ServerContext
 	UserService         *UserService
 	UserPasswordService *UserPasswordService
+	UserSettingService  *UserSettingService
 }
 
 func NewApi(UserService *UserService) *Api {
@@ -20,6 +21,7 @@ func NewApi(UserService *UserService) *Api {
 		ServerContext:       UserService.ServerContext,
 		UserService:         UserService,
 		UserPasswordService: NewUserPasswordService(UserService.ServerContext),
+		UserSettingService:  NewUserSettingService(UserService.ServerContext),
 	}
 }
 
@@ -31,12 +33,14 @@ var (
 	getPower            = base.AppendPower(&base.PowerAction{Action: "get", Text: "登录用户信息", Parent: Power, ShouldLogin: true, StandAlone: true})
 	updatePower         = base.AppendPower(&base.PowerAction{Action: "update", Text: "登录用户信息修改", Parent: Power, ShouldLogin: true, StandAlone: true})
 	updatePasswordPower = base.AppendPower(&base.PowerAction{Action: "updatePassword", Text: "登录用户密码修改", Parent: Power, ShouldLogin: true, StandAlone: true})
+	settingSave         = base.AppendPower(&base.PowerAction{Action: "setting/save", Text: "保存设置", Parent: Power, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *Api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: getPower, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: updatePower, Do: this_.update})
 	apis = append(apis, &base.ApiWorker{Power: updatePasswordPower, Do: this_.updatePassword})
+	apis = append(apis, &base.ApiWorker{Power: settingSave, Do: this_.settingSave})
 
 	return
 }
@@ -165,5 +169,24 @@ func (this_ *Api) updatePassword(requestBean *base.RequestBean, c *gin.Context) 
 	}
 
 	res = response
+	return
+}
+
+type SettingSaveRequest struct {
+	Setting map[string]string `json:"setting,omitempty"`
+}
+
+func (this_ *Api) settingSave(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &SettingSaveRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.UserSettingService.Save(requestBean.JWT.UserId, request.Setting)
+	if err != nil {
+		return
+	}
+
 	return
 }

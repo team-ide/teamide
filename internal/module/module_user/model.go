@@ -11,6 +11,8 @@ const (
 	TableUserAuth = "TM_USER_AUTH"
 	// TableUserPassword 用户密码表
 	TableUserPassword = "TM_USER_PASSWORD"
+	// TableUserSetting 用户设置表
+	TableUserSetting = "TM_USER_SETTING"
 )
 
 // UserModel 用户模型，和用户表对应
@@ -49,6 +51,15 @@ type UserPasswordModel struct {
 	UserId     int64     `json:"userId,omitempty"`
 	Salt       string    `json:"salt,omitempty"`
 	Password   string    `json:"password,omitempty"`
+	CreateTime time.Time `json:"createTime,omitempty"`
+	UpdateTime time.Time `json:"updateTime,omitempty"`
+}
+
+// UserSettingModel 用户设置模型
+type UserSettingModel struct {
+	UserId     int64     `json:"userId,omitempty"`
+	Name       string    `json:"name,omitempty"`
+	Value      string    `json:"value,omitempty"`
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 }

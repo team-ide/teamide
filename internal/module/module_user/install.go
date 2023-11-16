@@ -7,7 +7,7 @@ func GetInstallStages() []*install.StageModel {
 	return []*install.StageModel{
 
 		// 创建用户表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleUser,
 			Stage:   `创建表[` + TableUser + `]`,
@@ -65,7 +65,7 @@ CREATE TABLE ` + TableUser + ` (
 		},
 
 		// 创建用户授权表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleUser,
 			Stage:   `创建表[` + TableUserAuth + `]`,
@@ -115,7 +115,7 @@ CREATE TABLE ` + TableUserAuth + ` (
 		},
 
 		// 创建用户密码表
-		&install.StageModel{
+		{
 			Version: "1.0",
 			Module:  ModuleUser,
 			Stage:   `创建表[` + TableUserPassword + `]`,
@@ -140,6 +140,38 @@ CREATE TABLE ` + TableUserPassword + ` (
 	PRIMARY KEY (userId)
 );
 `,
+				},
+			},
+		},
+
+		// 创建用户设置表
+		{
+			Version: "1.0",
+			Module:  ModuleUser,
+			Stage:   `创建表[` + TableUserSetting + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableUserSetting + ` (
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	name varchar(100) NOT NULL COMMENT '名称',
+	value varchar(1000) DEFAULT NULL COMMENT '值',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (userId, name),
+	KEY index_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户设置';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableUserSetting + ` (
+	userId bigint(20) NOT NULL,
+	name varchar(100) NOT NULL,
+	value varchar(1000) DEFAULT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	PRIMARY KEY (userId, name)
+);
+`,
+					`CREATE INDEX ` + TableUserSetting + `_index_userId on ` + TableUserSetting + ` (userId);`,
 				},
 			},
 		},
