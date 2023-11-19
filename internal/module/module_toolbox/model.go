@@ -41,6 +41,16 @@ type ToolboxModel struct {
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
 }
 
+// ToolboxVisibilityModel 可见工具
+type ToolboxVisibilityModel struct {
+	ToolboxId   int64  `json:"toolboxId,omitempty"`
+	ToolboxType string `json:"toolboxType,omitempty"`
+	GroupId     int64  `json:"groupId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Comment     string `json:"comment,omitempty"`
+	UserId      int64  `json:"userId,omitempty"`
+}
+
 // ToolboxOpenModel 工具箱打开模型，和工具箱打开表对应
 type ToolboxOpenModel struct {
 	OpenId         int64     `json:"openId,omitempty"`

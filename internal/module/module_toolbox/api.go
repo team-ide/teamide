@@ -21,15 +21,15 @@ var (
 	// 工具 权限
 
 	// Power 工具基本 权限
-	Power          = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具箱", ShouldLogin: true, StandAlone: true})
-	PowerList      = base.AppendPower(&base.PowerAction{Action: "list", Text: "工具箱列表", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerGet       = base.AppendPower(&base.PowerAction{Action: "get", Text: "工具箱查询", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerCount     = base.AppendPower(&base.PowerAction{Action: "count", Text: "工具箱统计", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerInsert    = base.AppendPower(&base.PowerAction{Action: "insert", Text: "工具箱新增", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerUpdate    = base.AppendPower(&base.PowerAction{Action: "update", Text: "工具箱修改", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerRename    = base.AppendPower(&base.PowerAction{Action: "rename", Text: "工具箱重命名", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerDelete    = base.AppendPower(&base.PowerAction{Action: "delete", Text: "工具箱删除", Parent: Power, ShouldLogin: true, StandAlone: true})
-	PowerMoveGroup = base.AppendPower(&base.PowerAction{Action: "moveGroup", Text: "工具箱分组", Parent: Power, ShouldLogin: true, StandAlone: true})
+	Power           = base.AppendPower(&base.PowerAction{Action: "toolbox", Text: "工具箱", ShouldLogin: true, StandAlone: true})
+	queryVisibility = base.AppendPower(&base.PowerAction{Action: "queryVisibility", Text: "工具箱列表", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerGet        = base.AppendPower(&base.PowerAction{Action: "get", Text: "工具箱查询", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerCount      = base.AppendPower(&base.PowerAction{Action: "count", Text: "工具箱统计", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerInsert     = base.AppendPower(&base.PowerAction{Action: "insert", Text: "工具箱新增", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerUpdate     = base.AppendPower(&base.PowerAction{Action: "update", Text: "工具箱修改", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerRename     = base.AppendPower(&base.PowerAction{Action: "rename", Text: "工具箱重命名", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerDelete     = base.AppendPower(&base.PowerAction{Action: "delete", Text: "工具箱删除", Parent: Power, ShouldLogin: true, StandAlone: true})
+	PowerMoveGroup  = base.AppendPower(&base.PowerAction{Action: "moveGroup", Text: "工具箱分组", Parent: Power, ShouldLogin: true, StandAlone: true})
 
 	PowerGroup       = base.AppendPower(&base.PowerAction{Action: "group", Text: "工具箱分组列表", Parent: Power, ShouldLogin: true, StandAlone: true})
 	PowerGroupList   = base.AppendPower(&base.PowerAction{Action: "list", Text: "工具箱分组列表", Parent: PowerGroup, ShouldLogin: true, StandAlone: true})
@@ -56,7 +56,7 @@ var (
 )
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
-	apis = append(apis, &base.ApiWorker{Power: PowerList, Do: this_.list})
+	apis = append(apis, &base.ApiWorker{Power: queryVisibility, Do: this_.queryVisibility})
 	apis = append(apis, &base.ApiWorker{Power: PowerGet, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: PowerCount, Do: this_.count})
 	apis = append(apis, &base.ApiWorker{Power: PowerInsert, Do: this_.insert})

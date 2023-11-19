@@ -48,10 +48,10 @@ func (this_ *ToolboxService) Get(toolboxId int64) (res *ToolboxModel, err error)
 var visibilityOpen = 1
 
 // QueryVisibility 查询 可见工具
-func (this_ *ToolboxService) QueryVisibility(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
+func (this_ *ToolboxService) QueryVisibility(toolbox *ToolboxModel) (res []*ToolboxVisibilityModel, err error) {
 
 	var values []interface{}
-	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 `
+	sql := `SELECT toolboxId,toolboxType,groupId,name,comment,userId FROM ` + TableToolbox + ` WHERE deleted=2 `
 	sql += " AND ("
 	sql += " visibility = ?"
 	values = append(values, visibilityOpen)

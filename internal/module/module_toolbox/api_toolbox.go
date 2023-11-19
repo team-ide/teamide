@@ -34,21 +34,21 @@ func (this_ *ToolboxApi) count(requestBean *base.RequestBean, c *gin.Context) (r
 	return
 }
 
-type ListRequest struct {
+type QueryVisibilityRequest struct {
 	ToolboxType string `json:"toolboxType,omitempty"`
 }
 
-type ListResponse struct {
-	ToolboxList []*ToolboxModel `json:"toolboxList,omitempty"`
+type QueryVisibilityResponse struct {
+	ToolboxList []*ToolboxVisibilityModel `json:"toolboxList,omitempty"`
 }
 
-func (this_ *ToolboxApi) list(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *ToolboxApi) queryVisibility(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &ListRequest{}
+	request := &QueryVisibilityRequest{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	response := &ListResponse{}
+	response := &QueryVisibilityResponse{}
 
 	response.ToolboxList, err = this_.ToolboxService.QueryVisibility(&ToolboxModel{
 		UserId:      requestBean.JWT.UserId,

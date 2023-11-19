@@ -130,6 +130,16 @@ jobs:
           name: release
           path: release
 
+      # 读取发布地址
+      - id: release_upload_url
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/release.json
+          property: upload_url
+
+      - if: ${{ steps.release_upload_url.outputs.value == '' }}
+        run: exit
+
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
@@ -187,6 +197,16 @@ jobs:
         with:
           name: release
           path: release
+
+      # 读取发布地址
+      - id: release_upload_url
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/release.json
+          property: upload_url
+
+      - if: ${{ steps.release_upload_url.outputs.value == '' }}
+        run: exit
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -324,6 +344,16 @@ jobs:
         with:
           name: release
           path: release
+
+      # 读取发布地址
+      - id: release_upload_url
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/release.json
+          property: upload_url
+
+      - if: ${{ steps.release_upload_url.outputs.value == '' }}
+        run: exit
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
