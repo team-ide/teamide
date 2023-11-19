@@ -269,15 +269,6 @@ jobs:
           #指定用户/仓库名
           tags: teamide/teamide-server:latest,teamide/teamide-server:${{ steps.release_version.outputs.value }}
 
-
-      # 读取发布地址
-      - name: Read Release Upload Url
-        id: release_upload_url
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: release/release.json
-          property: upload_url
-
       - run: |
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
