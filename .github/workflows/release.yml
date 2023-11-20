@@ -137,9 +137,6 @@ jobs:
           path: release/release.json
           property: upload_url
 
-      - if: ${{ steps.release_upload_url.outputs.value == '' }}
-        run: exit
-
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
@@ -172,7 +169,8 @@ jobs:
         with:
           node-version: 16
 
-      - name: Electron Build
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        name: Electron Build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -204,9 +202,6 @@ jobs:
         with:
           path: release/release.json
           property: upload_url
-
-      - if: ${{ steps.release_upload_url.outputs.value == '' }}
-        run: exit
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -258,7 +253,8 @@ jobs:
           #这里用到了github的secrets功能，避免账户和密码随仓库泄露
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        name: Build and push
         #导入这个模块来完成自动编译和推送
         uses: docker/build-push-action@v3
         with:
@@ -303,7 +299,8 @@ jobs:
         with:
           node-version: 16
 
-      - name: Electron Build
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        name: Electron Build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -343,9 +340,6 @@ jobs:
           path: release/release.json
           property: upload_url
 
-      - if: ${{ steps.release_upload_url.outputs.value == '' }}
-        run: exit
-
       # 下载共享资源
       - uses: actions/download-artifact@v2
         with:
@@ -379,7 +373,8 @@ jobs:
         with:
           node-version: 16
 
-      - name: Electron Build
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        name: Electron Build
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}

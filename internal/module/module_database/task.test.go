@@ -291,7 +291,7 @@ func (this_ *api) getTestDirByTaskKey(request *BaseRequest, taskKey string) (dir
 }
 
 func (this_ *api) getTestParentDir(request *BaseRequest) (dir string) {
-	dir = fmt.Sprintf("%s/toolbox-%d/", "database-test", request.ToolboxId)
+	dir = fmt.Sprintf("%s%s/toolbox-%d/", this_.toolboxService.GetFilesDir(), "database-test", request.ToolboxId)
 	return
 }
 
