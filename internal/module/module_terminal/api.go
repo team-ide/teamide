@@ -44,6 +44,8 @@ var (
 	deleteLog            = base.AppendPower(&base.PowerAction{Action: "deleteLog", Text: "deleteLog", ShouldLogin: true, StandAlone: true, Parent: Power})
 	cleanLog             = base.AppendPower(&base.PowerAction{Action: "cleanLog", Text: "cleanLog", ShouldLogin: true, StandAlone: true, Parent: Power})
 	downloadLog          = base.AppendPower(&base.PowerAction{Action: "downloadLog", Text: "downloadLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	systemInfo           = base.AppendPower(&base.PowerAction{Action: "system/info", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
+	systemMonitor        = base.AppendPower(&base.PowerAction{Action: "system/monitor", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -57,6 +59,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: deleteLog, Do: this_.deleteLog})
 	apis = append(apis, &base.ApiWorker{Power: cleanLog, Do: this_.cleanLog})
 	apis = append(apis, &base.ApiWorker{Power: downloadLog, Do: this_.downloadLog})
+	apis = append(apis, &base.ApiWorker{Power: systemInfo, Do: this_.systemInfo})
+	apis = append(apis, &base.ApiWorker{Power: systemMonitor, Do: this_.systemMonitor, NotRecodeLog: true})
 
 	return
 }
@@ -174,6 +178,43 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	return
 }
 
+func (this_ *api) systemInfo(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	service := this_.GetService(request.Key)
+	if service == nil || service.service == nil {
+		return
+	}
+
+	data := map[string]interface{}{}
+	data["cpuInfo"], _ = service.service.GetCpuInfo()
+
+	res = data
+	return
+}
+
+func (this_ *api) systemMonitor(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	service := this_.GetService(request.Key)
+	if service == nil || service.service == nil {
+		return
+	}
+
+	data := map[string]interface{}{}
+	data["cpuPercent"], _ = service.service.GetCpuPercent()
+	data["memInfo"], _ = service.service.GetMemInfo()
+	data["diskStats"], _ = service.service.GetDiskStats()
+
+	res = data
+	return
+}
 func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	if request.JWT == nil || request.JWT.UserId == 0 {

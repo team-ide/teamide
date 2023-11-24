@@ -305,7 +305,9 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 		if err != nil {
 			this_.Logger.Error("处理操作异常", zap.Any("action", action), zap.Any("useTime", useTime), zap.Any("error", err.Error()))
 		} else {
-			this_.Logger.Debug("处理操作", zap.Any("action", action), zap.Any("useTime", useTime))
+			if !api.NotRecodeLog {
+				this_.Logger.Debug("处理操作", zap.Any("action", action), zap.Any("useTime", useTime))
+			}
 		}
 		if res == base.HttpNotResponse {
 			return true

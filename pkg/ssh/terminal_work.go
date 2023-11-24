@@ -1,10 +1,18 @@
 package ssh
 
 import (
+	"bytes"
+	"errors"
+	"github.com/pkg/sftp"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"os"
+	"strings"
 	"sync"
 	"teamide/pkg/terminal"
 	"time"
@@ -33,6 +41,7 @@ type terminalService struct {
 	lastActive   time.Time
 	lastUser     string
 	lastDir      string
+	sftpClient   *sftp.Client
 }
 
 func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
@@ -42,6 +51,9 @@ func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
 
 func (this_ *terminalService) Stop() {
 	this_.isStopped = true
+	if this_.sftpClient != nil {
+		_ = this_.sftpClient.Close()
+	}
 	if this_.sshSession != nil {
 		_ = this_.sshSession.Close()
 	}
@@ -87,6 +99,102 @@ func (this_ *terminalService) TestClient() (err error) {
 	}()
 	return
 }
+func (this_ *terminalService) readSSHFile(filepath string) (text string, err error) {
+	if this_.sftpClient == nil {
+		if this_.sshClient == nil {
+			err = errors.New("ssh client is null")
+			return
+		}
+		this_.sftpClient, err = sftp.NewClient(this_.sshClient)
+		if err != nil {
+			return
+		}
+	}
+	f, err := this_.sftpClient.Open(filepath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+		}
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	buf := &bytes.Buffer{}
+	_, err = io.Copy(buf, f)
+	if err != nil {
+		return
+	}
+	text = buf.String()
+	return
+}
+
+func (this_ *terminalService) GetCpuStats() (res []cpu.TimesStat, err error) {
+	statText, err := this_.readSSHFile("/proc/stat")
+	if err != nil {
+		return
+	}
+	res = ParseProcStat(statText)
+	return
+}
+
+func (this_ *terminalService) GetCpuPercent() (res []float64, err error) {
+	// Get CPU usage at the start of the interval.
+	cpuTimes1, err := this_.GetCpuStats()
+	if err != nil {
+		return
+	}
+	time.Sleep(time.Second)
+	cpuTimes2, err := this_.GetCpuStats()
+	if err != nil {
+		return
+	}
+	return calculateAllBusy(cpuTimes1, cpuTimes2)
+}
+
+func (this_ *terminalService) GetCpuInfo() (res []cpu.InfoStat, err error) {
+	cpuInfoText, err := this_.readSSHFile("/proc/cpuinfo")
+	if err != nil {
+		return
+	}
+	res, err = ParseProcCpuInfo(cpuInfoText, func(filepath string) []string {
+		text, _ := this_.readSSHFile(filepath)
+		return strings.Split(text, "\n")
+	})
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *terminalService) GetMemInfo() (res *mem.VirtualMemoryStat, err error) {
+
+	memInfoText, err := this_.readSSHFile("/proc/meminfo")
+	if err != nil {
+		return
+	}
+	zoneInfoText, err := this_.readSSHFile("/proc/zoneinfo")
+	if err != nil {
+		return
+	}
+	res, _, err = ParseProcMemInfo(memInfoText, zoneInfoText)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *terminalService) GetDiskStats() (res map[string]disk.IOCountersStat, err error) {
+	diskStatsText, err := this_.readSSHFile("/proc/diskstats")
+	if err != nil {
+		return
+	}
+	res, err = ParseProcDiskStats(diskStatsText)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 
 	this_.sshClient, err = NewClient(*this_.config)

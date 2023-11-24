@@ -2,9 +2,13 @@ package terminal
 
 import (
 	"errors"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
+	"time"
 )
 
 func NewLocalService() (res *localService) {
@@ -109,4 +113,20 @@ func (this_ *localService) Read(buf []byte) (n int, err error) {
 	//util.Logger.Info("local terminal read start")
 	n, err = this_.terminalStart.Read(buf)
 	return
+}
+
+func (this_ *localService) GetDiskStats() (res map[string]disk.IOCountersStat, err error) {
+	return disk.IOCounters()
+}
+func (this_ *localService) GetMemInfo() (res *mem.VirtualMemoryStat, err error) {
+	return mem.VirtualMemory()
+}
+func (this_ *localService) GetCpuInfo() (res []cpu.InfoStat, err error) {
+	return cpu.Info()
+}
+func (this_ *localService) GetCpuPercent() (res []float64, err error) {
+	return cpu.Percent(time.Second, true)
+}
+func (this_ *localService) GetCpuStats() (res []cpu.TimesStat, err error) {
+	return cpu.Times(true)
 }
