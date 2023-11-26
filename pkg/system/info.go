@@ -1,8 +1,6 @@
 package system
 
 import (
-	"errors"
-	"fmt"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
@@ -10,7 +8,6 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"reflect"
 	"sync"
 	"teamide/pkg/task"
 	"time"
@@ -21,136 +18,7 @@ var (
 	CollectMaxSize      = 3600
 	collectLock         = &sync.Mutex{}
 	monitorDataListLock = &sync.Mutex{}
-)
-
-type VirtualMemoryStat struct {
-	Total          uint64  `json:"total,omitempty"`
-	Available      uint64  `json:"available,omitempty"`
-	Used           uint64  `json:"used,omitempty"`
-	UsedPercent    float64 `json:"usedPercent,omitempty"`
-	Free           uint64  `json:"free,omitempty"`
-	Active         uint64  `json:"active,omitempty"`
-	Inactive       uint64  `json:"inactive,omitempty"`
-	Wired          uint64  `json:"wired,omitempty"`
-	Laundry        uint64  `json:"laundry,omitempty"`
-	Buffers        uint64  `json:"buffers,omitempty"`
-	Cached         uint64  `json:"cached,omitempty"`
-	WriteBack      uint64  `json:"writeBack,omitempty"`
-	Dirty          uint64  `json:"dirty,omitempty"`
-	WriteBackTmp   uint64  `json:"writeBackTmp,omitempty"`
-	Shared         uint64  `json:"shared,omitempty"`
-	Slab           uint64  `json:"slab,omitempty"`
-	Sreclaimable   uint64  `json:"sreclaimable,omitempty"`
-	Sunreclaim     uint64  `json:"sunreclaim,omitempty"`
-	PageTables     uint64  `json:"pageTables,omitempty"`
-	SwapCached     uint64  `json:"swapCached,omitempty"`
-	CommitLimit    uint64  `json:"commitLimit,omitempty"`
-	CommittedAS    uint64  `json:"committedAS,omitempty"`
-	HighTotal      uint64  `json:"highTotal,omitempty"`
-	HighFree       uint64  `json:"highFree,omitempty"`
-	LowTotal       uint64  `json:"lowTotal,omitempty"`
-	LowFree        uint64  `json:"lowFree,omitempty"`
-	SwapTotal      uint64  `json:"swapTotal,omitempty"`
-	SwapFree       uint64  `json:"swapFree,omitempty"`
-	Mapped         uint64  `json:"mapped,omitempty"`
-	VmallocTotal   uint64  `json:"vmallocTotal,omitempty"`
-	VmallocUsed    uint64  `json:"vmallocUsed,omitempty"`
-	VmallocChunk   uint64  `json:"vmallocChunk,omitempty"`
-	HugePagesTotal uint64  `json:"hugePagesTotal,omitempty"`
-	HugePagesFree  uint64  `json:"hugePagesFree,omitempty"`
-	HugePagesRsvd  uint64  `json:"hugePagesRsvd,omitempty"`
-	HugePagesSurp  uint64  `json:"hugePagesSurp,omitempty"`
-	HugePageSize   uint64  `json:"hugePageSize,omitempty"`
-}
-
-type DiskUsageStat struct {
-	Path              string  `json:"path,omitempty"`
-	Fstype            string  `json:"fstype,omitempty"`
-	Total             uint64  `json:"total,omitempty"`
-	Free              uint64  `json:"free,omitempty"`
-	Used              uint64  `json:"used,omitempty"`
-	UsedPercent       float64 `json:"usedPercent,omitempty"`
-	InodesTotal       uint64  `json:"inodesTotal,omitempty"`
-	InodesUsed        uint64  `json:"inodesUsed,omitempty"`
-	InodesFree        uint64  `json:"inodesFree,omitempty"`
-	InodesUsedPercent float64 `json:"inodesUsedPercent,omitempty"`
-}
-
-type HostInfoStat struct {
-	Hostname             string `json:"hostname,omitempty"`
-	Uptime               uint64 `json:"uptime,omitempty"`
-	BootTime             uint64 `json:"bootTime,omitempty"`
-	Procs                uint64 `json:"procs,omitempty"`           // number of processes
-	OS                   string `json:"os,omitempty"`              // ex: freebsd, linux
-	Platform             string `json:"platform,omitempty"`        // ex: ubuntu, linuxmint
-	PlatformFamily       string `json:"platformFamily,omitempty"`  // ex: debian, rhel
-	PlatformVersion      string `json:"platformVersion,omitempty"` // version of the complete OS
-	KernelVersion        string `json:"kernelVersion,omitempty"`   // version of the OS kernel (if available)
-	KernelArch           string `json:"kernelArch,omitempty"`      // native cpu architecture queried at runtime, as returned by `uname -m` or empty string in case of error
-	VirtualizationSystem string `json:"virtualizationSystem,omitempty"`
-	VirtualizationRole   string `json:"virtualizationRole,omitempty"` // guest or host
-	HostID               string `json:"hostId,omitempty"`             // ex: uuid
-}
-
-type NetIOCountersStat struct {
-	Name        string `json:"name,omitempty"`        // interface name
-	BytesSent   uint64 `json:"bytesSent,omitempty"`   // number of bytes sent
-	BytesRecv   uint64 `json:"bytesRecv,omitempty"`   // number of bytes received
-	PacketsSent uint64 `json:"packetsSent,omitempty"` // number of packets sent
-	PacketsRecv uint64 `json:"packetsRecv,omitempty"` // number of packets received
-	SpeedSent   uint64 `json:"speedSent,omitempty"`   // number of packets sent
-	SpeedRecv   uint64 `json:"speedRecv,omitempty"`   // number of packets received
-	Errin       uint64 `json:"errin,omitempty"`       // total number of errors while receiving
-	Errout      uint64 `json:"errout,omitempty"`      // total number of errors while sending
-	Dropin      uint64 `json:"dropin,omitempty"`      // total number of incoming packets which were dropped
-	Dropout     uint64 `json:"dropout,omitempty"`     // total number of outgoing packets which were dropped (always 0 on OSX and BSD)
-	Fifoin      uint64 `json:"fifoin,omitempty"`      // total number of FIFO buffers errors while receiving
-	Fifoout     uint64 `json:"fifoout,omitempty"`     // total number of FIFO buffers errors while sending
-}
-
-type CpuInfoStat struct {
-	CPU        int32    `json:"cpu,omitempty"`
-	VendorID   string   `json:"vendorId,omitempty"`
-	Family     string   `json:"family,omitempty"`
-	Model      string   `json:"model,omitempty"`
-	Stepping   int32    `json:"stepping,omitempty"`
-	PhysicalID string   `json:"physicalId,omitempty"`
-	CoreID     string   `json:"coreId,omitempty"`
-	Cores      int32    `json:"cores,omitempty"`
-	ModelName  string   `json:"modelName,omitempty"`
-	Mhz        float64  `json:"mhz,omitempty"`
-	CacheSize  int32    `json:"cacheSize,omitempty"`
-	Flags      []string `json:"flags,omitempty"`
-	Microcode  string   `json:"microcode,omitempty"`
-}
-
-type MonitorData struct {
-	VirtualMemoryStat  *VirtualMemoryStat   `json:"virtualMemoryStat,omitempty"`
-	CpuPercents        []float64            `json:"cpuPercents,omitempty"`
-	DiskUsageStat      *DiskUsageStat       `json:"diskUsageStat,omitempty"`
-	NetIOCountersStats []*NetIOCountersStat `json:"netIOCountersStats,omitempty"`
-	StartTime          int64                `json:"startTime,omitempty"`
-	EndTime            int64                `json:"endTime,omitempty"`
-}
-
-type Info struct {
-	HostInfoStat *HostInfoStat  `json:"hostInfoStat,omitempty"`
-	CpuInfoStats []*CpuInfoStat `json:"cpuInfoStats,omitempty"`
-}
-
-type QueryRequest struct {
-	Timestamp int64 `json:"timestamp,omitempty"`
-	Size      int   `json:"size,omitempty"`
-}
-
-type QueryResponse struct {
-	LastTimestamp   int64          `json:"lastTimestamp,omitempty"`
-	MonitorDataList []*MonitorData `json:"monitorDataList,omitempty"`
-	Size            int            `json:"size,omitempty"`
-}
-
-var (
-	monitorDataTask *task.CronTask
+	monitorDataTask     *task.CronTask
 )
 
 //func StopCollectMonitorData() {
@@ -167,7 +35,7 @@ func StartCollectMonitorData() {
 		return
 	}
 	monitorDataTask = &task.CronTask{
-		Spec: "0/5 * * * * *",
+		Spec: "0/10 * * * * *",
 		Task: &task.Task{
 			Key: monitorDataTaskKey,
 			Do: func() {
@@ -239,25 +107,123 @@ func GetInfo() (info *Info) {
 	if err != nil {
 		return
 	}
-	info.HostInfoStat = &HostInfoStat{}
-	err = SimpleCopyProperties(info.HostInfoStat, hostInfoStat)
-	if err != nil {
-		return
+	info.HostInfoStat = &HostInfoStat{
+		Hostname:             hostInfoStat.Hostname,
+		Uptime:               hostInfoStat.Uptime,
+		BootTime:             hostInfoStat.BootTime,
+		Procs:                hostInfoStat.Procs,
+		OS:                   hostInfoStat.OS,
+		Platform:             hostInfoStat.Platform,
+		PlatformFamily:       hostInfoStat.PlatformFamily,
+		PlatformVersion:      hostInfoStat.PlatformVersion,
+		KernelVersion:        hostInfoStat.KernelVersion,
+		KernelArch:           hostInfoStat.KernelArch,
+		VirtualizationSystem: hostInfoStat.VirtualizationSystem,
+		VirtualizationRole:   hostInfoStat.VirtualizationRole,
+		HostID:               hostInfoStat.HostID,
 	}
 
-	cpus, err := cpu.Info()
-	if err != nil {
+	cpus, _ := cpu.Info()
+	if cpus != nil {
+		for _, one := range cpus {
+			cInfo := &CpuInfoStat{
+				CPU:        one.CPU,
+				VendorID:   one.VendorID,
+				Family:     one.Family,
+				Model:      one.Model,
+				Stepping:   one.Stepping,
+				PhysicalID: one.PhysicalID,
+				CoreID:     one.CoreID,
+				Cores:      one.Cores,
+				ModelName:  one.ModelName,
+				Mhz:        one.Mhz,
+				CacheSize:  one.CacheSize,
+				//Flags:      one.Flags,
+				Microcode: one.Microcode,
+			}
+			info.CpuInfoStats = append(info.CpuInfoStats, cInfo)
+		}
+	}
+
+	virtualMemoryStat, _ := mem.VirtualMemory()
+	if virtualMemoryStat != nil {
+		info.Memory = &VirtualMemoryStat{
+			Total:          virtualMemoryStat.Total,
+			Available:      virtualMemoryStat.Available,
+			Used:           virtualMemoryStat.Used,
+			UsedPercent:    virtualMemoryStat.UsedPercent,
+			Free:           virtualMemoryStat.Free,
+			Active:         virtualMemoryStat.Active,
+			Inactive:       virtualMemoryStat.Inactive,
+			Wired:          virtualMemoryStat.Wired,
+			Laundry:        virtualMemoryStat.Laundry,
+			Buffers:        virtualMemoryStat.Buffers,
+			Cached:         virtualMemoryStat.Cached,
+			WriteBack:      virtualMemoryStat.WriteBack,
+			Dirty:          virtualMemoryStat.Dirty,
+			WriteBackTmp:   virtualMemoryStat.WriteBackTmp,
+			Shared:         virtualMemoryStat.Shared,
+			Slab:           virtualMemoryStat.Slab,
+			Sreclaimable:   virtualMemoryStat.Sreclaimable,
+			Sunreclaim:     virtualMemoryStat.Sunreclaim,
+			PageTables:     virtualMemoryStat.PageTables,
+			SwapCached:     virtualMemoryStat.SwapCached,
+			CommitLimit:    virtualMemoryStat.CommitLimit,
+			CommittedAS:    virtualMemoryStat.CommittedAS,
+			HighTotal:      virtualMemoryStat.HighTotal,
+			HighFree:       virtualMemoryStat.HighFree,
+			LowTotal:       virtualMemoryStat.LowTotal,
+			LowFree:        virtualMemoryStat.LowFree,
+			SwapTotal:      virtualMemoryStat.SwapTotal,
+			SwapFree:       virtualMemoryStat.SwapFree,
+			Mapped:         virtualMemoryStat.Mapped,
+			VmallocTotal:   virtualMemoryStat.VmallocTotal,
+			VmallocUsed:    virtualMemoryStat.VmallocUsed,
+			VmallocChunk:   virtualMemoryStat.VmallocChunk,
+			HugePagesTotal: virtualMemoryStat.HugePagesTotal,
+			HugePagesFree:  virtualMemoryStat.HugePagesFree,
+			HugePagesRsvd:  virtualMemoryStat.HugePagesRsvd,
+			HugePagesSurp:  virtualMemoryStat.HugePagesSurp,
+			HugePageSize:   virtualMemoryStat.HugePageSize,
+			AnonHugePages:  virtualMemoryStat.AnonHugePages,
+		}
+	}
+
+	ps, _ := disk.Partitions(true)
+	if ps != nil {
+		for _, p := range ps {
+			diskUsageStat, _ := disk.Usage(p.Device)
+			if diskUsageStat == nil {
+				continue
+			}
+			info.Disks = append(info.Disks, &DiskUsageStat{
+				Path:              diskUsageStat.Path,
+				Fstype:            diskUsageStat.Fstype,
+				Total:             diskUsageStat.Total,
+				Free:              diskUsageStat.Free,
+				Used:              diskUsageStat.Used,
+				UsedPercent:       diskUsageStat.UsedPercent,
+				InodesTotal:       diskUsageStat.InodesTotal,
+				InodesUsed:        diskUsageStat.InodesUsed,
+				InodesFree:        diskUsageStat.InodesFree,
+				InodesUsedPercent: diskUsageStat.InodesUsedPercent,
+			})
+		}
+	}
+
+	return
+}
+
+func GetCacheOrNew() (monitorData *MonitorData, err error) {
+	monitorDataListLock.Lock()
+	size := len(monitorDataList)
+	if size > 0 {
+		monitorData = monitorDataList[size-1]
+		monitorDataListLock.Unlock()
 		return
 	}
-	for _, one := range cpus {
-		cInfo := &CpuInfoStat{}
-		err = SimpleCopyProperties(cInfo, one)
-		if err != nil {
-			return
-		}
-		info.CpuInfoStats = append(info.CpuInfoStats, cInfo)
-	}
-	return
+	monitorDataListLock.Unlock()
+	return GetMonitorData()
 }
 
 func GetMonitorData() (monitorData *MonitorData, err error) {
@@ -268,7 +234,7 @@ func GetMonitorData() (monitorData *MonitorData, err error) {
 		monitorData.EndTime = util.GetNowMilli()
 	}()
 
-	monitorData.CpuPercents, err = cpu.Percent(time.Second, true)
+	monitorData.CpuPercents, err = cpu.Percent(0, true)
 	if err != nil {
 		return
 	}
@@ -277,93 +243,130 @@ func GetMonitorData() (monitorData *MonitorData, err error) {
 	if err != nil {
 		return
 	}
-	monitorData.VirtualMemoryStat = &VirtualMemoryStat{}
-	err = SimpleCopyProperties(monitorData.VirtualMemoryStat, virtualMemoryStat)
-	if err != nil {
-		return
+	monitorData.VirtualMemoryStat = &VirtualMemoryStat{
+		Total:          virtualMemoryStat.Total,
+		Available:      virtualMemoryStat.Available,
+		Used:           virtualMemoryStat.Used,
+		UsedPercent:    virtualMemoryStat.UsedPercent,
+		Free:           virtualMemoryStat.Free,
+		Active:         virtualMemoryStat.Active,
+		Inactive:       virtualMemoryStat.Inactive,
+		Wired:          virtualMemoryStat.Wired,
+		Laundry:        virtualMemoryStat.Laundry,
+		Buffers:        virtualMemoryStat.Buffers,
+		Cached:         virtualMemoryStat.Cached,
+		WriteBack:      virtualMemoryStat.WriteBack,
+		Dirty:          virtualMemoryStat.Dirty,
+		WriteBackTmp:   virtualMemoryStat.WriteBackTmp,
+		Shared:         virtualMemoryStat.Shared,
+		Slab:           virtualMemoryStat.Slab,
+		Sreclaimable:   virtualMemoryStat.Sreclaimable,
+		Sunreclaim:     virtualMemoryStat.Sunreclaim,
+		PageTables:     virtualMemoryStat.PageTables,
+		SwapCached:     virtualMemoryStat.SwapCached,
+		CommitLimit:    virtualMemoryStat.CommitLimit,
+		CommittedAS:    virtualMemoryStat.CommittedAS,
+		HighTotal:      virtualMemoryStat.HighTotal,
+		HighFree:       virtualMemoryStat.HighFree,
+		LowTotal:       virtualMemoryStat.LowTotal,
+		LowFree:        virtualMemoryStat.LowFree,
+		SwapTotal:      virtualMemoryStat.SwapTotal,
+		SwapFree:       virtualMemoryStat.SwapFree,
+		Mapped:         virtualMemoryStat.Mapped,
+		VmallocTotal:   virtualMemoryStat.VmallocTotal,
+		VmallocUsed:    virtualMemoryStat.VmallocUsed,
+		VmallocChunk:   virtualMemoryStat.VmallocChunk,
+		HugePagesTotal: virtualMemoryStat.HugePagesTotal,
+		HugePagesFree:  virtualMemoryStat.HugePagesFree,
+		HugePagesRsvd:  virtualMemoryStat.HugePagesRsvd,
+		HugePagesSurp:  virtualMemoryStat.HugePagesSurp,
+		HugePageSize:   virtualMemoryStat.HugePageSize,
+		AnonHugePages:  virtualMemoryStat.AnonHugePages,
 	}
 
-	diskUsageStat, err := disk.Usage("/")
-	if err != nil {
-		return
-	}
-	monitorData.DiskUsageStat = &DiskUsageStat{}
-	err = SimpleCopyProperties(monitorData.DiskUsageStat, diskUsageStat)
-	if err != nil {
-		return
-	}
-
-	network, err := net.IOCounters(true)
-	if err != nil {
-		return
-	}
-	time.Sleep(time.Second * 1)
-	netIOCountersStats, err := net.IOCounters(true)
-	if err != nil {
-		return
-	}
-	for i, one := range netIOCountersStats {
-		nInfo := &NetIOCountersStat{}
-		err = SimpleCopyProperties(nInfo, one)
-		if err != nil {
-			return
+	diskStat, _ := disk.IOCounters("/")
+	diskStatCache := lastDiskIOCountersStatCache
+	newSce := uint64(time.Now().Unix())
+	if diskStat != nil {
+		for _, one := range diskStat {
+			nInfo := &DiskIOCountersStat{
+				Name:             one.Name,
+				ReadCount:        one.ReadCount,
+				MergedReadCount:  one.MergedReadCount,
+				WriteCount:       one.WriteCount,
+				MergedWriteCount: one.MergedWriteCount,
+				ReadBytes:        one.ReadBytes,
+				WriteBytes:       one.WriteBytes,
+				ReadTime:         one.ReadTime,
+				WriteTime:        one.WriteTime,
+				IopsInProgress:   one.IopsInProgress,
+				IoTime:           one.IoTime,
+				WeightedIO:       one.WeightedIO,
+				SerialNumber:     one.SerialNumber,
+				Label:            one.Label,
+			}
+			find := diskStatCache[nInfo.Name]
+			if find.ReadBytes > 0 && nInfo.ReadBytes > find.ReadBytes {
+				nInfo.ReadBytesSpeed = (nInfo.ReadBytes - find.ReadBytes) / (newSce - lastDiskIOCounters)
+			}
+			if find.WriteBytes > 0 && nInfo.WriteBytes > find.WriteBytes {
+				nInfo.WriteBytesSpeed = (nInfo.WriteBytes - find.WriteBytes) / (newSce - lastDiskIOCounters)
+			}
+			if find.ReadCount > 0 && nInfo.ReadCount > find.ReadCount {
+				nInfo.ReadCountIncrease = nInfo.ReadCount - find.ReadCount
+			}
+			if find.WriteCount > 0 && nInfo.WriteCount > find.WriteCount {
+				nInfo.WriteCountIncrease = nInfo.WriteCount - find.WriteCount
+			}
+			monitorData.DiskIOCountersStats = append(monitorData.DiskIOCountersStats, nInfo)
 		}
-
-		nInfo.SpeedSent = nInfo.BytesSent - network[i].BytesSent
-		nInfo.SpeedRecv = nInfo.BytesRecv - network[i].BytesRecv
-
-		monitorData.NetIOCountersStats = append(monitorData.NetIOCountersStats, nInfo)
-
 	}
+	diskStatCache = make(map[string]disk.IOCountersStat)
+	if diskStat != nil {
+		for _, one := range diskStat {
+			diskStatCache[one.Name] = one
+		}
+	}
+	lastDiskIOCounters = newSce
+	lastDiskIOCountersStatCache = diskStatCache
 
+	newSce = uint64(time.Now().Unix())
+	netIOCountersStats, _ := net.IOCounters(true)
+	netStatCache := lastNetIOCountersStatCache
+	for _, one := range netIOCountersStats {
+		nInfo := &NetIOCountersStat{
+			Name:        one.Name,
+			BytesSent:   one.BytesSent,
+			BytesRecv:   one.BytesRecv,
+			PacketsSent: one.PacketsSent,
+			PacketsRecv: one.PacketsRecv,
+			Errin:       one.Errin,
+			Errout:      one.Errout,
+			Dropin:      one.Dropin,
+			Dropout:     one.Dropout,
+			Fifoin:      one.Fifoin,
+			Fifoout:     one.Fifoout,
+		}
+		find := netStatCache[one.Name]
+		if find.BytesSent > 0 && nInfo.BytesSent > find.BytesSent {
+			nInfo.SpeedSent = (nInfo.BytesSent - find.BytesSent) / (newSce - lastNetIOCounters)
+		}
+		if find.BytesRecv > 0 && nInfo.BytesRecv > find.BytesRecv {
+			nInfo.SpeedRecv = (nInfo.BytesRecv - find.BytesRecv) / (newSce - lastNetIOCounters)
+		}
+		monitorData.NetIOCountersStats = append(monitorData.NetIOCountersStats, nInfo)
+	}
+	netStatCache = make(map[string]net.IOCountersStat)
+	for _, one := range netIOCountersStats {
+		netStatCache[one.Name] = one
+	}
+	lastNetIOCounters = newSce
+	lastNetIOCountersStatCache = netStatCache
 	return
 }
 
-func SimpleCopyProperties(dst, src interface{}) (err error) {
-	// 防止意外panic
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(fmt.Sprintf("%v", e))
-		}
-	}()
+var lastDiskIOCounters uint64
+var lastDiskIOCountersStatCache = make(map[string]disk.IOCountersStat)
 
-	dstType, dstValue := reflect.TypeOf(dst), reflect.ValueOf(dst)
-	srcType, srcValue := reflect.TypeOf(src), reflect.ValueOf(src)
-
-	// dst必须结构体指针类型
-	if dstType.Kind() != reflect.Ptr || dstType.Elem().Kind() != reflect.Struct {
-		return errors.New("dst type should be a struct pointer")
-	}
-
-	// src必须为结构体或者结构体指针
-	if srcType.Kind() == reflect.Ptr {
-		srcType, srcValue = srcType.Elem(), srcValue.Elem()
-	}
-	if srcType.Kind() != reflect.Struct {
-		return errors.New("src type should be a struct or a struct pointer")
-	}
-
-	// 取具体内容
-	dstType, dstValue = dstType.Elem(), dstValue.Elem()
-
-	// 属性个数
-	propertyNums := dstType.NumField()
-
-	for i := 0; i < propertyNums; i++ {
-		// 属性
-		property := dstType.Field(i)
-		// 待填充属性值
-		propertyValue := srcValue.FieldByName(property.Name)
-
-		// 无效，说明src没有这个属性 || 属性同名但类型不同
-		if !propertyValue.IsValid() || property.Type != propertyValue.Type() {
-			continue
-		}
-
-		if dstValue.Field(i).CanSet() {
-			dstValue.Field(i).Set(propertyValue)
-		}
-	}
-
-	return nil
-}
+var lastNetIOCounters uint64
+var lastNetIOCountersStatCache = make(map[string]net.IOCountersStat)

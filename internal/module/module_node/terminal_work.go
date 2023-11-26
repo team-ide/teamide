@@ -2,14 +2,11 @@ package module_node
 
 import (
 	"errors"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/node"
+	"teamide/pkg/system"
 	"teamide/pkg/terminal"
-	"time"
 )
 
 func NewTerminalService(nodeId string, nodeService *NodeService) (res *terminalService) {
@@ -142,18 +139,22 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	return
 }
 
-func (this_ *terminalService) GetDiskStats() (res map[string]disk.IOCountersStat, err error) {
-	return disk.IOCounters()
+func (this_ *terminalService) SystemInfo() (res *system.Info, err error) {
+	var server *node.Server
+	server, err = this_.getServer()
+	if err != nil {
+		return
+	}
+	res = server.SystemGetInfo(this_.nodeLine)
+	return
 }
-func (this_ *terminalService) GetMemInfo() (res *mem.VirtualMemoryStat, err error) {
-	return mem.VirtualMemory()
-}
-func (this_ *terminalService) GetCpuInfo() (res []cpu.InfoStat, err error) {
-	return cpu.Info()
-}
-func (this_ *terminalService) GetCpuPercent() (res []float64, err error) {
-	return cpu.Percent(time.Second, true)
-}
-func (this_ *terminalService) GetCpuStats() (res []cpu.TimesStat, err error) {
-	return cpu.Times(true)
+
+func (this_ *terminalService) SystemMonitorData() (res *system.MonitorData, err error) {
+	var server *node.Server
+	server, err = this_.getServer()
+	if err != nil {
+		return
+	}
+	res = server.SystemMonitorData(this_.nodeLine)
+	return
 }

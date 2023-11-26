@@ -8,6 +8,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"math"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -794,4 +795,148 @@ func getAllBusy(t cpu.TimesStat) (float64, float64) {
 	busy := tot - t.Idle - t.Iowait
 
 	return tot, busy
+}
+
+type lsbStruct struct {
+	ID          string
+	Release     string
+	Codename    string
+	Description string
+}
+
+func (this_ *terminalService) getlsbStruct() (*lsbStruct, error) {
+	ret := &lsbStruct{}
+	if this_.fileExist("/etc/lsb-release") {
+		text, err := this_.readSSHFile("/etc/lsb-release")
+		if err != nil {
+			return ret, err // return empty
+		}
+		contents := strings.Split(text, "\n")
+		for _, line := range contents {
+			field := strings.Split(line, "=")
+			if len(field) < 2 {
+				continue
+			}
+			switch field[0] {
+			case "DISTRIB_ID":
+				ret.ID = strings.ReplaceAll(field[1], `"`, ``)
+			case "DISTRIB_RELEASE":
+				ret.Release = strings.ReplaceAll(field[1], `"`, ``)
+			case "DISTRIB_CODENAME":
+				ret.Codename = strings.ReplaceAll(field[1], `"`, ``)
+			case "DISTRIB_DESCRIPTION":
+				ret.Description = strings.ReplaceAll(field[1], `"`, ``)
+			}
+		}
+	} else if this_.fileExist("/usr/bin/lsb_release") {
+		out, err := this_.readSSHFile("/usr/bin/lsb_release")
+		if err != nil {
+			return ret, err
+		}
+		for _, line := range strings.Split(out, "\n") {
+			field := strings.Split(line, ":")
+			if len(field) < 2 {
+				continue
+			}
+			switch field[0] {
+			case "Distributor ID":
+				ret.ID = strings.ReplaceAll(field[1], `"`, ``)
+			case "Release":
+				ret.Release = strings.ReplaceAll(field[1], `"`, ``)
+			case "Codename":
+				ret.Codename = strings.ReplaceAll(field[1], `"`, ``)
+			case "Description":
+				ret.Description = strings.ReplaceAll(field[1], `"`, ``)
+			}
+		}
+
+	}
+
+	return ret, nil
+}
+
+func (this_ *terminalService) GetOSRelease() (platform string, version string, err error) {
+	text, err := this_.readSSHFile("/etc/os-release")
+	contents := strings.Split(text, "\n")
+	if err != nil {
+		return "", "", nil // return empty
+	}
+	for _, line := range contents {
+		field := strings.Split(line, "=")
+		if len(field) < 2 {
+			continue
+		}
+		switch field[0] {
+		case "ID": // use ID for lowercase
+			platform = trimQuotes(field[1])
+		case "VERSION":
+			version = trimQuotes(field[1])
+		}
+	}
+
+	// cleanup amazon ID
+	if platform == "amzn" {
+		platform = "amazon"
+	}
+
+	return platform, version, nil
+}
+
+// Remove quotes of the source string
+func trimQuotes(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
+}
+
+func getSlackwareVersion(contents []string) string {
+	c := strings.ToLower(strings.Join(contents, ""))
+	c = strings.Replace(c, "slackware ", "", 1)
+	return c
+}
+
+func getRedhatishVersion(contents []string) string {
+	c := strings.ToLower(strings.Join(contents, ""))
+
+	if strings.Contains(c, "rawhide") {
+		return "rawhide"
+	}
+	if matches := regexp.MustCompile(`release (\w[\d.]*)`).FindStringSubmatch(c); matches != nil {
+		return matches[1]
+	}
+	return ""
+}
+
+func getRedhatishPlatform(contents []string) string {
+	c := strings.ToLower(strings.Join(contents, ""))
+
+	if strings.Contains(c, "red hat") {
+		return "redhat"
+	}
+	f := strings.Split(c, " ")
+
+	return f[0]
+}
+
+func getSuseVersion(contents []string) string {
+	version := ""
+	for _, line := range contents {
+		if matches := regexp.MustCompile(`VERSION = ([\d.]+)`).FindStringSubmatch(line); matches != nil {
+			version = matches[1]
+		} else if matches := regexp.MustCompile(`PATCHLEVEL = ([\d]+)`).FindStringSubmatch(line); matches != nil {
+			version = version + "." + matches[1]
+		}
+	}
+	return version
+}
+
+func getSusePlatform(contents []string) string {
+	c := strings.ToLower(strings.Join(contents, ""))
+	if strings.Contains(c, "opensuse") {
+		return "opensuse"
+	}
+	return "suse"
 }

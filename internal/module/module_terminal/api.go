@@ -189,10 +189,8 @@ func (this_ *api) systemInfo(_ *base.RequestBean, c *gin.Context) (res interface
 		return
 	}
 
-	data := map[string]interface{}{}
-	data["cpuInfo"], _ = service.service.GetCpuInfo()
+	res, err = service.service.SystemInfo()
 
-	res = data
 	return
 }
 
@@ -207,12 +205,7 @@ func (this_ *api) systemMonitor(_ *base.RequestBean, c *gin.Context) (res interf
 		return
 	}
 
-	data := map[string]interface{}{}
-	data["cpuPercent"], _ = service.service.GetCpuPercent()
-	data["memInfo"], _ = service.service.GetMemInfo()
-	data["diskStats"], _ = service.service.GetDiskStats()
-
-	res = data
+	res, err = service.service.SystemMonitorData()
 	return
 }
 func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {

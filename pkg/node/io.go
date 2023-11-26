@@ -49,6 +49,7 @@ type SystemData struct {
 	QueryRequest  *system.QueryRequest  `json:"queryRequest,omitempty"`
 	QueryResponse *system.QueryResponse `json:"queryResponse,omitempty"`
 	Info          *system.Info          `json:"info,omitempty"`
+	MonitorData   *system.MonitorData   `json:"monitorData,omitempty"`
 }
 
 type WorkData struct {

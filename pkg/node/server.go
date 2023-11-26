@@ -119,6 +119,14 @@ func (this_ *Server) SystemGetInfo(lineNodeIdList []string) (info *system.Info) 
 	return
 }
 
+func (this_ *Server) SystemMonitorData(lineNodeIdList []string) (monitorData *system.MonitorData) {
+	res := this_.systemMonitorData(lineNodeIdList)
+	if res != nil {
+		monitorData = res.MonitorData
+	}
+	return
+}
+
 func (this_ *Server) SystemQueryMonitorData(lineNodeIdList []string, request *system.QueryRequest) (response *system.QueryResponse) {
 	res := this_.systemQueryMonitorData(lineNodeIdList, &SystemData{
 		QueryRequest: request,

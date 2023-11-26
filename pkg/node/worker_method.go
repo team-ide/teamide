@@ -51,6 +51,7 @@ var (
 	methodSystemGetInfo          MethodType = 501
 	methodSystemQueryMonitorData MethodType = 502
 	methodSystemCleanMonitorData MethodType = 503
+	methodSystemMonitorData      MethodType = 504
 
 	methodSendBytesStart MethodType = 601
 	methodSendBytes      MethodType = 602
@@ -252,6 +253,12 @@ func (this_ *Worker) doMethod(method MethodType, msg *Message) (res *Message, er
 
 	case methodSystemGetInfo:
 		response := this_.systemGetInfo(msg.LineNodeIdList)
+		if response != nil {
+			res.SystemData = response
+		}
+		return
+	case methodSystemMonitorData:
+		response := this_.systemMonitorData(msg.LineNodeIdList)
 		if response != nil {
 			res.SystemData = response
 		}
