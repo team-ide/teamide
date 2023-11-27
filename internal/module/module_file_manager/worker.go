@@ -262,32 +262,79 @@ func (this_ *worker) Move(param *BaseParam, fileWorkerKey string, oldPath string
 	return
 }
 
-func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, fromPlace string, fromPlaceId string, fromPath string) {
+func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, fromFileWorkerKey string, fromPlace string, fromPlaceId string, fromPath string) {
 	var err error
+	callStop := new(bool)
 	progress := newProgress(param, "copy", func() {
-
+		*callStop = true
 	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
+	progress.Data["fromFileWorkerKey"] = fromFileWorkerKey
 	progress.Data["fromPlace"] = fromPlace
 	progress.Data["fromPlaceId"] = fromPlaceId
 	progress.Data["fromPath"] = fromPath
 
 	defer func() { progress.end(err) }()
 
-	//toService, err := GetService(place, placeId)
-	//if err != nil {
-	//	return
-	//}
-	//
-	//fromService, err := GetService(fromPlace, fromPlaceId)
-	//if err != nil {
-	//	return
-	//}
+	toService, err := this_.GetService(fileWorkerKey, param)
+	if err != nil {
+		return
+	}
 
-	//err = toService.Copy(path, fromService, fromPath, func(fileCount int, fileSize int64) {
-	//
-	//})
+	fromService, err := this_.GetService(fromFileWorkerKey, &BaseParam{
+		Place:   fromPlace,
+		PlaceId: fromPlaceId,
+	})
+	if err != nil {
+		return
+	}
+
+	fromFile, err := fromService.File(fromPath)
+	if err != nil {
+		return
+	}
+	//var writer io.WriteCloser
+	var reader io.ReadCloser
+	if !fromFile.IsDir {
+
+		var exist bool
+		exist, err = toService.Exist(path)
+
+		if exist {
+			var action string
+			action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
+				[]*Action{
+					newAction("是", "yes", "color-green"),
+					newAction("否", "no", "color-orange"),
+				})
+			if err != nil {
+				return
+			}
+			if action != "yes" {
+				return
+			}
+		}
+
+		reader, err = fromService.OpenReader(fromPath)
+		if err != nil {
+			err = errors.New("get reader error:" + err.Error())
+			return
+		}
+		defer func() { _ = reader.Close() }()
+
+		err = toService.Write(path, reader, func(readSize int64, writeSize int64) {
+			progress.Data["readSize"] = readSize
+			progress.Data["writeSize"] = writeSize
+			progress.Data["successSize"] = writeSize
+		}, callStop)
+		if err != nil {
+			return
+		}
+	} else {
+		err = errors.New("暂不支持移动文件夹")
+	}
+
 	return
 }
 
@@ -322,6 +369,7 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 			}
 			*callStop = true
 		})
+
 		progress.Data["fileWorkerKey"] = fileWorkerKey
 		progress.Data["dir"] = dir
 		progress.Data["fullPath"] = fullPath

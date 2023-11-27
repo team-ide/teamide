@@ -360,3 +360,18 @@ func getFileInfoByStat(path string, stat os.FileInfo) (fileInfo *FileInfo) {
 	}
 	return
 }
+
+func (this_ *localService) OpenReader(path string) (reader io.ReadCloser, err error) {
+	reader, err = os.Open(path)
+	if err != nil {
+		return
+	}
+	return
+}
+func (this_ *localService) OpenWriter(path string) (writer io.WriteCloser, err error) {
+	writer, err = os.Create(path)
+	if err != nil {
+		return
+	}
+	return
+}

@@ -55,8 +55,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: writePower, Do: this_.write})
 	apis = append(apis, &base.ApiWorker{Power: renamePower, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Power: removePower, Do: this_.remove})
-	apis = append(apis, &base.ApiWorker{Power: copyPower, Do: this_.move})
-	apis = append(apis, &base.ApiWorker{Power: movePower, Do: this_.copy})
+	apis = append(apis, &base.ApiWorker{Power: copyPower, Do: this_.copy})
+	apis = append(apis, &base.ApiWorker{Power: movePower, Do: this_.move})
 	apis = append(apis, &base.ApiWorker{Power: uploadPower, Do: this_.upload, IsUpload: true})
 	apis = append(apis, &base.ApiWorker{Power: downloadPower, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Power: callActionPower, Do: this_.callAction})
@@ -67,19 +67,20 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 }
 
 type FileRequest struct {
-	FileWorkerKey string `json:"fileWorkerKey,omitempty"`
-	Dir           string `json:"dir,omitempty"`
-	Path          string `json:"path,omitempty"`
-	OldPath       string `json:"oldPath,omitempty"`
-	NewPath       string `json:"newPath,omitempty"`
-	IsDir         bool   `json:"isDir,omitempty"`
-	FromPlace     string `json:"fromPlace,omitempty"`
-	FromPlaceId   string `json:"fromPlaceId,omitempty"`
-	FromPath      string `json:"fromPath,omitempty"`
-	Text          string `json:"text,omitempty"`
-	ProgressId    string `json:"progressId,omitempty"`
-	Action        string `json:"action,omitempty"`
-	Force         bool   `json:"force,omitempty"`
+	FileWorkerKey     string `json:"fileWorkerKey,omitempty"`
+	Dir               string `json:"dir,omitempty"`
+	Path              string `json:"path,omitempty"`
+	OldPath           string `json:"oldPath,omitempty"`
+	NewPath           string `json:"newPath,omitempty"`
+	IsDir             bool   `json:"isDir,omitempty"`
+	FromFileWorkerKey string `json:"fromFileWorkerKey,omitempty"`
+	FromPlace         string `json:"fromPlace,omitempty"`
+	FromPlaceId       string `json:"fromPlaceId,omitempty"`
+	FromPath          string `json:"fromPath,omitempty"`
+	Text              string `json:"text,omitempty"`
+	ProgressId        string `json:"progressId,omitempty"`
+	Action            string `json:"action,omitempty"`
+	Force             bool   `json:"force,omitempty"`
 	*BaseParam
 }
 
@@ -217,7 +218,7 @@ func (this_ *api) copy(r *base.RequestBean, c *gin.Context) (res interface{}, er
 		return
 	}
 	request.ClientTabKey = r.ClientTabKey
-	go this_.Copy(request.BaseParam, request.FileWorkerKey, request.Path, request.FromPlace, request.FromPlaceId, request.FromPath)
+	go this_.Copy(request.BaseParam, request.FileWorkerKey, request.Path, request.FromFileWorkerKey, request.FromPlace, request.FromPlaceId, request.FromPath)
 	return
 }
 

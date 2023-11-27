@@ -158,3 +158,12 @@ func (this_ *fileService) File(path string) (file *filework.FileInfo, err error)
 	file, err = server.FileWorkFile(this_.nodeLine, path)
 	return
 }
+
+func (this_ *fileService) OpenReader(path string) (reader io.ReadCloser, err error) {
+	err = errors.New("节点暂不支持该功能")
+	return
+}
+func (this_ *fileService) OpenWriter(path string) (writer io.WriteCloser, err error) {
+	err = errors.New("节点暂不支持该功能")
+	return
+}

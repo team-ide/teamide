@@ -23,4 +23,6 @@ type Service interface {
 	CountSize(path string, onDo func(fileCount int, fileSize int64)) (fileCount int, fileSize int64, err error)
 	Files(dir string) (parentPath string, files []*FileInfo, err error)
 	File(path string) (file *FileInfo, err error)
+	OpenReader(path string) (reader io.ReadCloser, err error)
+	OpenWriter(path string) (writer io.WriteCloser, err error)
 }

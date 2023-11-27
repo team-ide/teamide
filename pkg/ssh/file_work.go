@@ -479,3 +479,30 @@ func getFileInfoByStat(path string, stat os.FileInfo) (fileInfo *filework.FileIn
 	}
 	return
 }
+
+func (this_ *fileService) OpenReader(path string) (reader io.ReadCloser, err error) {
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.getSftp()
+	if err != nil {
+		return
+	}
+
+	reader, err = sftpClient.Open(path)
+	if err != nil {
+		return
+	}
+	return
+}
+func (this_ *fileService) OpenWriter(path string) (writer io.WriteCloser, err error) {
+	var sftpClient *sftp.Client
+	sftpClient, err = this_.getSftp()
+	if err != nil {
+		return
+	}
+
+	writer, err = sftpClient.Create(path)
+	if err != nil {
+		return
+	}
+	return
+}
