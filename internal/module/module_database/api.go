@@ -215,7 +215,8 @@ type BaseRequest struct {
 	MaxIdleConn int `json:"maxIdleConn,omitempty"`
 	MaxOpenConn int `json:"maxOpenConn,omitempty"`
 
-	ShowDataMaxSize int `json:"showDataMaxSize,omitempty"`
+	ShowDataMaxSize int  `json:"showDataMaxSize,omitempty"`
+	OpenProfiling   bool `json:"openProfiling,omitempty"`
 
 	InsertList      []map[string]interface{} `json:"insertList,omitempty"`
 	UpdateList      []map[string]interface{} `json:"updateList,omitempty"`
@@ -722,6 +723,7 @@ func (this_ *api) executeSQL(requestBean *base.RequestBean, c *gin.Context) (res
 	data := make(map[string]interface{})
 	data["executeList"], data["error"], err = service.ExecuteSQL(param, request.OwnerName, request.ExecuteSQL, &db.ExecuteOptions{
 		SelectDataMax: request.ShowDataMaxSize,
+		OpenProfiling: request.OpenProfiling,
 	})
 	if err != nil {
 		return
