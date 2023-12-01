@@ -12,7 +12,6 @@ COPY docker/server.sh /opt/teamide/server.sh
 ENV LD_LIBRARY_PATH=/opt/teamide/lib:$LD_LIBRARY_PATH
 RUN chmod +x /opt/teamide/server.sh
 RUN chmod +x /opt/teamide/docker-entrypoint.sh
-# RUN yum install -y unixODBC libtool unixODBC-devel
 
 WORKDIR /opt/teamide
 

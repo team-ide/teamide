@@ -4,6 +4,10 @@ server:
   port: 21080 # 如果随机生成，则填写:“0”
   context: / # 如直接通过IP+端口访问，则填写:“” 或 “/”
   data: ./data # 数据存储目录，存储文件等
+  tls:
+    open: false # 是否开启 https 默认关闭 建议开启后使用 https 访问
+    cert: ./conf/server.crt  # 证书
+    key: ./conf/server.key   # 证书 密钥
 
 # 日志配置
 log:
