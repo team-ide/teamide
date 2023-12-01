@@ -1,4 +1,4 @@
-FROM teamide/build:1.2
+FROM teamide/build:1.3
 
 EXPOSE 21080/tcp
 

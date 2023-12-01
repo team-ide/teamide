@@ -8,6 +8,8 @@
   * SQL 执行将不再自动保存SQL，需要手动点击保存
 * 数据库 库列表默认将配置的库或匹配的模式置顶展示
 * Docker启动服务添加 Oracle 驱动 `instantclient-basic-linuxx64`
+  * 镜像 添加 `instantclient_11_2`
+  * 镜像 安装 `libaio` 库
 * 服务端模式添加 TLS
 ```conf
 server:
