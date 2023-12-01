@@ -77,6 +77,19 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 			util.Logger.Error("Init error", zap.Error(err))
 			return
 		}
+	} else {
+		if serverConfig.Server.TLS == nil {
+			crtPath := this_.RootDir + "conf/server.crt"
+			keyPath := this_.RootDir + "conf/server.key"
+			if e, _ := util.PathExists(crtPath); e {
+				if e, _ = util.PathExists(keyPath); e {
+					serverConfig.Server.TLS = new(config.ServerTLS)
+					serverConfig.Server.TLS.Open = true
+					serverConfig.Server.TLS.Cert = crtPath
+					serverConfig.Server.TLS.Key = keyPath
+				}
+			}
+		}
 	}
 
 	if serverConfig.Server.Host == "" {
@@ -197,10 +210,16 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	this_.ServerHost = serverConfig.Server.Host
 	this_.ServerPort = serverConfig.Server.Port
 
+	this_.ServerProtocol = "http"
+	if this_.ServerConfig.Server.TLS != nil && this_.ServerConfig.Server.TLS.Open {
+		this_.ServerProtocol = "https"
+		this_.IsHttps = true
+	}
+
 	if this_.ServerHost == "0.0.0.0" || this_.ServerHost == ":" || this_.ServerHost == "::" {
-		this_.ServerUrl = fmt.Sprint("http://127.0.0.1:", this_.ServerPort)
+		this_.ServerUrl = fmt.Sprintf("%s://127.0.0.1:%d", this_.ServerProtocol, this_.ServerPort)
 	} else {
-		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", "http", this_.ServerHost, this_.ServerPort)
+		this_.ServerUrl = fmt.Sprintf("%s://%s:%d", this_.ServerProtocol, this_.ServerHost, this_.ServerPort)
 	}
 
 	var databaseConfig *db.Config

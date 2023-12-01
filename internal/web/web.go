@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/util"
@@ -52,9 +53,9 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 	}
 	if this_.IsServer {
 		fmt.Printf("服务启动，访问地址:")
-		s := "http"
 		if this_.ServerHost == "0.0.0.0" || this_.ServerHost == "::" {
-			fmt.Printf("\t%s://127.0.0.1:%d%s\n", s, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://127.0.0.1:%d%s\n", this_.ServerProtocol, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://localhost:%d%s\n", this_.ServerProtocol, this_.ServerPort, this_.ServerContext.ServerContext)
 			for _, in := range ins {
 				if in.Flags&net.FlagUp == 0 {
 					continue
@@ -72,15 +73,19 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 					if ip == nil {
 						continue
 					}
-					fmt.Printf("\t%s://%s:%d%s\n", s, ip.String(), this_.ServerPort, this_.ServerContext.ServerContext)
+					fmt.Printf("\t%s://%s:%d%s\n", this_.ServerProtocol, ip.String(), this_.ServerPort, this_.ServerContext.ServerContext)
 				}
 			}
 		} else {
-			fmt.Printf("\t%s://%s:%d%s\n", s, this_.ServerHost, this_.ServerPort, this_.ServerContext.ServerContext)
+			fmt.Printf("\t%s://%s:%d%s\n", this_.ServerProtocol, this_.ServerHost, this_.ServerPort, this_.ServerContext.ServerContext)
 		}
 	}
 	addr := fmt.Sprint(this_.ServerHost, ":", this_.ServerPort)
-	this_.Logger.Info("http server start", zap.Any("addr", addr))
+	if this_.IsHttps {
+		this_.Logger.Info("https server start", zap.Any("addr", addr))
+	} else {
+		this_.Logger.Info("http server start", zap.Any("addr", addr))
+	}
 	s := &http.Server{
 		Addr:    addr,
 		Handler: router,
@@ -90,10 +95,19 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		return
 	}
 	go func() {
-		err = s.Serve(ln)
-		if err != nil {
-			this_.Logger.Error("Web启动失败", zap.Error(err))
-			panic(err)
+		if this_.IsHttps {
+			//err = s.ServeTLS(ln, this_.ServerConfig.Server.TLS.Cert, this_.ServerConfig.Server.TLS.Key)
+			err = s.ServeTLS(ln, this_.ServerConfig.Server.TLS.Cert, this_.ServerConfig.Server.TLS.Key)
+			if err != nil {
+				this_.Logger.Error("serve TLS error", zap.Error(err))
+				panic(err)
+			}
+		} else {
+			err = s.Serve(ln)
+			if err != nil {
+				this_.Logger.Error("Web启动失败", zap.Error(err))
+				panic(err)
+			}
 		}
 	}()
 	var checkStartTime = util.GetNowMilli()
@@ -106,7 +120,12 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 		time.Sleep(time.Millisecond * 100)
 		checkURL := this_.ServerUrl + this_.ServerContext.ServerContext
 		this_.Logger.Info("监听服务是否启动成功", zap.Any("checkURL", checkURL))
-		res, e := http.Get(checkURL)
+
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client := &http.Client{Transport: tr}
+		res, e := client.Get(checkURL)
 		if e != nil {
 			this_.Logger.Warn("监听服务连接失败，将继续监听", zap.Any("checkURL", checkURL), zap.Any("error", e.Error()))
 			continue
@@ -128,7 +147,7 @@ func (this_ *Server) Start() (serverUrl string, err error) {
 
 type nullWriter struct{}
 
-func (*nullWriter) Write(bs []byte) (int, error) {
+func (*nullWriter) Write(_ []byte) (int, error) {
 
 	return 0, nil
 }

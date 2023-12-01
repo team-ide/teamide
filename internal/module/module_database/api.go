@@ -274,6 +274,7 @@ func (this_ *api) data(requestBean *base.RequestBean, c *gin.Context) (res inter
 	data := make(map[string]interface{})
 	data["columnTypeInfoList"] = service.GetTargetDialect(param).GetColumnTypeInfos()
 	data["indexTypeInfoList"] = service.GetTargetDialect(param).GetIndexTypeInfos()
+	data["info"], _ = service.Info()
 	res = data
 	return
 }

@@ -53,6 +53,14 @@ var (
 	PowerQuickCommandInsert = base.AppendPower(&base.PowerAction{Action: "insert", Text: "工具快速指令新增", Parent: PowerQuickCommand, ShouldLogin: true, StandAlone: true})
 	PowerQuickCommandUpdate = base.AppendPower(&base.PowerAction{Action: "update", Text: "工具快速指令修改", Parent: PowerQuickCommand, ShouldLogin: true, StandAlone: true})
 	PowerQuickCommandDelete = base.AppendPower(&base.PowerAction{Action: "delete", Text: "工具快速指令删除", Parent: PowerQuickCommand, ShouldLogin: true, StandAlone: true})
+
+	extend         = base.AppendPower(&base.PowerAction{Action: "extend", Text: "扩展", Parent: Power, ShouldLogin: true, StandAlone: true})
+	extendGet      = base.AppendPower(&base.PowerAction{Action: "get", Text: "获取单个", Parent: extend, ShouldLogin: true, StandAlone: true})
+	extendQuery    = base.AppendPower(&base.PowerAction{Action: "query", Text: "查询", Parent: extend, ShouldLogin: true, StandAlone: true})
+	extendSave     = base.AppendPower(&base.PowerAction{Action: "save", Text: "保存", Parent: extend, ShouldLogin: true, StandAlone: true})
+	extendDelete   = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", Parent: extend, ShouldLogin: true, StandAlone: true})
+	extendLoadFile = base.AppendPower(&base.PowerAction{Action: "loadFile", Text: "加载文件", Parent: extend, ShouldLogin: true, StandAlone: true})
+	extendSaveFile = base.AppendPower(&base.PowerAction{Action: "saveFile", Text: "保存文件", Parent: extend, ShouldLogin: true, StandAlone: true})
 )
 
 func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
@@ -85,6 +93,13 @@ func (this_ *ToolboxApi) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: PowerQuickCommandInsert, Do: this_.insertQuickCommand})
 	apis = append(apis, &base.ApiWorker{Power: PowerQuickCommandUpdate, Do: this_.updateQuickCommand})
 	apis = append(apis, &base.ApiWorker{Power: PowerQuickCommandDelete, Do: this_.deleteQuickCommand})
+
+	apis = append(apis, &base.ApiWorker{Power: extendGet, Do: this_.extendGet})
+	apis = append(apis, &base.ApiWorker{Power: extendQuery, Do: this_.extendQuery})
+	apis = append(apis, &base.ApiWorker{Power: extendSave, Do: this_.extendSave})
+	apis = append(apis, &base.ApiWorker{Power: extendDelete, Do: this_.extendDelete})
+	apis = append(apis, &base.ApiWorker{Power: extendLoadFile, Do: this_.extendLoadFile})
+	apis = append(apis, &base.ApiWorker{Power: extendSaveFile, Do: this_.extendSaveFile})
 
 	return
 }

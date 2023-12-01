@@ -22,6 +22,9 @@ const (
 	// TableToolboxQuickCommand 工具箱快速命令
 	TableToolboxQuickCommand        = "TM_TOOLBOX_QUICK_COMMAND"
 	TableToolboxQuickCommandComment = "工具箱快速命令"
+	// TableToolboxExtend 工具箱 扩展
+	TableToolboxExtend        = "TM_TOOLBOX_EXTEND"
+	TableToolboxExtendComment = "工具箱扩展"
 )
 
 // ToolboxModel 工具箱模型，和工具箱表对应
@@ -100,4 +103,18 @@ type ToolboxQuickCommandModel struct {
 	UserId           int64     `json:"userId,omitempty"`
 	CreateTime       time.Time `json:"createTime,omitempty"`
 	UpdateTime       time.Time `json:"updateTime,omitempty"`
+}
+
+// ToolboxExtendModel 工具箱扩展
+type ToolboxExtendModel struct {
+	ExtendId   int64     `json:"extendId,omitempty"`
+	ToolboxId  int64     `json:"toolboxId,omitempty"`
+	ExtendType string    `json:"extendType,omitempty"`
+	Name       string    `json:"name,omitempty"`
+	Value      string    `json:"value,omitempty"`
+	UserId     int64     `json:"userId,omitempty"`
+	CreateTime time.Time `json:"createTime,omitempty"`
+	UpdateTime time.Time `json:"updateTime,omitempty"`
+
+	Extend map[string]interface{} `json:"extend,omitempty"`
 }

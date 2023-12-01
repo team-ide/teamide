@@ -20,14 +20,21 @@ type ServerConfig struct {
 }
 
 type server struct {
-	Host       string `json:"host,omitempty" yaml:"host,omitempty"`
-	Port       int    `json:"port,omitempty" yaml:"port,omitempty"`
-	Context    string `json:"context,omitempty" yaml:"context,omitempty"`
-	Data       string `json:"data,omitempty" yaml:"data,omitempty"`
-	BackupsDir string `json:"-" yaml:"-"`
-	TempDir    string `json:"-" yaml:"-"`
+	Host       string     `json:"host,omitempty" yaml:"host,omitempty"`
+	Port       int        `json:"port,omitempty" yaml:"port,omitempty"`
+	Context    string     `json:"context,omitempty" yaml:"context,omitempty"`
+	Data       string     `json:"data,omitempty" yaml:"data,omitempty"`
+	TLS        *ServerTLS `json:"tls,omitempty" yaml:"tls,omitempty"`
+	CertKey    string     `json:"certKey,omitempty" yaml:"certKey,omitempty"`
+	BackupsDir string     `json:"-" yaml:"-"`
+	TempDir    string     `json:"-" yaml:"-"`
 }
 
+type ServerTLS struct {
+	Open bool   `json:"open,omitempty" yaml:"open,omitempty"`
+	Cert string `json:"cert,omitempty" yaml:"cert,omitempty"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+}
 type mysql struct {
 	Host     string `json:"host,omitempty" yaml:"host,omitempty"`
 	Port     int    `json:"port,omitempty" yaml:"port,omitempty"`

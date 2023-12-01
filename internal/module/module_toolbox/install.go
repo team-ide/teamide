@@ -273,6 +273,52 @@ CREATE TABLE ` + TableToolboxQuickCommand + ` (
 			},
 		},
 		/** 工具表 添加 可见性 结束**/
+
+		/** 给工具箱添加 扩展 开始 **/
+
+		// 创建工具箱 扩展 表
+		{
+			Version: "1.0.3",
+			Module:  ModuleToolbox,
+			Stage:   `创建表[` + TableToolboxExtend + `]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{`
+CREATE TABLE ` + TableToolboxExtend + ` (
+	extendId bigint(20) NOT NULL COMMENT 'ID',
+	toolboxId bigint(20) NOT NULL COMMENT '工具箱ID',
+	extendType varchar(50) NOT NULL COMMENT '扩展类型',
+	name varchar(50) NOT NULL COMMENT '名称',
+	value text DEFAULT NULL COMMENT '值',
+	userId bigint(20) NOT NULL COMMENT '用户ID',
+	createTime datetime NOT NULL COMMENT '创建时间',
+	updateTime datetime DEFAULT NULL COMMENT '修改时间',
+	PRIMARY KEY (extendId),
+	KEY index_toolboxId (toolboxId),
+	KEY index_extendType (extendType),
+	KEY index_userId (userId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='` + TableToolboxExtendComment + `';
+`},
+				Sqlite: []string{`
+CREATE TABLE ` + TableToolboxExtend + ` (
+	extendId bigint(20) NOT NULL,
+	toolboxId bigint(20) NOT NULL,
+	extendType varchar(50) NOT NULL,
+	name varchar(50) NOT NULL,
+	value text DEFAULT NULL,
+	userId bigint(20) NOT NULL,
+	createTime datetime NOT NULL,
+	updateTime datetime DEFAULT NULL,
+	PRIMARY KEY (extendId)
+);
+`,
+					`CREATE INDEX ` + TableToolboxExtend + `_index_toolboxId on ` + TableToolboxExtend + ` (toolboxId);`,
+					`CREATE INDEX ` + TableToolboxExtend + `_index_extendType on ` + TableToolboxExtend + ` (extendType);`,
+					`CREATE INDEX ` + TableToolboxExtend + `_index_userId on ` + TableToolboxExtend + ` (userId);`,
+				},
+			},
+		},
+
+		/** 给工具箱添加 扩展 结束 **/
 	}
 
 }

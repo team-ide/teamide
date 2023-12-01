@@ -421,7 +421,7 @@ func databaseWorker() *ToolboxType {
 				},
 				{Label: "DbName", Name: "dbName", VIf: `type == 'kingbase' || type == 'shentong' || type == 'postgresql' || type == 'opengauss'`,
 					Rules: []*form.Rule{
-						{Required: true, Message: "dbName径不能为空"},
+						{Message: "dbName径不能为空"},
 					},
 				},
 				{Label: "数据库文件路径", Name: "databasePath", VIf: `type == 'sqlite'`,
@@ -683,7 +683,7 @@ func sshWorker() *ToolboxType {
 				{Label: `发送间隔（秒）`, Name: "idleSendTime", IsNumber: true, Col: 8, DefaultValue: 60, VIf: "idleSendOpen == true"},
 				{Label: `发送字符（^C：Ctrl+C、\n：回车）`, Name: "idleSendChar", Col: 8, DefaultValue: "^C", VIf: "idleSendOpen == true"},
 
-				{Label: "PublicKey", Name: "publicKey", Type: "file", Placeholder: "请上传PublicKey文件"},
+				{Label: "PublicKey（通常跳板机需要上传）", Name: "publicKey", Type: "file", Placeholder: "请上传PublicKey文件"},
 				{Label: "连接后执行命令(回车执行多条，sleep 5，表示等待5秒执行下一条)", Name: "command", Type: "textarea"},
 			},
 		},

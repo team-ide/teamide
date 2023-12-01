@@ -27,6 +27,8 @@ type ServerContext struct {
 	UserHomeDir    string
 	Setting        *Setting
 	CronHandler    *cron.Cron
+	IsHttps        bool
+	ServerProtocol string
 }
 
 func (this_ *ServerContext) GetFilesDir() string {
