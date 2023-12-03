@@ -291,6 +291,15 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	}
 	switch conf := config.(type) {
 	case *db.Config:
+		if conf.TlsRootCert != "" {
+			conf.TlsRootCert = this_.GetFilesFile(conf.TlsRootCert)
+		}
+		if conf.TlsClientCert != "" {
+			conf.TlsClientCert = this_.GetFilesFile(conf.TlsClientCert)
+		}
+		if conf.TlsClientKey != "" {
+			conf.TlsClientKey = this_.GetFilesFile(conf.TlsClientKey)
+		}
 		conf.Password = this_.DecryptOptionAttr(conf.Password)
 		break
 	case *redis.Config:
@@ -448,6 +457,17 @@ func databaseWorker() *ToolboxType {
 						{Text: "OpenGauss", Value: "opengauss"},
 					},
 				},
+				{Label: "TLS", Name: "tlsConfig", Type: "select", VIf: `type == 'mysql'`, DefaultValue: "", Placeholder: "不配置",
+					Options: []*form.Option{
+						{Text: "不配置", Value: ""},
+						{Text: "Skip Verify", Value: "skip-verify"},
+						{Text: "Preferred", Value: "preferred"},
+						{Text: "自定义", Value: "custom"},
+					},
+				},
+				{Label: "TLS RootCert", Name: "tlsRootCert", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
+				{Label: "TLS Client Cert", Name: "tlsClientCert", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
+				{Label: "TLS Client Key", Name: "tlsClientKey", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
 			},
 		},
 	}

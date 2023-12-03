@@ -151,6 +151,18 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 	if config.Password != "" {
 		key += "-" + base.GetMd5String(key+config.Password)
 	}
+	if config.TlsConfig != "" {
+		key += "-tls-" + config.TlsConfig
+	}
+	if config.TlsRootCert != "" {
+		key += "-tls-" + config.TlsRootCert
+	}
+	if config.TlsClientCert != "" {
+		key += "-tls-" + config.TlsClientCert
+	}
+	if config.TlsClientKey != "" {
+		key += "-tls-" + config.TlsClientKey
+	}
 	if sshConfig != nil {
 		key += "-ssh-" + sshConfig.Address
 		key += "-ssh-" + sshConfig.Username
@@ -200,6 +212,8 @@ type BaseRequest struct {
 	PageNo       int                    `json:"pageNo,omitempty"`
 	PageSize     int                    `json:"pageSize,omitempty"`
 	DatabaseType string                 `json:"databaseType,omitempty"`
+
+	Charset string `json:"charset,omitempty"`
 
 	IsBatch     bool   `json:"isBatch,omitempty"`
 	BatchSize   int    `json:"batchSize,omitempty"`
