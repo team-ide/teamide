@@ -262,7 +262,8 @@ jobs:
         #导入这个模块来完成自动编译和推送
         uses: docker/build-push-action@v3
         with:
-          file: ./docker/Dockerfile-amd64
+          context: .
+          file: ./Dockerfile-amd64
           push: true
           #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
           platforms: linux/amd64
@@ -273,7 +274,8 @@ jobs:
         #导入这个模块来完成自动编译和推送
         uses: docker/build-push-action@v3
         with:
-          file: ./docker/Dockerfile-arm64
+          context: .
+          file: ./Dockerfile-arm64
           push: true
           #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
           platforms: linux/arm64
