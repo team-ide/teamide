@@ -184,7 +184,7 @@ jobs:
   buildLinux:
     needs: buildStatic
     runs-on: ubuntu-latest
-    container: docker.io/teamide/build:0.9
+    container: docker.io/teamide/build:1.4
     steps:
       # 下载源码
       - name: Checkout code
@@ -243,7 +243,7 @@ jobs:
           cp -rf lib/shentong/arm64/libaci.so release/teamide-server-arm64/lib/libaci.so
           go mod tidy
           go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-amd64/teamide .
-          GOOS=linux GOARCH=arm64 go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-arm64/teamide .
+          CC=/home/gcc-arm-10.3/bin/aarch64-none-linux-gnu-gcc CXX=/home/gcc-arm-10.3/bin/aarch64-none-linux-gnu-g++ CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-arm64/teamide .
 
       - run: |
           cd release/teamide-server-amd64
