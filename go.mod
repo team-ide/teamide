@@ -17,9 +17,9 @@ require (
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/shirou/gopsutil/v3 v3.23.10
-	github.com/team-ide/go-dialect v1.9.15
-	github.com/team-ide/go-tool v1.1.10
+	github.com/shirou/gopsutil/v3 v3.23.11
+	github.com/team-ide/go-dialect v1.9.16
+	github.com/team-ide/go-tool v1.1.14
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.15.0
@@ -31,7 +31,6 @@ require (
 require (
 	gitee.com/chunanyong/dm v1.8.10 // indirect
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.4 // indirect
-	github.com/Chain-Zhang/pinyin v0.1.3 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
@@ -100,7 +99,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect

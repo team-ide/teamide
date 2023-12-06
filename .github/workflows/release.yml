@@ -232,17 +232,21 @@ jobs:
           CGO_ENABLED=0 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
 
       - run: |
-          mkdir -p release/teamide-server/lib
-          cp -rf release/statics release/teamide-server/statics
-          cp -rf conf/release release/teamide-server/conf
-          cp -rf lib/shentong/amd64/libaci.so release/teamide-server/lib/libaci.so
-          cp -rf docker/server.sh release/teamide-server/server.sh
-          chmod +x release/teamide-server/server.sh
+          mkdir -p release/teamide-server-amd64/lib
+          cp -rf release/statics release/teamide-server-amd64/statics
+          cp -rf conf/release release/teamide-server-amd64/conf
+          cp -rf lib/shentong/amd64/libaci.so release/teamide-server-amd64/lib/libaci.so
+          cp -rf docker/server.sh release/teamide-server-amd64/server.sh
+          chmod +x release/teamide-server-amd64/server.sh
+          cp -rf release/teamide-server-amd64 release/teamide-server-arm64
+          rm -rf release/teamide-server-arm64/lib/libaci.so
+          cp -rf lib/shentong/arm64/libaci.so release/teamide-server-arm64/lib/libaci.so
           go mod tidy
-          go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server/teamide .
+          go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-amd64/teamide .
+          GOOS=linux GOARCH=arm64 go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-arm64/teamide .
 
       - run: |
-          cd release/teamide-server
+          cd release/teamide-server-amd64
           ldd teamide
 
       - name: Set up Docker BuildX
@@ -254,22 +258,35 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
-        name: Build and push
+        name: Build and push amd64
         #导入这个模块来完成自动编译和推送
         uses: docker/build-push-action@v3
         with:
-          context: .
+          file: ./docker/Dockerfile-amd64
           push: true
           #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
           platforms: linux/amd64
           #指定用户/仓库名
           tags: teamide/teamide-server:latest,teamide/teamide-server:${{ steps.release_version.outputs.value }}
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        name: Build and push arm64
+        #导入这个模块来完成自动编译和推送
+        uses: docker/build-push-action@v3
+        with:
+          file: ./docker/Dockerfile-arm64
+          push: true
+          #在这里通过加入需要编译的平台和前面配好的QEMU，buildx来达到多平台编译 linux/amd64,linux/arm64,linux/arm
+          platforms: linux/arm64
+          #指定用户/仓库名
+          tags: teamide/teamide-server-arm64:latest,teamide/teamide-server-arm64:${{ steps.release_version.outputs.value }}
 
       - run: |
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          cp -rf release/teamide-server teamide-server-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-${{steps.release_version.outputs.value}}.zip teamide-server-${{steps.release_version.outputs.value}}
+          mv release/teamide-server-amd64 teamide-server-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-amd64-${{steps.release_version.outputs.value}}
+          mv release/teamide-server-arm64 teamide-server-arm64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-arm64-${{steps.release_version.outputs.value}}
           ls
 
       # 上传 到 Release
@@ -289,8 +306,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: teamide-server-${{steps.release_version.outputs.value}}.zip
-          asset_name: teamide-server-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_path: teamide-server-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_content_type: application/zip
+
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: teamide-server-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
 
