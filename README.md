@@ -66,7 +66,15 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
 ```shell
 
 # 最新版本 至 https://hub.docker.com/repository/docker/teamide/teamide-server/tags?page=1&ordering=last_updated 查看
+
+# amd64 环境
 docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server:latest
+
+# arm64 环境
+docker run -itd --name teamide-21080 -p 21080:21080 -v /data/teamide/data:/opt/teamide/data teamide/teamide-server-arm64:latest
+
+# 可以修改容器中 `conf/config.yaml` 配置 https 访问，这样浏览器可以使用复制粘贴功能
+
 ```
 
 #### 服务端 运行
