@@ -1,4 +1,4 @@
-FROM teamide/build-arm64:1.3
+FROM teamide/server-base-arm64:0.0.1
 
 EXPOSE 21080/tcp
 
