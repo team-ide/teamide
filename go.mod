@@ -4,7 +4,7 @@ go 1.18
 
 //replace (
 //	github.com/team-ide/go-dialect v1.9.15 => ../go-dialect
-//	github.com/team-ide/go-tool v1.1.10 => ../go-tool
+//	github.com/team-ide/go-tool v1.1.18 => ../go-tool
 //)
 
 require (
@@ -18,8 +18,8 @@ require (
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.11
-	github.com/team-ide/go-dialect v1.9.16
-	github.com/team-ide/go-tool v1.1.18
+	github.com/team-ide/go-dialect v1.9.17
+	github.com/team-ide/go-tool v1.1.20
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.15.0

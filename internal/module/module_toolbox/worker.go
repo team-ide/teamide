@@ -694,16 +694,16 @@ func sshWorker() *ToolboxType {
 					},
 					Col: 12,
 				},
-				{Label: "Username", Name: "username", Col: 8},
-				{Label: "Password", Name: "password", Type: "password", Col: 8, ShowPlaintextBtn: true},
+				{Label: "Username", Name: "username", Col: 9},
+				{Label: "Password（密码或密钥文件密码）", Name: "password", Type: "password", Col: 9, ShowPlaintextBtn: true},
 
-				{Label: `连接超时时间（秒）`, Name: "timeout", IsNumber: true, Col: 8, DefaultValue: 5},
+				{Label: `连接超时时间（秒）`, Name: "timeout", IsNumber: true, Col: 6, DefaultValue: 5},
 
 				{Label: "空闲自动发送（防止会话超时）", Name: "idleSendOpen", Type: "switch", Col: 8, DefaultValue: false},
 				{Label: `发送间隔（秒）`, Name: "idleSendTime", IsNumber: true, Col: 8, DefaultValue: 60, VIf: "idleSendOpen == true"},
 				{Label: `发送字符（^C：Ctrl+C、\n：回车）`, Name: "idleSendChar", Col: 8, DefaultValue: "^C", VIf: "idleSendOpen == true"},
 
-				{Label: "PublicKey（通常跳板机需要上传）", Name: "publicKey", Type: "file", Placeholder: "请上传PublicKey文件"},
+				{Label: "PrivateKey（通常跳板机需要的密钥文件）", Name: "publicKey", Type: "file", Placeholder: "请上传PrivateKey文件"},
 				{Label: "连接后执行命令(回车执行多条，sleep 5，表示等待5秒执行下一条)", Name: "command", Type: "textarea"},
 			},
 		},
