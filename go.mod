@@ -12,18 +12,18 @@ require (
 	github.com/apache/thrift v0.17.0
 	github.com/creack/pty v1.1.21
 	github.com/gin-gonic/gin v1.9.1
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.11
 	github.com/team-ide/go-dialect v1.9.17
-	github.com/team-ide/go-tool v1.1.20
+	github.com/team-ide/go-tool v1.1.21
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
-	golang.org/x/crypto v0.15.0
-	golang.org/x/net v0.18.0
+	golang.org/x/crypto v0.16.0
+	golang.org/x/net v0.19.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )

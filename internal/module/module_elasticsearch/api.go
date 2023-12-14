@@ -32,6 +32,7 @@ var (
 	putMappingPower  = base.AppendPower(&base.PowerAction{Action: "putMapping", Text: "ES索引修改", ShouldLogin: true, StandAlone: true, Parent: Power})
 	searchPower      = base.AppendPower(&base.PowerAction{Action: "search", Text: "ES搜索", ShouldLogin: true, StandAlone: true, Parent: Power})
 	scrollPower      = base.AppendPower(&base.PowerAction{Action: "scroll", Text: "ES滚动搜索", ShouldLogin: true, StandAlone: true, Parent: Power})
+	requestPower     = base.AppendPower(&base.PowerAction{Action: "request", Text: "ES HTTP请求", ShouldLogin: true, StandAlone: true, Parent: Power})
 	insertDataPower  = base.AppendPower(&base.PowerAction{Action: "insertData", Text: "ES插入数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "updateData", Text: "ES修改数据", ShouldLogin: true, StandAlone: true, Parent: Power})
 	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "ES删除数据", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -57,6 +58,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: putMappingPower, Do: this_.putMapping})
 	apis = append(apis, &base.ApiWorker{Power: searchPower, Do: this_.search})
 	apis = append(apis, &base.ApiWorker{Power: scrollPower, Do: this_.scroll})
+	apis = append(apis, &base.ApiWorker{Power: requestPower, Do: this_.request})
 	apis = append(apis, &base.ApiWorker{Power: insertDataPower, Do: this_.insertData})
 	apis = append(apis, &base.ApiWorker{Power: updateDataPower, Do: this_.updateData})
 	apis = append(apis, &base.ApiWorker{Power: deleteDataPower, Do: this_.deleteData})
@@ -337,6 +339,27 @@ func (this_ *api) scroll(requestBean *base.RequestBean, c *gin.Context) (res int
 	}
 
 	res, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize, request.WhereList, request.OrderList)
+	if err != nil {
+		return
+	}
+	return
+}
+func (this_ *api) request(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := elasticsearch.PerformRequestOptions{}
+	if !base.RequestJSON(&request, c) {
+		return
+	}
+
+	res, err = service.PerformRequest(request)
 	if err != nil {
 		return
 	}
