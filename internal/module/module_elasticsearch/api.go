@@ -359,10 +359,14 @@ func (this_ *api) request(requestBean *base.RequestBean, c *gin.Context) (res in
 		return
 	}
 
-	res, err = service.PerformRequest(request)
+	response, err := service.PerformRequest(request)
 	if err != nil {
 		return
 	}
+	data := make(map[string]interface{})
+	res = data
+	data["header"] = response.Header
+	data["body"] = string(response.Body)
 	return
 }
 func (this_ *api) insertData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {

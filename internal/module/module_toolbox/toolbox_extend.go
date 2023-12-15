@@ -10,6 +10,10 @@ import (
 )
 
 func (this_ *ToolboxService) FormatExtend(extendType string, value string) (res map[string]interface{}, err error) {
+	if value == "" {
+		res = make(map[string]interface{})
+		return
+	}
 	res, err = util.JsonToMap(value)
 	return
 }
