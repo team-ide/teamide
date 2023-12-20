@@ -59,6 +59,8 @@ const (
 	// IDTypeLog 日志
 	IDTypeLog = 7001
 
-	// IDTypeTerminalLog 控制台日志
+	// IDTypeTerminalLog 控制台日志 已废弃
 	IDTypeTerminalLog = 8001
+	// IDTypeTerminalCommand 控制台命令
+	IDTypeTerminalCommand = 8002
 )

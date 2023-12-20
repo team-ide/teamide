@@ -26,21 +26,19 @@ import (
 
 func NewWorkerFactory(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *WorkerFactory {
 	return &WorkerFactory{
-		ServerContext:      toolboxService_.ServerContext,
-		toolboxService:     toolboxService_,
-		nodeService:        nodeService_,
-		terminalLogService: NewTerminalLogService(toolboxService_.ServerContext),
-		workerCache:        make(map[string]*Worker),
+		ServerContext:  toolboxService_.ServerContext,
+		toolboxService: toolboxService_,
+		nodeService:    nodeService_,
+		workerCache:    make(map[string]*Worker),
 	}
 }
 
 type WorkerFactory struct {
 	*context.ServerContext
-	toolboxService     *module_toolbox.ToolboxService
-	nodeService        *module_node.NodeService
-	terminalLogService *TerminalLogService
-	workerCache        map[string]*Worker
-	workerCacheLock    sync.Mutex
+	toolboxService  *module_toolbox.ToolboxService
+	nodeService     *module_node.NodeService
+	workerCache     map[string]*Worker
+	workerCacheLock sync.Mutex
 }
 
 func (this_ *WorkerFactory) GetService(key string) (res *Worker) {
@@ -123,7 +121,7 @@ func (this_ *WorkerFactory) createService(param *CreateParam) (worker *Worker, c
 	return
 }
 
-func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal.Size, ws *websocket.Conn, baseLog *TerminalLogModel) (err error) {
+func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal.Size, ws *websocket.Conn) (err error) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -183,7 +181,7 @@ func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal
 
 	}
 
-	go worker.startReadWS(isWindow, baseLog)
+	go worker.startReadWS(isWindow)
 	go worker.startReadService(isWindow)
 
 	this_.workerCache[key] = worker
@@ -297,25 +295,6 @@ func (this_ *Worker) init() {
 	}
 	this_.dir = dir
 	return
-}
-
-type logContext struct {
-	commandBytes []byte
-}
-
-func (this_ *Worker) onCommand(logContext *logContext, commandBytes []byte, log TerminalLogModel) {
-
-	logContext.commandBytes = append(logContext.commandBytes, commandBytes...)
-
-	str := string(commandBytes)
-	if strings.Contains(str, "\n") ||
-		strings.Contains(str, "\r") {
-		command := string(logContext.commandBytes)
-		log.Command = command
-		_ = this_.terminalLogService.Insert(&log)
-		logContext.commandBytes = []byte{}
-	}
-
 }
 
 var (
@@ -441,7 +420,7 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 	_ = writer.Flush()
 }
 
-func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
+func (this_ *Worker) startReadWS(isWindow bool) {
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -450,7 +429,6 @@ func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
 	}()
 
 	defer func() { this_.stopAll() }()
-	logContext_ := &logContext{}
 	var buf []byte
 	var readErr error
 	var writeErr error
@@ -466,7 +444,6 @@ func (this_ *Worker) startReadWS(isWindow bool, baseLog *TerminalLogModel) {
 			break
 		}
 		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-		this_.onCommand(logContext_, buf, *baseLog)
 		_, writeErr = this_.service.Write(buf)
 
 		if writeErr != nil {

@@ -21,11 +21,13 @@ import (
 
 type api struct {
 	*WorkerFactory
+	terminalCommandService *TerminalCommandService
 }
 
 func NewApi(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *api {
 	return &api{
-		WorkerFactory: NewWorkerFactory(toolboxService_, nodeService_),
+		WorkerFactory:          NewWorkerFactory(toolboxService_, nodeService_),
+		terminalCommandService: NewTerminalCommandService(toolboxService_.ServerContext),
 	}
 }
 
@@ -46,6 +48,12 @@ var (
 	downloadLog          = base.AppendPower(&base.PowerAction{Action: "downloadLog", Text: "downloadLog", ShouldLogin: true, StandAlone: true, Parent: Power})
 	systemInfo           = base.AppendPower(&base.PowerAction{Action: "system/info", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
 	systemMonitor        = base.AppendPower(&base.PowerAction{Action: "system/monitor", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
+
+	command       = base.AppendPower(&base.PowerAction{Action: "command", Text: "命令行", ShouldLogin: true, StandAlone: true, Parent: Power})
+	commandInsert = base.AppendPower(&base.PowerAction{Action: "insert", Text: "插入", ShouldLogin: true, StandAlone: true, Parent: command})
+	commandQuery  = base.AppendPower(&base.PowerAction{Action: "query", Text: "查询", ShouldLogin: true, StandAlone: true, Parent: command})
+	commandCount  = base.AppendPower(&base.PowerAction{Action: "count", Text: "查询", ShouldLogin: true, StandAlone: true, Parent: command})
+	commandClean  = base.AppendPower(&base.PowerAction{Action: "clean", Text: "清理", ShouldLogin: true, StandAlone: true, Parent: command})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -61,6 +69,10 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: downloadLog, Do: this_.downloadLog})
 	apis = append(apis, &base.ApiWorker{Power: systemInfo, Do: this_.systemInfo})
 	apis = append(apis, &base.ApiWorker{Power: systemMonitor, Do: this_.systemMonitor, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandInsert, Do: this_.commandInsert, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandQuery, Do: this_.commandQuery, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandCount, Do: this_.commandCount, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandClean, Do: this_.commandClean, NotRecodeLog: true})
 
 	return
 }
@@ -142,19 +154,6 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	userAgentStr := c.Request.UserAgent()
-	baseLog := &TerminalLogModel{
-		Ip:        c.ClientIP(),
-		UserAgent: userAgentStr,
-		Place:     place,
-		PlaceId:   placeId,
-		WorkerId:  workerId,
-	}
-
-	baseLog.UserId = request.JWT.UserId
-	baseLog.UserName = request.JWT.Name
-	baseLog.UserAccount = request.JWT.Account
-	baseLog.LoginId = request.JWT.LoginId
 	err = this_.Start(key,
 		&CreateParam{
 			place:    place,
@@ -166,7 +165,7 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 		&terminal.Size{
 			Cols: cols,
 			Rows: rows,
-		}, ws, baseLog)
+		}, ws)
 	if err != nil {
 		_ = ws.WriteMessage(websocket.BinaryMessage, []byte("start error:"+err.Error()))
 		this_.Logger.Error("websocket start error", zap.Error(err))
@@ -208,6 +207,55 @@ func (this_ *api) systemMonitor(_ *base.RequestBean, c *gin.Context) (res interf
 	res, err = service.service.SystemMonitorData()
 	return
 }
+
+func (this_ *api) commandInsert(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &TerminalCommandModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	userAgentStr := c.Request.UserAgent()
+	request.Ip = c.ClientIP()
+	request.UserAgent = userAgentStr
+	request.UserId = r.JWT.UserId
+	request.UserName = r.JWT.Name
+	request.UserAccount = r.JWT.Account
+	request.LoginId = r.JWT.LoginId
+
+	err = this_.terminalCommandService.Insert(request)
+	return
+}
+
+func (this_ *api) commandQuery(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &TerminalCommandModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.terminalCommandService.Query(request)
+	return
+}
+
+func (this_ *api) commandCount(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &TerminalCommandModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.terminalCommandService.Count(request)
+	return
+}
+
+func (this_ *api) commandClean(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &TerminalCommandModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = this_.terminalCommandService.Clean(request)
+	return
+}
+
 func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	if request.JWT == nil || request.JWT.UserId == 0 {
