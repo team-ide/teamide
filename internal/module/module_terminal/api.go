@@ -50,9 +50,10 @@ var (
 	systemMonitor        = base.AppendPower(&base.PowerAction{Action: "system/monitor", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
 
 	command       = base.AppendPower(&base.PowerAction{Action: "command", Text: "命令行", ShouldLogin: true, StandAlone: true, Parent: Power})
-	commandInsert = base.AppendPower(&base.PowerAction{Action: "insert", Text: "插入", ShouldLogin: true, StandAlone: true, Parent: command})
+	commandSave   = base.AppendPower(&base.PowerAction{Action: "save", Text: "插入", ShouldLogin: true, StandAlone: true, Parent: command})
 	commandQuery  = base.AppendPower(&base.PowerAction{Action: "query", Text: "查询", ShouldLogin: true, StandAlone: true, Parent: command})
 	commandCount  = base.AppendPower(&base.PowerAction{Action: "count", Text: "查询", ShouldLogin: true, StandAlone: true, Parent: command})
+	commandDelete = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: command})
 	commandClean  = base.AppendPower(&base.PowerAction{Action: "clean", Text: "清理", ShouldLogin: true, StandAlone: true, Parent: command})
 )
 
@@ -69,10 +70,11 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: downloadLog, Do: this_.downloadLog})
 	apis = append(apis, &base.ApiWorker{Power: systemInfo, Do: this_.systemInfo})
 	apis = append(apis, &base.ApiWorker{Power: systemMonitor, Do: this_.systemMonitor, NotRecodeLog: true})
-	apis = append(apis, &base.ApiWorker{Power: commandInsert, Do: this_.commandInsert, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandSave, Do: this_.commandSave, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: commandQuery, Do: this_.commandQuery, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: commandCount, Do: this_.commandCount, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: commandClean, Do: this_.commandClean, NotRecodeLog: true})
+	apis = append(apis, &base.ApiWorker{Power: commandDelete, Do: this_.commandDelete, NotRecodeLog: true})
 
 	return
 }
@@ -208,7 +210,7 @@ func (this_ *api) systemMonitor(_ *base.RequestBean, c *gin.Context) (res interf
 	return
 }
 
-func (this_ *api) commandInsert(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) commandSave(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &TerminalCommandModel{}
 	if !base.RequestJSON(request, c) {
 		return
@@ -222,7 +224,11 @@ func (this_ *api) commandInsert(r *base.RequestBean, c *gin.Context) (res interf
 	request.UserAccount = r.JWT.Account
 	request.LoginId = r.JWT.LoginId
 
-	err = this_.terminalCommandService.Insert(request)
+	err = this_.terminalCommandService.Save(request)
+	if err != nil {
+		return
+	}
+	res = request
 	return
 }
 
@@ -232,6 +238,7 @@ func (this_ *api) commandQuery(r *base.RequestBean, c *gin.Context) (res interfa
 		return
 	}
 
+	request.UserId = r.JWT.UserId
 	res, err = this_.terminalCommandService.Query(request)
 	return
 }
@@ -242,6 +249,7 @@ func (this_ *api) commandCount(r *base.RequestBean, c *gin.Context) (res interfa
 		return
 	}
 
+	request.UserId = r.JWT.UserId
 	res, err = this_.terminalCommandService.Count(request)
 	return
 }
@@ -252,7 +260,19 @@ func (this_ *api) commandClean(r *base.RequestBean, c *gin.Context) (res interfa
 		return
 	}
 
-	res, err = this_.terminalCommandService.Clean(request)
+	request.UserId = r.JWT.UserId
+	err = this_.terminalCommandService.Clean(request)
+	return
+}
+
+func (this_ *api) commandDelete(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &TerminalCommandModel{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	request.UserId = r.JWT.UserId
+	err = this_.terminalCommandService.Delete(request.TerminalCommandId)
 	return
 }
 

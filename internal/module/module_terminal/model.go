@@ -30,9 +30,15 @@ type TerminalCommandModel struct {
 	PlaceId           string    `json:"placeId,omitempty"`
 	Command           string    `json:"command,omitempty"`
 	CreateTime        time.Time `json:"createTime,omitempty"`
+	Comment           string    `json:"comment,omitempty"`
+	CommandType       int       `json:"commandType,omitempty"`
 }
 
 // TerminalCommand 控制台命令
 type TerminalCommand struct {
-	Command string `json:"command,omitempty"`
+	TerminalCommandId int64     `json:"terminalCommandId,omitempty"`
+	Command           string    `json:"command,omitempty"`
+	Comment           string    `json:"comment,omitempty"`
+	CommandType       int       `json:"commandType,omitempty"`
+	CreateTime        time.Time `json:"createTime,omitempty"`
 }

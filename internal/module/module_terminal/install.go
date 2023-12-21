@@ -71,7 +71,7 @@ CREATE TABLE ` + TableTerminalLog + ` (
 		},
 		// 创建 终端日志 表 结束 已废弃
 
-		// 创建 终端日志 表 开始
+		// 创建 终端命令 表 开始
 		{
 			Version: "1.0",
 			Module:  ModuleTerminalCommand,
@@ -133,6 +133,28 @@ CREATE TABLE ` + TableTerminalCommand + ` (
 			},
 		},
 
-		// 创建 终端日志 表 结束
+		// 创建 终端命令 表 结束
+
+		/** 终端命令 添加 类型、注释 开始**/
+		{
+			Version: "1.0.4",
+			Module:  ModuleTerminalCommand,
+			Stage:   `终端命令[` + ModuleTerminalCommand + `]添加类型[commandType]、说明[comment]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableTerminalCommand + ` ADD COLUMN comment varchar(500);`,
+					`ALTER TABLE ` + TableTerminalCommand + ` ADD COLUMN commandType int(10) DEFAULT '1';`,
+					`ALTER TABLE ` + TableTerminalCommand + ` ADD INDEX ` + TableTerminalCommand + `_index_commandType(commandType);`,
+					`UPDATE ` + TableTerminalCommand + ` SET commandType=1 WHERE commandType=0 OR commandType IS NULL;`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableTerminalCommand + ` ADD comment varchar(500);`,
+					`ALTER TABLE ` + TableTerminalCommand + ` ADD commandType int(10) DEFAULT '1';`,
+					`CREATE INDEX ` + TableTerminalCommand + `_index_commandType on ` + TableTerminalCommand + ` (commandType);`,
+					`UPDATE ` + TableTerminalCommand + ` SET commandType=1 WHERE commandType=0 OR commandType IS NULL;`,
+				},
+			},
+		},
+		/** 终端命令 添加 类型、注释 结束**/
 	}
 }

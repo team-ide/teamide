@@ -18,7 +18,7 @@ require (
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.11
-	github.com/team-ide/go-dialect v1.9.17
+	github.com/team-ide/go-dialect v1.9.18
 	github.com/team-ide/go-tool v1.1.21
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
