@@ -10,7 +10,6 @@ import (
 	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
-	"go.uber.org/zap"
 	"strconv"
 	"teamide/pkg/base"
 	"teamide/pkg/form"
@@ -278,7 +277,7 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 							err = errors.New("ssh toolbox config error:" + err.Error())
 							return
 						}
-						this_.Logger.Info("BindConfig find sshConfig", zap.Any("sshConfig", sshConfig))
+						//this_.Logger.Info("BindConfig find sshConfig", zap.Any("sshConfig", sshConfig))
 					}
 				}
 			}
