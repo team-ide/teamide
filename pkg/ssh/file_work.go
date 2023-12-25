@@ -129,6 +129,31 @@ func (this_ *fileService) Exist(path string) (exist bool, err error) {
 	return
 }
 
+func (this_ *fileService) ExistAndMd5(path string) (exist bool, md5 string, err error) {
+	exist, err = this_.Exist(path)
+	if err != nil {
+		return
+	}
+	if !exist {
+		return
+	}
+	s, err := this_.sshClient.NewSession()
+	if err != nil {
+		return
+	}
+	defer func() { _ = s.Close() }()
+	bs, err := s.Output("md5sum " + path)
+	if err != nil {
+		return
+	}
+	text := strings.TrimSpace(string(bs))
+	spIndex := strings.Index(text, " ")
+	if spIndex > 0 {
+		md5 = text[0:spIndex]
+	}
+	return
+}
+
 func (this_ *fileService) Create(path string, isDir bool) (err error) {
 	var sftpClient *sftp.Client
 	sftpClient, err = this_.getSftp()
@@ -455,10 +480,10 @@ func (this_ *fileService) File(path string) (file *filework.FileInfo, err error)
 
 	stat, err := sftpClient.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			err = nil
-			return
-		}
+		//if os.IsNotExist(err) {
+		//	err = nil
+		//	return
+		//}
 		return
 	}
 

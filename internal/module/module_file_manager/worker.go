@@ -2,6 +2,7 @@ package module_file_manager
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"strconv"
@@ -85,7 +86,13 @@ func (this_ *worker) Create(param *BaseParam, fileWorkerKey string, path string,
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
 	progress.Data["isDir"] = isDir
-	defer func() { progress.end(err) }()
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -119,6 +126,11 @@ func (this_ *worker) CallStop(progressId string) (err error) {
 
 func (this_ *worker) File(param *BaseParam, fileWorkerKey string, path string) (file *filework.FileInfo, err error) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+	}()
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
 		return
@@ -129,6 +141,11 @@ func (this_ *worker) File(param *BaseParam, fileWorkerKey string, path string) (
 
 func (this_ *worker) Files(param *BaseParam, fileWorkerKey string, dir string) (parentPath string, files []*filework.FileInfo, err error) {
 
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+	}()
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
 		return
@@ -148,7 +165,12 @@ func (this_ *worker) Read(param *BaseParam, fileWorkerKey string, path string, w
 	progress.Data["readSize"] = 0
 	progress.Data["writeSize"] = 0
 	progress.Data["successSize"] = 0
-	defer func() { progress.end(err) }()
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -180,7 +202,13 @@ func (this_ *worker) Write(param *BaseParam, fileWorkerKey string, path string, 
 	progress.Data["readSize"] = 0
 	progress.Data["writeSize"] = 0
 	progress.Data["size"] = size
-	defer func() { progress.end(err) }()
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -208,7 +236,12 @@ func (this_ *worker) Rename(param *BaseParam, fileWorkerKey string, oldPath stri
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
 
-	defer func() { progress.end(err) }()
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -231,7 +264,13 @@ func (this_ *worker) Remove(param *BaseParam, fileWorkerKey string, path string)
 	progress.Data["path"] = path
 	progress.Data["fileCount"] = 0
 	progress.Data["removeCount"] = 0
-	defer func() { progress.end(err) }()
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -251,7 +290,13 @@ func (this_ *worker) Move(param *BaseParam, fileWorkerKey string, oldPath string
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["oldPath"] = oldPath
 	progress.Data["newPath"] = newPath
-	defer func() { progress.end(err) }()
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	toService, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -274,8 +319,14 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 	progress.Data["fromPlace"] = fromPlace
 	progress.Data["fromPlaceId"] = fromPlaceId
 	progress.Data["fromPath"] = fromPath
+	progress.Data["sameFile"] = false
 
-	defer func() { progress.end(err) }()
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+		progress.end(err)
+	}()
 
 	toService, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
@@ -299,9 +350,22 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 	if !fromFile.IsDir {
 
 		var exist bool
-		exist, err = toService.Exist(path)
+		var toMd5 string
+		var fromMd5 string
+		exist, toMd5, err = toService.ExistAndMd5(path)
 
 		if exist {
+			if toMd5 != "" {
+				exist, fromMd5, err = fromService.ExistAndMd5(fromPath)
+				if err != nil {
+					return
+				}
+				if fromMd5 == toMd5 {
+					progress.Data["sameFile"] = true
+					return
+				}
+			}
+
 			var action string
 			action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
 				[]*Action{
@@ -331,6 +395,8 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 		if err != nil {
 			return
 		}
+		progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
+
 	} else {
 		err = errors.New("暂不支持移动文件夹")
 	}
@@ -339,7 +405,11 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 }
 
 func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, fullPath string, fileList []*multipart.FileHeader) (err error) {
-
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+		}
+	}()
 	service, err := this_.GetService(fileWorkerKey, param)
 	if err != nil {
 		return
@@ -378,7 +448,12 @@ func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, 
 		progress.Data["size"] = one.Size
 		progress.Data["successSize"] = 0
 
-		defer func() { progress.end(err) }()
+		defer func() {
+			if e := recover(); e != nil {
+				err = errors.New(fmt.Sprint(e))
+			}
+			progress.end(err)
+		}()
 
 		var exist bool
 		exist, err = service.Exist(path)

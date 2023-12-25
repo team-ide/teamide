@@ -49,6 +49,17 @@ func (this_ *fileService) Exist(path string) (exist bool, err error) {
 	return
 }
 
+func (this_ *fileService) ExistAndMd5(path string) (exist bool, md5 string, err error) {
+	exist, err = this_.Exist(path)
+	if err != nil {
+		return
+	}
+	if !exist {
+		return
+	}
+	return
+}
+
 func (this_ *fileService) Create(path string, isDir bool) (err error) {
 	var server *node.Server
 	server, err = this_.getServer()

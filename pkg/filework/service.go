@@ -13,6 +13,7 @@ type FileInfo struct {
 
 type Service interface {
 	Exist(path string) (exist bool, err error)
+	ExistAndMd5(path string) (exist bool, md5 string, err error)
 	Create(path string, isDir bool) (err error)
 	Write(path string, reader io.Reader, onDo func(readSize int64, writeSize int64), callStop *bool) (err error)
 	Read(path string, writer io.Writer, onDo func(readSize int64, writeSize int64), callStop *bool) (err error)

@@ -140,6 +140,7 @@ func (this_ *terminalService) runCmd(cmd string) (text string, err error) {
 	if err != nil {
 		return
 	}
+	defer func() { _ = s.Close() }()
 	bs, err := s.Output(cmd)
 	if err != nil {
 		return

@@ -1,9 +1,12 @@
 package filework
 
 import (
+	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strings"
@@ -21,6 +24,37 @@ func (this_ *localService) Exist(path string) (exist bool, err error) {
 
 	exist, err = util.PathExists(path)
 
+	return
+}
+
+func (this_ *localService) ExistAndMd5(path string) (exist bool, md5str string, err error) {
+	exist, err = this_.Exist(path)
+	if err != nil {
+		return
+	}
+	if !exist {
+		return
+	}
+	// 打开文件
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = file.Close() }()
+
+	// 创建新的MD5哈希实例
+	hash := md5.New()
+
+	// 将文件内容拷贝到哈希实例中
+	if _, err = io.Copy(hash, file); err != nil {
+		return
+	}
+
+	// 计算MD5哈希值
+	hashBytes := hash.Sum(nil)
+
+	// 将二进制哈希值转换为十六进制字符串
+	md5str = fmt.Sprintf("%x", hashBytes)
 	return
 }
 
@@ -337,10 +371,10 @@ func (this_ *localService) File(path string) (file *FileInfo, err error) {
 	path = util.FormatPath(path)
 	stat, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			err = nil
-			return
-		}
+		//if os.IsNotExist(err) {
+		//	err = nil
+		//	return
+		//}
 		return
 	}
 
