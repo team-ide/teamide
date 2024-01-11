@@ -17,13 +17,13 @@ require (
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/shirou/gopsutil/v3 v3.23.11
+	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/team-ide/go-dialect v1.9.19
-	github.com/team-ide/go-tool v1.2.1
+	github.com/team-ide/go-tool v1.2.2
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
-	golang.org/x/crypto v0.16.0
-	golang.org/x/net v0.19.0
+	golang.org/x/crypto v0.18.0
+	golang.org/x/net v0.20.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -99,7 +99,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
