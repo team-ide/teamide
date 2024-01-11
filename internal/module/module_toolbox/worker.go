@@ -224,22 +224,20 @@ func (this_ *ToolboxService) initExtent(requestBean *base.RequestBean, c *gin.Co
 	return
 }
 
-func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (sshConfig *ssh.Config, err error) {
-	err = this_.initExtent(requestBean, c)
+func (this_ *ToolboxService) BindConfigById(toolboxId int64, config interface{}) (sshConfig *ssh.Config, err error) {
+	find, err := this_.Get(toolboxId)
 	if err != nil {
 		return
 	}
-
-	err = this_.CheckPower(requestBean)
-	if err != nil {
-		return
-	}
-
-	option := ""
-	if v := requestBean.GetExtend("toolboxModel"); v != nil {
-		find := v.(*ToolboxModel)
+	var option string
+	if find != nil {
 		option = find.Option
 	}
+	sshConfig, err = this_.BindConfigByOption(option, config)
+	return
+}
+
+func (this_ *ToolboxService) BindConfigByOption(option string, config interface{}) (sshConfig *ssh.Config, err error) {
 
 	sshConfig = nil
 
@@ -326,6 +324,26 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 	if err != nil {
 		return
 	}
+	return
+}
+func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Context, config interface{}) (sshConfig *ssh.Config, err error) {
+	err = this_.initExtent(requestBean, c)
+	if err != nil {
+		return
+	}
+
+	err = this_.CheckPower(requestBean)
+	if err != nil {
+		return
+	}
+	option := ""
+	if v := requestBean.GetExtend("toolboxModel"); v != nil {
+		find := v.(*ToolboxModel)
+		option = find.Option
+	}
+
+	sshConfig, err = this_.BindConfigByOption(option, config)
+
 	return
 }
 

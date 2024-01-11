@@ -11,6 +11,7 @@ import (
 	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_database"
+	"teamide/internal/module/module_datamove"
 	"teamide/internal/module/module_elasticsearch"
 	"teamide/internal/module/module_file_manager"
 	"teamide/internal/module/module_id"
@@ -162,6 +163,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_user.NewApi(this_.userService).GetApis()...)
 	apis = append(apis, module_redis.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_database.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_datamove.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_zookeeper.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_kafka.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_elasticsearch.NewApi(this_.toolboxService).GetApis()...)
