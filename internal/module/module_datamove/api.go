@@ -122,11 +122,16 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	request.Key = util.GetUUID()
-	request.Dir = this_.getAnnexPath(requestBean, request.Key)
+	options := request.Options
+
+	options.Key = util.GetUUID()
+	options.Dir = this_.getAnnexPath(requestBean, options.Key)
+	if options.FilePath != "" {
+		options.FilePath = this_.toolboxService.GetFilesFile(options.FilePath)
+	}
 
 	taskInfo := &TaskInfo{}
-	t, err := datamove.New(request.Options)
+	t, err := datamove.New(options)
 	if err != nil {
 		return
 	}
@@ -140,18 +145,15 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 	addTaskInfo(taskInfo)
 	go func() {
 		t.Run()
-		removeTaskInfo(request.Key)
 
-		ds, _ := os.ReadDir(request.Dir)
+		ds, _ := os.ReadDir(options.Dir)
 		if len(ds) > 0 {
 			taskInfo.AnnexInfo, _ = util.LoadDirInfo(request.Dir, true)
 			taskInfo.HasAnnex = true
 		}
 
-		err = this_.saveInfo(requestBean, t.Key, taskInfo)
-		if err != nil {
-			return
-		}
+		_ = this_.saveInfo(requestBean, options.Key, taskInfo)
+		removeTaskInfo(options.Key)
 	}()
 	return
 }
@@ -192,18 +194,26 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	infoPath := this_.getInfoPath(requestBean, request.TaskKey)
 
-	bs, _ := os.ReadFile(infoPath)
-	if len(bs) == 0 {
+	find := getTaskInfo(request.TaskKey)
+	if find != nil {
+		res = find
 		return
 	}
-	res = getTaskInfo(request.TaskKey)
-	if res != nil {
+	infoPath := this_.getInfoPath(requestBean, request.TaskKey)
+	bs, err := os.ReadFile(infoPath)
+	if err != nil {
 		return
 	}
-	res = &TaskInfo{}
-	_ = json.Unmarshal(bs, res)
+	info := &TaskInfo{}
+	err = json.Unmarshal(bs, info)
+	if err != nil {
+		return
+	}
+	if info.Task != nil {
+		info.IsEnd = true
+		res = info
+	}
 
 	return
 }
@@ -234,7 +244,10 @@ func (this_ *api) list(requestBean *base.RequestBean, c *gin.Context) (res inter
 			}
 			taskInfo := &TaskInfo{}
 			_ = json.Unmarshal(bs, taskInfo)
-			listData = append(listData, taskInfo)
+			if taskInfo.Task != nil {
+				taskInfo.IsEnd = true
+				listData = append(listData, taskInfo)
+			}
 		}
 	}
 	res = listData
