@@ -1,10 +1,13 @@
 package module_datamove
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/tealeg/xlsx"
+	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-tool/datamove"
 	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/elasticsearch"
@@ -35,13 +38,14 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 }
 
 var (
-	Power    = base.AppendPower(&base.PowerAction{Action: "datamove", Text: "DataMove", ShouldLogin: true, StandAlone: true})
-	start    = base.AppendPower(&base.PowerAction{Action: "start", Text: "启动", ShouldLogin: true, StandAlone: true, Parent: Power})
-	stop     = base.AppendPower(&base.PowerAction{Action: "stop", Text: "停止", ShouldLogin: true, StandAlone: true, Parent: Power})
-	delete_  = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: Power})
-	get      = base.AppendPower(&base.PowerAction{Action: "get", Text: "获取", ShouldLogin: true, StandAlone: true, Parent: Power})
-	list     = base.AppendPower(&base.PowerAction{Action: "list", Text: "列表", ShouldLogin: true, StandAlone: true, Parent: Power})
-	download = base.AppendPower(&base.PowerAction{Action: "download", Text: "下载", ShouldLogin: true, StandAlone: true, Parent: Power})
+	Power              = base.AppendPower(&base.PowerAction{Action: "datamove", Text: "DataMove", ShouldLogin: true, StandAlone: true})
+	start              = base.AppendPower(&base.PowerAction{Action: "start", Text: "启动", ShouldLogin: true, StandAlone: true, Parent: Power})
+	stop               = base.AppendPower(&base.PowerAction{Action: "stop", Text: "停止", ShouldLogin: true, StandAlone: true, Parent: Power})
+	delete_            = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: Power})
+	get                = base.AppendPower(&base.PowerAction{Action: "get", Text: "获取", ShouldLogin: true, StandAlone: true, Parent: Power})
+	list               = base.AppendPower(&base.PowerAction{Action: "list", Text: "列表", ShouldLogin: true, StandAlone: true, Parent: Power})
+	download           = base.AppendPower(&base.PowerAction{Action: "download", Text: "下载", ShouldLogin: true, StandAlone: true, Parent: Power})
+	readFileColumnList = base.AppendPower(&base.PowerAction{Action: "readFileColumnList", Text: "下载", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -51,6 +55,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: get, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: list, Do: this_.list})
 	apis = append(apis, &base.ApiWorker{Power: download, Do: this_.download})
+	apis = append(apis, &base.ApiWorker{Power: readFileColumnList, Do: this_.readFileColumnList})
 
 	return
 }
@@ -126,8 +131,8 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 
 	options.Key = util.GetUUID()
 	options.Dir = this_.getAnnexPath(requestBean, options.Key)
-	if options.FilePath != "" {
-		options.FilePath = this_.toolboxService.GetFilesFile(options.FilePath)
+	if options.From.FilePath != "" {
+		options.From.FilePath = this_.toolboxService.GetFilesFile(options.From.FilePath)
 	}
 
 	taskInfo := &TaskInfo{}
@@ -214,6 +219,73 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 		info.IsEnd = true
 		res = info
 	}
+
+	return
+}
+
+func (this_ *api) readFileColumnList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	if request.Options == nil || request.From == nil || request.From.FilePath == "" {
+		err = errors.New("文件地址为空")
+		return
+	}
+	filePath := request.From.FilePath
+	filePath = this_.toolboxService.GetFilesFile(filePath)
+	var columnList []*datamove.Column
+	switch request.From.Type {
+	case "txt":
+		var file *os.File
+		file, err = os.Open(filePath)
+		if err != nil {
+			err = errors.New("open file [" + filePath + "] error:" + err.Error())
+			return
+		}
+		defer func() { _ = file.Close() }()
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cols := strings.Split(line, request.From.ColSeparator)
+			for _, col := range cols {
+				column := &datamove.Column{
+					ColumnModel: &dialect.ColumnModel{},
+				}
+				column.ColumnName = col
+				columnList = append(columnList, column)
+			}
+			break
+		}
+		break
+	case "excel":
+		var file *xlsx.File
+		file, err = xlsx.OpenFile(filePath)
+		if err != nil {
+			err = errors.New("open file [" + filePath + "] error:" + err.Error())
+			return
+		}
+		if len(file.Sheets) == 0 || len(file.Sheets[0].Rows) == 0 {
+			err = errors.New("为解析到内容")
+			return
+		}
+		for _, col := range file.Sheets[0].Rows[0].Cells {
+			column := &datamove.Column{
+				ColumnModel: &dialect.ColumnModel{},
+			}
+			column.ColumnName = col.String()
+			columnList = append(columnList, column)
+		}
+		break
+	default:
+		err = errors.New("不支持的文件类型")
+		break
+	}
+	if len(columnList) == 0 {
+		err = errors.New("无法解析字段，请检查文件内容是否正确")
+		return
+	}
+	res = columnList
 
 	return
 }

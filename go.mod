@@ -3,8 +3,8 @@ module teamide
 go 1.18
 
 //replace (
-//	github.com/team-ide/go-dialect v1.9.15 => ../go-dialect
-//	github.com/team-ide/go-tool v1.1.18 => ../go-tool
+//	github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
+//	github.com/team-ide/go-tool v1.2.5 => ../go-tool
 //)
 
 require (
@@ -18,8 +18,9 @@ require (
 	github.com/pkg/sftp v1.13.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.12
+	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/go-dialect v1.9.19
-	github.com/team-ide/go-tool v1.2.2
+	github.com/team-ide/go-tool v1.2.5
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
@@ -88,7 +89,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/tealeg/xlsx v1.0.5 // indirect
 	github.com/team-ide/go-driver v1.3.1 // indirect
 	github.com/team-ide/go-interpreter v0.1.1 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
