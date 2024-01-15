@@ -97,21 +97,11 @@ func (this_ *api) fullConfig_(toolboxId int64, config *datamove.DataSourceConfig
 	}
 	return
 }
-func (this_ *api) fullConfig(request *BaseRequest) (err error) {
-	err = this_.fullConfig_(request.FromToolboxId, request.From)
-	if err != nil {
-		return
-	}
-	err = this_.fullConfig_(request.ToToolboxId, request.To)
-	if err != nil {
-		return
-	}
-	return
-}
 
 type BaseRequest struct {
-	*datamove.Options
+	datamove.Options
 	TaskKey       string `json:"taskKey"`
+	AnnexDir      string `json:"annexDir"`
 	FromToolboxId int64  `json:"fromToolboxId"`
 	ToToolboxId   int64  `json:"toToolboxId"`
 }
@@ -122,15 +112,23 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	err = this_.fullConfig(request)
+	options := &datamove.Options{}
+	if !base.RequestJSON(options, c) {
+		return
+	}
+
+	err = this_.fullConfig_(request.FromToolboxId, options.From)
+	if err != nil {
+		return
+	}
+	err = this_.fullConfig_(request.ToToolboxId, options.To)
 	if err != nil {
 		return
 	}
 
-	options := request.Options
-
 	options.Key = util.GetUUID()
 	options.Dir = this_.getAnnexPath(requestBean, options.Key)
+	request.AnnexDir = options.Dir
 	if options.From.FilePath != "" {
 		options.From.FilePath = this_.toolboxService.GetFilesFile(options.From.FilePath)
 	}
@@ -153,9 +151,10 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 
 		ds, _ := os.ReadDir(options.Dir)
 		if len(ds) > 0 {
-			taskInfo.AnnexInfo, _ = util.LoadDirInfo(request.Dir, true)
+			taskInfo.AnnexInfo, _ = util.LoadDirInfo(options.Dir, true)
 			taskInfo.HasAnnex = true
 		}
+		options.From.DataList = nil
 
 		_ = this_.saveInfo(requestBean, options.Key, taskInfo)
 		removeTaskInfo(options.Key)
@@ -228,7 +227,7 @@ func (this_ *api) readFileColumnList(requestBean *base.RequestBean, c *gin.Conte
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	if request.Options == nil || request.From == nil || request.From.FilePath == "" {
+	if request.From == nil || request.From.FilePath == "" {
 		err = errors.New("文件地址为空")
 		return
 	}
@@ -393,13 +392,13 @@ func (this_ *api) download(requestBean *base.RequestBean, c *gin.Context) (res i
 	if len(bs) != 0 {
 		_ = json.Unmarshal(bs, taskInfo)
 	}
-	if taskInfo.Request == nil || taskInfo.Request.Dir == "" {
+	annexDir := taskInfo.getAnnexDir()
+	if annexDir == "" {
 		err = errors.New("任务导出文件丢失")
 		return
 	}
 
-	path := taskInfo.Request.Dir
-	exists, err := util.PathExists(path)
+	exists, err := util.PathExists(annexDir)
 	if err != nil {
 		return
 	}
@@ -407,47 +406,47 @@ func (this_ *api) download(requestBean *base.RequestBean, c *gin.Context) (res i
 		err = errors.New("文件不存在")
 		return
 	}
-	if strings.HasSuffix(path, "/") {
-		path = path[0 : len(path)-1]
+	if strings.HasSuffix(annexDir, "/") {
+		annexDir = annexDir[0 : len(annexDir)-1]
 	}
 	var fileName string
 	var fileSize int64
-	ff, err := os.Lstat(path)
+	ff, err := os.Lstat(annexDir)
 	if err != nil {
 		return
 	}
 	var fileInfo *os.File
 	if ff.IsDir() {
-		fs, _ := os.ReadDir(path)
+		fs, _ := os.ReadDir(annexDir)
 		if len(fs) == 1 && !fs[0].IsDir() {
-			fPath := path + "/" + fs[0].Name()
+			fPath := annexDir + "/" + fs[0].Name()
 			ff, _ = os.Lstat(fPath)
 			fileInfo, err = os.Open(fPath)
 			if err != nil {
 				return
 			}
 		} else {
-			exists, err = util.PathExists(path + ".zip")
+			exists, err = util.PathExists(annexDir + ".zip")
 			if err != nil {
 				return
 			}
 			if !exists {
-				err = util.Zip(path, path+".zip")
+				err = util.Zip(annexDir, annexDir+".zip")
 				if err != nil {
 					return
 				}
 			}
-			ff, err = os.Lstat(path + ".zip")
+			ff, err = os.Lstat(annexDir + ".zip")
 			if err != nil {
 				return
 			}
-			fileInfo, err = os.Open(path + ".zip")
+			fileInfo, err = os.Open(annexDir + ".zip")
 			if err != nil {
 				return
 			}
 		}
 	} else {
-		fileInfo, err = os.Open(path)
+		fileInfo, err = os.Open(annexDir)
 		if err != nil {
 			return
 		}
@@ -480,6 +479,13 @@ type TaskInfo struct {
 	Request   *BaseRequest  `json:"request"`
 	HasAnnex  bool          `json:"hasAnnex"`
 	AnnexInfo *util.DirInfo `json:"annexInfo"`
+}
+
+func (this_ *TaskInfo) getAnnexDir() string {
+	if this_.Request == nil {
+		return ""
+	}
+	return this_.Request.AnnexDir
 }
 
 var taskInfoCache = map[string]*TaskInfo{}
