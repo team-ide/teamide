@@ -2,7 +2,7 @@ package task
 
 import (
 	"errors"
-	"github.com/robfig/cron/v3"
+	"github.com/team-ide/cron"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"

@@ -16,9 +16,9 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
-	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/tealeg/xlsx v1.0.5
+	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.19
 	github.com/team-ide/go-tool v1.2.6
 	github.com/team-ide/goja v1.0.2
