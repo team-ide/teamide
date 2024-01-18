@@ -4,7 +4,7 @@ go 1.18
 
 //replace (
 //	github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
-//	github.com/team-ide/go-tool v1.2.6 => ../go-tool
+//	github.com/team-ide/go-tool v1.2.7 => ../go-tool
 //)
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.19
-	github.com/team-ide/go-tool v1.2.6
+	github.com/team-ide/go-tool v1.2.7
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
