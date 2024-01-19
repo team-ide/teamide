@@ -147,17 +147,20 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 	}
 	addTaskInfo(taskInfo)
 	go func() {
+		defer func() {
+			ds, _ := os.ReadDir(options.Dir)
+			if len(ds) > 0 {
+				taskInfo.AnnexInfo, _ = util.LoadDirInfo(options.Dir, true)
+				taskInfo.HasAnnex = true
+			}
+			if options.From.DataSourceDataParam != nil {
+				options.From.DataSourceDataParam.DataList = nil
+			}
+			_ = this_.saveInfo(requestBean, options.Key, taskInfo)
+			removeTaskInfo(options.Key)
+		}()
 		t.Run()
 
-		ds, _ := os.ReadDir(options.Dir)
-		if len(ds) > 0 {
-			taskInfo.AnnexInfo, _ = util.LoadDirInfo(options.Dir, true)
-			taskInfo.HasAnnex = true
-		}
-		options.From.DataList = nil
-
-		_ = this_.saveInfo(requestBean, options.Key, taskInfo)
-		removeTaskInfo(options.Key)
 	}()
 	return
 }
