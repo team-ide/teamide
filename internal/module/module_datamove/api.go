@@ -151,11 +151,15 @@ func (this_ *api) start(requestBean *base.RequestBean, c *gin.Context) (res inte
 			ds, _ := os.ReadDir(options.Dir)
 			if len(ds) > 0 {
 				taskInfo.AnnexInfo, _ = util.LoadDirInfo(options.Dir, true)
-				taskInfo.HasAnnex = true
+				if taskInfo.AnnexInfo != nil {
+					taskInfo.HasAnnex = true
+					taskInfo.AnnexInfo.FileInfos = nil
+					taskInfo.AnnexInfo.DirInfos = nil
+				}
 			}
-			if options.From.DataSourceDataParam != nil {
-				options.From.DataSourceDataParam.DataList = nil
-			}
+			taskInfo.Request.From.DataSourceDataParam.DataList = nil
+			options.From = nil
+			options.To = nil
 			_ = this_.saveInfo(requestBean, options.Key, taskInfo)
 			removeTaskInfo(options.Key)
 		}()
@@ -409,9 +413,6 @@ func (this_ *api) download(requestBean *base.RequestBean, c *gin.Context) (res i
 		err = errors.New("文件不存在")
 		return
 	}
-	if strings.HasSuffix(annexDir, "/") {
-		annexDir = annexDir[0 : len(annexDir)-1]
-	}
 	var fileName string
 	var fileSize int64
 	ff, err := os.Lstat(annexDir)
@@ -420,6 +421,12 @@ func (this_ *api) download(requestBean *base.RequestBean, c *gin.Context) (res i
 	}
 	var fileInfo *os.File
 	if ff.IsDir() {
+		zipPath := annexDir + ".zip"
+		if strings.HasSuffix(annexDir, "/") {
+			zipPath = annexDir[0:len(annexDir)-1] + ".zip"
+		}
+		//fmt.Println("annexDir:", annexDir)
+		//fmt.Println("zipPath:", zipPath)
 		fs, _ := os.ReadDir(annexDir)
 		if len(fs) == 1 && !fs[0].IsDir() {
 			fPath := annexDir + "/" + fs[0].Name()
@@ -429,21 +436,21 @@ func (this_ *api) download(requestBean *base.RequestBean, c *gin.Context) (res i
 				return
 			}
 		} else {
-			exists, err = util.PathExists(annexDir + ".zip")
+			exists, err = util.PathExists(zipPath)
 			if err != nil {
 				return
 			}
 			if !exists {
-				err = util.Zip(annexDir, annexDir+".zip")
+				err = util.Zip(annexDir, zipPath)
 				if err != nil {
 					return
 				}
 			}
-			ff, err = os.Lstat(annexDir + ".zip")
+			ff, err = os.Lstat(zipPath)
 			if err != nil {
 				return
 			}
-			fileInfo, err = os.Open(annexDir + ".zip")
+			fileInfo, err = os.Open(zipPath)
 			if err != nil {
 				return
 			}
