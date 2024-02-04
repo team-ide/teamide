@@ -57,9 +57,20 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
 
 ### 注意
 
-> #### Team IDE 单机运行方式： 无需配置文件，数据和日志存储在`用户目录/temeide`下
+* Team IDE 支持单机运行以及服务器运行
+* 单机运行
+  * 下载 客户端安装包安装运行即可，目前不支持arm架构的安装包
+  * 无需配置文件，数据和日志存储在`用户目录/temeide`下
+* 服务器运行
+  * 下载 `teamide-server-amd64-xxx.zip`、`teamide-server-arm64-xxx.zip` 或 docker 运行
+  * 适合团队使用，部署到服务器通过浏览器访问
+  * 需要配置文件，数据和日志存储在`程序同级目录`下
+  * 服务端运行方式会生成 `admin` 用户到 `程序目录/data/init-user-info.json` 中
 
-> #### Team IDE 服务器运行方式： 需要配置文件，数据和日志存储在`程序同级目录`下
+* **终端连接`debian`遇到不识别登录SSH的用户、目录，不记录历史命令情况，可以修改下 `PS1` 环境变量**
+  * 将环境变量设置到 `~/.bashrc` 文件
+  * export PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+
 
 #### Docker 运行
 
