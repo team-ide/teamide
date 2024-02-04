@@ -4,7 +4,7 @@ go 1.18
 
 //replace (
 //	github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
-//	github.com/team-ide/go-tool v1.2.8 => ../go-tool
+//	github.com/team-ide/go-tool v1.2.9 => ../go-tool
 //)
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.19
-	github.com/team-ide/go-tool v1.2.8
+	github.com/team-ide/go-tool v1.2.9
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
@@ -30,7 +30,6 @@ require (
 )
 
 require (
-	gitee.com/chunanyong/dm v1.8.10 // indirect
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.4 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
@@ -89,7 +88,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/team-ide/go-driver v1.3.1 // indirect
+	github.com/team-ide/go-driver v1.3.3 // indirect
 	github.com/team-ide/go-interpreter v0.1.1 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

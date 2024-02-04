@@ -1,12 +1,9 @@
-# 2.6.6
+# 2.6.7
 
-## Version 2.6.6 （2024/1/24）
+## Version 2.6.7 （2024/2/4）
 
 发布功能
 
-* 数据库、elasticsearch、kafka导出导入
-  * 导入：根据 sql文件、文本文件(txt、csv)、excel、动态数据生成表达式等 导入
-  * 导出：导出 sql文件、文本文件(txt、csv)、excel等
-* 数据库、elasticsearch、kafka 表格数据导出
-* 数据库可以 右击选中执行SQL 导出
-* 添加 redis 导出导入
+* 达梦数据库支持别名配置
+  * host填写别名，端口填写0即可
+* 数据库 SQL 查询添加提示
