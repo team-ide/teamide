@@ -69,7 +69,7 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
 
 * **终端连接`debian`遇到不识别登录SSH的用户、目录，不记录历史命令情况，可以修改下 `PS1` 环境变量**
   * 将环境变量设置到 `~/.bashrc` 文件
-  * export PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+  * export PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\u@\h:\w\$"
 
 
 #### Docker 运行
