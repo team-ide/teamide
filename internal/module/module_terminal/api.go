@@ -17,6 +17,7 @@ import (
 	"teamide/pkg/base"
 	"teamide/pkg/ssh"
 	"teamide/pkg/terminal"
+	"time"
 )
 
 type api struct {
@@ -24,7 +25,7 @@ type api struct {
 	terminalCommandService *TerminalCommandService
 }
 
-func NewApi(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *api {
+func NewApi(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService, res *TerminalCommandService) *api {
 	return &api{
 		WorkerFactory:          NewWorkerFactory(toolboxService_, nodeService_),
 		terminalCommandService: NewTerminalCommandService(toolboxService_.ServerContext),
@@ -302,13 +303,14 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
+	var isClosed bool
 	go func() {
 		defer func() {
 			if e := recover(); e != nil {
 				this_.Logger.Error("uploadWebsocket error", zap.Any("error", e))
 			}
+			_ = ws.Close()
 		}()
-		var isClosed bool
 		ws.SetCloseHandler(func(code int, text string) error {
 			isClosed = true
 			return nil
@@ -316,22 +318,15 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 		var buf []byte
 		var readErr error
 		var writeErr error
-		var n int
-		for !isClosed {
+		for !isClosed && !service.IsStopped() {
 			_, buf, readErr = ws.ReadMessage()
 			if readErr != nil && readErr != io.EOF {
 				break
 			}
 			//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-			n, writeErr = service.service.Write(buf)
+			_, writeErr = service.service.Write(buf)
 			if writeErr != nil {
 				break
-			}
-			if n >= 200 {
-				writeErr = ws.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("%d", n)))
-				if writeErr != nil {
-					break
-				}
 			}
 			if readErr == io.EOF {
 				readErr = nil
@@ -346,6 +341,22 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 		if writeErr != nil && !isClosed {
 			this_.Logger.Error("uploadWebsocket write error", zap.Error(writeErr))
 		}
+	}()
+
+	go func() {
+		// 创建一个每秒触发一次的定时器
+		ticker := time.NewTicker(10 * time.Second)
+		for {
+			<-ticker.C
+			if isClosed || service.IsStopped() {
+				break
+			}
+			e := ws.WriteMessage(websocket.BinaryMessage, []byte("keepalive msg"))
+			if e != nil {
+				break
+			}
+		}
+		isClosed = true
 	}()
 
 	res = base.HttpNotResponse

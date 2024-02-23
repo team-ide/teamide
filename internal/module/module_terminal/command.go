@@ -16,7 +16,6 @@ func NewTerminalCommandService(ServerContext *context.ServerContext) (res *Termi
 		ServerContext: ServerContext,
 		idService:     idService,
 	}
-	res.init()
 	return
 }
 
@@ -26,7 +25,7 @@ type TerminalCommandService struct {
 	idService *module_id.IDService
 }
 
-func (this_ *TerminalCommandService) init() {
+func (this_ *TerminalCommandService) ServerReady() (err error) {
 
 	this_.cleanDeprecatedLog()
 	return

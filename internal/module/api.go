@@ -37,24 +37,22 @@ import (
 func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 
 	api = &Api{
-		ServerContext:      ServerContext,
-		userService:        module_user.NewUserService(ServerContext),
-		userSettingService: module_user.NewUserSettingService(ServerContext),
-		registerService:    module_register.NewRegisterService(ServerContext),
-		loginService:       module_login.NewLoginService(ServerContext),
-		installService:     NewInstallService(ServerContext),
-		toolboxService:     module_toolbox.NewToolboxService(ServerContext),
-		nodeService:        module_node.NewNodeService(ServerContext),
-		powerRoleService:   module_power.NewPowerRoleService(ServerContext),
-		powerRouteService:  module_power.NewPowerRouteService(ServerContext),
-		powerUserService:   module_power.NewPowerUserService(ServerContext),
-		settingService:     module_setting.NewSettingService(ServerContext),
-		idService:          module_id.NewIDService(ServerContext),
-		apiCache:           make(map[string]*base.ApiWorker),
-	}
-	api.logService, err = module_log.NewLogService(ServerContext)
-	if err != nil {
-		return
+		ServerContext:          ServerContext,
+		userService:            module_user.NewUserService(ServerContext),
+		userSettingService:     module_user.NewUserSettingService(ServerContext),
+		registerService:        module_register.NewRegisterService(ServerContext),
+		loginService:           module_login.NewLoginService(ServerContext),
+		installService:         NewInstallService(ServerContext),
+		toolboxService:         module_toolbox.NewToolboxService(ServerContext),
+		nodeService:            module_node.NewNodeService(ServerContext),
+		powerRoleService:       module_power.NewPowerRoleService(ServerContext),
+		powerRouteService:      module_power.NewPowerRouteService(ServerContext),
+		powerUserService:       module_power.NewPowerUserService(ServerContext),
+		settingService:         module_setting.NewSettingService(ServerContext),
+		terminalCommandService: module_terminal.NewTerminalCommandService(ServerContext),
+		idService:              module_id.NewIDService(ServerContext),
+		logService:             module_log.NewLogService(ServerContext),
+		apiCache:               make(map[string]*base.ApiWorker),
 	}
 	var apis []*base.ApiWorker
 	apis, err = api.GetApis()
@@ -90,6 +88,16 @@ func NewApi(ServerContext *context.ServerContext) (api *Api, err error) {
 		}
 	}
 	go api.nodeService.InitContext()
+
+	err = api.logService.ServerReady()
+	if err != nil {
+		return
+	}
+	err = api.terminalCommandService.ServerReady()
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -113,20 +121,21 @@ func (this_ *Api) InitSetting() (err error) {
 // Api ID服务
 type Api struct {
 	*context.ServerContext
-	toolboxService     *module_toolbox.ToolboxService
-	nodeService        *module_node.NodeService
-	userService        *module_user.UserService
-	userSettingService *module_user.UserSettingService
-	registerService    *module_register.RegisterService
-	loginService       *module_login.LoginService
-	powerRoleService   *module_power.PowerRoleService
-	powerRouteService  *module_power.PowerRouteService
-	powerUserService   *module_power.PowerUserService
-	logService         *module_log.LogService
-	settingService     *module_setting.SettingService
-	idService          *module_id.IDService
-	installService     *InstallService
-	apiCache           map[string]*base.ApiWorker
+	toolboxService         *module_toolbox.ToolboxService
+	nodeService            *module_node.NodeService
+	terminalCommandService *module_terminal.TerminalCommandService
+	userService            *module_user.UserService
+	userSettingService     *module_user.UserSettingService
+	registerService        *module_register.RegisterService
+	loginService           *module_login.LoginService
+	powerRoleService       *module_power.PowerRoleService
+	powerRouteService      *module_power.PowerRouteService
+	powerUserService       *module_power.PowerUserService
+	logService             *module_log.LogService
+	settingService         *module_setting.SettingService
+	idService              *module_id.IDService
+	installService         *InstallService
+	apiCache               map[string]*base.ApiWorker
 }
 
 var (
@@ -159,7 +168,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_toolbox.NewToolboxApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_node.NewNodeApi(this_.nodeService).GetApis()...)
 	apis = append(apis, module_file_manager.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
-	apis = append(apis, module_terminal.NewApi(this_.toolboxService, this_.nodeService).GetApis()...)
+	apis = append(apis, module_terminal.NewApi(this_.toolboxService, this_.nodeService, this_.terminalCommandService).GetApis()...)
 	apis = append(apis, module_user.NewApi(this_.userService).GetApis()...)
 	apis = append(apis, module_redis.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_database.NewApi(this_.toolboxService).GetApis()...)

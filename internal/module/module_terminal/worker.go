@@ -277,6 +277,8 @@ type Worker struct {
 	isRz           bool
 	isSz           bool
 	isLastSzEnd    bool
+
+	isStopped bool
 }
 
 func (this_ *Worker) init() {
@@ -554,7 +556,7 @@ func (this_ *WorkerFactory) stopService(key string) {
 }
 
 func (this_ *Worker) stopAll() {
-
+	this_.isStopped = true
 	defer func() {
 		if e := recover(); e != nil {
 			this_.Logger.Error("stopAll error", zap.Any("error", e))
@@ -572,4 +574,9 @@ func (this_ *Worker) stopAll() {
 	if this_.commandLogFile != nil {
 		_ = this_.commandLogFile.Close()
 	}
+}
+
+func (this_ *Worker) IsStopped() bool {
+
+	return this_.isStopped
 }

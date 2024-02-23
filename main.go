@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -135,12 +136,19 @@ func main() {
 		panic(err)
 	}
 
+	util.Logger.Info("server system info",
+		zap.Any("serverVersion", base.GetVersion()),
+		zap.Any("goVersion", runtime.Version()),
+		zap.Any("GOOS", runtime.GOOS),
+		zap.Any("GOARCH", runtime.GOARCH),
+	)
+	util.Logger.Info("server context init start")
 	serverContext, err = context.NewServerContext(*serverConf)
 	if err != nil {
-		util.Logger.Error("context NewServerContext error", zap.Error(err))
+		util.Logger.Error("server context init error", zap.Error(err))
 		panic(err)
 	}
-	util.Logger.Info("context init success")
+	util.Logger.Info("server context init success")
 	util.Logger.Info("server to start")
 	serverUrl, err = internal.Start(serverContext)
 	if err != nil {

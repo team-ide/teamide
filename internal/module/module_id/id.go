@@ -1,6 +1,7 @@
 package module_id
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"teamide/internal/context"
 	"teamide/internal/module/module_lock"
@@ -33,7 +34,7 @@ func (this_ *IDService) GetNextID(idType IDType) (id int64, err error) {
 
 // GetNextIDs 根据类型获取一组ID
 func (this_ *IDService) GetNextIDs(idType IDType, size int64) (ids []int64, err error) {
-	locker := module_lock.GetLock("ID:GetNextIDs")
+	locker := module_lock.GetLock(fmt.Sprintf("ID:GetNextIDs:%d", idType))
 	locker.Lock()
 	defer locker.Unlock()
 

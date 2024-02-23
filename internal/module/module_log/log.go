@@ -10,7 +10,7 @@ import (
 )
 
 // NewLogService 根据库配置创建LogService
-func NewLogService(ServerContext *context.ServerContext) (res *LogService, err error) {
+func NewLogService(ServerContext *context.ServerContext) (res *LogService) {
 
 	idService := module_id.NewIDService(ServerContext)
 
@@ -18,7 +18,6 @@ func NewLogService(ServerContext *context.ServerContext) (res *LogService, err e
 		ServerContext: ServerContext,
 		idService:     idService,
 	}
-	err = res.init()
 	return
 }
 
@@ -28,11 +27,11 @@ type LogService struct {
 	idService *module_id.IDService
 }
 
-func (this_ *LogService) init() (err error) {
+func (this_ *LogService) ServerReady() (err error) {
 
 	this_.cleanTask()
 	// 每天 2 点执行
-	_, _ = this_.CronHandler.AddFunc("0 0 2 * * ?", this_.cleanTask)
+	_, err = this_.CronHandler.AddFunc("0 0 2 * * ?", this_.cleanTask)
 	return
 }
 
