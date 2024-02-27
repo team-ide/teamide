@@ -319,6 +319,38 @@ CREATE TABLE ` + TableToolboxExtend + ` (
 		},
 
 		/** 给工具箱添加 扩展 结束 **/
+
+		/** 工具表 添加顺序号 开始 **/
+		{
+			Version: "1.0.4",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolbox + `]添加顺序号[sequence]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD COLUMN sequence int(10) DEFAULT NULL COMMENT '顺序号';`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolbox + ` ADD sequence int(10);`,
+				},
+			},
+		},
+		/** 工具表 添加顺序号 结束 **/
+
+		/** 工具表 分组 添加顺序号 开始 **/
+		{
+			Version: "1.0.4",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolboxGroup + `]添加顺序号[sequence]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolboxGroup + ` ADD COLUMN sequence int(10) DEFAULT NULL COMMENT '顺序号';`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolboxGroup + ` ADD sequence int(10);`,
+				},
+			},
+		},
+		/** 工具表 分组 添加顺序号 结束 **/
 	}
 
 }

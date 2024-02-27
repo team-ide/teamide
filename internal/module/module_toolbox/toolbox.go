@@ -72,7 +72,7 @@ func (this_ *ToolboxService) QueryVisibility(toolbox *ToolboxModel) (res []*Tool
 		sql += " AND name like ?"
 		values = append(values, fmt.Sprint("%", toolbox.Name, "%"))
 	}
-	sql += " ORDER BY NAME ASC "
+	sql += " ORDER BY sequence ASC, name ASC "
 
 	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {
@@ -115,6 +115,30 @@ func (this_ *ToolboxService) CountVisibility(toolbox *ToolboxModel) (res int64, 
 		return
 	}
 
+	return
+}
+
+// UpdateSequence 更新顺序
+func (this_ *ToolboxService) UpdateSequence(sequences map[int64]int) (err error) {
+	if sequences == nil || len(sequences) == 0 {
+		return
+	}
+	for id, sequence := range sequences {
+		var values []interface{}
+
+		sql := `UPDATE ` + TableToolbox + ` SET `
+		sql += "sequence=? "
+		values = append(values, sequence)
+
+		sql += " WHERE toolboxId=? "
+		values = append(values, id)
+
+		_, err = this_.DatabaseWorker.Exec(sql, values)
+		if err != nil {
+			this_.Logger.Error("UpdateSequence Error", zap.Error(err))
+			return
+		}
+	}
 	return
 }
 

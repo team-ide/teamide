@@ -26,6 +26,31 @@ func (this_ *ToolboxService) GetGroup(groupId int64) (res *ToolboxGroupModel, er
 	return
 }
 
+// UpdateGroupSequence 更新顺序
+func (this_ *ToolboxService) UpdateGroupSequence(sequences map[int64]int) (err error) {
+	if sequences == nil || len(sequences) == 0 {
+		return
+	}
+	for id, sequence := range sequences {
+		var values []interface{}
+
+		sql := `UPDATE ` + TableToolboxGroup + ` SET `
+
+		sql += "sequence=? "
+		values = append(values, sequence)
+
+		sql += " WHERE groupId=? "
+		values = append(values, id)
+
+		_, err = this_.DatabaseWorker.Exec(sql, values)
+		if err != nil {
+			this_.Logger.Error("UpdateGroupSequence Error", zap.Error(err))
+			return
+		}
+	}
+	return
+}
+
 // QueryGroup 查询
 func (this_ *ToolboxService) QueryGroup(toolboxGroup *ToolboxGroupModel) (res []*ToolboxGroupModel, err error) {
 
@@ -37,9 +62,11 @@ func (this_ *ToolboxService) QueryGroup(toolboxGroup *ToolboxGroupModel) (res []
 		values = append(values, toolboxGroup.UserId)
 	}
 	if toolboxGroup.Name != "" {
-		sql += " AND name like ?"
+		sql += " AND name LIKE ?"
 		values = append(values, fmt.Sprint("%", toolboxGroup.Name, "%"))
 	}
+
+	sql += " ORDER BY sequence ASC "
 
 	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {

@@ -152,6 +152,47 @@ func (this_ *ToolboxApi) update(requestBean *base.RequestBean, c *gin.Context) (
 	return
 }
 
+type UpdateSequenceRequest struct {
+	Sequences map[int64]int `json:"sequences"`
+}
+
+type UpdateSequenceResponse struct {
+}
+
+func (this_ *ToolboxApi) updateSequence(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateSequenceRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateSequenceResponse{}
+
+	err = this_.ToolboxService.UpdateSequence(request.Sequences)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
+func (this_ *ToolboxApi) updateGroupSequence(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &UpdateSequenceRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	response := &UpdateSequenceResponse{}
+
+	err = this_.ToolboxService.UpdateGroupSequence(request.Sequences)
+	if err != nil {
+		return
+	}
+
+	res = response
+	return
+}
+
 type MoveGroupRequest struct {
 	*ToolboxModel
 }

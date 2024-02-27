@@ -42,6 +42,7 @@ type ToolboxModel struct {
 	CreateTime   time.Time `json:"createTime,omitempty"`
 	UpdateTime   time.Time `json:"updateTime,omitempty"`
 	DeleteTime   time.Time `json:"deleteTime,omitempty"`
+	Sequence     int       `json:"sequence,omitempty"`
 }
 
 // ToolboxVisibilityModel 可见工具
@@ -89,6 +90,7 @@ type ToolboxGroupModel struct {
 	Comment    string    `json:"comment,omitempty"`
 	Option     string    `json:"option,omitempty"`
 	UserId     int64     `json:"userId,omitempty"`
+	Sequence   int       `json:"sequence,omitempty"`
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
 }
