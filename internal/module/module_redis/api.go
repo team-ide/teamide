@@ -1,6 +1,7 @@
 package module_redis
 
 import (
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
@@ -144,6 +145,7 @@ func getService(redisConfig *redis.Config, sshConfig *ssh.Config) (res redis.ISe
 
 type BaseRequest struct {
 	Key        string `json:"key"`
+	KeyBase64  string `json:"keyBase64"`
 	Value      string `json:"value"`
 	ValueSize  int    `json:"valueSize"`
 	ValueStart int    `json:"valueStart"`
@@ -156,6 +158,16 @@ type BaseRequest struct {
 	Field      string `json:"field"`
 	TaskKey    string `json:"taskKey,omitempty"`
 	Expire     int64  `json:"expire"`
+}
+
+func (this_ *BaseRequest) getKey() string {
+	if this_.KeyBase64 != "" {
+		k := base64.StdEncoding.EncodeToString([]byte(this_.KeyBase64))
+		if k != "" {
+			return this_.Key
+		}
+	}
+	return this_.Key
 }
 
 func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -202,11 +214,21 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if !base.RequestJSON(request, c) {
 		return
 	}
-	res, err = service.GetValueInfo(request.Key, redis.NewStartArg(request.ValueStart), redis.NewSizeArg(request.ValueSize), &redis.Param{Database: request.Database})
+	res, err = service.GetValueInfo(request.getKey(), redis.NewStartArg(request.ValueStart), redis.NewSizeArg(request.ValueSize), &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
 	return
+}
+
+type KeysResult struct {
+	Count   int        `json:"count"`
+	KeyList []*KeyInfo `json:"keyList"`
+}
+type KeyInfo struct {
+	Database  int    `json:"database"`
+	Key       string `json:"key"`
+	KeyBase64 string `json:"keyBase64"`
 }
 
 func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -224,9 +246,23 @@ func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	res, err = service.Keys(request.Pattern, redis.NewSizeArg(request.Size), &redis.Param{Database: request.Database})
+	kR, err := service.Keys(request.Pattern, redis.NewSizeArg(request.Size), &redis.Param{Database: request.Database})
 	if err != nil {
 		return
+	}
+	keysResult := &KeysResult{
+		Count: kR.Count,
+	}
+	res = keysResult
+	for _, one := range keysResult.KeyList {
+		keyInfo := &KeyInfo{
+			Database: one.Database,
+			Key:      one.Key,
+		}
+		if keyInfo.Key != "" {
+			keyInfo.KeyBase64 = base64.StdEncoding.EncodeToString([]byte(keyInfo.Key))
+		}
+		keysResult.KeyList = append(keysResult.KeyList, keyInfo)
 	}
 	return
 }
@@ -246,12 +282,12 @@ func (this_ *api) set(requestBean *base.RequestBean, c *gin.Context) (res interf
 		return
 	}
 
-	err = service.Set(request.Key, request.Value, &redis.Param{Database: request.Database})
+	err = service.Set(request.getKey(), request.Value, &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
 	if request.Expire > 0 {
-		_, err = service.Expire(request.Key, request.Expire, &redis.Param{Database: request.Database})
+		_, err = service.Expire(request.getKey(), request.Expire, &redis.Param{Database: request.Database})
 	}
 	return
 }
@@ -271,7 +307,7 @@ func (this_ *api) sadd(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.SetAdd(request.Key, request.Value, &redis.Param{Database: request.Database})
+	err = service.SetAdd(request.getKey(), request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -290,7 +326,7 @@ func (this_ *api) srem(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.SetRem(request.Key, request.Value, &redis.Param{Database: request.Database})
+	err = service.SetRem(request.getKey(), request.Value, &redis.Param{Database: request.Database})
 	return
 }
 func (this_ *api) lpush(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -308,7 +344,7 @@ func (this_ *api) lpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	err = service.ListPush(request.Key, request.Value, &redis.Param{Database: request.Database})
+	err = service.ListPush(request.getKey(), request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -327,7 +363,7 @@ func (this_ *api) rpush(requestBean *base.RequestBean, c *gin.Context) (res inte
 		return
 	}
 
-	err = service.ListRPush(request.Key, request.Value, &redis.Param{Database: request.Database})
+	err = service.ListRPush(request.getKey(), request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -346,7 +382,7 @@ func (this_ *api) lset(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.ListSet(request.Key, request.Index, request.Value, &redis.Param{Database: request.Database})
+	err = service.ListSet(request.getKey(), request.Index, request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -365,7 +401,7 @@ func (this_ *api) lrem(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.ListRem(request.Key, request.Count, request.Value, &redis.Param{Database: request.Database})
+	err = service.ListRem(request.getKey(), request.Count, request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -384,7 +420,7 @@ func (this_ *api) hset(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.HashSet(request.Key, request.Field, request.Value, &redis.Param{Database: request.Database})
+	err = service.HashSet(request.getKey(), request.Field, request.Value, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -403,7 +439,7 @@ func (this_ *api) hdel(requestBean *base.RequestBean, c *gin.Context) (res inter
 		return
 	}
 
-	err = service.HashDel(request.Key, request.Field, &redis.Param{Database: request.Database})
+	err = service.HashDel(request.getKey(), request.Field, &redis.Param{Database: request.Database})
 	return
 }
 
@@ -422,7 +458,7 @@ func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res int
 		return
 	}
 
-	res, err = service.Del(request.Key, &redis.Param{Database: request.Database})
+	res, err = service.Del(request.getKey(), &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
@@ -466,7 +502,7 @@ func (this_ *api) expire(requestBean *base.RequestBean, c *gin.Context) (res int
 		return
 	}
 
-	res, err = service.Expire(request.Key, request.Expire, &redis.Param{Database: request.Database})
+	res, err = service.Expire(request.getKey(), request.Expire, &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
@@ -488,7 +524,7 @@ func (this_ *api) ttl(requestBean *base.RequestBean, c *gin.Context) (res interf
 		return
 	}
 
-	res, err = service.Ttl(request.Key, &redis.Param{Database: request.Database})
+	res, err = service.Ttl(request.getKey(), &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
@@ -510,7 +546,7 @@ func (this_ *api) persist(requestBean *base.RequestBean, c *gin.Context) (res in
 		return
 	}
 
-	res, err = service.Persist(request.Key, &redis.Param{Database: request.Database})
+	res, err = service.Persist(request.getKey(), &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}

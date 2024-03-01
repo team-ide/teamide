@@ -20,7 +20,7 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.19
-	github.com/team-ide/go-tool v1.2.9
+	github.com/team-ide/go-tool v1.2.10
 	github.com/team-ide/goja v1.0.2
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.18.0
@@ -89,7 +89,7 @@ require (
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/team-ide/go-driver v1.3.4 // indirect
-	github.com/team-ide/go-interpreter v0.1.1 // indirect
+	github.com/team-ide/go-interpreter v0.1.2 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect

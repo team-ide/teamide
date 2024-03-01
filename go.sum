@@ -221,10 +221,10 @@ github.com/team-ide/go-dialect v1.9.19 h1:dEFXyZr3mvaBuYEgCITcdp3tgOn1flp5t7h3T/
 github.com/team-ide/go-dialect v1.9.19/go.mod h1:ho1lgryfyCsQlfueIXEMmrb6etfaLQ/Rm2fBkIcCcqg=
 github.com/team-ide/go-driver v1.3.4 h1:FXlX2KmeV0zGlk4QGEg+ECjcN/BX1I9zYDF6DnSfFjQ=
 github.com/team-ide/go-driver v1.3.4/go.mod h1:UhcuTAQRnvBUZXJeOA06eGJDeTqScJyfhyjpyzh3lxg=
-github.com/team-ide/go-interpreter v0.1.1 h1:RS3sJv8ZmpWXELJvlTGzuxAanubcG/luTzunkdr5U7Q=
-github.com/team-ide/go-interpreter v0.1.1/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
-github.com/team-ide/go-tool v1.2.9 h1:TxPshpp50H4elJsdqlfmcTKF+NGu9JO/YYTC7rKKkj8=
-github.com/team-ide/go-tool v1.2.9/go.mod h1:r80D/MUSyvliUWexLudpsf2k+M/I93Oe+uhY0dj0yrI=
+github.com/team-ide/go-interpreter v0.1.2 h1:m2C973+Wmp0GJ8khjZJfTjDCs9uRKCnMjm7is6+UkUo=
+github.com/team-ide/go-interpreter v0.1.2/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
+github.com/team-ide/go-tool v1.2.10 h1:J1e0Z5y3XlZnWpxTPGGuV4gqMs8XUTbe38qfRgvBF14=
+github.com/team-ide/go-tool v1.2.10/go.mod h1:1KuU/j9bKWCrpl4R18lNaT4RFfZoCKP2tzHi9/1WQs8=
 github.com/team-ide/goja v1.0.2 h1:AyTbZ+9JKPSAsq90YDEV7g6htbuwN/gntYQptfbAQTo=
 github.com/team-ide/goja v1.0.2/go.mod h1:Sd/GNJgfOpBvXEGIy2JgJden3hW+WWayjZwC8EATRTM=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=
@@ -240,7 +240,7 @@ github.com/ugorji/go/codec v1.2.11/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZ
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/yusufpapurcu/wmi v1.2.3 h1:E1ctvB7uKFMOJw3fdOW32DwGE9I7t++CRUEMKvFoFiw=
 github.com/yusufpapurcu/wmi v1.2.3/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
-go.uber.org/goleak v1.2.0 h1:xqgm/S+aQvhWFTtR0XK3Jvg7z8kGV8P4X14IzwN3Eqk=
+go.uber.org/goleak v1.2.1 h1:NBol2c7O1ZokfZ0LEU9K6Whx/KnwvepVetCUhtKja4A=
 go.uber.org/multierr v1.10.0 h1:S0h4aNzvfcFsC3dRF1jLoaov7oRaKqRGC/pUEJ2yvPQ=
 go.uber.org/multierr v1.10.0/go.mod h1:20+QtiLqy0Nd6FdQB9TLXag12DsQkrbs3htMFfDN80Y=
 go.uber.org/zap v1.26.0 h1:sI7k6L95XOKS281NhVKOFCUNIvv9e0w4BF8N3u+tCRo=
