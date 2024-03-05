@@ -93,7 +93,11 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	if serverConfig.Server.Host == "" {
-		serverConfig.Server.Host = "0.0.0.0"
+		if this_.IsServer {
+			serverConfig.Server.Host = "0.0.0.0"
+		} else {
+			serverConfig.Server.Host = "127.0.0.1"
+		}
 	}
 	if this_.IsHtmlDev {
 		serverConfig.Server.Host = "127.0.0.1"

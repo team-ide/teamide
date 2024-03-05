@@ -162,9 +162,9 @@ type BaseRequest struct {
 
 func (this_ *BaseRequest) getKey() string {
 	if this_.KeyBase64 != "" {
-		k := base64.StdEncoding.EncodeToString([]byte(this_.KeyBase64))
-		if k != "" {
-			return this_.Key
+		bs, e := base64.StdEncoding.DecodeString(this_.KeyBase64)
+		if e == nil && len(bs) > 0 {
+			return string(bs)
 		}
 	}
 	return this_.Key
@@ -218,6 +218,7 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 	if err != nil {
 		return
 	}
+
 	return
 }
 
@@ -254,7 +255,7 @@ func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res inter
 		Count: kR.Count,
 	}
 	res = keysResult
-	for _, one := range keysResult.KeyList {
+	for _, one := range kR.KeyList {
 		keyInfo := &KeyInfo{
 			Database: one.Database,
 			Key:      one.Key,
