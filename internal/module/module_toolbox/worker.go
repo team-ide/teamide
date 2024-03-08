@@ -7,6 +7,7 @@ import (
 	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/kafka"
+	"github.com/team-ide/go-tool/mongodb"
 	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
@@ -123,6 +124,16 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	case otherWorker_:
 		break
 	case sshWorker_:
+		if optionMap["password"] != nil {
+			str, ok := optionMap["password"].(string)
+			if ok {
+				optionMap["password"] = this_.EncryptOptionAttr(str)
+			} else {
+				delete(optionMap, "password")
+			}
+		}
+		break
+	case mongodbWorker_:
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
@@ -320,6 +331,12 @@ func (this_ *ToolboxService) BindConfigByOption(option string, config interface{
 		}
 		conf.Password = this_.DecryptOptionAttr(conf.Password)
 		break
+	case *mongodb.Config:
+		if conf.CertPath != "" {
+			conf.CertPath = this_.GetFilesFile(conf.CertPath)
+		}
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
 	}
 	if err != nil {
 		return
@@ -364,8 +381,10 @@ var (
 	zookeeperWorker_     = zookeeperWorker()
 	elasticsearchWorker_ = elasticsearchWorker()
 	kafkaWorker_         = kafkaWorker()
-	thriftWorker_        = thriftWorker()
-	otherWorker_         = otherWorker()
+	mongodbWorker_       = mongodbWorker()
+
+	thriftWorker_ = thriftWorker()
+	otherWorker_  = otherWorker()
 )
 
 func init() {
@@ -375,6 +394,7 @@ func init() {
 	*toolboxTypes = append(*toolboxTypes, zookeeperWorker_)
 	*toolboxTypes = append(*toolboxTypes, elasticsearchWorker_)
 	*toolboxTypes = append(*toolboxTypes, kafkaWorker_)
+	*toolboxTypes = append(*toolboxTypes, mongodbWorker_)
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
 	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
@@ -783,6 +803,27 @@ func zookeeperWorker() *ToolboxType {
 	return worker_
 }
 
+func mongodbWorker() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "mongodb",
+		Text: "Mongodb",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "连接地址（127.0.0.1:27017）", Name: "address", DefaultValue: "127.0.0.1:27017",
+					Rules: []*form.Rule{
+						{Required: true, Message: "连接地址不能为空"},
+					},
+				},
+				{Label: "Username", Name: "username", Col: 12},
+				{Label: "Password", Name: "password", Type: "password", Col: 12, ShowPlaintextBtn: true},
+				{Label: "Cert", Name: "certPath", Type: "file", Placeholder: "请上传Cert"},
+			},
+		},
+	}
+
+	return worker_
+}
 func thriftWorker() *ToolboxType {
 	worker_ := &ToolboxType{
 		Name: "thrift",

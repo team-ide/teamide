@@ -1,11 +1,17 @@
 package module_mongodb
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/team-ide/go-tool/elasticsearch"
+	"github.com/team-ide/go-tool/mongodb"
 	"github.com/team-ide/go-tool/util"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
-	"sync"
+	"reflect"
+	"strconv"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 )
@@ -21,62 +27,65 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 }
 
 var (
-	Power            = base.AppendPower(&base.PowerAction{Action: "mongodb", Text: "Mongodb", ShouldLogin: true, StandAlone: true})
-	check            = base.AppendPower(&base.PowerAction{Action: "check", Text: "Mongodb测试", ShouldLogin: true, StandAlone: true, Parent: Power})
-	infoPower        = base.AppendPower(&base.PowerAction{Action: "info", Text: "Mongodb信息", ShouldLogin: true, StandAlone: true, Parent: Power})
-	indexesPower     = base.AppendPower(&base.PowerAction{Action: "indexes", Text: "ES索引查询", ShouldLogin: true, StandAlone: true, Parent: Power})
-	indexStatPower   = base.AppendPower(&base.PowerAction{Action: "indexStat", Text: "ES索引状态", ShouldLogin: true, StandAlone: true, Parent: Power})
-	createIndexPower = base.AppendPower(&base.PowerAction{Action: "createIndex", Text: "ES创建索引", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteIndexPower = base.AppendPower(&base.PowerAction{Action: "deleteIndex", Text: "ES删除索引", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getMappingPower  = base.AppendPower(&base.PowerAction{Action: "getMapping", Text: "ES索引信息查询", ShouldLogin: true, StandAlone: true, Parent: Power})
-	putMappingPower  = base.AppendPower(&base.PowerAction{Action: "putMapping", Text: "ES索引修改", ShouldLogin: true, StandAlone: true, Parent: Power})
-	searchPower      = base.AppendPower(&base.PowerAction{Action: "search", Text: "ES搜索", ShouldLogin: true, StandAlone: true, Parent: Power})
-	scrollPower      = base.AppendPower(&base.PowerAction{Action: "scroll", Text: "ES滚动搜索", ShouldLogin: true, StandAlone: true, Parent: Power})
-	requestPower     = base.AppendPower(&base.PowerAction{Action: "request", Text: "ES HTTP请求", ShouldLogin: true, StandAlone: true, Parent: Power})
-	insertDataPower  = base.AppendPower(&base.PowerAction{Action: "insertData", Text: "ES插入数据", ShouldLogin: true, StandAlone: true, Parent: Power})
-	updateDataPower  = base.AppendPower(&base.PowerAction{Action: "updateData", Text: "ES修改数据", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteDataPower  = base.AppendPower(&base.PowerAction{Action: "deleteData", Text: "ES删除数据", ShouldLogin: true, StandAlone: true, Parent: Power})
-	reindexPower     = base.AppendPower(&base.PowerAction{Action: "reindex", Text: "ES复制索引", ShouldLogin: true, StandAlone: true, Parent: Power})
-	indexAliasPower  = base.AppendPower(&base.PowerAction{Action: "indexAlias", Text: "ES索引别名", ShouldLogin: true, StandAlone: true, Parent: Power})
-	importPower      = base.AppendPower(&base.PowerAction{Action: "import", Text: "ES导入", ShouldLogin: true, StandAlone: true, Parent: Power})
-	exportPower      = base.AppendPower(&base.PowerAction{Action: "export", Text: "ES导出", ShouldLogin: true, StandAlone: true, Parent: Power})
-	taskListPower    = base.AppendPower(&base.PowerAction{Action: "taskList", Text: "ES任务列表", ShouldLogin: true, StandAlone: true, Parent: Power})
-	taskStatusPower  = base.AppendPower(&base.PowerAction{Action: "taskStatus", Text: "ES任务状态", ShouldLogin: true, StandAlone: true, Parent: Power})
-	taskStopPower    = base.AppendPower(&base.PowerAction{Action: "taskStop", Text: "ES任务停止", ShouldLogin: true, StandAlone: true, Parent: Power})
-	taskCleanPower   = base.AppendPower(&base.PowerAction{Action: "taskClean", Text: "ES任务清理", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower       = base.AppendPower(&base.PowerAction{Action: "close", Text: "ES关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	Power = base.AppendPower(&base.PowerAction{Action: "mongodb", Text: "Mongodb", ShouldLogin: true, StandAlone: true})
+	check = base.AppendPower(&base.PowerAction{Action: "check", Text: "Mongodb测试", ShouldLogin: true, StandAlone: true, Parent: Power})
+	info  = base.AppendPower(&base.PowerAction{Action: "info", Text: "Mongodb信息", ShouldLogin: true, StandAlone: true, Parent: Power})
+
+	database         = base.AppendPower(&base.PowerAction{Action: "database", Text: "库", ShouldLogin: true, StandAlone: true, Parent: Power})
+	databaseList     = base.AppendPower(&base.PowerAction{Action: "list", Text: "列表", ShouldLogin: true, StandAlone: true, Parent: database})
+	databaseDelete   = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: database})
+	databaseDataTrim = base.AppendPower(&base.PowerAction{Action: "dataTrim", Text: "清空数据", ShouldLogin: true, StandAlone: true, Parent: database})
+
+	collection         = base.AppendPower(&base.PowerAction{Action: "collection", Text: "集合", ShouldLogin: true, StandAlone: true, Parent: Power})
+	collectionList     = base.AppendPower(&base.PowerAction{Action: "list", Text: "列表", ShouldLogin: true, StandAlone: true, Parent: collection})
+	collectionDelete   = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: collection})
+	collectionCreate   = base.AppendPower(&base.PowerAction{Action: "create", Text: "创建", ShouldLogin: true, StandAlone: true, Parent: collection})
+	collectionDataTrim = base.AppendPower(&base.PowerAction{Action: "dataTrim", Text: "清空数据", ShouldLogin: true, StandAlone: true, Parent: collection})
+
+	index       = base.AppendPower(&base.PowerAction{Action: "index", Text: "索引", ShouldLogin: true, StandAlone: true, Parent: Power})
+	indexList   = base.AppendPower(&base.PowerAction{Action: "list", Text: "列表", ShouldLogin: true, StandAlone: true, Parent: index})
+	indexDelete = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: index})
+	indexCreate = base.AppendPower(&base.PowerAction{Action: "create", Text: "创建", ShouldLogin: true, StandAlone: true, Parent: index})
+
+	insert     = base.AppendPower(&base.PowerAction{Action: "insert", Text: "插入", ShouldLogin: true, StandAlone: true, Parent: Power})
+	update     = base.AppendPower(&base.PowerAction{Action: "update", Text: "更新", ShouldLogin: true, StandAlone: true, Parent: Power})
+	delete_    = base.AppendPower(&base.PowerAction{Action: "delete", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteById = base.AppendPower(&base.PowerAction{Action: "deleteById", Text: "删除", ShouldLogin: true, StandAlone: true, Parent: Power})
+	queryPage  = base.AppendPower(&base.PowerAction{Action: "queryPage", Text: "分页查询", ShouldLogin: true, StandAlone: true, Parent: Power})
+
+	closePower = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
-	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
-	apis = append(apis, &base.ApiWorker{Power: indexesPower, Do: this_.indexes})
-	apis = append(apis, &base.ApiWorker{Power: indexStatPower, Do: this_.indexStat})
-	apis = append(apis, &base.ApiWorker{Power: createIndexPower, Do: this_.createIndex})
-	apis = append(apis, &base.ApiWorker{Power: deleteIndexPower, Do: this_.deleteIndex})
-	apis = append(apis, &base.ApiWorker{Power: getMappingPower, Do: this_.getMapping})
-	apis = append(apis, &base.ApiWorker{Power: putMappingPower, Do: this_.putMapping})
-	apis = append(apis, &base.ApiWorker{Power: searchPower, Do: this_.search})
-	apis = append(apis, &base.ApiWorker{Power: scrollPower, Do: this_.scroll})
-	apis = append(apis, &base.ApiWorker{Power: requestPower, Do: this_.request})
-	apis = append(apis, &base.ApiWorker{Power: insertDataPower, Do: this_.insertData})
-	apis = append(apis, &base.ApiWorker{Power: updateDataPower, Do: this_.updateData})
-	apis = append(apis, &base.ApiWorker{Power: deleteDataPower, Do: this_.deleteData})
-	apis = append(apis, &base.ApiWorker{Power: reindexPower, Do: this_.reindex})
-	apis = append(apis, &base.ApiWorker{Power: indexAliasPower, Do: this_.indexAlias})
-	apis = append(apis, &base.ApiWorker{Power: importPower, Do: this_._import})
-	apis = append(apis, &base.ApiWorker{Power: exportPower, Do: this_.export})
-	apis = append(apis, &base.ApiWorker{Power: taskStatusPower, Do: this_.taskStatus, NotRecodeLog: true})
-	apis = append(apis, &base.ApiWorker{Power: taskListPower, Do: this_.taskList})
-	apis = append(apis, &base.ApiWorker{Power: taskStopPower, Do: this_.taskStop})
-	apis = append(apis, &base.ApiWorker{Power: taskCleanPower, Do: this_.taskClean})
+	apis = append(apis, &base.ApiWorker{Power: info, Do: this_.info})
+
+	apis = append(apis, &base.ApiWorker{Power: databaseList, Do: this_.databases})
+	apis = append(apis, &base.ApiWorker{Power: databaseDelete, Do: this_.databaseDelete})
+	apis = append(apis, &base.ApiWorker{Power: databaseDataTrim, Do: this_.databaseDataTrim})
+
+	apis = append(apis, &base.ApiWorker{Power: collectionList, Do: this_.collections})
+	apis = append(apis, &base.ApiWorker{Power: collectionCreate, Do: this_.collectionCreate})
+	apis = append(apis, &base.ApiWorker{Power: collectionDelete, Do: this_.collectionDelete})
+	apis = append(apis, &base.ApiWorker{Power: collectionDataTrim, Do: this_.collectionDataTrim})
+
+	apis = append(apis, &base.ApiWorker{Power: indexList, Do: this_.indexList})
+	apis = append(apis, &base.ApiWorker{Power: indexDelete, Do: this_.indexDelete})
+	apis = append(apis, &base.ApiWorker{Power: indexCreate, Do: this_.indexCreate})
+
+	apis = append(apis, &base.ApiWorker{Power: insert, Do: this_.insert})
+	apis = append(apis, &base.ApiWorker{Power: update, Do: this_.update})
+	apis = append(apis, &base.ApiWorker{Power: delete_, Do: this_.delete})
+	apis = append(apis, &base.ApiWorker{Power: deleteById, Do: this_.deleteById})
+	apis = append(apis, &base.ApiWorker{Power: queryPage, Do: this_.queryPage})
+
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
 }
 
-func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *elasticsearch.Config, err error) {
-	config = &elasticsearch.Config{}
+func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (config *mongodb.Config, err error) {
+	config = &mongodb.Config{}
 	_, err = this_.toolboxService.BindConfig(requestBean, c, config)
 	if err != nil {
 		return
@@ -84,22 +93,22 @@ func (this_ *api) getConfig(requestBean *base.RequestBean, c *gin.Context) (conf
 	return
 }
 
-func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err error) {
-	key := "elasticsearch-" + esConfig.Url
-	if esConfig.Username != "" {
-		key += "-" + base.GetMd5String(key+esConfig.Username)
+func getService(config *mongodb.Config) (res mongodb.IService, err error) {
+	key := "mongodb-" + config.Address
+	if config.Username != "" {
+		key += "-" + base.GetMd5String(key+config.Username)
 	}
-	if esConfig.Password != "" {
-		key += "-" + base.GetMd5String(key+esConfig.Password)
+	if config.Password != "" {
+		key += "-" + base.GetMd5String(key+config.Password)
 	}
-	if esConfig.CertPath != "" {
-		key += "-" + base.GetMd5String(key+esConfig.CertPath)
+	if config.CertPath != "" {
+		key += "-" + base.GetMd5String(key+config.CertPath)
 	}
 
 	var serviceInfo *base.ServiceInfo
 	serviceInfo, err = base.GetService(key, func() (res *base.ServiceInfo, err error) {
-		var s elasticsearch.IService
-		s, err = elasticsearch.New(esConfig)
+		var s mongodb.IService
+		s, err = mongodb.New(config)
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -107,7 +116,7 @@ func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err
 			}
 			return
 		}
-		_, err = s.Info()
+		_, err = s.Count("_check_for_service_", "_check_for_service_", &map[string]interface{}{})
 		if err != nil {
 			util.Logger.Error("getService error", zap.Any("key", key), zap.Error(err))
 			if s != nil {
@@ -126,26 +135,28 @@ func getService(esConfig *elasticsearch.Config) (res elasticsearch.IService, err
 	if err != nil {
 		return
 	}
-	res = serviceInfo.Service.(elasticsearch.IService)
+	res = serviceInfo.Service.(mongodb.IService)
 	serviceInfo.SetLastUseTime()
 	return
 }
 
 type BaseRequest struct {
-	WorkerId        string                 `json:"workerId"`
-	IndexName       string                 `json:"indexName"`
-	Id              string                 `json:"id"`
-	Mapping         map[string]interface{} `json:"mapping"`
-	PageIndex       int                    `json:"pageIndex"`
-	PageSize        int                    `json:"pageSize"`
-	ScrollId        string                 `json:"scrollId"`
-	Doc             interface{}            `json:"doc"`
-	SourceIndexName string                 `json:"sourceIndexName"`
-	DestIndexName   string                 `json:"destIndexName"`
-	AliasName       string                 `json:"aliasName"`
-	WhereList       []*elasticsearch.Where `json:"whereList"`
-	OrderList       []*elasticsearch.Order `json:"orderList"`
-	TaskId          string                 `json:"taskId"`
+	WorkerId           string                 `json:"workerId"`
+	DatabaseName       string                 `json:"databaseName"`
+	CollectionName     string                 `json:"collectionName"`
+	IndexName          string                 `json:"indexName"`
+	Keys               bson.D                 `json:"keys"`
+	Filter             map[string]interface{} `json:"filter"`
+	Sort               bson.D                 `json:"sort"`
+	Id                 string                 `json:"id"`
+	IdType             string                 `json:"idType"`
+	PageIndex          int64                  `json:"pageIndex"`
+	PageSize           int64                  `json:"pageSize"`
+	Doc                string                 `json:"doc"`
+	IsObjectID         bool                   `json:"isObjectID"`
+	ObjectIDKey        string                 `json:"objectIDKey"`
+	IndexType          string                 `json:"indexType"`
+	ExpireAfterSeconds int32                  `json:"expireAfterSeconds"`
 }
 
 func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -161,24 +172,24 @@ func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res inte
 	return
 }
 
+func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	return
+}
 func (this_ *api) info(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
 	}
-	service, err := getService(config)
+	_, err = getService(config)
 	if err != nil {
 		return
 	}
 
-	res, err = service.Info()
-	if err != nil {
-		return
-	}
 	return
 }
 
-func (this_ *api) indexes(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) databases(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
@@ -188,29 +199,7 @@ func (this_ *api) indexes(requestBean *base.RequestBean, c *gin.Context) (res in
 		return
 	}
 
-	res, err = service.Indexes()
-	if err != nil {
-		return
-	}
-
-	return
-}
-func (this_ *api) indexStat(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.IndexStat(request.IndexName)
+	res, _, err = service.Databases()
 	if err != nil {
 		return
 	}
@@ -218,7 +207,7 @@ func (this_ *api) indexStat(requestBean *base.RequestBean, c *gin.Context) (res 
 	return
 }
 
-func (this_ *api) createIndex(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) databaseDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
@@ -233,13 +222,15 @@ func (this_ *api) createIndex(requestBean *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
-	err = service.CreateIndex(request.IndexName, request.Mapping)
+	err = service.DatabaseDelete(request.DatabaseName)
 	if err != nil {
 		return
 	}
+
 	return
 }
-func (this_ *api) deleteIndex(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+func (this_ *api) databaseDataTrim(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
 		return
@@ -254,390 +245,399 @@ func (this_ *api) deleteIndex(requestBean *base.RequestBean, c *gin.Context) (re
 		return
 	}
 
-	err = service.DeleteIndex(request.IndexName)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) getMapping(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
+	collections, err := service.Collections(request.DatabaseName)
 	if err != nil {
 		return
 	}
 
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.GetMapping(request.IndexName)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) putMapping(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	err = service.PutMapping(request.IndexName, request.Mapping)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) search(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Search(request.IndexName, request.PageIndex, request.PageSize, request.WhereList, request.OrderList)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) scroll(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Scroll(request.IndexName, request.ScrollId, request.PageSize, request.WhereList, request.OrderList)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) request(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := elasticsearch.PerformRequestOptions{}
-	if !base.RequestJSON(&request, c) {
-		return
-	}
-
-	response, err := service.PerformRequest(request)
-	if err != nil {
-		return
-	}
-	data := make(map[string]interface{})
-	res = data
-	data["header"] = response.Header
-	data["body"] = string(response.Body)
-	return
-}
-func (this_ *api) insertData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Insert(request.IndexName, request.Id, request.Doc)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) updateData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Update(request.IndexName, request.Id, request.Doc)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) deleteData(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Delete(request.IndexName, request.Id)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) reindex(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.Reindex(request.SourceIndexName, request.DestIndexName)
-	if err != nil {
-		return
-	}
-	return
-}
-func (this_ *api) indexAlias(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	request := &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res, err = service.IndexAlias(request.IndexName, request.DestIndexName)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *api) _import(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	config, err := this_.getConfig(requestBean, c)
-	if err != nil {
-		return
-	}
-	service, err := getService(config)
-	if err != nil {
-		return
-	}
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	var task = &elasticsearch.ImportTask{}
-	if !base.RequestJSON(task, c) {
-		return
-	}
-
-	task.Service = service
-	elasticsearch.StartImportTask(task)
-	addWorkerTask(request.WorkerId, task.TaskId)
-	res = task
-
-	return
-}
-
-func (this_ *api) export(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	//config, err := this_.getConfig(requestBean, c)
-	//if err != nil {
-	//	return
-	//}
-	//service, err := getService(config)
-	//if err != nil {
-	//	return
-	//}
-	//
-	//var task = &elasticsearch.ImportTask{}
-	//if !base.RequestJSON(task, c) {
-	//	return
-	//}
-	//
-	//task.Service = service
-	//elasticsearch.StartImportTask(task)
-	//res = task
-
-	return
-}
-
-func (this_ *api) taskStatus(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res = elasticsearch.GetTask(request.TaskId)
-	return
-}
-
-func (this_ *api) taskStop(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	elasticsearch.StopTask(request.TaskId)
-	return
-}
-
-func (this_ *api) taskClean(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	removeWorkerTask(request.WorkerId, request.TaskId)
-	return
-}
-
-func (this_ *api) taskList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-
-	res = getWorkerTasks(request.WorkerId)
-	return
-}
-
-func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-	var request = &BaseRequest{}
-	if !base.RequestJSON(request, c) {
-		return
-	}
-	removeWorkerTasks(request.WorkerId)
-	return
-}
-
-var (
-	workerTasksCache     = map[string][]string{}
-	workerTasksCacheLock = &sync.Mutex{}
-)
-
-func addWorkerTask(workerId string, taskId string) {
-	workerTasksCacheLock.Lock()
-	defer workerTasksCacheLock.Unlock()
-	taskIds := workerTasksCache[workerId]
-	if util.StringIndexOf(taskIds, taskId) < 0 {
-		taskIds = append(taskIds, taskId)
-		workerTasksCache[workerId] = taskIds
-	}
-	return
-}
-
-func getWorkerTasks(workerId string) (taskList []*elasticsearch.Task) {
-	workerTasksCacheLock.Lock()
-	defer workerTasksCacheLock.Unlock()
-	taskIds := workerTasksCache[workerId]
-	for _, id := range taskIds {
-		task := elasticsearch.GetTask(id)
-		if task != nil {
-			taskList = append(taskList, task)
+	for _, one := range collections {
+		_, err = service.DeleteMany(request.DatabaseName, one.Name, bson.M{})
+		if err != nil {
+			return
 		}
 	}
+
 	return
 }
 
-func removeWorkerTasks(workerId string) {
-	workerTasksCacheLock.Lock()
-	defer workerTasksCacheLock.Unlock()
-	taskIds := workerTasksCache[workerId]
-	for _, taskId := range taskIds {
-		elasticsearch.StopTask(taskId)
-		elasticsearch.CleanTask(taskId)
+func (this_ *api) collections(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
 	}
-	delete(workerTasksCache, workerId)
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.Collections(request.DatabaseName)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
-func removeWorkerTask(workerId string, taskId string) {
-	workerTasksCacheLock.Lock()
-	defer workerTasksCacheLock.Unlock()
+func (this_ *api) collectionCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
 
-	elasticsearch.StopTask(taskId)
-	elasticsearch.CleanTask(taskId)
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
 
-	taskIds := workerTasksCache[workerId]
-	var newIds []string
-	for _, id := range taskIds {
-		if id != taskId {
-			newIds = append(newIds, id)
+	err = service.CollectionCreate(request.DatabaseName, request.CollectionName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) collectionDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	err = service.CollectionDelete(request.DatabaseName, request.CollectionName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) collectionDataTrim(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	_, err = service.DeleteMany(request.DatabaseName, request.CollectionName, bson.M{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (this_ *api) indexList(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.Indexes(request.DatabaseName, request.CollectionName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) indexDelete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	err = service.IndexDelete(request.DatabaseName, request.CollectionName, request.IndexName)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) indexCreate(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+	i := mongo.IndexModel{}
+	i.Keys = request.Keys
+	i.Options = &options.IndexOptions{}
+	if request.IndexName != "" {
+		i.Options.SetName(request.IndexName)
+	}
+	if request.IndexType == "unique" {
+		i.Options.SetUnique(true)
+	} else if request.IndexType == "expireAfterSeconds" {
+		i.Options.SetExpireAfterSeconds(request.ExpireAfterSeconds)
+	}
+
+	res, err = service.IndexCreate(request.DatabaseName, request.CollectionName, i)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) insert(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	data := map[string]interface{}{}
+	err = util.JSONDecodeUseNumber([]byte(request.Doc), &data)
+	if err != nil {
+		return
+	}
+	res, err = service.Insert(request.DatabaseName, request.CollectionName, data)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *BaseRequest) getID() interface{} {
+	switch this_.IdType {
+	case "M", "map":
+		data := map[string]interface{}{}
+		err := util.JSONDecodeUseNumber([]byte(this_.Id), &data)
+		if err == nil {
+			return data
+		}
+		break
+	case "primitive.ObjectID", "ObjectID":
+		if v, e := primitive.ObjectIDFromHex(this_.Id); e == nil {
+			return v
+		}
+		break
+	case "int64", "int32", "int16", "int8":
+		if v, e := strconv.ParseInt(this_.Id, 10, 64); e == nil {
+			switch this_.IdType {
+			case "int32":
+				return int32(v)
+			case "int16":
+				return int16(v)
+			case "int8":
+				return int8(v)
+			default:
+				return v
+			}
+		}
+		break
+	case "float64", "float32":
+		if v, e := strconv.ParseFloat(this_.Id, 64); e == nil {
+			switch this_.IdType {
+			case "float32":
+				return float32(v)
+			default:
+				return v
+			}
+		}
+		break
+	}
+	return this_.Id
+}
+
+func (this_ *api) update(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	var id = request.getID()
+	data := map[string]interface{}{}
+	err = util.JSONDecodeUseNumber([]byte(request.Doc), &data)
+	if err != nil {
+		return
+	}
+
+	delete(data, "_id")
+
+	res, err = service.Update(request.DatabaseName, request.CollectionName, id, bson.M{
+		"$set": data,
+	})
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) queryPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if request.IsObjectID && request.ObjectIDKey != "" && request.Filter[request.ObjectIDKey] != nil {
+		v, e := primitive.ObjectIDFromHex(util.GetStringValue(request.Filter[request.ObjectIDKey]))
+		if e == nil {
+			request.Filter[request.ObjectIDKey] = v
 		}
 	}
-	taskIds = newIds
-	if len(taskIds) == 0 {
-		delete(workerTasksCache, workerId)
-	} else {
-		workerTasksCache[workerId] = taskIds
+
+	page := &mongodb.Page{
+		PageSize: request.PageSize,
+		PageNo:   request.PageIndex,
+	}
+	opts := options.Find()
+	opts.SetSort(request.Sort)
+	result, err := service.QueryMapPageResult(request.DatabaseName, request.CollectionName, request.Filter, page, opts)
+	if err != nil {
+		return
+	}
+
+	res = result
+	var list []interface{}
+
+	var bs []byte
+	for _, one := range result.List {
+		item := one.(map[string]interface{})
+		d := map[string]interface{}{}
+		bs, err = json.MarshalIndent(item, "", "  ")
+		if err != nil {
+			return
+		}
+		if _id, ok := item["_id"]; ok {
+			typeName := reflect.TypeOf(_id).Name()
+			if typeName == "ObjectID" {
+				id := _id.(primitive.ObjectID)
+				d["_id"] = id.Hex()
+			} else {
+				d["_id"] = util.GetStringValue(_id)
+			}
+			d["_id_type"] = typeName
+		}
+		d["value"] = string(bs)
+		list = append(list, d)
+	}
+	result.List = list
+	return
+}
+
+func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if request.IsObjectID && request.ObjectIDKey != "" && request.Filter[request.ObjectIDKey] != nil {
+		v, e := primitive.ObjectIDFromHex(util.GetStringValue(request.Filter[request.ObjectIDKey]))
+		if e == nil {
+			request.Filter[request.ObjectIDKey] = v
+		}
+	}
+	res, err = service.DeleteOne(request.DatabaseName, request.CollectionName, request.Filter)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *api) deleteById(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	res, err = service.DeleteOne(request.DatabaseName, request.CollectionName, bson.M{
+		"_id": request.getID(),
+	})
+	if err != nil {
+		return
 	}
 	return
 }

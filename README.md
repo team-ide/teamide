@@ -1,6 +1,6 @@
 # Team · IDE
 
-Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP、Redis、Zookeeper、Kafka、Elasticsearch、小工具等管理工具
+Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP、Redis、Zookeeper、Kafka、Elasticsearch、Mongodb、小工具等管理工具
 
 [![Code](https://img.shields.io/badge/Code-TeamIDE-red)](https://github.com/team-ide/teamide)
 [![License](https://img.shields.io/badge/License-Apache--2.0%20License-blue)](https://github.com/team-ide/teamide/blob/main/LICENSE)
@@ -38,6 +38,7 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
   * JSON、Yaml转换 **完成**
   * 时间长转换 **完成**
   * Base64、MD5等 **完成**
+  * 二维码生成 **完成**
 * Thrift
   * 添加thrift模块，配置thrift文件目录 **完成**
   * 展示所有thrift服务、方法等 **完成**
@@ -45,6 +46,11 @@ Team IDE 集成MySql、Oracle、金仓、达梦、神通等数据库、SSH、FTP
   * 性能测试，测试报告，图表展示TPS、AVG、Min、Max、T90、T99等 **完成**
 * SSH隧道
   * Mysql、Redis、Zookeeper支持SSH隧道连接，选择SSH后，填写127.0.0.1则连接到SSH本地相应资源 **完成**
+* Mongodb
+  * 库管理 **完成**
+  * 集合管理 **完成**
+  * 集合索引编辑 **完成**
+  * 集合数据查询、新增、修改、删除 **完成**
 
 ## 语言
 
