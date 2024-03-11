@@ -587,6 +587,20 @@ func (this_ *api) queryPage(requestBean *base.RequestBean, c *gin.Context) (res 
 		if err != nil {
 			return
 		}
+		for k, v := range filter {
+			if v == nil {
+				continue
+			}
+			if s, ok := v.(string); ok {
+				if strings.HasPrefix(s, "ObjectID('") && strings.HasSuffix(s, "')") {
+					s = strings.TrimPrefix(s, "ObjectID('")
+					s = strings.TrimSuffix(s, "')")
+					if id, e := primitive.ObjectIDFromHex(s); e == nil {
+						filter[k] = id
+					}
+				}
+			}
+		}
 	} else {
 
 		for _, where := range request.WhereList {
