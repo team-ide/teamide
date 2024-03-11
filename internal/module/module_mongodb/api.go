@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"reflect"
 	"strconv"
+	"strings"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 )
@@ -147,7 +148,9 @@ type BaseRequest struct {
 	IndexName          string                 `json:"indexName"`
 	Keys               bson.D                 `json:"keys"`
 	Filter             map[string]interface{} `json:"filter"`
-	Sort               bson.D                 `json:"sort"`
+	WhereDoc           string                 `json:"whereDoc"`
+	WhereList          []*Where               `json:"whereList"`
+	OrderList          []*Order               `json:"orderList"`
 	Id                 string                 `json:"id"`
 	IdType             string                 `json:"idType"`
 	PageIndex          int64                  `json:"pageIndex"`
@@ -157,6 +160,22 @@ type BaseRequest struct {
 	ObjectIDKey        string                 `json:"objectIDKey"`
 	IndexType          string                 `json:"indexType"`
 	ExpireAfterSeconds int32                  `json:"expireAfterSeconds"`
+}
+
+type Where struct {
+	Name                 string `json:"name"`
+	Value                string `json:"value"`
+	Before               string `json:"before"`
+	After                string `json:"after"`
+	CustomSql            string `json:"customSql"`
+	ConditionalOperation string `json:"conditionalOperation"`
+	AndOr                string `json:"andOr"`
+	DataType             string `json:"dataType"`
+}
+
+type Order struct {
+	Name    string `json:"name"`
+	AscDesc string `json:"ascDesc"`
 }
 
 func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -528,7 +547,13 @@ func (this_ *api) update(requestBean *base.RequestBean, c *gin.Context) (res int
 	}
 	return
 }
-
+func getNumberValue(s string) (interface{}, error) {
+	n := json.Number(s)
+	if strings.Contains(s, ".") {
+		return n.Float64()
+	}
+	return n.Int64()
+}
 func (this_ *api) queryPage(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	config, err := this_.getConfig(requestBean, c)
 	if err != nil {
@@ -555,9 +580,138 @@ func (this_ *api) queryPage(requestBean *base.RequestBean, c *gin.Context) (res 
 		PageSize: request.PageSize,
 		PageNo:   request.PageIndex,
 	}
+
+	filter := bson.M{}
+	if request.WhereDoc != "" {
+		err = util.JSONDecodeUseNumber([]byte(request.WhereDoc), &filter)
+		if err != nil {
+			return
+		}
+	} else {
+
+		for _, where := range request.WhereList {
+			if where.Name == "" {
+				continue
+			}
+			dataType := where.DataType
+			var v interface{}
+			v = where.Value
+			if dataType == "number" && util.StringIndexOf([]string{
+				"=", "<>", "<", "<=", ">", ">=",
+			}, where.ConditionalOperation) >= 0 {
+				v, err = getNumberValue(where.Value)
+				if err != nil {
+					return
+				}
+			}
+			if where.ConditionalOperation == "=" && dataType == "objectID" {
+				if v, err = primitive.ObjectIDFromHex(where.Value); err != nil {
+					return
+				}
+			}
+			filter[where.Name] = v
+			switch where.ConditionalOperation {
+			case "like":
+				filter[where.Name] = bson.M{
+					"$regex": where.Value,
+				}
+				break
+			case "like start":
+				filter[where.Name] = bson.M{
+					"$regex": "^" + where.Value,
+				}
+				break
+			case "like end":
+				filter[where.Name] = bson.M{
+					"$regex": where.Value + "$",
+				}
+				break
+			case "<>":
+				filter[where.Name] = bson.M{
+					"$ne": v,
+				}
+				break
+			case ">":
+				filter[where.Name] = bson.M{
+					"$gt": v,
+				}
+				break
+			case ">=":
+				filter[where.Name] = bson.M{
+					"$gte": v,
+				}
+				break
+			case "<":
+				filter[where.Name] = bson.M{
+					"$lt": v,
+				}
+				break
+			case "<=":
+				filter[where.Name] = bson.M{
+					"$lte": v,
+				}
+				break
+			case "between":
+				var b interface{} = where.Before
+				var a interface{} = where.After
+				if dataType == "number" {
+					b, err = getNumberValue(where.Before)
+					if err != nil {
+						return
+					}
+					a, err = getNumberValue(where.After)
+					if err != nil {
+						return
+					}
+				}
+				filter[where.Name] = bson.M{
+					"$gte": b,
+					"$lte": a,
+				}
+				break
+			case "in":
+				var vs []interface{}
+				ss := strings.Split(where.Value, ",")
+				for _, s := range ss {
+					if dataType == "number" {
+						var n interface{}
+						n, err = getNumberValue(where.Before)
+						if err != nil {
+							return
+						}
+						vs = append(vs, n)
+					} else {
+						vs = append(vs, s)
+					}
+				}
+				filter[where.Name] = bson.M{
+					"$in": vs,
+				}
+				break
+			}
+		}
+	}
+	sort := bson.D{}
+	for _, order := range request.OrderList {
+		if order.Name == "" {
+			continue
+		}
+		if strings.EqualFold(order.AscDesc, "asc") {
+			sort = append(sort, bson.E{
+				Key:   order.Name,
+				Value: 1,
+			})
+		} else {
+			sort = append(sort, bson.E{
+				Key:   order.Name,
+				Value: -1,
+			})
+		}
+	}
+
 	opts := options.Find()
-	opts.SetSort(request.Sort)
-	result, err := service.QueryMapPageResult(request.DatabaseName, request.CollectionName, request.Filter, page, opts)
+	opts.SetSort(sort)
+	result, err := service.QueryMapPageResult(request.DatabaseName, request.CollectionName, filter, page, opts)
 	if err != nil {
 		return
 	}
