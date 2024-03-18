@@ -324,6 +324,9 @@ func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (re
 				break
 			}
 			//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
+			if service.service == nil {
+				break
+			}
 			_, writeErr = service.service.Write(buf)
 			if writeErr != nil {
 				break
@@ -411,9 +414,10 @@ func (this_ *api) changeSize(_ *base.RequestBean, c *gin.Context) (res interface
 		return
 	}
 	service := this_.GetService(request.Key)
-	if service != nil {
-		err = service.service.ChangeSize(request.Size)
+	if service == nil || service.service == nil {
+		return
 	}
+	err = service.service.ChangeSize(request.Size)
 	return
 }
 

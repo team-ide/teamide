@@ -55,28 +55,33 @@ func (this_ *terminalService) Stop() {
 	this_.isStopped = true
 	if this_.sftpClient != nil {
 		_ = this_.sftpClient.Close()
+		this_.sftpClient = nil
 	}
 	if this_.sshSession != nil {
 		_ = this_.sshSession.Close()
+		this_.sshSession = nil
 	}
 	if this_.sshClient != nil {
 		_ = this_.sshClient.Close()
+		this_.sshClient = nil
 	}
 	if this_.stdout != nil {
 		if readerCloser, ok := this_.stdout.(io.ReadCloser); ok {
 			_ = readerCloser.Close()
 		}
+		this_.stdout = nil
 	}
 	if this_.stdin != nil {
 		if writeCloser, ok := this_.stdin.(io.WriteCloser); ok {
 			_ = writeCloser.Close()
 		}
+		this_.stdin = nil
 	}
 }
 
 func (this_ *terminalService) ChangeSize(size *terminal.Size) (err error) {
 
-	if this_.sshSession == nil {
+	if this_.sshSession == nil || this_.isStopped {
 		return
 	}
 	if size.Cols > 0 && size.Rows > 0 {

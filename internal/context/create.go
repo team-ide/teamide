@@ -177,6 +177,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 			return
 		}
 	}
+	util.SetTempDir(serverConfig.Server.TempDir)
 	if serverConfig.Server.BackupsDir == "" {
 		serverConfig.Server.BackupsDir = serverConfig.Server.Data + "backups/"
 	}
@@ -195,15 +196,13 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 	}
 
 	if this_.IsServerDev {
-		this_.Logger = util.Logger
-		if err != nil {
-			return
-		}
+		this_.Logger = Logger
 	} else {
 		this_.Logger = newZapLogger(serverConfig)
 	}
 	util.Logger = this_.Logger
-	util.SetTempDir(serverConfig.Server.TempDir)
+	this_.LoggerP1 = util.NewLoggerByCallerSkip(1)
+	this_.LoggerP2 = util.NewLoggerByCallerSkip(2)
 	node.Logger = this_.Logger
 	db.FileUploadDir = this_.GetFilesDir()
 
@@ -254,6 +253,7 @@ func (this_ *ServerContext) Init(serverConfig *config.ServerConfig) (err error) 
 		this_.Logger.Error("数据库连接异常", zap.Error(err))
 		return
 	}
+	this_.Debug("测试日志 %d %d %d", 1, 2, 3)
 
 	listenerInit()
 
@@ -298,5 +298,40 @@ func (this_ *ServerContext) backupSqlite(serverConfig *config.ServerConfig, data
 	}()
 	_, err = io.Copy(backupFile, databaseFile)
 
+	return
+}
+
+func (this_ *ServerContext) Debug(msg string, args ...interface{}) {
+	this_.LoggerP1.Debug(fmt.Sprintf(msg, args...))
+}
+
+func (this_ *ServerContext) Info(msg string, args ...interface{}) {
+	this_.LoggerP1.Info(fmt.Sprintf(msg, args...))
+}
+
+func (this_ *ServerContext) Warn(msg string, args ...interface{}) {
+	this_.LoggerP1.Warn(fmt.Sprintf(msg, args...))
+}
+
+func (this_ *ServerContext) Error(msg string, args ...interface{}) {
+	fields, err := formatErrorField(args)
+	if err != nil {
+		this_.LoggerP1.Error(fmt.Sprintf(msg, fields...), zap.Error(err))
+	} else {
+		this_.LoggerP1.Error(fmt.Sprintf(msg, args...))
+	}
+}
+
+func formatErrorField(args []interface{}) (fields []interface{}, err error) {
+	var l = len(args)
+	if l == 0 {
+		return
+	}
+	err, ok := args[l-1].(error)
+	if ok {
+		fields = args[0 : l-1]
+	} else {
+		fields = args
+	}
 	return
 }

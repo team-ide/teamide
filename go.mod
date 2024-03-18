@@ -7,6 +7,8 @@ go 1.18
 //	github.com/team-ide/go-tool v1.2.12 => ../go-tool
 //)
 
+replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v0.0.0-20240313073509-8b73338e8dfa
+
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/apache/thrift v0.17.0
@@ -23,7 +25,7 @@ require (
 	github.com/team-ide/go-tool v1.2.12
 	github.com/team-ide/goja v1.0.2
 	go.mongodb.org/mongo-driver v1.14.0
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1

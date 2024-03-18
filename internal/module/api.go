@@ -256,7 +256,7 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 	requestBean.Path = path
 	requestBean.Power = api.Power
 	if !this_.checkPower(api, requestBean.JWT, c) {
-		this_.Logger.Warn("no power", zap.Any("action", action))
+		this_.Logger.Warn(action + "] 无权限操作")
 		return true
 	}
 	if api.Do != nil {
@@ -316,10 +316,10 @@ func (this_ *Api) DoApi(path string, c *gin.Context) bool {
 		res, err := api.Do(requestBean, c)
 		useTime := time.Now().UnixMilli() - startTime.UnixMilli()
 		if err != nil {
-			this_.Logger.Error("处理操作异常", zap.Any("action", action), zap.Any("useTime", useTime), zap.Any("error", err.Error()))
+			this_.Error(action+" useTime:%dms", useTime, err)
 		} else {
 			if !api.NotRecodeLog {
-				this_.Logger.Debug("处理操作", zap.Any("action", action), zap.Any("useTime", useTime))
+				this_.Debug(action+" useTime:%dms", useTime)
 			}
 		}
 		if res == base.HttpNotResponse {

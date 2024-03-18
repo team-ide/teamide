@@ -17,6 +17,8 @@ type ServerContext struct {
 	DatabaseWorker db.IService
 	DatabaseConfig *db.Config  `json:"-" yaml:"-"`
 	Logger         *zap.Logger `json:"-" yaml:"-"`
+	LoggerP1       *zap.Logger `json:"-" yaml:"-"`
+	LoggerP2       *zap.Logger `json:"-" yaml:"-"`
 	Decryption     *Decryption `json:"-" yaml:"-"`
 	HttpAesKey     string      `json:"-" yaml:"-"`
 	JWTAesKey      string      `json:"-" yaml:"-"`
