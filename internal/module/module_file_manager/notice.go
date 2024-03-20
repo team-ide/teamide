@@ -181,7 +181,7 @@ func newProgress(param *BaseParam, work string, callStop func()) (progress *Prog
 				continue
 			}
 
-			time.Sleep(200 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			if progress.IsEnd {
 				progress.Timestamp = util.GetNowMilli()
 				context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))

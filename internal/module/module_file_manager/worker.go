@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"strconv"
-	"strings"
 	"teamide/internal/context"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
@@ -399,108 +397,6 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 
 	} else {
 		err = errors.New("暂不支持移动文件夹")
-	}
-
-	return
-}
-
-func (this_ *worker) Upload(param *BaseParam, fileWorkerKey string, dir string, fullPath string, fileList []*multipart.FileHeader) (err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(fmt.Sprint(e))
-		}
-	}()
-	service, err := this_.GetService(fileWorkerKey, param)
-	if err != nil {
-		return
-	}
-
-	if !strings.HasSuffix(dir, "/") {
-		dir += "/"
-	}
-
-	if strings.HasPrefix(fullPath, "/") {
-		fullPath = fullPath[1:]
-	}
-
-	upload := func(one *multipart.FileHeader) (err error) {
-
-		path := dir + one.Filename
-		if len(fullPath) > 0 {
-			path = dir + fullPath
-		}
-		var callStop = new(bool)
-		*callStop = false
-
-		var openF multipart.File
-		progress := newProgress(param, "upload", func() {
-			if openF != nil {
-				_ = openF.Close()
-			}
-			*callStop = true
-		})
-
-		progress.Data["fileWorkerKey"] = fileWorkerKey
-		progress.Data["dir"] = dir
-		progress.Data["fullPath"] = fullPath
-		progress.Data["filename"] = one.Filename
-		progress.Data["path"] = path
-		progress.Data["size"] = one.Size
-		progress.Data["successSize"] = 0
-
-		defer func() {
-			if e := recover(); e != nil {
-				err = errors.New(fmt.Sprint(e))
-			}
-			progress.end(err)
-		}()
-
-		var exist bool
-		exist, err = service.Exist(path)
-
-		if exist {
-			var action string
-			action, err = progress.waitAction("文件["+one.Filename+"]已存在，是否覆盖？",
-				[]*Action{
-					newAction("是", "yes", "color-green"),
-					newAction("否", "no", "color-orange"),
-				})
-			if err != nil {
-				return
-			}
-			if action != "yes" {
-				return
-			}
-		}
-		openF, err = one.Open()
-		if err != nil {
-			return
-		}
-
-		pathDir := path[0:strings.LastIndex(path, "/")]
-
-		var pathDirExist bool
-		pathDirExist, _ = service.Exist(pathDir)
-
-		err = service.Write(path, openF, func(readSize int64, writeSize int64) {
-			progress.Data["successSize"] = writeSize
-		}, callStop)
-		if err != nil {
-			return
-		}
-
-		progress.Data["fileInfo"], err = service.File(path)
-		if !pathDirExist {
-			progress.Data["fileDir"], _ = service.File(pathDir)
-		}
-		return
-	}
-
-	for _, one := range fileList {
-		err = upload(one)
-		if err != nil {
-			return
-		}
 	}
 
 	return

@@ -117,13 +117,15 @@ func (this_ *localService) Write(path string, reader io.Reader, onDo func(readSi
 			e = base.ProgressCallStoppedError
 			return
 		}
-		readSize += int64(n)
-		onDo(readSize, writeSize)
-		e = util.Write(f, buf[:n], func(n int) (e error) {
-			writeSize += int64(n)
+		if n > 0 {
+			readSize += int64(n)
 			onDo(readSize, writeSize)
-			return
-		})
+			e = util.Write(f, buf[:n], func(n int) (e error) {
+				writeSize += int64(n)
+				onDo(readSize, writeSize)
+				return
+			})
+		}
 		return
 	})
 
@@ -159,13 +161,15 @@ func (this_ *localService) Read(path string, writer io.Writer, onDo func(readSiz
 			e = base.ProgressCallStoppedError
 			return
 		}
-		readSize += int64(n)
-		onDo(readSize, writeSize)
-		e = util.Write(writer, buf[:n], func(n int) (e error) {
-			writeSize += int64(n)
+		if n > 0 {
+			readSize += int64(n)
 			onDo(readSize, writeSize)
-			return
-		})
+			e = util.Write(writer, buf[:n], func(n int) (e error) {
+				writeSize += int64(n)
+				onDo(readSize, writeSize)
+				return
+			})
+		}
 		return
 	})
 

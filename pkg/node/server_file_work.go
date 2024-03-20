@@ -59,11 +59,13 @@ func (this_ *Server) FileWorkWrite(lineNodeIdList []string, path string, reader 
 			e = base.ProgressCallStoppedError
 			return
 		}
-		readSize += int64(n)
-		onDo(readSize, writeSize)
-		e = this_.workSendBytes(lineNodeIdList, sendKey, buf[:n])
-		writeSize += int64(n)
-		onDo(readSize, writeSize)
+		if n > 0 {
+			readSize += int64(n)
+			onDo(readSize, writeSize)
+			e = this_.workSendBytes(lineNodeIdList, sendKey, buf[:n])
+			writeSize += int64(n)
+			onDo(readSize, writeSize)
+		}
 		return
 	})
 	err = this_.workSendBytesEnd(lineNodeIdList, sendKey)
@@ -94,13 +96,15 @@ func (this_ *Server) FileWorkRead(lineNodeIdList []string, path string, writer i
 				return
 			}
 			n := len(buf)
-			readSize += int64(n)
-			onDo(readSize, writeSize)
-			err = util.Write(writer, buf, func(n int) (e error) {
-				writeSize += int64(n)
+			if n > 0 {
+				readSize += int64(n)
 				onDo(readSize, writeSize)
-				return
-			})
+				err = util.Write(writer, buf, func(n int) (e error) {
+					writeSize += int64(n)
+					onDo(readSize, writeSize)
+					return
+				})
+			}
 			return
 		},
 		end: func() (err error) {

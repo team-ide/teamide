@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_toolbox"
@@ -57,7 +60,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: removePower, Do: this_.remove})
 	apis = append(apis, &base.ApiWorker{Power: copyPower, Do: this_.copy})
 	apis = append(apis, &base.ApiWorker{Power: movePower, Do: this_.move})
-	apis = append(apis, &base.ApiWorker{Power: uploadPower, Do: this_.upload, IsUpload: true})
+	apis = append(apis, &base.ApiWorker{Power: uploadPower, Do: this_.upload, IsUpload: true, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: downloadPower, Do: this_.download, IsGet: true})
 	apis = append(apis, &base.ApiWorker{Power: callActionPower, Do: this_.callAction})
 	apis = append(apis, &base.ApiWorker{Power: callStopPower, Do: this_.callStop})
@@ -242,42 +245,116 @@ func (this_ *api) callStop(_ *base.RequestBean, c *gin.Context) (res interface{}
 
 func (this_ *api) upload(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	workerId := c.PostForm("workerId")
-	if workerId == "" {
-		err = errors.New("workerId获取失败")
+	offset_ := c.PostForm("offset")
+	if offset_ == "" {
+		err = errors.New("offset获取失败")
 		return
 	}
-	fileWorkerKey := c.PostForm("fileWorkerKey")
-	if fileWorkerKey == "" {
-		err = errors.New("fileWorkerKey获取失败")
+	offset, err := strconv.ParseInt(offset_, 10, 64)
+	if err != nil {
 		return
 	}
-	dir := c.PostForm("dir")
-	if dir == "" {
-		err = errors.New("dir获取失败")
-		return
-	}
-	place := c.PostForm("place")
-	if place == "" {
-		err = errors.New("place获取失败")
-		return
-	}
-	placeId := c.PostForm("placeId")
-	fullPath := c.PostForm("fullPath")
-
+	isEnd := c.PostForm("isEnd") == "1"
 	mF, err := c.MultipartForm()
 	if err != nil {
 		return
 	}
-	fileList := mF.File["file"]
-	go func() {
-		err = this_.Upload(&BaseParam{
-			Place:        place,
-			PlaceId:      placeId,
-			WorkerId:     workerId,
-			ClientTabKey: r.ClientTabKey,
-		}, fileWorkerKey, dir, fullPath, fileList)
-	}()
+	defer func() { _ = mF.RemoveAll() }()
+	fileList := mF.File["chunk"]
+	if len(fileList) == 0 {
+		err = errors.New("切片流丢失")
+		return
+	}
+	f, err := fileList[0].Open()
+	if err != nil {
+		return
+	}
+	defer func() { _ = f.Close() }()
+	bs, err := io.ReadAll(f)
+	if err != nil {
+		return
+	}
+	_ = f.Close()
+
+	var chunkUpload *ChunkUpload
+	if offset == 0 {
+		workerId := c.PostForm("workerId")
+		if workerId == "" {
+			err = errors.New("workerId获取失败")
+			return
+		}
+		fileWorkerKey := c.PostForm("fileWorkerKey")
+		if fileWorkerKey == "" {
+			err = errors.New("fileWorkerKey获取失败")
+			return
+		}
+		dir := c.PostForm("dir")
+		if dir == "" {
+			err = errors.New("dir获取失败")
+			return
+		}
+		place := c.PostForm("place")
+		if place == "" {
+			err = errors.New("place获取失败")
+			return
+		}
+		filename := c.PostForm("filename")
+		if filename == "" {
+			err = errors.New("filename获取失败")
+			return
+		}
+		size_ := c.PostForm("size")
+		if size_ == "" {
+			err = errors.New("size获取失败")
+			return
+		}
+		size, _ := strconv.ParseInt(size_, 10, 64)
+		placeId := c.PostForm("placeId")
+		fullPath := c.PostForm("fullPath")
+		chunkUploadKey := util.GetUUID()
+		chunkUpload = &ChunkUpload{
+			chunkUploadKey: chunkUploadKey,
+			worker:         this_.worker,
+			param: &BaseParam{
+				Place:        place,
+				PlaceId:      placeId,
+				WorkerId:     workerId,
+				ClientTabKey: r.ClientTabKey,
+			},
+			fileWorkerKey: fileWorkerKey,
+			dir:           dir,
+			fullPath:      fullPath,
+			filename:      filename,
+			size:          size,
+		}
+		err = chunkUpload.Start()
+		if err != nil {
+			return
+		}
+		err = chunkUpload.Append(bs, isEnd)
+		if err != nil {
+			return
+		}
+		if !isEnd {
+			setChunkUpload(chunkUploadKey, chunkUpload)
+		}
+		res = chunkUploadKey
+	} else {
+		chunkUploadKey := c.PostForm("chunkUploadKey")
+		if chunkUploadKey == "" {
+			err = errors.New("chunkUploadKey获取失败")
+			return
+		}
+		chunkUpload = getChunkUpload(chunkUploadKey)
+		if chunkUpload == nil || chunkUpload.closed {
+			err = errors.New("closed")
+			return
+		}
+		err = chunkUpload.Append(bs, isEnd)
+		if err != nil {
+			return
+		}
+	}
 
 	return
 }

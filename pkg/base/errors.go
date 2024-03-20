@@ -3,5 +3,5 @@ package base
 import "errors"
 
 var (
-	ProgressCallStoppedError = errors.New("progress call stopped")
+	ProgressCallStoppedError = errors.New("已停止")
 )
