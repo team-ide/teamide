@@ -98,7 +98,7 @@ jobs:
       #      - name: Build Server
       #        uses: actions/setup-go@v2
       #        with:
-      #          go-version: "1.20.14"
+      #          go-version: "1.20.1"
       # 将静态资源打包html.go
       #      - run: |
       #          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
@@ -155,7 +155,7 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.20.14"
+          go-version: "1.20.1"
 
       # 将静态资源打包html.go
       #          mv release/html.go internal/static/html.go
@@ -221,7 +221,7 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.20.14"
+          go-version: "1.20.1"
 
       # 将静态资源打包html.go
       #          mv release/html.go internal/static/html.go
@@ -387,7 +387,7 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.20.14"
+          go-version: "1.20.1"
 
       # 将静态资源打包html.go
       # -H=windowsgui
