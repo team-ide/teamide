@@ -98,7 +98,7 @@ jobs:
       #      - name: Build Server
       #        uses: actions/setup-go@v2
       #        with:
-      #          go-version: "1.19.13"
+      #          go-version: "1.20.14"
       # 将静态资源打包html.go
       #      - run: |
       #          go test -v -timeout 3600s -run ^TestStatic$ teamide/internal/static
@@ -155,7 +155,7 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.19.13"
+          go-version: "1.20.14"
 
       # 将静态资源打包html.go
       #          mv release/html.go internal/static/html.go
@@ -221,7 +221,7 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.19.13"
+          go-version: "1.20.14"
 
       # 将静态资源打包html.go
       #          mv release/html.go internal/static/html.go
@@ -387,12 +387,18 @@ jobs:
       - name: Build Server
         uses: actions/setup-go@v2
         with:
-          go-version: "1.19.13"
+          go-version: "1.20.14"
+      - name: Setup GCC
+        id: setupGCC
+        uses: rlalik/setup-cpp-compiler@v1.2
+        with:
+          compiler: gcc-10.2.0
 
       # 将静态资源打包html.go
       # -H=windowsgui
       #          mv release/html.go internal/static/html.go
       - run: |
+          go env -w CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\gcc
           mv release/statics ./electron-template/assets/server/statics
           go mod tidy
           go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
