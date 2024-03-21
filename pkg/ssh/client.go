@@ -175,6 +175,9 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 		Config:          sshConfig,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //这个可以, 但是不够安全
 	}
+	if config.Type == "" {
+		config.Type = "tcp"
+	}
 	client, err = ssh.Dial(config.Type, config.Address, clientConfig)
 	if err != nil {
 		return
