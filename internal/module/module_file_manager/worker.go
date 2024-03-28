@@ -3,6 +3,9 @@ package module_file_manager
 import (
 	"errors"
 	"fmt"
+	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
+	goSSH "golang.org/x/crypto/ssh"
 	"io"
 	"strconv"
 	"teamide/internal/context"
@@ -51,8 +54,17 @@ func (this_ *worker) GetService(fileWorkerKey string, param *BaseParam) (service
 		}
 
 		var config *ssh.Config
-		config, err = this_.toolboxService.GetSSHConfig(tD.Option)
-
+		var sshConfig *ssh.Config
+		config, sshConfig, err = this_.toolboxService.GetSSHConfig(tD.Option)
+		if sshConfig != nil {
+			var sshClient *goSSH.Client
+			sshClient, err = ssh.NewClient(*sshConfig)
+			if err != nil {
+				util.Logger.Error("getSSHService ssh NewClient error", zap.Any("address", sshConfig.Address), zap.Error(err))
+				return
+			}
+			config.SSHClient = sshClient
+		}
 		service = ssh.CreateOrGetClient(fileWorkerKey, config)
 	case "node":
 		if param.PlaceId == "" {

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	goSSH "golang.org/x/crypto/ssh"
 	"io"
 	"io/fs"
 	"os"
@@ -89,9 +90,19 @@ func (this_ *WorkerFactory) createService(param *CreateParam) (worker *Worker, c
 		}
 
 		var config *ssh.Config
-		config, err = this_.toolboxService.GetSSHConfig(tD.Option)
+		var sshConfig *ssh.Config
+		config, sshConfig, err = this_.toolboxService.GetSSHConfig(tD.Option)
 		if err != nil {
 			return
+		}
+		if sshConfig != nil {
+			var sshClient *goSSH.Client
+			sshClient, err = ssh.NewClient(*sshConfig)
+			if err != nil {
+				util.Logger.Error("getSSHService ssh NewClient error", zap.Any("address", sshConfig.Address), zap.Error(err))
+				return
+			}
+			config.SSHClient = sshClient
 		}
 		if config != nil {
 			command = config.Command

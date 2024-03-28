@@ -22,15 +22,17 @@ import (
 
 func NewTerminalService(config *Config, lastUser string, lastDir string) (res *terminalService) {
 	res = &terminalService{
-		config:   config,
-		lastUser: lastUser,
-		lastDir:  lastDir,
+		config:     config,
+		lastUser:   lastUser,
+		lastDir:    lastDir,
+		sshClient2: config.SSHClient,
 	}
 	return
 }
 
 type terminalService struct {
 	config       *Config
+	sshClient2   *ssh.Client
 	sshClient    *ssh.Client
 	sshSession   *ssh.Session
 	stdout       io.Reader
@@ -64,6 +66,10 @@ func (this_ *terminalService) Stop() {
 	if this_.sshClient != nil {
 		_ = this_.sshClient.Close()
 		this_.sshClient = nil
+	}
+	if this_.sshClient2 != nil {
+		_ = this_.sshClient2.Close()
+		this_.sshClient2 = nil
 	}
 	if this_.stdout != nil {
 		if readerCloser, ok := this_.stdout.(io.ReadCloser); ok {
@@ -103,6 +109,9 @@ func (this_ *terminalService) TestClient() (err error) {
 	}
 	defer func() {
 		_ = sshClient.Close()
+		if this_.config.SSHClient != nil {
+			_ = this_.config.SSHClient.Close()
+		}
 	}()
 	return
 }
@@ -183,6 +192,7 @@ func (this_ *terminalService) Start(size *terminal.Size) (err error) {
 	this_.sshClient, err = NewClient(*this_.config)
 	if err != nil {
 		util.Logger.Error("SSH NewClient error", zap.Error(err))
+		this_.Stop()
 		return
 	}
 	util.Logger.Info("SSH NewClient success", zap.Any("address", this_.config.Address))

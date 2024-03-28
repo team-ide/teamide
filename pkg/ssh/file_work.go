@@ -17,7 +17,8 @@ import (
 
 func newFileService(config *Config) *fileService {
 	return &fileService{
-		config: config,
+		config:     config,
+		sshClient2: config.SSHClient,
 	}
 }
 
@@ -33,6 +34,10 @@ func CreateOrGetClient(key string, config *Config) (res *fileService) {
 	if !ok {
 		res = newFileService(config)
 		fileServiceCache[key] = res
+	} else {
+		if config.SSHClient != nil {
+			_ = config.SSHClient.Close()
+		}
 	}
 	return
 }
@@ -54,6 +59,7 @@ type fileService struct {
 	newSftpLock sync.Mutex
 
 	sftpClient *sftp.Client
+	sshClient2 *ssh.Client
 }
 
 func (this_ *fileService) getSftp() (sftpClient *sftp.Client, err error) {
@@ -93,12 +99,17 @@ func (this_ *fileService) closeClient() {
 		_ = this_.sshClient.Close()
 		this_.sshClient = nil
 	}
+	if this_.sshClient2 != nil {
+		_ = this_.sshClient2.Close()
+		this_.sshClient2 = nil
+	}
 	return
 }
 
 func (this_ *fileService) createClient() (err error) {
 
 	if this_.sshClient, err = NewClient(*this_.config); err != nil {
+		this_.closeClient()
 		util.Logger.Error("createClient error", zap.Error(err))
 		return
 	}

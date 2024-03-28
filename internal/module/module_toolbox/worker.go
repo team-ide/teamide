@@ -153,16 +153,9 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	return
 }
 
-func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, err error) {
-	optionBytes := []byte(option)
-	err = json.Unmarshal(optionBytes, &config)
-	if err != nil {
-		return
-	}
-	config.Password = this_.DecryptOptionAttr(config.Password)
-	if config.PublicKey != "" {
-		config.PublicKey = this_.GetFilesFile(config.PublicKey)
-	}
+func (this_ *ToolboxService) GetSSHConfig(option string) (config *ssh.Config, sshConfig *ssh.Config, err error) {
+	config = &ssh.Config{}
+	sshConfig, err = this_.BindConfigByOption(option, config, nil)
 	return
 }
 
@@ -244,11 +237,11 @@ func (this_ *ToolboxService) BindConfigById(toolboxId int64, config interface{})
 	if find != nil {
 		option = find.Option
 	}
-	sshConfig, err = this_.BindConfigByOption(option, config)
+	sshConfig, err = this_.BindConfigByOption(option, config, nil)
 	return
 }
 
-func (this_ *ToolboxService) BindConfigByOption(option string, config interface{}) (sshConfig *ssh.Config, err error) {
+func (this_ *ToolboxService) BindConfigByOption(option string, config interface{}, sshOptions []string) (sshConfig *ssh.Config, err error) {
 
 	sshConfig = nil
 
@@ -281,7 +274,7 @@ func (this_ *ToolboxService) BindConfigByOption(option string, config interface{
 						return
 					}
 					if sshToolbox != nil {
-						sshConfig, err = this_.GetSSHConfig(sshToolbox.Option)
+						sshConfig, _, err = this_.GetSSHConfig(sshToolbox.Option)
 						if err != nil {
 							err = errors.New("ssh toolbox config error:" + err.Error())
 							return
@@ -307,6 +300,12 @@ func (this_ *ToolboxService) BindConfigByOption(option string, config interface{
 		}
 		if conf.TlsClientKey != "" {
 			conf.TlsClientKey = this_.GetFilesFile(conf.TlsClientKey)
+		}
+		conf.Password = this_.DecryptOptionAttr(conf.Password)
+		break
+	case *ssh.Config:
+		if conf.PublicKey != "" {
+			conf.PublicKey = this_.GetFilesFile(conf.PublicKey)
 		}
 		conf.Password = this_.DecryptOptionAttr(conf.Password)
 		break
@@ -359,7 +358,7 @@ func (this_ *ToolboxService) BindConfig(requestBean *base.RequestBean, c *gin.Co
 		option = find.Option
 	}
 
-	sshConfig, err = this_.BindConfigByOption(option, config)
+	sshConfig, err = this_.BindConfigByOption(option, config, nil)
 
 	return
 }
@@ -715,14 +714,10 @@ func sshWorker() *ToolboxType {
 		ConfigForm: &form.Form{
 			Fields: []*form.Field{
 				{
-					Label: "类型", Name: "type", Type: "select", DefaultValue: "tcp",
-					Options: []*form.Option{
-						{Text: "TCP", Value: "tcp"},
-					},
-					Rules: []*form.Rule{
-						{Required: true, Message: "SSH类型不能为空"},
-					},
-					Col: 12,
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select",
+					OptionsName: "sshToolboxOptions",
+					Rules:       []*form.Rule{},
+					Col:         12,
 				},
 				{
 					Label: "连接地址（127.0.0.1:22）", Name: "address", DefaultValue: "127.0.0.1:22",

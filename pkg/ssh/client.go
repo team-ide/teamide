@@ -6,6 +6,7 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
+	"net"
 	"os"
 	"sync"
 	"time"
@@ -16,16 +17,17 @@ var (
 )
 
 type Config struct {
-	Type         string `json:"type"`
-	Address      string `json:"address"`
-	Username     string `json:"username"`
-	Password     string `json:"password"`
-	PublicKey    string `json:"publicKey"`
-	Command      string `json:"command"`
-	Timeout      int    `json:"timeout"`
-	IdleSendOpen bool   `json:"idleSendOpen"`
-	IdleSendTime int    `json:"idleSendTime"`
-	IdleSendChar string `json:"idleSendChar"`
+	Type         string      `json:"type"`
+	Address      string      `json:"address"`
+	Username     string      `json:"username"`
+	Password     string      `json:"password"`
+	PublicKey    string      `json:"publicKey"`
+	Command      string      `json:"command"`
+	Timeout      int         `json:"timeout"`
+	IdleSendOpen bool        `json:"idleSendOpen"`
+	IdleSendTime int         `json:"idleSendTime"`
+	IdleSendChar string      `json:"idleSendChar"`
+	SSHClient    *ssh.Client `json:"-"`
 }
 
 type Client struct {
@@ -178,9 +180,25 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 	if config.Type == "" {
 		config.Type = "tcp"
 	}
-	client, err = ssh.Dial(config.Type, config.Address, clientConfig)
-	if err != nil {
-		return
+	if config.SSHClient != nil {
+		var conn net.Conn
+		conn, err = config.SSHClient.Dial(config.Type, config.Address)
+		if err != nil {
+			return
+		}
+		var c ssh.Conn
+		var chanChannel <-chan ssh.NewChannel
+		var chanRequest <-chan *ssh.Request
+		c, chanChannel, chanRequest, err = ssh.NewClientConn(conn, config.Address, clientConfig)
+		if err != nil {
+			return
+		}
+		client = ssh.NewClient(c, chanChannel, chanRequest)
+	} else {
+		client, err = ssh.Dial(config.Type, config.Address, clientConfig)
+		if err != nil {
+			return
+		}
 	}
 	return
 }

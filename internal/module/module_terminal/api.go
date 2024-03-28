@@ -1,12 +1,14 @@
 package module_terminal
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	goSSH "golang.org/x/crypto/ssh"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,7 +19,6 @@ import (
 	"teamide/pkg/base"
 	"teamide/pkg/ssh"
 	"teamide/pkg/terminal"
-	"time"
 )
 
 type api struct {
@@ -36,19 +37,19 @@ var (
 	// Terminal 权限
 
 	// Power 文件管理器 基本 权限
-	Power                = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "终端", ShouldLogin: true, StandAlone: true})
-	websocketPower       = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
-	check                = base.AppendPower(&base.PowerAction{Action: "check", Text: "终端测试", ShouldLogin: true, StandAlone: true, Parent: Power})
-	closePower           = base.AppendPower(&base.PowerAction{Action: "close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
-	keyPower             = base.AppendPower(&base.PowerAction{Action: "key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
-	changeSizePower      = base.AppendPower(&base.PowerAction{Action: "changeSize", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
-	uploadWebsocketPower = base.AppendPower(&base.PowerAction{Action: "uploadWebsocket", Text: "终端上传WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
-	getLogs              = base.AppendPower(&base.PowerAction{Action: "getLogs", Text: "getLogs", ShouldLogin: true, StandAlone: true, Parent: Power})
-	deleteLog            = base.AppendPower(&base.PowerAction{Action: "deleteLog", Text: "deleteLog", ShouldLogin: true, StandAlone: true, Parent: Power})
-	cleanLog             = base.AppendPower(&base.PowerAction{Action: "cleanLog", Text: "cleanLog", ShouldLogin: true, StandAlone: true, Parent: Power})
-	downloadLog          = base.AppendPower(&base.PowerAction{Action: "downloadLog", Text: "downloadLog", ShouldLogin: true, StandAlone: true, Parent: Power})
-	systemInfo           = base.AppendPower(&base.PowerAction{Action: "system/info", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
-	systemMonitor        = base.AppendPower(&base.PowerAction{Action: "system/monitor", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
+	Power           = base.AppendPower(&base.PowerAction{Action: "terminal", Text: "终端", ShouldLogin: true, StandAlone: true})
+	websocketPower  = base.AppendPower(&base.PowerAction{Action: "websocket", Text: "终端WebSocket", ShouldLogin: true, StandAlone: true, Parent: Power})
+	check           = base.AppendPower(&base.PowerAction{Action: "check", Text: "终端测试", ShouldLogin: true, StandAlone: true, Parent: Power})
+	closePower      = base.AppendPower(&base.PowerAction{Action: "close", Text: "终端关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	keyPower        = base.AppendPower(&base.PowerAction{Action: "key", Text: "终端Key", ShouldLogin: true, StandAlone: true, Parent: Power})
+	changeSizePower = base.AppendPower(&base.PowerAction{Action: "changeSize", Text: "终端窗口大小变更", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getLogs         = base.AppendPower(&base.PowerAction{Action: "getLogs", Text: "getLogs", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteLog       = base.AppendPower(&base.PowerAction{Action: "deleteLog", Text: "deleteLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	cleanLog        = base.AppendPower(&base.PowerAction{Action: "cleanLog", Text: "cleanLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	downloadLog     = base.AppendPower(&base.PowerAction{Action: "downloadLog", Text: "downloadLog", ShouldLogin: true, StandAlone: true, Parent: Power})
+	upload          = base.AppendPower(&base.PowerAction{Action: "upload", Text: "upload", ShouldLogin: true, StandAlone: true, Parent: Power})
+	systemInfo      = base.AppendPower(&base.PowerAction{Action: "system/info", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
+	systemMonitor   = base.AppendPower(&base.PowerAction{Action: "system/monitor", Text: "system", ShouldLogin: true, StandAlone: true, Parent: Power})
 
 	command       = base.AppendPower(&base.PowerAction{Action: "command", Text: "命令行", ShouldLogin: true, StandAlone: true, Parent: Power})
 	commandSave   = base.AppendPower(&base.PowerAction{Action: "save", Text: "插入", ShouldLogin: true, StandAlone: true, Parent: command})
@@ -64,11 +65,11 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: changeSizePower, Do: this_.changeSize})
 	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
-	apis = append(apis, &base.ApiWorker{Power: uploadWebsocketPower, Do: this_.uploadWebsocket, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Power: getLogs, Do: this_.getLogs})
 	apis = append(apis, &base.ApiWorker{Power: deleteLog, Do: this_.deleteLog})
 	apis = append(apis, &base.ApiWorker{Power: cleanLog, Do: this_.cleanLog})
 	apis = append(apis, &base.ApiWorker{Power: downloadLog, Do: this_.downloadLog})
+	apis = append(apis, &base.ApiWorker{Power: upload, Do: this_.upload, IsUpload: true, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: systemInfo, Do: this_.systemInfo})
 	apis = append(apis, &base.ApiWorker{Power: systemMonitor, Do: this_.systemMonitor, NotRecodeLog: true})
 	apis = append(apis, &base.ApiWorker{Power: commandSave, Do: this_.commandSave, NotRecodeLog: true})
@@ -180,6 +181,31 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 	return
 }
 
+func (this_ *api) upload(r *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	key := c.PostForm("key")
+	if key == "" {
+		err = errors.New("key获取失败")
+		return
+	}
+	value := c.PostForm("value")
+	var bs []byte
+	if value != "" {
+		bs, err = base64.StdEncoding.DecodeString(value)
+		if err != nil {
+			return
+		}
+	}
+	//fmt.Println("bs:", bs)
+	service := this_.GetService(key)
+	if service == nil || service.service == nil {
+		err = errors.New("会话[" + key + "]不存在")
+		return
+	}
+	_, err = service.service.Write(bs)
+	return
+}
+
 func (this_ *api) systemInfo(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	request := &Request{}
 	if !base.RequestJSON(request, c) {
@@ -277,95 +303,6 @@ func (this_ *api) commandDelete(r *base.RequestBean, c *gin.Context) (res interf
 	return
 }
 
-func (this_ *api) uploadWebsocket(request *base.RequestBean, c *gin.Context) (res interface{}, err error) {
-
-	if request.JWT == nil || request.JWT.UserId == 0 {
-		err = errors.New("登录用户获取失败")
-		return
-	}
-	key := c.Query("key")
-	if key == "" {
-		err = errors.New("key获取失败")
-		return
-	}
-	//升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-
-	service := this_.GetService(key)
-	if service == nil {
-		err = errors.New("会话[" + key + "]不存在")
-
-		this_.Logger.Error("uploadWebsocket start error", zap.Error(err))
-		_ = ws.Close()
-		return
-	}
-
-	var isClosed bool
-	go func() {
-		defer func() {
-			if e := recover(); e != nil {
-				this_.Logger.Error("uploadWebsocket error", zap.Any("error", e))
-			}
-			_ = ws.Close()
-		}()
-		ws.SetCloseHandler(func(code int, text string) error {
-			isClosed = true
-			return nil
-		})
-		var buf []byte
-		var readErr error
-		var writeErr error
-		for !isClosed && !service.IsStopped() {
-			_, buf, readErr = ws.ReadMessage()
-			if readErr != nil && readErr != io.EOF {
-				break
-			}
-			//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
-			if service.service == nil {
-				break
-			}
-			_, writeErr = service.service.Write(buf)
-			if writeErr != nil {
-				break
-			}
-			if readErr == io.EOF {
-				readErr = nil
-				break
-			}
-		}
-
-		if readErr != nil && !isClosed {
-			this_.Logger.Error("uploadWebsocket read error", zap.Error(readErr))
-		}
-
-		if writeErr != nil && !isClosed {
-			this_.Logger.Error("uploadWebsocket write error", zap.Error(writeErr))
-		}
-	}()
-
-	go func() {
-		// 创建一个每秒触发一次的定时器
-		ticker := time.NewTicker(10 * time.Second)
-		for {
-			<-ticker.C
-			if isClosed || service.IsStopped() {
-				break
-			}
-			e := ws.WriteMessage(websocket.BinaryMessage, []byte("keepalive msg"))
-			if e != nil {
-				break
-			}
-		}
-		isClosed = true
-	}()
-
-	res = base.HttpNotResponse
-	return
-}
-
 type Request struct {
 	Place    string `json:"place,omitempty"`
 	PlaceId  string `json:"placeId,omitempty"`
@@ -388,11 +325,20 @@ func (this_ *api) check(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	}
 
 	var config *ssh.Config
-	config, err = this_.toolboxService.GetSSHConfig(request.Option)
+	var sshConfig *ssh.Config
+	config, sshConfig, err = this_.toolboxService.GetSSHConfig(request.Option)
 	if err != nil {
 		return
 	}
-
+	if sshConfig != nil {
+		var sshClient *goSSH.Client
+		sshClient, err = ssh.NewClient(*sshConfig)
+		if err != nil {
+			util.Logger.Error("getSSHService ssh NewClient error", zap.Any("address", sshConfig.Address), zap.Error(err))
+			return
+		}
+		config.SSHClient = sshClient
+	}
 	service := ssh.NewTerminalService(config, "", "")
 
 	err = service.TestClient()
