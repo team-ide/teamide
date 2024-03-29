@@ -318,10 +318,28 @@ func (this_ *worker) Move(param *BaseParam, fileWorkerKey string, oldPath string
 }
 
 func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, fromFileWorkerKey string, fromPlace string, fromPlaceId string, fromPath string) {
+
+	this_.copyFile(param, fileWorkerKey, path, fromFileWorkerKey, fromPlace, fromPlaceId, fromPath,
+		nil, nil,
+		&[]*bool{}, new(bool),
+	)
+
+	return
+}
+
+func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path string,
+	fromFileWorkerKey string, fromPlace string, fromPlaceId string, fromPath string,
+	toService filework.Service, fromService filework.Service,
+	callStopList *[]*bool, masterCallStop *bool) {
 	var err error
 	callStop := new(bool)
+	var subCallStopList = &[]*bool{}
+	*callStopList = append(*callStopList, callStop)
 	progress := newProgress(param, "copy", func() {
 		*callStop = true
+		for _, one := range *subCallStopList {
+			*one = true
+		}
 	})
 	progress.Data["fileWorkerKey"] = fileWorkerKey
 	progress.Data["path"] = path
@@ -338,78 +356,115 @@ func (this_ *worker) Copy(param *BaseParam, fileWorkerKey string, path string, f
 		progress.end(err)
 	}()
 
-	toService, err := this_.GetService(fileWorkerKey, param)
-	if err != nil {
-		return
+	if toService == nil {
+		toService, err = this_.GetService(fileWorkerKey, param)
+		if err != nil {
+			return
+		}
 	}
 
-	fromService, err := this_.GetService(fromFileWorkerKey, &BaseParam{
-		Place:   fromPlace,
-		PlaceId: fromPlaceId,
-	})
-	if err != nil {
-		return
+	if fromService == nil {
+		fromService, err = this_.GetService(fromFileWorkerKey, &BaseParam{
+			Place:   fromPlace,
+			PlaceId: fromPlaceId,
+		})
+		if err != nil {
+			return
+		}
 	}
 
 	fromFile, err := fromService.File(fromPath)
 	if err != nil {
 		return
 	}
-	//var writer io.WriteCloser
-	var reader io.ReadCloser
-	if !fromFile.IsDir {
-
-		var exist bool
-		var toMd5 string
-		var fromMd5 string
-		exist, toMd5, err = toService.ExistAndMd5(path)
-
-		if exist {
-			if toMd5 != "" {
-				exist, fromMd5, err = fromService.ExistAndMd5(fromPath)
-				if err != nil {
-					return
-				}
-				if fromMd5 == toMd5 {
-					progress.Data["sameFile"] = true
-					return
-				}
-			}
-
-			var action string
-			action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
-				[]*Action{
-					newAction("是", "yes", "color-green"),
-					newAction("否", "no", "color-orange"),
-				})
+	var exist bool
+	if fromFile.IsDir {
+		exist, err = toService.Exist(path)
+		if err != nil {
+			return
+		}
+		if !exist {
+			err = toService.Create(path, true)
 			if err != nil {
 				return
 			}
-			if action != "yes" {
+			progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
+		}
+		var files []*filework.FileInfo
+		_, files, err = fromService.Files(fromPath)
+		if err != nil {
+			return
+		}
+
+		for _, f := range files {
+			if f.Name == ".." || f.IsSham {
+				continue
+			}
+			if *masterCallStop || *callStop {
+				*callStop = true
+				for _, one := range *subCallStopList {
+					*one = true
+				}
+				return
+			}
+			this_.copyFile(param, fileWorkerKey, path+"/"+f.Name, fromFileWorkerKey, fromPlace, fromPlaceId, fromPath+"/"+f.Name,
+				toService, fromService,
+				subCallStopList, callStop,
+			)
+		}
+
+		return
+	}
+	//var writer io.WriteCloser
+	var reader io.ReadCloser
+
+	var toMd5 string
+	var fromMd5 string
+	exist, toMd5, err = toService.ExistAndMd5(path)
+
+	if exist {
+		if toMd5 != "" {
+			exist, fromMd5, err = fromService.ExistAndMd5(fromPath)
+			if err != nil {
+				return
+			}
+			if fromMd5 == toMd5 {
+				progress.Data["sameFile"] = true
 				return
 			}
 		}
 
-		reader, err = fromService.OpenReader(fromPath)
-		if err != nil {
-			err = errors.New("get reader error:" + err.Error())
-			return
-		}
-		defer func() { _ = reader.Close() }()
-
-		err = toService.Write(path, reader, func(readSize int64, writeSize int64) {
-			progress.Data["readSize"] = readSize
-			progress.Data["writeSize"] = writeSize
-			progress.Data["successSize"] = writeSize
-		}, callStop)
+		var action string
+		action, err = progress.waitAction("文件["+path+"]已存在，是否覆盖？",
+			[]*Action{
+				newAction("是", "yes", "color-green"),
+				newAction("否", "no", "color-orange"),
+			})
 		if err != nil {
 			return
 		}
-		progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
-
-	} else {
-		err = errors.New("暂不支持移动文件夹")
+		if action != "yes" {
+			return
+		}
 	}
+
+	progress.Data["size"] = fromFile.Size
+	reader, err = fromService.OpenReader(fromPath)
+	if err != nil {
+		err = errors.New("get reader error:" + err.Error())
+		return
+	}
+	defer func() { _ = reader.Close() }()
+
+	err = toService.Write(path, reader, func(readSize int64, writeSize int64) {
+		progress.Data["readSize"] = readSize
+		progress.Data["writeSize"] = writeSize
+		progress.Data["successSize"] = writeSize
+	}, callStop)
+	if err != nil {
+		return
+	}
+	progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
 
 	return
 }

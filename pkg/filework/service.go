@@ -9,6 +9,7 @@ type FileInfo struct {
 	Path     string `json:"path,omitempty"`
 	ModTime  int64  `json:"modTime,omitempty"`
 	FileMode string `json:"fileMode,omitempty"`
+	IsSham   bool   `json:"isSham,omitempty"` // 是虚假文件信息，无效
 }
 
 type Service interface {

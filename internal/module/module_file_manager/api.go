@@ -93,7 +93,7 @@ func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 		return
 	}
 	this_.Close(request.WorkerId)
-	ssh.CloseFileService(request.WorkerId)
+	ssh.CloseFileService(request.FileWorkerKey)
 	return
 }
 
@@ -164,8 +164,7 @@ func (this_ *api) read(r *base.RequestBean, c *gin.Context) (res interface{}, er
 		return
 	}
 	if writer.Len() > 0 {
-		bytes := writer.Bytes()
-		response["text"] = string(bytes)
+		response["text"] = string(writer.Bytes())
 	}
 	return
 }

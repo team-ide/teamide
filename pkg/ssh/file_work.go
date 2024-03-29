@@ -28,6 +28,7 @@ var (
 )
 
 func CreateOrGetClient(key string, config *Config) (res *fileService) {
+	util.Logger.Info("CreateOrGetClient key:" + key)
 	fileServiceCacheLock.Lock()
 	defer fileServiceCacheLock.Unlock()
 	res, ok := fileServiceCache[key]
@@ -45,6 +46,7 @@ func CreateOrGetClient(key string, config *Config) (res *fileService) {
 func CloseFileService(key string) {
 	fileServiceCacheLock.Lock()
 	defer fileServiceCacheLock.Unlock()
+	util.Logger.Info("CloseFileService key:" + key)
 	res, ok := fileServiceCache[key]
 	if ok {
 		delete(fileServiceCache, key)
@@ -424,9 +426,10 @@ func (this_ *fileService) Files(dir string) (parentPath string, files []*filewor
 
 	files = []*filework.FileInfo{
 		{
-			Name:  "..",
-			Path:  parentPath + "..",
-			IsDir: true,
+			Name:   "..",
+			Path:   parentPath + "..",
+			IsDir:  true,
+			IsSham: true,
 		},
 	}
 

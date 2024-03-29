@@ -309,9 +309,10 @@ func (this_ *localService) Files(dir string) (parentPath string, files []*FileIn
 
 	files = []*FileInfo{
 		{
-			Name:  "..",
-			Path:  parentPath + "..",
-			IsDir: true,
+			Name:   "..",
+			Path:   parentPath + "..",
+			IsDir:  true,
+			IsSham: true,
 		},
 	}
 
