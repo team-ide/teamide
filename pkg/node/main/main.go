@@ -38,10 +38,10 @@ func main() {
 		flag.Usage()
 		panic("请设置 -id")
 	}
-	if address == "" {
-		flag.Usage()
-		panic("请设置 -address")
-	}
+	//if address == "" {
+	//	flag.Usage()
+	//	panic("请设置 -address")
+	//}
 	if token == "" {
 		flag.Usage()
 		panic("请设置 -token")

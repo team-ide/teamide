@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -25,6 +26,8 @@ func (this_ *Server) serverListenerKeepAlive(localNode *LocalNode) {
 		return
 	}
 	Logger.Info("本地节点 启动 成功", zap.Any("localNode", localNode))
+
+	var locker = &sync.Mutex{}
 	for {
 		var conn net.Conn
 		conn, err = localNode.serverListener.Accept()
@@ -32,13 +35,14 @@ func (this_ *Server) serverListenerKeepAlive(localNode *LocalNode) {
 			Logger.Error("本地节点 监听 异常", zap.Any("localNode", localNode), zap.Error(err))
 			break
 		}
-		_ = this_.onServerConn(localNode, conn)
+		_ = this_.onServerConn(locker, localNode, conn)
 	}
 	return
 }
 
-func (this_ *Server) onServerConn(localNode *LocalNode, conn net.Conn) (err error) {
-
+func (this_ *Server) onServerConn(locker sync.Locker, localNode *LocalNode, conn net.Conn) (err error) {
+	locker.Lock()
+	defer locker.Unlock()
 	var bytes = make([]byte, tokenByteSize)
 	_, err = conn.Read(bytes)
 	if err != nil {
@@ -59,7 +63,7 @@ func (this_ *Server) onServerConn(localNode *LocalNode, conn net.Conn) (err erro
 		_ = conn.Close()
 		return
 	}
-	if clientMsg.ConnData == nil || clientMsg.ConnData.NodeId == "" {
+	if clientMsg.ConnData == nil {
 		Logger.Error(localNode.GetServerInfo() + " 来之客户端连接 接口异常")
 		_ = conn.Close()
 		return

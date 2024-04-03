@@ -76,13 +76,15 @@ func (this_ *NodeApi) insert(requestBean *base.RequestBean, c *gin.Context) (res
 			return
 		}
 	} else {
-		var listener net.Listener
-		listener, err = net.Listen("tcp", node.BindAddress)
-		if err != nil {
-			err = errors.New("本地节点地址[" + node.BindAddress + "]绑定失败，" + err.Error())
-			return
+		if node.BindAddress != "" {
+			var listener net.Listener
+			listener, err = net.Listen("tcp", node.BindAddress)
+			if err != nil {
+				err = errors.New("本地节点地址[" + node.BindAddress + "]绑定失败，" + err.Error())
+				return
+			}
+			_ = listener.Close()
 		}
-		_ = listener.Close()
 	}
 
 	_, err = this_.NodeService.Insert(node)
