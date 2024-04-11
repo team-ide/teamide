@@ -95,6 +95,7 @@ func getServiceKey(redisConfig *redis.Config, sshConfig *ssh.Config) (key string
 	}
 	return
 }
+
 func getService(redisConfig *redis.Config, sshConfig *ssh.Config) (res redis.IService, err error) {
 	key := getServiceKey(redisConfig, sshConfig)
 	var serviceInfo *base.ServiceInfo
@@ -104,7 +105,7 @@ func getService(redisConfig *redis.Config, sshConfig *ssh.Config) (res redis.ISe
 			var sshClient *goSSH.Client
 			sshClient, err = ssh.NewClient(*sshConfig)
 			if err != nil {
-				util.Logger.Error("getZKService ssh NewClient error", zap.Any("key", key), zap.Error(err))
+				util.Logger.Error("getRedisService ssh NewClient error", zap.Any("key", key), zap.Error(err))
 				return
 			}
 			redisConfig.SSHClient = sshClient

@@ -381,6 +381,7 @@ var (
 	elasticsearchWorker_ = elasticsearchWorker()
 	kafkaWorker_         = kafkaWorker()
 	mongodbWorker_       = mongodbWorker()
+	netConnWorker_       = netConn()
 
 	thriftWorker_ = thriftWorker()
 	otherWorker_  = otherWorker()
@@ -394,6 +395,7 @@ func init() {
 	*toolboxTypes = append(*toolboxTypes, elasticsearchWorker_)
 	*toolboxTypes = append(*toolboxTypes, kafkaWorker_)
 	*toolboxTypes = append(*toolboxTypes, mongodbWorker_)
+	*toolboxTypes = append(*toolboxTypes, netConnWorker_)
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
 	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
@@ -813,6 +815,33 @@ func mongodbWorker() *ToolboxType {
 				{Label: "Username", Name: "username", Col: 12},
 				{Label: "Password", Name: "password", Type: "password", Col: 12, ShowPlaintextBtn: true},
 				{Label: "Cert", Name: "certPath", Type: "file", Placeholder: "请上传Cert"},
+			},
+		},
+	}
+
+	return worker_
+}
+
+func netConn() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "connection",
+		Text: "网络（TCP）",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "SSH隧道", Name: "sshToolboxId", Type: "select",
+					OptionsName: "sshToolboxOptions",
+					Rules:       []*form.Rule{},
+					Col:         12,
+				},
+				{
+					Label: "连接地址（127.0.0.1:6379）", Name: "address", DefaultValue: "127.0.0.1:6379",
+					Rules: []*form.Rule{
+						{Required: true, Message: "连接地址不能为空"},
+					},
+					Col: 12,
+				},
+				{Label: "超时时间（毫秒）", Name: "timeout", Col: 12, IsNumber: true, DefaultValue: 5000},
 			},
 		},
 	}

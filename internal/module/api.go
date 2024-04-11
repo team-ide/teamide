@@ -20,6 +20,7 @@ import (
 	"teamide/internal/module/module_log"
 	"teamide/internal/module/module_login"
 	"teamide/internal/module/module_mongodb"
+	"teamide/internal/module/module_net"
 	"teamide/internal/module/module_node"
 	"teamide/internal/module/module_power"
 	"teamide/internal/module/module_redis"
@@ -184,6 +185,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_thrift.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_javascript.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_mongodb.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_net.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }

@@ -47,7 +47,7 @@ func newZapLogger(serverConfig *config.ServerConfig) *zap.Logger {
 		level = zapcore.DebugLevel
 	}
 	core := zapcore.NewCore(
-		zapcore.NewConsoleEncoder(NewEncoderConfig()),
+		zapcore.NewConsoleWrapColEncoder(NewEncoderConfig(), "[", "]"),
 		zapcore.AddSync(hook),
 		zap.NewAtomicLevelAt(level),
 	)
@@ -72,7 +72,10 @@ func newConsoleLogger() *zap.Logger {
 	)
 	caller := zap.AddCaller()
 
-	return zap.New(core, caller)
+	return zap.New(core, caller,
+		// 表示 输出 堆栈跟踪 传入 level 表示 在哪个级别下输出
+		zap.AddStacktrace(zapcore.ErrorLevel),
+	)
 }
 
 func NewEncoderConfig() zapcore.EncoderConfig {
