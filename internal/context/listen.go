@@ -258,7 +258,7 @@ func listenerInit() {
 }
 
 func checkListener() {
-	var ticker = time.NewTicker(time.Second * 60) // 60 秒检测一次
+	var ticker = time.NewTicker(time.Minute) // 每分钟检测一次
 	for {
 		select {
 		case <-ticker.C:
@@ -335,7 +335,7 @@ func (this_ *ClientTabListener) Listen() []*ListenEvent {
 		this_.lastListenTime = time.Now()
 	}()
 	var eventsList []*ListenEvent
-	var ticker = time.NewTicker(time.Millisecond * 100)
+	var ticker = time.NewTicker(time.Second)         // 每秒检测一次
 	expireAt := lastListenTime.UnixMilli() + 1000*60 // 超时时间为 60 秒
 	for {
 		this_.lastListenTime = time.Now()
@@ -349,7 +349,7 @@ func (this_ *ClientTabListener) Listen() []*ListenEvent {
 		if len(eventsList) > 0 {
 			break
 		}
-		// 判断是否已经等待10分钟
+		// 判断是否已经等待超时
 		if time.Now().UnixMilli() >= expireAt {
 			break
 		}
