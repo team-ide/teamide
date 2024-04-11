@@ -8,7 +8,6 @@ import (
 	"io"
 	"strings"
 	"sync"
-	"teamide/pkg/base"
 	"time"
 )
 
@@ -223,13 +222,6 @@ func (this_ *ChunkUpload) Start() (err error) {
 }
 
 func (this_ *ChunkUpload) Append(bs []byte, isEnd bool) (err error) {
-
-	defer func() {
-		if this_.callStop != nil && *this_.callStop {
-			err = base.ProgressCallStoppedError
-			return
-		}
-	}()
 	if this_.closed {
 		err = errors.New("closed")
 		return
