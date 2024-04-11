@@ -27,6 +27,12 @@ var (
 	fileServiceCacheLock = &sync.Mutex{}
 )
 
+func GetCacheClient(key string) (res *fileService) {
+	fileServiceCacheLock.Lock()
+	defer fileServiceCacheLock.Unlock()
+	res = fileServiceCache[key]
+	return
+}
 func CreateOrGetClient(key string, config *Config) (res *fileService) {
 	util.Logger.Info("CreateOrGetClient key:" + key)
 	fileServiceCacheLock.Lock()
@@ -35,10 +41,6 @@ func CreateOrGetClient(key string, config *Config) (res *fileService) {
 	if !ok {
 		res = newFileService(config)
 		fileServiceCache[key] = res
-	} else {
-		if config.SSHClient != nil {
-			_ = config.SSHClient.Close()
-		}
 	}
 	return
 }

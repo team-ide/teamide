@@ -8,6 +8,8 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"teamide/pkg/base"
+	"time"
 )
 
 type UploadReader struct {
@@ -112,6 +114,8 @@ type ChunkUpload struct {
 	size          int64
 	uploadReader  *UploadReader
 	closed        bool
+
+	callStop *bool
 }
 
 func (this_ *ChunkUpload) close() {
@@ -146,21 +150,21 @@ func (this_ *ChunkUpload) Start() (err error) {
 	if len(this_.fullPath) > 0 {
 		path = this_.dir + this_.fullPath
 	}
-	var callStop = new(bool)
-	*callStop = false
+	this_.callStop = new(bool)
+	*this_.callStop = false
 
 	progress := newProgress(this_.param, "upload", func() {
 		this_.close()
-		*callStop = true
+		*this_.callStop = true
 	})
 
-	progress.Data["fileWorkerKey"] = this_.fileWorkerKey
-	progress.Data["dir"] = this_.dir
-	progress.Data["fullPath"] = this_.fullPath
-	progress.Data["filename"] = this_.filename
-	progress.Data["path"] = path
-	progress.Data["size"] = this_.size
-	progress.Data["successSize"] = 0
+	progress.Data.FileWorkerKey = this_.fileWorkerKey
+	progress.Data.Dir = this_.dir
+	progress.Data.FullPath = this_.fullPath
+	progress.Data.Filename = this_.filename
+	progress.Data.Path = path
+	progress.Data.Size = this_.size
+	progress.Data.SuccessSize = 0
 
 	var exist bool
 	exist, err = service.Exist(path)
@@ -191,19 +195,24 @@ func (this_ *ChunkUpload) Start() (err error) {
 				err = errors.New(fmt.Sprint(e))
 			}
 
-			pathDir := path[0:strings.LastIndex(path, "/")]
-
-			var pathDirExist bool
-			pathDirExist, _ = service.Exist(pathDir)
-			progress.Data["fileInfo"], _ = service.File(path)
-			if !pathDirExist {
-				progress.Data["fileDir"], _ = service.File(pathDir)
-			}
 			progress.end(err)
 		}()
 		err = service.Write(path, this_.uploadReader, func(readSize int64, writeSize int64) {
-			progress.Data["successSize"] = writeSize
-		}, callStop)
+			if progress.Data.FileInfo == nil {
+				pathDir := path[0:strings.LastIndex(path, "/")]
+				var pathDirExist bool
+				pathDirExist, _ = service.Exist(pathDir)
+				progress.Data.FileInfo, _ = service.File(path)
+				if !pathDirExist {
+					progress.Data.FileDir, _ = service.File(pathDir)
+				}
+			}
+			progress.Data.SuccessSize = writeSize
+			if progress.Data.FileInfo != nil {
+				progress.Data.FileInfo.Size = writeSize
+			}
+			progress.Data.Timestamp = time.Now().UnixMilli()
+		}, this_.callStop)
 		if err != nil {
 			return
 		}
@@ -215,6 +224,12 @@ func (this_ *ChunkUpload) Start() (err error) {
 
 func (this_ *ChunkUpload) Append(bs []byte, isEnd bool) (err error) {
 
+	defer func() {
+		if this_.callStop != nil && *this_.callStop {
+			err = base.ProgressCallStoppedError
+			return
+		}
+	}()
 	if this_.closed {
 		err = errors.New("closed")
 		return

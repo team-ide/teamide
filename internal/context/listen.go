@@ -77,7 +77,7 @@ func ChangeListenerUserId(listener *ClientTabListener, userId int64) {
 		listenerCacheForUserId[userId] = newList
 	}
 
-	go listener.AddEvent(&ListenEvent{})
+	listener.AddEvent(&ListenEvent{})
 }
 
 func ChangeListenerClientKey(listener *ClientTabListener, clientKey string) {
@@ -114,7 +114,7 @@ func ChangeListenerClientKey(listener *ClientTabListener, clientKey string) {
 		}
 		listenerCacheForClientKey[listener.ClientKey] = newList
 	}
-	go listener.AddEvent(&ListenEvent{})
+	listener.AddEvent(&ListenEvent{})
 }
 
 func AddListener(listener *ClientTabListener) {
@@ -185,7 +185,7 @@ func RemoveListener(listener *ClientTabListener) {
 	listenerCacheLock.Lock()
 	defer listenerCacheLock.Unlock()
 
-	go listener.AddEvent(&ListenEvent{})
+	listener.AddEvent(&ListenEvent{})
 
 	var newList []*ClientTabListener
 	list := listenerCache
@@ -229,7 +229,7 @@ func CallUserEvent(userId int64, event *ListenEvent) {
 		return
 	}
 	for _, one := range list {
-		go one.AddEvent(event)
+		one.AddEvent(event)
 	}
 }
 
@@ -239,7 +239,7 @@ func CallClientKeyEvent(clientKey string, event *ListenEvent) {
 		return
 	}
 	for _, one := range list {
-		go one.AddEvent(event)
+		one.AddEvent(event)
 	}
 }
 
@@ -248,7 +248,7 @@ func CallClientTabKeyEvent(clientTabKey string, event *ListenEvent) {
 	if listener == nil {
 		return
 	}
-	go listener.AddEvent(event)
+	listener.AddEvent(event)
 }
 
 func listenerInit() {
@@ -257,39 +257,31 @@ func listenerInit() {
 }
 
 func checkListener() {
-	startTimeSecond := util.GetNowSecond()
+	var ticker = time.NewTicker(time.Second * 60) // 60 秒检测一次
+	for {
+		select {
+		case <-ticker.C:
+			list := GetListeners()
+			for _, one := range list {
+				nowTimeSecond := util.GetNowSecond()
 
-	defer func() {
-		endTimeSecond := util.GetNowSecond()
-		useSecond := endTimeSecond - startTimeSecond
-		waitSecond := 60 - useSecond
-		if waitSecond > 0 {
-			time.Sleep(time.Second * time.Duration(waitSecond))
-		}
-		checkListener()
-	}()
-
-	list := GetListeners()
-	for _, one := range list {
-		nowTimeSecond := util.GetNowSecond()
-
-		// 最后监听时间 在此 之前的 都为超时
-		outTimeSecond := nowTimeSecond - listenerLastListenTimeoutSecond
-		lastListenTimeSecond := util.GetSecondByTime(one.lastListenTime)
-		if lastListenTimeSecond > outTimeSecond {
-			if one.listenIng {
-				go one.AddEvent(&ListenEvent{})
+				// 最后监听时间 在此 之前的 都为超时
+				outTimeSecond := nowTimeSecond - listenerLastListenTimeoutSecond
+				lastListenTimeSecond := util.GetSecondByTime(one.lastListenTime)
+				if lastListenTimeSecond > outTimeSecond {
+					continue
+				}
+				RemoveListener(one)
 			}
-			continue
 		}
-		RemoveListener(one)
 	}
 
 }
 
 type ListenEvent struct {
-	Event string      `json:"event"`
-	Data  interface{} `json:"data"`
+	KeyForRemoveDuplicates string      `json:"-"` // 用于剔除重复
+	Event                  string      `json:"event"`
+	Data                   interface{} `json:"data"`
 }
 
 func NewListenEvent(event string, data interface{}) *ListenEvent {
@@ -305,7 +297,6 @@ func NewClientTabListener(clientKey string, clientTabKey string, userId int64) (
 		ClientTabKey: clientTabKey,
 		ClientKey:    clientKey,
 		UserId:       userId,
-		events:       make(chan *ListenEvent, 100),
 		listenLock:   &sync.Mutex{},
 		eventsLock:   &sync.Mutex{},
 	}
@@ -321,10 +312,9 @@ type ClientTabListener struct {
 	ClientTabKey   string `json:"clientTabKey"`
 	UserId         int64  `json:"userId"`
 	lastListenTime time.Time
-	events         chan *ListenEvent
+	events         []*ListenEvent
 	listenLock     sync.Locker
 	eventsLock     sync.Locker
-	listenIng      bool
 }
 
 func (this_ *ClientTabListener) AddEvent(event *ListenEvent) {
@@ -334,26 +324,52 @@ func (this_ *ClientTabListener) AddEvent(event *ListenEvent) {
 	this_.eventsLock.Lock()
 	defer this_.eventsLock.Unlock()
 
-	this_.events <- event
+	this_.events = append(this_.events, event)
 }
 
-func (this_ *ClientTabListener) Listen() (events []*ListenEvent) {
-	this_.listenLock.Lock()
-	defer this_.listenLock.Unlock()
-	//fmt.Println("Listen start")
+func (this_ *ClientTabListener) Listen() []*ListenEvent {
 
-	this_.listenIng = true
-	this_.lastListenTime = time.Now()
+	var lastListenTime = time.Now()
+	this_.lastListenTime = lastListenTime
 	defer func() {
-		//fmt.Println("Listen end")
-		this_.listenIng = false
 		this_.lastListenTime = time.Now()
 	}()
-
-	event := <-this_.events
-	if event != nil && event.Event != "" {
-		events = append(events, event)
+	var eventsList []*ListenEvent
+	var ticker = time.NewTicker(time.Millisecond * 100)
+	expireAt := lastListenTime.UnixMilli() + 1000*60*10
+	for {
+		select {
+		case <-ticker.C:
+			this_.eventsLock.Lock()
+			eventsList = this_.events
+			this_.events = make([]*ListenEvent, 0)
+			this_.eventsLock.Unlock()
+		}
+		if len(eventsList) > 0 {
+			break
+		}
+		// 判断是否已经等待10分钟
+		if time.Now().UnixMilli() >= expireAt {
+			break
+		}
+	}
+	ticker.Stop()
+	var events []*ListenEvent
+	var eventCache = make(map[string]*ListenEvent)
+	for _, event := range eventsList {
+		if event.KeyForRemoveDuplicates == "" {
+			events = append(events, event)
+		} else {
+			key := event.Event + "@" + event.KeyForRemoveDuplicates
+			find := eventCache[key]
+			if find != nil {
+				find.Data = event.Data
+			} else {
+				eventCache[key] = event
+				events = append(events, event)
+			}
+		}
 	}
 
-	return
+	return events
 }

@@ -2,6 +2,8 @@ package base
 
 import (
 	"github.com/gin-gonic/gin/binding"
+	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
 	"net/http"
 	"sync"
 
@@ -70,6 +72,11 @@ func RequestJSON(data interface{}, c *gin.Context) bool {
 }
 
 func ResponseJSON(data interface{}, err error, c *gin.Context) {
+	defer func() {
+		if e := recover(); e != nil {
+			util.Logger.Error("resource json error", zap.Any("error", e))
+		}
+	}()
 	if _, exists := c.Get("request-data-bind-json-error"); exists {
 		return
 	}

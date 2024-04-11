@@ -1,30 +1,55 @@
 package module_file_manager
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"sync"
 	"teamide/internal/context"
+	"teamide/pkg/filework"
 	"time"
 )
 
 type Progress struct {
 	*BaseParam
-	ProgressId        string                 `json:"progressId"`
-	StartTime         int64                  `json:"startTime"`
-	EndTime           int64                  `json:"endTime"`
-	Timestamp         int64                  `json:"timestamp"`
-	IsEnd             bool                   `json:"isEnd"`
-	Error             string                 `json:"error"`
-	Work              string                 `json:"work"`
-	Data              map[string]interface{} `json:"data"`
-	WaitActionMessage string                 `json:"waitActionMessage"`
-	WaitActionList    []*Action              `json:"waitActionList"`
-	WaitActionIng     bool                   `json:"waitActionIng"`
+	ProgressId        string        `json:"progressId"`
+	StartTime         int64         `json:"startTime"`
+	EndTime           int64         `json:"endTime"`
+	Timestamp         int64         `json:"timestamp"`
+	IsEnd             bool          `json:"isEnd"`
+	Error             string        `json:"error"`
+	Work              string        `json:"work"`
+	Data              *ProgressData `json:"data"`
+	WaitActionMessage string        `json:"waitActionMessage"`
+	WaitActionList    []*Action     `json:"waitActionList"`
+	WaitActionIng     bool          `json:"waitActionIng"`
 	waitActionChan    chan string
 	callStopped       bool
+}
+
+type ProgressData struct {
+	FileWorkerKey     string             `json:"fileWorkerKey,omitempty"`
+	OldPath           string             `json:"oldPath,omitempty"`
+	NewPath           string             `json:"newPath,omitempty"`
+	Dir               string             `json:"dir,omitempty"`
+	FullPath          string             `json:"fullPath,omitempty"`
+	Filename          string             `json:"filename,omitempty"`
+	Path              string             `json:"path,omitempty"`
+	Size              int64              `json:"size,omitempty"`
+	SuccessSize       int64              `json:"successSize,omitempty"`
+	Timestamp         int64              `json:"timestamp,omitempty"`
+	FileDir           *filework.FileInfo `json:"fileDir,omitempty"`
+	FileInfo          *filework.FileInfo `json:"fileInfo,omitempty"`
+	IsDir             bool               `json:"isDir,omitempty"`
+	FileCount         int                `json:"fileCount,omitempty"`
+	RemoveCount       int                `json:"removeCount,omitempty"`
+	FromFileWorkerKey string             `json:"fromFileWorkerKey,omitempty"`
+	FromPlace         string             `json:"fromPlace,omitempty"`
+	FromPlaceId       string             `json:"fromPlaceId,omitempty"`
+	FromPath          string             `json:"fromPath,omitempty"`
+	SameFile          bool               `json:"sameFile,omitempty"`
 }
 
 type Action struct {
@@ -54,7 +79,9 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 	this_.WaitActionIng = true
 	this_.WaitActionMessage = waitActionMessage
 	this_.WaitActionList = waitActionList
-	context.CallClientTabKeyEvent(this_.ClientTabKey, context.NewListenEvent("file-work-progress", this_))
+	event := context.NewListenEvent("file-work-progress", this_)
+	event.KeyForRemoveDuplicates = this_.ProgressId
+	context.CallClientTabKeyEvent(this_.ClientTabKey, event)
 
 	var isEnd bool
 	var startTime = time.Now()
@@ -81,7 +108,9 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 	action = <-this_.waitActionChan
 	isEnd = true
 
-	context.CallClientTabKeyEvent(this_.ClientTabKey, context.NewListenEvent("file-work-progress", this_))
+	event = context.NewListenEvent("file-work-progress", this_)
+	event.KeyForRemoveDuplicates = this_.ProgressId
+	context.CallClientTabKeyEvent(this_.ClientTabKey, event)
 
 	this_.closeCallAction()
 	return
@@ -166,10 +195,11 @@ func newProgress(param *BaseParam, work string, callStop func()) (progress *Prog
 	progress.Work = work
 	progress.ProgressId = ProgressId
 	progress.StartTime = util.GetNowMilli()
-	progress.Data = map[string]interface{}{}
+	progress.Data = &ProgressData{}
 
 	setProgress(progress)
 
+	var lastStr string
 	go func() {
 		defer removeProgress(ProgressId)
 		for {
@@ -181,14 +211,27 @@ func newProgress(param *BaseParam, work string, callStop func()) (progress *Prog
 				continue
 			}
 
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(300 * time.Millisecond)
 			if progress.IsEnd {
 				progress.Timestamp = util.GetNowMilli()
-				context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
+				event := context.NewListenEvent("file-work-progress", progress)
+				event.KeyForRemoveDuplicates = progress.ProgressId
+				context.CallClientTabKeyEvent(progress.ClientTabKey, event)
 				break
 			}
+			bs, e := json.Marshal(progress)
+			if e != nil {
+				return
+			}
+			str := string(bs)
+			if str == lastStr {
+				continue
+			}
+			lastStr = str
 			progress.Timestamp = util.GetNowMilli()
-			context.CallClientTabKeyEvent(progress.ClientTabKey, context.NewListenEvent("file-work-progress", progress))
+			event := context.NewListenEvent("file-work-progress", progress)
+			event.KeyForRemoveDuplicates = progress.ProgressId
+			context.CallClientTabKeyEvent(progress.ClientTabKey, event)
 		}
 	}()
 

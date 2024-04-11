@@ -13,6 +13,7 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/filework"
 	"teamide/pkg/ssh"
+	"time"
 )
 
 func NewWorker(toolboxService_ *module_toolbox.ToolboxService, nodeService_ *module_node.NodeService) *worker {
@@ -34,38 +35,42 @@ func (this_ *worker) GetService(fileWorkerKey string, param *BaseParam) (service
 	case "local":
 		service = filework.NewLocalService()
 	case "ssh":
-		if param.PlaceId == "" {
-			err = errors.New("SSH配置不能为空")
-			return
-		}
-		var id int64
-		id, err = strconv.ParseInt(param.PlaceId, 10, 64)
-		if err != nil {
-			return
-		}
-		var tD *module_toolbox.ToolboxModel
-		tD, err = this_.toolboxService.Get(id)
-		if err != nil {
-			return
-		}
-		if tD == nil || tD.Option == "" {
-			err = errors.New("SSH[" + param.PlaceId + "]配置不存在")
-			return
-		}
-
-		var config *ssh.Config
-		var sshConfig *ssh.Config
-		config, sshConfig, err = this_.toolboxService.GetSSHConfig(tD.Option)
-		if sshConfig != nil {
-			var sshClient *goSSH.Client
-			sshClient, err = ssh.NewClient(*sshConfig)
-			if err != nil {
-				util.Logger.Error("getSSHService ssh NewClient error", zap.Any("address", sshConfig.Address), zap.Error(err))
+		find := ssh.GetCacheClient(fileWorkerKey)
+		service = find
+		if find == nil {
+			if param.PlaceId == "" {
+				err = errors.New("SSH配置不能为空")
 				return
 			}
-			config.SSHClient = sshClient
+			var id int64
+			id, err = strconv.ParseInt(param.PlaceId, 10, 64)
+			if err != nil {
+				return
+			}
+			var tD *module_toolbox.ToolboxModel
+			tD, err = this_.toolboxService.Get(id)
+			if err != nil {
+				return
+			}
+			if tD == nil || tD.Option == "" {
+				err = errors.New("SSH[" + param.PlaceId + "]配置不存在")
+				return
+			}
+
+			var config *ssh.Config
+			var sshConfig *ssh.Config
+			config, sshConfig, err = this_.toolboxService.GetSSHConfig(tD.Option)
+			if sshConfig != nil {
+				var sshClient *goSSH.Client
+				sshClient, err = ssh.NewClient(*sshConfig)
+				if err != nil {
+					util.Logger.Error("getSSHService ssh NewClient error", zap.Any("address", sshConfig.Address), zap.Error(err))
+					return
+				}
+				config.SSHClient = sshClient
+			}
+			service = ssh.CreateOrGetClient(fileWorkerKey, config)
 		}
-		service = ssh.CreateOrGetClient(fileWorkerKey, config)
 	case "node":
 		if param.PlaceId == "" {
 			err = errors.New("node配置不能为空")
@@ -93,9 +98,9 @@ func (this_ *worker) Create(param *BaseParam, fileWorkerKey string, path string,
 	progress := newProgress(param, "create", func() {
 
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["path"] = path
-	progress.Data["isDir"] = isDir
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.Path = path
+	progress.Data.IsDir = isDir
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -170,11 +175,9 @@ func (this_ *worker) Read(param *BaseParam, fileWorkerKey string, path string, w
 	progress := newProgress(param, "read", func() {
 		*callStop = true
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["path"] = path
-	progress.Data["readSize"] = 0
-	progress.Data["writeSize"] = 0
-	progress.Data["successSize"] = 0
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.Path = path
+	progress.Data.SuccessSize = 0
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New(fmt.Sprint(e))
@@ -191,12 +194,11 @@ func (this_ *worker) Read(param *BaseParam, fileWorkerKey string, path string, w
 	if err != nil {
 		return
 	}
-	progress.Data["size"] = file.Size
+	progress.Data.Size = file.Size
 
 	err = service.Read(path, writer, func(readSize int64, writeSize int64) {
-		progress.Data["readSize"] = readSize
-		progress.Data["writeSize"] = writeSize
-		progress.Data["successSize"] = writeSize
+		progress.Data.SuccessSize = writeSize
+		progress.Data.Timestamp = time.Now().UnixMilli()
 	}, callStop)
 	return
 }
@@ -207,11 +209,9 @@ func (this_ *worker) Write(param *BaseParam, fileWorkerKey string, path string, 
 	progress := newProgress(param, "write", func() {
 		*callStop = true
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["path"] = path
-	progress.Data["readSize"] = 0
-	progress.Data["writeSize"] = 0
-	progress.Data["size"] = size
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.Path = path
+	progress.Data.Size = int64(size)
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -226,9 +226,8 @@ func (this_ *worker) Write(param *BaseParam, fileWorkerKey string, path string, 
 	}
 
 	err = service.Write(path, reader, func(readSize int64, writeSize int64) {
-		progress.Data["readSize"] = readSize
-		progress.Data["writeSize"] = writeSize
-		progress.Data["successSize"] = writeSize
+		progress.Data.SuccessSize = writeSize
+		progress.Data.Timestamp = time.Now().UnixMilli()
 	}, callStop)
 	if err != nil {
 		return
@@ -242,9 +241,9 @@ func (this_ *worker) Rename(param *BaseParam, fileWorkerKey string, oldPath stri
 	progress := newProgress(param, "rename", func() {
 
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["oldPath"] = oldPath
-	progress.Data["newPath"] = newPath
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.OldPath = oldPath
+	progress.Data.NewPath = newPath
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -270,10 +269,10 @@ func (this_ *worker) Remove(param *BaseParam, fileWorkerKey string, path string)
 	progress := newProgress(param, "remove", func() {
 
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["path"] = path
-	progress.Data["fileCount"] = 0
-	progress.Data["removeCount"] = 0
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.Path = path
+	progress.Data.FileCount = 0
+	progress.Data.RemoveCount = 0
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -287,8 +286,8 @@ func (this_ *worker) Remove(param *BaseParam, fileWorkerKey string, path string)
 		return
 	}
 	err = service.Remove(path, func(fileCount int, removeCount int) {
-		progress.Data["fileCount"] = fileCount
-		progress.Data["removeCount"] = removeCount
+		progress.Data.FileCount = fileCount
+		progress.Data.RemoveCount = removeCount
 	})
 	return
 }
@@ -297,9 +296,9 @@ func (this_ *worker) Move(param *BaseParam, fileWorkerKey string, oldPath string
 	progress := newProgress(param, "move", func() {
 
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["oldPath"] = oldPath
-	progress.Data["newPath"] = newPath
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.OldPath = oldPath
+	progress.Data.NewPath = newPath
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -341,13 +340,13 @@ func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path strin
 			*one = true
 		}
 	})
-	progress.Data["fileWorkerKey"] = fileWorkerKey
-	progress.Data["path"] = path
-	progress.Data["fromFileWorkerKey"] = fromFileWorkerKey
-	progress.Data["fromPlace"] = fromPlace
-	progress.Data["fromPlaceId"] = fromPlaceId
-	progress.Data["fromPath"] = fromPath
-	progress.Data["sameFile"] = false
+	progress.Data.FileWorkerKey = fileWorkerKey
+	progress.Data.Path = path
+	progress.Data.FromFileWorkerKey = fromFileWorkerKey
+	progress.Data.FromPlace = fromPlace
+	progress.Data.FromPlaceId = fromPlaceId
+	progress.Data.FromPath = fromPath
+	progress.Data.SameFile = false
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -388,7 +387,7 @@ func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path strin
 			if err != nil {
 				return
 			}
-			progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
+			progress.Data.FileInfo, _ = this_.File(param, fileWorkerKey, path)
 		}
 		var files []*filework.FileInfo
 		_, files, err = fromService.Files(fromPath)
@@ -429,7 +428,7 @@ func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path strin
 				return
 			}
 			if fromMd5 == toMd5 {
-				progress.Data["sameFile"] = true
+				progress.Data.SameFile = true
 				return
 			}
 		}
@@ -448,7 +447,7 @@ func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path strin
 		}
 	}
 
-	progress.Data["size"] = fromFile.Size
+	progress.Data.Size = fromFile.Size
 	reader, err = fromService.OpenReader(fromPath)
 	if err != nil {
 		err = errors.New("get reader error:" + err.Error())
@@ -457,14 +456,13 @@ func (this_ *worker) copyFile(param *BaseParam, fileWorkerKey string, path strin
 	defer func() { _ = reader.Close() }()
 
 	err = toService.Write(path, reader, func(readSize int64, writeSize int64) {
-		progress.Data["readSize"] = readSize
-		progress.Data["writeSize"] = writeSize
-		progress.Data["successSize"] = writeSize
+		progress.Data.SuccessSize = writeSize
+		progress.Data.Timestamp = time.Now().UnixMilli()
 	}, callStop)
 	if err != nil {
 		return
 	}
-	progress.Data["fileInfo"], _ = this_.File(param, fileWorkerKey, path)
+	progress.Data.FileInfo, _ = this_.File(param, fileWorkerKey, path)
 
 	return
 }
