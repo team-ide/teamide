@@ -2,6 +2,7 @@ package context
 
 import (
 	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
@@ -271,6 +272,7 @@ func checkListener() {
 				if lastListenTimeSecond > outTimeSecond {
 					continue
 				}
+				util.Logger.Debug("remove listener", zap.Any("listener", one))
 				RemoveListener(one)
 			}
 		}
@@ -297,7 +299,6 @@ func NewClientTabListener(clientKey string, clientTabKey string, userId int64) (
 		ClientTabKey: clientTabKey,
 		ClientKey:    clientKey,
 		UserId:       userId,
-		listenLock:   &sync.Mutex{},
 		eventsLock:   &sync.Mutex{},
 	}
 	listener.lastListenTime = time.Now()
@@ -313,7 +314,6 @@ type ClientTabListener struct {
 	UserId         int64  `json:"userId"`
 	lastListenTime time.Time
 	events         []*ListenEvent
-	listenLock     sync.Locker
 	eventsLock     sync.Locker
 }
 
@@ -336,8 +336,9 @@ func (this_ *ClientTabListener) Listen() []*ListenEvent {
 	}()
 	var eventsList []*ListenEvent
 	var ticker = time.NewTicker(time.Millisecond * 100)
-	expireAt := lastListenTime.UnixMilli() + 1000*60*10
+	expireAt := lastListenTime.UnixMilli() + 1000*60 // 超时时间为 60 秒
 	for {
+		this_.lastListenTime = time.Now()
 		select {
 		case <-ticker.C:
 			this_.eventsLock.Lock()
