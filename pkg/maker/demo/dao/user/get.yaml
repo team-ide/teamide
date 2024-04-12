@@ -1,0 +1,17 @@
+name: user/get
+args:
+  - name: userId
+    type: user.userId
+steps:
+  - db: selectOne
+    table: TB_USER
+    columns:
+      - userId
+      - name
+    wheres:
+      - name: userId
+        value: user.userId
+    setVar: user
+    setVarType: user
+
+return: user

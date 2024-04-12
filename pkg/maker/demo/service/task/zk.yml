@@ -1,0 +1,7 @@
+name: task/zk
+steps:
+
+  # 监听ZK子节点
+  - zk: watchChildren
+    path: /test/node1
+    createPathIfNotExists: true

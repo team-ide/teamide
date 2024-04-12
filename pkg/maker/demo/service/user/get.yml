@@ -1,0 +1,23 @@
+name: user/get
+args:
+  - name: userId
+    type: i64
+steps:
+  - redis: get
+    key: user-${userId}
+    setVar: user
+    setVarType: user
+
+  - if: user == null
+    dao: user/get
+    args:
+      - userId
+    setVar: user
+    steps:
+      - if: user != null
+        redis: set
+        key: user-${userId}
+        value: user
+        expire: USER_REDIS_EXPIRE
+
+return: user

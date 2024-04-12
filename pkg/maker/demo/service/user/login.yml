@@ -1,0 +1,34 @@
+name: user/login
+args:
+  - name: account
+  - name: password
+steps:
+  # 验证参数合法性
+  - if: util.isEmpty(account)
+    error: USER_ACCOUNT_IS_EMPTY
+  - if: util.isEmpty(password)
+    error: USER_PASSWORD_IS_EMPTY
+
+  # 查询账号
+  - dao: user/queryByAccount
+    args:
+      - account
+    setVar: user
+    setVarType: user
+
+  # 判断用户是否存在
+  - if: user == null
+    error: USER_LOGIN_ERROR
+
+  # 加密输入的密码
+  # 生成 密码
+  - var: md5Password
+    value: util.md5(user.salt + password)
+
+  # 判断密码是否一致
+  - if: util.notEquals(md5Password, user.password)
+    error: USER_LOGIN_ERROR
+
+
+
+return: user

@@ -1,0 +1,16 @@
+name: user/delete
+args:
+  - name: userId
+    type: i64
+steps:
+  # 验证参数合法性
+  - if: util.isEmpty(userId)
+    error: USER_ID_IS_EMPTY
+
+  # 删除
+  - dao: user/delete
+    args:
+      - userId
+
+  - redis: del
+    key: user-${userId}

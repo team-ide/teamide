@@ -16,6 +16,7 @@ import (
 	"teamide/internal"
 	"teamide/internal/context"
 	"teamide/pkg/base"
+	"teamide/pkg/maker"
 	"teamide/pkg/window"
 )
 
@@ -122,6 +123,10 @@ func main() {
 	}()
 
 	waitGroupForStop.Add(1)
+
+	if isServerDev {
+		maker.HasMaker = true
+	}
 
 	serverConf := &context.ServerConf{
 		Version:     base.GetVersion(),

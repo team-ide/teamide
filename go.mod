@@ -2,10 +2,8 @@ module teamide
 
 go 1.18
 
-//replace (
-//	github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
-//	github.com/team-ide/go-tool v1.2.12 => ../go-tool
-//)
+//replace github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
+//replace github.com/team-ide/go-tool v1.2.12 => ../go-tool
 
 replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v0.0.0-20240313073509-8b73338e8dfa
 

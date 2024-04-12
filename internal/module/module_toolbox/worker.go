@@ -12,8 +12,10 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"strconv"
+	"sync"
 	"teamide/pkg/base"
 	"teamide/pkg/form"
+	"teamide/pkg/maker"
 	"teamide/pkg/ssh"
 )
 
@@ -374,6 +376,8 @@ type ToolboxType struct {
 
 var (
 	toolboxTypes         = &[]*ToolboxType{}
+	toolboxTypesLock     = &sync.Mutex{}
+	toolboxTypesInit     bool
 	databaseWorker_      = databaseWorker()
 	sshWorker_           = sshWorker()
 	redisWorker_         = redisWorker()
@@ -384,10 +388,16 @@ var (
 	netConnWorker_       = netConn()
 
 	thriftWorker_ = thriftWorker()
-	otherWorker_  = otherWorker()
+	makerWorker_  = makerWorker()
+
+	otherWorker_ = otherWorker()
 )
 
-func init() {
+func initToolboxTypes() {
+	if toolboxTypesInit {
+		return
+	}
+	toolboxTypesInit = true
 	*toolboxTypes = append(*toolboxTypes, databaseWorker_)
 	*toolboxTypes = append(*toolboxTypes, sshWorker_)
 	*toolboxTypes = append(*toolboxTypes, redisWorker_)
@@ -397,10 +407,16 @@ func init() {
 	*toolboxTypes = append(*toolboxTypes, mongodbWorker_)
 	*toolboxTypes = append(*toolboxTypes, netConnWorker_)
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
+	if maker.HasMaker {
+		*toolboxTypes = append(*toolboxTypes, makerWorker_)
+	}
 	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
 
 func GetToolboxTypes() (res []*ToolboxType) {
+	toolboxTypesLock.Lock()
+	defer toolboxTypesLock.Unlock()
+	initToolboxTypes()
 	res = *toolboxTypes
 	return
 }
@@ -858,6 +874,25 @@ func thriftWorker() *ToolboxType {
 					Label: "Thrift文件目录", Name: "thriftDir",
 					Rules: []*form.Rule{
 						{Required: true, Message: "Thrift文件目录不能为空"},
+					},
+				},
+			},
+		},
+	}
+
+	return worker_
+}
+
+func makerWorker() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "maker",
+		Text: "模型转代码",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "目录（请配置一个目录）", Name: "dir",
+					Rules: []*form.Rule{
+						{Required: true, Message: "目录不能为空"},
 					},
 				},
 			},

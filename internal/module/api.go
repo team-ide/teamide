@@ -19,6 +19,7 @@ import (
 	"teamide/internal/module/module_kafka"
 	"teamide/internal/module/module_log"
 	"teamide/internal/module/module_login"
+	"teamide/internal/module/module_maker"
 	"teamide/internal/module/module_mongodb"
 	"teamide/internal/module/module_net"
 	"teamide/internal/module/module_node"
@@ -186,6 +187,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_javascript.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_mongodb.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_net.NewApi(this_.toolboxService).GetApis()...)
+	apis = append(apis, module_maker.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }
