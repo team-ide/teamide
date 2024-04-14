@@ -1,10 +1,10 @@
 package modelers
 
 import (
+	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"path/filepath"
+	"os"
 	"strings"
 )
 
@@ -14,37 +14,60 @@ func newApplication() (app *Application) {
 }
 
 func Load(dir string) (app *Application) {
-	dir_, err := filepath.Abs(dir)
-	if err != nil {
-		util.Logger.Error("filepath Abs error", zap.Any("dir", dir), zap.Error(err))
-	} else {
-		dir = dir_
-	}
 	app = newApplication()
 	types := Types
+	app.Dir = util.FormatPath(dir)
+	if app.Dir == "" {
+		app.Dir = dir
+	}
+	if !strings.HasSuffix(app.Dir, "/") {
+		app.Dir += "/"
+	}
 
 	for _, modelType := range types {
-		appendModelByType(dir, app, modelType)
+		appendModelByType(app.Dir, app, modelType)
 	}
 	return
 }
 
 func appendModelByType(dir string, app *Application, modelType *Type) {
-
-	pathname := dir + "/" + modelType.Dir
-	loadFiles(pathname, func(fileName string, fullName string) {
-		appendModel(dir, app, modelType, fileName, fullName)
-	})
+	baseDir := dir
+	if modelType.Dir != "" {
+		baseDir += modelType.Dir
+	}
+	if !strings.HasSuffix(baseDir, "/") {
+		baseDir += "/"
+	}
+	if modelType.Children != nil {
+		for _, one := range modelType.Children {
+			appendModelByType(baseDir, app, one)
+		}
+	} else {
+		loadFiles(baseDir, func(fileName string, fullName string) {
+			appendModel(baseDir, app, modelType, fileName, fullName)
+		})
+	}
 	return
 }
 
-func appendModel(dir string, app *Application, modelType *Type, fileName string, fullName string) {
+func appendModel(baseDir string, app *Application, modelType *Type, fileName string, fullName string) {
+	if !(strings.HasSuffix(fileName, ".yml") || strings.HasSuffix(fileName, ".yaml")) {
+		return
+	}
 	if modelType.FileName != "" {
 		if !strings.HasPrefix(fileName, modelType.FileName+".") {
 			return
 		}
 	}
-	path := strings.TrimLeft(fullName, dir)
+	if !strings.HasSuffix(baseDir, "/") {
+		baseDir += "/"
+	}
+	path := strings.TrimPrefix(fullName, app.Dir)
+	name := strings.TrimPrefix(fullName, baseDir)
+	name = strings.TrimSuffix(name, ".yml")
+	name = strings.TrimSuffix(name, ".yaml")
+	fmt.Println("path:", path)
+	fmt.Println("name:", name)
 	var err error
 	defer func() {
 		if err != nil {
@@ -55,18 +78,12 @@ func appendModel(dir string, app *Application, modelType *Type, fileName string,
 			app.LoadErrors = append(app.LoadErrors, loadError)
 		}
 	}()
-	fullName_, err := filepath.Abs(fullName)
-	if err != nil {
-		util.Logger.Error("filepath Abs error", zap.Any("fullName", fullName), zap.Error(err))
-	} else {
-		fullName = fullName_
-	}
-	bs, err := ioutil.ReadFile(fullName)
+	bs, err := os.ReadFile(fullName)
 	if err != nil {
 		util.Logger.Error("appendModelByType ReadFile error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Error(err))
 		return
 	}
-	one, err := modelType.toModel(string(bs))
+	one, err := modelType.toModel(name, string(bs))
 	if err != nil {
 		util.Logger.Error("appendModelByType ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
 		return
@@ -79,13 +96,13 @@ func appendModel(dir string, app *Application, modelType *Type, fileName string,
 	return
 }
 func loadFiles(folder string, onLoad func(name string, pathname string)) {
-	files, _ := ioutil.ReadDir(folder)
+	files, _ := os.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
-			loadFiles(folder+"/"+file.Name(), onLoad)
+			loadFiles(folder+file.Name()+"/", onLoad)
 		} else {
 			if onLoad != nil {
-				onLoad(file.Name(), folder+"/"+file.Name())
+				onLoad(file.Name(), folder+file.Name())
 			}
 		}
 	}

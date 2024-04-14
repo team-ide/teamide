@@ -53,23 +53,27 @@ func NewInvokeData(app *modelers.Application) (data *InvokeData, err error) {
 
 func (this_ *InvokeData) init() (err error) {
 	// 将 常量 error func 填充 至 script 变量域中
-	for _, one := range this_.app.ConstantList {
-		err = this_.scriptSet(one.Name, one.Value)
-		if err != nil {
-			util.Logger.Error("invoke data init set constant value error", zap.Any("name", one.Name), zap.Any("value", one.Value), zap.Any("error", err))
-			return
+	for _, one := range this_.app.GetConstantList() {
+		for _, option := range one.Options {
+			err = this_.scriptSet(option.Name, option.Value)
+			if err != nil {
+				util.Logger.Error("invoke data init set constant value error", zap.Any("name", option.Name), zap.Any("value", option.Value), zap.Any("error", err))
+				return
+			}
 		}
 	}
 
-	for _, one := range this_.app.ErrorList {
-		err = this_.scriptSet(one.Name, one)
-		if err != nil {
-			util.Logger.Error("invoke data init set error value error", zap.Any("name", one.Name), zap.Any("error", one), zap.Any("error", err))
-			return
+	for _, one := range this_.app.GetErrorList() {
+		for _, option := range one.Options {
+			err = this_.scriptSet(option.Name, option)
+			if err != nil {
+				util.Logger.Error("invoke data init set error value error", zap.Any("name", option.Name), zap.Any("error", option), zap.Any("error", err))
+				return
+			}
 		}
 	}
 
-	for _, one := range this_.app.FuncList {
+	for _, one := range this_.app.GetFuncList() {
 		err = this_.scriptSet(one.Name, func(args ...interface{}) {
 			util.Logger.Debug("func "+one.Name+" run start", zap.Any("func", one))
 		})

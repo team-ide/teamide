@@ -53,21 +53,21 @@ type Invoker struct {
 
 func (this_ *Invoker) init() (err error) {
 	// 初始化服务
-	for _, one := range this_.app.ConfigRedisList {
+	for _, one := range this_.app.GetConfigRedisList() {
 		_, err = this_.GetRedisServiceByName(one.Name)
 		if err != nil {
 			util.Logger.Error("invoker init get redis service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
-	for _, one := range this_.app.ConfigDbList {
+	for _, one := range this_.app.GetConfigDbList() {
 		_, err = this_.GetDbServiceByName(one.Name)
 		if err != nil {
 			util.Logger.Error("invoker init get db service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
-	for _, one := range this_.app.ConfigZkList {
+	for _, one := range this_.app.GetConfigZkList() {
 		_, err = this_.GetZkServiceByName(one.Name)
 		if err != nil {
 			util.Logger.Error("invoker init get zk service error", zap.Any("name", one.Name), zap.Any("error", err))
@@ -246,6 +246,7 @@ func (this_ *FuncInvoke) start() {
 }
 
 func (this_ *FuncInvoke) end(err error) {
+	this_.err = err
 	this_.endTime = time.Now()
 }
 

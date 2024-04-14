@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"teamide/pkg/maker/modelers"
 )
 
 type api struct {
@@ -86,7 +87,10 @@ func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	res = service.app
+	context := make(map[string]interface{})
+	context["app"] = service.app
+	context["types"] = modelers.GetTypes()
+	res = context
 	return
 }
 
