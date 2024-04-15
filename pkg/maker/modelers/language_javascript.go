@@ -31,3 +31,15 @@ func (this_ *LanguageJavascriptModel) GetConstantName() string {
 	}
 	return "constant.js"
 }
+
+func init() {
+	addDocTemplate(&docTemplate{
+		Name:    TypeLanguageJavascriptName,
+		Comment: "语言-JavaScript",
+		Fields: []*docTemplateField{
+			{Name: "dir", Comment: "目录"},
+			{Name: "constantDir", Comment: "常量文件目录"},
+			{Name: "constantName", Comment: "常量文件名称"},
+		},
+	})
+}

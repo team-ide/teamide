@@ -1,7 +1,7 @@
 package modelers
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
@@ -25,12 +25,12 @@ func Load(dir string) (app *Application) {
 	}
 
 	for _, modelType := range types {
-		appendModelByType(app.Dir, app, modelType)
+		appendModelByType(nil, app.Dir, app, modelType)
 	}
 	return
 }
 
-func appendModelByType(dir string, app *Application, modelType *Type) {
+func appendModelByType(parent *Element, dir string, app *Application, modelType *Type) {
 	baseDir := dir
 	if modelType.Dir != "" {
 		baseDir += modelType.Dir
@@ -38,24 +38,31 @@ func appendModelByType(dir string, app *Application, modelType *Type) {
 	if !strings.HasSuffix(baseDir, "/") {
 		baseDir += "/"
 	}
+	typeElement := app.appendType(parent, modelType)
 	if modelType.Children != nil {
 		for _, one := range modelType.Children {
-			appendModelByType(baseDir, app, one)
+			appendModelByType(typeElement, baseDir, app, one)
 		}
 	} else {
-		loadFiles(baseDir, func(fileName string, fullName string) {
-			appendModel(baseDir, app, modelType, fileName, fullName)
+		loadFiles(typeElement, app, modelType, baseDir, func(parent *Element, app *Application, fileName string, fullName string) {
+			appendModel(parent, baseDir, app, modelType, fileName, fullName)
 		})
 	}
 	return
 }
 
-func appendModel(baseDir string, app *Application, modelType *Type, fileName string, fullName string) {
+var (
+	packInfoFileName = "pack-info"
+)
+
+func appendModel(parent *Element, baseDir string, app *Application, modelType *Type, fileName string, fullName string) {
 	if !(strings.HasSuffix(fileName, ".yml") || strings.HasSuffix(fileName, ".yaml")) {
 		return
 	}
-	if modelType.FileName != "" {
-		if !strings.HasPrefix(fileName, modelType.FileName+".") {
+	fileName = strings.TrimSuffix(fileName, ".yml")
+	fileName = strings.TrimSuffix(fileName, ".yaml")
+	if modelType.FileName != "" && fileName != packInfoFileName {
+		if fileName != modelType.FileName {
 			return
 		}
 	}
@@ -66,8 +73,6 @@ func appendModel(baseDir string, app *Application, modelType *Type, fileName str
 	name := strings.TrimPrefix(fullName, baseDir)
 	name = strings.TrimSuffix(name, ".yml")
 	name = strings.TrimSuffix(name, ".yaml")
-	fmt.Println("path:", path)
-	fmt.Println("name:", name)
 	var err error
 	defer func() {
 		if err != nil {
@@ -83,26 +88,37 @@ func appendModel(baseDir string, app *Application, modelType *Type, fileName str
 		util.Logger.Error("appendModelByType ReadFile error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Error(err))
 		return
 	}
-	one, err := modelType.toModel(name, string(bs))
-	if err != nil {
-		util.Logger.Error("appendModelByType ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
-		return
-	}
-	err = modelType.append(app, one)
-	if err != nil {
-		util.Logger.Error("appendModelByType Append error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("model", one), zap.Error(err))
-		return
+	if fileName == packInfoFileName {
+		parent.Pack = &Pack{}
+		err = json.Unmarshal(bs, parent.Pack)
+		if err != nil {
+			util.Logger.Error("appendModelByType toPack error", zap.Any("path", path), zap.Error(err))
+			return
+		}
+	} else {
+		var one interface{}
+		one, err = modelType.toModel(name, string(bs))
+		if err != nil {
+			util.Logger.Error("appendModelByType ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
+			return
+		}
+		err = app.appendModel(parent, modelType, fileName, name, one)
+		if err != nil {
+			util.Logger.Error("appendModelByType Append error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("model", one), zap.Error(err))
+			return
+		}
 	}
 	return
 }
-func loadFiles(folder string, onLoad func(name string, pathname string)) {
+func loadFiles(parent *Element, app *Application, modelType *Type, folder string, onLoad func(parent *Element, app *Application, name string, pathname string)) {
 	files, _ := os.ReadDir(folder)
 	for _, file := range files {
 		if file.IsDir() {
-			loadFiles(folder+file.Name()+"/", onLoad)
+			packElement := app.appendPack(parent, modelType, file.Name())
+			loadFiles(packElement, app, modelType, folder+file.Name()+"/", onLoad)
 		} else {
 			if onLoad != nil {
-				onLoad(file.Name(), folder+file.Name())
+				onLoad(parent, app, file.Name(), folder+file.Name())
 			}
 		}
 	}

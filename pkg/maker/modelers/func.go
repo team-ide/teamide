@@ -9,13 +9,9 @@ type FuncModel struct {
 	ReturnType string      `json:"returnType,omitempty"` // 返回类型
 }
 
-var (
-	docTemplateFuncName = "func"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateFuncName,
+		Name:    TypeFuncName,
 		Comment: "函数",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "函数名称"},

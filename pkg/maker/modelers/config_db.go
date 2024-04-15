@@ -16,18 +16,14 @@ type ConfigDbModel struct {
 
 	Schema       string `json:"schema,omitempty"`
 	Sid          string `json:"sid,omitempty"`
-	MaxIdleConns int    `json:"maxIdleConns,omitempty"`
-	MaxOpenConns int    `json:"maxOpenConns,omitempty"`
+	MaxIdleConn  int    `json:"maxIdleConn,omitempty"`
+	MaxOpenConn  int    `json:"maxOpenConn,omitempty"`
 	DatabasePath string `json:"databasePath,omitempty"`
 }
 
-var (
-	docTemplateConfigDbName = "configDb"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateConfigDbName,
+		Name:    TypeConfigDbName,
 		Comment: "Redis配置",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "配置名称"},
@@ -44,8 +40,8 @@ func init() {
 			{Name: "odbcDialectName", Comment: ""},
 			{Name: "schema", Comment: ""},
 			{Name: "sid", Comment: ""},
-			{Name: "maxIdleConns", Comment: ""},
-			{Name: "maxOpenConns", Comment: ""},
+			{Name: "maxIdleConn", Comment: ""},
+			{Name: "maxOpenConn", Comment: ""},
 			{Name: "databasePath", Comment: ""},
 		},
 	})

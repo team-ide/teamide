@@ -10,13 +10,9 @@ type ConfigMongodbModel struct {
 
 }
 
-var (
-	docTemplateConfigMongodbName = "configMongodb"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateConfigMongodbName,
+		Name:    TypeConfigMongodbName,
 		Comment: "Mongodb配置",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "配置名称"},

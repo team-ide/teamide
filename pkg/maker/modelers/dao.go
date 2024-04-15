@@ -9,13 +9,9 @@ type DaoModel struct {
 	Return  string        `json:"return,omitempty"`  // 返回
 }
 
-var (
-	docTemplateDaoName = "dao"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateDaoName,
+		Name:    TypeDaoName,
 		Comment: "数据层，处理数据库等落地数据",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "数据层名称"},

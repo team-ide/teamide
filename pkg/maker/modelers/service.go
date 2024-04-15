@@ -17,13 +17,12 @@ type ArgModel struct {
 }
 
 var (
-	docTemplateServiceName = "service"
-	docTemplateArgName     = "arg"
+	docTemplateArgName = "arg"
 )
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateServiceName,
+		Name:    TypeServiceName,
 		Comment: "服务文件，该文件用于动作处理，如数据库、redis、文件等地方",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "结构体名称"},

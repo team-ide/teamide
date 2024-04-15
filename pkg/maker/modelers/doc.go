@@ -3,6 +3,7 @@ package modelers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -12,30 +13,30 @@ import (
 )
 
 type docTemplate struct {
-	Name           string `json:"name"`
-	Inline         string `json:"inline"`
+	Name           string `json:"name,omitempty"`
+	Inline         string `json:"inline,omitempty"`
 	inlineNewModel func() interface{}
-	Abbreviation   string              `json:"abbreviation"`
-	Comment        string              `json:"comment"`
-	Fields         []*docTemplateField `json:"fields"`
+	Abbreviation   string              `json:"abbreviation,omitempty"`
+	Comment        string              `json:"comment,omitempty"`
+	Fields         []*docTemplateField `json:"fields,omitempty"`
 	newModel       func() interface{}
 	newModels      func() interface{}
 	appendModel    func(values interface{}, value interface{}) (res interface{})
 }
 
 type docTemplateField struct {
-	Name       string            `json:"name"`
-	Comment    string            `json:"comment"`
-	IsList     bool              `json:"isList"`
-	StructName string            `json:"structName"`
-	Default    interface{}       `json:"default"` // 默认值
-	Sons       []*docTemplateSon `json:"sons"`
+	Name       string            `json:"name,omitempty"`
+	Comment    string            `json:"comment,omitempty"`
+	IsList     bool              `json:"isList,omitempty"`
+	StructName string            `json:"structName,omitempty"`
+	Default    interface{}       `json:"default,omitempty"` // 默认值
+	Sons       []*docTemplateSon `json:"sons,omitempty"`
 }
 
 type docTemplateSon struct {
-	MatchKey   string      `json:"matchKey"`
-	MatchValue interface{} `json:"matchValue"`
-	StructName string      `json:"structName"`
+	MatchKey   string      `json:"matchKey,omitempty"`
+	MatchValue interface{} `json:"matchValue,omitempty"`
+	StructName string      `json:"structName,omitempty"`
 	newModel   func() interface{}
 }
 
@@ -48,6 +49,17 @@ var (
 	docTemplateCache     = map[string]*docTemplate{}
 	docTemplateCacheLock = &sync.Mutex{}
 )
+
+func GetDocTemplateCache() (res map[string]*docTemplate) {
+	docTemplateCacheLock.Lock()
+	defer docTemplateCacheLock.Unlock()
+
+	res = map[string]*docTemplate{}
+	for k, v := range docTemplateCache {
+		res[k] = v
+	}
+	return
+}
 
 func addDocTemplate(template *docTemplate) {
 	docTemplateCacheLock.Lock()
@@ -430,7 +442,19 @@ func setFieldValue(data interface{}, name string, value interface{}) {
 		}
 	}
 	if !canNotOut(value) {
-		fV.Set(reflect.ValueOf(value))
+		fieldType := fV.Type().String()
+		valueType := reflect.TypeOf(value).String()
+		if fieldType == valueType {
+			fV.Set(reflect.ValueOf(value))
+		} else {
+			if fieldType == "string" {
+				fV.Set(reflect.ValueOf(util.GetStringValue(value)))
+			} else {
+				fmt.Println("field type:", fieldType)
+				fmt.Println("value type:", valueType)
+				fV.Set(reflect.ValueOf(value))
+			}
+		}
 	}
 	return
 }

@@ -19,7 +19,7 @@ func TestCoder(t *testing.T) {
 	applicationCoder := coders.NewApplicationCoder(app, coderFactory)
 
 	println("---------constant list start---------")
-	for _, one := range app.Constant {
+	for _, one := range app.GetConstantList() {
 		println("---------constant [" + one.Name + "] start---------")
 		code, err := applicationCoder.GenConstant(one)
 		if err != nil {

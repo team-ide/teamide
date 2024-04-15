@@ -20,13 +20,12 @@ type StructField struct {
 }
 
 var (
-	docTemplateStructName      = "struct"
 	docTemplateStructFieldName = "struct_field"
 )
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateStructName,
+		Name:    TypeStruct.Name,
 		Comment: "结构体文件，该文件用于入参、出参、函数调用、数据存储等地方",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "结构体名称"},

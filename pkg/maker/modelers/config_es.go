@@ -1,6 +1,6 @@
 package modelers
 
-type ConfigKafkaModel struct {
+type ConfigEsModel struct {
 	Name     string `json:"name,omitempty"`     // 名称，同一个应用中唯一
 	Comment  string `json:"comment,omitempty"`  // 说明
 	Note     string `json:"note,omitempty"`     // 注释
@@ -12,8 +12,8 @@ type ConfigKafkaModel struct {
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    TypeConfigKafkaName,
-		Comment: "Kafka配置",
+		Name:    TypeConfigElasticsearchName,
+		Comment: "Elasticsearch配置",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "配置名称"},
 			{Name: "comment", Comment: "配置说明"},

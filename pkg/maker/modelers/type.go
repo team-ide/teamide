@@ -3,7 +3,6 @@ package modelers
 import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
 )
 
 type Type struct {
@@ -15,79 +14,76 @@ type Type struct {
 
 	toModel func(name, text string) (model interface{}, err error)
 	toText  func(model interface{}) (text string, err error)
-	append  func(app *Application, model interface{}) (err error)
 }
 
 var (
 	Types []*Type
-)
 
-func init() {
-	AppendType(&Type{
-		Name:    "constant",
+	TypeConstantName = "constant"
+
+	TypeConstant = &Type{
+		Name:    TypeConstantName,
 		Comment: "常量",
 		Dir:     "constant",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConstantModel{}
-			err = yaml.Unmarshal([]byte(text), model)
+			err = toModel(text, TypeConstantName, model)
 			if err != nil {
-				util.Logger.Error("yaml to constant error", zap.Any("yaml", text), zap.Error(err))
+				util.Logger.Error("text to constant model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
 			model.(*ConstantModel).Name = name
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			bytes, err := yaml.Marshal(model)
+			text, err = toText(model, TypeConstantName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
 			if err != nil {
-				util.Logger.Error("constants to yaml error", zap.Any("constants", model), zap.Error(err))
+				util.Logger.Error("constant model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
-			text = string(bytes)
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendConstant(model.(*ConstantModel))
-			return
-		},
-	})
+	}
 
-	AppendType(&Type{
-		Name:    "error",
+	TypeErrorName = "error"
+	TypeError     = &Type{
+		Name:    TypeErrorName,
 		Comment: "错误码",
 		Dir:     "error",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ErrorModel{}
-			err = yaml.Unmarshal([]byte(text), model)
+			err = toModel(text, TypeErrorName, model)
 			if err != nil {
-				util.Logger.Error("yaml to error error", zap.Any("text", text), zap.Error(err))
+				util.Logger.Error("text to error model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
 			model.(*ErrorModel).Name = name
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			bytes, err := yaml.Marshal(model)
+			text, err = toText(model, TypeErrorName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
 			if err != nil {
-				util.Logger.Error("error to yaml error", zap.Any("model", model), zap.Error(err))
+				util.Logger.Error("error model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
-			text = string(bytes)
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendError(model.(*ErrorModel))
-			return
-		},
-	})
+	}
 
-	AppendType(&Type{
-		Name:    "struct",
+	TypeStructName = "struct"
+	TypeStruct     = &Type{
+		Name:    TypeStructName,
 		Comment: "结构体",
 		Dir:     "struct",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &StructModel{}
-			err = toModel(text, docTemplateStructName, model)
+			err = toModel(text, TypeStructName, model)
 			if err != nil {
 				util.Logger.Error("text to struct model error", zap.Any("text", text), zap.Error(err))
 				return
@@ -96,7 +92,7 @@ func init() {
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, docTemplateStructName, &docOptions{
+			text, err = toText(model, TypeStructName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
@@ -106,19 +102,16 @@ func init() {
 			}
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendStruct(model.(*StructModel))
-			return
-		},
-	})
+	}
 
-	AppendType(&Type{
-		Name:    "service",
+	TypeServiceName = "service"
+	TypeService     = &Type{
+		Name:    TypeServiceName,
 		Comment: "服务",
 		Dir:     "service",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ServiceModel{}
-			err = toModel(text, docTemplateServiceName, model)
+			err = toModel(text, TypeServiceName, model)
 			if err != nil {
 				util.Logger.Error("text to service model error", zap.Any("text", text), zap.Error(err))
 				return
@@ -127,7 +120,7 @@ func init() {
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, docTemplateServiceName, &docOptions{
+			text, err = toText(model, TypeServiceName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
@@ -137,19 +130,16 @@ func init() {
 			}
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendService(model.(*ServiceModel))
-			return
-		},
-	})
+	}
 
-	AppendType(&Type{
-		Name:    "dao",
+	TypeDaoName = "dao"
+	TypeDao     = &Type{
+		Name:    TypeDaoName,
 		Comment: "数据层",
 		Dir:     "dao",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &DaoModel{}
-			err = toModel(text, docTemplateDaoName, model)
+			err = toModel(text, TypeDaoName, model)
 			if err != nil {
 				util.Logger.Error("text to dao model error", zap.Any("text", text), zap.Error(err))
 				return
@@ -158,7 +148,7 @@ func init() {
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, docTemplateDaoName, &docOptions{
+			text, err = toText(model, TypeDaoName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
@@ -168,19 +158,16 @@ func init() {
 			}
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendDao(model.(*DaoModel))
-			return
-		},
-	})
+	}
 
-	AppendType(&Type{
-		Name:    "func",
+	TypeFuncName = "func"
+	TypeFunc     = &Type{
+		Name:    TypeFuncName,
 		Comment: "函数",
 		Dir:     "func",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &FuncModel{}
-			err = toModel(text, docTemplateFuncName, model)
+			err = toModel(text, TypeFuncName, model)
 			if err != nil {
 				util.Logger.Error("text to func model error", zap.Any("text", text), zap.Error(err))
 				return
@@ -189,7 +176,7 @@ func init() {
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, docTemplateFuncName, &docOptions{
+			text, err = toText(model, TypeFuncName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
@@ -199,11 +186,217 @@ func init() {
 			}
 			return
 		},
-		append: func(app *Application, model interface{}) (err error) {
-			err = app.AppendFunc(model.(*FuncModel))
+	}
+
+	TypeConfigDbName = "config/database"
+	TypeConfigDb     = &Type{
+		Name:    TypeConfigDbName,
+		Comment: "Database",
+		Dir:     "database",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigDbModel{}
+			err = toModel(text, TypeConfigDbName, model)
+			if err != nil {
+				util.Logger.Error("text to config database model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigDbModel).Name = name
 			return
 		},
-	})
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigDbName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config database model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeConfigRedisName = "config/redis"
+	TypeConfigRedis     = &Type{
+		Name:    TypeConfigRedisName,
+		Comment: "Redis",
+		Dir:     "redis",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigRedisModel{}
+			err = toModel(text, TypeConfigRedisName, model)
+			if err != nil {
+				util.Logger.Error("text to config redis model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigRedisModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigRedisName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config redis model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeConfigZkName = "config/zookeeper"
+	TypeConfigZk     = &Type{
+		Name:    TypeConfigZkName,
+		Comment: "Zookeeper",
+		Dir:     "zookeeper",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigZkModel{}
+			err = toModel(text, TypeConfigZkName, model)
+			if err != nil {
+				util.Logger.Error("text to config zookeeper model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigZkModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigZkName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config zookeeper model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeConfigKafkaName = "config/kafka"
+	TypeConfigKafka     = &Type{
+		Name:    TypeConfigKafkaName,
+		Comment: "Kafka",
+		Dir:     "kafka",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigKafkaModel{}
+			err = toModel(text, TypeConfigKafkaName, model)
+			if err != nil {
+				util.Logger.Error("text to config kafka model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigKafkaModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigKafkaName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config kafka model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeConfigMongodbName = "config/mongodb"
+	TypeConfigMongodb     = &Type{
+		Name:    TypeConfigMongodbName,
+		Comment: "Mongodb",
+		Dir:     "mongodb",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigMongodbModel{}
+			err = toModel(text, TypeConfigMongodbName, model)
+			if err != nil {
+				util.Logger.Error("text to config mongodb model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigMongodbModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigMongodbName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config mongodb model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeConfigElasticsearchName = "config/elasticsearch"
+	TypeConfigElasticsearch     = &Type{
+		Name:    TypeConfigElasticsearchName,
+		Comment: "Elastic Search",
+		Dir:     "elasticsearch",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ConfigMongodbModel{}
+			err = toModel(text, TypeConfigElasticsearchName, model)
+			if err != nil {
+				util.Logger.Error("text to config elasticsearch model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ConfigMongodbModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeConfigElasticsearchName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("config elasticsearch model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeLanguageJavascriptName = "language/javascript"
+	TypeLanguageJavascript     = &Type{
+		Name:     TypeLanguageJavascriptName,
+		Comment:  "JavaScript",
+		Dir:      "",
+		FileName: "javascript",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &LanguageJavascriptModel{}
+			err = toModel(text, TypeLanguageJavascriptName, model)
+			if err != nil {
+				util.Logger.Error("text to language javascript model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeLanguageJavascriptName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("language javascript model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+)
+
+func init() {
+	AppendType(TypeConstant)
+
+	AppendType(TypeError)
+
+	AppendType(TypeStruct)
+
+	AppendType(TypeDao)
+
+	AppendType(TypeService)
+
+	AppendType(TypeFunc)
 
 	AppendType(&Type{
 		Name:    "config",
@@ -211,149 +404,12 @@ func init() {
 		Dir:     "config",
 		Children: []*Type{
 
-			{
-				Name:    "configRedis",
-				Comment: "Redis",
-				Dir:     "redis",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &ConfigRedisModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to config redis error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					model.(*ConfigRedisModel).Name = name
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("config redis to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					err = app.AppendConfigRedis(model.(*ConfigRedisModel))
-					return
-				},
-			},
-
-			{
-				Name:    "configDb",
-				Comment: "Database",
-				Dir:     "database",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &ConfigDbModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to config db error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					model.(*ConfigDbModel).Name = name
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("config db to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					err = app.AppendConfigDb(model.(*ConfigDbModel))
-					return
-				},
-			},
-
-			{
-				Name:    "configZk",
-				Comment: "Zookeeper",
-				Dir:     "zookeeper",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &ConfigZkModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to config zk error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					model.(*ConfigZkModel).Name = name
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("config zk to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					err = app.AppendConfigZk(model.(*ConfigZkModel))
-					return
-				},
-			},
-
-			{
-				Name:    "configKafka",
-				Comment: "Kafka",
-				Dir:     "kafka",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &ConfigKafkaModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to config kafka error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					model.(*ConfigKafkaModel).Name = name
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("config kafka to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					err = app.AppendConfigKafka(model.(*ConfigKafkaModel))
-					return
-				},
-			},
-			{
-				Name:    "configMongodb",
-				Comment: "Mongodb",
-				Dir:     "mongodb",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &ConfigMongodbModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to config mongodb error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					model.(*ConfigMongodbModel).Name = name
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("config mongodb to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					err = app.AppendConfigMongodb(model.(*ConfigMongodbModel))
-					return
-				},
-			},
+			TypeConfigDb,
+			TypeConfigRedis,
+			TypeConfigZk,
+			TypeConfigKafka,
+			TypeConfigMongodb,
+			TypeConfigElasticsearch,
 		},
 	})
 
@@ -362,34 +418,7 @@ func init() {
 		Comment: "导出语言",
 		Dir:     "language",
 		Children: []*Type{
-			{
-				Name:     "languageJavascript",
-				Comment:  "JavaScript",
-				Dir:      "",
-				FileName: "javascript",
-				toModel: func(name, text string) (model interface{}, err error) {
-					model = &LanguageJavascriptModel{}
-					err = yaml.Unmarshal([]byte(text), model)
-					if err != nil {
-						util.Logger.Error("yaml to language javascript error", zap.Any("text", text), zap.Error(err))
-						return
-					}
-					return
-				},
-				toText: func(model interface{}) (text string, err error) {
-					bytes, err := yaml.Marshal(model)
-					if err != nil {
-						util.Logger.Error("language javascript to yaml error", zap.Any("model", model), zap.Error(err))
-						return
-					}
-					text = string(bytes)
-					return
-				},
-				append: func(app *Application, model interface{}) (err error) {
-					app.SetLanguageJavascript(model.(*LanguageJavascriptModel))
-					return
-				},
-			},
+			TypeLanguageJavascript,
 		},
 	})
 }

@@ -10,13 +10,9 @@ type ConfigZkModel struct {
 
 }
 
-var (
-	docTemplateConfigZkName = "configZk"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateConfigZkName,
+		Name:    TypeConfigZkName,
 		Comment: "Zookeeper配置",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "配置名称"},

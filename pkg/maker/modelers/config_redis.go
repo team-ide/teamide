@@ -11,13 +11,9 @@ type ConfigRedisModel struct {
 
 }
 
-var (
-	docTemplateConfigRedisName = "configRedis"
-)
-
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    docTemplateConfigRedisName,
+		Name:    TypeConfigRedisName,
 		Comment: "Redis配置",
 		Fields: []*docTemplateField{
 			{Name: "name", Comment: "配置名称"},
