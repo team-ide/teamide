@@ -1,7 +1,7 @@
 package modelers
 
 type ErrorModel struct {
-	Name    string              `json:"name,omitempty"`    // 字段名称，同一个结构体中唯一
+	ElementNode
 	Comment string              `json:"comment,omitempty"` // 说明
 	Note    string              `json:"note,omitempty"`    // 注释
 	Options []*ErrorOptionModel `json:"options,omitempty"`
@@ -24,7 +24,6 @@ func init() {
 		Name:    TypeErrorName,
 		Comment: "异常配置",
 		Fields: []*docTemplateField{
-			{Name: "name", Comment: "配置名称"},
 			{Name: "comment", Comment: "配置说明"},
 			{Name: "note", Comment: "配置源码注释"},
 			{Name: "options", Comment: "异常项", IsList: true, StructName: docTemplateErrorOptionName},

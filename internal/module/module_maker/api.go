@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	"teamide/internal/context"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 	"teamide/pkg/maker/modelers"
@@ -30,7 +31,8 @@ var (
 	getList      = base.AppendPower(&base.PowerAction{Action: "getList", Text: "getList", ShouldLogin: true, StandAlone: true, Parent: Power})
 	insert       = base.AppendPower(&base.PowerAction{Action: "insert", Text: "insert", ShouldLogin: true, StandAlone: true, Parent: Power})
 	save         = base.AppendPower(&base.PowerAction{Action: "save", Text: "save", ShouldLogin: true, StandAlone: true, Parent: Power})
-	del          = base.AppendPower(&base.PowerAction{Action: "delete", Text: "delete", ShouldLogin: true, StandAlone: true, Parent: Power})
+	remove       = base.AppendPower(&base.PowerAction{Action: "remove", Text: "remove", ShouldLogin: true, StandAlone: true, Parent: Power})
+	rename       = base.AppendPower(&base.PowerAction{Action: "rename", Text: "rename", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower   = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
@@ -40,7 +42,8 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: getList, Do: this_.getList})
 	apis = append(apis, &base.ApiWorker{Power: insert, Do: this_.insert})
 	apis = append(apis, &base.ApiWorker{Power: save, Do: this_.save})
-	apis = append(apis, &base.ApiWorker{Power: del, Do: this_.delete})
+	apis = append(apis, &base.ApiWorker{Power: remove, Do: this_.remove})
+	apis = append(apis, &base.ApiWorker{Power: rename, Do: this_.rename})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -90,10 +93,13 @@ func (this_ *api) getService(requestBean *base.RequestBean, c *gin.Context) (res
 }
 
 type Request struct {
-	Key       string      `json:"key"`
-	ModelType string      `json:"modelType"`
-	ModelName string      `json:"modelName"`
-	Model     interface{} `json:"model"`
+	Key          string      `json:"key"`
+	ModelType    string      `json:"modelType"`
+	ModelName    string      `json:"modelName"`
+	OldModelName string      `json:"oldModelName"`
+	NewModelName string      `json:"newModelName"`
+	Model        interface{} `json:"model"`
+	IsPack       bool        `json:"isPack"`
 }
 
 func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -101,12 +107,14 @@ func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res in
 	if err != nil {
 		return
 	}
-	context := make(map[string]interface{})
-	context["app"] = service.app
-	context["types"] = modelers.GetTypes()
-	context["docTemplateCache"] = modelers.GetDocTemplateCache()
+	data := make(map[string]interface{})
+	data["app"] = service.app
+	data["dir"] = service.app.GetDir()
+	data["typeCache"] = modelers.GetTypeCache()
+	data["valueTypes"] = modelers.GetValueTypes()
+	//context["docTemplateCache"] = modelers.GetDocTemplateCache()
 
-	res = context
+	res = data
 	return
 }
 
@@ -155,8 +163,22 @@ func (this_ *api) insert(requestBean *base.RequestBean, c *gin.Context) (res int
 		err = errors.New("参数丢失")
 		return
 	}
+	modelType := modelers.GetModelType(request.ModelType)
+	if modelType == nil {
+		err = errors.New("model type [" + request.ModelType + "] is error")
+		return
+	}
 
-	err = service.app.Save(request.ModelType, request.ModelName, request.Model, true)
+	model, element, err := service.app.Save(modelType, request.ModelName, request.Model, request.IsPack, true)
+	if err != nil {
+		return
+	}
+	listen := context.NewListenEvent("maker-insert", map[string]interface{}{
+		"modelType": modelType,
+		"element":   element,
+		"model":     model,
+	})
+	context.CallClientTabKeyEvent(requestBean.ClientTabKey, listen)
 	return
 }
 
@@ -175,12 +197,60 @@ func (this_ *api) save(requestBean *base.RequestBean, c *gin.Context) (res inter
 		err = errors.New("参数丢失")
 		return
 	}
+	modelType := modelers.GetModelType(request.ModelType)
+	if modelType == nil {
+		err = errors.New("model type [" + request.ModelType + "] is error")
+		return
+	}
 
-	err = service.app.Save(request.ModelType, request.ModelName, request.Model, false)
+	model, element, err := service.app.Save(modelType, request.ModelName, request.Model, request.IsPack, false)
+	if err != nil {
+		return
+	}
+	listen := context.NewListenEvent("maker-save", map[string]interface{}{
+		"modelType": modelType,
+		"element":   element,
+		"model":     model,
+	})
+	context.CallClientTabKeyEvent(requestBean.ClientTabKey, listen)
 	return
 }
 
-func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+func (this_ *api) rename(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	service, err := this_.getService(requestBean, c)
+	if err != nil {
+		return
+	}
+
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if request.ModelType == "" || request.OldModelName == "" || request.NewModelName == "" {
+		err = errors.New("参数丢失")
+		return
+	}
+	modelType := modelers.GetModelType(request.ModelType)
+	if modelType == nil {
+		err = errors.New("model type [" + request.ModelType + "] is error")
+		return
+	}
+
+	oldElement, newElement, err := service.app.Rename(modelType, request.OldModelName, request.NewModelName, request.IsPack)
+	if err != nil {
+		return
+	}
+	listen := context.NewListenEvent("maker-rename", map[string]interface{}{
+		"modelType":  modelType,
+		"oldElement": oldElement,
+		"newElement": newElement,
+	})
+	context.CallClientTabKeyEvent(requestBean.ClientTabKey, listen)
+	return
+}
+
+func (this_ *api) remove(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 	service, err := this_.getService(requestBean, c)
 	if err != nil {
 		return
@@ -195,8 +265,21 @@ func (this_ *api) delete(requestBean *base.RequestBean, c *gin.Context) (res int
 		err = errors.New("参数丢失")
 		return
 	}
+	modelType := modelers.GetModelType(request.ModelType)
+	if modelType == nil {
+		err = errors.New("model type [" + request.ModelType + "] is error")
+		return
+	}
 
-	err = service.app.Remove(request.ModelType, request.ModelName)
+	element, err := service.app.Remove(modelType, request.ModelName, request.IsPack)
+	if err != nil {
+		return
+	}
+	listen := context.NewListenEvent("maker-remove", map[string]interface{}{
+		"modelType": modelType,
+		"element":   element,
+	})
+	context.CallClientTabKeyEvent(requestBean.ClientTabKey, listen)
 	return
 }
 

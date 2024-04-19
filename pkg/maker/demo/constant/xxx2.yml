@@ -1,0 +1,12 @@
+# 常量配置
+note: adasd # 配置源码注释
+# 配置项
+options:
+    # 常量项配置
+    - name: xxxx # 配置名称
+      type: string # 类型
+      value: 1 # 值
+    # 常量项配置
+    - name: xxxxx # 配置名称
+      type: string # 类型
+      value: xxx # 值

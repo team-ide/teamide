@@ -36,7 +36,7 @@ type ValueType struct {
 	IsNumber bool         `json:"isNumber,omitempty"`
 	Match    []string     `json:"match,omitempty"`
 	Struct   *StructModel `json:"struct,omitempty"`
-	isBase   bool         `json:"isBase,omitempty"`
+	isBase   bool
 }
 
 func (this_ *ValueType) IsBase() bool {
@@ -136,4 +136,8 @@ func init() {
 	ValueTypes = append(ValueTypes, ValueTypeInt32)
 	ValueTypes = append(ValueTypes, ValueTypeFloat32)
 	ValueTypes = append(ValueTypes, ValueTypeMap)
+}
+
+func GetValueTypes() []*ValueType {
+	return ValueTypes
 }

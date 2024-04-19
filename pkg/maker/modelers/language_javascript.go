@@ -3,6 +3,7 @@ package modelers
 import "strings"
 
 type LanguageJavascriptModel struct {
+	ElementNode
 	Dir          string `json:"dir,omitempty"`          // 常量文件
 	ConstantDir  string `json:"constantDir,omitempty"`  // 常量文件
 	ConstantName string `json:"constantName,omitempty"` // 常量文件

@@ -1,4 +1,21 @@
+# 常量配置
+# 配置项
 options:
-  - name: USER_REDIS_EXPIRE
-    type: i64
-    value: 60
+    # 常量项配置
+    - name: USER_REDIS_EXPIRE # 配置名称
+      type: i64 # 类型
+      value: 60 # 值
+    # 常量项配置
+    - name: asdasd # 配置名称
+      type: string # 类型
+      value: sdsd # 值
+    # 常量项配置
+    - name: asd # 配置名称
+      type: string # 类型
+      value: asd # 值
+    # 常量项配置
+    - name: asdas # 配置名称
+      type: string # 类型
+    # 常量项配置
+    - name: ad # 配置名称
+      type: string # 类型

@@ -1,34 +1,48 @@
+# 异常配置
+note: sdasdasd # 配置源码注释
+# 异常项
 options:
-  - name: USER_IS_NULL
-    code: 20001
-    msg: 用户信息不能为空！
-  - name: USER_NAME_IS_EMPTY
-    code: 20002
-    msg: 用户名称不能为空！
-  - name: USER_ACCOUNT_IS_EMPTY
-    code: 20003
-    msg: 登录账号不能为空！
-  - name: USER_PASSWORD_IS_EMPTY
-    code: 20004
-    msg: 登录密码不能为空！
-  - name: USER_ACCOUNT_ALREADY_EXIST
-    code: 20005
-    msg: 登录账号已存在！
-  - name: USER_LOGIN_ERROR
-    code: 20006
-    msg: 登录账号或密码错误！
-  - name: USER_ID_IS_EMPTY
-    code: 20007
-    msg: 用户ID不能为空！
-  - name: USER_OLD_PASSWORD_IS_EMPTY
-    code: 20008
-    msg: 原密码不能为空！
-  - name: USER_NEW_PASSWORD_IS_EMPTY
-    code: 20009
-    msg: 新密码不能为空！
-  - name: USER_IS_NOT_EXIST
-    code: 20009
-    msg: 用户不存在！
-  - name: USER_OLD_PASSWORD_IS_ERROR
-    code: 20009
-    msg: 原密码验证失败！
+    # 异常项配置
+    - name: USER_IS_NULL # 配置名称
+      code: 20001 # 错误码
+      msg: 用户信息不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_NAME_IS_EMPTY # 配置名称
+      code: 20002 # 错误码
+      msg: 用户名称不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_ACCOUNT_IS_EMPTY # 配置名称
+      code: 20003 # 错误码
+      msg: 登录账号不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_PASSWORD_IS_EMPTY # 配置名称
+      code: 20004 # 错误码
+      msg: 登录密码不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_ACCOUNT_ALREADY_EXIST # 配置名称
+      code: 20005 # 错误码
+      msg: 登录账号已存在！ # 错误信息
+    # 异常项配置
+    - name: USER_LOGIN_ERROR # 配置名称
+      code: 20006 # 错误码
+      msg: 登录账号或密码错误！ # 错误信息
+    # 异常项配置
+    - name: USER_ID_IS_EMPTY # 配置名称
+      code: 20007 # 错误码
+      msg: 用户ID不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_OLD_PASSWORD_IS_EMPTY # 配置名称
+      code: 20008 # 错误码
+      msg: 原密码不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_NEW_PASSWORD_IS_EMPTY # 配置名称
+      code: 20009 # 错误码
+      msg: 新密码不能为空！ # 错误信息
+    # 异常项配置
+    - name: USER_IS_NOT_EXIST # 配置名称
+      code: 20009 # 错误码
+      msg: 用户不存在！ # 错误信息
+    # 异常项配置
+    - name: USER_OLD_PASSWORD_IS_ERROR # 配置名称
+      code: 20009 # 错误码
+      msg: 原密码验证失败！ # 错误信息

@@ -8,8 +8,7 @@ import (
 type Type struct {
 	Name     string  `json:"name"`
 	Comment  string  `json:"comment"`
-	Dir      string  `json:"dir"`
-	FileName string  `json:"fileName"`
+	IsFile   bool    `json:"isFile"`
 	Children []*Type `json:"children"`
 
 	toModel func(name, text string) (model interface{}, err error)
@@ -24,7 +23,6 @@ var (
 	TypeConstant = &Type{
 		Name:    TypeConstantName,
 		Comment: "常量",
-		Dir:     "constant",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConstantModel{}
 			err = toModel(text, TypeConstantName, model)
@@ -52,7 +50,6 @@ var (
 	TypeError     = &Type{
 		Name:    TypeErrorName,
 		Comment: "错误码",
-		Dir:     "error",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ErrorModel{}
 			err = toModel(text, TypeErrorName, model)
@@ -80,7 +77,6 @@ var (
 	TypeStruct     = &Type{
 		Name:    TypeStructName,
 		Comment: "结构体",
-		Dir:     "struct",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &StructModel{}
 			err = toModel(text, TypeStructName, model)
@@ -108,7 +104,6 @@ var (
 	TypeService     = &Type{
 		Name:    TypeServiceName,
 		Comment: "服务",
-		Dir:     "service",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ServiceModel{}
 			err = toModel(text, TypeServiceName, model)
@@ -136,7 +131,6 @@ var (
 	TypeDao     = &Type{
 		Name:    TypeDaoName,
 		Comment: "数据层",
-		Dir:     "dao",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &DaoModel{}
 			err = toModel(text, TypeDaoName, model)
@@ -164,7 +158,6 @@ var (
 	TypeFunc     = &Type{
 		Name:    TypeFuncName,
 		Comment: "函数",
-		Dir:     "func",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &FuncModel{}
 			err = toModel(text, TypeFuncName, model)
@@ -192,7 +185,6 @@ var (
 	TypeConfigDb     = &Type{
 		Name:    TypeConfigDbName,
 		Comment: "Database",
-		Dir:     "database",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigDbModel{}
 			err = toModel(text, TypeConfigDbName, model)
@@ -220,7 +212,6 @@ var (
 	TypeConfigRedis     = &Type{
 		Name:    TypeConfigRedisName,
 		Comment: "Redis",
-		Dir:     "redis",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigRedisModel{}
 			err = toModel(text, TypeConfigRedisName, model)
@@ -248,7 +239,6 @@ var (
 	TypeConfigZk     = &Type{
 		Name:    TypeConfigZkName,
 		Comment: "Zookeeper",
-		Dir:     "zookeeper",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigZkModel{}
 			err = toModel(text, TypeConfigZkName, model)
@@ -276,7 +266,6 @@ var (
 	TypeConfigKafka     = &Type{
 		Name:    TypeConfigKafkaName,
 		Comment: "Kafka",
-		Dir:     "kafka",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigKafkaModel{}
 			err = toModel(text, TypeConfigKafkaName, model)
@@ -304,7 +293,6 @@ var (
 	TypeConfigMongodb     = &Type{
 		Name:    TypeConfigMongodbName,
 		Comment: "Mongodb",
-		Dir:     "mongodb",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigMongodbModel{}
 			err = toModel(text, TypeConfigMongodbName, model)
@@ -332,7 +320,6 @@ var (
 	TypeConfigElasticsearch     = &Type{
 		Name:    TypeConfigElasticsearchName,
 		Comment: "Elastic Search",
-		Dir:     "elasticsearch",
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &ConfigMongodbModel{}
 			err = toModel(text, TypeConfigElasticsearchName, model)
@@ -358,10 +345,9 @@ var (
 
 	TypeLanguageJavascriptName = "language/javascript"
 	TypeLanguageJavascript     = &Type{
-		Name:     TypeLanguageJavascriptName,
-		Comment:  "JavaScript",
-		Dir:      "",
-		FileName: "javascript",
+		Name:    TypeLanguageJavascriptName,
+		Comment: "JavaScript",
+		IsFile:  true,
 		toModel: func(name, text string) (model interface{}, err error) {
 			model = &LanguageJavascriptModel{}
 			err = toModel(text, TypeLanguageJavascriptName, model)
@@ -401,7 +387,6 @@ func init() {
 	AppendType(&Type{
 		Name:    "config",
 		Comment: "配置",
-		Dir:     "config",
 		Children: []*Type{
 
 			TypeConfigDb,
@@ -416,17 +401,34 @@ func init() {
 	AppendType(&Type{
 		Name:    "language",
 		Comment: "导出语言",
-		Dir:     "language",
 		Children: []*Type{
 			TypeLanguageJavascript,
 		},
 	})
 }
 
+var (
+	modelTypeCache = make(map[string]*Type)
+)
+
+func GetModelType(key string) (modelType *Type) {
+	modelType = modelTypeCache[key]
+	return
+}
+
 func AppendType(one *Type) {
+
+	modelTypeCache[one.Name] = one
+	for _, c := range one.Children {
+		modelTypeCache[c.Name] = c
+	}
 	Types = append(Types, one)
 }
 
 func GetTypes() []*Type {
 	return Types
+}
+
+func GetTypeCache() map[string]*Type {
+	return modelTypeCache
 }

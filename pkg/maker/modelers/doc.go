@@ -414,6 +414,41 @@ func appendDataByStruct(source map[string]interface{}, data interface{}, docStru
 	return
 }
 
+func getFieldReflectValue(data interface{}, name string) (fV reflect.Value, find bool) {
+	dV := reflect.ValueOf(data) // 取得struct变量的指针
+	if dV.Kind() == reflect.Ptr {
+		dV = dV.Elem()
+	}
+	dT := reflect.TypeOf(data)
+	if dT.Kind() == reflect.Ptr {
+		dT = dT.Elem()
+	}
+	if dT.Kind() != reflect.Struct {
+		return
+	}
+	num := dT.NumField()
+	for i := 0; i < num; i++ {
+		field := dT.Field(i)
+		jsonKey := field.Tag.Get("json")
+		if jsonKey != "" {
+			if strings.Contains(jsonKey, ",") {
+				jsonKey = strings.Split(jsonKey, ",")[0]
+			}
+			if strings.EqualFold(jsonKey, name) {
+				fV = dV.Field(i)
+				find = true
+				return
+			}
+		}
+		if strings.EqualFold(field.Name, name) {
+			fV = dV.Field(i)
+			find = true
+			return
+		}
+	}
+	return
+}
+
 func setFieldValue(data interface{}, name string, value interface{}) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -421,27 +456,17 @@ func setFieldValue(data interface{}, name string, value interface{}) {
 		}
 	}()
 	var fV reflect.Value
-	dV := reflect.ValueOf(data) // 取得struct变量的指针
-	dT := reflect.TypeOf(data)
-	num := dT.Elem().NumField()
-	for i := 0; i < num; i++ {
-		field := dT.Elem().Field(i)
-		jsonKey := field.Tag.Get("json")
-		if jsonKey != "" {
-			if strings.Contains(jsonKey, ",") {
-				jsonKey = strings.Split(jsonKey, ",")[0]
-			}
-			if strings.EqualFold(jsonKey, name) {
-				fV = dV.Elem().Field(i)
-				break
-			}
-		}
-		if strings.EqualFold(field.Name, name) {
-			fV = dV.Elem().Field(i)
-			break
-		}
+	fV, find := getFieldReflectValue(data, name)
+	if !find {
+		util.Logger.Warn("set field not found", zap.Any("name", name), zap.Any("data", data), zap.Any("value", value))
+		return
 	}
 	if !canNotOut(value) {
+		if !fV.CanSet() {
+			util.Logger.Warn("field can not set", zap.Any("name", name), zap.Any("data", data), zap.Any("value", value))
+			return
+		}
+
 		fieldType := fV.Type().String()
 		valueType := reflect.TypeOf(value).String()
 		if fieldType == valueType {

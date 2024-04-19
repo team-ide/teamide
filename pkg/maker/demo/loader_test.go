@@ -46,4 +46,19 @@ func TestLoader(t *testing.T) {
 		return
 	}
 	println(string(bs))
+
+	res, err := app.Save(modelers.TypeDao, "user/getAllUsers", map[string]interface{}{
+		"comment": "获取所有用户",
+	}, false, false)
+	if err != nil {
+		util.Logger.Error("app save model error", zap.Error(err))
+		return
+	}
+	println(util.GetStringValue(res))
+	bs, err = json.MarshalIndent(app, "", "  ")
+	if err != nil {
+		util.Logger.Error("app to json error", zap.Error(err))
+		return
+	}
+	println(string(bs))
 }

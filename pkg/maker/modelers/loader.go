@@ -9,70 +9,82 @@ import (
 )
 
 func newApplication() (app *Application) {
-	app = &Application{}
+	app = &Application{
+		elementCache:    make(map[string]*Element),
+		modelTypeCaches: make(map[*Type]*util.Cache),
+		modelTypeItems:  make(map[*Type][]ElementIFace),
+	}
 	return
 }
 
 func Load(dir string) (app *Application) {
 	app = newApplication()
 	types := Types
-	app.Dir = util.FormatPath(dir)
-	if app.Dir == "" {
-		app.Dir = dir
+	app.dir = util.FormatPath(dir)
+	if app.dir == "" {
+		app.dir = dir
 	}
-	if !strings.HasSuffix(app.Dir, "/") {
-		app.Dir += "/"
+	if !strings.HasSuffix(app.dir, "/") {
+		app.dir += "/"
 	}
 
 	for _, modelType := range types {
-		appendModelByType(nil, app.Dir, app, modelType)
+		app.loadByType(nil, modelType)
 	}
 	return
 }
 
-func appendModelByType(parent *Element, dir string, app *Application, modelType *Type) {
-	baseDir := dir
-	if modelType.Dir != "" {
-		baseDir += modelType.Dir
-	}
-	if !strings.HasSuffix(baseDir, "/") {
-		baseDir += "/"
-	}
-	typeElement := app.appendType(parent, modelType)
+func (this_ *Application) loadByType(parent *Element, modelType *Type) {
+	typeElement := this_.appendType(parent, modelType)
 	if modelType.Children != nil {
 		for _, one := range modelType.Children {
-			appendModelByType(typeElement, baseDir, app, one)
+			this_.loadByType(typeElement, one)
+		}
+		return
+	}
+	modelTypePath := this_.getModeTypePath(modelType)
+	if modelType.IsFile {
+		if exist, _ := util.PathExists(modelTypePath + ".yml"); exist {
+			this_.loadFile(typeElement, modelType, modelTypePath+".yml")
 		}
 	} else {
-		loadFiles(typeElement, app, modelType, baseDir, func(parent *Element, app *Application, fileName string, fullName string) {
-			appendModel(parent, baseDir, app, modelType, fileName, fullName)
-		})
+		this_.loadFiles(typeElement, modelType, modelTypePath)
 	}
 	return
 }
 
-var (
-	packInfoFileName = "pack-info"
-)
-
-func appendModel(parent *Element, baseDir string, app *Application, modelType *Type, fileName string, fullName string) {
-	if !(strings.HasSuffix(fileName, ".yml") || strings.HasSuffix(fileName, ".yaml")) {
-		return
-	}
-	fileName = strings.TrimSuffix(fileName, ".yml")
-	fileName = strings.TrimSuffix(fileName, ".yaml")
-	if modelType.FileName != "" && fileName != packInfoFileName {
-		if fileName != modelType.FileName {
-			return
+func (this_ *Application) loadFiles(parent *Element, modelType *Type, folder string) {
+	files, _ := os.ReadDir(folder)
+	for _, file := range files {
+		filePath := folder + file.Name()
+		if file.IsDir() {
+			packElement := this_.appendPack(parent, modelType, file.Name())
+			this_.loadFiles(packElement, modelType, filePath+"/")
+		} else {
+			this_.loadFile(parent, modelType, filePath)
 		}
 	}
-	if !strings.HasSuffix(baseDir, "/") {
-		baseDir += "/"
+}
+
+func (this_ *Application) loadFile(parent *Element, modelType *Type, filePath string) (model interface{}, element *Element) {
+	if !(strings.HasSuffix(filePath, ".yml")) {
+		return
 	}
-	path := strings.TrimPrefix(fullName, app.Dir)
-	name := strings.TrimPrefix(fullName, baseDir)
-	name = strings.TrimSuffix(name, ".yml")
-	name = strings.TrimSuffix(name, ".yaml")
+
+	path := strings.TrimPrefix(filePath, this_.dir)
+	modelTypePath := this_.getModeTypePath(modelType)
+	filename := filePath[strings.LastIndex(filePath, "/")+1:]
+	filename = strings.TrimSuffix(filename, ".yml")
+
+	var name = filename
+	if !modelType.IsFile {
+		name = strings.TrimPrefix(filePath, modelTypePath)
+		name = strings.TrimSuffix(name, ".yml")
+	}
+
+	//fmt.Println("path:", path)
+	//fmt.Println("name:", name)
+
 	var err error
 	defer func() {
 		if err != nil {
@@ -80,47 +92,36 @@ func appendModel(parent *Element, baseDir string, app *Application, modelType *T
 			loadError.Type = modelType
 			loadError.Path = path
 			loadError.Error = err.Error()
-			app.LoadErrors = append(app.LoadErrors, loadError)
+			this_.LoadErrors = append(this_.LoadErrors, loadError)
 		}
 	}()
-	bs, err := os.ReadFile(fullName)
+	bs, err := os.ReadFile(filePath)
 	if err != nil {
-		util.Logger.Error("appendModelByType ReadFile error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Error(err))
+		util.Logger.Error("loadFile ReadFile error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Error(err))
 		return
 	}
-	if fileName == packInfoFileName {
+	if filename == packInfoFileName {
 		parent.Pack = &Pack{}
 		err = json.Unmarshal(bs, parent.Pack)
 		if err != nil {
-			util.Logger.Error("appendModelByType toPack error", zap.Any("path", path), zap.Error(err))
+			util.Logger.Error("loadFile toPack error", zap.Any("path", path), zap.Error(err))
 			return
 		}
 	} else {
-		var one interface{}
-		one, err = modelType.toModel(name, string(bs))
+		model, err = modelType.toModel(name, string(bs))
 		if err != nil {
-			util.Logger.Error("appendModelByType ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
+			util.Logger.Error("loadFile ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
 			return
 		}
-		err = app.appendModel(parent, modelType, fileName, name, one)
+		element, err = this_.appendModel(parent, modelType, filename, name, model)
 		if err != nil {
-			util.Logger.Error("appendModelByType Append error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("model", one), zap.Error(err))
+			util.Logger.Error("loadFile Append error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("model", model), zap.Error(err))
 			return
 		}
 	}
 	return
 }
-func loadFiles(parent *Element, app *Application, modelType *Type, folder string, onLoad func(parent *Element, app *Application, name string, pathname string)) {
-	files, _ := os.ReadDir(folder)
-	for _, file := range files {
-		if file.IsDir() {
-			packElement := app.appendPack(parent, modelType, file.Name())
-			loadFiles(packElement, app, modelType, folder+file.Name()+"/", onLoad)
-		} else {
-			if onLoad != nil {
-				onLoad(parent, app, file.Name(), folder+file.Name())
-			}
-		}
-	}
 
-}
+var (
+	packInfoFileName = "pack-info"
+)

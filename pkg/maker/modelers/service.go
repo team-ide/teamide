@@ -1,7 +1,7 @@
 package modelers
 
 type ServiceModel struct {
-	Name    string        `json:"name,omitempty"`    // 名称，同一个应用中唯一
+	ElementNode
 	Comment string        `json:"comment,omitempty"` // 说明
 	Note    string        `json:"note,omitempty"`    // 注释
 	Args    []*ArgModel   `json:"args,omitempty"`    //入参
@@ -25,7 +25,6 @@ func init() {
 		Name:    TypeServiceName,
 		Comment: "服务文件，该文件用于动作处理，如数据库、redis、文件等地方",
 		Fields: []*docTemplateField{
-			{Name: "name", Comment: "结构体名称"},
 			{Name: "comment", Comment: "结构体说明"},
 			{Name: "note", Comment: "结构体源码注释"},
 			{Name: "args", Comment: "参数", IsList: true, StructName: docTemplateArgName},

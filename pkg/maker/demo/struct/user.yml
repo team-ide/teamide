@@ -1,12 +1,28 @@
-name: user
+# 结构体文件，该文件用于入参、出参、函数调用、数据存储等地方
+note: sdasdasd # 结构体源码注释
+# 这是结构体字段
 fields:
-  - name: userId
-    type: i64
-  - name
-  - account
-  - password
-  - salt
-  - phone
-  - photo
-  - name: age
-    type: i64
+    # 结构体字段
+    - name: userId # 字段名称
+      type: i64 # 字段类型
+    # 结构体字段
+    - name: name # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: account # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: password # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: salt # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: phone # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: photo # 字段名称
+      type: string # 字段类型
+    # 结构体字段
+    - name: age # 字段名称
+      type: i64 # 字段类型
