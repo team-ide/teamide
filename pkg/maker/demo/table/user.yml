@@ -1,7 +1,7 @@
-# 用户
-fields:
+# 用户 表
+columns:
   # 用户 ID 主键标识
-  - name: userId
+  - name: user_id
     type: i64
     column: user_id
   - name: name

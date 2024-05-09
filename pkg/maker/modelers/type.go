@@ -100,27 +100,27 @@ var (
 		},
 	}
 
-	TypeServiceName = "service"
-	TypeService     = &Type{
-		Name:    TypeServiceName,
-		Comment: "服务",
+	TypeTableName = "table"
+	TypeTable     = &Type{
+		Name:    TypeTableName,
+		Comment: "表",
 		toModel: func(name, text string) (model interface{}, err error) {
-			model = &ServiceModel{}
-			err = toModel(text, TypeServiceName, model)
+			model = &TableModel{}
+			err = toModel(text, TypeTableName, model)
 			if err != nil {
-				util.Logger.Error("text to service model error", zap.Any("text", text), zap.Error(err))
+				util.Logger.Error("text to table model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
-			model.(*ServiceModel).Name = name
+			model.(*TableModel).Name = name
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, TypeServiceName, &docOptions{
+			text, err = toText(model, TypeTableName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
 			if err != nil {
-				util.Logger.Error("service model to text error", zap.Any("model", model), zap.Error(err))
+				util.Logger.Error("table model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
 			return
@@ -148,6 +148,33 @@ var (
 			})
 			if err != nil {
 				util.Logger.Error("dao model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeServiceName = "service"
+	TypeService     = &Type{
+		Name:    TypeServiceName,
+		Comment: "服务",
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ServiceModel{}
+			err = toModel(text, TypeServiceName, model)
+			if err != nil {
+				util.Logger.Error("text to service model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*ServiceModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeServiceName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("service model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
 			return
@@ -369,14 +396,72 @@ var (
 			return
 		},
 	}
+
+	TypeLanguageGolangName = "language/golang"
+	TypeLanguageGolang     = &Type{
+		Name:    TypeLanguageGolangName,
+		Comment: "Golang",
+		IsFile:  true,
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &LanguageGolangModel{}
+			err = toModel(text, TypeLanguageGolangName, model)
+			if err != nil {
+				util.Logger.Error("text to language golang model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeLanguageGolangName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("language golang model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
+
+	TypeApplicationName = "application"
+	TypeApplication     = &Type{
+		Name:    TypeApplicationName,
+		Comment: "Application",
+		IsFile:  true,
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &ApplicationModel{}
+			err = toModel(text, TypeApplicationName, model)
+			if err != nil {
+				util.Logger.Error("text to application model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeApplicationName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("application model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
 )
 
 func init() {
+	AppendType(TypeApplication)
+
 	AppendType(TypeConstant)
 
 	AppendType(TypeError)
 
 	AppendType(TypeStruct)
+
+	AppendType(TypeTable)
 
 	AppendType(TypeDao)
 
@@ -402,6 +487,7 @@ func init() {
 		Name:    "language",
 		Comment: "导出语言",
 		Children: []*Type{
+			TypeLanguageGolang,
 			TypeLanguageJavascript,
 		},
 	})

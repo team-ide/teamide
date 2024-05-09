@@ -1,23 +1,19 @@
-name: user/get
 args:
   - name: userId
     type: i64
-steps:
-  - redis: get
-    key: user-${userId}
-    setVar: user
-    setVarType: user
-
-  - if: user == null
-    dao: user/get
-    args:
-      - userId
-    setVar: user
-    steps:
-      - if: user != null
-        redis: set
-        key: user-${userId}
-        value: user
-        expire: USER_REDIS_EXPIRE
-
-return: user
+func: |
+  if(isEmpty(userId)){
+    throw error.USER_ID_IS_EMPTY;
+  }
+  var user user
+  user = redis.get(user-${userId})
+  if(user == null){
+    user = dao.user.get(userId)
+    if(user != null){
+      redis.set(user-${userId}, user, USER_REDIS_EXPIRE)
+    }
+  }
+  if(user != null){
+    user.password = null
+  }
+  return user;

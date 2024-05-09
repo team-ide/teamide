@@ -1,22 +1,5 @@
-name: user/insert
 args:
   - name: user
     type: user
-steps:
-
-  # 插入数据
-  - db: insert
-    table: TB_USER
-    columns:
-      - name: userId
-        value: user.userId
-      - name: name
-        value: user.name
-      - name: account
-        value: user.account
-      - name: salt
-        value: salt
-      - name: password
-        value: md5Password
-
-return: user
+func: |
+  return db.insert("TB_USER", user)

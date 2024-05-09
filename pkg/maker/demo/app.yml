@@ -1,0 +1,17 @@
+
+mongodb:
+  url: mongodb://127.0.0.1:27017/
+  database: test_db
+  minSize: 300
+  maxSize: 300
+  maxConnecting: 300
+  maxWaitTime: 2000
+  maxConnectionIdleTime: 15
+  maxConnectionLifeTime: 2
+  connectTimeout: 2000
+  readTimeout: 3000
+
+redis:
+  type: standalone
+  address: 127.0.0.1:11080
+  password:

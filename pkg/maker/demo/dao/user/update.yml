@@ -1,22 +1,13 @@
-name: user/update
 args:
   - name: user
     type: user
-steps:
-
-  # 更新
-  - db: update
-    table: TB_USER
-    columns:
-      - if: util.isNotEmpty(user.name)
-        name: name
-        value: user.name
-      - if: util.isNotEmpty(user.account)
-        name: account
-        value: user.account
-    wheres:
-      - name: userId
-        value: user.userId
-    setVar: updateCount
-
-return: updateCount
+func: |
+  var update Map
+  if(isNotEmpty(user.name)){
+    update["name"] = user.name
+  }
+  if(isNotEmpty(user.account)){
+    update["account"] = user.account
+  }
+  
+  return db.update("TB_USER", update, "account=${account}")

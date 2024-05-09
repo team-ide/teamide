@@ -47,7 +47,7 @@ func TestLoader(t *testing.T) {
 	}
 	println(string(bs))
 
-	res, err := app.Save(modelers.TypeDao, "user/getAllUsers", map[string]interface{}{
+	res, _, err := app.Save(modelers.TypeDao, "user/getAllUsers", map[string]interface{}{
 		"comment": "获取所有用户",
 	}, false, false)
 	if err != nil {

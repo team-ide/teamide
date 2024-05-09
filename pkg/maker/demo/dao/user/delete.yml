@@ -1,11 +1,5 @@
-name: user/delete
 args:
   - name: userId
-    type: user.userId
-steps:
-  # 查询账号
-  - db: delete
-    table: TB_USER
-    wheres:
-      - name: userId
-        value: userId
+    type: i64
+func: |
+  return db.delete("TB_USER", "userId=${userId}")
