@@ -1,4 +1,4 @@
-package invokers
+package maker
 
 import (
 	"errors"
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func NewInvoker(app *modelers.Application) (runner *Invoker, err error) {
+func NewInvoker(app *Application) (runner *Invoker, err error) {
 	runner = &Invoker{
 		app:                   app,
 		redisServiceCache:     make(map[string]redis.IService),
@@ -29,6 +29,7 @@ func NewInvoker(app *modelers.Application) (runner *Invoker, err error) {
 		dbServiceCacheLock:    &sync.Mutex{},
 		kafkaServiceCache:     make(map[string]kafka.IService),
 		kafkaServiceCacheLock: &sync.Mutex{},
+		errorContext:          make(map[string]*Error),
 	}
 
 	err = runner.init()
@@ -37,7 +38,7 @@ func NewInvoker(app *modelers.Application) (runner *Invoker, err error) {
 }
 
 type Invoker struct {
-	app                   *modelers.Application
+	app                   *Application
 	redisServiceCache     map[string]redis.IService
 	redisServiceCacheLock sync.Locker
 	esServiceCache        map[string]elasticsearch.IService
@@ -49,9 +50,46 @@ type Invoker struct {
 	kafkaServiceCache     map[string]kafka.IService
 	kafkaServiceCacheLock sync.Locker
 	script                *javascript.Script
+	errorContext          map[string]*Error
+}
+
+type Error struct {
+	Code string `json:"code"`
+	Msg  string `json:"msg"`
+}
+
+func (this_ *Error) Error() string {
+	return fmt.Sprintf("code:%s,msg:%s", this_.Code, this_.Msg)
+}
+
+func (this_ *Invoker) setScriptVar(name string, value interface{}) (err error) {
+	err = this_.script.Set(name, value)
+	if err != nil {
+		util.Logger.Error("invoker set script var error", zap.Any("name", name), zap.Any("error", err))
+		return
+	}
+	return
 }
 
 func (this_ *Invoker) init() (err error) {
+	this_.script, err = javascript.NewScript()
+	if err != nil {
+		util.Logger.Error("invoker init new script error", zap.Any("error", err))
+		return
+	}
+	err = this_.setScriptVar("error", this_.errorContext)
+	if err != nil {
+		return
+	}
+	for _, one := range this_.app.GetErrorList() {
+		for _, o := range one.Options {
+			this_.errorContext[o.Name] = &Error{
+				Code: o.Code,
+				Msg:  o.Msg,
+			}
+		}
+	}
+
 	// 初始化服务
 	for _, one := range this_.app.GetConfigRedisList() {
 		_, err = this_.GetRedisServiceByName(one.Name)
@@ -121,20 +159,10 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 	}
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	err = this_.InvokeSteps(funcInvoke.name, service.Steps, invokeData)
+	res, err = this_.InvokeFunc(funcInvoke.name, service.Func, invokeData)
 	if err != nil {
 		return
 	}
-
-	if service.Return != "" {
-		res, err = invokeData.InvokeScript(service.Return)
-		if err != nil {
-			util.Logger.Error(funcInvoke.name+" get return value error", zap.Any("return", service.Return), zap.Any("error", err))
-			return
-		}
-		return
-	}
-
 	return
 }
 
@@ -181,25 +209,15 @@ func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) 
 	}
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	err = this_.InvokeSteps(funcInvoke.name, dao.Steps, invokeData)
+	res, err = this_.InvokeFunc(funcInvoke.name, dao.Func, invokeData)
 	if err != nil {
 		return
 	}
-
-	if dao.Return != "" {
-		res, err = invokeData.InvokeScript(dao.Return)
-		if err != nil {
-			util.Logger.Error(funcInvoke.name+" get return value error", zap.Any("return", dao.Return), zap.Any("error", err))
-			return
-		}
-		return
-	}
-
 	return
 }
 
-func (this_ *Invoker) InvokeSteps(from string, steps []interface{}, invokeData *InvokeData) (err error) {
-	funcInvoke := invokeStart(from+" steps", invokeData)
+func (this_ *Invoker) InvokeFunc(from string, code string, invokeData *InvokeData) (res interface{}, err error) {
+	funcInvoke := invokeStart(from+" func code", invokeData)
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
@@ -210,15 +228,10 @@ func (this_ *Invoker) InvokeSteps(from string, steps []interface{}, invokeData *
 	}()
 	util.Logger.Debug(funcInvoke.name + " start")
 	//var res interface{}
-	var isReturn bool
-	for _, step := range steps {
-		_, isReturn, err = this_.InvokeStep(funcInvoke.name, step, invokeData)
-		if err != nil {
-			return
-		}
-		if isReturn {
-			break
-		}
+	res, err = invokeData.InvokeScript(code)
+	if err != nil {
+		util.Logger.Error(funcInvoke.name+" invoke error", zap.Any("error", err))
+		return
 	}
 
 	return

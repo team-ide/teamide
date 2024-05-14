@@ -1,4 +1,4 @@
-package invokers
+package maker
 
 import (
 	"errors"
@@ -66,6 +66,13 @@ func (this_ *Invoker) GetRedisServiceByName(name string) (res redis.IService, er
 		return
 	}
 	this_.redisServiceCache[name] = res
+
+	var scriptVar = "redis"
+	if name != "default" {
+		scriptVar = "redis_" + name
+	}
+	err = this_.setScriptVar(scriptVar, res)
+
 	return
 }
 
@@ -120,6 +127,13 @@ func (this_ *Invoker) GetDbServiceByName(name string) (res db.IService, err erro
 		return
 	}
 	this_.dbServiceCache[name] = res
+
+	var scriptVar = "db"
+	if name != "default" {
+		scriptVar = "db_" + name
+	}
+	err = this_.setScriptVar(scriptVar, res)
+
 	return
 }
 
@@ -177,5 +191,10 @@ func (this_ *Invoker) GetZkServiceByName(name string) (res zookeeper.IService, e
 	}
 
 	this_.zkServiceCache[name] = res
+	var scriptVar = "zk"
+	if name != "default" {
+		scriptVar = "zk_" + name
+	}
+	err = this_.setScriptVar(scriptVar, res)
 	return
 }

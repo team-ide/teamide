@@ -1,4 +1,4 @@
-package modelers
+package maker
 
 import (
 	"encoding/json"
@@ -6,20 +6,21 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"strings"
+	"teamide/pkg/maker/modelers"
 )
 
 func newApplication() (app *Application) {
 	app = &Application{
-		elementCache:    make(map[string]*Element),
-		modelTypeCaches: make(map[*Type]*util.Cache),
-		modelTypeItems:  make(map[*Type][]ElementIFace),
+		elementCache:    make(map[string]*modelers.Element),
+		modelTypeCaches: make(map[*modelers.Type]*util.Cache),
+		modelTypeItems:  make(map[*modelers.Type][]modelers.ElementIFace),
 	}
 	return
 }
 
 func Load(dir string) (app *Application) {
 	app = newApplication()
-	types := Types
+	types := modelers.Types
 	app.dir = util.FormatPath(dir)
 	if app.dir == "" {
 		app.dir = dir
@@ -34,7 +35,7 @@ func Load(dir string) (app *Application) {
 	return
 }
 
-func (this_ *Application) loadByType(parent *Element, modelType *Type) {
+func (this_ *Application) loadByType(parent *modelers.Element, modelType *modelers.Type) {
 	typeElement := this_.appendType(parent, modelType)
 	if modelType.Children != nil {
 		for _, one := range modelType.Children {
@@ -53,7 +54,7 @@ func (this_ *Application) loadByType(parent *Element, modelType *Type) {
 	return
 }
 
-func (this_ *Application) loadFiles(parent *Element, modelType *Type, folder string) {
+func (this_ *Application) loadFiles(parent *modelers.Element, modelType *modelers.Type, folder string) {
 	files, _ := os.ReadDir(folder)
 	for _, file := range files {
 		filePath := folder + file.Name()
@@ -66,7 +67,7 @@ func (this_ *Application) loadFiles(parent *Element, modelType *Type, folder str
 	}
 }
 
-func (this_ *Application) loadFile(parent *Element, modelType *Type, filePath string) (model interface{}, element *Element) {
+func (this_ *Application) loadFile(parent *modelers.Element, modelType *modelers.Type, filePath string) (model interface{}, element *modelers.Element) {
 	if !(strings.HasSuffix(filePath, ".yml")) {
 		return
 	}
@@ -101,14 +102,14 @@ func (this_ *Application) loadFile(parent *Element, modelType *Type, filePath st
 		return
 	}
 	if filename == packInfoFileName {
-		parent.Pack = &Pack{}
+		parent.Pack = &modelers.Pack{}
 		err = json.Unmarshal(bs, parent.Pack)
 		if err != nil {
 			util.Logger.Error("loadFile toPack error", zap.Any("path", path), zap.Error(err))
 			return
 		}
 	} else {
-		model, err = modelType.toModel(name, string(bs))
+		model, err = modelType.ToModel(name, string(bs))
 		if err != nil {
 			util.Logger.Error("loadFile ToModel error", zap.Any("model", path), zap.Any("modelType", modelType), zap.Any("text", string(bs)), zap.Error(err))
 			return

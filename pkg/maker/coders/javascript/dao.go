@@ -2,8 +2,8 @@ package javascript
 
 import (
 	"github.com/team-ide/go-tool/util"
-	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/base"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
@@ -24,7 +24,7 @@ func GetDaoMethodName(name string) (methodName string) {
 	return
 }
 
-func GetDaoJavascript(app *modelers.Application, dao *modelers.DaoModel) (javascript string, err error) {
+func GetDaoJavascript(app *maker.Application, dao *modelers.DaoModel) (javascript string, err error) {
 	serviceMethodName := GetDaoMethodName(dao.Name)
 	javascript += ""
 	javascript += "function " + serviceMethodName + "("
@@ -38,11 +38,11 @@ func GetDaoJavascript(app *modelers.Application, dao *modelers.DaoModel) (javasc
 	javascript += "\n"
 
 	var stepsJavascript string
-	stepsJavascript, err = GetJavascriptBySteps(app, dao.Steps, 1)
-	if err != nil {
-		util.Logger.Error("GetDaoJavascript GetJavascriptBySteps error", zap.Any("dao", dao), zap.Error(err))
-		return
-	}
+	//stepsJavascript, err = GetJavascriptBySteps(app, dao.Steps, 1)
+	//if err != nil {
+	//	util.Logger.Error("GetDaoJavascript GetJavascriptBySteps error", zap.Any("dao", dao), zap.Error(err))
+	//	return
+	//}
 	if util.IsNotEmpty(stepsJavascript) {
 		javascript += stepsJavascript
 	}

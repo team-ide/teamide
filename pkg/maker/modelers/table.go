@@ -31,7 +31,7 @@ func init() {
 			{Name: "comment", Comment: "结构体说明"},
 			{Name: "note", Comment: "结构体源码注释"},
 			{Name: "parent", Comment: "父级结构体，源码将继承该结构体"},
-			{Name: "fields", Comment: "这是结构体字段", IsList: true, StructName: docTemplateTableColumnName},
+			{Name: "columns", Comment: "这是结构体字段", IsList: true, StructName: docTemplateTableColumnName},
 		},
 		newModel: func() interface{} {
 			return &TableModel{}

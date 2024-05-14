@@ -2,11 +2,12 @@ package modelers
 
 type ServiceModel struct {
 	ElementNode
-	Comment string        `json:"comment,omitempty"` // 说明
-	Note    string        `json:"note,omitempty"`    // 注释
-	Args    []*ArgModel   `json:"args,omitempty"`    //入参
-	Steps   []interface{} `json:"steps,omitempty"`   // 阶段
-	Return  string        `json:"return,omitempty"`  // 返回
+	Comment string      `json:"comment,omitempty"` // 说明
+	Note    string      `json:"note,omitempty"`    // 注释
+	Args    []*ArgModel `json:"args,omitempty"`    //入参
+	Func    string      `json:"func,omitempty"`    // 函数内容
+	//Steps   []interface{} `json:"steps,omitempty"`   // 阶段
+	Return string `json:"return,omitempty"` // 返回
 }
 
 type ArgModel struct {
@@ -28,7 +29,8 @@ func init() {
 			{Name: "comment", Comment: "结构体说明"},
 			{Name: "note", Comment: "结构体源码注释"},
 			{Name: "args", Comment: "参数", IsList: true, StructName: docTemplateArgName},
-			{Name: "steps", Comment: "阶段", IsList: true, StructName: docTemplateStepName},
+			{Name: "func", Comment: "函数内容"},
+			//{Name: "steps", Comment: "阶段", IsList: true, StructName: docTemplateStepName},
 			{Name: "return", Comment: "返回值"},
 		},
 	})

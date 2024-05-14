@@ -1,4 +1,4 @@
-package invokers
+package maker
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 )
 
 type InvokeData struct {
-	app          *modelers.Application
+	app          *Application
 	args         []*InvokeVar
 	vars         []*InvokeVar
 	argCache     map[string]*InvokeVar
@@ -29,7 +29,7 @@ type InvokeVar struct {
 	ValueType *modelers.ValueType `json:"valueType,omitempty"`
 }
 
-func NewInvokeData(app *modelers.Application) (data *InvokeData, err error) {
+func NewInvokeData(app *Application) (data *InvokeData, err error) {
 	script, err := javascript.NewScript()
 	if err != nil {
 		util.Logger.Error("NewInvokeData NewScript error", zap.Any("error", err))

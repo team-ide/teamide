@@ -1,12 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"teamide/pkg/maker/coders"
 	"teamide/pkg/maker/coders/javascript"
 	"testing"
 )
+
+func TestS(t *testing.T) {
+	var bs = []string{"1", "2", "3"}
+	bs2 := bs[0:2]
+	bs[0] = "--"
+	fmt.Println(bs)
+	fmt.Println(bs2)
+}
 
 func TestCoder(t *testing.T) {
 	app, err := LoadDemoApp()

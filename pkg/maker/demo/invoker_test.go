@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-zookeeper/zk"
+	_ "github.com/team-ide/go-tool/db/db_type_mysql"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"sync"
-	"teamide/pkg/maker/invokers"
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/modelers"
 	"testing"
 	"time"
@@ -45,13 +46,13 @@ func TestInvokerUserGet(t *testing.T) {
 		return
 	}
 
-	invoker, err := invokers.NewInvoker(app)
+	invoker, err := maker.NewInvoker(app)
 	if err != nil {
 		util.Logger.Error("NewInvoker error", zap.Error(err))
 		return
 	}
 
-	invokeData, err := invokers.NewInvokeData(app)
+	invokeData, err := maker.NewInvokeData(app)
 	if err != nil {
 		util.Logger.Error("NewInvokeData error", zap.Error(err))
 		return
@@ -87,13 +88,13 @@ func TestInvokerZk(t *testing.T) {
 		return
 	}
 
-	invoker, err := invokers.NewInvoker(app)
+	invoker, err := maker.NewInvoker(app)
 	if err != nil {
 		util.Logger.Error("NewInvoker error", zap.Error(err))
 		return
 	}
 
-	invokeData, err := invokers.NewInvokeData(app)
+	invokeData, err := maker.NewInvokeData(app)
 	if err != nil {
 		util.Logger.Error("NewInvokeData error", zap.Error(err))
 		return

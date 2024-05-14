@@ -1,11 +1,12 @@
 package coders
 
 import (
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
 )
 
-func NewApplicationCoder(app *modelers.Application, coderFactory common.ICoderFactory) (res *applicationCoder) {
+func NewApplicationCoder(app *maker.Application, coderFactory common.ICoderFactory) (res *applicationCoder) {
 	res = &applicationCoder{
 		app:          app,
 		coderFactory: coderFactory,
@@ -15,7 +16,7 @@ func NewApplicationCoder(app *modelers.Application, coderFactory common.ICoderFa
 }
 
 type applicationCoder struct {
-	app          *modelers.Application
+	app          *maker.Application
 	coderFactory common.ICoderFactory
 	appCoder     common.IAppCoder
 }

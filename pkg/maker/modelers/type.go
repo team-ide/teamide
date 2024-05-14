@@ -15,6 +15,14 @@ type Type struct {
 	toText  func(model interface{}) (text string, err error)
 }
 
+func (this_ *Type) ToText(model interface{}) (text string, err error) {
+	return this_.toText(model)
+}
+
+func (this_ *Type) ToModel(name, text string) (model interface{}, err error) {
+	return this_.toModel(name, text)
+}
+
 var (
 	Types []*Type
 
@@ -424,27 +432,27 @@ var (
 		},
 	}
 
-	TypeApplicationName = "application"
-	TypeApplication     = &Type{
-		Name:    TypeApplicationName,
-		Comment: "Application",
+	TypeAppName = "app"
+	TypeApp     = &Type{
+		Name:    TypeAppName,
+		Comment: "应用设置",
 		IsFile:  true,
 		toModel: func(name, text string) (model interface{}, err error) {
-			model = &ApplicationModel{}
-			err = toModel(text, TypeApplicationName, model)
+			model = &AppModel{}
+			err = toModel(text, TypeAppName, model)
 			if err != nil {
-				util.Logger.Error("text to application model error", zap.Any("text", text), zap.Error(err))
+				util.Logger.Error("text to app model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, TypeApplicationName, &docOptions{
+			text, err = toText(model, TypeAppName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
 			if err != nil {
-				util.Logger.Error("application model to text error", zap.Any("model", model), zap.Error(err))
+				util.Logger.Error("app model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
 			return
@@ -453,7 +461,7 @@ var (
 )
 
 func init() {
-	AppendType(TypeApplication)
+	AppendType(TypeApp)
 
 	AppendType(TypeConstant)
 

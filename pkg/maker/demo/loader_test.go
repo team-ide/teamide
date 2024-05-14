@@ -7,11 +7,12 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"strings"
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/modelers"
 	"testing"
 )
 
-func LoadDemoApp() (app *modelers.Application, err error) {
+func LoadDemoApp() (app *maker.Application, err error) {
 	rootDir, err := os.Getwd()
 	if err != nil {
 		util.Logger.Error("os get wd error", zap.Error(err))
@@ -29,7 +30,7 @@ func LoadDemoApp() (app *modelers.Application, err error) {
 	}
 
 	fmt.Println("demo app dir:", dir)
-	app = modelers.Load(dir)
+	app = maker.Load(dir)
 	return
 }
 

@@ -1,11 +1,11 @@
 package javascript
 
 import (
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/coders/common"
-	"teamide/pkg/maker/modelers"
 )
 
-func NewFactory(app *modelers.Application) (res common.ICoderFactory) {
+func NewFactory(app *maker.Application) (res common.ICoderFactory) {
 	appCoder_ := &appCoder{Application: app, codeType: common.CodeTypeJs, LanguageJavascriptModel: app.GetLanguageJavascript()}
 	res = &factory{
 		appCoder:      appCoder_,

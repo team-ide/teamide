@@ -2,8 +2,8 @@ package javascript
 
 import (
 	"github.com/team-ide/go-tool/util"
-	"go.uber.org/zap"
 	"strings"
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/base"
 	"teamide/pkg/maker/coders/common"
 	"teamide/pkg/maker/modelers"
@@ -46,7 +46,7 @@ func GetServiceMethodName(name string) (methodName string) {
 	return
 }
 
-func GetServiceJavascript(app *modelers.Application, service *modelers.ServiceModel) (javascript string, err error) {
+func GetServiceJavascript(app *maker.Application, service *modelers.ServiceModel) (javascript string, err error) {
 	serviceMethodName := GetServiceMethodName(service.Name)
 	javascript += ""
 	javascript += "function " + serviceMethodName + "("
@@ -60,11 +60,11 @@ func GetServiceJavascript(app *modelers.Application, service *modelers.ServiceMo
 	javascript += "\n"
 
 	var stepsJavascript string
-	stepsJavascript, err = GetJavascriptBySteps(app, service.Steps, 1)
-	if err != nil {
-		util.Logger.Error("GetServiceJavascript GetJavascriptBySteps error", zap.Any("service", service), zap.Error(err))
-		return
-	}
+	//stepsJavascript, err = GetJavascriptBySteps(app, service.Steps, 1)
+	//if err != nil {
+	//	util.Logger.Error("GetServiceJavascript GetJavascriptBySteps error", zap.Any("service", service), zap.Error(err))
+	//	return
+	//}
 	if util.IsNotEmpty(stepsJavascript) {
 		javascript += stepsJavascript
 	}

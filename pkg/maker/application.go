@@ -1,4 +1,4 @@
-package modelers
+package maker
 
 import (
 	"errors"
@@ -8,17 +8,18 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"teamide/pkg/maker/modelers"
 )
 
 type Application struct {
 	dir string
 
-	Children []*Element `json:"children"`
+	Children []*modelers.Element `json:"children"`
 
-	elementCache map[string]*Element
+	elementCache map[string]*modelers.Element
 
-	modelTypeCaches map[*Type]*util.Cache
-	modelTypeItems  map[*Type][]ElementIFace
+	modelTypeCaches map[*modelers.Type]*util.Cache
+	modelTypeItems  map[*modelers.Type][]modelers.ElementIFace
 
 	doLocker    sync.Mutex
 	cacheLocker sync.Mutex
@@ -30,84 +31,27 @@ func (this_ *Application) GetDir() string {
 	return this_.dir
 }
 
-type ElementNode struct {
-	Name    string `json:"name,omitempty"` // 名称，同一个应用中唯一
-	element *Element
-}
-
-func (this_ *ElementNode) GetName() string {
-	if this_ == nil {
-		return ""
-	}
-	return this_.Name
-}
-
-func (this_ *ElementNode) SetName(name string) {
-	if this_ == nil {
-		return
-	}
-	this_.Name = name
-}
-
-func (this_ *ElementNode) GetElement() *Element {
-	if this_ == nil {
-		return nil
-	}
-	return this_.element
-}
-
-func (this_ *ElementNode) SetElement(element *Element) {
-	if this_ == nil {
-		return
-	}
-	this_.element = element
-}
-
-type ElementIFace interface {
-	GetName() string
-	SetName(name string)
-	GetElement() *Element
-	SetElement(element *Element)
-}
-
-type Element struct {
-	Key      string     `json:"key,omitempty"`
-	Text     string     `json:"text,omitempty"`
-	IsType   bool       `json:"isType,omitempty"`
-	IsPack   bool       `json:"isPack,omitempty"`
-	IsModel  bool       `json:"isModel,omitempty"`
-	Children []*Element `json:"children,omitempty"`
-	Pack     *Pack      `json:"pack,omitempty"`
-	parent   *Element
-}
-
-type Pack struct {
-	Name    string `json:"name,omitempty"`    // 名称，同一个应用中唯一
-	Comment string `json:"comment,omitempty"` // 说明
-	Note    string `json:"note,omitempty"`    // 注释
-}
-
 type LoadError struct {
-	Type  *Type  `json:"type"`
-	Path  string `json:"path"`
-	Error string `json:"error"`
+	Type  *modelers.Type `json:"type"`
+	Path  string         `json:"path"`
+	Error string         `json:"error"`
 }
 
-func (this_ *Application) getElement(key string) (element *Element) {
+func (this_ *Application) getElement(key string) (element *modelers.Element) {
 	this_.cacheLocker.Lock()
 	defer this_.cacheLocker.Unlock()
 	element = this_.elementCache[key]
 	return
 }
 
-func (this_ *Application) setElement(element *Element) {
+func (this_ *Application) setElement(element *modelers.Element) {
 	this_.cacheLocker.Lock()
 	defer this_.cacheLocker.Unlock()
 	this_.elementCache[element.Key] = element
 	return
 }
 
-func (this_ *Application) removeElement(modelType *Type, key string) {
+func (this_ *Application) removeElement(modelType *modelers.Type, key string) {
 	items := this_.getModelTypeItems(modelType)
 	cache := this_.getModelTypeCache(modelType)
 
@@ -116,7 +60,7 @@ func (this_ *Application) removeElement(modelType *Type, key string) {
 
 	var deleteKeys []string
 
-	itemCache := make(map[string]ElementIFace)
+	itemCache := make(map[string]modelers.ElementIFace)
 	for _, one := range items {
 		itemCache[one.GetElement().Key] = one
 	}
@@ -135,14 +79,14 @@ func (this_ *Application) removeElement(modelType *Type, key string) {
 	for _, k := range deleteKeys {
 		delete(this_.elementCache, k)
 	}
-	var newItems []ElementIFace
+	var newItems []modelers.ElementIFace
 	for _, one := range itemCache {
 		newItems = append(newItems, one)
 	}
 	this_.modelTypeItems[modelType] = newItems
 
-	if findElement != nil && findElement.parent != nil {
-		findElement.parent.Children = removeElement(findElement.parent.Children, key)
+	if findElement != nil && findElement.GetParent() != nil {
+		findElement.GetParent().Children = removeElement(findElement.GetParent().Children, key)
 	} else {
 		this_.Children = removeElement(this_.Children, key)
 	}
@@ -150,7 +94,7 @@ func (this_ *Application) removeElement(modelType *Type, key string) {
 	return
 }
 
-func removeElement(list []*Element, removeKey string) (newList []*Element) {
+func removeElement(list []*modelers.Element, removeKey string) (newList []*modelers.Element) {
 	for _, one := range list {
 		if one.Key != removeKey {
 			newList = append(newList, one)
@@ -160,7 +104,7 @@ func removeElement(list []*Element, removeKey string) (newList []*Element) {
 }
 
 func (this_ *Application) GetModelTypeModel(key string, name string) (model interface{}) {
-	modelType := GetModelType(key)
+	modelType := modelers.GetModelType(key)
 	if modelType == nil {
 		util.Logger.Error("model type " + key + " not found")
 		return
@@ -174,7 +118,7 @@ func (this_ *Application) GetModelTypeModel(key string, name string) (model inte
 	return
 }
 
-func (this_ *Application) getModeTypePath(modelType *Type) (path string) {
+func (this_ *Application) getModeTypePath(modelType *modelers.Type) (path string) {
 	path = this_.dir + modelType.Name
 	if !modelType.IsFile {
 		path += "/"
@@ -182,7 +126,7 @@ func (this_ *Application) getModeTypePath(modelType *Type) (path string) {
 	return
 }
 
-func (this_ *Application) getModePath(modelType *Type, name string, isPack bool) (path string, err error) {
+func (this_ *Application) getModePath(modelType *modelers.Type, name string, isPack bool) (path string, err error) {
 	var modelTypePath = this_.getModeTypePath(modelType)
 	if modelType.IsFile {
 		path = modelTypePath
@@ -209,7 +153,7 @@ func (this_ *Application) getModePath(modelType *Type, name string, isPack bool)
 	return
 }
 
-func (this_ *Application) getModeKey(modelType *Type, name string) (key string) {
+func (this_ *Application) getModeKey(modelType *modelers.Type, name string) (key string) {
 	key = modelType.Name
 	if !modelType.IsFile {
 		key += "/" + name
@@ -230,7 +174,7 @@ func FormatName(name string) (res string) {
 	return
 }
 
-func (this_ *Application) Remove(modelType *Type, modelName string, isPack bool) (element *Element, err error) {
+func (this_ *Application) Remove(modelType *modelers.Type, modelName string, isPack bool) (element *modelers.Element, err error) {
 	modelName = FormatName(modelName)
 	if modelName == "" {
 		err = errors.New("model name is empty")
@@ -264,7 +208,7 @@ func (this_ *Application) Remove(modelType *Type, modelName string, isPack bool)
 	return
 }
 
-func (this_ *Application) Rename(modelType *Type, oldModelName string, newModelName string, isPack bool) (oldElement *Element, newElement *Element, err error) {
+func (this_ *Application) Rename(modelType *modelers.Type, oldModelName string, newModelName string, isPack bool) (oldElement *modelers.Element, newElement *modelers.Element, err error) {
 	oldModelName = FormatName(oldModelName)
 	if oldModelName == "" {
 		err = errors.New("old model name is empty")
@@ -350,7 +294,7 @@ func (this_ *Application) Rename(modelType *Type, oldModelName string, newModelN
 	return
 }
 
-func (this_ *Application) appendPackByName(modelType *Type, packFullName string) (element *Element, err error) {
+func (this_ *Application) appendPackByName(modelType *modelers.Type, packFullName string) (element *modelers.Element, err error) {
 	path := this_.getModeTypePath(modelType)
 
 	var exist bool
@@ -388,7 +332,7 @@ func (this_ *Application) appendPackByName(modelType *Type, packFullName string)
 	element = parentElement
 	return
 }
-func (this_ *Application) Save(modelType *Type, modelName string, model interface{}, isPack, isNew bool) (res interface{}, element *Element, err error) {
+func (this_ *Application) Save(modelType *modelers.Type, modelName string, model interface{}, isPack, isNew bool) (res interface{}, element *modelers.Element, err error) {
 	modelName = FormatName(modelName)
 	if modelName == "" {
 		err = errors.New("model name is empty")
@@ -432,7 +376,7 @@ func (this_ *Application) Save(modelType *Type, modelName string, model interfac
 
 	if !isPack {
 		var text string
-		if text, err = modelType.toText(model); err != nil {
+		if text, err = modelType.ToText(model); err != nil {
 			return
 		}
 		var f *os.File
@@ -451,7 +395,7 @@ func (this_ *Application) Save(modelType *Type, modelName string, model interfac
 }
 
 func (this_ *Application) GetModelTypeModels(key string) (models interface{}) {
-	modelType := GetModelType(key)
+	modelType := modelers.GetModelType(key)
 	if modelType == nil {
 		util.Logger.Error("model type " + key + " not found")
 		return
@@ -465,15 +409,15 @@ func (this_ *Application) GetModelTypeModels(key string) (models interface{}) {
 	return
 }
 
-func (this_ *Application) appendType(parent *Element, modelType *Type) (element *Element) {
+func (this_ *Application) appendType(parent *modelers.Element, modelType *modelers.Type) (element *modelers.Element) {
 
-	element = &Element{
+	element = &modelers.Element{
 		Key:  modelType.Name,
 		Text: modelType.Comment,
 	}
 	if parent != nil {
 		parent.Children = append(parent.Children, element)
-		element.parent = parent
+		element.SetParent(parent)
 	} else {
 		this_.Children = append(this_.Children, element)
 	}
@@ -482,29 +426,29 @@ func (this_ *Application) appendType(parent *Element, modelType *Type) (element 
 	return
 }
 
-func (this_ *Application) appendPack(parent *Element, modelType *Type, name string) (element *Element) {
+func (this_ *Application) appendPack(parent *modelers.Element, modelType *modelers.Type, name string) (element *modelers.Element) {
 
-	element = &Element{
+	element = &modelers.Element{
 		Key:  name,
 		Text: name,
 	}
 	if parent != nil {
 		element.Key = parent.Key + "/" + element.Key
 		parent.Children = append(parent.Children, element)
-		element.parent = parent
+		element.SetParent(parent)
 	} else {
 		this_.Children = append(this_.Children, element)
 	}
 	element.IsPack = true
-	element.Pack = &Pack{
+	element.Pack = &modelers.Pack{
 		Name: name,
 	}
 	this_.setElement(element)
 	return
 }
 
-func (this_ *Application) appendModel(parent *Element, modelType *Type, fileName string, name string, model interface{}) (element *Element, err error) {
-	model_, ok := model.(ElementIFace)
+func (this_ *Application) appendModel(parent *modelers.Element, modelType *modelers.Type, fileName string, name string, model interface{}) (element *modelers.Element, err error) {
+	model_, ok := model.(modelers.ElementIFace)
 	if !ok {
 		err = errors.New("type " + modelType.Name + " model [" + name + "] can not to ElementIFace")
 		return
@@ -515,11 +459,11 @@ func (this_ *Application) appendModel(parent *Element, modelType *Type, fileName
 	}
 	element = parent
 	if !modelType.IsFile {
-		element = &Element{
+		element = &modelers.Element{
 			Key:  key,
 			Text: fileName,
 		}
-		element.parent = parent
+		element.SetParent(parent)
 	}
 	element.IsModel = true
 	model_.SetElement(element)
@@ -543,7 +487,7 @@ func (this_ *Application) appendModel(parent *Element, modelType *Type, fileName
 	this_.setElement(element)
 
 	var list = this_.modelTypeItems[modelType]
-	var newList []ElementIFace
+	var newList []modelers.ElementIFace
 	for _, one := range list {
 		if one.GetElement().Key != model_.GetElement().Key {
 			newList = append(newList, one)
@@ -555,8 +499,11 @@ func (this_ *Application) appendModel(parent *Element, modelType *Type, fileName
 	})
 	this_.modelTypeItems[modelType] = newList
 
-	var Children = element.parent.Children
-	var newChildren []*Element
+	var Children = this_.Children
+	if element.GetParent() != nil {
+		Children = element.GetParent().Children
+	}
+	var newChildren []*modelers.Element
 	for _, one := range Children {
 		if one.Key != model_.GetElement().Key {
 			newChildren = append(newChildren, one)
@@ -566,11 +513,15 @@ func (this_ *Application) appendModel(parent *Element, modelType *Type, fileName
 	sort.SliceStable(newChildren, func(i, j int) bool {
 		return newChildren[i].Key < newChildren[j].Key
 	})
-	element.parent.Children = newChildren
+	if element.GetParent() != nil {
+		element.GetParent().Children = newChildren
+	} else {
+		this_.Children = newChildren
+	}
 	return
 }
 
-func (this_ *Application) getModelTypeCache(modelType *Type) (cache *util.Cache) {
+func (this_ *Application) getModelTypeCache(modelType *modelers.Type) (cache *util.Cache) {
 	this_.cacheLocker.Lock()
 	defer this_.cacheLocker.Unlock()
 
@@ -582,7 +533,7 @@ func (this_ *Application) getModelTypeCache(modelType *Type) (cache *util.Cache)
 	return
 }
 
-func (this_ *Application) getModelTypeItems(modelType *Type) (items []ElementIFace) {
+func (this_ *Application) getModelTypeItems(modelType *modelers.Type) (items []modelers.ElementIFace) {
 	this_.cacheLocker.Lock()
 	defer this_.cacheLocker.Unlock()
 
@@ -590,212 +541,212 @@ func (this_ *Application) getModelTypeItems(modelType *Type) (items []ElementIFa
 	return
 }
 
-func (this_ *Application) GetConstantList() (res []*ConstantModel) {
-	items := this_.getModelTypeItems(TypeConstant)
+func (this_ *Application) GetConstantList() (res []*modelers.ConstantModel) {
+	items := this_.getModelTypeItems(modelers.TypeConstant)
 	for _, one := range items {
-		res = append(res, one.(*ConstantModel))
+		res = append(res, one.(*modelers.ConstantModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConstant(name string) (model *ConstantModel) {
-	cache := this_.getModelTypeCache(TypeConstant)
+func (this_ *Application) GetConstant(name string) (model *modelers.ConstantModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConstant)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConstantModel)
+		model = find.(*modelers.ConstantModel)
 	}
 	return
 }
 
-func (this_ *Application) GetStruct(name string) (model *StructModel) {
-	cache := this_.getModelTypeCache(TypeStruct)
+func (this_ *Application) GetStruct(name string) (model *modelers.StructModel) {
+	cache := this_.getModelTypeCache(modelers.TypeStruct)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*StructModel)
+		model = find.(*modelers.StructModel)
 	}
 	return
 }
 
-func (this_ *Application) GetService(name string) (model *ServiceModel) {
-	cache := this_.getModelTypeCache(TypeService)
+func (this_ *Application) GetService(name string) (model *modelers.ServiceModel) {
+	cache := this_.getModelTypeCache(modelers.TypeService)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ServiceModel)
+		model = find.(*modelers.ServiceModel)
 	}
 	return
 }
 
-func (this_ *Application) GetDao(name string) (model *DaoModel) {
-	cache := this_.getModelTypeCache(TypeDao)
+func (this_ *Application) GetDao(name string) (model *modelers.DaoModel) {
+	cache := this_.getModelTypeCache(modelers.TypeDao)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*DaoModel)
+		model = find.(*modelers.DaoModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigRedisList() (res []*ConfigRedisModel) {
-	items := this_.getModelTypeItems(TypeConfigRedis)
+func (this_ *Application) GetConfigRedisList() (res []*modelers.ConfigRedisModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigRedis)
 	for _, one := range items {
-		res = append(res, one.(*ConfigRedisModel))
+		res = append(res, one.(*modelers.ConfigRedisModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigRedis(name string) (model *ConfigRedisModel) {
-	cache := this_.getModelTypeCache(TypeConfigRedis)
+func (this_ *Application) GetConfigRedis(name string) (model *modelers.ConfigRedisModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigRedis)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigRedisModel)
+		model = find.(*modelers.ConfigRedisModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigDbList() (res []*ConfigDbModel) {
-	items := this_.getModelTypeItems(TypeConfigDb)
+func (this_ *Application) GetConfigDbList() (res []*modelers.ConfigDbModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigDb)
 	for _, one := range items {
-		res = append(res, one.(*ConfigDbModel))
+		res = append(res, one.(*modelers.ConfigDbModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigDb(name string) (model *ConfigDbModel) {
-	cache := this_.getModelTypeCache(TypeConfigDb)
+func (this_ *Application) GetConfigDb(name string) (model *modelers.ConfigDbModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigDb)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigDbModel)
+		model = find.(*modelers.ConfigDbModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigZkList() (res []*ConfigZkModel) {
-	items := this_.getModelTypeItems(TypeConfigZk)
+func (this_ *Application) GetConfigZkList() (res []*modelers.ConfigZkModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigZk)
 	for _, one := range items {
-		res = append(res, one.(*ConfigZkModel))
+		res = append(res, one.(*modelers.ConfigZkModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigZk(name string) (model *ConfigZkModel) {
-	cache := this_.getModelTypeCache(TypeConfigZk)
+func (this_ *Application) GetConfigZk(name string) (model *modelers.ConfigZkModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigZk)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigZkModel)
+		model = find.(*modelers.ConfigZkModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigKafkaList() (res []*ConfigKafkaModel) {
-	items := this_.getModelTypeItems(TypeConfigKafka)
+func (this_ *Application) GetConfigKafkaList() (res []*modelers.ConfigKafkaModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigKafka)
 	for _, one := range items {
-		res = append(res, one.(*ConfigKafkaModel))
+		res = append(res, one.(*modelers.ConfigKafkaModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigKafka(name string) (model *ConfigKafkaModel) {
-	cache := this_.getModelTypeCache(TypeConfigKafka)
+func (this_ *Application) GetConfigKafka(name string) (model *modelers.ConfigKafkaModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigKafka)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigKafkaModel)
+		model = find.(*modelers.ConfigKafkaModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigMongodbList() (res []*ConfigMongodbModel) {
-	items := this_.getModelTypeItems(TypeConfigMongodb)
+func (this_ *Application) GetConfigMongodbList() (res []*modelers.ConfigMongodbModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigMongodb)
 	for _, one := range items {
-		res = append(res, one.(*ConfigMongodbModel))
+		res = append(res, one.(*modelers.ConfigMongodbModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigMongodb(name string) (model *ConfigMongodbModel) {
-	cache := this_.getModelTypeCache(TypeConfigMongodb)
+func (this_ *Application) GetConfigMongodb(name string) (model *modelers.ConfigMongodbModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigMongodb)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigMongodbModel)
+		model = find.(*modelers.ConfigMongodbModel)
 	}
 	return
 }
 
-func (this_ *Application) GetConfigElasticsearchList() (res []*ConfigEsModel) {
-	items := this_.getModelTypeItems(TypeConfigElasticsearch)
+func (this_ *Application) GetConfigElasticsearchList() (res []*modelers.ConfigEsModel) {
+	items := this_.getModelTypeItems(modelers.TypeConfigElasticsearch)
 	for _, one := range items {
-		res = append(res, one.(*ConfigEsModel))
+		res = append(res, one.(*modelers.ConfigEsModel))
 	}
 	return
 }
 
-func (this_ *Application) GetConfigElasticsearch(name string) (model *ConfigEsModel) {
-	cache := this_.getModelTypeCache(TypeConfigElasticsearch)
+func (this_ *Application) GetConfigElasticsearch(name string) (model *modelers.ConfigEsModel) {
+	cache := this_.getModelTypeCache(modelers.TypeConfigElasticsearch)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ConfigEsModel)
+		model = find.(*modelers.ConfigEsModel)
 	}
 	return
 }
 
-func (this_ *Application) GetErrorList() (res []*ErrorModel) {
-	items := this_.getModelTypeItems(TypeError)
+func (this_ *Application) GetErrorList() (res []*modelers.ErrorModel) {
+	items := this_.getModelTypeItems(modelers.TypeError)
 	for _, one := range items {
-		res = append(res, one.(*ErrorModel))
+		res = append(res, one.(*modelers.ErrorModel))
 	}
 	return
 }
 
-func (this_ *Application) GetError(name string) (model *ErrorModel) {
-	cache := this_.getModelTypeCache(TypeError)
+func (this_ *Application) GetError(name string) (model *modelers.ErrorModel) {
+	cache := this_.getModelTypeCache(modelers.TypeError)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*ErrorModel)
+		model = find.(*modelers.ErrorModel)
 	}
 	return
 }
 
-func (this_ *Application) GetFuncList() (res []*FuncModel) {
-	items := this_.getModelTypeItems(TypeFunc)
+func (this_ *Application) GetFuncList() (res []*modelers.FuncModel) {
+	items := this_.getModelTypeItems(modelers.TypeFunc)
 	for _, one := range items {
-		res = append(res, one.(*FuncModel))
+		res = append(res, one.(*modelers.FuncModel))
 	}
 	return
 }
 
-func (this_ *Application) GetFunc(name string) (model *FuncModel) {
-	cache := this_.getModelTypeCache(TypeFunc)
+func (this_ *Application) GetFunc(name string) (model *modelers.FuncModel) {
+	cache := this_.getModelTypeCache(modelers.TypeFunc)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*FuncModel)
+		model = find.(*modelers.FuncModel)
 	}
 	return
 }
 
-func (this_ *Application) GetLanguageJavascript() (model *LanguageJavascriptModel) {
-	items := this_.getModelTypeItems(TypeLanguageJavascript)
-	model = items[0].(*LanguageJavascriptModel)
+func (this_ *Application) GetLanguageJavascript() (model *modelers.LanguageJavascriptModel) {
+	items := this_.getModelTypeItems(modelers.TypeLanguageJavascript)
+	model = items[0].(*modelers.LanguageJavascriptModel)
 	return
 }
 
-func (this_ *Application) GetLanguageGolang() (model *LanguageGolangModel) {
-	items := this_.getModelTypeItems(TypeLanguageGolang)
-	model = items[0].(*LanguageGolangModel)
+func (this_ *Application) GetLanguageGolang() (model *modelers.LanguageGolangModel) {
+	items := this_.getModelTypeItems(modelers.TypeLanguageGolang)
+	model = items[0].(*modelers.LanguageGolangModel)
 	return
 }
 
-func (this_ *Application) GetApplication() (model *ApplicationModel) {
-	items := this_.getModelTypeItems(TypeApplication)
-	model = items[0].(*ApplicationModel)
+func (this_ *Application) GetApp() (model *modelers.AppModel) {
+	items := this_.getModelTypeItems(modelers.TypeApp)
+	model = items[0].(*modelers.AppModel)
 	return
 }
 
-func (this_ *Application) GetValueType(name string) (valueType *ValueType, err error) {
-	for _, one := range ValueTypes {
+func (this_ *Application) GetValueType(name string) (valueType *modelers.ValueType, err error) {
+	for _, one := range modelers.ValueTypes {
 		if strings.EqualFold(one.Name, name) {
 			valueType = one
 			return
 		}
 	}
-	valueType = &ValueType{
+	valueType = &modelers.ValueType{
 		Name: name,
 	}
 	valueType.Struct = this_.GetStruct(valueType.Name)
@@ -804,47 +755,4 @@ func (this_ *Application) GetValueType(name string) (valueType *ValueType, err e
 		return
 	}
 	return
-}
-
-type ApplicationModel struct {
-	ElementNode
-	Dir          string `json:"dir,omitempty"`          // 常量文件
-	ConstantDir  string `json:"constantDir,omitempty"`  // 常量文件
-	ConstantName string `json:"constantName,omitempty"` // 常量文件
-}
-
-func (this_ *ApplicationModel) GetDir() string {
-	if this_.Dir != "" {
-		if !strings.HasSuffix(this_.Dir, "/") {
-			this_.Dir = this_.Dir + "/"
-		}
-		return this_.Dir
-	}
-	return "src/"
-}
-
-func (this_ *ApplicationModel) GetConstantDir() string {
-	if this_.ConstantDir != "" {
-		return this_.ConstantDir
-	}
-	return this_.GetDir() + "constant/"
-}
-
-func (this_ *ApplicationModel) GetConstantName() string {
-	if this_.ConstantName != "" {
-		return this_.ConstantName
-	}
-	return "constant.js"
-}
-
-func init() {
-	addDocTemplate(&docTemplate{
-		Name:    TypeApplicationName,
-		Comment: "应用",
-		Fields: []*docTemplateField{
-			{Name: "dir", Comment: "目录"},
-			{Name: "constantDir", Comment: "常量文件目录"},
-			{Name: "constantName", Comment: "常量文件名称"},
-		},
-	})
 }
