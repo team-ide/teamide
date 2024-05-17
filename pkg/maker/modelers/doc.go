@@ -458,7 +458,7 @@ func setFieldValue(data interface{}, name string, value interface{}) {
 	var fV reflect.Value
 	fV, find := getFieldReflectValue(data, name)
 	if !find {
-		util.Logger.Warn("set field not found", zap.Any("name", name), zap.Any("data", data), zap.Any("value", value))
+		util.Logger.Warn("set field not found", zap.Any("field", name), zap.Any("data", data), zap.Any("type", reflect.TypeOf(data)), zap.Any("value", value))
 		return
 	}
 	if !canNotOut(value) {

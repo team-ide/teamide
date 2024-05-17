@@ -356,13 +356,13 @@ var (
 		Name:    TypeConfigElasticsearchName,
 		Comment: "Elastic Search",
 		toModel: func(name, text string) (model interface{}, err error) {
-			model = &ConfigMongodbModel{}
+			model = &ConfigEsModel{}
 			err = toModel(text, TypeConfigElasticsearchName, model)
 			if err != nil {
 				util.Logger.Error("text to config elasticsearch model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
-			model.(*ConfigMongodbModel).Name = name
+			model.(*ConfigEsModel).Name = name
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {

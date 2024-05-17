@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/kafka"
+	"github.com/team-ide/go-tool/mongodb"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
@@ -177,6 +178,63 @@ func (this_ *Invoker) GetKafkaServiceByName(name string) (res kafka.IService, er
 	var scriptVar = "kafka"
 	if name != "default" {
 		scriptVar = "kafka_" + name
+	}
+	err = this_.setScriptVar(scriptVar, res)
+	return
+}
+
+func (this_ *Invoker) GetMongodbService() (res mongodb.IService, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("get mongodb service error", zap.Any("error", err))
+		}
+	}()
+	res, err = this_.GetMongodbServiceByName("")
+	return
+}
+
+func (this_ *Invoker) GetMongodbServiceByName(name string) (res mongodb.IService, err error) {
+	if name == "" {
+		name = "default"
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("get mongodb service by name error", zap.Any("name", name), zap.Any("error", err))
+		}
+	}()
+	this_.mongodbServiceCacheLock.Lock()
+	defer this_.mongodbServiceCacheLock.Unlock()
+	res, find := this_.mongodbServiceCache[name]
+
+	if find {
+		return
+	}
+
+	util.Logger.Info("mongodb service not found,now create service", zap.Any("name", name))
+
+	var config *modelers.ConfigKafkaModel
+	config = this_.app.GetConfigKafka(name)
+	if config == nil {
+		err = errors.New("config mongodb [" + name + "] is not exist")
+		util.Logger.Error("create mongodb service error", zap.Any("error", err))
+		return
+	}
+	res, err = mongodb.New(&mongodb.Config{
+		Address:  config.Address,
+		Username: config.Username,
+		Password: config.Password,
+	})
+	if err != nil {
+		util.Logger.Error("create mongodb service error", zap.Any("error", err))
+		return
+	}
+
+	this_.mongodbServiceCache[name] = res
+	var scriptVar = "mongodb"
+	if name != "default" {
+		scriptVar = "mongodb_" + name
 	}
 	err = this_.setScriptVar(scriptVar, res)
 	return

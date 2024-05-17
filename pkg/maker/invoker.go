@@ -3,6 +3,7 @@ package maker
 import (
 	"errors"
 	"fmt"
+	"github.com/dop251/goja"
 	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/kafka"
@@ -36,6 +37,9 @@ func NewInvoker(app *Application) (runner *Invoker, err error) {
 		errorContext:    make(map[string]*Error),
 		serviceContext:  make(map[string]interface{}),
 		daoContext:      make(map[string]interface{}),
+
+		daoProgram:     make(map[string]*goja.Program),
+		serviceProgram: make(map[string]*goja.Program),
 	}
 
 	err = runner.init()
@@ -62,6 +66,8 @@ type Invoker struct {
 	errorContext    map[string]*Error
 	serviceContext  map[string]interface{}
 	daoContext      map[string]interface{}
+	daoProgram      map[string]*goja.Program
+	serviceProgram  map[string]*goja.Program
 
 	script *Script
 }
@@ -163,6 +169,27 @@ func (this_ *Invoker) init() (err error) {
 			return
 		}
 	}
+	for _, one := range this_.app.GetConfigElasticsearchList() {
+		_, err = this_.GetEsServiceByName(one.Name)
+		if err != nil {
+			util.Logger.Error("invoker init get es service error", zap.Any("name", one.Name), zap.Any("error", err))
+			return
+		}
+	}
+	for _, one := range this_.app.GetConfigKafkaList() {
+		_, err = this_.GetKafkaServiceByName(one.Name)
+		if err != nil {
+			util.Logger.Error("invoker init get kafka service error", zap.Any("name", one.Name), zap.Any("error", err))
+			return
+		}
+	}
+	for _, one := range this_.app.GetConfigMongodbList() {
+		_, err = this_.GetMongodbServiceByName(one.Name)
+		if err != nil {
+			util.Logger.Error("invoker init get mongodb service error", zap.Any("name", one.Name), zap.Any("error", err))
+			return
+		}
+	}
 
 	err = this_.setScriptVar("dao", this_.daoContext)
 	if err != nil {
@@ -190,6 +217,11 @@ func (this_ *Invoker) init() (err error) {
 }
 
 func (this_ *Invoker) BindDao(dao *modelers.DaoModel) (err error) {
+	this_.daoProgram[dao.Name], err = this_.script.CompileScript(dao.Func)
+	if err != nil {
+		util.Logger.Error("invoker bind dao compile script error", zap.Any("name", dao.Name), zap.Any("error", err))
+		return
+	}
 	var run = func(args ...interface{}) (res any, err error) {
 		data, err := this_.NewInvokeDataByArgs(dao.Args, args)
 		if err != nil {
@@ -203,6 +235,11 @@ func (this_ *Invoker) BindDao(dao *modelers.DaoModel) (err error) {
 }
 
 func (this_ *Invoker) BindService(service *modelers.ServiceModel) (err error) {
+	this_.serviceProgram[service.Name], err = this_.script.CompileScript(service.Func)
+	if err != nil {
+		util.Logger.Error("invoker bind service compile script error", zap.Any("name", service.Name), zap.Any("error", err))
+		return
+	}
 	var run = func(args ...interface{}) (res any, err error) {
 		data, err := this_.NewInvokeDataByArgs(service.Args, args)
 		if err != nil {
@@ -274,9 +311,15 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 	if invokeData.app == nil {
 		invokeData.app = this_.app
 	}
+
+	p := this_.serviceProgram[service.Name]
+	if p == nil {
+		err = errors.New("invoke service [" + service.Name + "] error, service program is null")
+		return
+	}
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	res, err = this_.InvokeFunc(funcInvoke.name, service.Func, invokeData)
+	res, err = this_.InvokeFunc(funcInvoke.name, p, invokeData)
 	if err != nil {
 		return
 	}
@@ -324,17 +367,24 @@ func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) 
 	if invokeData.app == nil {
 		invokeData.app = this_.app
 	}
+
+	p := this_.daoProgram[dao.Name]
+	if p == nil {
+		err = errors.New("invoke dao [" + dao.Name + "] error, dao program is null")
+		return
+	}
+
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	res, err = this_.InvokeFunc(funcInvoke.name, dao.Func, invokeData)
+	res, err = this_.InvokeFunc(funcInvoke.name, p, invokeData)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Invoker) InvokeFunc(from string, code string, invokeData *InvokeData) (res interface{}, err error) {
-	funcInvoke := invokeStart(from+" func code", invokeData)
+func (this_ *Invoker) InvokeFunc(from string, p *goja.Program, invokeData *InvokeData) (res interface{}, err error) {
+	funcInvoke := invokeStart(from+" run func program", invokeData)
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
@@ -345,11 +395,12 @@ func (this_ *Invoker) InvokeFunc(from string, code string, invokeData *InvokeDat
 	}()
 	util.Logger.Debug(funcInvoke.name + " start")
 	//var res interface{}
-	res, err = invokeData.InvokeScript(code)
+	v, err := invokeData.script.vm.RunProgram(p)
 	if err != nil {
 		util.Logger.Error(funcInvoke.name+" invoke error", zap.Any("error", err))
 		return
 	}
+	res = v.Export()
 
 	return
 }
