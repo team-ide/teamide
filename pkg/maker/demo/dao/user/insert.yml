@@ -2,4 +2,4 @@ args:
   - name: user
     type: user
 func: |
-  return db.insert("TB_USER", user)
+  return db.insert("tb_user", user)

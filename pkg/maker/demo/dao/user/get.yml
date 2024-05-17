@@ -3,5 +3,5 @@ args:
     type: i64
 func: |
   var user User
-  user = db.selectOne("userId, name", "TB_USER", "userId=${userId}")
+  user = db.selectOne("userId, name", "tb_user", "userId=${userId}")
   return user

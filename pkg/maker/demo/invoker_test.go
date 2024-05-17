@@ -52,7 +52,7 @@ func TestInvokerUserGet(t *testing.T) {
 		return
 	}
 
-	invokeData, err := maker.NewInvokeData(app)
+	invokeData, err := invoker.NewInvokeData()
 	if err != nil {
 		util.Logger.Error("NewInvokeData error", zap.Error(err))
 		return
@@ -94,7 +94,7 @@ func TestInvokerZk(t *testing.T) {
 		return
 	}
 
-	invokeData, err := maker.NewInvokeData(app)
+	invokeData, err := invoker.NewInvokeData()
 	if err != nil {
 		util.Logger.Error("NewInvokeData error", zap.Error(err))
 		return

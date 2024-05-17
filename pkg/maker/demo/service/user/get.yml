@@ -6,11 +6,11 @@ func: |
     throw error.USER_ID_IS_EMPTY;
   }
   var user user
-  user = redis.get(user-${userId})
+  user = redis.get(`user-${userId}`)
   if(user == null){
     user = dao.user.get(userId)
     if(user != null){
-      redis.set(user-${userId}, user, USER_REDIS_EXPIRE)
+      redis.set(`user-${userId}`, user, USER_REDIS_EXPIRE)
     }
   }
   if(user != null){

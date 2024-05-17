@@ -3,7 +3,6 @@ package maker
 import (
 	"errors"
 	"fmt"
-	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"regexp"
@@ -13,13 +12,14 @@ import (
 
 type InvokeData struct {
 	app          *Application
+	invoker      *Invoker
 	args         []*InvokeVar
 	vars         []*InvokeVar
 	argCache     map[string]*InvokeVar
 	argCacheLock sync.Locker
 	varCache     map[string]*InvokeVar
 	varCacheLock sync.Locker
-	script       *javascript.Script
+	script       *Script
 	scriptLock   sync.Locker
 }
 
@@ -29,14 +29,15 @@ type InvokeVar struct {
 	ValueType *modelers.ValueType `json:"valueType,omitempty"`
 }
 
-func NewInvokeData(app *Application) (data *InvokeData, err error) {
-	script, err := javascript.NewScript()
+func (this_ *Invoker) NewInvokeData() (data *InvokeData, err error) {
+	script, err := NewScriptByParent(this_.script)
 	if err != nil {
 		util.Logger.Error("NewInvokeData NewScript error", zap.Any("error", err))
 		return
 	}
 	data = &InvokeData{
-		app:          app,
+		app:          this_.app,
+		invoker:      this_,
 		argCache:     make(map[string]*InvokeVar),
 		argCacheLock: &sync.Mutex{},
 		varCache:     make(map[string]*InvokeVar),
@@ -44,41 +45,22 @@ func NewInvokeData(app *Application) (data *InvokeData, err error) {
 		script:       script,
 		scriptLock:   &sync.Mutex{},
 	}
-	err = data.init()
-	if err != nil {
-		return nil, err
-	}
 	return
 }
 
-func (this_ *InvokeData) init() (err error) {
-	// 将 常量 error func 填充 至 script 变量域中
-	for _, one := range this_.app.GetConstantList() {
-		for _, option := range one.Options {
-			err = this_.scriptSet(option.Name, option.Value)
-			if err != nil {
-				util.Logger.Error("invoke data init set constant value error", zap.Any("name", option.Name), zap.Any("value", option.Value), zap.Any("error", err))
-				return
-			}
-		}
+func (this_ *Invoker) NewInvokeDataByArgs(argModels []*modelers.ArgModel, args []interface{}) (data *InvokeData, err error) {
+	data, err = this_.NewInvokeData()
+	if err != nil {
+		return
 	}
-
-	for _, one := range this_.app.GetErrorList() {
-		for _, option := range one.Options {
-			err = this_.scriptSet(option.Name, option)
-			if err != nil {
-				util.Logger.Error("invoke data init set error value error", zap.Any("name", option.Name), zap.Any("error", option), zap.Any("error", err))
-				return
-			}
+	mSize := len(argModels)
+	vSize := len(args)
+	for i := 0; i < mSize; i++ {
+		if i > vSize-1 {
+			break
 		}
-	}
-
-	for _, one := range this_.app.GetFuncList() {
-		err = this_.scriptSet(one.Name, func(args ...interface{}) {
-			util.Logger.Debug("func "+one.Name+" run start", zap.Any("func", one))
-		})
+		err = data.AddVar(argModels[i].Name, args[i], argModels[i].Type)
 		if err != nil {
-			util.Logger.Error("invoke data init set func value error", zap.Any("name", one.Name), zap.Any("func", one), zap.Any("error", err))
 			return
 		}
 	}
@@ -207,12 +189,12 @@ func (this_ *InvokeData) InvokeScript(script string) (res interface{}, err error
 		funcInvoke.end(err)
 		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
 	}()
-	util.Logger.Debug(funcInvoke.name+" start", zap.Any("script", script))
+	util.Logger.Debug(funcInvoke.name + " start")
 	if script == "" {
 		return
 	}
 
-	res, err = this_.script.GetScriptValue(script)
+	res, err = this_.script.RunScript(script)
 	if err != nil {
 		util.Logger.Error(funcInvoke.name+" error", zap.Any("script", script), zap.Any("error", err))
 		return
@@ -231,7 +213,7 @@ func (this_ *InvokeData) InvokeScriptStringValue(script string) (res string, err
 		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
 	}()
 
-	util.Logger.Debug(funcInvoke.name+" start", zap.Any("script", script))
+	util.Logger.Debug(funcInvoke.name + " start")
 	if script == "" {
 		return
 	}

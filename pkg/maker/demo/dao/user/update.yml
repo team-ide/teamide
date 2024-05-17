@@ -10,4 +10,4 @@ func: |
     update["account"] = user.account
   }
   
-  return db.update("TB_USER", update, "account=${account}")
+  return db.update("tb_user", update, "account=${account}")

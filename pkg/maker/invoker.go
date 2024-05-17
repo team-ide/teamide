@@ -3,14 +3,14 @@ package maker
 import (
 	"errors"
 	"fmt"
-	"github.com/team-ide/go-tool/db"
 	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/kafka"
-	"github.com/team-ide/go-tool/redis"
+	"github.com/team-ide/go-tool/mongodb"
 	"github.com/team-ide/go-tool/util"
 	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 	"teamide/pkg/maker/modelers"
 	"time"
@@ -18,18 +18,24 @@ import (
 
 func NewInvoker(app *Application) (runner *Invoker, err error) {
 	runner = &Invoker{
-		app:                   app,
-		redisServiceCache:     make(map[string]redis.IService),
-		redisServiceCacheLock: &sync.Mutex{},
-		esServiceCache:        make(map[string]elasticsearch.IService),
-		esServiceCacheLock:    &sync.Mutex{},
-		zkServiceCache:        make(map[string]zookeeper.IService),
-		zkServiceCacheLock:    &sync.Mutex{},
-		dbServiceCache:        make(map[string]db.IService),
-		dbServiceCacheLock:    &sync.Mutex{},
-		kafkaServiceCache:     make(map[string]kafka.IService),
-		kafkaServiceCacheLock: &sync.Mutex{},
-		errorContext:          make(map[string]*Error),
+		app:                     app,
+		redisServiceCache:       make(map[string]*ServiceRedis),
+		redisServiceCacheLock:   &sync.Mutex{},
+		esServiceCache:          make(map[string]elasticsearch.IService),
+		esServiceCacheLock:      &sync.Mutex{},
+		zkServiceCache:          make(map[string]zookeeper.IService),
+		zkServiceCacheLock:      &sync.Mutex{},
+		dbServiceCache:          make(map[string]*ServiceDb),
+		dbServiceCacheLock:      &sync.Mutex{},
+		mongodbServiceCache:     make(map[string]mongodb.IService),
+		mongodbServiceCacheLock: &sync.Mutex{},
+		kafkaServiceCache:       make(map[string]kafka.IService),
+		kafkaServiceCacheLock:   &sync.Mutex{},
+
+		constantContext: make(map[string]interface{}),
+		errorContext:    make(map[string]*Error),
+		serviceContext:  make(map[string]interface{}),
+		daoContext:      make(map[string]interface{}),
 	}
 
 	err = runner.init()
@@ -38,19 +44,26 @@ func NewInvoker(app *Application) (runner *Invoker, err error) {
 }
 
 type Invoker struct {
-	app                   *Application
-	redisServiceCache     map[string]redis.IService
-	redisServiceCacheLock sync.Locker
-	esServiceCache        map[string]elasticsearch.IService
-	esServiceCacheLock    sync.Locker
-	zkServiceCache        map[string]zookeeper.IService
-	zkServiceCacheLock    sync.Locker
-	dbServiceCache        map[string]db.IService
-	dbServiceCacheLock    sync.Locker
-	kafkaServiceCache     map[string]kafka.IService
-	kafkaServiceCacheLock sync.Locker
-	script                *javascript.Script
-	errorContext          map[string]*Error
+	app                     *Application
+	redisServiceCache       map[string]*ServiceRedis
+	redisServiceCacheLock   sync.Locker
+	esServiceCache          map[string]elasticsearch.IService
+	esServiceCacheLock      sync.Locker
+	zkServiceCache          map[string]zookeeper.IService
+	zkServiceCacheLock      sync.Locker
+	dbServiceCache          map[string]*ServiceDb
+	dbServiceCacheLock      sync.Locker
+	mongodbServiceCache     map[string]mongodb.IService
+	mongodbServiceCacheLock sync.Locker
+	kafkaServiceCache       map[string]kafka.IService
+	kafkaServiceCacheLock   sync.Locker
+
+	constantContext map[string]interface{}
+	errorContext    map[string]*Error
+	serviceContext  map[string]interface{}
+	daoContext      map[string]interface{}
+
+	script *Script
 }
 
 type Error struct {
@@ -65,18 +78,46 @@ func (this_ *Error) Error() string {
 func (this_ *Invoker) setScriptVar(name string, value interface{}) (err error) {
 	err = this_.script.Set(name, value)
 	if err != nil {
-		util.Logger.Error("invoker set script var error", zap.Any("name", name), zap.Any("error", err))
 		return
 	}
 	return
 }
 
+func (this_ *Invoker) initScript() (err error) {
+
+	this_.script, err = NewScript()
+	scriptContext := javascript.NewContext()
+	for key, value := range scriptContext {
+		err = this_.setScriptVar(key, value)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
 func (this_ *Invoker) init() (err error) {
-	this_.script, err = javascript.NewScript()
+	err = this_.initScript()
 	if err != nil {
-		util.Logger.Error("invoker init new script error", zap.Any("error", err))
 		return
 	}
+
+	err = this_.setScriptVar("constant", this_.constantContext)
+	if err != nil {
+		return
+	}
+	// 将 常量 error func 填充 至 script 变量域中
+	for _, one := range this_.app.GetConstantList() {
+		for _, o := range one.Options {
+			err = this_.setScriptVar(o.Name, o.Value)
+			if err != nil {
+				util.Logger.Error("invoke data init set constant value error", zap.Any("name", o.Name), zap.Any("value", o.Value), zap.Any("error", err))
+				return
+			}
+			this_.constantContext[o.Name] = o.Value
+		}
+	}
+
 	err = this_.setScriptVar("error", this_.errorContext)
 	if err != nil {
 		return
@@ -87,6 +128,16 @@ func (this_ *Invoker) init() (err error) {
 				Code: o.Code,
 				Msg:  o.Msg,
 			}
+		}
+	}
+
+	for _, one := range this_.app.GetFuncList() {
+		err = this_.setScriptVar(one.Name, func(args ...interface{}) {
+			util.Logger.Debug("func "+one.Name+" run start", zap.Any("func", one))
+		})
+		if err != nil {
+			util.Logger.Error("invoke data init set func value error", zap.Any("name", one.Name), zap.Any("func", one), zap.Any("error", err))
+			return
 		}
 	}
 
@@ -113,7 +164,73 @@ func (this_ *Invoker) init() (err error) {
 		}
 	}
 
+	err = this_.setScriptVar("dao", this_.daoContext)
+	if err != nil {
+		return
+	}
+	for _, one := range this_.app.GetDaoList() {
+		err = this_.BindDao(one)
+		if err != nil {
+			return
+		}
+	}
+
+	err = this_.setScriptVar("service", this_.serviceContext)
+	if err != nil {
+		return
+	}
+	for _, one := range this_.app.GetServiceList() {
+		err = this_.BindService(one)
+		if err != nil {
+			return
+		}
+	}
+
 	return
+}
+
+func (this_ *Invoker) BindDao(dao *modelers.DaoModel) (err error) {
+	var run = func(args ...interface{}) (res any, err error) {
+		data, err := this_.NewInvokeDataByArgs(dao.Args, args)
+		if err != nil {
+			return
+		}
+		res, err = this_.InvokeDao(dao, data)
+		return
+	}
+	SetBySlash(this_.daoContext, dao.Name, run)
+	return
+}
+
+func (this_ *Invoker) BindService(service *modelers.ServiceModel) (err error) {
+	var run = func(args ...interface{}) (res any, err error) {
+		data, err := this_.NewInvokeDataByArgs(service.Args, args)
+		if err != nil {
+			return
+		}
+		res, err = this_.InvokeService(service, data)
+		return
+	}
+	SetBySlash(this_.serviceContext, service.Name, run)
+	return
+}
+
+func SetBySlash(data map[string]interface{}, name string, value any) {
+	//fmt.Println("SetBySlash:", name)
+	index := strings.Index(name, "/")
+	if index < 0 {
+		data[name] = value
+		return
+	}
+	pName := name[:index]
+	cName := name[index+1:]
+	//fmt.Println("SetBySlash pName:", pName, "cName:", cName)
+	parent := data[pName]
+	if parent == nil {
+		parent = map[string]interface{}{}
+		data[pName] = parent
+	}
+	SetBySlash(parent.(map[string]interface{}), cName, value)
 }
 
 func (this_ *Invoker) InvokeServiceByName(name string, invokeData *InvokeData) (res interface{}, err error) {
@@ -149,7 +266,7 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
 	}()
 	if invokeData == nil {
-		invokeData, err = NewInvokeData(this_.app)
+		invokeData, err = this_.NewInvokeData()
 		if err != nil {
 			return
 		}
@@ -186,7 +303,7 @@ func (this_ *Invoker) InvokeDaoByName(name string, invokeData *InvokeData) (res 
 
 func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) (res interface{}, err error) {
 	if dao == nil {
-		err = errors.New("invoke dao error,service is null")
+		err = errors.New("invoke dao error,dao is null")
 		return
 	}
 	funcInvoke := invokeStart("dao "+dao.Name, invokeData)
@@ -199,7 +316,7 @@ func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) 
 		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
 	}()
 	if invokeData == nil {
-		invokeData, err = NewInvokeData(this_.app)
+		invokeData, err = this_.NewInvokeData()
 		if err != nil {
 			return
 		}

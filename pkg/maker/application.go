@@ -567,6 +567,23 @@ func (this_ *Application) GetStruct(name string) (model *modelers.StructModel) {
 	return
 }
 
+func (this_ *Application) GetDao(name string) (model *modelers.DaoModel) {
+	cache := this_.getModelTypeCache(modelers.TypeDao)
+	find, _ := cache.Get(name)
+	if find != nil {
+		model = find.(*modelers.DaoModel)
+	}
+	return
+}
+
+func (this_ *Application) GetDaoList() (res []*modelers.DaoModel) {
+	items := this_.getModelTypeItems(modelers.TypeDao)
+	for _, one := range items {
+		res = append(res, one.(*modelers.DaoModel))
+	}
+	return
+}
+
 func (this_ *Application) GetService(name string) (model *modelers.ServiceModel) {
 	cache := this_.getModelTypeCache(modelers.TypeService)
 	find, _ := cache.Get(name)
@@ -576,11 +593,10 @@ func (this_ *Application) GetService(name string) (model *modelers.ServiceModel)
 	return
 }
 
-func (this_ *Application) GetDao(name string) (model *modelers.DaoModel) {
-	cache := this_.getModelTypeCache(modelers.TypeDao)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.DaoModel)
+func (this_ *Application) GetServiceList() (res []*modelers.ServiceModel) {
+	items := this_.getModelTypeItems(modelers.TypeService)
+	for _, one := range items {
+		res = append(res, one.(*modelers.ServiceModel))
 	}
 	return
 }

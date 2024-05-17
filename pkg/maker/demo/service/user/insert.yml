@@ -26,5 +26,5 @@ func: |
   
   // 插入数据入库
   dao.user.insert(user)
-  redis.set(user-${user.userId}, user, USER_REDIS_EXPIRE)
+  redis.set(`user-${user.userId}`, user, USER_REDIS_EXPIRE)
   return user

@@ -6,4 +6,4 @@ func: |
     throw error.USER_ID_IS_EMPTY;
   }
   dao.user.delete(userId)
-  redis.del(user-${userId})
+  redis.del(`user-${userId}`)
