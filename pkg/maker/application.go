@@ -2,6 +2,7 @@ package maker
 
 import (
 	"errors"
+	"github.com/dop251/goja"
 	"github.com/team-ide/go-tool/util"
 	"os"
 	"regexp"
@@ -25,6 +26,18 @@ type Application struct {
 	cacheLocker sync.Mutex
 
 	LoadErrors []*LoadError `json:"loadErrors"`
+
+	constantContext map[string]interface{}
+	errorContext    map[string]*Error
+
+	daoContext map[string]interface{}
+	daoProgram map[string]*goja.Program
+
+	serviceContext map[string]interface{}
+	serviceProgram map[string]*goja.Program
+
+	funcContext map[string]interface{}
+	funcProgram map[string]*goja.Program
 }
 
 func (this_ *Application) GetDir() string {

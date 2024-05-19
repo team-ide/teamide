@@ -67,7 +67,7 @@ func (this_ *Script) GetScriptValue(script string) (interface{}, error) {
 func (this_ *Script) CompileScript(script string) (*goja.Program, error) {
 	runScript := `(function (){` + script + `})()
 `
-	p, err := this_.vm.CompileScript("", runScript)
+	p, err := goja.Compile("", runScript, false)
 	if err != nil {
 		return nil, err
 	}

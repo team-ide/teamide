@@ -44,7 +44,7 @@ func (this_ *Invoker) GetZkServiceByName(name string) (res zookeeper.IService, e
 	util.Logger.Info("zk service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigZkModel
-	config = this_.app.GetConfigZk(name)
+	config = this_.GetConfigZk(name)
 	if config == nil {
 		err = errors.New("config zk [" + name + "] is not exist")
 		util.Logger.Error("create zk service error", zap.Any("error", err))
@@ -101,7 +101,7 @@ func (this_ *Invoker) GetEsServiceByName(name string) (res elasticsearch.IServic
 	util.Logger.Info("es service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigEsModel
-	config = this_.app.GetConfigElasticsearch(name)
+	config = this_.GetConfigElasticsearch(name)
 	if config == nil {
 		err = errors.New("config es [" + name + "] is not exist")
 		util.Logger.Error("create es service error", zap.Any("error", err))
@@ -158,7 +158,7 @@ func (this_ *Invoker) GetKafkaServiceByName(name string) (res kafka.IService, er
 	util.Logger.Info("kafka service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigKafkaModel
-	config = this_.app.GetConfigKafka(name)
+	config = this_.GetConfigKafka(name)
 	if config == nil {
 		err = errors.New("config kafka [" + name + "] is not exist")
 		util.Logger.Error("create kafka service error", zap.Any("error", err))
@@ -215,7 +215,7 @@ func (this_ *Invoker) GetMongodbServiceByName(name string) (res mongodb.IService
 	util.Logger.Info("mongodb service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigKafkaModel
-	config = this_.app.GetConfigKafka(name)
+	config = this_.GetConfigKafka(name)
 	if config == nil {
 		err = errors.New("config mongodb [" + name + "] is not exist")
 		util.Logger.Error("create mongodb service error", zap.Any("error", err))

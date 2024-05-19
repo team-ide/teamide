@@ -11,7 +11,6 @@ import (
 )
 
 type InvokeData struct {
-	app          *Application
 	invoker      *Invoker
 	args         []*InvokeVar
 	vars         []*InvokeVar
@@ -36,7 +35,6 @@ func (this_ *Invoker) NewInvokeData() (data *InvokeData, err error) {
 		return
 	}
 	data = &InvokeData{
-		app:          this_.app,
 		invoker:      this_,
 		argCache:     make(map[string]*InvokeVar),
 		argCacheLock: &sync.Mutex{},
@@ -114,7 +112,7 @@ func (this_ *InvokeData) AddVar(name string, value interface{}, varType string) 
 	var valueType *modelers.ValueType = nil
 
 	if varType != "" {
-		valueType, err = this_.app.GetValueType(varType)
+		valueType, err = this_.invoker.GetValueType(varType)
 		if err != nil {
 			util.Logger.Error("invoke set var get value type error", zap.Any("varType", varType), zap.Any("error", err))
 			return

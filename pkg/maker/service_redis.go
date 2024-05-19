@@ -42,7 +42,7 @@ func (this_ *Invoker) GetRedisServiceByName(name string) (res *ServiceRedis, err
 	util.Logger.Info("redis service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigRedisModel
-	config = this_.app.GetConfigRedis(name)
+	config = this_.GetConfigRedis(name)
 	if config == nil {
 		err = errors.New("config redis [" + name + "] is not exist")
 		util.Logger.Error("create redis service error", zap.Any("error", err))

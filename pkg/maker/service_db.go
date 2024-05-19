@@ -41,7 +41,7 @@ func (this_ *Invoker) GetDbServiceByName(name string) (res *ServiceDb, err error
 	util.Logger.Info("db service not found,now create service", zap.Any("name", name))
 
 	var config *modelers.ConfigDbModel
-	config = this_.app.GetConfigDb(name)
+	config = this_.GetConfigDb(name)
 	if config == nil {
 		err = errors.New("config db [" + name + "] is not exist")
 		util.Logger.Error("create db service error", zap.Any("error", err))
