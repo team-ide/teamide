@@ -2,7 +2,6 @@ package maker
 
 import (
 	"errors"
-	"github.com/dop251/goja"
 	"github.com/team-ide/go-tool/util"
 	"os"
 	"regexp"
@@ -11,6 +10,29 @@ import (
 	"sync"
 	"teamide/pkg/maker/modelers"
 )
+
+func newApplication() (app *Application) {
+	app = &Application{
+		elementCache:    make(map[string]*modelers.Element),
+		modelTypeCaches: make(map[*modelers.Type]*util.Cache),
+		modelTypeItems:  make(map[*modelers.Type][]modelers.ElementIFace),
+
+		constantContext: make(map[string]interface{}),
+		errorContext:    make(map[string]interface{}),
+		strictContext:   make(map[string]interface{}),
+		tableContext:    make(map[string]interface{}),
+
+		daoContext: make(map[string]interface{}),
+		daoProgram: make(map[string]*CompileProgram),
+
+		serviceContext: make(map[string]interface{}),
+		serviceProgram: make(map[string]*CompileProgram),
+
+		funcContext: make(map[string]interface{}),
+		funcProgram: make(map[string]*CompileProgram),
+	}
+	return
+}
 
 type Application struct {
 	dir string
@@ -28,16 +50,18 @@ type Application struct {
 	LoadErrors []*LoadError `json:"loadErrors"`
 
 	constantContext map[string]interface{}
-	errorContext    map[string]*Error
+	errorContext    map[string]interface{}
+	strictContext   map[string]interface{}
+	tableContext    map[string]interface{}
 
 	daoContext map[string]interface{}
-	daoProgram map[string]*goja.Program
+	daoProgram map[string]*CompileProgram
 
 	serviceContext map[string]interface{}
-	serviceProgram map[string]*goja.Program
+	serviceProgram map[string]*CompileProgram
 
 	funcContext map[string]interface{}
-	funcProgram map[string]*goja.Program
+	funcProgram map[string]*CompileProgram
 }
 
 func (this_ *Application) GetDir() string {

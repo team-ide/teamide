@@ -29,8 +29,9 @@ func LoadDemoApp() (app *maker.Application, err error) {
 		dir = rootDir + "/pkg/maker/demo"
 	}
 
-	fmt.Println("demo app dir:", dir)
+	fmt.Println("demo app load start dir:", dir)
 	app = maker.Load(dir)
+	fmt.Println("demo app load success")
 	return
 }
 

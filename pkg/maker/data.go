@@ -29,7 +29,7 @@ type InvokeVar struct {
 }
 
 func (this_ *Invoker) NewInvokeData() (data *InvokeData, err error) {
-	script, err := NewScriptByParent(this_.script)
+	script, err := this_.NewScriptByParent(this_.script)
 	if err != nil {
 		util.Logger.Error("NewInvokeData NewScript error", zap.Any("error", err))
 		return

@@ -2,34 +2,12 @@ package maker
 
 import (
 	"encoding/json"
-	"github.com/dop251/goja"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
 	"strings"
 	"teamide/pkg/maker/modelers"
 )
-
-func newApplication() (app *Application) {
-	app = &Application{
-		elementCache:    make(map[string]*modelers.Element),
-		modelTypeCaches: make(map[*modelers.Type]*util.Cache),
-		modelTypeItems:  make(map[*modelers.Type][]modelers.ElementIFace),
-
-		constantContext: make(map[string]interface{}),
-		errorContext:    make(map[string]*Error),
-
-		daoContext: make(map[string]interface{}),
-		daoProgram: make(map[string]*goja.Program),
-
-		serviceContext: make(map[string]interface{}),
-		serviceProgram: make(map[string]*goja.Program),
-
-		funcContext: make(map[string]interface{}),
-		funcProgram: make(map[string]*goja.Program),
-	}
-	return
-}
 
 func Load(dir string) (app *Application) {
 	app = newApplication()

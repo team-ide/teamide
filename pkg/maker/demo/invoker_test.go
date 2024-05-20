@@ -40,13 +40,9 @@ func TestInvokerUserGet(t *testing.T) {
 
 	util.Logger.Debug("TestInvokerUserGet start")
 
-	app, err := LoadDemoApp()
-	if err != nil {
-		util.Logger.Error("load demo app error", zap.Error(err))
-		return
-	}
+	compiler := LoadDemoCompiler()
 
-	invoker, err := maker.NewInvoker(app)
+	invoker, err := maker.NewInvoker(compiler)
 	if err != nil {
 		util.Logger.Error("NewInvoker error", zap.Error(err))
 		return
@@ -82,13 +78,9 @@ func TestInvokerUserGet(t *testing.T) {
 }
 
 func TestInvokerZk(t *testing.T) {
-	app, err := LoadDemoApp()
-	if err != nil {
-		util.Logger.Error("load demo app error", zap.Error(err))
-		return
-	}
+	compiler := LoadDemoCompiler()
 
-	invoker, err := maker.NewInvoker(app)
+	invoker, err := maker.NewInvoker(compiler)
 	if err != nil {
 		util.Logger.Error("NewInvoker error", zap.Error(err))
 		return

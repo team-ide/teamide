@@ -5,9 +5,52 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
+	"teamide/pkg/maker/modelers"
 )
 
+func (this_ *Compiler) NewScript() (script *Script, err error) {
+
+	return this_.NewScriptByParent(nil)
+}
+
+func (this_ *Compiler) NewScriptByParent(parent *Script) (script *Script, err error) {
+	script = &Script{
+		compiler: this_,
+	}
+	script.vm = goja.New()
+	script.dataContext = make(map[string]interface{})
+	if parent != nil {
+		for key, value := range parent.dataContext {
+			err = script.Set(key, value)
+			if err != nil {
+				return
+			}
+		}
+	}
+
+	return
+}
+
+func (this_ *Script) NewScript() (script *Script, err error) {
+	return this_.compiler.NewScriptByParent(this_)
+}
+
+func (this_ *Script) NewScriptByArgs(args []*modelers.ArgModel) (script *Script, err error) {
+	script, err = this_.compiler.NewScriptByParent(this_)
+	if err != nil {
+		return
+	}
+	for _, arg := range args {
+		err = script.Set(arg.Name, arg)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 type Script struct {
+	compiler    *Compiler
 	dataContext map[string]interface{}
 	vm          *goja.Runtime
 }
@@ -64,16 +107,6 @@ func (this_ *Script) GetScriptValue(script string) (interface{}, error) {
 	return scriptValue.Export(), nil
 }
 
-func (this_ *Script) CompileScript(script string) (*goja.Program, error) {
-	runScript := `(function (){` + script + `})()
-`
-	p, err := goja.Compile("", runScript, false)
-	if err != nil {
-		return nil, err
-	}
-	return p, nil
-}
-
 func (this_ *Script) RunScript(script string) (interface{}, error) {
 	if script == "" {
 		return nil, nil
@@ -98,24 +131,5 @@ func (this_ *Script) GetStringScriptValue(script string) (value string, err erro
 		value = util.GetStringValue(scriptValue)
 		return
 	}
-	return
-}
-func NewScript() (script *Script, err error) {
-
-	return NewScriptByParent(nil)
-}
-func NewScriptByParent(parent *Script) (script *Script, err error) {
-	script = &Script{}
-	script.vm = goja.New()
-	script.dataContext = make(map[string]interface{})
-	if parent != nil {
-		for key, value := range parent.dataContext {
-			err = script.Set(key, value)
-			if err != nil {
-				return
-			}
-		}
-	}
-
 	return
 }

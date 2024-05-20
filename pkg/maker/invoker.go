@@ -3,35 +3,15 @@ package maker
 import (
 	"errors"
 	"fmt"
-	"github.com/dop251/goja"
-	"github.com/team-ide/go-tool/elasticsearch"
 	"github.com/team-ide/go-tool/javascript"
-	"github.com/team-ide/go-tool/kafka"
-	"github.com/team-ide/go-tool/mongodb"
 	"github.com/team-ide/go-tool/util"
-	"github.com/team-ide/go-tool/zookeeper"
 	"go.uber.org/zap"
-	"strings"
-	"sync"
 	"teamide/pkg/maker/modelers"
-	"time"
 )
 
-func NewInvoker(app *Application) (runner *Invoker, err error) {
+func NewInvoker(compiler *Compiler) (runner *Invoker, err error) {
 	runner = &Invoker{
-		Application:             app,
-		redisServiceCache:       make(map[string]*ServiceRedis),
-		redisServiceCacheLock:   &sync.Mutex{},
-		esServiceCache:          make(map[string]elasticsearch.IService),
-		esServiceCacheLock:      &sync.Mutex{},
-		zkServiceCache:          make(map[string]zookeeper.IService),
-		zkServiceCacheLock:      &sync.Mutex{},
-		dbServiceCache:          make(map[string]*ServiceDb),
-		dbServiceCacheLock:      &sync.Mutex{},
-		mongodbServiceCache:     make(map[string]mongodb.IService),
-		mongodbServiceCacheLock: &sync.Mutex{},
-		kafkaServiceCache:       make(map[string]kafka.IService),
-		kafkaServiceCacheLock:   &sync.Mutex{},
+		Compiler: compiler,
 	}
 
 	err = runner.init()
@@ -40,21 +20,7 @@ func NewInvoker(app *Application) (runner *Invoker, err error) {
 }
 
 type Invoker struct {
-	*Application
-	redisServiceCache       map[string]*ServiceRedis
-	redisServiceCacheLock   sync.Locker
-	esServiceCache          map[string]elasticsearch.IService
-	esServiceCacheLock      sync.Locker
-	zkServiceCache          map[string]zookeeper.IService
-	zkServiceCacheLock      sync.Locker
-	dbServiceCache          map[string]*ServiceDb
-	dbServiceCacheLock      sync.Locker
-	mongodbServiceCache     map[string]mongodb.IService
-	mongodbServiceCacheLock sync.Locker
-	kafkaServiceCache       map[string]kafka.IService
-	kafkaServiceCacheLock   sync.Locker
-
-	script *Script
+	*Compiler
 }
 
 type Error struct {
@@ -66,20 +32,8 @@ func (this_ *Error) Error() string {
 	return fmt.Sprintf("code:%s,msg:%s", this_.Code, this_.Msg)
 }
 
-func (this_ *Invoker) setScriptVar(name string, value interface{}) (err error) {
-	err = this_.script.Set(name, value)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *Invoker) initScript() (err error) {
-
-	return
-}
 func (this_ *Invoker) init() (err error) {
-	this_.script, err = NewScript()
+	this_.script, err = this_.NewScript()
 	scriptContext := javascript.NewContext()
 	for key, value := range scriptContext {
 		err = this_.setScriptVar(key, value)
@@ -118,55 +72,58 @@ func (this_ *Invoker) init() (err error) {
 	}
 
 	for _, one := range this_.GetFuncList() {
-		err = this_.setScriptVar(one.Name, func(args ...interface{}) {
-			util.Logger.Debug("func "+one.Name+" run start", zap.Any("func", one))
-		})
+		err = this_.BindFunc(one)
 		if err != nil {
-			util.Logger.Error("invoke data init set func value error", zap.Any("name", one.Name), zap.Any("func", one), zap.Any("error", err))
 			return
 		}
 	}
 
 	// 初始化服务
 	for _, one := range this_.GetConfigRedisList() {
-		_, err = this_.GetRedisServiceByName(one.Name)
+		err = this_.BindComponent("redis", one.Name, func() (component interface{}, err error) {
+			return NewComponentRedis(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get redis service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
 	for _, one := range this_.GetConfigDbList() {
-		_, err = this_.GetDbServiceByName(one.Name)
+		err = this_.BindComponent("db", one.Name, func() (component interface{}, err error) {
+			return NewComponentDb(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get db service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
 	for _, one := range this_.GetConfigZkList() {
-		_, err = this_.GetZkServiceByName(one.Name)
+		err = this_.BindComponent("zk", one.Name, func() (component interface{}, err error) {
+			return NewComponentZk(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get zk service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
 	for _, one := range this_.GetConfigElasticsearchList() {
-		_, err = this_.GetEsServiceByName(one.Name)
+		err = this_.BindComponent("es", one.Name, func() (component interface{}, err error) {
+			return NewComponentEs(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get es service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
 	for _, one := range this_.GetConfigKafkaList() {
-		_, err = this_.GetKafkaServiceByName(one.Name)
+		err = this_.BindComponent("kafka", one.Name, func() (component interface{}, err error) {
+			return NewComponentKafka(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get kafka service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
 	for _, one := range this_.GetConfigMongodbList() {
-		_, err = this_.GetMongodbServiceByName(one.Name)
+		err = this_.BindComponent("mongodb", one.Name, func() (component interface{}, err error) {
+			return NewComponentMongodb(one)
+		})
 		if err != nil {
-			util.Logger.Error("invoker init get mongodb service error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
 	}
@@ -248,24 +205,6 @@ func (this_ *Invoker) BindService(service *modelers.ServiceModel) (err error) {
 	}
 	SetBySlash(this_.serviceContext, service.Name, run)
 	return
-}
-
-func SetBySlash(data map[string]interface{}, name string, value any) {
-	//fmt.Println("SetBySlash:", name)
-	index := strings.Index(name, "/")
-	if index < 0 {
-		data[name] = value
-		return
-	}
-	pName := name[:index]
-	cName := name[index+1:]
-	//fmt.Println("SetBySlash pName:", pName, "cName:", cName)
-	parent := data[pName]
-	if parent == nil {
-		parent = map[string]interface{}{}
-		data[pName] = parent
-	}
-	SetBySlash(parent.(map[string]interface{}), cName, value)
 }
 
 func (this_ *Invoker) InvokeServiceByName(name string, invokeData *InvokeData) (res interface{}, err error) {
@@ -411,79 +350,15 @@ func (this_ *Invoker) InvokeFunc(f *modelers.FuncModel, invokeData *InvokeData) 
 	return
 }
 
-func (this_ *Invoker) InvokeProgram(from string, p *goja.Program, invokeData *InvokeData) (res interface{}, err error) {
-	funcInvoke := invokeStart(from+" run func program", invokeData)
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
-			util.Logger.Error(funcInvoke.name+" error", zap.Any("error", err))
-		}
-		funcInvoke.end(err)
-		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
-	}()
-	util.Logger.Debug(funcInvoke.name + " start")
+func (this_ *Invoker) InvokeProgram(from string, p *CompileProgram, invokeData *InvokeData) (res interface{}, err error) {
+
 	//var res interface{}
-	v, err := invokeData.script.vm.RunProgram(p)
+	v, err := invokeData.script.vm.RunProgram(p.program)
 	if err != nil {
-		util.Logger.Error(funcInvoke.name+" invoke error", zap.Any("error", err))
+		util.Logger.Error(from+" invoke error", zap.Any("error", err))
 		return
 	}
 	res = v.Export()
 
-	return
-}
-
-func invokeStart(name string, invokeData *InvokeData) (funcInvoke *FuncInvoke) {
-	funcInvoke = &FuncInvoke{
-		name:       name,
-		invokeData: invokeData,
-	}
-	funcInvoke.start()
-	return
-}
-
-type FuncInvoke struct {
-	name       string
-	startTime  time.Time
-	endTime    time.Time
-	err        error
-	invokeData *InvokeData
-}
-
-func (this_ *FuncInvoke) start() {
-	this_.startTime = time.Now()
-}
-
-func (this_ *FuncInvoke) end(err error) {
-	this_.err = err
-	this_.endTime = time.Now()
-}
-
-func (this_ *FuncInvoke) use() string {
-	return GetDurationFormatByMillisecond(this_.endTime.UnixMilli() - this_.startTime.UnixMilli())
-}
-
-func GetDurationFormatByMillisecond(millisecond int64) (formatString string) {
-	if millisecond == 0 {
-		return fmt.Sprintf("%d毫秒", 0)
-	}
-
-	duration := time.Duration(millisecond) * time.Millisecond
-	h := int(duration.Hours())
-	m := int(duration.Minutes()) % 60
-	s := int(duration.Seconds()) % 60
-	ms := int(duration.Milliseconds()) % 1000
-	if h > 0 {
-		formatString = fmt.Sprintf("%d小时", h)
-	}
-	if m > 0 {
-		formatString += fmt.Sprintf("%d分钟", m)
-	}
-	if s > 0 {
-		formatString += fmt.Sprintf("%d秒", s)
-	}
-	if ms > 0 {
-		formatString += fmt.Sprintf("%d毫秒", ms)
-	}
 	return
 }
