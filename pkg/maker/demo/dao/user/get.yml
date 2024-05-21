@@ -2,6 +2,5 @@ args:
   - name: userId
     type: i64
 func: |
-  var user User
-  user = db.selectOne("userId, name", "tb_user", "userId=${userId}")
+  var user = db.selectOne("userId, name", "tb_user", "userId=${userId}", struct.user)
   return user

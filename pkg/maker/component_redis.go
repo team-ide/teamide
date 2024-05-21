@@ -1,7 +1,6 @@
 package maker
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/team-ide/go-tool/redis"
 	"github.com/team-ide/go-tool/util"
@@ -10,7 +9,25 @@ import (
 )
 
 func NewRedisCompiler(config *modelers.ConfigRedisModel) *Component {
-	component := &Component{}
+	component := &Component{
+		Methods: []*ComponentMethod{
+			{
+				Name: "Get", GetReturnTypes: func(args []interface{}) (returnTypes []*modelers.ValueType) {
+					if len(args) == 2 {
+						returnTypes = append(returnTypes, args[1].(*modelers.ValueType))
+					} else {
+						returnTypes = append(returnTypes, modelers.ValueTypeString)
+					}
+					return
+				},
+			},
+			{
+				Name: "Set", GetReturnTypes: func(args []interface{}) (returnTypes []*modelers.ValueType) {
+					return
+				},
+			},
+		},
+	}
 	return component
 }
 
@@ -31,6 +48,7 @@ func NewComponentRedis(config *modelers.ConfigRedisModel) (res *ComponentRedis, 
 }
 
 type ComponentRedis struct {
+	*Compiler
 	ser redis.IService
 }
 
@@ -38,14 +56,13 @@ func (this_ *ComponentRedis) ShouldMappingFunc() bool {
 	return true
 }
 
-func (this_ *ComponentRedis) Get(args ...interface{}) (res any, err error) {
-	argLen := len(args)
-	if argLen == 0 {
-		err = errors.New("redis get args error")
+func (this_ *ComponentRedis) Get(key string, valueType *modelers.ValueType) (res any, err error) {
+	workInfo := "redis get "
+	if key == "" {
+		err = errors.New(workInfo + "key is empty")
 		return
 	}
-	key := util.GetStringValue(args[0])
-	util.Logger.Debug("redis get", zap.Any("key", key))
+	util.Logger.Debug(workInfo, zap.Any("key", key))
 
 	v, err := this_.ser.Get(key)
 	if err != nil {
@@ -54,8 +71,7 @@ func (this_ *ComponentRedis) Get(args ...interface{}) (res any, err error) {
 	if v == "" {
 		return
 	}
-	res = map[string]interface{}{}
-	err = json.Unmarshal([]byte(v), &res)
+	res, err = this_.ToValueByValueType(v, valueType)
 	if err != nil {
 		return
 	}
@@ -63,17 +79,16 @@ func (this_ *ComponentRedis) Get(args ...interface{}) (res any, err error) {
 	return
 }
 
-func (this_ *ComponentRedis) Set(args ...interface{}) (res any, err error) {
-	argLen := len(args)
-	if argLen < 2 {
-		err = errors.New("redis set args error")
+func (this_ *ComponentRedis) Set(key string, value interface{}) (err error) {
+	workInfo := "redis set "
+	if key == "" {
+		err = errors.New(workInfo + "key is empty")
 		return
 	}
-	key := util.GetStringValue(args[0])
-	value := util.GetStringValue(args[1])
-	util.Logger.Debug("redis set", zap.Any("key", key), zap.Any("value", value))
+	valueStr := util.GetStringValue(value)
+	util.Logger.Debug(workInfo+"", zap.Any("key", key), zap.Any("value", valueStr))
 
-	err = this_.ser.Set(key, value)
+	err = this_.ser.Set(key, valueStr)
 
 	return
 }

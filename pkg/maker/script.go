@@ -41,7 +41,15 @@ func (this_ *Script) NewScriptByArgs(args []*modelers.ArgModel) (script *Script,
 		return
 	}
 	for _, arg := range args {
-		err = script.Set(arg.Name, arg)
+		if arg.Type == "" {
+			arg.Type = "string"
+		}
+		var t *modelers.ValueType
+		t, err = this_.compiler.GetValueType(arg.Type)
+		if err != nil {
+			return
+		}
+		err = script.Set(arg.Name, t)
 		if err != nil {
 			return
 		}

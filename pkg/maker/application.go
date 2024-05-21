@@ -30,6 +30,8 @@ func newApplication() (app *Application) {
 
 		funcContext: make(map[string]interface{}),
 		funcProgram: make(map[string]*CompileProgram),
+
+		typeContext: make(map[string]*modelers.ValueType),
 	}
 	return
 }
@@ -62,6 +64,8 @@ type Application struct {
 
 	funcContext map[string]interface{}
 	funcProgram map[string]*CompileProgram
+
+	typeContext map[string]*modelers.ValueType
 }
 
 func (this_ *Application) GetDir() string {
@@ -604,6 +608,14 @@ func (this_ *Application) GetStruct(name string) (model *modelers.StructModel) {
 	return
 }
 
+func (this_ *Application) GetStructList() (res []*modelers.StructModel) {
+	items := this_.getModelTypeItems(modelers.TypeStruct)
+	for _, one := range items {
+		res = append(res, one.(*modelers.StructModel))
+	}
+	return
+}
+
 func (this_ *Application) GetDao(name string) (model *modelers.DaoModel) {
 	cache := this_.getModelTypeCache(modelers.TypeDao)
 	find, _ := cache.Get(name)
@@ -793,19 +805,33 @@ func (this_ *Application) GetApp() (model *modelers.AppModel) {
 }
 
 func (this_ *Application) GetValueType(name string) (valueType *modelers.ValueType, err error) {
-	for _, one := range modelers.ValueTypes {
-		if strings.EqualFold(one.Name, name) {
-			valueType = one
-			return
-		}
+	valueType = modelers.GetValueType(name)
+	if valueType != nil {
+		return
+	}
+
+	valueType = this_.typeContext[name]
+	if valueType != nil {
+		return
 	}
 	valueType = &modelers.ValueType{
-		Name: name,
+		Name:       name,
+		FieldTypes: make(map[string]*modelers.ValueType),
 	}
 	valueType.Struct = this_.GetStruct(valueType.Name)
 	if valueType.Struct == nil {
 		err = errors.New("value type and struct not found name [" + valueType.Name + "]")
 		return
+	}
+	this_.typeContext[name] = valueType
+	for _, field := range valueType.Struct.Fields {
+		if field.Type == "" {
+			field.Type = "string"
+		}
+		valueType.FieldTypes[field.Name], err = this_.GetValueType(field.Type)
+		if err != nil {
+			return
+		}
 	}
 	return
 }

@@ -6,7 +6,20 @@ import (
 )
 
 func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
-	component := &Component{}
+	component := &Component{
+		Methods: []*ComponentMethod{
+			{
+				Name: "SelectOne", GetReturnTypes: func(args []interface{}) (returnTypes []*modelers.ValueType) {
+					if len(args) == 4 {
+						returnTypes = append(returnTypes, args[3].(*modelers.ValueType))
+					} else {
+						returnTypes = append(returnTypes, modelers.ValueTypeMap)
+					}
+					return
+				},
+			},
+		},
+	}
 	return component
 }
 
@@ -36,7 +49,7 @@ func (this_ *ComponentDb) ShouldMappingFunc() bool {
 	return true
 }
 
-func (this_ *ComponentDb) SelectOne(args ...interface{}) (res any, err error) {
+func (this_ *ComponentDb) SelectOne(columns string, table string, where string, valueType *modelers.ValueType) (res any, err error) {
 	find := map[string]interface{}{
 		"userId": 1,
 		"name":   "张三",

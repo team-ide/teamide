@@ -31,12 +31,13 @@ func init() {
 }
 
 type ValueType struct {
-	Name     string       `json:"name,omitempty"`
-	Comment  string       `json:"comment,omitempty"`
-	IsNumber bool         `json:"isNumber,omitempty"`
-	Match    []string     `json:"match,omitempty"`
-	Struct   *StructModel `json:"struct,omitempty"`
-	isBase   bool
+	Name       string                `json:"name,omitempty"`
+	Comment    string                `json:"comment,omitempty"`
+	IsNumber   bool                  `json:"isNumber,omitempty"`
+	Match      []string              `json:"match,omitempty"`
+	Struct     *StructModel          `json:"struct,omitempty"`
+	FieldTypes map[string]*ValueType `json:"fieldTypes,omitempty"`
+	isBase     bool
 }
 
 func (this_ *ValueType) IsBase() bool {
@@ -123,6 +124,14 @@ var (
 		Match:    []string{"map", "Map"},
 		isBase:   true,
 	}
+
+	ValueTypeNull = &ValueType{
+		Name:     "null",
+		Comment:  "NULL",
+		IsNumber: true,
+		Match:    []string{"null", "NULL", "nil"},
+		isBase:   true,
+	}
 )
 
 func init() {
@@ -136,6 +145,22 @@ func init() {
 	ValueTypes = append(ValueTypes, ValueTypeInt32)
 	ValueTypes = append(ValueTypes, ValueTypeFloat32)
 	ValueTypes = append(ValueTypes, ValueTypeMap)
+	ValueTypes = append(ValueTypes, ValueTypeNull)
+
+	for _, v := range ValueTypes {
+		valueTypeCache[v.Name] = v
+		for _, k := range v.Match {
+			valueTypeCache[k] = v
+		}
+	}
+}
+
+var (
+	valueTypeCache = make(map[string]*ValueType)
+)
+
+func GetValueType(name string) *ValueType {
+	return valueTypeCache[name]
 }
 
 func GetValueTypes() []*ValueType {

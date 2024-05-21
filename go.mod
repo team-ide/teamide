@@ -5,11 +5,12 @@ go 1.18
 //replace github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
 //replace github.com/team-ide/go-tool v1.2.12 => ../go-tool
 
-//replace github.com/dop251/goja => github.com/team-ide/goja v1.0.3
+replace github.com/dop251/goja => github.com/team-ide/goja v1.0.4
+
 //
 //replace github.com/team-ide/goja v1.0.3 => ../goja
 
-replace github.com/dop251/goja => ../goja
+//replace github.com/dop251/goja => ../goja
 
 replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v1.27.0
 

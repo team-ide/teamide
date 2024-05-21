@@ -230,6 +230,8 @@ github.com/team-ide/go-interpreter v0.1.2 h1:m2C973+Wmp0GJ8khjZJfTjDCs9uRKCnMjm7
 github.com/team-ide/go-interpreter v0.1.2/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
 github.com/team-ide/go-tool v1.2.14 h1:l6e23cn5bY7C0jftMr1I4N2H0uoVthg1bV1IRWYqYlw=
 github.com/team-ide/go-tool v1.2.14/go.mod h1:qO1J/i4pV8w4wbZz67ZsrF47TYvcKJ6m0o+ffzQjp+0=
+github.com/team-ide/goja v1.0.4 h1:jmPVRk1rAtkvdncVL9rjlyCrYQBou6HgwDRNWnLnqP4=
+github.com/team-ide/goja v1.0.4/go.mod h1:WUV1qbPVN754l6kT35lPkoU0Ck6zlcE7UWl9F44ui/Q=
 github.com/team-ide/zap v1.27.0 h1:2DLUFPDfsxujtfSjEh8MEKSyaHakx3jYRct9fF7B7pk=
 github.com/team-ide/zap v1.27.0/go.mod h1:GB2qFLM7cTU87MWRP2mPIjqfIDnGu+VIO4V/SdhGo2E=
 github.com/tjfoc/gmsm v1.4.1 h1:aMe1GlZb+0bLjn+cKTPEvvn9oUEBlJitaZiiBwsbgho=

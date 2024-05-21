@@ -6,7 +6,6 @@ import (
 	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"reflect"
 	"teamide/pkg/maker/modelers"
 )
 
@@ -59,12 +58,21 @@ func (this_ *Compiler) init() (err error) {
 	// 将 常量 error func 填充 至 script 变量域中
 	for _, one := range this_.GetConstantList() {
 		for _, o := range one.Options {
-			err = this_.setScriptVar(o.Name, o)
+			var valueType *modelers.ValueType
+			if o.Type == "" {
+				o.Type = "string"
+			}
+			valueType, err = this_.GetValueType(o.Type)
 			if err != nil {
-				util.Logger.Error("compiler data init set constant value error", zap.Any("name", o.Name), zap.Any("error", err))
+				util.Logger.Error("compiler init set constant value error", zap.Any("name", one.Name), zap.Any("error", err))
 				return
 			}
-			this_.constantContext[o.Name] = o
+			err = this_.setScriptVar(o.Name, valueType)
+			if err != nil {
+				util.Logger.Error("compiler init set constant value error", zap.Any("name", o.Name), zap.Any("error", err))
+				return
+			}
+			this_.constantContext[o.Name] = valueType
 		}
 	}
 
@@ -76,11 +84,25 @@ func (this_ *Compiler) init() (err error) {
 		for _, o := range one.Options {
 			err = this_.setScriptVar(o.Name, o)
 			if err != nil {
-				util.Logger.Error("compiler data init set error value error", zap.Any("name", o.Name), zap.Any("error", err))
+				util.Logger.Error("compiler init set error value error", zap.Any("name", o.Name), zap.Any("error", err))
 				return
 			}
 			this_.errorContext[o.Name] = o
 		}
+	}
+
+	err = this_.setScriptVar("struct", this_.strictContext)
+	if err != nil {
+		return
+	}
+	for _, one := range this_.GetStructList() {
+		var valueType *modelers.ValueType
+		valueType, err = this_.GetValueType(one.Name)
+		if err != nil {
+			util.Logger.Error("compiler init set error strict error", zap.Any("name", one.Name), zap.Any("error", err))
+			return
+		}
+		this_.strictContext[one.Name] = valueType
 	}
 
 	for _, one := range this_.GetFuncList() {
@@ -227,7 +249,7 @@ func (this_ *Compiler) BindService(service *modelers.ServiceModel) (err error) {
 	return
 }
 
-func (this_ *Compiler) CompileFunc(f *modelers.FuncModel) (res *CompileResult, err error) {
+func (this_ *Compiler) CompileFunc(f *modelers.FuncModel) (res *CompileInfo, err error) {
 	if f == nil {
 		err = errors.New("compile func error, func is null")
 		return
@@ -255,14 +277,14 @@ func (this_ *Compiler) CompileFunc(f *modelers.FuncModel) (res *CompileResult, e
 		return
 	}
 
-	res, err = this_.CompileProgram(funcInvoke.name, script, p)
+	res, err = p.Compile(funcInvoke.name, script)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Compiler) CompileDaoByName(name string) (res *CompileResult, err error) {
+func (this_ *Compiler) CompileDaoByName(name string) (res *CompileInfo, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New("compile dao by name [" + name + "] error:" + fmt.Sprint(e))
@@ -280,7 +302,7 @@ func (this_ *Compiler) CompileDaoByName(name string) (res *CompileResult, err er
 	return
 }
 
-func (this_ *Compiler) CompileDao(dao *modelers.DaoModel) (res *CompileResult, err error) {
+func (this_ *Compiler) CompileDao(dao *modelers.DaoModel) (res *CompileInfo, err error) {
 	if dao == nil {
 		err = errors.New("compile dao error,dao is null")
 		return
@@ -308,14 +330,14 @@ func (this_ *Compiler) CompileDao(dao *modelers.DaoModel) (res *CompileResult, e
 		return
 	}
 
-	res, err = this_.CompileProgram(funcInvoke.name, script, p)
+	res, err = p.Compile(funcInvoke.name, script)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Compiler) CompileServiceByName(name string) (res *CompileResult, err error) {
+func (this_ *Compiler) CompileServiceByName(name string) (res *CompileInfo, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New("compile service by name [" + name + "] error:" + fmt.Sprint(e))
@@ -333,7 +355,7 @@ func (this_ *Compiler) CompileServiceByName(name string) (res *CompileResult, er
 	return
 }
 
-func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *CompileResult, err error) {
+func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *CompileInfo, err error) {
 	if service == nil {
 		err = errors.New("compile service error,service is null")
 		return
@@ -360,20 +382,14 @@ func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *Comp
 		return
 	}
 
-	res, err = this_.CompileProgram(funcInvoke.name, script, p)
+	res, err = p.Compile(funcInvoke.name, script)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *Compiler) CompileProgram(from string, script *Script, p *CompileProgram) (res *CompileResult, err error) {
+func (this_ *Compiler) ToValueByValueType(oldV any, valueType *modelers.ValueType) (value any, err error) {
 
-	fmt.Println(util.GetStringValue(p.program.Program))
-	codes := p.program.GetCode()
-	for _, c := range codes {
-		fmt.Println(reflect.TypeOf(c))
-		fmt.Println(util.GetStringValue(c))
-	}
 	return
 }
