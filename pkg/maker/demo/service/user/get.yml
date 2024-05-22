@@ -15,5 +15,4 @@ func: |
   if(user != null){
     user.password = null
   }
-  var aa = user.password
-  return aa;
+  return user;

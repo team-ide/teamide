@@ -134,6 +134,10 @@ func (this_ *CompileProgram) AssignExpression(info *CompileInfo, expression *ast
 	if err != nil {
 		return
 	}
+	if !info.findType(nameScript) {
+		err = errors.New("变量[" + nameScript + "]未定义")
+		return
+	}
 	fmt.Println("AssignExpression Right:", util.GetStringValue(expression.Right))
 	_, v, err := this_.GetExpressionForType(info, expression.Right)
 	if err != nil {
@@ -203,6 +207,17 @@ func (this_ *CompileProgram) GetExpressionForType(info *CompileInfo, expression 
 		return
 	case *ast.NullLiteral:
 		res = append(res, modelers.ValueTypeNull)
+		return
+	case *ast.NumberLiteral:
+		if _, ok := s.Value.(float64); ok {
+			res = append(res, modelers.ValueTypeFloat64)
+		} else if _, ok := s.Value.(float32); ok {
+			res = append(res, modelers.ValueTypeFloat32)
+		} else if _, ok := s.Value.(int64); ok {
+			res = append(res, modelers.ValueTypeInt64)
+		} else {
+			res = append(res, modelers.ValueTypeInt)
+		}
 		return
 	case *ast.CallExpression:
 		var v any

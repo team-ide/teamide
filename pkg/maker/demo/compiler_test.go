@@ -36,7 +36,6 @@ func TestCompileUserGet(t *testing.T) {
 	util.Logger.Debug("TestCompileUserGet start")
 
 	compiler := LoadDemoCompiler()
-	util.Logger.Debug("TestCompileUserGet end")
 
 	serviceName := "user/get"
 	res, err := compiler.CompileServiceByName(serviceName)
@@ -44,5 +43,6 @@ func TestCompileUserGet(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(util.GetStringValue(res))
+	util.Logger.Debug("TestCompileUserGet end")
 
 }

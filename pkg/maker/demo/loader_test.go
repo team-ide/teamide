@@ -12,6 +12,10 @@ import (
 	"testing"
 )
 
+var (
+	localDir string
+)
+
 func LoadDemoApp() (app *maker.Application, err error) {
 	rootDir, err := os.Getwd()
 	if err != nil {
@@ -20,17 +24,17 @@ func LoadDemoApp() (app *maker.Application, err error) {
 	}
 
 	rootDir = util.FormatPath(rootDir)
-	dir := rootDir
+	localDir = rootDir
 	if !strings.HasSuffix(rootDir, "/demo") {
-		dir = rootDir + "/demo"
+		localDir = rootDir + "/demo"
 	}
-	exist, _ := util.PathExists(dir)
+	exist, _ := util.PathExists(localDir)
 	if !exist {
-		dir = rootDir + "/pkg/maker/demo"
+		localDir = rootDir + "/pkg/maker/demo"
 	}
 
-	fmt.Println("demo app load start dir:", dir)
-	app = maker.Load(dir)
+	fmt.Println("demo app load start dir:", localDir)
+	app = maker.Load(localDir)
 	fmt.Println("demo app load success")
 	return
 }

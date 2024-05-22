@@ -5,7 +5,6 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
-	"teamide/pkg/maker/modelers"
 )
 
 func (this_ *Compiler) NewScript() (script *Script, err error) {
@@ -33,28 +32,6 @@ func (this_ *Compiler) NewScriptByParent(parent *Script) (script *Script, err er
 
 func (this_ *Script) NewScript() (script *Script, err error) {
 	return this_.compiler.NewScriptByParent(this_)
-}
-
-func (this_ *Script) NewScriptByArgs(args []*modelers.ArgModel) (script *Script, err error) {
-	script, err = this_.compiler.NewScriptByParent(this_)
-	if err != nil {
-		return
-	}
-	for _, arg := range args {
-		if arg.Type == "" {
-			arg.Type = "string"
-		}
-		var t *modelers.ValueType
-		t, err = this_.compiler.GetValueType(arg.Type)
-		if err != nil {
-			return
-		}
-		err = script.Set(arg.Name, t)
-		if err != nil {
-			return
-		}
-	}
-	return
 }
 
 type Script struct {

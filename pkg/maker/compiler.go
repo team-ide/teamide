@@ -59,9 +59,6 @@ func (this_ *Compiler) init() (err error) {
 	for _, one := range this_.GetConstantList() {
 		for _, o := range one.Options {
 			var valueType *modelers.ValueType
-			if o.Type == "" {
-				o.Type = "string"
-			}
 			valueType, err = this_.GetValueType(o.Type)
 			if err != nil {
 				util.Logger.Error("compiler init set constant value error", zap.Any("name", one.Name), zap.Any("error", err))
@@ -272,12 +269,7 @@ func (this_ *Compiler) CompileFunc(f *modelers.FuncModel) (res *CompileInfo, err
 
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	script, err := this_.script.NewScriptByArgs(f.Args)
-	if err != nil {
-		return
-	}
-
-	res, err = p.Compile(funcInvoke.name, script)
+	res, err = p.Compile(funcInvoke.name, f.Args)
 	if err != nil {
 		return
 	}
@@ -325,12 +317,7 @@ func (this_ *Compiler) CompileDao(dao *modelers.DaoModel) (res *CompileInfo, err
 
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	script, err := this_.script.NewScriptByArgs(dao.Args)
-	if err != nil {
-		return
-	}
-
-	res, err = p.Compile(funcInvoke.name, script)
+	res, err = p.Compile(funcInvoke.name, dao.Args)
 	if err != nil {
 		return
 	}
@@ -377,12 +364,7 @@ func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *Comp
 	}
 	util.Logger.Debug(funcInvoke.name + " start")
 
-	script, err := this_.script.NewScriptByArgs(service.Args)
-	if err != nil {
-		return
-	}
-
-	res, err = p.Compile(funcInvoke.name, script)
+	res, err = p.Compile(funcInvoke.name, service.Args)
 	if err != nil {
 		return
 	}

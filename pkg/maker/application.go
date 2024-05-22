@@ -805,6 +805,9 @@ func (this_ *Application) GetApp() (model *modelers.AppModel) {
 }
 
 func (this_ *Application) GetValueType(name string) (valueType *modelers.ValueType, err error) {
+	if name == "" {
+		name = "string"
+	}
 	valueType = modelers.GetValueType(name)
 	if valueType != nil {
 		return

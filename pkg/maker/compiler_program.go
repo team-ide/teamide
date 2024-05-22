@@ -45,7 +45,46 @@ type CompileInfo struct {
 	script         *Script
 	expressionInfo *ExpressionInfo
 	returnList     []*modelers.ValueType
+	paramTypes     map[string][]*modelers.ValueType
 	varTypes       map[string][]*modelers.ValueType
+}
+
+func (this_ *CompileInfo) findType(name string) (find bool) {
+	_, find = this_.varTypes[name]
+	if !find {
+		_, find = this_.paramTypes[name]
+	}
+	return
+}
+
+func (this_ *CompileInfo) getType(name string) (types []*modelers.ValueType) {
+	types = append(types, this_.varTypes[name]...)
+	if len(types) == 0 {
+		types = append(types, this_.paramTypes[name]...)
+	}
+	return
+}
+
+func (this_ *CompileInfo) addParamType(name string, types ...*modelers.ValueType) {
+	for _, t := range types {
+		var find bool
+		for _, t_ := range this_.paramTypes[name] {
+			if t_ == t {
+				find = true
+				break
+			}
+		}
+		if !find {
+			this_.varTypes[name] = append(this_.paramTypes[name], t)
+			if t.FieldTypes != nil {
+				for n, nT := range t.FieldTypes {
+					this_.addParamType(name+"."+n, nT)
+				}
+			}
+		}
+	}
+
+	return
 }
 
 func (this_ *CompileInfo) addVarType(name string, types ...*modelers.ValueType) {
@@ -59,10 +98,10 @@ func (this_ *CompileInfo) addVarType(name string, types ...*modelers.ValueType) 
 		}
 		if !find {
 			this_.varTypes[name] = append(this_.varTypes[name], t)
-		}
-		if t.FieldTypes != nil {
-			for n, nT := range t.FieldTypes {
-				this_.addVarType(name+"."+n, nT)
+			if t.FieldTypes != nil {
+				for n, nT := range t.FieldTypes {
+					this_.addVarType(name+"."+n, nT)
+				}
 			}
 		}
 	}
@@ -70,13 +109,35 @@ func (this_ *CompileInfo) addVarType(name string, types ...*modelers.ValueType) 
 	return
 }
 
-func (this_ *CompileProgram) Compile(from string, script *Script) (info *CompileInfo, err error) {
+func (this_ *CompileProgram) Compile(from string, args []*modelers.ArgModel) (info *CompileInfo, err error) {
+
 	util.Logger.Debug("compile start", zap.Any("from", from))
-	info = &CompileInfo{
-		from:     from,
-		script:   script,
-		varTypes: make(map[string][]*modelers.ValueType),
+
+	script, err := this_.script.NewScript()
+	if err != nil {
+		return
 	}
+
+	info = &CompileInfo{
+		from:       from,
+		script:     script,
+		paramTypes: make(map[string][]*modelers.ValueType),
+		varTypes:   make(map[string][]*modelers.ValueType),
+	}
+
+	for _, arg := range args {
+		var t *modelers.ValueType
+		t, err = script.compiler.GetValueType(arg.Type)
+		if err != nil {
+			return
+		}
+		info.addParamType(arg.Name, t)
+		err = script.Set(arg.Name, t)
+		if err != nil {
+			return
+		}
+	}
+
 	err = this_.VariableDeclarations(info, this_.astProgram.DeclarationList)
 	if err != nil {
 		return

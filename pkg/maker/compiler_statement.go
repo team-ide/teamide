@@ -89,6 +89,10 @@ func (this_ *CompileProgram) Binding(info *CompileInfo, binding *ast.Binding) (e
 	if err != nil {
 		return
 	}
+	if info.findType(nameScript) {
+		err = errors.New("变量[" + nameScript + "]已定义")
+		return
+	}
 	var varTypeStr string
 	if binding.Type != nil {
 		for i, t := range binding.Type {
