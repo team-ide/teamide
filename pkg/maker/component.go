@@ -2,7 +2,6 @@ package maker
 
 import (
 	"github.com/team-ide/go-tool/util"
-	"teamide/pkg/maker/modelers"
 )
 
 type Component struct {
@@ -16,10 +15,10 @@ type ComponentField struct {
 }
 
 type ComponentMethod struct {
-	Name           string                                                       `json:"name"`
-	Args           []*ComponentField                                            `json:"args"`
-	ThrowErrors    []string                                                     `json:"throwErrors"`
-	GetReturnTypes func(args []interface{}) (returnTypes []*modelers.ValueType) `json:"-"`
+	Name           string                                              `json:"name"`
+	Args           []*ComponentField                                   `json:"args"`
+	ThrowErrors    []string                                            `json:"throwErrors"`
+	GetReturnTypes func(args []interface{}) (returnTypes []*ValueType) `json:"-"`
 }
 
 func (this_ *Component) ToContext() (ctx map[string]interface{}) {

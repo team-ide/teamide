@@ -23,9 +23,9 @@ type InvokeData struct {
 }
 
 type InvokeVar struct {
-	Name      string              `json:"name,omitempty"`
-	Value     interface{}         `json:"value,omitempty"`
-	ValueType *modelers.ValueType `json:"valueType,omitempty"`
+	Name      string      `json:"name,omitempty"`
+	Value     interface{} `json:"value,omitempty"`
+	ValueType *ValueType  `json:"valueType,omitempty"`
 }
 
 func (this_ *Invoker) NewInvokeData() (data *InvokeData, err error) {
@@ -88,7 +88,7 @@ func (this_ *InvokeData) scriptSet(name string, value interface{}) (err error) {
 	return
 }
 
-func (this_ *InvokeData) AddArg(name string, value interface{}, valueType *modelers.ValueType) (err error) {
+func (this_ *InvokeData) AddArg(name string, value interface{}, valueType *ValueType) (err error) {
 	this_.argCacheLock.Lock()
 	defer this_.argCacheLock.Unlock()
 
@@ -109,7 +109,7 @@ func (this_ *InvokeData) AddVar(name string, value interface{}, varType string) 
 	this_.varCacheLock.Lock()
 	defer this_.varCacheLock.Unlock()
 
-	var valueType *modelers.ValueType = nil
+	var valueType *ValueType = nil
 
 	if varType != "" {
 		valueType, err = this_.invoker.GetValueType(varType)

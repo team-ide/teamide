@@ -7,7 +7,6 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
-	"teamide/pkg/maker/modelers"
 )
 
 func (this_ *CompileProgram) Statements(info *CompileInfo, statements []ast.Statement) (err error) {
@@ -103,7 +102,7 @@ func (this_ *CompileProgram) Binding(info *CompileInfo, binding *ast.Binding) (e
 		}
 	}
 	if varTypeStr != "" {
-		var varType *modelers.ValueType
+		var varType *ValueType
 		varType, err = info.script.compiler.GetValueType(varTypeStr)
 		if err != nil {
 			return
@@ -120,7 +119,7 @@ func (this_ *CompileProgram) Binding(info *CompileInfo, binding *ast.Binding) (e
 		}
 	}
 	if binding.Initializer != nil {
-		var v []*modelers.ValueType
+		var v []*ValueType
 		_, v, err = this_.GetExpressionForType(info, binding.Initializer)
 		if err != nil {
 			return

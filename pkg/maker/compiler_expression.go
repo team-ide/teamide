@@ -44,7 +44,7 @@ func (this_ *CompileProgram) Expression(info *CompileInfo, expression ast.Expres
 
 func (this_ *CompileProgram) ArgumentList(info *CompileInfo, argumentList []ast.Expression) (values []interface{}, err error) {
 	fmt.Println("TODO ArgumentList:", util.GetStringValue(argumentList))
-	var v []*modelers.ValueType
+	var v []*ValueType
 	for _, arg := range argumentList {
 		_, v, err = this_.GetExpressionForType(info, arg)
 		if err != nil {
@@ -114,10 +114,10 @@ func (this_ *CompileProgram) CallExpression(info *CompileInfo, expression *ast.C
 		}
 		res = in.returnList
 		break
-	case *modelers.ValueType:
+	case *ValueType:
 		res = m
 		break
-	case []*modelers.ValueType:
+	case []*ValueType:
 		res = m
 		break
 	default:
@@ -155,7 +155,7 @@ func (this_ *CompileProgram) AssignExpression(info *CompileInfo, expression *ast
 
 func (this_ *CompileProgram) TemplateLiteral(info *CompileInfo, expression *ast.TemplateLiteral) (res any, err error) {
 	fmt.Println("TODO TemplateLiteral:", util.GetStringValue(expression))
-	res = modelers.ValueTypeString
+	res = ValueTypeString
 	return
 }
 
@@ -171,11 +171,11 @@ func (this_ *CompileProgram) GetExpressionForValue(info *CompileInfo, expression
 		return
 	case *ast.StringLiteral:
 		//res = s.Value.String()
-		res = modelers.ValueTypeString
+		res = ValueTypeString
 		return
 	case *ast.NullLiteral:
 		//res = s.Value.String()
-		res = modelers.ValueTypeNull
+		res = ValueTypeNull
 		return
 	}
 	nameScript, err = this_.GetExpressionScript(info, expression)
@@ -195,28 +195,28 @@ func (this_ *CompileProgram) GetExpressionForValue(info *CompileInfo, expression
 	return
 }
 
-func (this_ *CompileProgram) GetExpressionForType(info *CompileInfo, expression ast.Expression) (nameScript string, res []*modelers.ValueType, err error) {
+func (this_ *CompileProgram) GetExpressionForType(info *CompileInfo, expression ast.Expression) (nameScript string, res []*ValueType, err error) {
 
 	fmt.Println("TODO GetExpressionType:", util.GetStringValue(expression))
 	switch s := expression.(type) {
 	case *ast.TemplateLiteral:
-		res = append(res, modelers.ValueTypeString)
+		res = append(res, ValueTypeString)
 		return
 	case *ast.StringLiteral:
-		res = append(res, modelers.ValueTypeString)
+		res = append(res, ValueTypeString)
 		return
 	case *ast.NullLiteral:
-		res = append(res, modelers.ValueTypeNull)
+		res = append(res, ValueTypeNull)
 		return
 	case *ast.NumberLiteral:
 		if _, ok := s.Value.(float64); ok {
-			res = append(res, modelers.ValueTypeFloat64)
+			res = append(res, ValueTypeFloat64)
 		} else if _, ok := s.Value.(float32); ok {
-			res = append(res, modelers.ValueTypeFloat32)
+			res = append(res, ValueTypeFloat32)
 		} else if _, ok := s.Value.(int64); ok {
-			res = append(res, modelers.ValueTypeInt64)
+			res = append(res, ValueTypeInt64)
 		} else {
-			res = append(res, modelers.ValueTypeInt)
+			res = append(res, ValueTypeInt)
 		}
 		return
 	case *ast.CallExpression:
@@ -227,9 +227,9 @@ func (this_ *CompileProgram) GetExpressionForType(info *CompileInfo, expression 
 		}
 		fmt.Println("GetExpressionForType CallExpression res:", util.GetStringValue(v))
 		if v != nil {
-			if vT, ok := v.(*modelers.ValueType); ok {
+			if vT, ok := v.(*ValueType); ok {
 				res = append(res, vT)
-			} else if vTs, ok := v.([]*modelers.ValueType); ok {
+			} else if vTs, ok := v.([]*ValueType); ok {
 				res = append(res, vTs...)
 			} else {
 				err = errors.New("GetExpressionForType CallExpression value [" + reflect.TypeOf(v).String() + "] not is ValueType")
@@ -253,9 +253,9 @@ func (this_ *CompileProgram) GetExpressionForType(info *CompileInfo, expression 
 			return
 		}
 		vv := v.Export()
-		if vT, ok := vv.(*modelers.ValueType); ok {
+		if vT, ok := vv.(*ValueType); ok {
 			res = append(res, vT)
-		} else if vTs, ok := vv.([]*modelers.ValueType); ok {
+		} else if vTs, ok := vv.([]*ValueType); ok {
 			res = append(res, vTs...)
 		} else {
 			err = errors.New("GetExpressionForType value [" + reflect.TypeOf(v).String() + "] not is ValueType")

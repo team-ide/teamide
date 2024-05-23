@@ -58,7 +58,7 @@ func (this_ *Compiler) init() (err error) {
 	// 将 常量 error func 填充 至 script 变量域中
 	for _, one := range this_.GetConstantList() {
 		for _, o := range one.Options {
-			var valueType *modelers.ValueType
+			var valueType *ValueType
 			valueType, err = this_.GetValueType(o.Type)
 			if err != nil {
 				util.Logger.Error("compiler init set constant value error", zap.Any("name", one.Name), zap.Any("error", err))
@@ -93,7 +93,7 @@ func (this_ *Compiler) init() (err error) {
 		return
 	}
 	for _, one := range this_.GetStructList() {
-		var valueType *modelers.ValueType
+		var valueType *ValueType
 		valueType, err = this_.GetValueType(one.Name)
 		if err != nil {
 			util.Logger.Error("compiler init set error strict error", zap.Any("name", one.Name), zap.Any("error", err))
@@ -371,7 +371,7 @@ func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *Comp
 	return
 }
 
-func (this_ *Compiler) ToValueByValueType(oldV any, valueType *modelers.ValueType) (value any, err error) {
+func (this_ *Compiler) ToValueByValueType(oldV any, valueType *ValueType) (value any, err error) {
 
 	return
 }

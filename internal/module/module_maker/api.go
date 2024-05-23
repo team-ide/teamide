@@ -8,6 +8,7 @@ import (
 	"teamide/internal/context"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
+	"teamide/pkg/maker"
 	"teamide/pkg/maker/modelers"
 )
 
@@ -111,7 +112,7 @@ func (this_ *api) context(requestBean *base.RequestBean, c *gin.Context) (res in
 	data["app"] = service.app
 	data["dir"] = service.app.GetDir()
 	data["typeCache"] = modelers.GetTypeCache()
-	data["valueTypes"] = modelers.GetValueTypes()
+	data["valueTypes"] = maker.GetValueTypes()
 	//context["docTemplateCache"] = modelers.GetDocTemplateCache()
 
 	res = data

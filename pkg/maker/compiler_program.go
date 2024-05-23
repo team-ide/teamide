@@ -44,9 +44,9 @@ type CompileInfo struct {
 	from           string
 	script         *Script
 	expressionInfo *ExpressionInfo
-	returnList     []*modelers.ValueType
-	paramTypes     map[string][]*modelers.ValueType
-	varTypes       map[string][]*modelers.ValueType
+	returnList     []*ValueType
+	paramTypes     map[string][]*ValueType
+	varTypes       map[string][]*ValueType
 }
 
 func (this_ *CompileInfo) findType(name string) (find bool) {
@@ -57,7 +57,7 @@ func (this_ *CompileInfo) findType(name string) (find bool) {
 	return
 }
 
-func (this_ *CompileInfo) getType(name string) (types []*modelers.ValueType) {
+func (this_ *CompileInfo) getType(name string) (types []*ValueType) {
 	types = append(types, this_.varTypes[name]...)
 	if len(types) == 0 {
 		types = append(types, this_.paramTypes[name]...)
@@ -65,7 +65,7 @@ func (this_ *CompileInfo) getType(name string) (types []*modelers.ValueType) {
 	return
 }
 
-func (this_ *CompileInfo) addParamType(name string, types ...*modelers.ValueType) {
+func (this_ *CompileInfo) addParamType(name string, types ...*ValueType) {
 	for _, t := range types {
 		var find bool
 		for _, t_ := range this_.paramTypes[name] {
@@ -87,7 +87,7 @@ func (this_ *CompileInfo) addParamType(name string, types ...*modelers.ValueType
 	return
 }
 
-func (this_ *CompileInfo) addVarType(name string, types ...*modelers.ValueType) {
+func (this_ *CompileInfo) addVarType(name string, types ...*ValueType) {
 	for _, t := range types {
 		var find bool
 		for _, t_ := range this_.varTypes[name] {
@@ -121,12 +121,12 @@ func (this_ *CompileProgram) Compile(from string, args []*modelers.ArgModel) (in
 	info = &CompileInfo{
 		from:       from,
 		script:     script,
-		paramTypes: make(map[string][]*modelers.ValueType),
-		varTypes:   make(map[string][]*modelers.ValueType),
+		paramTypes: make(map[string][]*ValueType),
+		varTypes:   make(map[string][]*ValueType),
 	}
 
 	for _, arg := range args {
-		var t *modelers.ValueType
+		var t *ValueType
 		t, err = script.compiler.GetValueType(arg.Type)
 		if err != nil {
 			return

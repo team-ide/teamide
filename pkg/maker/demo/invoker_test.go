@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"sync"
 	"teamide/pkg/maker"
-	"teamide/pkg/maker/modelers"
 	"testing"
 	"time"
 )
@@ -54,7 +53,7 @@ func TestInvokerUserGet(t *testing.T) {
 		return
 	}
 
-	err = invokeData.AddArg("userId", 1, modelers.ValueTypeInt64)
+	err = invokeData.AddArg("userId", 1, maker.ValueTypeInt64)
 	if err != nil {
 		util.Logger.Error("invoke data add arg error", zap.Error(err))
 		return

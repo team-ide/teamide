@@ -31,7 +31,7 @@ func newApplication() (app *Application) {
 		funcContext: make(map[string]interface{}),
 		funcProgram: make(map[string]*CompileProgram),
 
-		typeContext: make(map[string]*modelers.ValueType),
+		typeContext: make(map[string]*ValueType),
 	}
 	return
 }
@@ -65,7 +65,7 @@ type Application struct {
 	funcContext map[string]interface{}
 	funcProgram map[string]*CompileProgram
 
-	typeContext map[string]*modelers.ValueType
+	typeContext map[string]*ValueType
 }
 
 func (this_ *Application) GetDir() string {
@@ -804,11 +804,11 @@ func (this_ *Application) GetApp() (model *modelers.AppModel) {
 	return
 }
 
-func (this_ *Application) GetValueType(name string) (valueType *modelers.ValueType, err error) {
+func (this_ *Application) GetValueType(name string) (valueType *ValueType, err error) {
 	if name == "" {
 		name = "string"
 	}
-	valueType = modelers.GetValueType(name)
+	valueType = GetValueType(name)
 	if valueType != nil {
 		return
 	}
@@ -817,9 +817,9 @@ func (this_ *Application) GetValueType(name string) (valueType *modelers.ValueTy
 	if valueType != nil {
 		return
 	}
-	valueType = &modelers.ValueType{
+	valueType = &ValueType{
 		Name:       name,
-		FieldTypes: make(map[string]*modelers.ValueType),
+		FieldTypes: make(map[string]*ValueType),
 	}
 	valueType.Struct = this_.GetStruct(valueType.Name)
 	if valueType.Struct == nil {

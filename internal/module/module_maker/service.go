@@ -2,8 +2,7 @@ package module_maker
 
 import (
 	"errors"
-	_ "teamide/pkg/maker/invokers"
-	"teamide/pkg/maker/modelers"
+	"teamide/pkg/maker"
 )
 
 type Config struct {
@@ -20,7 +19,7 @@ func createService(config *Config) (service *Service, err error) {
 
 type Service struct {
 	*Config
-	app       *modelers.Application
+	app       *maker.Application
 	isStopped bool
 }
 
@@ -29,7 +28,7 @@ func (this_ *Service) init() (err error) {
 		err = errors.New("dir is empty")
 		return
 	}
-	this_.app = modelers.Load(this_.Dir)
+	this_.app = maker.Load(this_.Dir)
 	return
 }
 

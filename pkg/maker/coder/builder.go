@@ -24,6 +24,23 @@ type Builder struct {
 	colNumber int
 }
 
+func (this_ *Builder) Tab() {
+	this_.tab++
+}
+func (this_ *Builder) Indent() {
+	if this_.tab > 0 {
+		this_.tab--
+	}
+}
+func (this_ *Builder) SetTab(tab int) {
+	this_.tab = tab
+}
+
+func (this_ *Builder) GetTab() (tab int) {
+	tab = this_.tab
+	return
+}
+
 func (this_ *Builder) AppendLine(line string) (err error) {
 	str := ""
 
@@ -36,6 +53,10 @@ func (this_ *Builder) AppendLine(line string) (err error) {
 	return
 }
 
+func (this_ *Builder) AppendCode(code string) (err error) {
+	_, err = this_.f.WriteString(code)
+	return
+}
 func (this_ *Builder) NewLine() (err error) {
 	_, err = this_.f.WriteString("\n")
 	return

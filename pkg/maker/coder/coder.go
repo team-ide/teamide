@@ -65,6 +65,35 @@ func (this_ *Coder) Gen() (err error) {
 			return
 		}
 	}
+	for _, one := range this_.GetErrorList() {
+		err = generator.GenError(one)
+		if err != nil {
+			return
+		}
+	}
+	for _, one := range this_.GetStructList() {
+		err = generator.GenStruct(one)
+		if err != nil {
+			return
+		}
+	}
+
+	pathFunc := map[string][]*modelers.FuncModel{}
+	for _, one := range this_.GetFuncList() {
+		path := ""
+		dot := strings.LastIndex(one.Name, "/")
+		if dot > 0 {
+			path = one.Name[:dot]
+		}
+		pathFunc[path] = append(pathFunc[path], one)
+	}
+	for path, list := range pathFunc {
+		err = generator.GenFunc(path, list)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 func (this_ *Coder) SetGenerator(generator IGenerator) {
@@ -105,4 +134,7 @@ func (this_ *Coder) AppendLine(content *string, line string, tab int) {
 type IGenerator interface {
 	GenBase() (err error)
 	GenConstant(model *modelers.ConstantModel) (err error)
+	GenError(model *modelers.ErrorModel) (err error)
+	GenStruct(model *modelers.StructModel) (err error)
+	GenFunc(funcPath string, models []*modelers.FuncModel) (err error)
 }

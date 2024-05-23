@@ -12,17 +12,17 @@ func NewRedisCompiler(config *modelers.ConfigRedisModel) *Component {
 	component := &Component{
 		Methods: []*ComponentMethod{
 			{
-				Name: "Get", GetReturnTypes: func(args []interface{}) (returnTypes []*modelers.ValueType) {
+				Name: "Get", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
 					if len(args) == 2 {
-						returnTypes = append(returnTypes, args[1].(*modelers.ValueType))
+						returnTypes = append(returnTypes, args[1].(*ValueType))
 					} else {
-						returnTypes = append(returnTypes, modelers.ValueTypeString)
+						returnTypes = append(returnTypes, ValueTypeString)
 					}
 					return
 				},
 			},
 			{
-				Name: "Set", GetReturnTypes: func(args []interface{}) (returnTypes []*modelers.ValueType) {
+				Name: "Set", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
 					return
 				},
 			},
@@ -56,7 +56,7 @@ func (this_ *ComponentRedis) ShouldMappingFunc() bool {
 	return true
 }
 
-func (this_ *ComponentRedis) Get(key string, valueType *modelers.ValueType) (res any, err error) {
+func (this_ *ComponentRedis) Get(key string, valueType *ValueType) (res any, err error) {
 	workInfo := "redis get "
 	if key == "" {
 		err = errors.New(workInfo + "key is empty")
