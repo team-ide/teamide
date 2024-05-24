@@ -2,6 +2,7 @@ package maker
 
 import (
 	"github.com/dop251/goja"
+	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
@@ -17,16 +18,21 @@ func (this_ *Compiler) NewScriptByParent(parent *Script) (script *Script, err er
 		compiler: this_,
 	}
 	script.vm = goja.New()
-	script.dataContext = make(map[string]interface{})
 	if parent != nil {
+		script.dataContext = make(map[string]interface{})
 		for key, value := range parent.dataContext {
-			err = script.Set(key, value)
-			if err != nil {
-				return
-			}
+			script.dataContext[key] = value
 		}
+	} else {
+		script.dataContext = javascript.NewContext()
 	}
 
+	for key, value := range script.dataContext {
+		err = script.Set(key, value)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 

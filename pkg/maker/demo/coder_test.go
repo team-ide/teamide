@@ -28,6 +28,12 @@ func TestCoder(t *testing.T) {
 
 	compiler := LoadDemoCompiler()
 
+	compileErrs := compiler.Compile(false)
+	for _, compileErr := range compileErrs {
+		fmt.Println("method:", compileErr.Method.GetKey())
+		fmt.Println("error:", compileErr.Err.Error())
+	}
+
 	options := &coder.Options{
 		Dir: compiler.GetDir() + "gen-golang",
 	}

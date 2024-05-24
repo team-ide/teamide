@@ -18,6 +18,24 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 					return
 				},
 			},
+			{
+				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+					returnTypes = append(returnTypes, ValueTypeInt64)
+					return
+				},
+			},
+			{
+				Name: "Update", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+					returnTypes = append(returnTypes, ValueTypeInt64)
+					return
+				},
+			},
+			{
+				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+					returnTypes = append(returnTypes, ValueTypeInt64)
+					return
+				},
+			},
 		},
 	}
 	return component

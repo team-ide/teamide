@@ -6,12 +6,12 @@ import (
 	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"teamide/pkg/maker/modelers"
 )
 
 func NewCompiler(app *Application) (compiler *Compiler, err error) {
 	compiler = &Compiler{
 		Application: app,
+		spaceCache:  make(map[string]*CompilerSpace),
 	}
 
 	err = compiler.init()
@@ -22,7 +22,9 @@ func NewCompiler(app *Application) (compiler *Compiler, err error) {
 type Compiler struct {
 	*Application
 
-	script *Script
+	spaceList  []*CompilerSpace
+	spaceCache map[string]*CompilerSpace
+	script     *Script
 }
 
 func (this_ *Compiler) setScriptVar(name string, value interface{}) (err error) {
@@ -34,14 +36,7 @@ func (this_ *Compiler) setScriptVar(name string, value interface{}) (err error) 
 }
 
 func (this_ *Compiler) initScript() (err error) {
-	return
-}
-
-func (this_ *Compiler) initVar() (err error) {
-	return
-}
-
-func (this_ *Compiler) init() (err error) {
+	util.Logger.Debug("init script start")
 	this_.script, err = this_.NewScript()
 	scriptContext := javascript.NewContext()
 	for key, value := range scriptContext {
@@ -50,13 +45,26 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init script end")
+	return
+}
 
-	err = this_.setScriptVar("constant", this_.constantContext)
+func (this_ *Compiler) GetPackClass(name string, lastIsClass bool) (class *CompilerClass) {
+	return
+}
+
+func (this_ *Compiler) init() (err error) {
+	util.Logger.Debug("init start")
+	err = this_.initScript()
 	if err != nil {
 		return
 	}
+
+	util.Logger.Debug("init constant start")
+	space := this_.GetOrCreateSpace("constant")
 	// 将 常量 error func 填充 至 script 变量域中
 	for _, one := range this_.GetConstantList() {
+		_, class := space.GetClass(one.Name, true)
 		for _, o := range one.Options {
 			var valueType *ValueType
 			valueType, err = this_.GetValueType(o.Type)
@@ -64,50 +72,77 @@ func (this_ *Compiler) init() (err error) {
 				util.Logger.Error("compiler init set constant value error", zap.Any("name", one.Name), zap.Any("error", err))
 				return
 			}
-			err = this_.setScriptVar(o.Name, valueType)
+			field := class.GetOrCreateField(o.Name)
+			field.addValueType(valueType)
+			field.value = o.Value
+
+			err = this_.setScriptVar(o.Name, field)
 			if err != nil {
 				util.Logger.Error("compiler init set constant value error", zap.Any("name", o.Name), zap.Any("error", err))
 				return
 			}
-			this_.constantContext[o.Name] = valueType
+			this_.constantContext[o.Name] = field
 		}
 	}
+	util.Logger.Debug("init constant end")
 
+	util.Logger.Debug("init error start")
 	err = this_.setScriptVar("error", this_.errorContext)
 	if err != nil {
 		return
 	}
+	space = this_.GetOrCreateSpace("error")
 	for _, one := range this_.GetErrorList() {
+		_, class := space.GetClass(one.Name, true)
 		for _, o := range one.Options {
 			err = this_.setScriptVar(o.Name, o)
 			if err != nil {
 				util.Logger.Error("compiler init set error value error", zap.Any("name", o.Name), zap.Any("error", err))
 				return
 			}
+			field := class.GetOrCreateField(o.Name)
+			field.addValueType(ValueTypeError)
 			this_.errorContext[o.Name] = o
 		}
 	}
 
+	util.Logger.Debug("init error end")
+
+	util.Logger.Debug("init struct start")
 	err = this_.setScriptVar("struct", this_.strictContext)
 	if err != nil {
 		return
 	}
+	space = this_.GetOrCreateSpace("struct")
 	for _, one := range this_.GetStructList() {
+		_, class := space.GetClass(one.Name, true)
 		var valueType *ValueType
 		valueType, err = this_.GetValueType(one.Name)
 		if err != nil {
 			util.Logger.Error("compiler init set error strict error", zap.Any("name", one.Name), zap.Any("error", err))
 			return
 		}
+		for _, f := range one.Fields {
+			field := class.GetOrCreateField(f.Name)
+			field.addValueType(valueType.FieldTypes[f.Name])
+		}
 		this_.strictContext[one.Name] = valueType
 	}
+	util.Logger.Debug("init struct end")
 
-	for _, one := range this_.GetFuncList() {
-		err = this_.BindFunc(one)
-		if err != nil {
-			return
-		}
+	util.Logger.Debug("init common start")
+
+	// 初始化服务
+	err = this_.BindComponent("common", "", func() (component interface{}, err error) {
+		component = NewCommonCompiler(this_.GetApp()).ToContext()
+		return
+	})
+	if err != nil {
+		return
 	}
+	util.Logger.Debug("init common end")
+
+	util.Logger.Debug("init redis start")
 
 	// 初始化服务
 	for _, one := range this_.GetConfigRedisList() {
@@ -119,6 +154,9 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init redis end")
+
+	util.Logger.Debug("init db start")
 	for _, one := range this_.GetConfigDbList() {
 		err = this_.BindComponent("db", one.Name, func() (component interface{}, err error) {
 			component = NewDbCompiler(one).ToContext()
@@ -128,6 +166,9 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init db end")
+
+	util.Logger.Debug("init zk start")
 	for _, one := range this_.GetConfigZkList() {
 		err = this_.BindComponent("zk", one.Name, func() (component interface{}, err error) {
 			component = NewZkCompiler(one).ToContext()
@@ -137,6 +178,9 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init zk end")
+
+	util.Logger.Debug("init es start")
 	for _, one := range this_.GetConfigElasticsearchList() {
 		err = this_.BindComponent("es", one.Name, func() (component interface{}, err error) {
 			component = NewEsCompiler(one).ToContext()
@@ -146,6 +190,9 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init es end")
+
+	util.Logger.Debug("init kafka start")
 	for _, one := range this_.GetConfigKafkaList() {
 		err = this_.BindComponent("kafka", one.Name, func() (component interface{}, err error) {
 			component = NewKafkaCompiler(one).ToContext()
@@ -155,6 +202,9 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init kafka end")
+
+	util.Logger.Debug("init mongodb start")
 	for _, one := range this_.GetConfigMongodbList() {
 		err = this_.BindComponent("mongodb", one.Name, func() (component interface{}, err error) {
 			component = NewMongodbCompiler(one).ToContext()
@@ -164,38 +214,62 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 	}
+	util.Logger.Debug("init mongodb end")
 
+	util.Logger.Debug("init func start")
+	err = this_.setScriptVar("func", this_.funcContext)
+	if err != nil {
+		return
+	}
+	space = this_.GetOrCreateSpace("func")
+	var method *CompilerMethod
+	for _, one := range this_.GetFuncList() {
+		methodName, class := space.GetClass(one.Name, false)
+		method, err = class.CreateMethod(methodName, one.Args)
+		err = method.BindCode(one.Func)
+		if err != nil {
+			return
+		}
+		SetBySlash(this_.funcContext, one.Name, method)
+	}
+	util.Logger.Debug("init func end")
+
+	util.Logger.Debug("init dao start")
 	err = this_.setScriptVar("dao", this_.daoContext)
 	if err != nil {
 		return
 	}
+	space = this_.GetOrCreateSpace("dao")
 	for _, one := range this_.GetDaoList() {
-		err = this_.BindDao(one)
+		methodName, class := space.GetClass(one.Name, false)
+		method, err = class.CreateMethod(methodName, one.Args)
+		err = method.BindCode(one.Func)
 		if err != nil {
 			return
 		}
+		SetBySlash(this_.daoContext, one.Name, method)
 	}
+	util.Logger.Debug("init dao end")
+
+	util.Logger.Debug("init service start")
 
 	err = this_.setScriptVar("service", this_.serviceContext)
 	if err != nil {
 		return
 	}
+	space = this_.GetOrCreateSpace("service")
 	for _, one := range this_.GetServiceList() {
-		err = this_.BindService(one)
+		methodName, class := space.GetClass(one.Name, false)
+		method, err = class.CreateMethod(methodName, one.Args)
+		err = method.BindCode(one.Func)
 		if err != nil {
 			return
 		}
+		SetBySlash(this_.serviceContext, one.Name, method)
 	}
-	return
-}
+	util.Logger.Debug("init service end")
 
-func (this_ *Compiler) BindFunc(f *modelers.FuncModel) (err error) {
-	this_.funcProgram[f.Name], err = this_.script.CompileScript(f.Func)
-	if err != nil {
-		util.Logger.Error("compiler bind func compile script error", zap.Any("name", f.Name), zap.Any("error", err))
-		return
-	}
-	SetBySlash(this_.funcContext, f.Name, f)
+	util.Logger.Debug("init end")
 	return
 }
 
@@ -226,152 +300,42 @@ func (this_ *Compiler) BindComponent(componentType, name string, create func() (
 	return
 }
 
-func (this_ *Compiler) BindDao(dao *modelers.DaoModel) (err error) {
-	this_.daoProgram[dao.Name], err = this_.script.CompileScript(dao.Func)
-	if err != nil {
-		util.Logger.Error("compiler bind dao compile script error", zap.Any("name", dao.Name), zap.Any("error", err))
-		return
-	}
-	SetBySlash(this_.daoContext, dao.Name, dao)
+func (this_ *Compiler) ToValueByValueType(originalValue any, valueType *ValueType) (targetValue any, err error) {
 	return
 }
 
-func (this_ *Compiler) BindService(service *modelers.ServiceModel) (err error) {
-	this_.serviceProgram[service.Name], err = this_.script.CompileScript(service.Func)
-	if err != nil {
-		util.Logger.Error("compiler bind service compile script error", zap.Any("name", service.Name), zap.Any("error", err))
-		return
-	}
-	SetBySlash(this_.serviceContext, service.Name, service)
-	return
-}
-
-func (this_ *Compiler) CompileFunc(f *modelers.FuncModel) (res *CompileInfo, err error) {
-	if f == nil {
-		err = errors.New("compile func error, func is null")
-		return
-	}
-	funcInvoke := invokeStart("compile func "+f.Name, nil)
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
-			util.Logger.Error("compile func error", zap.Any("error", err))
+func (this_ *Compiler) Compile(hasErrorContinue bool) (compileErrors []*CompileError) {
+	util.Logger.Debug("compile start")
+	for _, space := range this_.spaceList {
+		util.Logger.Debug("compile space [" + space.space + "] start")
+		for _, pack := range space.packList {
+			util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] start")
+			for _, class := range pack.classList {
+				util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] class [" + class.class + "] start")
+				for _, method := range class.methodList {
+					_, err := method.Compile()
+					if err != nil {
+						compileErrors = append(compileErrors, &CompileError{
+							Err:    err,
+							Method: method,
+						})
+						if !hasErrorContinue {
+							return
+						}
+					}
+				}
+				util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] class [" + class.class + "] end")
+			}
+			util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] end")
 		}
-		funcInvoke.end(err)
-		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
-	}()
-
-	p := this_.funcProgram[f.Name]
-	if p == nil {
-		err = errors.New("compile func [" + f.Name + "] error, func program is null")
-		return
+		util.Logger.Debug("compile space [" + space.space + "] end")
 	}
 
-	util.Logger.Debug(funcInvoke.name + " start")
-
-	res, err = p.Compile(funcInvoke.name, f.Args)
-	if err != nil {
-		return
-	}
+	util.Logger.Debug("compile end")
 	return
 }
 
-func (this_ *Compiler) CompileDaoByName(name string) (res *CompileInfo, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New("compile dao by name [" + name + "] error:" + fmt.Sprint(e))
-			util.Logger.Error("compile dao by name error", zap.Any("error", err))
-		}
-	}()
-
-	dao := this_.GetDao(name)
-	if dao == nil {
-		err = errors.New("dao [" + name + "] is not exist")
-		util.Logger.Error("compile dao by name error", zap.Any("error", err))
-		return
-	}
-	res, err = this_.CompileDao(dao)
-	return
-}
-
-func (this_ *Compiler) CompileDao(dao *modelers.DaoModel) (res *CompileInfo, err error) {
-	if dao == nil {
-		err = errors.New("compile dao error,dao is null")
-		return
-	}
-	funcInvoke := invokeStart("compile dao "+dao.Name, nil)
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
-			util.Logger.Error("compile dao error", zap.Any("error", err))
-		}
-		funcInvoke.end(err)
-		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
-	}()
-
-	p := this_.daoProgram[dao.Name]
-	if p == nil {
-		err = errors.New("compile dao [" + dao.Name + "] error, dao program is null")
-		return
-	}
-
-	util.Logger.Debug(funcInvoke.name + " start")
-
-	res, err = p.Compile(funcInvoke.name, dao.Args)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *Compiler) CompileServiceByName(name string) (res *CompileInfo, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New("compile service by name [" + name + "] error:" + fmt.Sprint(e))
-			util.Logger.Error("compile service by name error", zap.Any("error", err))
-		}
-	}()
-
-	service := this_.GetService(name)
-	if service == nil {
-		err = errors.New("service [" + name + "] is not exist")
-		util.Logger.Error("compile service by name error", zap.Any("error", err))
-		return
-	}
-	res, err = this_.CompileService(service)
-	return
-}
-
-func (this_ *Compiler) CompileService(service *modelers.ServiceModel) (res *CompileInfo, err error) {
-	if service == nil {
-		err = errors.New("compile service error,service is null")
-		return
-	}
-	funcInvoke := invokeStart("compile service "+service.Name, nil)
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
-			util.Logger.Error("compile service error", zap.Any("error", err))
-		}
-		funcInvoke.end(err)
-		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
-	}()
-
-	p := this_.serviceProgram[service.Name]
-	if p == nil {
-		err = errors.New("compile service [" + service.Name + "] error, service program is null")
-		return
-	}
-	util.Logger.Debug(funcInvoke.name + " start")
-
-	res, err = p.Compile(funcInvoke.name, service.Args)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (this_ *Compiler) ToValueByValueType(oldV any, valueType *ValueType) (value any, err error) {
-
-	return
+type CompileError struct {
+	Err    error
+	Method *CompilerMethod
 }

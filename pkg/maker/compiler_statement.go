@@ -9,10 +9,10 @@ import (
 	"reflect"
 )
 
-func (this_ *CompileProgram) Statements(info *CompileInfo, statements []ast.Statement) (err error) {
+func (this_ *CompilerMethod) Statements(statements []ast.Statement) (err error) {
 	fmt.Println("TODO Statements:", util.GetStringValue(statements))
 	for _, statement := range statements {
-		err = this_.Statement(info, statement)
+		err = this_.Statement(statement)
 		if err != nil {
 			return
 		}
@@ -20,7 +20,7 @@ func (this_ *CompileProgram) Statements(info *CompileInfo, statements []ast.Stat
 	return
 }
 
-func (this_ *CompileProgram) Statement(info *CompileInfo, statement ast.Statement) (err error) {
+func (this_ *CompilerMethod) Statement(statement ast.Statement) (err error) {
 	if statement == nil {
 		return
 	}
@@ -28,53 +28,52 @@ func (this_ *CompileProgram) Statement(info *CompileInfo, statement ast.Statemen
 
 	switch s := statement.(type) {
 	case *ast.ExpressionStatement:
-		err = this_.ExpressionStatement(info, s)
+		err = this_.ExpressionStatement(s)
 		break
 	case *ast.IfStatement:
-		err = this_.IfStatement(info, s)
+		err = this_.IfStatement(s)
 		break
 	case *ast.VariableStatement:
-		err = this_.VariableStatement(info, s)
+		err = this_.VariableStatement(s)
 		break
 	case *ast.BlockStatement:
-		err = this_.BlockStatement(info, s)
+		err = this_.BlockStatement(s)
 		break
 	case *ast.ThrowStatement:
-		err = this_.ThrowStatement(info, s)
+		err = this_.ThrowStatement(s)
 		break
 	case *ast.ReturnStatement:
-		err = this_.ReturnStatement(info, s)
+		err = this_.ReturnStatement(s)
 		break
 	default:
 		err = errors.New("statement [" + reflect.TypeOf(statement).String() + "] not support")
 		break
-
 	}
 	return
 }
 
-func (this_ *CompileProgram) BlockStatement(info *CompileInfo, statement *ast.BlockStatement) (err error) {
+func (this_ *CompilerMethod) BlockStatement(statement *ast.BlockStatement) (err error) {
 	fmt.Println("TODO BlockStatement:", util.GetStringValue(statement))
-	err = this_.Statements(info, statement.List)
+	err = this_.Statements(statement.List)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *CompileProgram) VariableStatement(info *CompileInfo, statement *ast.VariableStatement) (err error) {
+func (this_ *CompilerMethod) VariableStatement(statement *ast.VariableStatement) (err error) {
 	fmt.Println("TODO VariableStatement:", util.GetStringValue(statement))
-	err = this_.Bindings(info, statement.List)
+	err = this_.Bindings(statement.List)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *CompileProgram) Bindings(info *CompileInfo, bindings []*ast.Binding) (err error) {
+func (this_ *CompilerMethod) Bindings(bindings []*ast.Binding) (err error) {
 	fmt.Println("TODO Bindings:", util.GetStringValue(bindings))
 	for _, binding := range bindings {
-		err = this_.Binding(info, binding)
+		err = this_.Binding(binding)
 		if err != nil {
 			return
 		}
@@ -82,13 +81,13 @@ func (this_ *CompileProgram) Bindings(info *CompileInfo, bindings []*ast.Binding
 	return
 }
 
-func (this_ *CompileProgram) Binding(info *CompileInfo, binding *ast.Binding) (err error) {
+func (this_ *CompilerMethod) Binding(binding *ast.Binding) (err error) {
 	fmt.Println("TODO Binding:", util.GetStringValue(binding))
-	nameScript, err := this_.GetExpressionScript(info, binding.Target)
+	nameScript, err := this_.GetExpressionScript(binding.Target)
 	if err != nil {
 		return
 	}
-	if info.findType(nameScript) {
+	if this_.findType(nameScript) {
 		err = errors.New("变量[" + nameScript + "]已定义")
 		return
 	}
@@ -101,68 +100,62 @@ func (this_ *CompileProgram) Binding(info *CompileInfo, binding *ast.Binding) (e
 			varTypeStr += t.Name.String()
 		}
 	}
+	methodVar := this_.addVar(nameScript)
 	if varTypeStr != "" {
-		var varType *ValueType
-		varType, err = info.script.compiler.GetValueType(varTypeStr)
+		var valueType *ValueType
+		valueType, err = this_.GetValueType(varTypeStr)
 		if err != nil {
 			return
 		}
-		util.Logger.Debug("Binding var set type", zap.Any("name", nameScript), zap.Any("type", varType))
-		err = info.script.Set(nameScript, varType)
-		if err != nil {
-			return
-		}
-	} else {
-		err = info.script.Set(nameScript, nil)
-		if err != nil {
-			return
-		}
+		methodVar.addValueType(valueType)
+
+		util.Logger.Debug("Binding var set type", zap.Any("name", nameScript), zap.Any("type", valueType))
+	}
+	err = this_.script.Set(nameScript, methodVar)
+	if err != nil {
+		return
 	}
 	if binding.Initializer != nil {
 		var v []*ValueType
-		_, v, err = this_.GetExpressionForType(info, binding.Initializer)
+		_, v, err = this_.GetExpressionForType(binding.Initializer)
 		if err != nil {
 			return
 		}
 		util.Logger.Debug("Binding var set initializer type", zap.Any("name", nameScript), zap.Any("type", v))
-		info.addVarType(nameScript, v...)
-		err = info.script.Set(nameScript, v)
-		if err != nil {
-			return
-		}
+		methodVar.addValueType(v...)
 	}
 	return
 }
-func (this_ *CompileProgram) ExpressionStatement(info *CompileInfo, statement *ast.ExpressionStatement) (err error) {
+func (this_ *CompilerMethod) ExpressionStatement(statement *ast.ExpressionStatement) (err error) {
 	fmt.Println("TODO ExpressionStatement:", util.GetStringValue(statement))
-	err = this_.Expression(info, statement.Expression)
+	err = this_.Expression(statement.Expression)
 	return
 }
-func (this_ *CompileProgram) ThrowStatement(info *CompileInfo, statement *ast.ThrowStatement) (err error) {
+func (this_ *CompilerMethod) ThrowStatement(statement *ast.ThrowStatement) (err error) {
 	fmt.Println("TODO ThrowStatement:", util.GetStringValue(statement))
 	return
 }
 
-func (this_ *CompileProgram) IfStatement(info *CompileInfo, statement *ast.IfStatement) (err error) {
+func (this_ *CompilerMethod) IfStatement(statement *ast.IfStatement) (err error) {
 	fmt.Println("TODO IfStatement:", util.GetStringValue(statement))
-	err = this_.Statement(info, statement.Consequent)
+	err = this_.Statement(statement.Consequent)
 	if err != nil {
 		return
 	}
 
-	err = this_.Statement(info, statement.Alternate)
+	err = this_.Statement(statement.Alternate)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (this_ *CompileProgram) ReturnStatement(info *CompileInfo, statement *ast.ReturnStatement) (err error) {
+func (this_ *CompilerMethod) ReturnStatement(statement *ast.ReturnStatement) (err error) {
 	fmt.Println("TODO ReturnStatement:", util.GetStringValue(statement))
-	_, resV, err := this_.GetExpressionForType(info, statement.Argument)
+	_, resV, err := this_.GetExpressionForType(statement.Argument)
 	if err != nil {
 		return
 	}
-	info.returnList = append(info.returnList, resV...)
+	this_.result.addValueType(resV...)
 	return
 }

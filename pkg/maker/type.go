@@ -97,11 +97,25 @@ var (
 		isBase:   true,
 	}
 
+	ValueTypeAny = &ValueType{
+		Name:     "any",
+		Comment:  "Any",
+		IsNumber: true,
+		Match:    []string{"any", "Object", "interface{}"},
+		isBase:   true,
+	}
 	ValueTypeNull = &ValueType{
 		Name:     "null",
 		Comment:  "NULL",
 		IsNumber: true,
 		Match:    []string{"null", "NULL", "nil"},
+		isBase:   true,
+	}
+	ValueTypeError = &ValueType{
+		Name:     "error",
+		Comment:  "Error",
+		IsNumber: true,
+		Match:    []string{"error", "err"},
 		isBase:   true,
 	}
 )
@@ -117,7 +131,9 @@ func init() {
 	ValueTypes = append(ValueTypes, ValueTypeInt32)
 	ValueTypes = append(ValueTypes, ValueTypeFloat32)
 	ValueTypes = append(ValueTypes, ValueTypeMap)
+	ValueTypes = append(ValueTypes, ValueTypeAny)
 	ValueTypes = append(ValueTypes, ValueTypeNull)
+	ValueTypes = append(ValueTypes, ValueTypeError)
 
 	for _, v := range ValueTypes {
 		valueTypeCache[v.Name] = v

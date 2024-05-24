@@ -26,23 +26,24 @@ func LoadDemoCompiler() *maker.Compiler {
 	return compiler
 }
 
-func TestCompileUserGet(t *testing.T) {
+func TestCompile(t *testing.T) {
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("TestCompileUserGet error", zap.Any("error", e))
+			util.Logger.Error("TestCompile error", zap.Any("error", e))
 		}
 	}()
 
-	util.Logger.Debug("TestCompileUserGet start")
+	util.Logger.Debug("TestCompile start")
 
 	compiler := LoadDemoCompiler()
 
-	serviceName := "user/get"
-	res, err := compiler.CompileServiceByName(serviceName)
-	if err != nil {
-		panic(err)
+	//fmt.Println(util.GetStringValue(compiler))
+	compileErrs := compiler.Compile(false)
+	for _, compileErr := range compileErrs {
+		fmt.Println("method:", compileErr.Method.GetKey())
+		fmt.Println("error:", compileErr.Err.Error())
 	}
-	fmt.Println(util.GetStringValue(res))
-	util.Logger.Debug("TestCompileUserGet end")
+
+	util.Logger.Debug("TestCompile end")
 
 }

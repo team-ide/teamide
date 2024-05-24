@@ -26,6 +26,11 @@ func NewRedisCompiler(config *modelers.ConfigRedisModel) *Component {
 					return
 				},
 			},
+			{
+				Name: "Del", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+					return
+				},
+			},
 		},
 	}
 	return component
