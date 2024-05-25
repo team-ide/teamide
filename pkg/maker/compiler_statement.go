@@ -1,7 +1,6 @@
 package maker
 
 import (
-	"errors"
 	"fmt"
 	"github.com/dop251/goja/ast"
 	"github.com/team-ide/go-tool/util"
@@ -10,7 +9,6 @@ import (
 )
 
 func (this_ *CompilerMethod) Statements(statements []ast.Statement) (err error) {
-	fmt.Println("TODO Statements:", util.GetStringValue(statements))
 	for _, statement := range statements {
 		err = this_.Statement(statement)
 		if err != nil {
@@ -24,7 +22,6 @@ func (this_ *CompilerMethod) Statement(statement ast.Statement) (err error) {
 	if statement == nil {
 		return
 	}
-	fmt.Println("TODO Statement:", util.GetStringValue(statement))
 
 	switch s := statement.(type) {
 	case *ast.ExpressionStatement:
@@ -46,14 +43,14 @@ func (this_ *CompilerMethod) Statement(statement ast.Statement) (err error) {
 		err = this_.ReturnStatement(s)
 		break
 	default:
-		err = errors.New("statement [" + reflect.TypeOf(statement).String() + "] not support")
+		err = this_.Error("statement ["+reflect.TypeOf(statement).String()+"] 不支持", statement)
+		util.Logger.Debug(this_.GetKey()+" Statement error", zap.Error(err))
 		break
 	}
 	return
 }
 
 func (this_ *CompilerMethod) BlockStatement(statement *ast.BlockStatement) (err error) {
-	fmt.Println("TODO BlockStatement:", util.GetStringValue(statement))
 	err = this_.Statements(statement.List)
 	if err != nil {
 		return
@@ -62,7 +59,6 @@ func (this_ *CompilerMethod) BlockStatement(statement *ast.BlockStatement) (err 
 }
 
 func (this_ *CompilerMethod) VariableStatement(statement *ast.VariableStatement) (err error) {
-	fmt.Println("TODO VariableStatement:", util.GetStringValue(statement))
 	err = this_.Bindings(statement.List)
 	if err != nil {
 		return
@@ -70,8 +66,13 @@ func (this_ *CompilerMethod) VariableStatement(statement *ast.VariableStatement)
 	return
 }
 
+func (this_ *CompilerMethod) VariableDeclaration(variableDeclaration *ast.VariableDeclaration) (err error) {
+	fmt.Println("TODO VariableDeclaration:", util.GetStringValue(variableDeclaration))
+	fmt.Println("TODO VariableDeclaration code:", this_.GetNodeCode(variableDeclaration))
+	return
+}
+
 func (this_ *CompilerMethod) Bindings(bindings []*ast.Binding) (err error) {
-	fmt.Println("TODO Bindings:", util.GetStringValue(bindings))
 	for _, binding := range bindings {
 		err = this_.Binding(binding)
 		if err != nil {
@@ -82,13 +83,13 @@ func (this_ *CompilerMethod) Bindings(bindings []*ast.Binding) (err error) {
 }
 
 func (this_ *CompilerMethod) Binding(binding *ast.Binding) (err error) {
-	fmt.Println("TODO Binding:", util.GetStringValue(binding))
 	nameScript, err := this_.GetExpressionScript(binding.Target)
 	if err != nil {
 		return
 	}
 	if this_.findType(nameScript) {
-		err = errors.New("变量[" + nameScript + "]已定义")
+		err = this_.Error("变量 ["+nameScript+"] 已定义", binding)
+		util.Logger.Error(this_.GetKey()+" Binding error", zap.Error(err))
 		return
 	}
 	var varTypeStr string
@@ -100,34 +101,31 @@ func (this_ *CompilerMethod) Binding(binding *ast.Binding) (err error) {
 			varTypeStr += t.Name.String()
 		}
 	}
-	methodVar := this_.addVar(nameScript)
+	var valueType *ValueType
 	if varTypeStr != "" {
-		var valueType *ValueType
 		valueType, err = this_.GetValueType(varTypeStr)
 		if err != nil {
 			return
 		}
-		methodVar.addValueType(valueType)
-
-		util.Logger.Debug("Binding var set type", zap.Any("name", nameScript), zap.Any("type", valueType))
 	}
+	if binding.Initializer != nil {
+		_, valueType, err = this_.GetExpressionForType(binding.Initializer)
+		if err != nil {
+			return
+		}
+	}
+	methodVar := this_.addVar(nameScript, valueType)
+
+	util.Logger.Debug("Binding var ["+nameScript+"]", zap.Any("type", valueType))
 	err = this_.script.Set(nameScript, methodVar)
 	if err != nil {
 		return
 	}
-	if binding.Initializer != nil {
-		var v []*ValueType
-		_, v, err = this_.GetExpressionForType(binding.Initializer)
-		if err != nil {
-			return
-		}
-		util.Logger.Debug("Binding var set initializer type", zap.Any("name", nameScript), zap.Any("type", v))
-		methodVar.addValueType(v...)
-	}
+
+	this_.BindingCache[binding] = methodVar
 	return
 }
 func (this_ *CompilerMethod) ExpressionStatement(statement *ast.ExpressionStatement) (err error) {
-	fmt.Println("TODO ExpressionStatement:", util.GetStringValue(statement))
 	err = this_.Expression(statement.Expression)
 	return
 }
@@ -137,7 +135,6 @@ func (this_ *CompilerMethod) ThrowStatement(statement *ast.ThrowStatement) (err 
 }
 
 func (this_ *CompilerMethod) IfStatement(statement *ast.IfStatement) (err error) {
-	fmt.Println("TODO IfStatement:", util.GetStringValue(statement))
 	err = this_.Statement(statement.Consequent)
 	if err != nil {
 		return
@@ -151,11 +148,13 @@ func (this_ *CompilerMethod) IfStatement(statement *ast.IfStatement) (err error)
 }
 
 func (this_ *CompilerMethod) ReturnStatement(statement *ast.ReturnStatement) (err error) {
-	fmt.Println("TODO ReturnStatement:", util.GetStringValue(statement))
 	_, resV, err := this_.GetExpressionForType(statement.Argument)
 	if err != nil {
 		return
 	}
-	this_.result.addValueType(resV...)
+	err = this_.Result.addValueTypes(resV)
+	if err != nil {
+		return
+	}
 	return
 }

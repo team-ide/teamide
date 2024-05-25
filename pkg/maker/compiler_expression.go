@@ -10,15 +10,11 @@ import (
 	"reflect"
 )
 
-type ExpressionInfo struct {
-	Value any
-}
-
 func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 	if expression == nil {
 		return
 	}
-	fmt.Println("TODO Expression:", util.GetStringValue(expression))
+	//fmt.Println("TODO Expression:", util.GetStringValue(expression))
 	switch e := expression.(type) {
 	case *ast.CallExpression:
 		_, err = this_.CallExpression(e)
@@ -33,7 +29,8 @@ func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 		_, err = this_.TemplateLiteral(e)
 		break
 	default:
-		err = errors.New("expression [" + reflect.TypeOf(expression).String() + "] not support")
+		err = this_.Error("expression ["+reflect.TypeOf(expression).String()+"] 不支持", expression)
+		util.Logger.Debug(this_.GetKey()+" Expression error", zap.Error(err))
 		break
 
 	}
@@ -41,31 +38,25 @@ func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 }
 
 func (this_ *CompilerMethod) ArgumentList(argumentList []ast.Expression) (values []interface{}, err error) {
-	fmt.Println("TODO ArgumentList:", util.GetStringValue(argumentList))
-	var v []*ValueType
+	//fmt.Println("TODO ArgumentList:", util.GetStringValue(argumentList))
+	var v *ValueType
 	for _, arg := range argumentList {
 		_, v, err = this_.GetExpressionForType(arg)
 		if err != nil {
 			return
 		}
-		if len(v) == 0 {
-			values = append(values, nil)
-		} else if len(v) == 1 {
-			values = append(values, v[0])
-		} else {
-			values = append(values, v)
-		}
+		values = append(values, v)
 	}
 	return
 }
 
 func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res any, err error) {
-	fmt.Println("TODO CallExpression ArgumentList:", util.GetStringValue(expression.ArgumentList))
+	//fmt.Println("TODO CallExpression ArgumentList:", util.GetStringValue(expression.ArgumentList))
 	args, err := this_.ArgumentList(expression.ArgumentList)
 	if err != nil {
 		return
 	}
-	fmt.Println("TODO CallExpression Callee:", util.GetStringValue(expression.Callee))
+	//fmt.Println("TODO CallExpression Callee:", util.GetStringValue(expression.Callee))
 
 	nameScript, v, err := this_.GetExpressionForValue(expression.Callee)
 	if err != nil {
@@ -78,7 +69,7 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 		err = errors.New("call expression method [" + nameScript + "] is null")
 		return
 	}
-	fmt.Println("CallExpression GetExpressionForValue res:", util.GetStringValue(v))
+	//fmt.Println("CallExpression GetExpressionForValue res:", util.GetStringValue(v))
 
 	switch m := v.(type) {
 	case *ComponentMethod:
@@ -105,12 +96,9 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 		res = re
 		break
 	case *CompilerMethodResult:
-		res = m.valueTypes
+		res = m.valueType
 		break
 	case *ValueType:
-		res = m
-		break
-	case []*ValueType:
 		res = m
 		break
 	default:
@@ -149,7 +137,9 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 					err = errors.New("call expression func [" + reflect.TypeOf(v).String() + "] not support result type [" + out.Kind().String() + "]")
 					return
 				}
-				break
+				if res != nil {
+					break
+				}
 			}
 			break
 		}
@@ -161,30 +151,34 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 
 func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) (err error) {
 
-	fmt.Println("TODO AssignExpression Left:", util.GetStringValue(expression.Left))
+	//fmt.Println("TODO AssignExpression Left:", util.GetStringValue(expression.Left))
 	nameScript, err := this_.GetExpressionScript(expression.Left)
 	if err != nil {
 		return
 	}
-	if this_.getByNameScript(nameScript) == nil {
-		err = errors.New("变量[" + nameScript + "]未定义")
+
+	methodVar := this_.getVar(nameScript)
+	methodParam := this_.getParam(nameScript)
+	if methodVar == nil && methodParam == nil {
+		err = this_.Error("变量["+nameScript+"]未定义", expression)
 		return
 	}
-	fmt.Println("AssignExpression Right:", util.GetStringValue(expression.Right))
+
+	//fmt.Println("AssignExpression Right:", util.GetStringValue(expression.Right))
 	_, v, err := this_.GetExpressionForType(expression.Right)
 	if err != nil {
 		return
 	}
-	methodVar := this_.getParam(nameScript)
+
 	if methodVar != nil {
-		methodVar.addValueType(v...)
+		err = methodVar.addValueTypes(v)
+	} else {
+		err = methodParam.addValueTypes(v)
 	}
-
-	methodParam := this_.getParam(nameScript)
-	if methodParam != nil {
-		methodParam.addValueType(v...)
+	if err != nil {
+		err = this_.Error(err.Error(), expression.Left)
+		return
 	}
-
 	util.Logger.Debug("AssignExpression var set", zap.Any("name", nameScript), zap.Any("type", v))
 	if err != nil {
 		return
@@ -200,7 +194,7 @@ func (this_ *CompilerMethod) TemplateLiteral(expression *ast.TemplateLiteral) (r
 
 func (this_ *CompilerMethod) GetExpressionForValue(expression ast.Expression) (nameScript string, res any, err error) {
 
-	fmt.Println("TODO GetExpressionValue:", util.GetStringValue(expression))
+	//fmt.Println("TODO GetExpressionValue:", util.GetStringValue(expression))
 	switch s := expression.(type) {
 	case *ast.TemplateLiteral:
 		res, err = this_.TemplateLiteral(s)
@@ -229,37 +223,43 @@ func (this_ *CompilerMethod) GetExpressionForValue(expression ast.Expression) (n
 		return
 	}
 	res = v.Export()
-	fmt.Println("TODO GetExpressionValue key:", nameScript, ",value:", res)
+	util.Logger.Debug(this_.GetKey()+" GetExpressionValue nameScript ["+nameScript+"] ", zap.Any("value", res))
 
 	return
 }
 
-func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (nameScript string, res []*ValueType, err error) {
+func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (nameScript string, res *ValueType, err error) {
 
-	fmt.Println("TODO GetExpressionType:", util.GetStringValue(expression))
+	//fmt.Println(fmt.Sprintf("TODO GetExpressionType code:%s,expression:%s", this_.GetNodeCode(expression), util.GetStringValue(expression)))
 	switch s := expression.(type) {
 	case *ast.TemplateLiteral:
-		res = append(res, ValueTypeString)
+		res = ValueTypeString
 		return
 	case *ast.StringLiteral:
-		res = append(res, ValueTypeString)
+		res = ValueTypeString
 		return
 	case *ast.NullLiteral:
-		res = append(res, ValueTypeNull)
+		res = ValueTypeNull
 		return
 	case *ast.BinaryExpression:
 		// TODO 表达式
-		res = append(res, ValueTypeAny)
+		res = ValueTypeAny
 		return
 	case *ast.NumberLiteral:
 		if _, ok := s.Value.(float64); ok {
-			res = append(res, ValueTypeFloat64)
+			res = ValueTypeFloat64
 		} else if _, ok := s.Value.(float32); ok {
-			res = append(res, ValueTypeFloat32)
+			res = ValueTypeFloat32
 		} else if _, ok := s.Value.(int64); ok {
-			res = append(res, ValueTypeInt64)
+			res = ValueTypeInt64
+		} else if _, ok := s.Value.(int8); ok {
+			res = ValueTypeInt8
+		} else if _, ok := s.Value.(int16); ok {
+			res = ValueTypeInt16
+		} else if _, ok := s.Value.(int32); ok {
+			res = ValueTypeInt32
 		} else {
-			res = append(res, ValueTypeInt)
+			res = ValueTypeInt
 		}
 		return
 	case *ast.CallExpression:
@@ -271,13 +271,11 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 		fmt.Println("GetExpressionForType CallExpression res:", util.GetStringValue(v))
 		if v != nil {
 			if vT, ok := v.(*ValueType); ok {
-				res = append(res, vT)
-			} else if vTs, ok := v.([]*ValueType); ok {
-				res = append(res, vTs...)
+				res = vT
 			} else if vT, ok := v.(*CompilerMethodResult); ok {
-				res = append(res, vT.valueTypes...)
+				res = vT.valueType
 			} else if vT, ok := v.(*CompilerField); ok {
-				res = append(res, vT.valueTypes...)
+				res = vT.valueType
 			} else {
 				err = errors.New("GetExpressionForType CallExpression value [" + reflect.TypeOf(v).String() + "] not is ValueType")
 				return
@@ -295,13 +293,13 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 
 	methodVar := this_.getParam(nameScript)
 	if methodVar != nil {
-		res = methodVar.valueTypes
+		res = methodVar.valueType
 		return
 	}
 
 	methodParam := this_.getParam(nameScript)
 	if methodParam != nil {
-		res = methodParam.valueTypes
+		res = methodParam.valueType
 		return
 	}
 
@@ -316,13 +314,11 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 	fmt.Println("TODO GetExpressionType key:", nameScript, ",v:", v)
 	vv := v.Export()
 	if vT, ok := vv.(*ValueType); ok {
-		res = append(res, vT)
-	} else if vTs, ok := vv.([]*ValueType); ok {
-		res = append(res, vTs...)
+		res = vT
 	} else if vT, ok := vv.(*CompilerMethodVar); ok {
-		res = append(res, vT.valueTypes...)
+		res = vT.valueType
 	} else if vT, ok := vv.(*CompilerField); ok {
-		res = append(res, vT.valueTypes...)
+		res = vT.valueType
 	} else {
 		err = errors.New("GetExpressionForType nameScript [" + nameScript + "] value [" + reflect.TypeOf(vv).String() + "] not is ValueType")
 		return
@@ -334,7 +330,7 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 
 func (this_ *CompilerMethod) GetExpressionScript(expression ast.Expression) (script string, err error) {
 
-	fmt.Println("TODO GetExpressionScript:", util.GetStringValue(expression))
+	//fmt.Println("TODO GetExpressionScript:", util.GetStringValue(expression))
 	switch s := expression.(type) {
 	case *ast.FunctionLiteral:
 		err = this_.FunctionLiteral(s)
@@ -343,7 +339,7 @@ func (this_ *CompilerMethod) GetExpressionScript(expression ast.Expression) (scr
 		script = s.Name.String()
 		break
 	case *ast.StringLiteral:
-		script = s.Value.String()
+		script = "\"" + s.Value.String() + "\""
 		break
 	case *ast.BracketExpression:
 		var leftName string
@@ -356,7 +352,7 @@ func (this_ *CompilerMethod) GetExpressionScript(expression ast.Expression) (scr
 		if err != nil {
 			return
 		}
-		script = leftName + "." + rightName
+		script = leftName + "[" + rightName + "]"
 		break
 	case *ast.DotExpression:
 		var leftName string
@@ -368,10 +364,11 @@ func (this_ *CompilerMethod) GetExpressionScript(expression ast.Expression) (scr
 		script = leftName + "." + rightName
 		break
 	default:
-		err = errors.New("GetExpressionScript [" + reflect.TypeOf(s).String() + "] not support")
+		err = this_.Error("GetExpressionScript ["+reflect.TypeOf(s).String()+"] 不支持", expression)
+		util.Logger.Debug(this_.GetKey()+" GetExpressionScript error", zap.Error(err))
 		break
 	}
-	fmt.Println("TODO GetExpressionScript script:", script)
+	util.Logger.Debug(this_.GetKey()+" GetExpressionScript script ["+script+"] ", zap.Any("code", this_.GetNodeCode(expression)))
 
 	return
 }

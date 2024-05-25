@@ -12,22 +12,22 @@ func NewRedisCompiler(config *modelers.ConfigRedisModel) *Component {
 	component := &Component{
 		Methods: []*ComponentMethod{
 			{
-				Name: "Get", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "Get", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					if len(args) == 2 {
-						returnTypes = append(returnTypes, args[1].(*ValueType))
+						returnType = args[1].(*ValueType)
 					} else {
-						returnTypes = append(returnTypes, ValueTypeString)
+						returnType = ValueTypeString
 					}
 					return
 				},
 			},
 			{
-				Name: "Set", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "Set", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					return
 				},
 			},
 			{
-				Name: "Del", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "Del", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					return
 				},
 			},

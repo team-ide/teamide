@@ -8,16 +8,16 @@ func NewCommonCompiler(config *modelers.AppModel) *Component {
 	component := &Component{
 		Methods: []*ComponentMethod{
 			{
-				Name: "GenId", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "GenId", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 
-					returnTypes = append(returnTypes, ValueTypeInt64)
+					returnType = ValueTypeInt64
 					return
 				},
 			},
 			{
-				Name: "GenStr", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "GenStr", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 
-					returnTypes = append(returnTypes, ValueTypeString)
+					returnType = ValueTypeString
 					return
 				},
 			},

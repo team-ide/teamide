@@ -1,6 +1,7 @@
 package maker
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/dop251/goja/ast"
@@ -15,11 +16,11 @@ func (this_ *Compiler) GetOrCreateSpace(space string) (res *CompilerSpace) {
 	res = this_.spaceCache[space]
 	if res == nil {
 		res = &CompilerSpace{
-			space:     space,
+			Space:     space,
 			Compiler:  this_,
 			packCache: make(map[string]*CompilerPack),
 		}
-		this_.spaceList = append(this_.spaceList, res)
+		this_.SpaceList = append(this_.SpaceList, res)
 		this_.spaceCache[space] = res
 	}
 	return
@@ -27,23 +28,35 @@ func (this_ *Compiler) GetOrCreateSpace(space string) (res *CompilerSpace) {
 
 type CompilerSpace struct {
 	*Compiler
-	space     string
-	packList  []*CompilerPack
+	Space     string
+	PackList  []*CompilerPack
 	packCache map[string]*CompilerPack
+}
+
+func (this_ *CompilerSpace) GetKey() (key string) {
+	key = "space [" + this_.Space + "]"
+	return
 }
 
 func (this_ *CompilerSpace) GetOrCreatePack(pack string) (res *CompilerPack) {
 	res = this_.packCache[pack]
 	if res == nil {
 		res = &CompilerPack{
-			pack:          pack,
+			Pack:          pack,
 			CompilerSpace: this_,
 			classCache:    make(map[string]*CompilerClass),
 		}
-		this_.packList = append(this_.packList, res)
+		this_.PackList = append(this_.PackList, res)
 		this_.packCache[pack] = res
 	}
 	return
+}
+
+type CompilerPack struct {
+	*CompilerSpace
+	Pack       string
+	ClassList  []*CompilerClass
+	classCache map[string]*CompilerClass
 }
 
 func (this_ *CompilerSpace) GetClass(path string, fileIsClass bool) (endName string, res *CompilerClass) {
@@ -72,24 +85,22 @@ func (this_ *CompilerSpace) GetClass(path string, fileIsClass bool) (endName str
 	return
 }
 
-type CompilerPack struct {
-	*CompilerSpace
-	pack       string
-	classList  []*CompilerClass
-	classCache map[string]*CompilerClass
+func (this_ *CompilerPack) GetKey() (key string) {
+	key = this_.CompilerSpace.GetKey() + " pack [" + this_.Pack + "]"
+	return
 }
 
 func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
 	res = this_.classCache[class]
 	if res == nil {
 		res = &CompilerClass{
-			class:        class,
+			Class:        class,
 			CompilerPack: this_,
 			importCache:  make(map[*CompilerClass]*CompilerImport),
 			fieldCache:   make(map[string]*CompilerField),
 			methodCache:  make(map[string]*CompilerMethod),
 		}
-		this_.classList = append(this_.classList, res)
+		this_.ClassList = append(this_.ClassList, res)
 		this_.classCache[class] = res
 	}
 	return
@@ -97,50 +108,63 @@ func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
 
 type CompilerClass struct {
 	*CompilerPack
-	class       string
-	importList  []*CompilerImport
+	Class       string
+	ImportList  []*CompilerImport
 	importCache map[*CompilerClass]*CompilerImport
-	fieldList   []*CompilerField
+	FieldList   []*CompilerField
 	fieldCache  map[string]*CompilerField
-	methodList  []*CompilerMethod
+	MethodList  []*CompilerMethod
 	methodCache map[string]*CompilerMethod
+	Constant    *modelers.ConstantModel
+	Error       *modelers.ErrorModel
+	Struct      *modelers.StructModel
+}
+
+func (this_ *CompilerClass) GetKey() (key string) {
+	key = this_.CompilerPack.GetKey() + " class [" + this_.Class + "]"
+	return
 }
 
 func (this_ *CompilerClass) GetOrCreateImport(class *CompilerClass) (res *CompilerImport) {
 	res = this_.importCache[class]
 	if res == nil {
 		res = &CompilerImport{
-			class: class,
+			CompilerClass: class,
 		}
-		this_.importList = append(this_.importList, res)
+		this_.ImportList = append(this_.ImportList, res)
 		this_.importCache[class] = res
 	}
 	return
 }
 
 type CompilerImport struct {
-	class *CompilerClass
+	*CompilerClass
 }
 
-func (this_ *CompilerClass) GetOrCreateField(name string) (res *CompilerField) {
-	res = this_.fieldCache[name]
-	if res == nil {
-		res = &CompilerField{
-			CompilerClass: this_,
-			CompilerArg: &CompilerArg{
-				name: name,
-			},
-		}
-		this_.fieldList = append(this_.fieldList, res)
-		this_.fieldCache[name] = res
+func (this_ *CompilerClass) addField(name string, valueType *ValueType) (res *CompilerField) {
+	res = &CompilerField{
+		CompilerClass:     this_,
+		Name:              name,
+		CompilerValueType: NewCompilerValueType(valueType),
 	}
+	this_.FieldList = append(this_.FieldList, res)
+	this_.fieldCache[name] = res
+
 	return
 }
 
 type CompilerField struct {
 	*CompilerClass
-	*CompilerArg
-	value string
+	Name string
+	*CompilerValueType
+	ConstantOption *modelers.ConstantOptionModel
+	ErrorOption    *modelers.ErrorOptionModel
+	StructField    *modelers.StructField
+}
+
+func (this_ *CompilerField) GetKey() (key string) {
+	key = this_.CompilerClass.GetKey() + " field [" + this_.Name + "]"
+	return
 }
 
 func (this_ *CompilerClass) GetMethod(name string) (res *CompilerMethod) {
@@ -152,9 +176,10 @@ func (this_ *CompilerClass) CreateMethod(name string, args []*modelers.ArgModel)
 
 	res = &CompilerMethod{
 		CompilerClass: this_,
-		method:        name,
+		Method:        name,
 		paramCache:    make(map[string]*CompilerMethodParam),
 		varCache:      make(map[string]*CompilerMethodVar),
+		BindingCache:  make(map[*ast.Binding]*CompilerMethodVar),
 	}
 
 	for _, arg := range args {
@@ -168,63 +193,108 @@ func (this_ *CompilerClass) CreateMethod(name string, args []*modelers.ArgModel)
 			return
 		}
 	}
-	this_.methodList = append(this_.methodList, res)
+	this_.MethodList = append(this_.MethodList, res)
 	this_.methodCache[name] = res
 	return
 }
 
 type CompilerMethod struct {
 	*CompilerClass
-	method            string
-	paramList         []*CompilerMethodParam
+	Method            string
+	Comment           string
+	ParamList         []*CompilerMethodParam
 	paramCache        map[string]*CompilerMethodParam
-	varList           []*CompilerMethodVar
+	VarList           []*CompilerMethodVar
 	varCache          map[string]*CompilerMethodVar
-	callComponentList []*CompilerCall
-	callUtilList      []*CompilerCall
-	callFuncList      []*CompilerCall
-	callDaoList       []*CompilerCall
-	callServiceList   []*CompilerCall
-	result            *CompilerMethodResult
-	program           *ast.Program
+	CallComponentList []*CompilerCall
+	CallUtilList      []*CompilerCall
+	CallFuncList      []*CompilerCall
+	CallDaoList       []*CompilerCall
+	CallServiceList   []*CompilerCall
+	Result            *CompilerMethodResult
+	Program           *ast.Program
 	script            *Script
+	code              string
+
+	BindingCache map[*ast.Binding]*CompilerMethodVar
 }
 
 func (this_ *CompilerMethod) GetKey() (key string) {
-	key = "space:" + this_.space + ",class:" + this_.class + ",method:" + this_.method
+	key = this_.CompilerClass.GetKey() + " method [" + this_.Method + "]"
 	return
 }
 
-func (this_ *CompilerMethod) getParam(name string) (res *CompilerMethodParam) {
-	res = this_.paramCache[name]
+func (this_ *CompilerMethod) getParam(name string) (res *CompilerValueType) {
+	index := strings.Index(name, ".")
+	var varName = name
+	var subName = ""
+	if index > 0 {
+		varName = name[0:index]
+		subName = name[index+1:]
+	} else {
+		index = strings.Index(name, "[\"")
+		if index > 0 {
+			varName = name[0:index]
+			subName = name[index+2:]
+		}
+	}
+	find := this_.paramCache[varName]
+	if find != nil {
+		if subName != "" {
+			res = find.CompilerValueType.getVar(subName)
+		} else {
+			res = find.CompilerValueType
+		}
+	}
 	return
 }
+
 func (this_ *CompilerMethod) addParam(name string, valueType *ValueType) (res *CompilerMethodParam) {
+	util.Logger.Debug(this_.GetKey()+" set param ["+name+"] ", zap.Any("valueType", valueType))
 	res = &CompilerMethodParam{
-		CompilerMethod: this_,
-		CompilerArg: &CompilerArg{
-			name:       name,
-			valueTypes: []*ValueType{valueType},
-		},
+		CompilerMethod:    this_,
+		Name:              name,
+		CompilerValueType: NewCompilerValueType(valueType),
 	}
-	this_.paramList = append(this_.paramList, res)
+	this_.ParamList = append(this_.ParamList, res)
 	this_.paramCache[name] = res
 
 	return
 }
 
-func (this_ *CompilerMethod) getVar(name string) (res *CompilerMethodVar) {
-	res = this_.varCache[name]
+func (this_ *CompilerMethod) getVar(name string) (res *CompilerValueType) {
+	index := strings.Index(name, ".")
+	var varName = name
+	var subName = ""
+	if index > 0 {
+		varName = name[0:index]
+		subName = name[index+1:]
+	} else {
+		index = strings.Index(name, "[\"")
+		if index > 0 {
+			varName = name[0:index]
+			subName = name[index+2:]
+		}
+	}
+	find := this_.varCache[varName]
+	if find != nil {
+		if subName != "" {
+			res = find.CompilerValueType.getVar(subName)
+		} else {
+			res = find.CompilerValueType
+		}
+	}
 	return
 }
-func (this_ *CompilerMethod) addVar(name string) (res *CompilerMethodVar) {
+
+func (this_ *CompilerMethod) addVar(name string, valueType *ValueType) (res *CompilerMethodVar) {
+	util.Logger.Debug(this_.GetKey()+" set var ["+name+"] ", zap.Any("valueType", valueType))
 	res = &CompilerMethodVar{
-		CompilerMethod: this_,
-		CompilerArg: &CompilerArg{
-			name: name,
-		},
+		CompilerMethod:    this_,
+		Name:              name,
+		CompilerValueType: NewCompilerValueType(valueType),
 	}
-	this_.varList = append(this_.varList, res)
+	this_.VarList = append(this_.VarList, res)
 	this_.varCache[name] = res
 
 	return
@@ -250,7 +320,6 @@ func (this_ *CompilerMethod) getByNameScript(nameScript string) (res interface{}
 	default:
 		panic("getByNameScript [" + reflect.TypeOf(v).String() + "] not support")
 	}
-
 	return
 }
 func (this_ *CompilerMethod) findType(name string) (find bool) {
@@ -262,27 +331,37 @@ func (this_ *CompilerMethod) findType(name string) (find bool) {
 }
 
 func (this_ *CompilerMethod) BindCode(script string) (err error) {
-	runScript := `(function (){
+	this_.code = `(function (){
 ` + script + `
 })()`
-	this_.program, err = goja.Parse("", runScript)
+	this_.Program, err = goja.Parse("", this_.code)
 	if err != nil {
 		util.Logger.Error("compile script parse error", zap.Any("error", err))
 		return
 	}
+	return
+}
 
+func (this_ *CompilerMethod) Error(msg string, node ast.Node) (err error) {
+	err = errors.New(msg + ",code:" + this_.GetNodeCode(node))
+	return
+}
+func (this_ *CompilerMethod) GetNodeCode(node ast.Node) (code string) {
+	code = this_.code[node.Idx0()-1 : node.Idx1()-1]
 	return
 }
 
 type CompilerMethodParam struct {
 	*CompilerMethod
-	*CompilerArg
+	Name string
+	*CompilerValueType
 }
 
 type CompilerMethodVar struct {
 	*CompilerMethod
-	*CompilerArg
-	value string
+	Name string
+	*CompilerValueType
+	Value string
 }
 
 type CompilerCall struct {
@@ -294,41 +373,139 @@ type CompilerCall struct {
 
 type CompilerCallParam struct {
 	*CompilerCall
-	*CompilerArg
-	value string
+	Name string
+	*CompilerValueType
+	Value string
 }
 
-type CompilerArg struct {
-	name       string
-	valueTypes []*ValueType
+type CompilerValueType struct {
+	valueType *ValueType
+	types     []*ValueType
+
+	subList  []*CompilerValueSub
+	subCache map[string]*CompilerValueSub
 }
 
-func (this_ *CompilerArg) addValueType(valueTypes ...*ValueType) {
-	addValueTypes(&this_.valueTypes, valueTypes...)
+type CompilerValueSub struct {
+	parent *CompilerValueType
+	Name   string
+	*CompilerValueType
+	Value string
+}
+
+func (this_ *CompilerValueType) GetValueType() (res *ValueType) {
+	res = this_.valueType
 	return
 }
 
-type CompilerMethodResult struct {
-	valueTypes []*ValueType
+func (this_ *CompilerValueType) getVar(name string) (res *CompilerValueType) {
+	if this_.subCache == nil {
+		this_.subCache = make(map[string]*CompilerValueSub)
+	}
+	index := strings.Index(name, ".")
+	var varName = name
+	var subName = ""
+	if index > 0 {
+		varName = name[0:index]
+		subName = name[index+1:]
+	} else {
+		index = strings.Index(name, "[\"")
+		if index > 0 {
+			varName = name[0:index]
+			subName = name[index+2:]
+		}
+	}
+	if strings.HasSuffix(varName, "\"]") {
+		varName = strings.TrimSuffix(varName, "\"]")
+	}
+	find := this_.subCache[varName]
+	if find != nil {
+		if subName != "" {
+			res = find.CompilerValueType.getVar(subName)
+		} else {
+			res = find.CompilerValueType
+		}
+	} else {
+		if this_.valueType == nil {
+			this_.types = append(this_.types, ValueTypeMap)
+			this_.valueType = ValueTypeMap
+		}
+		if this_.valueType.FieldTypes == nil {
+			this_.valueType.FieldTypes = make(map[string]*ValueType)
+		}
+		t := this_.valueType.FieldTypes[varName]
+		if t != nil {
+			sub := this_.addVar(varName, t)
+			res = sub.CompilerValueType
+		} else if this_.valueType == ValueTypeMap {
+			sub := this_.addVar(varName, nil)
+			res = sub.CompilerValueType
+		}
+	}
+	return
 }
+func (this_ *CompilerValueType) addVar(name string, valueType *ValueType) (res *CompilerValueSub) {
+	res = &CompilerValueSub{
+		parent:            this_,
+		Name:              name,
+		CompilerValueType: NewCompilerValueType(valueType),
+	}
+	this_.subList = append(this_.subList, res)
+	this_.subCache[name] = res
 
-func (this_ *CompilerMethodResult) addValueType(valueTypes ...*ValueType) {
-	addValueTypes(&this_.valueTypes, valueTypes...)
 	return
 }
 
-func addValueTypes(toList *[]*ValueType, valueTypes ...*ValueType) {
+func NewCompilerValueType(valueType *ValueType) (res *CompilerValueType) {
+	res = &CompilerValueType{}
+	if valueType != nil {
+		res.types = append(res.types, valueType)
+		res.valueType = valueType
+	}
+	return
+}
+func (this_ *CompilerValueType) addValueTypes(valueTypes ...*ValueType) (err error) {
+
 	for _, valueType := range valueTypes {
 		var find bool
-		for _, v := range *toList {
+		for _, v := range this_.types {
 			if v == valueType {
 				find = true
 			}
 		}
 		if !find {
-			*toList = append(*toList, valueType)
+			if this_.valueType == nil {
+				this_.valueType = valueType
+			} else {
+				this_.valueType, err = this_.upgradeType(this_.valueType, valueType)
+				if err != nil {
+					return
+				}
+			}
+			this_.types = append(this_.types, valueType)
 		}
 	}
+	return
+}
+
+func (this_ *CompilerValueType) upgradeType(from *ValueType, to *ValueType) (endType *ValueType, err error) {
+	if from == to {
+		endType = to
+		return
+	}
+	if from.IsNumber && to.IsNumber {
+		endType = to
+		return
+	}
+	if to == ValueTypeNull {
+		endType = from
+		return
+	}
+	err = errors.New("类型 [" + from.Name + "] [" + to.Name + "] 不一致")
 
 	return
+}
+
+type CompilerMethodResult struct {
+	*CompilerValueType
 }

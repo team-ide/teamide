@@ -17,6 +17,10 @@ type LanguageGolangModel struct {
 	StructPack   string `json:"structPack,omitempty"`
 	FuncPath     string `json:"funcPath,omitempty"`
 	FuncPack     string `json:"funcPack,omitempty"`
+	DaoPath      string `json:"daoPath,omitempty"`
+	DaoPack      string `json:"daoPack,omitempty"`
+	ServicePath  string `json:"servicePath,omitempty"`
+	ServicePack  string `json:"servicePack,omitempty"`
 }
 
 func (this_ *LanguageGolangModel) GetModuleName() string {
@@ -84,6 +88,9 @@ func (this_ *LanguageGolangModel) GetStructPath() string {
 func (this_ *LanguageGolangModel) GetStructPack() string {
 	return GetPack(&this_.StructPack, "bean")
 }
+func (this_ *LanguageGolangModel) GetStructImport() string {
+	return this_.GetPackImport(this_.GetStructPath(), this_.GetStructPack())
+}
 
 func (this_ *LanguageGolangModel) GetFuncDir(dir string) string {
 	return GetDir(dir, this_.GetFuncPath())
@@ -95,6 +102,30 @@ func (this_ *LanguageGolangModel) GetFuncPath() string {
 
 func (this_ *LanguageGolangModel) GetFuncPack() string {
 	return GetPack(&this_.FuncPack, "tool")
+}
+
+func (this_ *LanguageGolangModel) GetDaoDir(dir string) string {
+	return GetDir(dir, this_.GetDaoPath())
+}
+
+func (this_ *LanguageGolangModel) GetDaoPath() string {
+	return GetPath(&this_.DaoPath, "dao/")
+}
+
+func (this_ *LanguageGolangModel) GetDaoPack() string {
+	return GetPack(&this_.DaoPack, "dao")
+}
+
+func (this_ *LanguageGolangModel) GetServiceDir(dir string) string {
+	return GetDir(dir, this_.GetServicePath())
+}
+
+func (this_ *LanguageGolangModel) GetServicePath() string {
+	return GetPath(&this_.ServicePath, "service/")
+}
+
+func (this_ *LanguageGolangModel) GetServicePack() string {
+	return GetPack(&this_.ServicePack, "service")
 }
 
 func (this_ *LanguageGolangModel) GetPackImport(path string, pack string) string {

@@ -3,17 +3,16 @@ args:
     type: user
 func: |
   //  验证参数合法性
-  if(isNull(user)){
+  if (isNull(user)){
     throw error.USER_IS_NULL;
-  }
-  if(isEmpty(user.name)){
+  } else if (isEmpty(user.name)){
     throw error.USER_NAME_IS_EMPTY;
-  }
-  if(isEmpty(user.account)){
+  } else if (isEmpty(user.account)){
     throw error.USER_ACCOUNT_IS_EMPTY;
-  }
-  if(isEmpty(user.password)){
-    throw error.USER_PASSWORD_IS_EMPTY;
+  } else {
+    if(isEmpty(user.password)){
+      throw error.USER_PASSWORD_IS_EMPTY;
+    }
   }
   if(dao.user.queryByAccount(user.account) != null){
     throw USER_ACCOUNT_ALREADY_EXIST;

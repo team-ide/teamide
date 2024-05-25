@@ -9,30 +9,30 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 	component := &Component{
 		Methods: []*ComponentMethod{
 			{
-				Name: "SelectOne", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
+				Name: "SelectOne", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					if len(args) == 4 {
-						returnTypes = append(returnTypes, args[3].(*ValueType))
+						returnType = args[3].(*ValueType)
 					} else {
-						returnTypes = append(returnTypes, ValueTypeMap)
+						returnType = ValueTypeMap
 					}
 					return
 				},
 			},
 			{
-				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
-					returnTypes = append(returnTypes, ValueTypeInt64)
+				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
+					returnType = ValueTypeInt64
 					return
 				},
 			},
 			{
-				Name: "Update", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
-					returnTypes = append(returnTypes, ValueTypeInt64)
+				Name: "Update", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
+					returnType = ValueTypeInt64
 					return
 				},
 			},
 			{
-				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnTypes []*ValueType) {
-					returnTypes = append(returnTypes, ValueTypeInt64)
+				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
+					returnType = ValueTypeInt64
 					return
 				},
 			},

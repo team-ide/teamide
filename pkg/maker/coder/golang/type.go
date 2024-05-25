@@ -1,6 +1,9 @@
 package golang
 
-import "teamide/pkg/maker"
+import (
+	"github.com/team-ide/go-tool/util"
+	"teamide/pkg/maker"
+)
 
 var (
 	typeStr = map[*maker.ValueType]string{}
@@ -19,24 +22,21 @@ func init() {
 }
 
 // GetTypeStr 获取  类型 字符串 如 string、int
-func (this_ *Generator) GetTypeStr(name string) (str string, err error) {
-	valueType, err := this_.GetValueType(name)
-	if err != nil {
-		return
-	}
+func (this_ *Generator) GetTypeStr(valueType *maker.ValueType) (str string, err error) {
 	str = typeStr[valueType]
 	if str == "" {
 		// 获取对象类型
+		if valueType.Struct != nil {
+			structName := util.FirstToUpper(valueType.Struct.Name)
+			structPack := this_.golang.GetStructPack()
+			str = structPack + "." + structName
+		}
 	}
 	return
 }
 
 // GetTypeQuoteStr 获取  类型 引用 字符串 如 string 类型为 *string
-func (this_ *Generator) GetTypeQuoteStr(name string) (str string, err error) {
-	valueType, err := this_.GetValueType(name)
-	if err != nil {
-		return
-	}
+func (this_ *Generator) GetTypeQuoteStr(valueType *maker.ValueType) (str string, err error) {
 	str = typeStr[valueType]
 	if str == "" {
 		// 获取对象类型

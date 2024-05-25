@@ -22,7 +22,7 @@ func NewCompiler(app *Application) (compiler *Compiler, err error) {
 type Compiler struct {
 	*Application
 
-	spaceList  []*CompilerSpace
+	SpaceList  []*CompilerSpace
 	spaceCache map[string]*CompilerSpace
 	script     *Script
 }
@@ -49,10 +49,6 @@ func (this_ *Compiler) initScript() (err error) {
 	return
 }
 
-func (this_ *Compiler) GetPackClass(name string, lastIsClass bool) (class *CompilerClass) {
-	return
-}
-
 func (this_ *Compiler) init() (err error) {
 	util.Logger.Debug("init start")
 	err = this_.initScript()
@@ -65,6 +61,7 @@ func (this_ *Compiler) init() (err error) {
 	// 将 常量 error func 填充 至 script 变量域中
 	for _, one := range this_.GetConstantList() {
 		_, class := space.GetClass(one.Name, true)
+		class.Constant = one
 		for _, o := range one.Options {
 			var valueType *ValueType
 			valueType, err = this_.GetValueType(o.Type)
@@ -72,9 +69,8 @@ func (this_ *Compiler) init() (err error) {
 				util.Logger.Error("compiler init set constant value error", zap.Any("name", one.Name), zap.Any("error", err))
 				return
 			}
-			field := class.GetOrCreateField(o.Name)
-			field.addValueType(valueType)
-			field.value = o.Value
+			field := class.addField(o.Name, valueType)
+			field.ConstantOption = o
 
 			err = this_.setScriptVar(o.Name, field)
 			if err != nil {
@@ -94,14 +90,15 @@ func (this_ *Compiler) init() (err error) {
 	space = this_.GetOrCreateSpace("error")
 	for _, one := range this_.GetErrorList() {
 		_, class := space.GetClass(one.Name, true)
+		class.Error = one
 		for _, o := range one.Options {
 			err = this_.setScriptVar(o.Name, o)
 			if err != nil {
 				util.Logger.Error("compiler init set error value error", zap.Any("name", o.Name), zap.Any("error", err))
 				return
 			}
-			field := class.GetOrCreateField(o.Name)
-			field.addValueType(ValueTypeError)
+			field := class.addField(o.Name, ValueTypeError)
+			field.ErrorOption = o
 			this_.errorContext[o.Name] = o
 		}
 	}
@@ -116,6 +113,7 @@ func (this_ *Compiler) init() (err error) {
 	space = this_.GetOrCreateSpace("struct")
 	for _, one := range this_.GetStructList() {
 		_, class := space.GetClass(one.Name, true)
+		class.Struct = one
 		var valueType *ValueType
 		valueType, err = this_.GetValueType(one.Name)
 		if err != nil {
@@ -123,8 +121,8 @@ func (this_ *Compiler) init() (err error) {
 			return
 		}
 		for _, f := range one.Fields {
-			field := class.GetOrCreateField(f.Name)
-			field.addValueType(valueType.FieldTypes[f.Name])
+			field := class.addField(f.Name, valueType.FieldTypes[f.Name])
+			field.StructField = f
 		}
 		this_.strictContext[one.Name] = valueType
 	}
@@ -306,13 +304,13 @@ func (this_ *Compiler) ToValueByValueType(originalValue any, valueType *ValueTyp
 
 func (this_ *Compiler) Compile(hasErrorContinue bool) (compileErrors []*CompileError) {
 	util.Logger.Debug("compile start")
-	for _, space := range this_.spaceList {
-		util.Logger.Debug("compile space [" + space.space + "] start")
-		for _, pack := range space.packList {
-			util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] start")
-			for _, class := range pack.classList {
-				util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] class [" + class.class + "] start")
-				for _, method := range class.methodList {
+	for _, space := range this_.SpaceList {
+		util.Logger.Debug("compile " + space.GetKey() + " start")
+		for _, pack := range space.PackList {
+			util.Logger.Debug("compile " + pack.GetKey() + " start")
+			for _, class := range pack.ClassList {
+				util.Logger.Debug("compile " + class.GetKey() + " start")
+				for _, method := range class.MethodList {
 					_, err := method.Compile()
 					if err != nil {
 						compileErrors = append(compileErrors, &CompileError{
@@ -324,11 +322,11 @@ func (this_ *Compiler) Compile(hasErrorContinue bool) (compileErrors []*CompileE
 						}
 					}
 				}
-				util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] class [" + class.class + "] end")
+				util.Logger.Debug("compile " + class.GetKey() + " end")
 			}
-			util.Logger.Debug("compile space [" + space.space + "] pack [" + pack.pack + "] end")
+			util.Logger.Debug("compile " + pack.GetKey() + " end")
 		}
-		util.Logger.Debug("compile space [" + space.space + "] end")
+		util.Logger.Debug("compile " + space.GetKey() + " end")
 	}
 
 	util.Logger.Debug("compile end")

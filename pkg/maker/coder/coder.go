@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 	"teamide/pkg/maker"
-	"teamide/pkg/maker/modelers"
 )
 
 func NewCoder(compiler *maker.Compiler, options *Options) (res *Coder, err error) {
@@ -55,40 +54,20 @@ func (this_ *Coder) Gen() (err error) {
 	if err != nil {
 		return
 	}
+
+	compileErrors := this_.Compile(false)
+	if len(compileErrors) > 0 {
+		err = errors.New(compileErrors[0].Method.GetKey() + " error:" + compileErrors[0].Err.Error())
+		return
+	}
+
 	err = generator.GenBase()
 	if err != nil {
 		return
 	}
-	for _, one := range this_.GetConstantList() {
-		err = generator.GenConstant(one)
-		if err != nil {
-			return
-		}
-	}
-	for _, one := range this_.GetErrorList() {
-		err = generator.GenError(one)
-		if err != nil {
-			return
-		}
-	}
-	for _, one := range this_.GetStructList() {
-		err = generator.GenStruct(one)
-		if err != nil {
-			return
-		}
-	}
 
-	pathFunc := map[string][]*modelers.FuncModel{}
-	for _, one := range this_.GetFuncList() {
-		path := ""
-		dot := strings.LastIndex(one.Name, "/")
-		if dot > 0 {
-			path = one.Name[:dot]
-		}
-		pathFunc[path] = append(pathFunc[path], one)
-	}
-	for path, list := range pathFunc {
-		err = generator.GenFunc(path, list)
+	for _, one := range this_.SpaceList {
+		err = generator.GenSpace(one)
 		if err != nil {
 			return
 		}
@@ -96,10 +75,12 @@ func (this_ *Coder) Gen() (err error) {
 
 	return
 }
+
 func (this_ *Coder) SetGenerator(generator IGenerator) {
 	this_.generator = generator
 	return
 }
+
 func (this_ *Coder) Mkdir(path string) (err error) {
 	ex, err := util.PathExists(path)
 	if err != nil {
@@ -111,6 +92,11 @@ func (this_ *Coder) Mkdir(path string) (err error) {
 	return
 }
 func (this_ *Coder) CreateAndOpen(path string) (f *os.File, err error) {
+	dir := path[0:strings.LastIndex(path, "/")]
+	err = this_.Mkdir(dir)
+	if err != nil {
+		return
+	}
 	ex, err := util.PathExists(path)
 	if err != nil {
 		return
@@ -133,8 +119,5 @@ func (this_ *Coder) AppendLine(content *string, line string, tab int) {
 
 type IGenerator interface {
 	GenBase() (err error)
-	GenConstant(model *modelers.ConstantModel) (err error)
-	GenError(model *modelers.ErrorModel) (err error)
-	GenStruct(model *modelers.StructModel) (err error)
-	GenFunc(funcPath string, models []*modelers.FuncModel) (err error)
+	GenSpace(space *maker.CompilerSpace) (err error)
 }

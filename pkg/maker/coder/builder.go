@@ -24,6 +24,12 @@ type Builder struct {
 	colNumber int
 }
 
+func (this_ *Builder) GetRowNumber() int {
+	return this_.rowNumber
+}
+func (this_ *Builder) GetColNumber() int {
+	return this_.colNumber
+}
 func (this_ *Builder) Tab() {
 	this_.tab++
 }
@@ -41,24 +47,42 @@ func (this_ *Builder) GetTab() (tab int) {
 	return
 }
 
-func (this_ *Builder) AppendLine(line string) (err error) {
+func (this_ *Builder) AppendTabLine(ss ...string) {
 	str := ""
 
 	for i := 0; i < this_.tab; i++ {
 		str += "    "
 	}
-	str += line
+	for _, s := range ss {
+		str += s
+	}
 	str += "\n"
-	_, err = this_.f.WriteString(str)
+	_, _ = this_.f.WriteString(str)
+	this_.rowNumber++
 	return
 }
 
-func (this_ *Builder) AppendCode(code string) (err error) {
-	_, err = this_.f.WriteString(code)
+func (this_ *Builder) AppendTab() {
+	str := ""
+	for i := 0; i < this_.tab; i++ {
+		str += "    "
+	}
+	_, _ = this_.f.WriteString(str)
 	return
 }
-func (this_ *Builder) NewLine() (err error) {
-	_, err = this_.f.WriteString("\n")
+
+func (this_ *Builder) AppendCode(ss ...string) {
+	str := ""
+	for _, s := range ss {
+		str += s
+	}
+	_, _ = this_.f.WriteString(str)
+	return
+}
+
+func (this_ *Builder) NewLine() {
+	_, _ = this_.f.WriteString("\n")
+	this_.rowNumber++
 	return
 }
 

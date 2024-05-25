@@ -15,10 +15,10 @@ type ComponentField struct {
 }
 
 type ComponentMethod struct {
-	Name           string                                              `json:"name"`
-	Args           []*ComponentField                                   `json:"args"`
-	ThrowErrors    []string                                            `json:"throwErrors"`
-	GetReturnTypes func(args []interface{}) (returnTypes []*ValueType) `json:"-"`
+	Name           string                                           `json:"name"`
+	Args           []*ComponentField                                `json:"args"`
+	ThrowErrors    []string                                         `json:"throwErrors"`
+	GetReturnTypes func(args []interface{}) (returnType *ValueType) `json:"-"`
 }
 
 func (this_ *Component) ToContext() (ctx map[string]interface{}) {

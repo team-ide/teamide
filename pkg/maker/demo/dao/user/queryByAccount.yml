@@ -3,5 +3,5 @@ args:
     type: string
 func: |
   var user user
-  user = db.selectOne("tb_user", "account=${account}")
+  user = db.selectOne("*", "tb_user", "account=${account}", struct.user)
   return user

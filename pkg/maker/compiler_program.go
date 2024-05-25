@@ -41,7 +41,7 @@ type CompileProgram struct {
 
 func (this_ *CompilerMethod) CompileMethod(method *CompilerMethod) (res *CompilerMethodResult, err error) {
 	key := method.GetKey()
-	res = method.result
+	res = method.Result
 	if res != nil {
 		util.Logger.Debug("compile method ["+key+"] already compiled", zap.Any("result", res))
 		return
@@ -56,54 +56,48 @@ func (this_ *CompilerMethod) CompileMethod(method *CompilerMethod) (res *Compile
 
 func (this_ *CompilerMethod) Compile() (res *CompilerMethodResult, err error) {
 	key := this_.GetKey()
-	res = &CompilerMethodResult{}
-	this_.result = res
+	res = &CompilerMethodResult{
+		CompilerValueType: NewCompilerValueType(nil),
+	}
+	this_.Result = res
 
-	util.Logger.Debug("compile method [" + key + "] start")
+	util.Logger.Debug("compile " + key + " start")
 	this_.script, err = this_.Compiler.script.NewScript()
 	if err != nil {
-		util.Logger.Error("compile method new script error", zap.Error(err))
+		util.Logger.Error("compile "+key+" new script error", zap.Error(err))
 		return
 	}
 
-	for _, param := range this_.paramList {
-		util.Logger.Debug("compile method [" + key + "] param [" + param.name + "] init")
-		err = this_.script.Set(param.name, param)
+	for _, param := range this_.ParamList {
+		util.Logger.Debug("compile " + key + " param [" + param.Name + "] init")
+		err = this_.script.Set(param.Name, param)
 		if err != nil {
-			util.Logger.Error("compile method ["+key+"] param ["+param.name+"] init error", zap.Error(err))
+			util.Logger.Error("compile "+key+" param ["+param.Name+"] init error", zap.Error(err))
 			return
 		}
 	}
 
-	err = this_.VariableDeclarations(this_.program.DeclarationList)
+	err = this_.VariableDeclarations(this_.Program.DeclarationList)
 	if err != nil {
-		util.Logger.Error("compile method ["+key+"] variable declarations error", zap.Error(err))
 		return
 	}
-	err = this_.Statements(this_.program.Body)
+	err = this_.Statements(this_.Program.Body[0].(*ast.ExpressionStatement).Expression.(*ast.CallExpression).Callee.(*ast.FunctionLiteral).Body.List)
 	if err != nil {
-		util.Logger.Error("compile method ["+key+"] statements error", zap.Error(err))
 		return
 	}
-	util.Logger.Debug("compile method ["+key+"] end", zap.Any("result", res))
+	util.Logger.Debug("compile "+key+" end", zap.Any("result", res))
 
 	return
 }
 
 func (this_ *CompilerMethod) VariableDeclarations(variableDeclarations []*ast.VariableDeclaration) (err error) {
 
-	fmt.Println("TODO VariableDeclarations:", util.GetStringValue(variableDeclarations))
 	for _, variableDeclaration := range variableDeclarations {
 		err = this_.VariableDeclaration(variableDeclaration)
 		if err != nil {
 			return
 		}
 	}
-	return
-}
-
-func (this_ *CompilerMethod) VariableDeclaration(variableDeclaration *ast.VariableDeclaration) (err error) {
-	fmt.Println("TODO VariableDeclaration:", util.GetStringValue(variableDeclaration))
 	return
 }
 
