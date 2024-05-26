@@ -28,6 +28,24 @@ func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 	case *ast.TemplateLiteral:
 		_, err = this_.TemplateLiteral(e)
 		break
+	case *ast.BinaryExpression:
+		err = this_.BinaryExpression(e)
+		break
+	case *ast.Identifier:
+		err = this_.Identifier(e)
+		break
+	case *ast.StringLiteral:
+		err = this_.StringLiteral(e)
+		break
+	case *ast.NumberLiteral:
+		err = this_.NumberLiteral(e)
+		break
+	case *ast.NullLiteral:
+		err = this_.NullLiteral(e)
+		break
+	case *ast.DotExpression:
+		err = this_.DotExpression(e)
+		break
 	default:
 		err = this_.Error("expression ["+reflect.TypeOf(expression).String()+"] 不支持", expression)
 		util.Logger.Debug(this_.GetKey()+" Expression error", zap.Error(err))
@@ -71,6 +89,11 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 	}
 	//fmt.Println("CallExpression GetExpressionForValue res:", util.GetStringValue(v))
 
+	if nameScript != "" {
+		this_.fullImport(nameScript)
+	}
+	this_.CallCache[expression] = v
+	this_.CallScriptCache[expression] = nameScript
 	switch m := v.(type) {
 	case *ComponentMethod:
 		if m.GetReturnTypes == nil {
@@ -133,6 +156,9 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 				case reflect.Float64:
 					res = ValueTypeFloat64
 					break
+				case reflect.Bool:
+					res = ValueTypeBool
+					break
 				default:
 					err = errors.New("call expression func [" + reflect.TypeOf(v).String() + "] not support result type [" + out.Kind().String() + "]")
 					return
@@ -165,9 +191,13 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 	}
 
 	//fmt.Println("AssignExpression Right:", util.GetStringValue(expression.Right))
-	_, v, err := this_.GetExpressionForType(expression.Right)
+	vName, v, err := this_.GetExpressionForType(expression.Right)
 	if err != nil {
 		return
+	}
+
+	if vName != "" {
+		this_.fullImport(vName)
 	}
 
 	if methodVar != nil {
@@ -189,6 +219,47 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 func (this_ *CompilerMethod) TemplateLiteral(expression *ast.TemplateLiteral) (res any, err error) {
 	fmt.Println("TODO TemplateLiteral:", util.GetStringValue(expression))
 	res = ValueTypeString
+	return
+}
+func (this_ *CompilerMethod) Identifier(expression *ast.Identifier) (err error) {
+	fmt.Println("TODO Identifier:", util.GetStringValue(expression))
+	return
+}
+func (this_ *CompilerMethod) NullLiteral(expression *ast.NullLiteral) (err error) {
+	fmt.Println("TODO NullLiteral:", util.GetStringValue(expression))
+	return
+}
+func (this_ *CompilerMethod) StringLiteral(expression *ast.StringLiteral) (err error) {
+	fmt.Println("TODO StringLiteral:", util.GetStringValue(expression))
+	return
+}
+func (this_ *CompilerMethod) NumberLiteral(expression *ast.NumberLiteral) (err error) {
+	fmt.Println("TODO NumberLiteral:", util.GetStringValue(expression))
+	return
+}
+func (this_ *CompilerMethod) DotExpression(expression *ast.DotExpression) (err error) {
+	fmt.Println("TODO DotExpression:", util.GetStringValue(expression))
+	err = this_.Expression(expression.Left)
+	if err != nil {
+		return
+	}
+	err = this_.Identifier(&expression.Identifier)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *CompilerMethod) BinaryExpression(expression *ast.BinaryExpression) (err error) {
+
+	err = this_.Expression(expression.Left)
+	if err != nil {
+		return
+	}
+	err = this_.Expression(expression.Right)
+	if err != nil {
+		return
+	}
 	return
 }
 

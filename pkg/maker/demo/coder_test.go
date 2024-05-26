@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestS(t *testing.T) {
+func TestXxxSx(t *testing.T) {
 	var bs = []string{"1", "2", "3"}
 	bs2 := bs[0:2]
 	bs[0] = "--"

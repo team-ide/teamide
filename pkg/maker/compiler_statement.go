@@ -87,7 +87,7 @@ func (this_ *CompilerMethod) Binding(binding *ast.Binding) (err error) {
 	if err != nil {
 		return
 	}
-	if this_.findType(nameScript) {
+	if this_.FindType(nameScript) {
 		err = this_.Error("变量 ["+nameScript+"] 已定义", binding)
 		util.Logger.Error(this_.GetKey()+" Binding error", zap.Error(err))
 		return
@@ -130,16 +130,20 @@ func (this_ *CompilerMethod) ExpressionStatement(statement *ast.ExpressionStatem
 	return
 }
 func (this_ *CompilerMethod) ThrowStatement(statement *ast.ThrowStatement) (err error) {
+	this_.fullImport("error")
 	fmt.Println("TODO ThrowStatement:", util.GetStringValue(statement))
 	return
 }
 
 func (this_ *CompilerMethod) IfStatement(statement *ast.IfStatement) (err error) {
+	err = this_.Expression(statement.Test)
+	if err != nil {
+		return
+	}
 	err = this_.Statement(statement.Consequent)
 	if err != nil {
 		return
 	}
-
 	err = this_.Statement(statement.Alternate)
 	if err != nil {
 		return

@@ -94,12 +94,14 @@ func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
 	res = this_.classCache[class]
 	if res == nil {
 		res = &CompilerClass{
-			Class:        class,
-			CompilerPack: this_,
-			importCache:  make(map[*CompilerClass]*CompilerImport),
-			fieldCache:   make(map[string]*CompilerField),
-			methodCache:  make(map[string]*CompilerMethod),
+			Class:            class,
+			CompilerPack:     this_,
+			importClassCache: make(map[*CompilerClass]*CompilerImport),
+			importCache:      make(map[string]*CompilerImport),
+			fieldCache:       make(map[string]*CompilerField),
+			methodCache:      make(map[string]*CompilerMethod),
 		}
+
 		this_.ClassList = append(this_.ClassList, res)
 		this_.classCache[class] = res
 	}
@@ -108,16 +110,17 @@ func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
 
 type CompilerClass struct {
 	*CompilerPack
-	Class       string
-	ImportList  []*CompilerImport
-	importCache map[*CompilerClass]*CompilerImport
-	FieldList   []*CompilerField
-	fieldCache  map[string]*CompilerField
-	MethodList  []*CompilerMethod
-	methodCache map[string]*CompilerMethod
-	Constant    *modelers.ConstantModel
-	Error       *modelers.ErrorModel
-	Struct      *modelers.StructModel
+	Class            string
+	ImportList       []*CompilerImport
+	importClassCache map[*CompilerClass]*CompilerImport
+	importCache      map[string]*CompilerImport
+	FieldList        []*CompilerField
+	fieldCache       map[string]*CompilerField
+	MethodList       []*CompilerMethod
+	methodCache      map[string]*CompilerMethod
+	Constant         *modelers.ConstantModel
+	Error            *modelers.ErrorModel
+	Struct           *modelers.StructModel
 }
 
 func (this_ *CompilerClass) GetKey() (key string) {
@@ -125,20 +128,39 @@ func (this_ *CompilerClass) GetKey() (key string) {
 	return
 }
 
-func (this_ *CompilerClass) GetOrCreateImport(class *CompilerClass) (res *CompilerImport) {
-	res = this_.importCache[class]
+func (this_ *CompilerClass) GetOrCreateClassImport(class *CompilerClass) (res *CompilerImport) {
+	res = this_.importClassCache[class]
 	if res == nil {
 		res = &CompilerImport{
-			CompilerClass: class,
+			Class: class,
 		}
 		this_.ImportList = append(this_.ImportList, res)
-		this_.importCache[class] = res
+		this_.importClassCache[class] = res
+	}
+	return
+}
+
+func (this_ *CompilerClass) GetImport(imp string) (res *CompilerImport) {
+	res = this_.importCache[imp]
+	return
+}
+func (this_ *CompilerClass) GetOrCreateImport(imp string) (res *CompilerImport) {
+	res = this_.importCache[imp]
+	if res == nil {
+		res = &CompilerImport{
+			Import: imp,
+		}
+		this_.ImportList = append(this_.ImportList, res)
+		this_.importCache[imp] = res
 	}
 	return
 }
 
 type CompilerImport struct {
-	*CompilerClass
+	Class  *CompilerClass
+	Import string
+	AsName string
+	IsThis bool
 }
 
 func (this_ *CompilerClass) addField(name string, valueType *ValueType) (res *CompilerField) {
@@ -175,11 +197,13 @@ func (this_ *CompilerClass) GetMethod(name string) (res *CompilerMethod) {
 func (this_ *CompilerClass) CreateMethod(name string, args []*modelers.ArgModel) (res *CompilerMethod, err error) {
 
 	res = &CompilerMethod{
-		CompilerClass: this_,
-		Method:        name,
-		paramCache:    make(map[string]*CompilerMethodParam),
-		varCache:      make(map[string]*CompilerMethodVar),
-		BindingCache:  make(map[*ast.Binding]*CompilerMethodVar),
+		CompilerClass:   this_,
+		Method:          name,
+		paramCache:      make(map[string]*CompilerMethodParam),
+		varCache:        make(map[string]*CompilerMethodVar),
+		BindingCache:    make(map[*ast.Binding]*CompilerMethodVar),
+		CallCache:       make(map[*ast.CallExpression]interface{}),
+		CallScriptCache: make(map[*ast.CallExpression]string),
 	}
 
 	for _, arg := range args {
@@ -216,7 +240,9 @@ type CompilerMethod struct {
 	script            *Script
 	code              string
 
-	BindingCache map[*ast.Binding]*CompilerMethodVar
+	BindingCache    map[*ast.Binding]*CompilerMethodVar
+	CallCache       map[*ast.CallExpression]interface{}
+	CallScriptCache map[*ast.CallExpression]string
 }
 
 func (this_ *CompilerMethod) GetKey() (key string) {
@@ -225,6 +251,7 @@ func (this_ *CompilerMethod) GetKey() (key string) {
 }
 
 func (this_ *CompilerMethod) getParam(name string) (res *CompilerValueType) {
+	this_.fullImport(name)
 	index := strings.Index(name, ".")
 	var varName = name
 	var subName = ""
@@ -249,6 +276,54 @@ func (this_ *CompilerMethod) getParam(name string) (res *CompilerValueType) {
 	return
 }
 
+func (this_ *CompilerMethod) fullImport(name string) {
+	var importName = name
+	index := strings.Index(name, ".")
+	if index > 0 {
+		importName = name[0:index]
+	}
+	switch importName {
+	case "util":
+		this_.GetOrCreateImport(importName)
+		break
+	case "error":
+		this_.GetOrCreateImport(importName)
+		break
+	case "struct":
+		this_.GetOrCreateImport(importName)
+		break
+	case "dao":
+		this_.GetOrCreateImport(importName)
+		break
+	case "service":
+		this_.GetOrCreateImport(importName)
+		break
+	case "func":
+		this_.GetOrCreateImport(importName)
+		break
+	case "common":
+		this_.GetOrCreateImport(importName)
+		break
+	default:
+		if importName == "db" || strings.HasPrefix(importName, "db_") {
+			this_.GetOrCreateImport("db")
+		}
+		if importName == "redis" || strings.HasPrefix(importName, "redis_") {
+			this_.GetOrCreateImport("redis")
+		}
+		if importName == "zk" || strings.HasPrefix(importName, "zk_") {
+			this_.GetOrCreateImport("zk")
+		}
+		if importName == "kafka" || strings.HasPrefix(importName, "kafka_") {
+			this_.GetOrCreateImport("kafka")
+		}
+		if importName == "es" || strings.HasPrefix(importName, "es_") {
+			this_.GetOrCreateImport("es")
+		}
+	}
+	return
+}
+
 func (this_ *CompilerMethod) addParam(name string, valueType *ValueType) (res *CompilerMethodParam) {
 	util.Logger.Debug(this_.GetKey()+" set param ["+name+"] ", zap.Any("valueType", valueType))
 	res = &CompilerMethodParam{
@@ -263,6 +338,7 @@ func (this_ *CompilerMethod) addParam(name string, valueType *ValueType) (res *C
 }
 
 func (this_ *CompilerMethod) getVar(name string) (res *CompilerValueType) {
+	this_.fullImport(name)
 	index := strings.Index(name, ".")
 	var varName = name
 	var subName = ""
@@ -322,7 +398,7 @@ func (this_ *CompilerMethod) getByNameScript(nameScript string) (res interface{}
 	}
 	return
 }
-func (this_ *CompilerMethod) findType(name string) (find bool) {
+func (this_ *CompilerMethod) FindType(name string) (find bool) {
 	_, find = this_.varCache[name]
 	if !find {
 		_, find = this_.paramCache[name]

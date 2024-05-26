@@ -3,14 +3,15 @@ args:
     type: user
 func: |
   //  验证参数合法性
-  if(isNull(user)){
+  if(util.isNull(user)){
     throw error.USER_IS_NULL;
   }
-  if(isEmpty(user.userId)){
+  if(util.isEmpty(user.userId)){
     throw error.USER_ID_IS_EMPTY;
   }
-  if(isNotEmpty(user.account)){
-    if(dao.user.exist(user.account)){
+  if(util.isNotEmpty(user.account)){
+    var find = dao.user.queryByAccount(user.account)
+    if(find != null && find.userId != user.userId){
       throw error.USER_ACCOUNT_ALREADY_EXIST;
     }
   }

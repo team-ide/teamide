@@ -65,6 +65,10 @@ func (this_ *LanguageGolangModel) GetConstantPack() string {
 	return GetPack(&this_.ConstantPack, "constant")
 }
 
+func (this_ *LanguageGolangModel) GetConstantImport() string {
+	return this_.GetPackImport(this_.GetConstantPath(), this_.GetConstantPack())
+}
+
 func (this_ *LanguageGolangModel) GetErrorDir(dir string) string {
 	return GetDir(dir, this_.GetErrorPath())
 }
@@ -75,6 +79,9 @@ func (this_ *LanguageGolangModel) GetErrorPath() string {
 
 func (this_ *LanguageGolangModel) GetErrorPack() string {
 	return GetPack(&this_.ErrorPack, "exception")
+}
+func (this_ *LanguageGolangModel) GetErrorImport() string {
+	return this_.GetPackImport(this_.GetErrorPath(), this_.GetErrorPack())
 }
 
 func (this_ *LanguageGolangModel) GetStructDir(dir string) string {
@@ -103,6 +110,9 @@ func (this_ *LanguageGolangModel) GetFuncPath() string {
 func (this_ *LanguageGolangModel) GetFuncPack() string {
 	return GetPack(&this_.FuncPack, "tool")
 }
+func (this_ *LanguageGolangModel) GetFuncImport() string {
+	return this_.GetPackImport(this_.GetFuncPath(), this_.GetFuncPack())
+}
 
 func (this_ *LanguageGolangModel) GetDaoDir(dir string) string {
 	return GetDir(dir, this_.GetDaoPath())
@@ -115,6 +125,9 @@ func (this_ *LanguageGolangModel) GetDaoPath() string {
 func (this_ *LanguageGolangModel) GetDaoPack() string {
 	return GetPack(&this_.DaoPack, "dao")
 }
+func (this_ *LanguageGolangModel) GetDaoImport() string {
+	return this_.GetPackImport(this_.GetDaoPath(), this_.GetDaoPack())
+}
 
 func (this_ *LanguageGolangModel) GetServiceDir(dir string) string {
 	return GetDir(dir, this_.GetServicePath())
@@ -126,6 +139,9 @@ func (this_ *LanguageGolangModel) GetServicePath() string {
 
 func (this_ *LanguageGolangModel) GetServicePack() string {
 	return GetPack(&this_.ServicePack, "service")
+}
+func (this_ *LanguageGolangModel) GetServiceImport() string {
+	return this_.GetPackImport(this_.GetServicePath(), this_.GetServicePack())
 }
 
 func (this_ *LanguageGolangModel) GetPackImport(path string, pack string) string {

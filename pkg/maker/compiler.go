@@ -57,6 +57,7 @@ func (this_ *Compiler) init() (err error) {
 	}
 
 	util.Logger.Debug("init constant start")
+	err = this_.setScriptVar("constant", this_.constantContext)
 	space := this_.GetOrCreateSpace("constant")
 	// 将 常量 error func 填充 至 script 变量域中
 	for _, one := range this_.GetConstantList() {

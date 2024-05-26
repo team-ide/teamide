@@ -2,7 +2,7 @@ args:
   - name: userId
     type: i64
 func: |
-  if(isEmpty(userId)){
+  if(util.isEmpty(userId)){
     throw error.USER_ID_IS_EMPTY;
   }
   dao.user.delete(userId)

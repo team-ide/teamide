@@ -3,10 +3,10 @@ args:
   - name: password
 func: |
   //  验证参数合法性
-  if(isEmpty(account)){
+  if(util.isEmpty(account)){
     throw error.USER_ACCOUNT_IS_EMPTY;
   }
-  if(isEmpty(password)){
+  if(util.isEmpty(password)){
     throw error.USER_PASSWORD_IS_EMPTY;
   }
   var user user

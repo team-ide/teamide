@@ -28,7 +28,9 @@ type ClassBuilder struct {
 	*coder.Builder
 	*maker.CompilerClass
 	*PackBuilder
-	filePath string
+	filePath      string
+	className     string
+	classBeanName string
 }
 
 func (this_ *Generator) getSpaceBuilder(space *maker.CompilerSpace) (builder *SpaceBuilder) {
@@ -97,7 +99,7 @@ func (this_ *Generator) getPackBuilder(pack *maker.CompilerPack) (builder *PackB
 	return
 }
 
-func (this_ *Generator) getClassBuilder(class *maker.CompilerClass) (builder *ClassBuilder, err error) {
+func (this_ *Generator) getClassBuilder(class *maker.CompilerClass) (builder *ClassBuilder) {
 	builder = this_.classCache[class.GetKey()]
 	if builder != nil {
 		return
@@ -143,11 +145,67 @@ func (this_ *Generator) GenPack(pack *maker.CompilerPack) (err error) {
 	return
 }
 
-func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
-	builder, err := this_.getClassBuilder(class)
-	if err != nil {
+func (this_ *ClassBuilder) GetClassName() (res string) {
+	res = this_.className
+	if res != "" {
 		return
 	}
+	res = this_.Class + util.FirstToUpper(this_.spacePack)
+	res = util.FirstToUpper(res)
+	this_.className = res
+	return
+}
+
+func (this_ *ClassBuilder) GetClassBeanName() (res string) {
+	res = this_.classBeanName
+	if res != "" {
+		return
+	}
+	res = this_.GetClassName()
+	res += "Obj"
+	this_.classBeanName = res
+	return
+}
+
+func (this_ *Generator) GetImportAsName(name string) (impl string, asName string) {
+	switch name {
+	case "common":
+		impl = this_.golang.GetCommonImport()
+		asName = this_.golang.GetCommonPack()
+		break
+	case "constant":
+		impl = this_.golang.GetConstantImport()
+		asName = this_.golang.GetConstantPack()
+		break
+	case "error":
+		impl = this_.golang.GetErrorImport()
+		asName = this_.golang.GetErrorPack()
+		break
+	case "struct":
+		impl = this_.golang.GetStructImport()
+		asName = this_.golang.GetStructPack()
+		break
+	case "func":
+		impl = this_.golang.GetFuncImport()
+		asName = this_.golang.GetFuncPack()
+		break
+	case "dao":
+		impl = this_.golang.GetDaoImport()
+		asName = this_.golang.GetDaoPack()
+		break
+	case "service":
+		impl = this_.golang.GetServiceImport()
+		asName = this_.golang.GetServicePack()
+		break
+	case "util":
+		impl = "github.com/team-ide/go-tool/util"
+		asName = "util"
+		break
+	}
+	return
+}
+func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
+	builder := this_.getClassBuilder(class)
 	util.Logger.Debug("gen "+class.GetKey(), zap.Any("path", builder.filePath))
 	builder.Builder, err = this_.NewBuilder(builder.filePath)
 	if err != nil {
@@ -168,7 +226,44 @@ func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
 
 		var imports []string
 
-		imports = append(imports, this_.golang.GetStructImport())
+		for _, impl := range class.ImportList {
+			if impl.Import != "" {
+				switch impl.Import {
+				case "common":
+					imports = append(imports, this_.golang.GetCommonImport())
+					impl.AsName = this_.golang.GetCommonPack()
+					break
+				case "constant":
+					imports = append(imports, this_.golang.GetConstantImport())
+					impl.AsName = this_.golang.GetConstantPack()
+					break
+				case "error":
+					imports = append(imports, this_.golang.GetErrorImport())
+					impl.AsName = this_.golang.GetErrorPack()
+					break
+				case "struct":
+					imports = append(imports, this_.golang.GetStructImport())
+					impl.AsName = this_.golang.GetStructPack()
+					break
+				case "func":
+					imports = append(imports, this_.golang.GetFuncImport())
+					impl.AsName = this_.golang.GetFuncPack()
+					break
+				case "dao":
+					imports = append(imports, this_.golang.GetDaoImport())
+					impl.AsName = this_.golang.GetDaoPack()
+					break
+				case "service":
+					imports = append(imports, this_.golang.GetServiceImport())
+					impl.AsName = this_.golang.GetServicePack()
+					break
+				case "util":
+					imports = append(imports, "github.com/team-ide/go-tool/util")
+					impl.AsName = "util"
+					break
+				}
+			}
+		}
 
 		builder.AppendTabLine("import(")
 		builder.Tab()
@@ -177,6 +272,24 @@ func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
 		}
 		builder.Indent()
 		builder.AppendTabLine(")")
+		builder.NewLine()
+
+		builder.AppendTabLine("// ", builder.GetClassBeanName(), " ", builder.GetClassName(), "对象实例")
+		builder.AppendTabLine("var ", builder.GetClassBeanName(), " = New", builder.GetClassName(), "()")
+		builder.NewLine()
+
+		builder.AppendTabLine("// New", builder.GetClassName(), " 新建", builder.GetClassName(), "对象实例")
+		builder.AppendTabLine("func New", builder.GetClassName(), "() (res ", builder.GetClassName(), ") {")
+		builder.Tab()
+		builder.NewLine()
+		builder.AppendTabLine("return")
+		builder.Indent()
+		builder.AppendTabLine("}")
+		builder.NewLine()
+
+		builder.AppendTabLine("type ", builder.GetClassName(), " struct {")
+		builder.NewLine()
+		builder.AppendTabLine("}")
 		builder.NewLine()
 
 		for _, method := range class.MethodList {

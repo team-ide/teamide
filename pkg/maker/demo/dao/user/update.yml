@@ -3,10 +3,10 @@ args:
     type: user
 func: |
   var update Map
-  if(isNotEmpty(user.name)){
+  if(util.isNotEmpty(user.name)){
     update["name"] = user.name
   }
-  if(isNotEmpty(user.account)){
+  if(util.isNotEmpty(user.account)){
     update["account"] = user.account
   }
   

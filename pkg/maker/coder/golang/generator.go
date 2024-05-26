@@ -54,6 +54,14 @@ func (this_ *Generator) GenMod() (err error) {
 	builder.NewLine()
 	builder.AppendTabLine("go " + this_.golang.GetGoVersion())
 	builder.NewLine()
+
+	builder.AppendTabLine("require (")
+	builder.Tab()
+	builder.AppendTabLine("github.com/team-ide/go-tool v1.2.14")
+	builder.Indent()
+	builder.AppendTabLine(")")
+	builder.NewLine()
+
 	return
 }
 
@@ -90,6 +98,13 @@ func NewError(code string, msg string) *Error {
 	return err
 }
 
+func GenId() (res int64){
+	return
+}
+
+func GenStr() (res string){
+	return
+}
 `
 )
 

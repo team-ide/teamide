@@ -9,7 +9,7 @@ func: |
   if(user == null){
     user = dao.user.get(userId)
     if(user != null){
-      redis.set(`user-${userId}`, user, USER_REDIS_EXPIRE)
+      redis.set(`user-${userId}`, user, constant.USER_REDIS_EXPIRE)
     }
   }
   if(user != null){

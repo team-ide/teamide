@@ -2,4 +2,4 @@
 
 cd %~dp0
 
-go test -v -run TestCoder$ ./
+go test -v -run ^TestCoder$ ./

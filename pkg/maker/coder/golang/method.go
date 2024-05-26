@@ -6,6 +6,7 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"reflect"
+	"strings"
 	"teamide/pkg/maker"
 )
 
@@ -25,7 +26,7 @@ func (this_ *MethodBuilder) Gen() (err error) {
 	methodName := util.FirstToUpper(this_.Method)
 	this_.AppendTabLine("// " + methodName + " " + this_.Comment + "")
 	var str string
-	str += "func " + methodName
+	str += "func (this_ *" + this_.GetClassName() + ") " + methodName
 	str += "("
 	for i, param := range this_.ParamList {
 
@@ -343,11 +344,41 @@ func (this_ *MethodBuilder) ArgumentList(argumentList []ast.Expression) (err err
 	return
 }
 
-func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err error) {
-	err = this_.Expression(expression.Callee)
-	if err != nil {
+func (this_ *MethodBuilder) formatScript(name string, obj interface{}) (script string) {
+	names := strings.Split(name, ".")
+	script = name
+	if len(names) < 2 {
 		return
 	}
+
+	switch toB := obj.(type) {
+	case *maker.CompilerMethod:
+		place := this_.getPackBuilder(toB.CompilerPack)
+		class := this_.getClassBuilder(toB.CompilerClass)
+		script = place.spacePack
+		script += "." + class.GetClassBeanName()
+		script += "." + util.FirstToUpper(names[len(names)-1])
+		break
+	default:
+		script = names[0]
+		for i := 1; i < len(names); i++ {
+			script += "." + util.FirstToUpper(names[i])
+		}
+
+	}
+	return
+}
+func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err error) {
+
+	obj := this_.CallCache[expression]
+	script := this_.CallScriptCache[expression]
+	script = this_.formatScript(script, obj)
+
+	this_.AppendCode(script)
+	//err = this_.Expression(expression.Callee)
+	//if err != nil {
+	//	return
+	//}
 	this_.AppendCode("(")
 	err = this_.ArgumentList(expression.ArgumentList)
 	if err != nil {
@@ -386,7 +417,16 @@ func (this_ *MethodBuilder) BinaryExpression(expression *ast.BinaryExpression) (
 }
 
 func (this_ *MethodBuilder) Identifier(expression *ast.Identifier) (err error) {
-	this_.AppendCode(expression.Name.String())
+	name := expression.Name.String()
+	impl := this_.CompilerMethod.CompilerClass.GetImport(name)
+	if impl != nil && impl.AsName != "" {
+		name = impl.AsName
+	} else {
+		if !this_.FindType(name) {
+			name = util.FirstToUpper(name)
+		}
+	}
+	this_.AppendCode(name)
 	return
 }
 
