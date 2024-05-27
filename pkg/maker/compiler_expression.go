@@ -182,6 +182,7 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 	if err != nil {
 		return
 	}
+	this_.AssignExpressionScriptCache[expression] = nameScript
 
 	methodVar := this_.getVar(nameScript)
 	methodParam := this_.getParam(nameScript)
@@ -189,7 +190,6 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 		err = this_.Error("变量["+nameScript+"]未定义", expression)
 		return
 	}
-
 	//fmt.Println("AssignExpression Right:", util.GetStringValue(expression.Right))
 	vName, v, err := this_.GetExpressionForType(expression.Right)
 	if err != nil {
@@ -202,8 +202,10 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 
 	if methodVar != nil {
 		err = methodVar.addValueTypes(v)
+		this_.AssignExpressionScriptTypeCache[expression] = methodVar
 	} else {
 		err = methodParam.addValueTypes(v)
+		this_.AssignExpressionScriptTypeCache[expression] = methodParam
 	}
 	if err != nil {
 		err = this_.Error(err.Error(), expression.Left)

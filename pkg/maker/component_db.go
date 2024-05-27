@@ -17,24 +17,28 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 					}
 					return
 				},
+				HasError: true,
 			},
 			{
 				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
+				HasError: true,
 			},
 			{
 				Name: "Update", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
+				HasError: true,
 			},
 			{
 				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
+				HasError: true,
 			},
 		},
 	}

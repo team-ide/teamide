@@ -17,7 +17,7 @@ type ComponentField struct {
 type ComponentMethod struct {
 	Name           string                                           `json:"name"`
 	Args           []*ComponentField                                `json:"args"`
-	ThrowErrors    []string                                         `json:"throwErrors"`
+	HasError       bool                                             `json:"hasError"`
 	GetReturnTypes func(args []interface{}) (returnType *ValueType) `json:"-"`
 }
 

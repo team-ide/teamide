@@ -14,7 +14,8 @@ func: |
       throw error.USER_PASSWORD_IS_EMPTY;
     }
   }
-  if(dao.user.queryByAccount(user.account) != null){
+  var find = dao.user.queryByAccount(user.account)
+  if(find != null){
     throw error.USER_ACCOUNT_ALREADY_EXIST;
   }
   // 生成 userId

@@ -16,6 +16,9 @@ type MethodBuilder struct {
 	inIfTest            int
 	inElseIf            int
 	lastReturnRowNumber int
+	inVarScript         int
+	inArgument          int
+	inArgumentStruct    int
 }
 
 func (this_ *MethodBuilder) Gen() (err error) {
@@ -186,27 +189,54 @@ func (this_ *MethodBuilder) Bindings(bindings []*ast.Binding) (err error) {
 func (this_ *MethodBuilder) Binding(binding *ast.Binding) (err error) {
 	this_.AppendTab()
 	this_.AppendCode("var ")
+
+	this_.inVarScript = 1
 	err = this_.Expression(binding.Target)
+	this_.inVarScript = 0
+
+	methodVar := this_.BindingCache[binding]
+	valueType := methodVar.CompilerValueType.GetValueType()
+	var typeS string
+	typeS, err = this_.GetTypeStr(valueType)
+	if err != nil {
+		return
+	}
+	this_.AppendCode(" " + typeS)
+	this_.NewLine()
+
 	if err != nil {
 		return
 	}
 	if binding.Initializer != nil {
+
+		this_.AppendTab()
+		this_.inVarScript = 1
+		err = this_.Expression(binding.Target)
+		this_.inVarScript = 0
+
+		var hasError bool
+		if a, ok := binding.Initializer.(*ast.CallExpression); ok {
+			hasError = this_.getMethodHasError(this_.CallCache[a])
+		}
+		if hasError {
+			this_.AppendCode(", err")
+		}
 		this_.AppendCode(" = ")
 		err = this_.Expression(binding.Initializer)
 		if err != nil {
 			return
 		}
-	} else {
-		methodVar := this_.BindingCache[binding]
-		var typeS string
-		typeS, err = this_.GetTypeStr(methodVar.CompilerValueType.GetValueType())
-		if err != nil {
-			return
+		this_.NewLine()
+
+		if hasError {
+			this_.AppendTabLine("if err != nil {")
+			this_.Tab()
+			this_.AppendTabLine("return")
+			this_.Indent()
+			this_.AppendTabLine("}")
 		}
-		this_.AppendCode(" " + typeS)
 	}
 
-	this_.NewLine()
 	return
 }
 func (this_ *MethodBuilder) ExpressionStatement(statement *ast.ExpressionStatement) (err error) {
@@ -218,7 +248,9 @@ func (this_ *MethodBuilder) ExpressionStatement(statement *ast.ExpressionStateme
 func (this_ *MethodBuilder) ThrowStatement(statement *ast.ThrowStatement) (err error) {
 	this_.AppendTab()
 	this_.AppendCode("err = ")
+	this_.inVarScript = 1
 	err = this_.Expression(statement.Argument)
+	this_.inVarScript = 0
 	if err != nil {
 		return
 	}
@@ -278,6 +310,25 @@ func (this_ *MethodBuilder) IfStatement(statement *ast.IfStatement) (err error) 
 }
 
 func (this_ *MethodBuilder) ReturnStatement(statement *ast.ReturnStatement) (err error) {
+	if statement.Argument != nil {
+		this_.AppendTab()
+		var hasError bool
+		if a, ok := statement.Argument.(*ast.CallExpression); ok {
+			hasError = this_.getMethodHasError(this_.CallCache[a])
+		}
+		if hasError {
+			this_.AppendCode("res, err = ")
+		} else {
+			this_.AppendCode("res = ")
+		}
+		this_.inVarScript = 1
+		err = this_.Expression(statement.Argument)
+		this_.inVarScript = 0
+		if err != nil {
+			return
+		}
+		this_.NewLine()
+	}
 	this_.AppendTabLine("return")
 	this_.lastReturnRowNumber = this_.GetRowNumber()
 	return
@@ -335,7 +386,12 @@ func (this_ *MethodBuilder) ArgumentList(argumentList []ast.Expression) (err err
 		if i > 0 {
 			this_.AppendCode(", ")
 		}
+
+		this_.inArgument = 1
+		this_.inVarScript = 1
 		err = this_.Expression(one)
+		this_.inVarScript = 0
+		this_.inArgument = 0
 		if err != nil {
 			return
 		}
@@ -344,7 +400,7 @@ func (this_ *MethodBuilder) ArgumentList(argumentList []ast.Expression) (err err
 	return
 }
 
-func (this_ *MethodBuilder) formatScript(name string, obj interface{}) (script string) {
+func (this_ *MethodBuilder) formatMethod(name string, obj interface{}) (script string) {
 	names := strings.Split(name, ".")
 	script = name
 	if len(names) < 2 {
@@ -355,15 +411,53 @@ func (this_ *MethodBuilder) formatScript(name string, obj interface{}) (script s
 	case *maker.CompilerMethod:
 		place := this_.getPackBuilder(toB.CompilerPack)
 		class := this_.getClassBuilder(toB.CompilerClass)
-		script = place.spacePack
-		script += "." + class.GetClassBeanName()
+		if this_.spacePack == place.spacePack {
+			script = class.GetClassBeanName()
+		} else {
+			script = place.spacePack
+			script += "." + class.GetClassBeanName()
+		}
 		script += "." + util.FirstToUpper(names[len(names)-1])
 		break
 	default:
-		script = names[0]
-		for i := 1; i < len(names); i++ {
-			script += "." + util.FirstToUpper(names[i])
-		}
+		script = this_.formatAssign(name)
+
+	}
+	return
+}
+
+func (this_ *MethodBuilder) formatAssign(name string) (script string) {
+	names := strings.Split(name, ".")
+	script = name
+	if len(names) < 2 {
+		return
+	}
+	script = names[0]
+	_, asName := this_.GetImportAsName(names[0])
+	if asName != "" {
+		script = asName
+	}
+
+	for i := 1; i < len(names); i++ {
+		script += "." + util.FirstToUpper(names[i])
+	}
+
+	return
+}
+
+func (this_ *MethodBuilder) getMethodHasError(obj any) (hasError bool) {
+	if obj == nil {
+		return
+	}
+
+	switch toB := obj.(type) {
+	case *maker.CompilerMethod:
+		hasError = true
+		break
+	case *maker.ComponentMethod:
+		hasError = toB.HasError
+		break
+	default:
 
 	}
 	return
@@ -372,7 +466,7 @@ func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err 
 
 	obj := this_.CallCache[expression]
 	script := this_.CallScriptCache[expression]
-	script = this_.formatScript(script, obj)
+	script = this_.formatMethod(script, obj)
 
 	this_.AppendCode(script)
 	//err = this_.Expression(expression.Callee)
@@ -389,27 +483,61 @@ func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err 
 }
 
 func (this_ *MethodBuilder) AssignExpression(expression *ast.AssignExpression) (err error) {
-	err = this_.Expression(expression.Left)
-	if err != nil {
-		return
+	script := this_.AssignExpressionScriptCache[expression]
+	varType := this_.AssignExpressionScriptTypeCache[expression]
+	script = this_.formatAssign(script)
+	var hasError bool
+	if a, ok := expression.Right.(*ast.CallExpression); ok {
+		hasError = this_.getMethodHasError(this_.CallCache[a])
+	}
+
+	this_.AppendCode(script)
+	if hasError {
+		this_.AppendCode(", err")
 	}
 	this_.AppendCode(" " + expression.Operator.String() + " ")
-	err = this_.Expression(expression.Right)
-	if err != nil {
-		return
+
+	if _, ok := expression.Right.(*ast.NullLiteral); ok {
+		valueType := varType.GetValueType()
+		if valueType.IsNumber {
+			this_.AppendCode("0")
+		} else if valueType == maker.ValueTypeString {
+			this_.AppendCode("\"\"")
+		}
+
+	} else {
+		this_.inVarScript = 1
+		err = this_.Expression(expression.Right)
+		this_.inVarScript = 0
+		if err != nil {
+			return
+		}
 	}
+
 	this_.NewLine()
+
+	if hasError {
+		this_.AppendTabLine("if err != nil {")
+		this_.Tab()
+		this_.AppendTabLine("return")
+		this_.Indent()
+		this_.AppendTabLine("}")
+	}
 
 	return
 }
 
 func (this_ *MethodBuilder) BinaryExpression(expression *ast.BinaryExpression) (err error) {
+	this_.inVarScript = 1
 	err = this_.Expression(expression.Left)
+	this_.inVarScript = 0
 	if err != nil {
 		return
 	}
 	this_.AppendCode(" " + expression.Operator.String() + " ")
+	this_.inVarScript = 1
 	err = this_.Expression(expression.Right)
+	this_.inVarScript = 0
 	if err != nil {
 		return
 	}
@@ -418,15 +546,33 @@ func (this_ *MethodBuilder) BinaryExpression(expression *ast.BinaryExpression) (
 
 func (this_ *MethodBuilder) Identifier(expression *ast.Identifier) (err error) {
 	name := expression.Name.String()
-	impl := this_.CompilerMethod.CompilerClass.GetImport(name)
-	if impl != nil && impl.AsName != "" {
-		name = impl.AsName
-	} else {
-		if !this_.FindType(name) {
+	if this_.inVarScript > 0 {
+		if this_.inVarScript == 1 {
+			_, asName := this_.GetImportAsName(name)
+			if asName != "" {
+				name = asName
+			}
+		} else {
 			name = util.FirstToUpper(name)
 		}
 	}
+	if this_.inArgument > 0 {
+		if this_.inArgument == 1 {
+			this_.inArgument++
+			this_.inArgumentStruct = 0
+			if name == this_.golang.GetStructPack() {
+				this_.inArgumentStruct = 1
+				name = "&" + name
+			}
+		} else {
+			if this_.inArgumentStruct == 1 {
+				this_.inArgumentStruct = 0
+				name = name + "{}"
+			}
+		}
+	}
 	this_.AppendCode(name)
+	this_.inVarScript++
 	return
 }
 
@@ -469,7 +615,10 @@ func (this_ *MethodBuilder) BracketExpression(expression *ast.BracketExpression)
 		return
 	}
 	this_.AppendCode("[")
+	oldInVarScript := this_.inVarScript
+	this_.inVarScript = 1
 	err = this_.Expression(expression.Member)
+	this_.inVarScript = oldInVarScript
 	if err != nil {
 		return
 	}

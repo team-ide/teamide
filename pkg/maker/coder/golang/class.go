@@ -3,6 +3,7 @@ package golang
 import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	"sort"
 	"strings"
 	"teamide/pkg/maker"
 	"teamide/pkg/maker/coder"
@@ -197,6 +198,14 @@ func (this_ *Generator) GetImportAsName(name string) (impl string, asName string
 		impl = this_.golang.GetServiceImport()
 		asName = this_.golang.GetServicePack()
 		break
+	case "db":
+		impl = this_.golang.GetComponentDbImport()
+		asName = this_.golang.GetComponentDbPack()
+		break
+	case "redis":
+		impl = this_.golang.GetComponentRedisImport()
+		asName = this_.golang.GetComponentRedisPack()
+		break
 	case "util":
 		impl = "github.com/team-ide/go-tool/util"
 		asName = "util"
@@ -228,45 +237,17 @@ func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
 
 		for _, impl := range class.ImportList {
 			if impl.Import != "" {
-				switch impl.Import {
-				case "common":
-					imports = append(imports, this_.golang.GetCommonImport())
-					impl.AsName = this_.golang.GetCommonPack()
-					break
-				case "constant":
-					imports = append(imports, this_.golang.GetConstantImport())
-					impl.AsName = this_.golang.GetConstantPack()
-					break
-				case "error":
-					imports = append(imports, this_.golang.GetErrorImport())
-					impl.AsName = this_.golang.GetErrorPack()
-					break
-				case "struct":
-					imports = append(imports, this_.golang.GetStructImport())
-					impl.AsName = this_.golang.GetStructPack()
-					break
-				case "func":
-					imports = append(imports, this_.golang.GetFuncImport())
-					impl.AsName = this_.golang.GetFuncPack()
-					break
-				case "dao":
-					imports = append(imports, this_.golang.GetDaoImport())
-					impl.AsName = this_.golang.GetDaoPack()
-					break
-				case "service":
-					imports = append(imports, this_.golang.GetServiceImport())
-					impl.AsName = this_.golang.GetServicePack()
-					break
-				case "util":
-					imports = append(imports, "github.com/team-ide/go-tool/util")
-					impl.AsName = "util"
-					break
+				implPath, asName := this_.GetImportAsName(impl.Import)
+				if implPath != "" {
+					imports = append(imports, implPath)
+					impl.AsName = asName
 				}
 			}
 		}
 
 		builder.AppendTabLine("import(")
 		builder.Tab()
+		sort.Strings(imports)
 		for _, im := range imports {
 			builder.AppendTabLine("\"" + im + "\"")
 		}

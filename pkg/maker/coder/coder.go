@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"teamide/pkg/maker"
+	"teamide/pkg/maker/modelers"
 )
 
 func NewCoder(compiler *maker.Compiler, options *Options) (res *Coder, err error) {
@@ -66,6 +67,33 @@ func (this_ *Coder) Gen() (err error) {
 		return
 	}
 
+	err = generator.GenCommon()
+	if err != nil {
+		return
+	}
+
+	for _, one := range this_.GetConfigDbList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentDb(name, one)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, one := range this_.GetConfigRedisList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentRedis(name, one)
+		if err != nil {
+			return
+		}
+	}
+
 	for _, one := range this_.SpaceList {
 		err = generator.GenSpace(one)
 		if err != nil {
@@ -119,5 +147,8 @@ func (this_ *Coder) AppendLine(content *string, line string, tab int) {
 
 type IGenerator interface {
 	GenBase() (err error)
+	GenCommon() (err error)
+	GenComponentDb(name string, model *modelers.ConfigDbModel) (err error)
+	GenComponentRedis(name string, model *modelers.ConfigRedisModel) (err error)
 	GenSpace(space *maker.CompilerSpace) (err error)
 }

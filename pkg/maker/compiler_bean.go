@@ -165,10 +165,10 @@ type CompilerImport struct {
 
 func (this_ *CompilerClass) addField(name string, valueType *ValueType) (res *CompilerField) {
 	res = &CompilerField{
-		CompilerClass:     this_,
-		Name:              name,
-		CompilerValueType: NewCompilerValueType(valueType),
+		CompilerClass: this_,
+		Name:          name,
 	}
+	res.CompilerValueType = NewCompilerValueType(res, valueType)
 	this_.FieldList = append(this_.FieldList, res)
 	this_.fieldCache[name] = res
 
@@ -197,13 +197,16 @@ func (this_ *CompilerClass) GetMethod(name string) (res *CompilerMethod) {
 func (this_ *CompilerClass) CreateMethod(name string, args []*modelers.ArgModel) (res *CompilerMethod, err error) {
 
 	res = &CompilerMethod{
-		CompilerClass:   this_,
-		Method:          name,
-		paramCache:      make(map[string]*CompilerMethodParam),
-		varCache:        make(map[string]*CompilerMethodVar),
-		BindingCache:    make(map[*ast.Binding]*CompilerMethodVar),
-		CallCache:       make(map[*ast.CallExpression]interface{}),
-		CallScriptCache: make(map[*ast.CallExpression]string),
+		CompilerClass:                   this_,
+		Method:                          name,
+		paramCache:                      make(map[string]*CompilerMethodParam),
+		varCache:                        make(map[string]*CompilerMethodVar),
+		BindingCache:                    make(map[*ast.Binding]*CompilerMethodVar),
+		CallCache:                       make(map[*ast.CallExpression]interface{}),
+		CallScriptCache:                 make(map[*ast.CallExpression]string),
+		BindingScriptCache:              make(map[*ast.Binding]string),
+		AssignExpressionScriptCache:     make(map[*ast.AssignExpression]string),
+		AssignExpressionScriptTypeCache: make(map[*ast.AssignExpression]*CompilerValueType),
 	}
 
 	for _, arg := range args {
@@ -240,9 +243,12 @@ type CompilerMethod struct {
 	script            *Script
 	code              string
 
-	BindingCache    map[*ast.Binding]*CompilerMethodVar
-	CallCache       map[*ast.CallExpression]interface{}
-	CallScriptCache map[*ast.CallExpression]string
+	BindingCache                    map[*ast.Binding]*CompilerMethodVar
+	CallCache                       map[*ast.CallExpression]interface{}
+	CallScriptCache                 map[*ast.CallExpression]string
+	BindingScriptCache              map[*ast.Binding]string
+	AssignExpressionScriptCache     map[*ast.AssignExpression]string
+	AssignExpressionScriptTypeCache map[*ast.AssignExpression]*CompilerValueType
 }
 
 func (this_ *CompilerMethod) GetKey() (key string) {
@@ -281,6 +287,9 @@ func (this_ *CompilerMethod) fullImport(name string) {
 	index := strings.Index(name, ".")
 	if index > 0 {
 		importName = name[0:index]
+	}
+	if importName == this_.Space {
+		return
 	}
 	switch importName {
 	case "util":
@@ -327,10 +336,10 @@ func (this_ *CompilerMethod) fullImport(name string) {
 func (this_ *CompilerMethod) addParam(name string, valueType *ValueType) (res *CompilerMethodParam) {
 	util.Logger.Debug(this_.GetKey()+" set param ["+name+"] ", zap.Any("valueType", valueType))
 	res = &CompilerMethodParam{
-		CompilerMethod:    this_,
-		Name:              name,
-		CompilerValueType: NewCompilerValueType(valueType),
+		CompilerMethod: this_,
+		Name:           name,
 	}
+	res.CompilerValueType = NewCompilerValueType(res, valueType)
 	this_.ParamList = append(this_.ParamList, res)
 	this_.paramCache[name] = res
 
@@ -366,10 +375,10 @@ func (this_ *CompilerMethod) getVar(name string) (res *CompilerValueType) {
 func (this_ *CompilerMethod) addVar(name string, valueType *ValueType) (res *CompilerMethodVar) {
 	util.Logger.Debug(this_.GetKey()+" set var ["+name+"] ", zap.Any("valueType", valueType))
 	res = &CompilerMethodVar{
-		CompilerMethod:    this_,
-		Name:              name,
-		CompilerValueType: NewCompilerValueType(valueType),
+		CompilerMethod: this_,
+		Name:           name,
 	}
+	res.CompilerValueType = NewCompilerValueType(res, valueType)
 	this_.VarList = append(this_.VarList, res)
 	this_.varCache[name] = res
 
@@ -455,6 +464,7 @@ type CompilerCallParam struct {
 }
 
 type CompilerValueType struct {
+	Parent    interface{}
 	valueType *ValueType
 	types     []*ValueType
 
@@ -463,7 +473,7 @@ type CompilerValueType struct {
 }
 
 type CompilerValueSub struct {
-	parent *CompilerValueType
+	Parent *CompilerValueType
 	Name   string
 	*CompilerValueType
 	Value string
@@ -522,18 +532,20 @@ func (this_ *CompilerValueType) getVar(name string) (res *CompilerValueType) {
 }
 func (this_ *CompilerValueType) addVar(name string, valueType *ValueType) (res *CompilerValueSub) {
 	res = &CompilerValueSub{
-		parent:            this_,
-		Name:              name,
-		CompilerValueType: NewCompilerValueType(valueType),
+		Parent: this_,
+		Name:   name,
 	}
+	res.CompilerValueType = NewCompilerValueType(res, valueType)
 	this_.subList = append(this_.subList, res)
 	this_.subCache[name] = res
 
 	return
 }
 
-func NewCompilerValueType(valueType *ValueType) (res *CompilerValueType) {
-	res = &CompilerValueType{}
+func NewCompilerValueType(parent interface{}, valueType *ValueType) (res *CompilerValueType) {
+	res = &CompilerValueType{
+		Parent: parent,
+	}
 	if valueType != nil {
 		res.types = append(res.types, valueType)
 		res.valueType = valueType

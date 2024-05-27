@@ -19,6 +19,7 @@ func init() {
 	typeStr[maker.ValueTypeFloat32] = "float32"
 	typeStr[maker.ValueTypeFloat64] = "float64"
 	typeStr[maker.ValueTypeBool] = "bool"
+	typeStr[maker.ValueTypeMap] = "map[string]any"
 }
 
 // GetTypeStr 获取  类型 字符串 如 string、int
@@ -29,7 +30,7 @@ func (this_ *Generator) GetTypeStr(valueType *maker.ValueType) (str string, err 
 		if valueType.Struct != nil {
 			structName := util.FirstToUpper(valueType.Struct.Name)
 			structPack := this_.golang.GetStructPack()
-			str = structPack + "." + structName
+			str = "*" + structPack + "." + structName
 		}
 	}
 	return

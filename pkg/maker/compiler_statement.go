@@ -92,6 +92,7 @@ func (this_ *CompilerMethod) Binding(binding *ast.Binding) (err error) {
 		util.Logger.Error(this_.GetKey()+" Binding error", zap.Error(err))
 		return
 	}
+	this_.BindingScriptCache[binding] = nameScript
 	var varTypeStr string
 	if binding.Type != nil {
 		for i, t := range binding.Type {

@@ -56,9 +56,8 @@ func (this_ *CompilerMethod) CompileMethod(method *CompilerMethod) (res *Compile
 
 func (this_ *CompilerMethod) Compile() (res *CompilerMethodResult, err error) {
 	key := this_.GetKey()
-	res = &CompilerMethodResult{
-		CompilerValueType: NewCompilerValueType(nil),
-	}
+	res = &CompilerMethodResult{}
+	res.CompilerValueType = NewCompilerValueType(res, nil)
 	this_.Result = res
 
 	util.Logger.Debug("compile " + key + " start")

@@ -20,16 +20,19 @@ func NewRedisCompiler(config *modelers.ConfigRedisModel) *Component {
 					}
 					return
 				},
+				HasError: true,
 			},
 			{
 				Name: "Set", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					return
 				},
+				HasError: true,
 			},
 			{
 				Name: "Del", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					return
 				},
+				HasError: true,
 			},
 		},
 	}

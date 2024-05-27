@@ -21,6 +21,12 @@ type LanguageGolangModel struct {
 	DaoPack      string `json:"daoPack,omitempty"`
 	ServicePath  string `json:"servicePath,omitempty"`
 	ServicePack  string `json:"servicePack,omitempty"`
+
+	ComponentDbPath string `json:"componentDbPath,omitempty"`
+	ComponentDbPack string `json:"componentDbPack,omitempty"`
+
+	ComponentRedisPath string `json:"componentRedisPath,omitempty"`
+	ComponentRedisPack string `json:"componentRedisPack,omitempty"`
 }
 
 func (this_ *LanguageGolangModel) GetModuleName() string {
@@ -140,8 +146,41 @@ func (this_ *LanguageGolangModel) GetServicePath() string {
 func (this_ *LanguageGolangModel) GetServicePack() string {
 	return GetPack(&this_.ServicePack, "service")
 }
+
 func (this_ *LanguageGolangModel) GetServiceImport() string {
 	return this_.GetPackImport(this_.GetServicePath(), this_.GetServicePack())
+}
+
+func (this_ *LanguageGolangModel) GetComponentDbDir(dir string) string {
+	return GetDir(dir, this_.GetComponentDbPath())
+}
+
+func (this_ *LanguageGolangModel) GetComponentDbPath() string {
+	return GetPath(&this_.ComponentDbPath, "component_db/")
+}
+
+func (this_ *LanguageGolangModel) GetComponentDbPack() string {
+	return GetPack(&this_.ComponentDbPack, "component_db")
+}
+
+func (this_ *LanguageGolangModel) GetComponentDbImport() string {
+	return this_.GetPackImport(this_.GetComponentDbPath(), this_.GetComponentDbPack())
+}
+
+func (this_ *LanguageGolangModel) GetComponentRedisDir(dir string) string {
+	return GetDir(dir, this_.GetComponentRedisPath())
+}
+
+func (this_ *LanguageGolangModel) GetComponentRedisPath() string {
+	return GetPath(&this_.ComponentRedisPath, "component_redis/")
+}
+
+func (this_ *LanguageGolangModel) GetComponentRedisPack() string {
+	return GetPack(&this_.ComponentRedisPack, "component_redis")
+}
+
+func (this_ *LanguageGolangModel) GetComponentRedisImport() string {
+	return this_.GetPackImport(this_.GetComponentRedisPath(), this_.GetComponentRedisPack())
 }
 
 func (this_ *LanguageGolangModel) GetPackImport(path string, pack string) string {
