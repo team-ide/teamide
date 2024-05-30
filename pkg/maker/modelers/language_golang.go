@@ -7,6 +7,10 @@ type LanguageGolangModel struct {
 	Dir          string `json:"dir,omitempty"`
 	ModuleName   string `json:"moduleName,omitempty"`
 	GoVersion    string `json:"goVersion,omitempty"`
+	ConfigPath   string `json:"configPath,omitempty"`
+	ConfigPack   string `json:"configPack,omitempty"`
+	LoggerPath   string `json:"loggerPath,omitempty"`
+	LoggerPack   string `json:"loggerPack,omitempty"`
 	CommonPath   string `json:"commonPath,omitempty"`
 	CommonPack   string `json:"commonPack,omitempty"`
 	ConstantPath string `json:"constantPath,omitempty"`
@@ -21,12 +25,6 @@ type LanguageGolangModel struct {
 	DaoPack      string `json:"daoPack,omitempty"`
 	ServicePath  string `json:"servicePath,omitempty"`
 	ServicePack  string `json:"servicePack,omitempty"`
-
-	ComponentDbPath string `json:"componentDbPath,omitempty"`
-	ComponentDbPack string `json:"componentDbPack,omitempty"`
-
-	ComponentRedisPath string `json:"componentRedisPath,omitempty"`
-	ComponentRedisPack string `json:"componentRedisPack,omitempty"`
 }
 
 func (this_ *LanguageGolangModel) GetModuleName() string {
@@ -41,6 +39,38 @@ func (this_ *LanguageGolangModel) GetGoVersion() string {
 		return this_.GoVersion
 	}
 	return "1.18"
+}
+
+func (this_ *LanguageGolangModel) GetConfigDir(dir string) string {
+	return GetDir(dir, this_.GetConfigPath())
+}
+
+func (this_ *LanguageGolangModel) GetConfigPath() string {
+	return GetPath(&this_.ConfigPath, "config/")
+}
+
+func (this_ *LanguageGolangModel) GetConfigPack() string {
+	return GetPack(&this_.ConfigPack, "config")
+}
+
+func (this_ *LanguageGolangModel) GetConfigImport() string {
+	return this_.GetPackImport(this_.GetConfigPath(), this_.GetConfigPack())
+}
+
+func (this_ *LanguageGolangModel) GetLoggerDir(dir string) string {
+	return GetDir(dir, this_.GetLoggerPath())
+}
+
+func (this_ *LanguageGolangModel) GetLoggerPath() string {
+	return GetPath(&this_.LoggerPath, "logger/")
+}
+
+func (this_ *LanguageGolangModel) GetLoggerPack() string {
+	return GetPack(&this_.LoggerPack, "logger")
+}
+
+func (this_ *LanguageGolangModel) GetLoggerImport() string {
+	return this_.GetPackImport(this_.GetLoggerPath(), this_.GetLoggerPack())
 }
 
 func (this_ *LanguageGolangModel) GetCommonDir(dir string) string {
@@ -151,36 +181,28 @@ func (this_ *LanguageGolangModel) GetServiceImport() string {
 	return this_.GetPackImport(this_.GetServicePath(), this_.GetServicePack())
 }
 
-func (this_ *LanguageGolangModel) GetComponentDbDir(dir string) string {
-	return GetDir(dir, this_.GetComponentDbPath())
+func (this_ *LanguageGolangModel) GetComponentDir(dir string, componentType, name string) string {
+	return GetDir(dir, this_.GetComponentPath(componentType, name))
 }
 
-func (this_ *LanguageGolangModel) GetComponentDbPath() string {
-	return GetPath(&this_.ComponentDbPath, "component_db/")
+func (this_ *LanguageGolangModel) GetComponentPath(componentType, name string) string {
+	path := "component_" + componentType
+	if name != "" && name != "default" {
+		path += "_" + name
+	}
+	return path + "/"
 }
 
-func (this_ *LanguageGolangModel) GetComponentDbPack() string {
-	return GetPack(&this_.ComponentDbPack, "component_db")
+func (this_ *LanguageGolangModel) GetComponentPack(componentType, name string) string {
+	pack := "component_" + componentType
+	if name != "" && name != "default" {
+		pack += "_" + name
+	}
+	return pack
 }
 
-func (this_ *LanguageGolangModel) GetComponentDbImport() string {
-	return this_.GetPackImport(this_.GetComponentDbPath(), this_.GetComponentDbPack())
-}
-
-func (this_ *LanguageGolangModel) GetComponentRedisDir(dir string) string {
-	return GetDir(dir, this_.GetComponentRedisPath())
-}
-
-func (this_ *LanguageGolangModel) GetComponentRedisPath() string {
-	return GetPath(&this_.ComponentRedisPath, "component_redis/")
-}
-
-func (this_ *LanguageGolangModel) GetComponentRedisPack() string {
-	return GetPack(&this_.ComponentRedisPack, "component_redis")
-}
-
-func (this_ *LanguageGolangModel) GetComponentRedisImport() string {
-	return this_.GetPackImport(this_.GetComponentRedisPath(), this_.GetComponentRedisPack())
+func (this_ *LanguageGolangModel) GetComponentImport(componentType, name string) string {
+	return this_.GetPackImport(this_.GetComponentPath(componentType, name), this_.GetComponentPack(componentType, name))
 }
 
 func (this_ *LanguageGolangModel) GetPackImport(path string, pack string) string {

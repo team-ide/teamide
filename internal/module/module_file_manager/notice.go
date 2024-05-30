@@ -71,7 +71,7 @@ func (this_ *Progress) waitAction(waitActionMessage string, waitActionList []*Ac
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New(fmt.Sprint(e))
-			util.Logger.Error("waitAction error", zap.Any("error", e))
+			util.Logger.Error("waitAction error", zap.Error(err))
 		}
 	}()
 

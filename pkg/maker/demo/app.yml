@@ -1,6 +1,21 @@
+db:
+  type: mysql
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: 123456
+  database: TEST_DB
+
+db_2:
+  type: mysql
+  host: 127.0.0.1
+  port: 3306
+  username: root
+  password: 123456
+  database: TEST_DB
 
 mongodb:
-  url: mongodb://127.0.0.1:27017/
+  address: 127.0.0.1:2181
   database: test_db
   minSize: 300
   maxSize: 300
@@ -13,5 +28,14 @@ mongodb:
 
 redis:
   type: standalone
-  address: 127.0.0.1:11080
+  address: 127.0.0.1:6379
   password:
+
+zk:
+  address: 127.0.0.1:2181
+
+kafka:
+  address: 127.0.0.1:6379
+
+es:
+  url: 127.0.0.1:6379

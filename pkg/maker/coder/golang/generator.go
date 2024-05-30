@@ -2,6 +2,7 @@ package golang
 
 import (
 	"github.com/team-ide/go-tool/util"
+	"strings"
 	"teamide/pkg/maker/coder"
 	"teamide/pkg/maker/modelers"
 )
@@ -41,6 +42,22 @@ func (this_ *Generator) init() (err error) {
 	return
 }
 
+var modCode = `
+module {module}
+
+go {version}
+
+replace github.com/dop251/goja => github.com/team-ide/goja v1.0.4
+replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v1.27.0
+
+require (
+	github.com/team-ide/go-tool v1.2.15
+	go.uber.org/zap v1.27.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.1
+)
+`
+
 func (this_ *Generator) GenMod() (err error) {
 	path := this_.Dir + "go.mod"
 	builder, err := this_.NewBuilder(path)
@@ -49,23 +66,28 @@ func (this_ *Generator) GenMod() (err error) {
 	}
 	defer builder.Close()
 
-	builder.AppendTabLine("module " + this_.golang.GetModuleName())
-	builder.NewLine()
-	builder.AppendTabLine("go " + this_.golang.GetGoVersion())
-	builder.NewLine()
+	code := strings.ReplaceAll(modCode, "{module}", this_.golang.GetModuleName())
+	code = strings.ReplaceAll(code, "{version}", this_.golang.GetGoVersion())
 
-	builder.AppendTabLine("require (")
-	builder.Tab()
-	builder.AppendTabLine("github.com/team-ide/go-tool v1.2.14")
-	builder.Indent()
-	builder.AppendTabLine(")")
-	builder.NewLine()
+	builder.AppendCode(code)
 
 	return
 }
 
 func (this_ *Generator) GenBase() (err error) {
 	if err = this_.GenMod(); err != nil {
+		return
+	}
+	if err = this_.GenConf(); err != nil {
+		return
+	}
+	if err = this_.GenConfig(); err != nil {
+		return
+	}
+	if err = this_.GenLogger(); err != nil {
+		return
+	}
+	if err = this_.GenMain(); err != nil {
 		return
 	}
 	return

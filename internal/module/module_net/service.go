@@ -1,6 +1,8 @@
 package module_net
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
@@ -107,7 +109,8 @@ func (this_ *Service) startReadWS() {
 
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("startReadWS error", zap.Any("error", e))
+			err := errors.New(fmt.Sprint(e))
+			util.Logger.Error("startReadWS panic error:", zap.Error(err))
 		}
 	}()
 
@@ -159,7 +162,8 @@ func (this_ *Service) startReadService() {
 
 	defer func() {
 		if e := recover(); e != nil {
-			util.Logger.Error("startReadService error", zap.Any("error", e))
+			err := errors.New(fmt.Sprint(e))
+			util.Logger.Error("startReadService panic error", zap.Error(err))
 		}
 		util.Logger.Info("service read end", zap.Any("key", this_.Key))
 	}()

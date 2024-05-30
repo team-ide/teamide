@@ -2,6 +2,8 @@ package module_node
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"teamide/pkg/node"
 	"time"
@@ -18,7 +20,8 @@ func (this_ *NodeContext) doAlive() {
 	this_.doAliveIng = true
 	defer func() {
 		if e := recover(); e != nil {
-			this_.Logger.Error("doAlive error", zap.Any("error", e))
+			err := errors.New(fmt.Sprint(e))
+			this_.Logger.Error("doAlive panic error", zap.Error(err))
 		}
 		this_.doAliveIng = false
 		go func() {

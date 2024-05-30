@@ -58,12 +58,17 @@ func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 func (this_ *CompilerMethod) ArgumentList(argumentList []ast.Expression) (values []interface{}, err error) {
 	//fmt.Println("TODO ArgumentList:", util.GetStringValue(argumentList))
 	var v *ValueType
+	var nameScript string
 	for _, arg := range argumentList {
-		_, v, err = this_.GetExpressionForType(arg)
+		nameScript, v, err = this_.GetExpressionForType(arg)
 		if err != nil {
 			return
 		}
 		values = append(values, v)
+
+		if nameScript != "" {
+			this_.fullImport(nameScript)
+		}
 	}
 	return
 }

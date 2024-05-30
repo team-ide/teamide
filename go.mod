@@ -29,7 +29,7 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.20
-	github.com/team-ide/go-tool v1.2.14
+	github.com/team-ide/go-tool v1.2.15
 	go.mongodb.org/mongo-driver v1.15.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.23.0

@@ -180,7 +180,7 @@ func (this_ *Compiler) init() (err error) {
 	util.Logger.Debug("init zk end")
 
 	util.Logger.Debug("init es start")
-	for _, one := range this_.GetConfigElasticsearchList() {
+	for _, one := range this_.GetConfigEsList() {
 		err = this_.BindComponent("es", one.Name, func() (component interface{}, err error) {
 			component = NewEsCompiler(one).ToContext()
 			return

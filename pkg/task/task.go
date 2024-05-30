@@ -1,6 +1,8 @@
 package task
 
 import (
+	"errors"
+	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 )
@@ -103,8 +105,9 @@ func (this_ *Task) runAfter() {
 
 func (this_ *Task) Stop() {
 	defer func() {
-		if err := recover(); err != nil {
-			util.Logger.Error("任务执行 [stop] 异常", zap.Any("error", err))
+		if e := recover(); e != nil {
+			err := errors.New(fmt.Sprint(e))
+			util.Logger.Error("任务执行 [stop] 异常", zap.Error(err))
 		}
 	}()
 	this_.isStop = true

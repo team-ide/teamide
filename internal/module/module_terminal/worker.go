@@ -62,7 +62,8 @@ func (this_ *WorkerFactory) createService(param *CreateParam) (worker *Worker, c
 
 	defer func() {
 		if e := recover(); e != nil {
-			this_.Logger.Error("createService error", zap.Any("error", e))
+			err = errors.New(fmt.Sprint(e))
+			this_.Logger.Error("createService panic error", zap.Error(err))
 		}
 	}()
 	var service terminal.Service
@@ -136,7 +137,8 @@ func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal
 
 	defer func() {
 		if e := recover(); e != nil {
-			this_.Logger.Error("Start error", zap.Any("error", e))
+			err = errors.New(fmt.Sprint(e))
+			util.Logger.Error("Start panic error", zap.Error(err))
 		}
 	}()
 
@@ -437,7 +439,8 @@ func (this_ *Worker) startReadWS(isWindow bool) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			this_.Logger.Error("startReadWS error", zap.Any("error", e))
+			err := errors.New(fmt.Sprint(e))
+			this_.Logger.Error("startReadWS panic error", zap.Error(err))
 		}
 	}()
 
@@ -550,7 +553,8 @@ func (this_ *WorkerFactory) stopService(key string) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			this_.Logger.Error("stopService error", zap.Any("error", e))
+			err := errors.New(fmt.Sprint(e))
+			this_.Logger.Error("stopService panic error", zap.Error(err))
 		}
 	}()
 

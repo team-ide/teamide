@@ -103,7 +103,7 @@ func (this_ *Invoker) init() (err error) {
 			return
 		}
 	}
-	for _, one := range this_.GetConfigElasticsearchList() {
+	for _, one := range this_.GetConfigEsList() {
 		err = this_.BindComponent("es", one.Name, func() (component interface{}, err error) {
 			return NewComponentEs(one)
 		})

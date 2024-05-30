@@ -94,6 +94,50 @@ func (this_ *Coder) Gen() (err error) {
 		}
 	}
 
+	for _, one := range this_.GetConfigZkList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentZk(name, one)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, one := range this_.GetConfigEsList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentEs(name, one)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, one := range this_.GetConfigKafkaList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentKafka(name, one)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, one := range this_.GetConfigMongodbList() {
+		name := one.Name
+		if name == "default" {
+			name = ""
+		}
+		err = generator.GenComponentMongodb(name, one)
+		if err != nil {
+			return
+		}
+	}
+
 	for _, one := range this_.SpaceList {
 		err = generator.GenSpace(one)
 		if err != nil {
@@ -150,5 +194,9 @@ type IGenerator interface {
 	GenCommon() (err error)
 	GenComponentDb(name string, model *modelers.ConfigDbModel) (err error)
 	GenComponentRedis(name string, model *modelers.ConfigRedisModel) (err error)
+	GenComponentZk(name string, model *modelers.ConfigZkModel) (err error)
+	GenComponentKafka(name string, model *modelers.ConfigKafkaModel) (err error)
+	GenComponentEs(name string, model *modelers.ConfigEsModel) (err error)
+	GenComponentMongodb(name string, model *modelers.ConfigMongodbModel) (err error)
 	GenSpace(space *maker.CompilerSpace) (err error)
 }

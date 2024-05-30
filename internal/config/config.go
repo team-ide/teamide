@@ -94,7 +94,7 @@ func CreateServerConfig(configPath string) (config *ServerConfig, err error) {
 			util.Logger.Error("config map to bytes error", zap.Any("configMap", configMap), zap.Error(err))
 			return
 		}
-		err = json.Unmarshal(bs, config)
+		err = yaml.Unmarshal(bs, config)
 		if err != nil {
 			util.Logger.Error("config bytes to config error", zap.Any("config", string(bs)), zap.Error(err))
 			return

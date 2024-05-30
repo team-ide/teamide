@@ -14,7 +14,7 @@ import (
 func newApplication() (app *Application) {
 	app = &Application{
 		elementCache:    make(map[string]*modelers.Element),
-		modelTypeCaches: make(map[*modelers.Type]*util.Cache),
+		modelTypeCaches: make(map[*modelers.Type]*util.Cache[any]),
 		modelTypeItems:  make(map[*modelers.Type][]modelers.ElementIFace),
 
 		constantContext: make(map[string]interface{}),
@@ -43,7 +43,7 @@ type Application struct {
 
 	elementCache map[string]*modelers.Element
 
-	modelTypeCaches map[*modelers.Type]*util.Cache
+	modelTypeCaches map[*modelers.Type]*util.Cache[any]
 	modelTypeItems  map[*modelers.Type][]modelers.ElementIFace
 
 	doLocker    sync.Mutex
@@ -511,7 +511,7 @@ func (this_ *Application) appendModel(parent *modelers.Element, modelType *model
 
 	cache := this_.modelTypeCaches[modelType]
 	if cache == nil {
-		cache = util.NewCache()
+		cache = util.NewCache(modelType.NewModel())
 		this_.modelTypeCaches[modelType] = cache
 	}
 
@@ -562,13 +562,13 @@ func (this_ *Application) appendModel(parent *modelers.Element, modelType *model
 	return
 }
 
-func (this_ *Application) getModelTypeCache(modelType *modelers.Type) (cache *util.Cache) {
+func (this_ *Application) getModelTypeCache(modelType *modelers.Type) (cache *util.Cache[any]) {
 	this_.cacheLocker.Lock()
 	defer this_.cacheLocker.Unlock()
 
 	cache = this_.modelTypeCaches[modelType]
 	if cache == nil {
-		cache = util.NewCache()
+		cache = util.NewCache(modelType.NewModel())
 		this_.modelTypeCaches[modelType] = cache
 	}
 	return
@@ -650,104 +650,80 @@ func (this_ *Application) GetServiceList() (res []*modelers.ServiceModel) {
 	return
 }
 
-func (this_ *Application) GetConfigRedisList() (res []*modelers.ConfigRedisModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigRedis)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigRedisModel))
-	}
-	return
-}
-
-func (this_ *Application) GetConfigRedis(name string) (model *modelers.ConfigRedisModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigRedis)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigRedisModel)
-	}
-	return
-}
-
 func (this_ *Application) GetConfigDbList() (res []*modelers.ConfigDbModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigDb)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigDbModel))
+	app := this_.GetApp()
+	if app.Db != nil {
+		res = append(res, app.Db)
+	}
+	if app.DbOther != nil {
+		for _, one := range app.DbOther {
+			res = append(res, one)
+		}
 	}
 	return
 }
 
-func (this_ *Application) GetConfigDb(name string) (model *modelers.ConfigDbModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigDb)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigDbModel)
+func (this_ *Application) GetConfigRedisList() (res []*modelers.ConfigRedisModel) {
+	app := this_.GetApp()
+	if app.Redis != nil {
+		res = append(res, app.Redis)
+	}
+	if app.RedisOther != nil {
+		for _, one := range app.RedisOther {
+			res = append(res, one)
+		}
 	}
 	return
 }
 
 func (this_ *Application) GetConfigZkList() (res []*modelers.ConfigZkModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigZk)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigZkModel))
+	app := this_.GetApp()
+	if app.Zk != nil {
+		res = append(res, app.Zk)
 	}
-	return
-}
-
-func (this_ *Application) GetConfigZk(name string) (model *modelers.ConfigZkModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigZk)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigZkModel)
+	if app.ZkOther != nil {
+		for _, one := range app.ZkOther {
+			res = append(res, one)
+		}
 	}
 	return
 }
 
 func (this_ *Application) GetConfigKafkaList() (res []*modelers.ConfigKafkaModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigKafka)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigKafkaModel))
+	app := this_.GetApp()
+	if app.Kafka != nil {
+		res = append(res, app.Kafka)
 	}
-	return
-}
-
-func (this_ *Application) GetConfigKafka(name string) (model *modelers.ConfigKafkaModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigKafka)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigKafkaModel)
+	if app.KafkaOther != nil {
+		for _, one := range app.KafkaOther {
+			res = append(res, one)
+		}
 	}
 	return
 }
 
 func (this_ *Application) GetConfigMongodbList() (res []*modelers.ConfigMongodbModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigMongodb)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigMongodbModel))
+	app := this_.GetApp()
+	if app.Mongodb != nil {
+		res = append(res, app.Mongodb)
+	}
+	if app.MongodbOther != nil {
+		for _, one := range app.MongodbOther {
+			res = append(res, one)
+		}
 	}
 	return
 }
 
-func (this_ *Application) GetConfigMongodb(name string) (model *modelers.ConfigMongodbModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigMongodb)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigMongodbModel)
+func (this_ *Application) GetConfigEsList() (res []*modelers.ConfigEsModel) {
+	app := this_.GetApp()
+	if app.Es != nil {
+		res = append(res, app.Es)
 	}
-	return
-}
-
-func (this_ *Application) GetConfigElasticsearchList() (res []*modelers.ConfigEsModel) {
-	items := this_.getModelTypeItems(modelers.TypeConfigElasticsearch)
-	for _, one := range items {
-		res = append(res, one.(*modelers.ConfigEsModel))
-	}
-	return
-}
-
-func (this_ *Application) GetConfigElasticsearch(name string) (model *modelers.ConfigEsModel) {
-	cache := this_.getModelTypeCache(modelers.TypeConfigElasticsearch)
-	find, _ := cache.Get(name)
-	if find != nil {
-		model = find.(*modelers.ConfigEsModel)
+	if app.EsOther != nil {
+		for _, one := range app.EsOther {
+			res = append(res, one)
+		}
 	}
 	return
 }

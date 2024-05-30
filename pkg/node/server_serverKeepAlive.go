@@ -22,7 +22,7 @@ func (this_ *Server) serverListenerKeepAlive(localNode *LocalNode) {
 	Logger.Info("本地节点 启动 开始", zap.Any("localNode", localNode))
 	localNode.serverListener, err = net.Listen("tcp", GetAddress(localNode.BindAddress))
 	if err != nil {
-		Logger.Error("本地节点 启动 异常", zap.Any("localNode", localNode), zap.Any("error", err.Error()))
+		Logger.Error("本地节点 启动 异常", zap.Any("localNode", localNode), zap.Error(err))
 		return
 	}
 	Logger.Info("本地节点 启动 成功", zap.Any("localNode", localNode))

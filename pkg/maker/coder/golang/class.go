@@ -198,18 +198,35 @@ func (this_ *Generator) GetImportAsName(name string) (impl string, asName string
 		impl = this_.golang.GetServiceImport()
 		asName = this_.golang.GetServicePack()
 		break
-	case "db":
-		impl = this_.golang.GetComponentDbImport()
-		asName = this_.golang.GetComponentDbPack()
-		break
-	case "redis":
-		impl = this_.golang.GetComponentRedisImport()
-		asName = this_.golang.GetComponentRedisPack()
-		break
 	case "util":
 		impl = "github.com/team-ide/go-tool/util"
 		asName = "util"
 		break
+	default:
+		var componentType string
+		var componentName = "default"
+		if strings.HasPrefix(name, "component_") {
+			ss := strings.Split(strings.TrimPrefix(name, "component_"), "_")
+			componentType = ss[0]
+			componentName = "default"
+			if len(ss) > 1 {
+				componentName = ss[1]
+			}
+		} else {
+			var componentTypes = []string{"db", "redis", "zk", "kafka", "es", "mongodb"}
+			for _, s := range componentTypes {
+				if name == s {
+					componentType = s
+				} else if strings.HasPrefix(name, s+"_") {
+					componentType = s
+					componentName = strings.TrimPrefix(name, s+"_")
+				}
+			}
+		}
+		if componentType != "" {
+			impl = this_.golang.GetComponentImport(componentType, componentName)
+			asName = this_.golang.GetComponentPack(componentType, componentName)
+		}
 	}
 	return
 }

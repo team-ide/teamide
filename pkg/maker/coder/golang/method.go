@@ -563,6 +563,11 @@ func (this_ *MethodBuilder) Identifier(expression *ast.Identifier) (err error) {
 			if name == this_.golang.GetStructPack() {
 				this_.inArgumentStruct = 1
 				name = "&" + name
+			} else {
+				_, asName := this_.GetImportAsName(name)
+				if asName != "" {
+					name = asName
+				}
 			}
 		} else {
 			if this_.inArgumentStruct == 1 {

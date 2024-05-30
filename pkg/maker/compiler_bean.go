@@ -295,6 +295,9 @@ func (this_ *CompilerMethod) fullImport(name string) {
 	case "util":
 		this_.GetOrCreateImport(importName)
 		break
+	case "constant":
+		this_.GetOrCreateImport(importName)
+		break
 	case "error":
 		this_.GetOrCreateImport(importName)
 		break
@@ -315,19 +318,19 @@ func (this_ *CompilerMethod) fullImport(name string) {
 		break
 	default:
 		if importName == "db" || strings.HasPrefix(importName, "db_") {
-			this_.GetOrCreateImport("db")
+			this_.GetOrCreateImport("component_" + importName)
 		}
 		if importName == "redis" || strings.HasPrefix(importName, "redis_") {
-			this_.GetOrCreateImport("redis")
+			this_.GetOrCreateImport("component_" + importName)
 		}
 		if importName == "zk" || strings.HasPrefix(importName, "zk_") {
-			this_.GetOrCreateImport("zk")
+			this_.GetOrCreateImport("component_" + importName)
 		}
 		if importName == "kafka" || strings.HasPrefix(importName, "kafka_") {
-			this_.GetOrCreateImport("kafka")
+			this_.GetOrCreateImport("component_" + importName)
 		}
 		if importName == "es" || strings.HasPrefix(importName, "es_") {
-			this_.GetOrCreateImport("es")
+			this_.GetOrCreateImport("component_" + importName)
 		}
 	}
 	return

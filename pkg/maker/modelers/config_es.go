@@ -12,7 +12,7 @@ type ConfigEsModel struct {
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    TypeConfigElasticsearchName,
+		Name:    TypeConfigEsName,
 		Comment: "Elasticsearch配置",
 		Fields: []*docTemplateField{
 			{Name: "comment", Comment: "配置说明"},

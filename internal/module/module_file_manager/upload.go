@@ -68,8 +68,9 @@ func (ur *UploadReader) Close() {
 	defer ur.mutex.Unlock()
 
 	defer func() {
-		if x := recover(); x != nil {
-			util.Logger.Error("UploadReader close panic error:", zap.Any("error", x))
+		if e := recover(); e != nil {
+			err := errors.New(fmt.Sprint(e))
+			util.Logger.Error("UploadReader close panic error", zap.Error(err))
 		}
 	}()
 	close(ur.close)
