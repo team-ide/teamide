@@ -2,5 +2,7 @@ args:
   - name: userId
     type: i64
 func: |
-  var user = db.selectOne("userId, name", "tb_user", "userId=${userId}", struct.user)
+  var whereParam map
+  whereParam["userId"] = userId
+  var user = db.selectOne("select * from tb_user userId=${userId}", whereParam, struct.user)
   return user

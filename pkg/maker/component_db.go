@@ -10,35 +10,41 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 		Methods: []*ComponentMethod{
 			{
 				Name: "SelectOne", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
-					if len(args) == 4 {
+					if len(args) == 3 {
+						returnType = args[2].(*ValueType)
+					} else if len(args) == 4 {
 						returnType = args[3].(*ValueType)
 					} else {
 						returnType = ValueTypeMap
 					}
 					return
 				},
-				HasError: true,
+				HasError:   true,
+				HasContext: true,
 			},
 			{
 				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
-				HasError: true,
+				HasError:   true,
+				HasContext: true,
 			},
 			{
 				Name: "Update", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
-				HasError: true,
+				HasError:   true,
+				HasContext: true,
 			},
 			{
 				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
 					returnType = ValueTypeInt64
 					return
 				},
-				HasError: true,
+				HasError:   true,
+				HasContext: true,
 			},
 		},
 	}

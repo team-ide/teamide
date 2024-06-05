@@ -1,18 +1,13 @@
 package golang
 
 import (
+	"sort"
 	"strings"
 	"teamide/pkg/maker/modelers"
 )
 
 var (
-	componentZkCode = `package {pack}
-
-import (
-	"app/config"
-	"github.com/team-ide/go-tool/zookeeper"
-)
-
+	componentZkCode = `
 var (
 	service zookeeper.IService
 )
@@ -25,7 +20,7 @@ func Init(c *zookeeper.Config) (err error) {
 	if err != nil {
 		return
 	}
-	config.AddOnStop(service.Close)
+	common.AddOnStop(service.Close)
 	return
 }
 
@@ -48,7 +43,43 @@ func (this_ *Generator) GenComponentZk(name string, model *modelers.ConfigZkMode
 	}
 	defer builder.Close()
 
-	code := strings.ReplaceAll(componentZkCode, "{pack}", this_.golang.GetComponentPack("zk", name))
+	var imports []string
+
+	imports = append(imports, this_.golang.GetCommonImport())
+	pack := this_.golang.GetComponentPack("zk", name)
+
+	builder.AppendTabLine("package " + pack)
+	builder.NewLine()
+
+	builder.AppendTabLine("import(")
+	builder.Tab()
+
+	ss := strings.Split(`
+	"github.com/team-ide/go-tool/zookeeper"
+`, "\n")
+	for _, s := range ss {
+		s = strings.TrimSpace(s)
+		if s == "" {
+			continue
+		}
+		s = strings.TrimPrefix(s, `"`)
+		s = strings.TrimSuffix(s, `"`)
+		imports = append(imports, s)
+	}
+
+	sort.Strings(imports)
+	for _, im := range imports {
+		if strings.HasSuffix(im, " _") {
+			builder.AppendTabLine("_ \"" + strings.TrimSuffix(im, " _") + "\"")
+		} else {
+			builder.AppendTabLine("\"" + im + "\"")
+		}
+	}
+	builder.Indent()
+	builder.AppendTabLine(")")
+	builder.NewLine()
+
+	code := strings.ReplaceAll(componentRedisCode, "{pack}", pack)
 
 	builder.AppendCode(code)
 	return

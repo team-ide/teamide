@@ -9,7 +9,9 @@ import (
 var (
 	componentDbCode = `
 var (
-	service db.IService
+	service     db.IService
+	options     *db.TemplateOptions
+	mapTemplate *db.Template[map[string]interface{}]
 )
 
 func Init(c *db.Config) (err error) {
@@ -20,7 +22,11 @@ func Init(c *db.Config) (err error) {
 	if err != nil {
 		return
 	}
-	config.AddOnStop(service.Close)
+	options = &db.TemplateOptions{
+		Service: service,
+	}
+	mapTemplate = db.WarpTemplate(map[string]interface{}{}, options)
+	common.AddOnStop(service.Close)
 	return
 }
 
@@ -35,20 +41,30 @@ func GetSqlDb() *sql.DB {
 	return service.GetDb()
 }
 
-func SelectOne[T any](columns string, table string, where string, obj T) (res T, err error) {
-
+func SelectOne[T any](ctx context.Context, sqlParamSql string, sqlParam any, obj T) (res T, err error) {
+	template := db.WarpTemplate(obj, options)
+	res, err = template.SelectOne(ctx, sqlParamSql, sqlParam)
 	return
 }
 
-func Insert(table string, obj any) (res int64, err error) {
+func SelectList[T any](ctx context.Context, sqlParamSql string, sqlParam any, obj T) (res []T, err error) {
+	template := db.WarpTemplate(obj, options)
+	res, err = template.SelectList(ctx, sqlParamSql, sqlParam)
 	return
 }
 
-func Update(table string, update any, where string) (res int64, err error) {
+func Insert(ctx context.Context, table string, obj any) (res int64, err error) {
+	res, err = mapTemplate.Insert(ctx, table, obj)
 	return
 }
 
-func Delete(table string, where string) (res int64, err error) {
+func Update(ctx context.Context, table string, update any, whereSql string, whereParam any, ignoreColumns ...string) (res int64, err error) {
+	res, err = mapTemplate.Update(ctx, table, update, whereSql, whereParam, ignoreColumns...)
+	return
+}
+
+func Delete(ctx context.Context, table string, whereSql string, whereParam any) (res int64, err error) {
+	res, err = mapTemplate.Delete(ctx, table, whereSql, whereParam)
 	return
 }
 
@@ -69,6 +85,7 @@ func (this_ *Generator) GenComponentDb(name string, model *modelers.ConfigDbMode
 
 	var imports []string
 
+	imports = append(imports, this_.golang.GetCommonImport())
 	imports = append(imports, this_.golang.GetConfigImport())
 	pack := this_.golang.GetComponentPack("db", name)
 
@@ -79,6 +96,7 @@ func (this_ *Generator) GenComponentDb(name string, model *modelers.ConfigDbMode
 	builder.Tab()
 
 	ss := strings.Split(`
+	"context"
 	"database/sql"
 	"github.com/team-ide/go-tool/db"
 `, "\n")

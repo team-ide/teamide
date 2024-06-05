@@ -5,7 +5,35 @@ import "strings"
 var (
 	commonCode = `package {pack}
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
+)
+
+var onStops []func()
+
+func AddOnStop(onStop func()) {
+	onStops = append(onStops, onStop)
+}
+
+func OnStop() {
+	for _, onStop := range onStops {
+		callOnStop(onStop)
+	}
+}
+
+func callOnStop(onStop func()) {
+	defer func() {
+		if e := recover(); e != nil {
+			err := errors.New(fmt.Sprint(e))
+			fmt.Println("callOnStop:", err)
+			util.Logger.Error("callOnStop", zap.Error(err))
+		}
+	}()
+	onStop()
+}
 
 type Error struct {
 	code string
@@ -25,13 +53,14 @@ func NewError(code string, msg string) *Error {
 	return err
 }
 
-func GenId() (res int64){
+func GenId() (res int64) {
 	return
 }
 
-func GenStr(min int, max int) (res string){
+func GenStr(min int, max int) (res string) {
 	return
 }
+
 `
 )
 

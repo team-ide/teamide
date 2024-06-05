@@ -2,4 +2,6 @@ args:
   - name: userId
     type: i64
 func: |
-  return db.delete("tb_user", "userId=${userId}")
+  var whereParam map
+  whereParam["userId"] = userId
+  return db.delete("tb_user", "userId=${userId}", whereParam)

@@ -2,6 +2,8 @@ args:
   - name: account
     type: string
 func: |
-  var user user
-  user = db.selectOne("*", "tb_user", "account=${account}", struct.user)
+  var whereParam map;
+  whereParam["account"] = account;
+  var user user;
+  user = db.selectOne("select * from tb_user where account=${account}", whereParam, struct.user)
   return user

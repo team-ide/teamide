@@ -251,6 +251,7 @@ func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
 	} else {
 
 		var imports []string
+		imports = append(imports, "context")
 
 		for _, impl := range class.ImportList {
 			if impl.Import != "" {

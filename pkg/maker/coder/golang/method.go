@@ -30,17 +30,15 @@ func (this_ *MethodBuilder) Gen() (err error) {
 	this_.AppendTabLine("// " + methodName + " " + this_.Comment + "")
 	var str string
 	str += "func (this_ *" + this_.GetClassName() + ") " + methodName
-	str += "("
-	for i, param := range this_.ParamList {
+	str += "(ctx context.Context"
+	for _, param := range this_.ParamList {
 
 		var typeS string
 		typeS, err = this_.GetTypeStr(param.CompilerValueType.GetValueType())
 		if err != nil {
 			return
 		}
-		if i > 0 {
-			str += ", "
-		}
+		str += ", "
 
 		str += param.Name + " " + typeS
 	}
@@ -381,9 +379,20 @@ func (this_ *MethodBuilder) Expression(expression ast.Expression) (err error) {
 	return
 }
 
-func (this_ *MethodBuilder) ArgumentList(argumentList []ast.Expression) (err error) {
+func (this_ *MethodBuilder) ArgumentList(method any, argumentList []ast.Expression) (err error) {
+	var hasCtx bool
+	switch m := method.(type) {
+	case *maker.ComponentMethod:
+		hasCtx = m.HasContext
+	case *maker.CompilerMethod:
+		hasCtx = true
+
+	}
+	if hasCtx {
+		this_.AppendCode("ctx")
+	}
 	for i, one := range argumentList {
-		if i > 0 {
+		if i > 0 || hasCtx {
 			this_.AppendCode(", ")
 		}
 
@@ -474,7 +483,7 @@ func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err 
 	//	return
 	//}
 	this_.AppendCode("(")
-	err = this_.ArgumentList(expression.ArgumentList)
+	err = this_.ArgumentList(obj, expression.ArgumentList)
 	if err != nil {
 		return
 	}

@@ -80,11 +80,11 @@ func main() {
 			switch s {
 			case os.Kill: // kill -9 pid，下面的无效
 				fmt.Println("强制退出", s)
-				config.OnStop()
+				common.OnStop()
 				os.Exit(0)
 			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT: // ctrl + c
 				fmt.Println("退出", s)
-				config.OnStop()
+				common.OnStop()
 				os.Exit(0)
 			}
 		}
@@ -180,6 +180,7 @@ func (this_ *Generator) GenMain() (err error) {
 
 	imports = append(imports, this_.golang.GetConfigImport())
 	imports = append(imports, this_.golang.GetLoggerImport())
+	imports = append(imports, this_.golang.GetCommonImport())
 	builder.AppendTabLine("import(")
 	builder.Tab()
 

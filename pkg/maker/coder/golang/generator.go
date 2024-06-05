@@ -51,7 +51,7 @@ replace github.com/dop251/goja => github.com/team-ide/goja v1.0.4
 replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v1.27.0
 
 require (
-	github.com/team-ide/go-tool v1.2.15
+	github.com/team-ide/go-tool v1.2.17
 	go.uber.org/zap v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1

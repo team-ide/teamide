@@ -28,8 +28,8 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/tealeg/xlsx v1.0.5
 	github.com/team-ide/cron v1.0.1
-	github.com/team-ide/go-dialect v1.9.20
-	github.com/team-ide/go-tool v1.2.15
+	github.com/team-ide/go-dialect v1.9.21
+	github.com/team-ide/go-tool v1.2.17
 	go.mongodb.org/mongo-driver v1.15.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.23.0
