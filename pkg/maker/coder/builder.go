@@ -80,6 +80,14 @@ func (this_ *Builder) AppendCode(ss ...string) {
 	return
 }
 
+func (this_ *Builder) AppendComment(comment string) {
+	if comment == "" {
+		comment = "暂无说明"
+	}
+	_, _ = this_.f.WriteString(comment)
+	return
+}
+
 func (this_ *Builder) NewLine() {
 	_, _ = this_.f.WriteString("\n")
 	this_.rowNumber++

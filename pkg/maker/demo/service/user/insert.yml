@@ -14,7 +14,7 @@ func: |
       throw error.USER_PASSWORD_IS_EMPTY;
     }
   }
-  var find = dao.user.queryByAccount(user.account)
+  var find = dao.user.queryByAccount(ctx, user.account)
   if(find != null){
     throw error.USER_ACCOUNT_ALREADY_EXIST;
   }
@@ -25,6 +25,6 @@ func: |
   user.password = func.encryptPassword(user.salt, user.password)
   
   // 插入数据入库
-  dao.user.insert(user)
+  dao.user.insert(ctx, user)
   redis.set(`user-${user.userId}`, user, constant.USER_REDIS_EXPIRE)
   return user

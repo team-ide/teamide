@@ -21,6 +21,7 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 				},
 				HasError:   true,
 				HasContext: true,
+				HasReturn:  true,
 			},
 			{
 				Name: "Insert", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
@@ -29,6 +30,7 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 				},
 				HasError:   true,
 				HasContext: true,
+				HasReturn:  true,
 			},
 			{
 				Name: "Update", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
@@ -37,6 +39,7 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 				},
 				HasError:   true,
 				HasContext: true,
+				HasReturn:  true,
 			},
 			{
 				Name: "Delete", GetReturnTypes: func(args []interface{}) (returnType *ValueType) {
@@ -45,6 +48,7 @@ func NewDbCompiler(config *modelers.ConfigDbModel) *Component {
 				},
 				HasError:   true,
 				HasContext: true,
+				HasReturn:  true,
 			},
 		},
 	}

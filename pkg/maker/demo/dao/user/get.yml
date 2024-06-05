@@ -4,5 +4,5 @@ args:
 func: |
   var whereParam map
   whereParam["userId"] = userId
-  var user = db.selectOne("select * from tb_user userId=${userId}", whereParam, struct.user)
+  var user = db.selectOne(ctx, "select * from tb_user userId=${userId}", whereParam, struct.user)
   return user

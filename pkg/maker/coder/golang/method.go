@@ -13,12 +13,14 @@ import (
 type MethodBuilder struct {
 	*ClassBuilder
 	*maker.CompilerMethod
-	inIfTest            int
-	inElseIf            int
-	lastReturnRowNumber int
-	inVarScript         int
-	inArgument          int
-	inArgumentStruct    int
+	inIfTest              int
+	inElseIf              int
+	lastReturnRowNumber   int
+	inVarScript           int
+	inArgument            int
+	inArgumentStruct      int
+	inAssign              int
+	inExpressionStatement int
 }
 
 func (this_ *MethodBuilder) Gen() (err error) {
@@ -27,18 +29,23 @@ func (this_ *MethodBuilder) Gen() (err error) {
 	util.Logger.Debug("gen " + key + " start")
 
 	methodName := util.FirstToUpper(this_.Method)
-	this_.AppendTabLine("// " + methodName + " " + this_.Comment + "")
+	this_.AppendTab()
+	this_.AppendCode("// " + methodName + " ")
+	this_.AppendComment(this_.Comment)
+	this_.NewLine()
 	var str string
 	str += "func (this_ *" + this_.GetClassName() + ") " + methodName
-	str += "(ctx context.Context"
-	for _, param := range this_.ParamList {
+	str += "("
+	for i, param := range this_.ParamList {
 
 		var typeS string
 		typeS, err = this_.GetTypeStr(param.CompilerValueType.GetValueType())
 		if err != nil {
 			return
 		}
-		str += ", "
+		if i > 0 {
+			str += ", "
+		}
 
 		str += param.Name + " " + typeS
 	}
@@ -239,7 +246,9 @@ func (this_ *MethodBuilder) Binding(binding *ast.Binding) (err error) {
 }
 func (this_ *MethodBuilder) ExpressionStatement(statement *ast.ExpressionStatement) (err error) {
 	this_.AppendTab()
+	this_.inExpressionStatement = 1
 	err = this_.Expression(statement.Expression)
+	this_.inExpressionStatement = 0
 	this_.NewLine()
 	return
 }
@@ -380,19 +389,9 @@ func (this_ *MethodBuilder) Expression(expression ast.Expression) (err error) {
 }
 
 func (this_ *MethodBuilder) ArgumentList(method any, argumentList []ast.Expression) (err error) {
-	var hasCtx bool
-	switch m := method.(type) {
-	case *maker.ComponentMethod:
-		hasCtx = m.HasContext
-	case *maker.CompilerMethod:
-		hasCtx = true
 
-	}
-	if hasCtx {
-		this_.AppendCode("ctx")
-	}
 	for i, one := range argumentList {
-		if i > 0 || hasCtx {
+		if i > 0 {
 			this_.AppendCode(", ")
 		}
 
@@ -471,12 +470,40 @@ func (this_ *MethodBuilder) getMethodHasError(obj any) (hasError bool) {
 	}
 	return
 }
+
+func (this_ *MethodBuilder) getMethodHasReturn(obj any) (hasReturn bool) {
+	if obj == nil {
+		return
+	}
+
+	switch toB := obj.(type) {
+	case *maker.CompilerMethod:
+		hasReturn = toB.Result.GetValueType() != nil
+		break
+	case *maker.ComponentMethod:
+		hasReturn = toB.HasReturn
+		break
+	default:
+
+	}
+	return
+}
 func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err error) {
 
 	obj := this_.CallCache[expression]
 	script := this_.CallScriptCache[expression]
 	script = this_.formatMethod(script, obj)
 
+	var hasError bool
+	if this_.inAssign == 0 && this_.inExpressionStatement == 1 {
+		hasError = this_.getMethodHasError(obj)
+		if hasError {
+			if this_.getMethodHasReturn(obj) {
+				this_.AppendCode("_, ")
+			}
+			this_.AppendCode("err = ")
+		}
+	}
 	this_.AppendCode(script)
 	//err = this_.Expression(expression.Callee)
 	//if err != nil {
@@ -488,12 +515,23 @@ func (this_ *MethodBuilder) CallExpression(expression *ast.CallExpression) (err 
 		return
 	}
 	this_.AppendCode(")")
+
+	if hasError {
+		this_.NewLine()
+		this_.AppendTabLine("if err != nil {")
+		this_.Tab()
+		this_.AppendTabLine("return")
+		this_.Indent()
+		this_.AppendTabLine("}")
+	}
+
 	return
 }
 
 func (this_ *MethodBuilder) AssignExpression(expression *ast.AssignExpression) (err error) {
 	script := this_.AssignExpressionScriptCache[expression]
 	varType := this_.AssignExpressionScriptTypeCache[expression]
+	this_.inAssign = 1
 	script = this_.formatAssign(script)
 	var hasError bool
 	if a, ok := expression.Right.(*ast.CallExpression); ok {
@@ -523,6 +561,7 @@ func (this_ *MethodBuilder) AssignExpression(expression *ast.AssignExpression) (
 		}
 	}
 
+	this_.inAssign = 0
 	this_.NewLine()
 
 	if hasError {

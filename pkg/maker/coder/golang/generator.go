@@ -105,7 +105,10 @@ func (this_ *Generator) GenConstant(builder *ClassBuilder) (err error) {
 			return
 		}
 		name := util.FirstToUpper(one.Name)
-		builder.AppendTabLine("// " + name + " " + one.ConstantOption.Comment + "")
+		builder.AppendTab()
+		builder.AppendCode("// " + name + " ")
+		builder.AppendComment(one.ConstantOption.Comment)
+		builder.NewLine()
 		if str == "string" {
 			builder.AppendTabLine("" + name + " = \"" + one.ConstantOption.Value + "\"")
 		} else {
@@ -142,7 +145,10 @@ func (this_ *Generator) GenError(builder *ClassBuilder) (err error) {
 	builder.Tab()
 	for _, one := range builder.FieldList {
 		name := util.FirstToUpper(one.Name)
-		builder.AppendTabLine("// " + name + " " + one.ErrorOption.Comment + "")
+		builder.AppendTab()
+		builder.AppendCode("// " + name + " ")
+		builder.AppendComment(one.ErrorOption.Comment)
+		builder.NewLine()
 		builder.AppendTabLine("" + name + " = " + commonPack + ".NewError(\"" + one.ErrorOption.Code + "\", \"" + one.ErrorOption.Msg + "\")")
 		builder.NewLine()
 	}
@@ -168,7 +174,10 @@ func (this_ *Generator) GenStruct(builder *ClassBuilder) (err error) {
 	builder.NewLine()
 
 	structName := util.FirstToUpper(builder.Struct.Name)
-	builder.AppendTabLine("// " + structName + " " + builder.Struct.Comment + "")
+	builder.AppendTab()
+	builder.AppendCode("// " + structName + " ")
+	builder.AppendComment(builder.Struct.Comment)
+	builder.NewLine()
 	builder.AppendTabLine("type " + structName + " struct {")
 
 	builder.Tab()

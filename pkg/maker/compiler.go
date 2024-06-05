@@ -6,6 +6,7 @@ import (
 	"github.com/team-ide/go-tool/javascript"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
+	"teamide/pkg/maker/modelers"
 )
 
 func NewCompiler(app *Application) (compiler *Compiler, err error) {
@@ -241,7 +242,9 @@ func (this_ *Compiler) init() (err error) {
 	space = this_.GetOrCreateSpace("dao")
 	for _, one := range this_.GetDaoList() {
 		methodName, class := space.GetClass(one.Name, false)
-		method, err = class.CreateMethod(methodName, one.Args)
+		var args = []*modelers.ArgModel{{Name: "ctx", Type: "context"}}
+		args = append(args, one.Args...)
+		method, err = class.CreateMethod(methodName, args)
 		err = method.BindCode(one.Func)
 		if err != nil {
 			return
@@ -259,7 +262,9 @@ func (this_ *Compiler) init() (err error) {
 	space = this_.GetOrCreateSpace("service")
 	for _, one := range this_.GetServiceList() {
 		methodName, class := space.GetClass(one.Name, false)
-		method, err = class.CreateMethod(methodName, one.Args)
+		var args = []*modelers.ArgModel{{Name: "ctx", Type: "context"}}
+		args = append(args, one.Args...)
+		method, err = class.CreateMethod(methodName, args)
 		err = method.BindCode(one.Func)
 		if err != nil {
 			return

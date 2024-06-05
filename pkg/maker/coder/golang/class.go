@@ -202,6 +202,10 @@ func (this_ *Generator) GetImportAsName(name string) (impl string, asName string
 		impl = "github.com/team-ide/go-tool/util"
 		asName = "util"
 		break
+	case "context":
+		impl = "context"
+		asName = "context"
+		break
 	default:
 		var componentType string
 		var componentName = "default"
@@ -251,7 +255,6 @@ func (this_ *Generator) GenClass(class *maker.CompilerClass) (err error) {
 	} else {
 
 		var imports []string
-		imports = append(imports, "context")
 
 		for _, impl := range class.ImportList {
 			if impl.Import != "" {

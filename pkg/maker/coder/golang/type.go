@@ -20,6 +20,7 @@ func init() {
 	typeStr[maker.ValueTypeFloat64] = "float64"
 	typeStr[maker.ValueTypeBool] = "bool"
 	typeStr[maker.ValueTypeMap] = "map[string]any"
+	typeStr[maker.ValueTypeContext] = "context.Context"
 }
 
 // GetTypeStr 获取  类型 字符串 如 string、int

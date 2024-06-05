@@ -292,6 +292,9 @@ func (this_ *CompilerMethod) fullImport(name string) {
 		return
 	}
 	switch importName {
+	case "context":
+		this_.GetOrCreateImport(importName)
+		break
 	case "util":
 		this_.GetOrCreateImport(importName)
 		break
@@ -345,6 +348,9 @@ func (this_ *CompilerMethod) addParam(name string, valueType *ValueType) (res *C
 	res.CompilerValueType = NewCompilerValueType(res, valueType)
 	this_.ParamList = append(this_.ParamList, res)
 	this_.paramCache[name] = res
+	if valueType == ValueTypeContext {
+		this_.fullImport("context")
+	}
 
 	return
 }

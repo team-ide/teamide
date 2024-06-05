@@ -4,4 +4,4 @@ args:
 func: |
   var whereParam map
   whereParam["userId"] = userId
-  return db.delete("tb_user", "userId=${userId}", whereParam)
+  return db.delete(ctx, "tb_user", "userId=${userId}", whereParam)
