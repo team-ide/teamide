@@ -104,9 +104,37 @@ func main() {
 
 	logger.Init(config.GetConfig().Log)
 
-{component_init}
+	err = initComponent()
+	if err != nil {
+		util.Logger.Error("初始化组件失败", zap.Error(err))
+		return
+	}
+
+	err = initIFace()
+	if err != nil {
+		util.Logger.Error("初始化接口失败", zap.Error(err))
+		return
+	}
+
+	err = common.OnReady()
+	if err != nil {
+		return
+	}
 
 }
+
+func initComponent()(err error){
+	
+{componentContent}
+	return
+}
+
+func initIFace()(err error){
+	
+{iFaceContent}
+	return
+}
+
 `
 )
 
@@ -132,6 +160,10 @@ func (this_ *Generator) appendMainInit(code *string, imports *[]string, componen
 		return
 	}
 `
+	addImport(imports, importName)
+}
+
+func addImport(imports *[]string, importName string) {
 	var find bool
 	for _, s := range *imports {
 		if s == importName {
@@ -142,6 +174,7 @@ func (this_ *Generator) appendMainInit(code *string, imports *[]string, componen
 		*imports = append(*imports, importName)
 	}
 }
+
 func (this_ *Generator) GenMain() (err error) {
 	dir := this_.Dir
 	if err = this_.Mkdir(dir); err != nil {
@@ -155,24 +188,48 @@ func (this_ *Generator) GenMain() (err error) {
 	defer builder.Close()
 
 	var imports []string
-	component_init := ""
+	componentContent := ""
 	for _, one := range this_.GetConfigDbList() {
-		this_.appendMainInit(&component_init, &imports, "db", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "db", one.Name)
 	}
 	for _, one := range this_.GetConfigRedisList() {
-		this_.appendMainInit(&component_init, &imports, "redis", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "redis", one.Name)
 	}
 	for _, one := range this_.GetConfigZkList() {
-		this_.appendMainInit(&component_init, &imports, "zk", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "zk", one.Name)
 	}
 	for _, one := range this_.GetConfigKafkaList() {
-		this_.appendMainInit(&component_init, &imports, "kafka", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "kafka", one.Name)
 	}
 	for _, one := range this_.GetConfigEsList() {
-		this_.appendMainInit(&component_init, &imports, "es", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "es", one.Name)
 	}
 	for _, one := range this_.GetConfigMongodbList() {
-		this_.appendMainInit(&component_init, &imports, "mongodb", one.Name)
+		this_.appendMainInit(&componentContent, &imports, "mongodb", one.Name)
+	}
+
+	iFaceContent := ""
+	for _, one := range this_.iFaceClassList {
+		iFaceContent += "\t"
+
+		var asName = one.spacePack + "_" + one.implPack
+		asNames := strings.Split(asName, "_")
+		asName = ""
+		for i, n := range asNames {
+			if i > 0 {
+				asName += util.FirstToUpper(n)
+			} else {
+				asName += n
+			}
+		}
+
+		iFaceContent += "// 初始化 接口 I" + one.GetClassName() + " 实现" + "\n"
+		iFaceContent += "\t"
+		iFaceContent += one.spacePack + "." + one.GetClassBeanName() + " = " + asName + ".New()" + "\n"
+
+		iFaceContent += "\n"
+		addImport(&imports, one.implImport+" "+asName)
+		addImport(&imports, one.spaceImport)
 	}
 
 	builder.AppendTabLine("package main")
@@ -211,13 +268,19 @@ func (this_ *Generator) GenMain() (err error) {
 
 	sort.Strings(imports)
 	for _, im := range imports {
-		builder.AppendTabLine("\"" + im + "\"")
+		as := strings.Split(im, " ")
+		if len(as) == 2 {
+			builder.AppendTabLine(as[1] + " \"" + as[0] + "\"")
+		} else {
+			builder.AppendTabLine("\"" + im + "\"")
+		}
 	}
 	builder.Indent()
 	builder.AppendTabLine(")")
 	builder.NewLine()
 
-	code := strings.ReplaceAll(mainCode, "{component_init}", component_init)
+	code := strings.ReplaceAll(mainCode, "{componentContent}", componentContent)
+	code = strings.ReplaceAll(code, "{iFaceContent}", iFaceContent)
 
 	builder.AppendCode(code)
 	return

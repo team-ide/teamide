@@ -34,7 +34,7 @@ func (this_ *MethodBuilder) Gen() (err error) {
 	this_.AppendComment(this_.Comment)
 	this_.NewLine()
 	var str string
-	str += "func (this_ *" + this_.GetClassName() + ") " + methodName
+	str += "func (this_ *" + this_.GetImplClassName() + ") " + methodName
 	str += "("
 	for i, param := range this_.ParamList {
 
@@ -240,6 +240,20 @@ func (this_ *MethodBuilder) Binding(binding *ast.Binding) (err error) {
 			this_.Indent()
 			this_.AppendTabLine("}")
 		}
+	} else {
+		if valueType == maker.ValueTypeMap || valueType.Struct != nil {
+			this_.AppendTab()
+			this_.inVarScript = 1
+			err = this_.Expression(binding.Target)
+			this_.inVarScript = 0
+			this_.AppendCode(" = ")
+			if valueType == maker.ValueTypeMap {
+				this_.AppendCode("make(map[string]any)")
+			} else if valueType.Struct != nil {
+				this_.AppendCode("&" + strings.TrimPrefix(typeS, "*") + "{}")
+			}
+			this_.NewLine()
+		}
 	}
 
 	return
@@ -420,7 +434,7 @@ func (this_ *MethodBuilder) formatMethod(name string, obj interface{}) (script s
 		place := this_.getPackBuilder(toB.CompilerPack)
 		class := this_.getClassBuilder(toB.CompilerClass)
 		if this_.spacePack == place.spacePack {
-			script = class.GetClassBeanName()
+			script = "this_"
 		} else {
 			script = place.spacePack
 			script += "." + class.GetClassBeanName()
@@ -645,7 +659,27 @@ func (this_ *MethodBuilder) StringLiteral(expression *ast.StringLiteral) (err er
 }
 
 func (this_ *MethodBuilder) TemplateLiteral(expression *ast.TemplateLiteral) (err error) {
-	this_.AppendCode(`"`, `"`)
+
+	var str = ""
+	for i, element := range expression.Elements {
+		str += element.Literal
+		if i < len(expression.Elements)-1 {
+			str += "%v"
+		}
+	}
+
+	fmt.Println("TODO TemplateLiteral Elements:", util.GetStringValue(expression.Elements))
+	fmt.Println("TODO TemplateLiteral Expressions:", util.GetStringValue(expression.Expressions))
+	fmt.Println("TODO TemplateLiteral Tag:", util.GetStringValue(expression.Tag))
+	this_.AppendCode("fmt.Sprintf(`", str, "`")
+	for _, e := range expression.Expressions {
+		this_.AppendCode(`, `)
+		err = this_.Expression(e)
+		if err != nil {
+			return
+		}
+	}
+	this_.AppendCode(")")
 	return
 }
 func (this_ *MethodBuilder) DotExpression(expression *ast.DotExpression) (err error) {

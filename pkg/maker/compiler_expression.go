@@ -225,6 +225,7 @@ func (this_ *CompilerMethod) AssignExpression(expression *ast.AssignExpression) 
 
 func (this_ *CompilerMethod) TemplateLiteral(expression *ast.TemplateLiteral) (res any, err error) {
 	fmt.Println("TODO TemplateLiteral:", util.GetStringValue(expression))
+	this_.fullImport("fmt")
 	res = ValueTypeString
 	return
 }
@@ -312,6 +313,7 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 	switch s := expression.(type) {
 	case *ast.TemplateLiteral:
 		res = ValueTypeString
+		this_.fullImport("fmt")
 		return
 	case *ast.StringLiteral:
 		res = ValueTypeString

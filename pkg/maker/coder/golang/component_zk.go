@@ -36,7 +36,7 @@ func (this_ *Generator) GenComponentZk(name string, model *modelers.ConfigZkMode
 	if err = this_.Mkdir(dir); err != nil {
 		return
 	}
-	path := dir + "es.go"
+	path := dir + "zk.go"
 	builder, err := this_.NewBuilder(path)
 	if err != nil {
 		return
@@ -79,7 +79,7 @@ func (this_ *Generator) GenComponentZk(name string, model *modelers.ConfigZkMode
 	builder.AppendTabLine(")")
 	builder.NewLine()
 
-	code := strings.ReplaceAll(componentRedisCode, "{pack}", pack)
+	code := strings.ReplaceAll(componentZkCode, "{pack}", pack)
 
 	builder.AppendCode(code)
 	return

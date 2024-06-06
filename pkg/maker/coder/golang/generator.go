@@ -32,6 +32,8 @@ type Generator struct {
 	spaceCache map[string]*SpaceBuilder
 	packCache  map[string]*PackBuilder
 	classCache map[string]*ClassBuilder
+
+	iFaceClassList []*ClassBuilder
 }
 
 func (this_ *Generator) init() (err error) {
@@ -51,7 +53,7 @@ replace github.com/dop251/goja => github.com/team-ide/goja v1.0.4
 replace go.uber.org/zap v1.27.0 => github.com/team-ide/zap v1.27.0
 
 require (
-	github.com/team-ide/go-tool v1.2.17
+	github.com/team-ide/go-tool v1.2.20
 	go.uber.org/zap v1.27.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -85,9 +87,6 @@ func (this_ *Generator) GenBase() (err error) {
 		return
 	}
 	if err = this_.GenLogger(); err != nil {
-		return
-	}
-	if err = this_.GenMain(); err != nil {
 		return
 	}
 	return
@@ -190,7 +189,15 @@ func (this_ *Generator) GenStruct(builder *ClassBuilder) (err error) {
 			return
 		}
 		name_ := util.FirstToLower(one.Name)
-		builder.AppendTabLine("" + name + " " + str + "`json:\"" + name_ + "\"`")
+		builder.AppendTab()
+		builder.AppendCode("" + name + " " + str + "`json:\"" + name_ + "\"")
+		columnName := name_
+		if one.StructField.Column != "" {
+			columnName = one.StructField.Column
+		}
+		builder.AppendCode(" column:\"" + columnName + "\"")
+
+		builder.AppendCode("`")
 		builder.NewLine()
 	}
 	builder.Indent()

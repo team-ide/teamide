@@ -132,7 +132,7 @@ func (this_ *CompilerMethod) ExpressionStatement(statement *ast.ExpressionStatem
 }
 func (this_ *CompilerMethod) ThrowStatement(statement *ast.ThrowStatement) (err error) {
 	this_.fullImport("error")
-	fmt.Println("TODO ThrowStatement:", util.GetStringValue(statement))
+	//fmt.Println("TODO ThrowStatement:", util.GetStringValue(statement))
 	return
 }
 

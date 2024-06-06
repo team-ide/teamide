@@ -86,7 +86,6 @@ func (this_ *Generator) GenComponentDb(name string, model *modelers.ConfigDbMode
 	var imports []string
 
 	imports = append(imports, this_.golang.GetCommonImport())
-	imports = append(imports, this_.golang.GetConfigImport())
 	pack := this_.golang.GetComponentPack("db", name)
 
 	builder.AppendTabLine("package " + pack)

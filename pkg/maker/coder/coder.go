@@ -145,6 +145,10 @@ func (this_ *Coder) Gen() (err error) {
 		}
 	}
 
+	err = generator.GenMain()
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -199,4 +203,5 @@ type IGenerator interface {
 	GenComponentEs(name string, model *modelers.ConfigEsModel) (err error)
 	GenComponentMongodb(name string, model *modelers.ConfigMongodbModel) (err error)
 	GenSpace(space *maker.CompilerSpace) (err error)
+	GenMain() (err error)
 }

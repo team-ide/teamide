@@ -135,50 +135,126 @@ func (this_ *LanguageGolangModel) GetStructImport() string {
 	return this_.GetPackImport(this_.GetStructPath(), this_.GetStructPack())
 }
 
-func (this_ *LanguageGolangModel) GetFuncDir(dir string) string {
-	return GetDir(dir, this_.GetFuncPath())
+func (this_ *LanguageGolangModel) GetFuncIFaceDir(dir string) string {
+	return GetDir(dir, this_.GetFuncIFacePath())
 }
 
-func (this_ *LanguageGolangModel) GetFuncPath() string {
+func (this_ *LanguageGolangModel) GetFuncIFacePath() string {
 	return GetPath(&this_.FuncPath, "tool/")
 }
 
-func (this_ *LanguageGolangModel) GetFuncPack() string {
+func (this_ *LanguageGolangModel) GetFuncIFacePack() string {
 	return GetPack(&this_.FuncPack, "tool")
 }
-func (this_ *LanguageGolangModel) GetFuncImport() string {
-	return this_.GetPackImport(this_.GetFuncPath(), this_.GetFuncPack())
+func (this_ *LanguageGolangModel) GetFuncIFaceImport() string {
+	return this_.GetPackImport(this_.GetFuncIFacePath(), this_.GetFuncIFacePack())
 }
 
-func (this_ *LanguageGolangModel) GetDaoDir(dir string) string {
-	return GetDir(dir, this_.GetDaoPath())
+func (this_ *LanguageGolangModel) GetFuncImplDir(dir string, name string) string {
+	return GetDir(dir, this_.GetFuncImplPath(name))
 }
 
-func (this_ *LanguageGolangModel) GetDaoPath() string {
+func (this_ *LanguageGolangModel) GetFuncImplPath(name string) string {
+	path := this_.GetFuncIFacePath()
+	if name == "" {
+		name = "base"
+	}
+	path += name
+	return path + "/"
+}
+
+func (this_ *LanguageGolangModel) GetFuncImplPack(name string) string {
+	if name == "" {
+		name = "base"
+	}
+	pack := name
+	return pack
+}
+
+func (this_ *LanguageGolangModel) GetFuncImplImport(name string) string {
+	return this_.GetPackImport(this_.GetFuncImplPath(name), this_.GetFuncImplPack(name))
+}
+
+func (this_ *LanguageGolangModel) GetDaoIFaceDir(dir string) string {
+	return GetDir(dir, this_.GetDaoIFacePath())
+}
+
+func (this_ *LanguageGolangModel) GetDaoIFacePath() string {
 	return GetPath(&this_.DaoPath, "dao/")
 }
 
-func (this_ *LanguageGolangModel) GetDaoPack() string {
+func (this_ *LanguageGolangModel) GetDaoIFacePack() string {
 	return GetPack(&this_.DaoPack, "dao")
 }
-func (this_ *LanguageGolangModel) GetDaoImport() string {
-	return this_.GetPackImport(this_.GetDaoPath(), this_.GetDaoPack())
+
+func (this_ *LanguageGolangModel) GetDaoIFaceImport() string {
+	return this_.GetPackImport(this_.GetDaoIFacePath(), this_.GetDaoIFacePack())
 }
 
-func (this_ *LanguageGolangModel) GetServiceDir(dir string) string {
-	return GetDir(dir, this_.GetServicePath())
+func (this_ *LanguageGolangModel) GetDaoImplDir(dir string, name string) string {
+	return GetDir(dir, this_.GetDaoImplPath(name))
 }
 
-func (this_ *LanguageGolangModel) GetServicePath() string {
+func (this_ *LanguageGolangModel) GetDaoImplPath(name string) string {
+	path := this_.GetDaoIFacePath()
+	if name == "" {
+		name = "base"
+	}
+	path += name
+	return path + "/"
+}
+
+func (this_ *LanguageGolangModel) GetDaoImplPack(name string) string {
+	if name == "" {
+		name = "base"
+	}
+	pack := name
+	return pack
+}
+
+func (this_ *LanguageGolangModel) GetDaoImplImport(name string) string {
+	return this_.GetPackImport(this_.GetDaoImplPath(name), this_.GetDaoImplPack(name))
+}
+
+func (this_ *LanguageGolangModel) GetServiceIFaceDir(dir string) string {
+	return GetDir(dir, this_.GetServiceIFacePath())
+}
+
+func (this_ *LanguageGolangModel) GetServiceIFacePath() string {
 	return GetPath(&this_.ServicePath, "service/")
 }
 
-func (this_ *LanguageGolangModel) GetServicePack() string {
+func (this_ *LanguageGolangModel) GetServiceIFacePack() string {
 	return GetPack(&this_.ServicePack, "service")
 }
 
-func (this_ *LanguageGolangModel) GetServiceImport() string {
-	return this_.GetPackImport(this_.GetServicePath(), this_.GetServicePack())
+func (this_ *LanguageGolangModel) GetServiceIFaceImport() string {
+	return this_.GetPackImport(this_.GetServiceIFacePath(), this_.GetServiceIFacePack())
+}
+
+func (this_ *LanguageGolangModel) GetServiceImplDir(dir string, name string) string {
+	return GetDir(dir, this_.GetServiceImplPath(name))
+}
+
+func (this_ *LanguageGolangModel) GetServiceImplPath(name string) string {
+	path := this_.GetServiceIFacePath()
+	if name == "" {
+		name = "base"
+	}
+	path += name
+	return path + "/"
+}
+
+func (this_ *LanguageGolangModel) GetServiceImplPack(name string) string {
+	if name == "" {
+		name = "base"
+	}
+	pack := name
+	return pack
+}
+
+func (this_ *LanguageGolangModel) GetServiceImplImport(name string) string {
+	return this_.GetPackImport(this_.GetServiceImplPath(name), this_.GetServiceImplPack(name))
 }
 
 func (this_ *LanguageGolangModel) GetComponentDir(dir string, componentType, name string) string {
@@ -186,7 +262,7 @@ func (this_ *LanguageGolangModel) GetComponentDir(dir string, componentType, nam
 }
 
 func (this_ *LanguageGolangModel) GetComponentPath(componentType, name string) string {
-	path := "component_" + componentType
+	path := "component/" + componentType
 	if name != "" && name != "default" {
 		path += "_" + name
 	}
@@ -194,7 +270,7 @@ func (this_ *LanguageGolangModel) GetComponentPath(componentType, name string) s
 }
 
 func (this_ *LanguageGolangModel) GetComponentPack(componentType, name string) string {
-	pack := "component_" + componentType
+	pack := "" + componentType
 	if name != "" && name != "default" {
 		pack += "_" + name
 	}
@@ -208,12 +284,12 @@ func (this_ *LanguageGolangModel) GetComponentImport(componentType, name string)
 func (this_ *LanguageGolangModel) GetPackImport(path string, pack string) string {
 	path = strings.TrimPrefix(path, "/")
 	path = strings.TrimSuffix(path, "/")
-	moduleName := this_.GetModuleName()
+	imp := this_.GetModuleName()
 	dot := strings.LastIndex(path, "/")
 	if dot > 0 {
-		moduleName += path[:dot]
+		imp += "/" + path[:dot]
 	}
-	return moduleName + "/" + pack
+	return imp + "/" + pack
 }
 
 func GetDir(dir string, path string) string {

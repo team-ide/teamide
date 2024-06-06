@@ -10,3 +10,11 @@ fields:
   # 密码 通过 盐(salt) + 用户密码 获取 MD5值
   - name: password
   - name: salt
+  - name: status
+    type: i
+  - name: createAt
+    type: i64
+    column: create_at
+  - name: deleteAt
+    type: i64
+    column: delete_at

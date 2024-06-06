@@ -17,6 +17,7 @@ type StructField struct {
 	IsList        bool   `json:"isList,omitempty"`        // 是否是列表
 	Type          string `json:"type,omitempty"`          // 数据类型
 	Default       string `json:"default,omitempty"`       // 默认值
+	Column        string `json:"column,omitempty"`        // 默认值
 }
 
 var (
@@ -59,6 +60,7 @@ func init() {
 			{Name: "jsonOmitempty", Comment: "序列化JSON，省略空值"},
 			{Name: "isList", Comment: "是集合"},
 			{Name: "default", Comment: "创建对象该字段默认的值"},
+			{Name: "column", Comment: "字段"},
 		},
 		newModel: func() interface{} {
 			return &StructField{}

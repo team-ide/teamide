@@ -29,10 +29,25 @@ func GetService() redis.IService {
 }
 
 func Get[T any](key string, obj T) (res T, err error) {
+	value, err := service.Get(key)
+	if err != nil {
+		return
+	}
+	if value != "" {
+		res, err = util.StringTo(value, obj)
+	}
 	return
 }
 
 func Set(key string, obj any, ex int64) (err error) {
+	value := util.GetStringValue(obj)
+	err = service.Set(key, value)
+	if err != nil {
+		return
+	}
+	if ex > 0 {
+		_, err = service.Expire(key, ex)
+	}
 	return
 }
 
@@ -68,6 +83,7 @@ func (this_ *Generator) GenComponentRedis(name string, model *modelers.ConfigRed
 
 	ss := strings.Split(`
 	"github.com/team-ide/go-tool/redis"
+	"github.com/team-ide/go-tool/util"
 `, "\n")
 	for _, s := range ss {
 		s = strings.TrimSpace(s)

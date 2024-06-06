@@ -19,10 +19,11 @@ func: |
     throw error.USER_ACCOUNT_ALREADY_EXIST;
   }
   // 生成 userId
-  user.userId = common.genId()
+  user.userId = util.nextId()
   // 生成盐 + 加密密码
-  user.salt = common.genStr(6, 6)
+  user.salt = util.RandomString(6, 6)
   user.password = func.encryptPassword(user.salt, user.password)
+  user.createAt = util.getNowMilli()
   
   // 插入数据入库
   dao.user.insert(ctx, user)

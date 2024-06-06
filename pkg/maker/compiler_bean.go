@@ -62,22 +62,20 @@ type CompilerPack struct {
 func (this_ *CompilerSpace) GetClass(path string, fileIsClass bool) (endName string, res *CompilerClass) {
 	names := strings.Split(path, "/")
 	size := len(names)
-	classIndex := size - 1
 	endNameIndex := -1
 	if !fileIsClass {
-		classIndex = size - 2
 		endNameIndex = size - 1
 	}
-	var packs []string
-	var class string
-	if classIndex >= 0 {
-		class = names[classIndex]
-		if classIndex > 0 {
-			packs = names[:classIndex-1]
-		}
+	var class []string
+	if endNameIndex > 0 {
+		class = names[:endNameIndex]
+	} else {
+		class = names
 	}
-	packName := strings.Join(packs, ".")
-	pack := this_.GetOrCreatePack(packName)
+	if len(class) == 0 {
+		class = []string{"base"}
+	}
+	pack := this_.GetOrCreatePack("")
 	res = pack.GetOrCreateClass(class)
 	if endNameIndex >= 0 {
 		endName = names[endNameIndex]
@@ -90,8 +88,9 @@ func (this_ *CompilerPack) GetKey() (key string) {
 	return
 }
 
-func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
-	res = this_.classCache[class]
+func (this_ *CompilerPack) GetOrCreateClass(class []string) (res *CompilerClass) {
+	classKey := strings.Join(class, "_")
+	res = this_.classCache[classKey]
 	if res == nil {
 		res = &CompilerClass{
 			Class:            class,
@@ -103,14 +102,14 @@ func (this_ *CompilerPack) GetOrCreateClass(class string) (res *CompilerClass) {
 		}
 
 		this_.ClassList = append(this_.ClassList, res)
-		this_.classCache[class] = res
+		this_.classCache[classKey] = res
 	}
 	return
 }
 
 type CompilerClass struct {
 	*CompilerPack
-	Class            string
+	Class            []string
 	ImportList       []*CompilerImport
 	importClassCache map[*CompilerClass]*CompilerImport
 	importCache      map[string]*CompilerImport
@@ -124,7 +123,7 @@ type CompilerClass struct {
 }
 
 func (this_ *CompilerClass) GetKey() (key string) {
-	key = this_.CompilerPack.GetKey() + " class [" + this_.Class + "]"
+	key = this_.CompilerPack.GetKey() + " class [" + strings.Join(this_.Class, "_") + "]"
 	return
 }
 
@@ -292,6 +291,12 @@ func (this_ *CompilerMethod) fullImport(name string) {
 		return
 	}
 	switch importName {
+	case "logger":
+		this_.GetOrCreateImport(importName)
+		break
+	case "fmt":
+		this_.GetOrCreateImport(importName)
+		break
 	case "context":
 		this_.GetOrCreateImport(importName)
 		break

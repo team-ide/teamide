@@ -12,14 +12,17 @@ import (
 	"go.uber.org/zap"
 )
 
-var onStops []func()
+var onStopList []func()
 
 func AddOnStop(onStop func()) {
-	onStops = append(onStops, onStop)
+	if onStop == nil {
+		return
+	}
+	onStopList = append(onStopList, onStop)
 }
 
 func OnStop() {
-	for _, onStop := range onStops {
+	for _, onStop := range onStopList {
 		callOnStop(onStop)
 	}
 }
@@ -33,6 +36,25 @@ func callOnStop(onStop func()) {
 		}
 	}()
 	onStop()
+}
+
+var onReadyList []func() (err error)
+
+func AddOnReady(onReady func() (err error)) {
+	if onReady == nil {
+		return
+	}
+	onReadyList = append(onReadyList, onReady)
+}
+
+func OnReady() (err error) {
+	for _, onReady := range onReadyList {
+		err = onReady()
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 type Error struct {
@@ -54,11 +76,11 @@ func NewError(code string, msg string) *Error {
 }
 
 func GenId() (res int64) {
-	return
+	return util.NextId()
 }
 
 func GenStr(min int, max int) (res string) {
-	return
+	return util.RandomString(min, max)
 }
 
 `
