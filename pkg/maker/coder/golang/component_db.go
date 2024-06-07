@@ -26,7 +26,11 @@ func Init(c *db.Config) (err error) {
 		Service: service,
 	}
 	mapTemplate = db.WarpTemplate(map[string]interface{}{}, options)
-	common.AddOnStop(service.Close)
+
+	common.OnEvent(common.EventAppStop, func(args ...any) {
+		service.Close()
+	}, math.MaxInt)
+
 	return
 }
 
@@ -95,6 +99,7 @@ func (this_ *Generator) GenComponentDb(name string, model *modelers.ConfigDbMode
 	builder.Tab()
 
 	ss := strings.Split(`
+	"math"
 	"context"
 	"database/sql"
 	"github.com/team-ide/go-tool/db"
@@ -115,8 +120,9 @@ func (this_ *Generator) GenComponentDb(name string, model *modelers.ConfigDbMode
 
 	sort.Strings(imports)
 	for _, im := range imports {
-		if strings.HasSuffix(im, " _") {
-			builder.AppendTabLine("_ \"" + strings.TrimSuffix(im, " _") + "\"")
+		as := strings.Split(im, " ")
+		if len(as) == 2 {
+			builder.AppendTabLine(as[1] + " \"" + as[0] + "\"")
 		} else {
 			builder.AppendTabLine("\"" + im + "\"")
 		}

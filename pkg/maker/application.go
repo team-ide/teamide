@@ -22,8 +22,8 @@ func newApplication() (app *Application) {
 		strictContext:   make(map[string]interface{}),
 		tableContext:    make(map[string]interface{}),
 
-		daoContext: make(map[string]interface{}),
-		daoProgram: make(map[string]*CompileProgram),
+		storageContext: make(map[string]interface{}),
+		storageProgram: make(map[string]*CompileProgram),
 
 		serviceContext: make(map[string]interface{}),
 		serviceProgram: make(map[string]*CompileProgram),
@@ -56,8 +56,8 @@ type Application struct {
 	strictContext   map[string]interface{}
 	tableContext    map[string]interface{}
 
-	daoContext map[string]interface{}
-	daoProgram map[string]*CompileProgram
+	storageContext map[string]interface{}
+	storageProgram map[string]*CompileProgram
 
 	serviceContext map[string]interface{}
 	serviceProgram map[string]*CompileProgram
@@ -616,19 +616,19 @@ func (this_ *Application) GetStructList() (res []*modelers.StructModel) {
 	return
 }
 
-func (this_ *Application) GetDao(name string) (model *modelers.DaoModel) {
-	cache := this_.getModelTypeCache(modelers.TypeDao)
+func (this_ *Application) GetStorage(name string) (model *modelers.StorageModel) {
+	cache := this_.getModelTypeCache(modelers.TypeStorage)
 	find, _ := cache.Get(name)
 	if find != nil {
-		model = find.(*modelers.DaoModel)
+		model = find.(*modelers.StorageModel)
 	}
 	return
 }
 
-func (this_ *Application) GetDaoList() (res []*modelers.DaoModel) {
-	items := this_.getModelTypeItems(modelers.TypeDao)
+func (this_ *Application) GetStorageList() (res []*modelers.StorageModel) {
+	items := this_.getModelTypeItems(modelers.TypeStorage)
 	for _, one := range items {
-		res = append(res, one.(*modelers.DaoModel))
+		res = append(res, one.(*modelers.StorageModel))
 	}
 	return
 }

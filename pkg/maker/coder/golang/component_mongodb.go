@@ -20,7 +20,11 @@ func Init(c *mongodb.Config) (err error) {
 	if err != nil {
 		return
 	}
-	common.AddOnStop(service.Close)
+
+	common.OnEvent(common.EventAppStop, func(args ...any) {
+		service.Close()
+	}, math.MaxInt)
+
 	return
 }
 
@@ -55,6 +59,7 @@ func (this_ *Generator) GenComponentMongodb(name string, model *modelers.ConfigM
 	builder.Tab()
 
 	ss := strings.Split(`
+	"math"
 	"github.com/team-ide/go-tool/mongodb"
 `, "\n")
 	for _, s := range ss {
@@ -69,8 +74,9 @@ func (this_ *Generator) GenComponentMongodb(name string, model *modelers.ConfigM
 
 	sort.Strings(imports)
 	for _, im := range imports {
-		if strings.HasSuffix(im, " _") {
-			builder.AppendTabLine("_ \"" + strings.TrimSuffix(im, " _") + "\"")
+		as := strings.Split(im, " ")
+		if len(as) == 2 {
+			builder.AppendTabLine(as[1] + " \"" + as[0] + "\"")
 		} else {
 			builder.AppendTabLine("\"" + im + "\"")
 		}

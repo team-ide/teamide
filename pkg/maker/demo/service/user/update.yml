@@ -10,12 +10,12 @@ func: |
     throw error.USER_ID_IS_EMPTY;
   }
   if(util.isNotEmpty(user.account)){
-    var find = dao.user.queryByAccount(ctx, user.account)
+    var find = storage.user.queryByAccount(ctx, user.account)
     if(find != null && find.userId != user.userId){
       throw error.USER_ACCOUNT_ALREADY_EXIST;
     }
   }
-  var updateCount = dao.user.update(ctx, user)
+  var updateCount = storage.user.update(ctx, user)
   if(updateCount == 0){
       throw error.USER_IS_NOT_EXIST;
   }

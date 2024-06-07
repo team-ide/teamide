@@ -128,12 +128,12 @@ func (this_ *Invoker) init() (err error) {
 		}
 	}
 
-	err = this_.setScriptVar("dao", this_.daoContext)
+	err = this_.setScriptVar("storage", this_.storageContext)
 	if err != nil {
 		return
 	}
-	for _, one := range this_.GetDaoList() {
-		err = this_.BindDao(one)
+	for _, one := range this_.GetStorageList() {
+		err = this_.BindStorage(one)
 		if err != nil {
 			return
 		}
@@ -171,21 +171,21 @@ func (this_ *Invoker) BindFunc(f *modelers.FuncModel) (err error) {
 	return
 }
 
-func (this_ *Invoker) BindDao(dao *modelers.DaoModel) (err error) {
-	this_.daoProgram[dao.Name], err = this_.script.CompileScript(dao.Func)
+func (this_ *Invoker) BindStorage(storage *modelers.StorageModel) (err error) {
+	this_.storageProgram[storage.Name], err = this_.script.CompileScript(storage.Func)
 	if err != nil {
-		util.Logger.Error("invoker bind dao compile script error", zap.Any("name", dao.Name), zap.Any("error", err))
+		util.Logger.Error("invoker bind storage compile script error", zap.Any("name", storage.Name), zap.Any("error", err))
 		return
 	}
 	var run = func(args ...interface{}) (res any, err error) {
-		data, err := this_.NewInvokeDataByArgs(dao.Args, args)
+		data, err := this_.NewInvokeDataByArgs(storage.Args, args)
 		if err != nil {
 			return
 		}
-		res, err = this_.InvokeDao(dao, data)
+		res, err = this_.InvokeStorage(storage, data)
 		return
 	}
-	SetBySlash(this_.daoContext, dao.Name, run)
+	SetBySlash(this_.storageContext, storage.Name, run)
 	return
 }
 
@@ -260,34 +260,34 @@ func (this_ *Invoker) InvokeService(service *modelers.ServiceModel, invokeData *
 	return
 }
 
-func (this_ *Invoker) InvokeDaoByName(name string, invokeData *InvokeData) (res interface{}, err error) {
+func (this_ *Invoker) InvokeStorageByName(name string, invokeData *InvokeData) (res interface{}, err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err = errors.New("invoke dao by name [" + name + "] error:" + fmt.Sprint(e))
-			util.Logger.Error("invoke dao by name error", zap.Any("error", err))
+			err = errors.New("invoke storage by name [" + name + "] error:" + fmt.Sprint(e))
+			util.Logger.Error("invoke storage by name error", zap.Any("error", err))
 		}
 	}()
 
-	dao := this_.GetDao(name)
-	if dao == nil {
-		err = errors.New("dao [" + name + "] is not exist")
-		util.Logger.Error("invoke dao by name error", zap.Any("error", err))
+	storage := this_.GetStorage(name)
+	if storage == nil {
+		err = errors.New("storage [" + name + "] is not exist")
+		util.Logger.Error("invoke storage by name error", zap.Any("error", err))
 		return
 	}
-	res, err = this_.InvokeDao(dao, invokeData)
+	res, err = this_.InvokeStorage(storage, invokeData)
 	return
 }
 
-func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) (res interface{}, err error) {
-	if dao == nil {
-		err = errors.New("invoke dao error,dao is null")
+func (this_ *Invoker) InvokeStorage(storage *modelers.StorageModel, invokeData *InvokeData) (res interface{}, err error) {
+	if storage == nil {
+		err = errors.New("invoke storage error,Storage is null")
 		return
 	}
-	funcInvoke := invokeStart("dao "+dao.Name, invokeData)
+	funcInvoke := invokeStart("storage "+storage.Name, invokeData)
 	defer func() {
 		if e := recover(); e != nil {
 			err = errors.New(funcInvoke.name + " error:" + fmt.Sprint(e))
-			util.Logger.Error("invoke dao error", zap.Any("error", err))
+			util.Logger.Error("invoke storage error", zap.Any("error", err))
 		}
 		funcInvoke.end(err)
 		util.Logger.Debug(funcInvoke.name+" end", zap.Any("use", funcInvoke.use()))
@@ -299,9 +299,9 @@ func (this_ *Invoker) InvokeDao(dao *modelers.DaoModel, invokeData *InvokeData) 
 		}
 	}
 
-	p := this_.daoProgram[dao.Name]
+	p := this_.storageProgram[storage.Name]
 	if p == nil {
-		err = errors.New("invoke dao [" + dao.Name + "] error, dao program is null")
+		err = errors.New("invoke storage [" + storage.Name + "] error, storage program is null")
 		return
 	}
 

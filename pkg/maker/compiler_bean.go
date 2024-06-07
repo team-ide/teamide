@@ -67,8 +67,10 @@ func (this_ *CompilerSpace) GetClass(path string, fileIsClass bool) (endName str
 		endNameIndex = size - 1
 	}
 	var class []string
-	if endNameIndex > 0 {
-		class = names[:endNameIndex]
+	if endNameIndex >= 0 {
+		if endNameIndex > 0 {
+			class = names[:endNameIndex]
+		}
 	} else {
 		class = names
 	}
@@ -235,7 +237,7 @@ type CompilerMethod struct {
 	CallComponentList []*CompilerCall
 	CallUtilList      []*CompilerCall
 	CallFuncList      []*CompilerCall
-	CallDaoList       []*CompilerCall
+	CallStorageList   []*CompilerCall
 	CallServiceList   []*CompilerCall
 	Result            *CompilerMethodResult
 	Program           *ast.Program
@@ -312,7 +314,7 @@ func (this_ *CompilerMethod) fullImport(name string) {
 	case "struct":
 		this_.GetOrCreateImport(importName)
 		break
-	case "dao":
+	case "storage":
 		this_.GetOrCreateImport(importName)
 		break
 	case "service":

@@ -234,13 +234,13 @@ func (this_ *Compiler) init() (err error) {
 	}
 	util.Logger.Debug("init func end")
 
-	util.Logger.Debug("init dao start")
-	err = this_.setScriptVar("dao", this_.daoContext)
+	util.Logger.Debug("init storage start")
+	err = this_.setScriptVar("storage", this_.storageContext)
 	if err != nil {
 		return
 	}
-	space = this_.GetOrCreateSpace("dao")
-	for _, one := range this_.GetDaoList() {
+	space = this_.GetOrCreateSpace("storage")
+	for _, one := range this_.GetStorageList() {
 		methodName, class := space.GetClass(one.Name, false)
 		var args = []*modelers.ArgModel{{Name: "ctx", Type: "context"}}
 		args = append(args, one.Args...)
@@ -249,9 +249,9 @@ func (this_ *Compiler) init() (err error) {
 		if err != nil {
 			return
 		}
-		SetBySlash(this_.daoContext, one.Name, method)
+		SetBySlash(this_.storageContext, one.Name, method)
 	}
-	util.Logger.Debug("init dao end")
+	util.Logger.Debug("init storage end")
 
 	util.Logger.Debug("init service start")
 

@@ -13,13 +13,13 @@ func Init() {
 
 	config.RootDir, err = os.Getwd()
 	if err != nil {
-		util.Logger.Error("os get wd error", zap.Error(err))
+		logger.Logger.Error("os get wd error", zap.Error(err))
 		panic(err)
 	}
 
 	config.RootDir, err = filepath.Abs(config.RootDir)
 	if err != nil {
-		util.Logger.Error("filepath abs error", zap.Error(err))
+		logger.Logger.Error("filepath abs error", zap.Error(err))
 		panic(err)
 	}
 	config.RootDir = filepath.ToSlash(config.RootDir)
@@ -28,7 +28,7 @@ func Init() {
 	}
 	current, err := user.Current()
 	if err != nil {
-		util.Logger.Error("user current error", zap.Error(err))
+		logger.Logger.Error("user current error", zap.Error(err))
 		panic(err)
 	}
 
@@ -36,7 +36,7 @@ func Init() {
 	if config.UserHomeDir != "" {
 		config.UserHomeDir, err = filepath.Abs(config.UserHomeDir)
 		if err != nil {
-			util.Logger.Error("filepath abs error", zap.Error(err))
+			logger.Logger.Error("filepath abs error", zap.Error(err))
 			panic(err)
 		}
 		config.UserHomeDir = filepath.ToSlash(config.UserHomeDir)
@@ -58,69 +58,57 @@ func main() {
 			return
 		}
 	}
-	var err error
-	var waitGroupForStop sync.WaitGroup
-
-	defer func() {
-		if e := recover(); e != nil {
-			err = errors.New("奔溃异常:" + fmt.Sprint(e))
-		}
-		if err!=nil {
-			fmt.Println("启动失败:", err)
-			util.Logger.Error("启动失败", zap.Error(err))
-		}
-		waitGroupForStop.Done()
-
-	}()
-
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c)
-		for s := range c {
-			switch s {
-			case os.Kill: // kill -9 pid，下面的无效
-				fmt.Println("强制退出", s)
-				common.OnStop()
-				os.Exit(0)
-			case syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT: // ctrl + c
-				fmt.Println("退出", s)
-				common.OnStop()
-				os.Exit(0)
-			}
-		}
-	}()
-
-	waitGroupForStop.Add(1)
+	Init()
 
 	var conf = flag.String("config", "conf/application.yml", "配置文件地址")
 
 	flag.Parse()
 
+	common.CallEvent(common.EventAppStart)
+	var err error
+
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.New("奔溃异常:" + fmt.Sprint(e))
+		}
+		if err != nil {
+			fmt.Println("启动失败:", err)
+			logger.Logger.Error("启动失败", zap.Error(err))
+		}
+
+	}()
+
+	go common.OnSignal()
+
+	common.CallEvent(common.EventAppConfigBefore)
 	err = config.InitConfig(*conf)
 	if err != nil {
-		util.Logger.Error("初始化配置文件失败", zap.Error(err))
+		logger.Logger.Error("初始化配置文件失败", zap.Error(err))
 		return
 	}
+	common.CallEvent(common.EventAppConfigAfter)
 
 	logger.Init(config.GetConfig().Log)
 
+	common.CallEvent(common.EventAppComponentBefore)
 	err = initComponent()
 	if err != nil {
-		util.Logger.Error("初始化组件失败", zap.Error(err))
+		logger.Logger.Error("初始化组件失败", zap.Error(err))
 		return
 	}
+	common.CallEvent(common.EventAppComponentAfter)
 
+	common.CallEvent(common.EventAppIFaceBefore)
 	err = initIFace()
 	if err != nil {
-		util.Logger.Error("初始化接口失败", zap.Error(err))
+		logger.Logger.Error("初始化接口失败", zap.Error(err))
 		return
 	}
+	common.CallEvent(common.EventAppIFaceAfter)
 
-	err = common.OnReady()
-	if err != nil {
-		return
-	}
+	common.CallEvent(common.EventAppReady)
 
+	common.Wait()
 }
 
 func initComponent()(err error){
@@ -150,13 +138,13 @@ func (this_ *Generator) appendMainInit(code *string, imports *[]string, componen
 	configName = util.FirstToUpper(configName)
 	*code += `
 	if config.GetConfig().` + configName + ` == nil {
-		util.Logger.Error("配置 ` + componentType + ` 为空，请检查配置")
+		logger.Logger.Error("配置 ` + componentType + ` 为空，请检查配置")
 		return
 	}
 `
 	*code += `
 	if err = ` + pack + `.Init(config.GetConfig().` + configName + `); err != nil {
-		util.Logger.Error("初始化 ` + componentType + ` 失败", zap.Error(err))
+		logger.Logger.Error("初始化 ` + componentType + ` 失败", zap.Error(err))
 		return
 	}
 `
@@ -245,16 +233,12 @@ func (this_ *Generator) GenMain() (err error) {
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"os"
-	"os/signal"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
-	"syscall"
 `, "\n")
 	for _, s := range ss {
 		s = strings.TrimSpace(s)

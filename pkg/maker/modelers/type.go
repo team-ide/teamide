@@ -456,28 +456,28 @@ var (
 		},
 	}
 
-	TypeDaoName = "dao"
-	TypeDao     = &Type{
-		Name:     TypeDaoName,
+	TypeStorageName = "storage"
+	TypeStorage     = &Type{
+		Name:     TypeStorageName,
 		Comment:  "数据层",
-		newModel: func() any { return &DaoModel{} },
+		newModel: func() any { return &StorageModel{} },
 		toModel: func(name, text string) (model interface{}, err error) {
-			model = &DaoModel{}
-			err = toModel(text, TypeDaoName, model)
+			model = &StorageModel{}
+			err = toModel(text, TypeStorageName, model)
 			if err != nil {
-				util.Logger.Error("text to dao model error", zap.Any("text", text), zap.Error(err))
+				util.Logger.Error("text to storage model error", zap.Any("text", text), zap.Error(err))
 				return
 			}
-			model.(*DaoModel).Name = name
+			model.(*StorageModel).Name = name
 			return
 		},
 		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, TypeDaoName, &docOptions{
+			text, err = toText(model, TypeStorageName, &docOptions{
 				outComment: true,
 				omitEmpty:  false,
 			})
 			if err != nil {
-				util.Logger.Error("dao model to text error", zap.Any("model", model), zap.Error(err))
+				util.Logger.Error("storage model to text error", zap.Any("model", model), zap.Error(err))
 				return
 			}
 			return
@@ -608,7 +608,7 @@ func init() {
 
 	AppendType(TypeTable)
 
-	AppendType(TypeDao)
+	AppendType(TypeStorage)
 
 	AppendType(TypeService)
 

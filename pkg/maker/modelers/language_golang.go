@@ -21,8 +21,8 @@ type LanguageGolangModel struct {
 	StructPack   string `json:"structPack,omitempty"`
 	FuncPath     string `json:"funcPath,omitempty"`
 	FuncPack     string `json:"funcPack,omitempty"`
-	DaoPath      string `json:"daoPath,omitempty"`
-	DaoPack      string `json:"daoPack,omitempty"`
+	StoragePath  string `json:"storagePath,omitempty"`
+	StoragePack  string `json:"storagePack,omitempty"`
 	ServicePath  string `json:"servicePath,omitempty"`
 	ServicePack  string `json:"servicePack,omitempty"`
 }
@@ -175,28 +175,28 @@ func (this_ *LanguageGolangModel) GetFuncImplImport(name string) string {
 	return this_.GetPackImport(this_.GetFuncImplPath(name), this_.GetFuncImplPack(name))
 }
 
-func (this_ *LanguageGolangModel) GetDaoIFaceDir(dir string) string {
-	return GetDir(dir, this_.GetDaoIFacePath())
+func (this_ *LanguageGolangModel) GetStorageIFaceDir(dir string) string {
+	return GetDir(dir, this_.GetStorageIFacePath())
 }
 
-func (this_ *LanguageGolangModel) GetDaoIFacePath() string {
-	return GetPath(&this_.DaoPath, "dao/")
+func (this_ *LanguageGolangModel) GetStorageIFacePath() string {
+	return GetPath(&this_.StoragePath, "storage/")
 }
 
-func (this_ *LanguageGolangModel) GetDaoIFacePack() string {
-	return GetPack(&this_.DaoPack, "dao")
+func (this_ *LanguageGolangModel) GetStorageIFacePack() string {
+	return GetPack(&this_.StoragePack, "storage")
 }
 
-func (this_ *LanguageGolangModel) GetDaoIFaceImport() string {
-	return this_.GetPackImport(this_.GetDaoIFacePath(), this_.GetDaoIFacePack())
+func (this_ *LanguageGolangModel) GetStorageIFaceImport() string {
+	return this_.GetPackImport(this_.GetStorageIFacePath(), this_.GetStorageIFacePack())
 }
 
-func (this_ *LanguageGolangModel) GetDaoImplDir(dir string, name string) string {
-	return GetDir(dir, this_.GetDaoImplPath(name))
+func (this_ *LanguageGolangModel) GetStorageImplDir(dir string, name string) string {
+	return GetDir(dir, this_.GetStorageImplPath(name))
 }
 
-func (this_ *LanguageGolangModel) GetDaoImplPath(name string) string {
-	path := this_.GetDaoIFacePath()
+func (this_ *LanguageGolangModel) GetStorageImplPath(name string) string {
+	path := this_.GetStorageIFacePath()
 	if name == "" {
 		name = "base"
 	}
@@ -204,7 +204,7 @@ func (this_ *LanguageGolangModel) GetDaoImplPath(name string) string {
 	return path + "/"
 }
 
-func (this_ *LanguageGolangModel) GetDaoImplPack(name string) string {
+func (this_ *LanguageGolangModel) GetStorageImplPack(name string) string {
 	if name == "" {
 		name = "base"
 	}
@@ -212,8 +212,8 @@ func (this_ *LanguageGolangModel) GetDaoImplPack(name string) string {
 	return pack
 }
 
-func (this_ *LanguageGolangModel) GetDaoImplImport(name string) string {
-	return this_.GetPackImport(this_.GetDaoImplPath(name), this_.GetDaoImplPack(name))
+func (this_ *LanguageGolangModel) GetStorageImplImport(name string) string {
+	return this_.GetPackImport(this_.GetStorageImplPath(name), this_.GetStorageImplPack(name))
 }
 
 func (this_ *LanguageGolangModel) GetServiceIFaceDir(dir string) string {

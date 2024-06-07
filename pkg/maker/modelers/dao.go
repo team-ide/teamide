@@ -1,6 +1,6 @@
 package modelers
 
-type DaoModel struct {
+type StorageModel struct {
 	ElementNode
 	Comment string      `json:"comment,omitempty"` // 说明
 	Note    string      `json:"note,omitempty"`    // 注释
@@ -12,7 +12,7 @@ type DaoModel struct {
 
 func init() {
 	addDocTemplate(&docTemplate{
-		Name:    TypeDaoName,
+		Name:    TypeStorageName,
 		Comment: "数据层，处理数据库等落地数据",
 		Fields: []*docTemplateField{
 			{Name: "comment", Comment: "数据层说明"},

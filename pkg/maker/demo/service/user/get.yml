@@ -7,7 +7,7 @@ func: |
   }
   var user = redis.get(`user-${userId}`, struct.user)
   if(user == null){
-    user = dao.user.get(ctx, userId)
+    user = storage.user.get(ctx, userId)
     if(user != null){
       redis.set(`user-${userId}`, user, constant.USER_REDIS_EXPIRE)
     }

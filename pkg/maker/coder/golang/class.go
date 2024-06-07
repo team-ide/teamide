@@ -77,11 +77,11 @@ func (this_ *Generator) getSpaceBuilder(space *maker.CompilerSpace) (builder *Sp
 		builder.spaceImport = this_.golang.GetFuncIFaceImport()
 
 		break
-	case "dao":
-		builder.spacePath = this_.golang.GetDaoIFacePath()
-		builder.spacePack = this_.golang.GetDaoIFacePack()
-		builder.spaceDir = this_.golang.GetDaoIFaceDir(this_.Dir)
-		builder.spaceImport = this_.golang.GetDaoIFaceImport()
+	case "storage":
+		builder.spacePath = this_.golang.GetStorageIFacePath()
+		builder.spacePack = this_.golang.GetStorageIFacePack()
+		builder.spaceDir = this_.golang.GetStorageIFaceDir(this_.Dir)
+		builder.spaceImport = this_.golang.GetStorageIFaceImport()
 		break
 	case "service":
 		builder.spacePath = this_.golang.GetServiceIFacePath()
@@ -146,11 +146,11 @@ func (this_ *Generator) getClassBuilder(class *maker.CompilerClass) (builder *Cl
 		builder.implPath = this_.golang.GetFuncImplPath(builder.classFileName)
 		builder.implPack = this_.golang.GetFuncImplPack(builder.classFileName)
 		builder.implImport = this_.golang.GetFuncImplImport(builder.classFileName)
-	} else if class.Space == "dao" {
-		builder.implDir = this_.golang.GetDaoImplDir(this_.Dir, builder.classFileName)
-		builder.implPath = this_.golang.GetDaoImplPath(builder.classFileName)
-		builder.implPack = this_.golang.GetDaoImplPack(builder.classFileName)
-		builder.implImport = this_.golang.GetDaoImplImport(builder.classFileName)
+	} else if class.Space == "storage" {
+		builder.implDir = this_.golang.GetStorageImplDir(this_.Dir, builder.classFileName)
+		builder.implPath = this_.golang.GetStorageImplPath(builder.classFileName)
+		builder.implPack = this_.golang.GetStorageImplPack(builder.classFileName)
+		builder.implImport = this_.golang.GetStorageImplImport(builder.classFileName)
 	} else if class.Space == "service" {
 		builder.implDir = this_.golang.GetServiceImplDir(this_.Dir, builder.classFileName)
 		builder.implPath = this_.golang.GetServiceImplPath(builder.classFileName)
@@ -198,8 +198,8 @@ func (this_ *ClassBuilder) GetClassName() (res string) {
 
 func (this_ *ClassBuilder) GetImplClassName() (res string) {
 	switch this_.CompilerClass.Space {
-	case "dao":
-		res = "Dao"
+	case "storage":
+		res = "Storage"
 		return
 	case "service":
 		res = "Service"
@@ -260,9 +260,9 @@ func (this_ *Generator) GetImportAsName(name string) (impl string, asName string
 		impl = this_.golang.GetFuncIFaceImport()
 		asName = this_.golang.GetFuncIFacePack()
 		break
-	case "dao":
-		impl = this_.golang.GetDaoIFaceImport()
-		asName = this_.golang.GetDaoIFacePack()
+	case "storage":
+		impl = this_.golang.GetStorageIFaceImport()
+		asName = this_.golang.GetStorageIFacePack()
 		break
 	case "service":
 		impl = this_.golang.GetServiceIFaceImport()

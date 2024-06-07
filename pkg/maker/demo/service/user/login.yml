@@ -10,7 +10,7 @@ func: |
     throw error.USER_PASSWORD_IS_EMPTY;
   }
   var user user
-  user = dao.user.queryByAccount(ctx, account)
+  user = storage.user.queryByAccount(ctx, account)
   if(user == null){
     throw error.USER_LOGIN_ERROR
   }
