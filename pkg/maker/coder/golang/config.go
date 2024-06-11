@@ -11,33 +11,7 @@ var (
 var (
 	config     *Config
 	configPath string
-
-	RootDir     = ""
-	UserHomeDir = ""
-	Version     = "0.0.1"
-	onStops     []func()
 )
-
-func AddOnStop(onStop func()) {
-	onStops = append(onStops, onStop)
-}
-
-func OnStop() {
-	for _, onStop := range onStops {
-		callOnStop(onStop)
-	}
-}
-
-func callOnStop(onStop func()) {
-	defer func() {
-		if e := recover(); e != nil {
-			err := errors.New(fmt.Sprint(e))
-			fmt.Println("callOnStop:", err)
-			util.Logger.Error("callOnStop", zap.Error(err))
-		}
-	}()
-	onStop()
-}
 
 {config}
 

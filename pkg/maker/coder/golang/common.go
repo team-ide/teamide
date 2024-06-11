@@ -7,6 +7,14 @@ import (
 
 var (
 	commonCode = `
+var (
+	ReleaseTime    = ""
+	ReleaseVersion = "0.0.1"
+	GitCommit      = "xxx"
+	RootDir        = ""
+	UserHomeDir    = ""
+)
+
 type Error struct {
 	code string
 	msg  string

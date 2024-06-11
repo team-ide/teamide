@@ -11,20 +11,20 @@ var (
 func Init() {
 	var err error
 
-	config.RootDir, err = os.Getwd()
+	common.RootDir, err = os.Getwd()
 	if err != nil {
 		logger.Logger.Error("os get wd error", zap.Error(err))
 		panic(err)
 	}
 
-	config.RootDir, err = filepath.Abs(config.RootDir)
+	common.RootDir, err = filepath.Abs(common.RootDir)
 	if err != nil {
 		logger.Logger.Error("filepath abs error", zap.Error(err))
 		panic(err)
 	}
-	config.RootDir = filepath.ToSlash(config.RootDir)
-	if !strings.HasSuffix(config.RootDir, "/") {
-		config.RootDir += "/"
+	common.RootDir = filepath.ToSlash(common.RootDir)
+	if !strings.HasSuffix(common.RootDir, "/") {
+		common.RootDir += "/"
 	}
 	current, err := user.Current()
 	if err != nil {
@@ -32,16 +32,16 @@ func Init() {
 		panic(err)
 	}
 
-	config.UserHomeDir = current.HomeDir
-	if config.UserHomeDir != "" {
-		config.UserHomeDir, err = filepath.Abs(config.UserHomeDir)
+	common.UserHomeDir = current.HomeDir
+	if common.UserHomeDir != "" {
+		common.UserHomeDir, err = filepath.Abs(common.UserHomeDir)
 		if err != nil {
 			logger.Logger.Error("filepath abs error", zap.Error(err))
 			panic(err)
 		}
-		config.UserHomeDir = filepath.ToSlash(config.UserHomeDir)
-		if !strings.HasSuffix(config.UserHomeDir, "/") {
-			config.UserHomeDir += "/"
+		common.UserHomeDir = filepath.ToSlash(common.UserHomeDir)
+		if !strings.HasSuffix(common.UserHomeDir, "/") {
+			common.UserHomeDir += "/"
 		}
 
 	}
@@ -50,11 +50,12 @@ func Init() {
 func main() {
 	for _, v := range os.Args {
 		if v == "-version" || v == "-v" {
-			println("app version:" + config.Version)
-			println("Go os:" + runtime.GOOS)
-			println("Go arch:" + runtime.GOARCH)
-			println("Go compiler:" + runtime.Compiler)
-			println("Go version:" + runtime.Version())
+			println("Release version : " + common.ReleaseVersion)
+			println("   Release time : " + common.ReleaseTime)
+			println("     Git commit : " + common.GitCommit)
+			println("          Go os : " + runtime.GOOS)
+			println("        Go arch : " + runtime.GOARCH)
+			println("     Go version : " + runtime.Version())
 			return
 		}
 	}
