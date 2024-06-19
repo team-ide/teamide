@@ -9,6 +9,8 @@ import (
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 	"teamide/pkg/maker"
+	"teamide/pkg/maker/coder"
+	"teamide/pkg/maker/coder/golang"
 	"teamide/pkg/maker/modelers"
 )
 
@@ -34,6 +36,7 @@ var (
 	save         = base.AppendPower(&base.PowerAction{Action: "save", Text: "save", ShouldLogin: true, StandAlone: true, Parent: Power})
 	remove       = base.AppendPower(&base.PowerAction{Action: "remove", Text: "remove", ShouldLogin: true, StandAlone: true, Parent: Power})
 	rename       = base.AppendPower(&base.PowerAction{Action: "rename", Text: "rename", ShouldLogin: true, StandAlone: true, Parent: Power})
+	gen          = base.AppendPower(&base.PowerAction{Action: "gen", Text: "gen", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower   = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
@@ -45,6 +48,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: save, Do: this_.save})
 	apis = append(apis, &base.ApiWorker{Power: remove, Do: this_.remove})
 	apis = append(apis, &base.ApiWorker{Power: rename, Do: this_.rename})
+	apis = append(apis, &base.ApiWorker{Power: gen, Do: this_.gen})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
 
 	return
@@ -281,6 +285,53 @@ func (this_ *api) remove(requestBean *base.RequestBean, c *gin.Context) (res int
 		"element":   element,
 	})
 	context.CallClientTabKeyEvent(requestBean.ClientTabKey, listen)
+	return
+}
+
+func (this_ *api) gen(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	service, err := this_.getService(requestBean, c)
+	if err != nil {
+		return
+	}
+
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	if request.ModelType == "" {
+		err = errors.New("参数丢失")
+		return
+	}
+	modelType := modelers.GetModelType(request.ModelType)
+	if modelType == nil {
+		err = errors.New("model type [" + request.ModelType + "] is error")
+		return
+	}
+	compiler, err := maker.NewCompiler(service.app)
+	if err != nil {
+		return
+	}
+	var coder_ *coder.Coder
+	switch modelType {
+	case modelers.TypeLanguageGolang:
+		options := &coder.Options{}
+		if service.app.GetLanguageGolang().Dir == "" {
+			options.Dir = compiler.GetDir() + "gen-golang"
+		}
+		coder_, err = coder.NewCoder(compiler, options)
+		if err != nil {
+			return
+		}
+		err = golang.FullGenerator(coder_)
+		if err != nil {
+			return
+		}
+	default:
+		err = errors.New("暂不支持 [" + modelType.Comment + "] 生成源码")
+		return
+	}
+	err = coder_.Gen()
 	return
 }
 

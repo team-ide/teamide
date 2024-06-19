@@ -1,13 +1,15 @@
+# 数据层，处理数据库等落地数据
+# 参数
 args:
-  - name: user
-    type: user
-func: |
-  var update Map
-  if(util.isNotEmpty(user.name)){
-    update["name"] = user.name
-  }
-  if(util.isNotEmpty(user.account)){
-    update["account"] = user.account
-  }
-  
-  return db.update(ctx, "tb_user", update, "user_id=${userId}", user)
+    - name: user # 参数名称
+      type: user # 参数类型
+func: | # 函数内容
+    var update  = map
+    if(util.isNotEmpty(user.name)){
+      update["name"] = user.name
+    }
+    if(util.isNotEmpty(user.account)){
+      update["account"] = user.account
+    }
+
+    return db.update(ctx, "tb_user", update, "user_id=${userId}", user)

@@ -1,23 +1,27 @@
+# 服务文件，该文件用于动作处理，如数据库、redis、文件等地方
+# 参数
 args:
-  - name: account
-  - name: password
-func: |
-  //  验证参数合法性
-  if(util.isEmpty(account)){
-    throw error.USER_ACCOUNT_IS_EMPTY;
-  }
-  if(util.isEmpty(password)){
-    throw error.USER_PASSWORD_IS_EMPTY;
-  }
-  var user user
-  user = storage.user.queryByAccount(ctx, account)
-  if(user == null){
-    throw error.USER_LOGIN_ERROR
-  }
-  var md5Password string
-  md5Password = func.encryptPassword(user.salt, password)
-  if(md5Password != user.password){
-    throw error.USER_LOGIN_ERROR
-  }
-  user.password = null
-  return user
+    - name: account # 参数名称
+      type: string # 参数类型
+    - name: password # 参数名称
+      type: string # 参数类型
+func: | # 函数内容
+    //  验证参数合法性
+    if(util.isEmpty(account)){
+      throw error.USER_ACCOUNT_IS_EMPTY;
+    }
+    if(util.isEmpty(password)){
+      throw error.USER_PASSWORD_IS_EMPTY;
+    }
+    var user = struct.user
+    user = storage.user.queryByAccount(ctx, account)
+    if(user == null){
+      throw error.USER_LOGIN_ERROR
+    }
+    var md5Password = string
+    md5Password = func.encryptPassword(user.salt, password)
+    if(md5Password != user.password){
+      throw error.USER_LOGIN_ERROR
+    }
+    user.password = null
+    return user
