@@ -4,8 +4,4 @@ args:
     - name: account # 参数名称
       type: string # 参数类型
 func: | # 函数内容
-    var whereParam  = map;
-    whereParam["account"] = account;
-    var user = struct.user;
-    user = db.selectOne(ctx, "select * from tb_user where account=${account}", whereParam, struct.user)
-    return user
+    return db.selectOne(ctx, "select * from tb_user where account=${account}", {account:account}, struct.user)

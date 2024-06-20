@@ -13,13 +13,11 @@ func: | # 函数内容
     if(util.isEmpty(password)){
       throw error.USER_PASSWORD_IS_EMPTY;
     }
-    var user = struct.user
-    user = storage.user.queryByAccount(ctx, account)
+    var user = storage.user.queryByAccount(ctx, account)
     if(user == null){
       throw error.USER_LOGIN_ERROR
     }
-    var md5Password = string
-    md5Password = func.encryptPassword(user.salt, password)
+    var md5Password = func.encryptPassword(user.salt, password)
     if(md5Password != user.password){
       throw error.USER_LOGIN_ERROR
     }

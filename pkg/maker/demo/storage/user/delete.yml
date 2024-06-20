@@ -4,6 +4,4 @@ args:
     - name: userId # 参数名称
       type: i64 # 参数类型
 func: | # 函数内容
-    var whereParam = map
-    whereParam["userId"] = userId
-    return db.delete(ctx, "tb_user", "userId=${userId}", whereParam)
+    return db.delete(ctx, "tb_user", "userId=${userId}", {userId:userId})

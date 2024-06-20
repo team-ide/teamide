@@ -4,9 +4,9 @@ args:
     - name: user # 参数名称
       type: user # 参数类型
 func: | # 函数内容
-    var update  = map
+    var update  = {}
     if(util.isNotEmpty(user.name)){
-      update["name"] = user.name
+      update.name = user.name
     }
     if(util.isNotEmpty(user.account)){
       update["account"] = user.account
