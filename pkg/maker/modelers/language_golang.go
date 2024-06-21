@@ -11,6 +11,8 @@ type LanguageGolangModel struct {
 	ConfigPack   string `json:"configPack,omitempty"`
 	LoggerPath   string `json:"loggerPath,omitempty"`
 	LoggerPack   string `json:"loggerPack,omitempty"`
+	StartPath    string `json:"startPath,omitempty"`
+	StartPack    string `json:"startPack,omitempty"`
 	CommonPath   string `json:"commonPath,omitempty"`
 	CommonPack   string `json:"commonPack,omitempty"`
 	ConstantPath string `json:"constantPath,omitempty"`
@@ -71,6 +73,22 @@ func (this_ *LanguageGolangModel) GetLoggerPack() string {
 
 func (this_ *LanguageGolangModel) GetLoggerImport() string {
 	return this_.GetPackImport(this_.GetLoggerPath(), this_.GetLoggerPack())
+}
+
+func (this_ *LanguageGolangModel) GetStartDir(dir string) string {
+	return GetDir(dir, this_.GetStartPath())
+}
+
+func (this_ *LanguageGolangModel) GetStartPath() string {
+	return GetPath(&this_.StartPath, "start/")
+}
+
+func (this_ *LanguageGolangModel) GetStartPack() string {
+	return GetPack(&this_.StartPack, "start")
+}
+
+func (this_ *LanguageGolangModel) GetStartImport() string {
+	return this_.GetPackImport(this_.GetStartPath(), this_.GetStartPack())
 }
 
 func (this_ *LanguageGolangModel) GetCommonDir(dir string) string {

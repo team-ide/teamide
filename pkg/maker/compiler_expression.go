@@ -48,7 +48,7 @@ func (this_ *CompilerMethod) Expression(expression ast.Expression) (err error) {
 		break
 	default:
 		err = this_.Error("expression ["+reflect.TypeOf(expression).String()+"] 不支持", expression)
-		util.Logger.Debug(this_.GetKey()+" Expression error", zap.Error(err))
+		util.Logger.Error(this_.GetKey()+" Expression error", zap.Error(err))
 		break
 
 	}
@@ -166,6 +166,7 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 					break
 				default:
 					err = errors.New("call expression func [" + reflect.TypeOf(v).String() + "] not support result type [" + out.Kind().String() + "]")
+					util.Logger.Error(this_.GetKey()+" CallExpression error", zap.Error(err))
 					return
 				}
 				if res != nil {
@@ -175,6 +176,7 @@ func (this_ *CompilerMethod) CallExpression(expression *ast.CallExpression) (res
 			break
 		}
 		err = errors.New("call expression method [" + reflect.TypeOf(v).String() + "] not support")
+		util.Logger.Error(this_.GetKey()+" CallExpression error", zap.Error(err))
 		break
 	}
 	return
@@ -325,6 +327,9 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 		// TODO 表达式
 		res = ValueTypeAny
 		return
+	case *ast.ObjectLiteral:
+		res = ValueTypeMap
+		return
 	case *ast.NumberLiteral:
 		if _, ok := s.Value.(float64); ok {
 			res = ValueTypeFloat64
@@ -358,6 +363,7 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 				res = vT.valueType
 			} else {
 				err = errors.New("GetExpressionForType CallExpression value [" + reflect.TypeOf(v).String() + "] not is ValueType")
+				util.Logger.Error(this_.GetKey()+" GetExpressionForType error", zap.Error(err))
 				return
 			}
 		}
@@ -401,6 +407,7 @@ func (this_ *CompilerMethod) GetExpressionForType(expression ast.Expression) (na
 		res = vT.valueType
 	} else {
 		err = errors.New("GetExpressionForType nameScript [" + nameScript + "] value [" + reflect.TypeOf(vv).String() + "] not is ValueType")
+		util.Logger.Error(this_.GetKey()+" GetExpressionForType error", zap.Error(err))
 		return
 	}
 	fmt.Println("TODO GetExpressionType key:", nameScript, ",type:", res)
@@ -445,7 +452,7 @@ func (this_ *CompilerMethod) GetExpressionScript(expression ast.Expression) (scr
 		break
 	default:
 		err = this_.Error("GetExpressionScript ["+reflect.TypeOf(s).String()+"] 不支持", expression)
-		util.Logger.Debug(this_.GetKey()+" GetExpressionScript error", zap.Error(err))
+		util.Logger.Error(this_.GetKey()+" GetExpressionScript error", zap.Error(err))
 		break
 	}
 	util.Logger.Debug(this_.GetKey()+" GetExpressionScript script ["+script+"] ", zap.Any("code", this_.GetNodeCode(expression)))

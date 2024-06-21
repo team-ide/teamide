@@ -87,6 +87,9 @@ func (this_ *Generator) GenCommon() (err error) {
 
 	builder.AppendCode(code)
 	err = this_.GenCommonEvent()
+	if err != nil {
+		return
+	}
 	return
 }
 

@@ -121,7 +121,7 @@ func (this_ *MethodBuilder) Statement(statement ast.Statement) (err error) {
 		break
 	default:
 		err = this_.Error("statement ["+reflect.TypeOf(statement).String()+"] 不支持", statement)
-		util.Logger.Debug(this_.GetKey()+" Statement error", zap.Error(err))
+		util.Logger.Error(this_.GetKey()+" Statement error", zap.Error(err))
 		break
 	}
 	return
@@ -192,12 +192,25 @@ func (this_ *MethodBuilder) Bindings(bindings []*ast.Binding) (err error) {
 }
 
 func (this_ *MethodBuilder) Binding(binding *ast.Binding) (err error) {
+
+	var hasError bool
+	var hasInitializer bool
+	if binding.Initializer != nil {
+		hasInitializer = true
+		if a, ok := binding.Initializer.(*ast.CallExpression); ok {
+			hasError = this_.getMethodHasError(this_.CallCache[a])
+		}
+	}
+
 	this_.AppendTab()
 	this_.AppendCode("var ")
 
 	this_.inVarScript = 1
 	err = this_.Expression(binding.Target)
 	this_.inVarScript = 0
+	if err != nil {
+		return
+	}
 
 	methodVar := this_.BindingCache[binding]
 	valueType := methodVar.CompilerValueType.GetValueType()
@@ -206,24 +219,19 @@ func (this_ *MethodBuilder) Binding(binding *ast.Binding) (err error) {
 	if err != nil {
 		return
 	}
-	this_.AppendCode(" " + typeS)
-	this_.NewLine()
 
-	if err != nil {
-		return
+	if !hasInitializer || hasError {
+		this_.AppendCode(" " + typeS)
+		this_.NewLine()
 	}
-	if binding.Initializer != nil {
 
-		this_.AppendTab()
-		this_.inVarScript = 1
-		err = this_.Expression(binding.Target)
-		this_.inVarScript = 0
-
-		var hasError bool
-		if a, ok := binding.Initializer.(*ast.CallExpression); ok {
-			hasError = this_.getMethodHasError(this_.CallCache[a])
-		}
+	if hasInitializer {
 		if hasError {
+			this_.AppendTab()
+			this_.inVarScript = 1
+			err = this_.Expression(binding.Target)
+			this_.inVarScript = 0
+
 			this_.AppendCode(", err")
 		}
 		this_.AppendCode(" = ")
@@ -299,6 +307,7 @@ func (this_ *MethodBuilder) IfStatement(statement *ast.IfStatement) (err error) 
 	this_.AppendCode(" { ")
 	this_.NewLine()
 	this_.Tab()
+	//fmt.Println("IfStatement Consequent:", reflect.ValueOf(statement.Consequent).String(), this_.GetNodeCode(statement.Consequent))
 	err = this_.Statement(statement.Consequent)
 	if err != nil {
 		return
@@ -393,9 +402,12 @@ func (this_ *MethodBuilder) Expression(expression ast.Expression) (err error) {
 	case *ast.TemplateLiteral:
 		err = this_.TemplateLiteral(e)
 		break
+	case *ast.ObjectLiteral:
+		err = this_.ObjectLiteral(e)
+		break
 	default:
 		err = this_.Error("expression ["+reflect.TypeOf(expression).String()+"] 不支持", expression)
-		util.Logger.Debug(this_.GetKey()+" Expression error", zap.Error(err))
+		util.Logger.Error(this_.GetKey()+" Expression error", zap.Error(err))
 		break
 
 	}
@@ -576,9 +588,9 @@ func (this_ *MethodBuilder) AssignExpression(expression *ast.AssignExpression) (
 	}
 
 	this_.inAssign = 0
-	this_.NewLine()
 
 	if hasError {
+		this_.NewLine()
 		this_.AppendTabLine("if err != nil {")
 		this_.Tab()
 		this_.AppendTabLine("return")
@@ -667,10 +679,6 @@ func (this_ *MethodBuilder) TemplateLiteral(expression *ast.TemplateLiteral) (er
 			str += "%v"
 		}
 	}
-
-	fmt.Println("TODO TemplateLiteral Elements:", util.GetStringValue(expression.Elements))
-	fmt.Println("TODO TemplateLiteral Expressions:", util.GetStringValue(expression.Expressions))
-	fmt.Println("TODO TemplateLiteral Tag:", util.GetStringValue(expression.Tag))
 	this_.AppendCode("fmt.Sprintf(`", str, "`")
 	for _, e := range expression.Expressions {
 		this_.AppendCode(`, `)
@@ -693,6 +701,57 @@ func (this_ *MethodBuilder) DotExpression(expression *ast.DotExpression) (err er
 		return
 	}
 
+	return
+}
+func (this_ *MethodBuilder) ObjectLiteral(expression *ast.ObjectLiteral) (err error) {
+
+	if len(expression.Value) == 0 {
+		this_.AppendCode("map[string]any{}")
+	} else {
+		this_.AppendCode("map[string]any{")
+		for i, v := range expression.Value {
+			if i > 0 {
+				this_.AppendCode(", ")
+			}
+			err = this_.Property(v)
+			if err != nil {
+				return
+			}
+		}
+		this_.AppendCode("}")
+	}
+
+	return
+}
+
+func (this_ *MethodBuilder) Property(property ast.Property) (err error) {
+	if property == nil {
+		return
+	}
+	switch e := property.(type) {
+	case *ast.PropertyKeyed:
+		err = this_.PropertyKeyed(e)
+		break
+	default:
+		err = this_.Error("property ["+reflect.TypeOf(property).String()+"] 不支持", property)
+		util.Logger.Error(this_.GetKey()+" Property error", zap.Error(err))
+		break
+
+	}
+	return
+}
+
+func (this_ *MethodBuilder) PropertyKeyed(property *ast.PropertyKeyed) (err error) {
+	err = this_.Expression(property.Key)
+	if err != nil {
+		return
+	}
+	this_.AppendCode(" : ")
+	fmt.Println("PropertyKeyed Value", reflect.TypeOf(property.Value).String())
+	err = this_.Expression(property.Value)
+	if err != nil {
+		return
+	}
 	return
 }
 

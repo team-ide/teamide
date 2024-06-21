@@ -44,7 +44,7 @@ func (this_ *CompilerMethod) Statement(statement ast.Statement) (err error) {
 		break
 	default:
 		err = this_.Error("statement ["+reflect.TypeOf(statement).String()+"] 不支持", statement)
-		util.Logger.Debug(this_.GetKey()+" Statement error", zap.Error(err))
+		util.Logger.Error(this_.GetKey()+" Statement error", zap.Error(err))
 		break
 	}
 	return
