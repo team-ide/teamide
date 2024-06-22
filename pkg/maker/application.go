@@ -526,6 +526,7 @@ func (this_ *Application) appendModel(parent *modelers.Element, modelType *model
 		cache.Put(name, model)
 	}
 	this_.setElement(element)
+	element.Model = model
 
 	var list = this_.modelTypeItems[modelType]
 	var newList []modelers.ElementIFace
@@ -653,10 +654,7 @@ func (this_ *Application) GetServiceList() (res []*modelers.ServiceModel) {
 func (this_ *Application) GetConfigDbList() (res []*modelers.ConfigDbModel) {
 	app := this_.GetApp()
 	if app.Db != nil {
-		res = append(res, app.Db)
-	}
-	if app.DbOther != nil {
-		for _, one := range app.DbOther {
+		for _, one := range app.Db {
 			res = append(res, one)
 		}
 	}
@@ -666,10 +664,7 @@ func (this_ *Application) GetConfigDbList() (res []*modelers.ConfigDbModel) {
 func (this_ *Application) GetConfigRedisList() (res []*modelers.ConfigRedisModel) {
 	app := this_.GetApp()
 	if app.Redis != nil {
-		res = append(res, app.Redis)
-	}
-	if app.RedisOther != nil {
-		for _, one := range app.RedisOther {
+		for _, one := range app.Redis {
 			res = append(res, one)
 		}
 	}
@@ -679,10 +674,7 @@ func (this_ *Application) GetConfigRedisList() (res []*modelers.ConfigRedisModel
 func (this_ *Application) GetConfigZkList() (res []*modelers.ConfigZkModel) {
 	app := this_.GetApp()
 	if app.Zk != nil {
-		res = append(res, app.Zk)
-	}
-	if app.ZkOther != nil {
-		for _, one := range app.ZkOther {
+		for _, one := range app.Zk {
 			res = append(res, one)
 		}
 	}
@@ -692,10 +684,7 @@ func (this_ *Application) GetConfigZkList() (res []*modelers.ConfigZkModel) {
 func (this_ *Application) GetConfigKafkaList() (res []*modelers.ConfigKafkaModel) {
 	app := this_.GetApp()
 	if app.Kafka != nil {
-		res = append(res, app.Kafka)
-	}
-	if app.KafkaOther != nil {
-		for _, one := range app.KafkaOther {
+		for _, one := range app.Kafka {
 			res = append(res, one)
 		}
 	}
@@ -705,10 +694,7 @@ func (this_ *Application) GetConfigKafkaList() (res []*modelers.ConfigKafkaModel
 func (this_ *Application) GetConfigMongodbList() (res []*modelers.ConfigMongodbModel) {
 	app := this_.GetApp()
 	if app.Mongodb != nil {
-		res = append(res, app.Mongodb)
-	}
-	if app.MongodbOther != nil {
-		for _, one := range app.MongodbOther {
+		for _, one := range app.Mongodb {
 			res = append(res, one)
 		}
 	}
@@ -718,10 +704,7 @@ func (this_ *Application) GetConfigMongodbList() (res []*modelers.ConfigMongodbM
 func (this_ *Application) GetConfigEsList() (res []*modelers.ConfigEsModel) {
 	app := this_.GetApp()
 	if app.Es != nil {
-		res = append(res, app.Es)
-	}
-	if app.EsOther != nil {
-		for _, one := range app.EsOther {
+		for _, one := range app.Es {
 			res = append(res, one)
 		}
 	}
@@ -759,12 +742,6 @@ func (this_ *Application) GetFunc(name string) (model *modelers.FuncModel) {
 	if find != nil {
 		model = find.(*modelers.FuncModel)
 	}
-	return
-}
-
-func (this_ *Application) GetLanguageJavascript() (model *modelers.LanguageJavascriptModel) {
-	items := this_.getModelTypeItems(modelers.TypeLanguageJavascript)
-	model = items[0].(*modelers.LanguageJavascriptModel)
 	return
 }
 

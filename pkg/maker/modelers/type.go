@@ -71,79 +71,56 @@ var (
 					}
 				}
 				if t != nil {
-					if tN == "" {
-						tN = "default"
-					}
 					bs, err = yaml.Marshal(v)
 					if err != nil {
 						util.Logger.Error("value to yaml error", zap.Any("value", v), zap.Error(err))
 						return
 					}
-					m, err = t.toModel(tN, string(bs))
+					modelName := tN
+					if modelName == "" {
+						modelName = "default"
+					}
+					m, err = t.toModel(modelName, string(bs))
 					if err != nil {
 						util.Logger.Error("value yaml to model error", zap.Any("type", t.Name), zap.Any("value", string(bs)), zap.Error(err))
 						return
 					}
 					switch t {
 					case TypeConfigDb:
-						if tN == "default" {
-							app.Db = m.(*ConfigDbModel)
-						} else {
-							if app.DbOther == nil {
-								app.DbOther = make(map[string]*ConfigDbModel)
-							}
-							app.DbOther[tN] = m.(*ConfigDbModel)
+						if app.Db == nil {
+							app.Db = make(map[string]*ConfigDbModel)
 						}
+						app.Db[tN] = m.(*ConfigDbModel)
 						break
 					case TypeConfigRedis:
-						if tN == "default" {
-							app.Redis = m.(*ConfigRedisModel)
-						} else {
-							if app.RedisOther == nil {
-								app.RedisOther = make(map[string]*ConfigRedisModel)
-							}
-							app.RedisOther[tN] = m.(*ConfigRedisModel)
+						if app.Redis == nil {
+							app.Redis = make(map[string]*ConfigRedisModel)
 						}
+						app.Redis[tN] = m.(*ConfigRedisModel)
 						break
 					case TypeConfigZk:
-						if tN == "default" {
-							app.Zk = m.(*ConfigZkModel)
-						} else {
-							if app.ZkOther == nil {
-								app.ZkOther = make(map[string]*ConfigZkModel)
-							}
-							app.ZkOther[tN] = m.(*ConfigZkModel)
+						if app.Zk == nil {
+							app.Zk = make(map[string]*ConfigZkModel)
 						}
+						app.Zk[tN] = m.(*ConfigZkModel)
 						break
 					case TypeConfigEs:
-						if tN == "default" {
-							app.Es = m.(*ConfigEsModel)
-						} else {
-							if app.EsOther == nil {
-								app.EsOther = make(map[string]*ConfigEsModel)
-							}
-							app.EsOther[tN] = m.(*ConfigEsModel)
+						if app.Es == nil {
+							app.Es = make(map[string]*ConfigEsModel)
 						}
+						app.Es[tN] = m.(*ConfigEsModel)
 						break
 					case TypeConfigKafka:
-						if tN == "default" {
-							app.Kafka = m.(*ConfigKafkaModel)
-						} else {
-							if app.KafkaOther == nil {
-								app.KafkaOther = make(map[string]*ConfigKafkaModel)
-							}
-							app.KafkaOther[tN] = m.(*ConfigKafkaModel)
+						if app.Kafka == nil {
+							app.Kafka = make(map[string]*ConfigKafkaModel)
 						}
+						app.Kafka[tN] = m.(*ConfigKafkaModel)
 						break
 					case TypeConfigMongodb:
-						if tN == "default" {
-							app.Mongodb = m.(*ConfigMongodbModel)
-						} else {
-							if app.MongodbOther == nil {
-								app.MongodbOther = make(map[string]*ConfigMongodbModel)
-							}
-							app.MongodbOther[tN] = m.(*ConfigMongodbModel)
+						if app.Mongodb == nil {
+							app.Mongodb = make(map[string]*ConfigMongodbModel)
 						}
+						app.Mongodb[tN] = m.(*ConfigMongodbModel)
 						break
 					}
 				} else {
@@ -540,34 +517,6 @@ var (
 		},
 	}
 
-	TypeLanguageJavascriptName = "language/javascript"
-	TypeLanguageJavascript     = &Type{
-		Name:     TypeLanguageJavascriptName,
-		Comment:  "JavaScript",
-		IsFile:   true,
-		newModel: func() any { return &LanguageJavascriptModel{} },
-		toModel: func(name, text string) (model interface{}, err error) {
-			model = &LanguageJavascriptModel{}
-			err = toModel(text, TypeLanguageJavascriptName, model)
-			if err != nil {
-				util.Logger.Error("text to language javascript model error", zap.Any("text", text), zap.Error(err))
-				return
-			}
-			return
-		},
-		toText: func(model interface{}) (text string, err error) {
-			text, err = toText(model, TypeLanguageJavascriptName, &docOptions{
-				outComment: true,
-				omitEmpty:  false,
-			})
-			if err != nil {
-				util.Logger.Error("language javascript model to text error", zap.Any("model", model), zap.Error(err))
-				return
-			}
-			return
-		},
-	}
-
 	TypeLanguageGolangName = "language/golang"
 	TypeLanguageGolang     = &Type{
 		Name:     TypeLanguageGolangName,
@@ -595,6 +544,34 @@ var (
 			return
 		},
 	}
+
+	TypeFlowchartName = "flowchart"
+	TypeFlowchart     = &Type{
+		Name:     TypeFlowchartName,
+		Comment:  "流程图",
+		newModel: func() any { return &FlowchartModel{} },
+		toModel: func(name, text string) (model interface{}, err error) {
+			model = &FlowchartModel{}
+			err = toModel(text, TypeFlowchartName, model)
+			if err != nil {
+				util.Logger.Error("text to flowchart model error", zap.Any("text", text), zap.Error(err))
+				return
+			}
+			model.(*FlowchartModel).Name = name
+			return
+		},
+		toText: func(model interface{}) (text string, err error) {
+			text, err = toText(model, TypeFlowchartName, &docOptions{
+				outComment: true,
+				omitEmpty:  false,
+			})
+			if err != nil {
+				util.Logger.Error("flowchart model to text error", zap.Any("model", model), zap.Error(err))
+				return
+			}
+			return
+		},
+	}
 )
 
 func init() {
@@ -614,28 +591,16 @@ func init() {
 
 	AppendType(TypeFunc)
 
-	//AppendType(&Type{
-	//	Name:    "config",
-	//	Comment: "配置",
-	//	Children: []*Type{
-	//
-	//		TypeConfigDb,
-	//		TypeConfigRedis,
-	//		TypeConfigZk,
-	//		TypeConfigKafka,
-	//		TypeConfigMongodb,
-	//		TypeConfigElasticsearch,
-	//	},
-	//})
-
 	AppendType(&Type{
 		Name:    "language",
 		Comment: "导出语言",
 		Children: []*Type{
 			TypeLanguageGolang,
-			TypeLanguageJavascript,
 		},
 	})
+
+	AppendType(TypeFlowchart)
+
 }
 
 var (

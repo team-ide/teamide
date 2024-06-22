@@ -52,6 +52,7 @@ type Element struct {
 	Children []*Element `json:"children,omitempty"`
 	Pack     *Pack      `json:"pack,omitempty"`
 	parent   *Element
+	Model    any `json:"model,omitempty"`
 }
 
 func (this_ *Element) GetParent() *Element {
