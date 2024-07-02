@@ -293,6 +293,10 @@ func (this_ *terminalService) Write(buf []byte) (n int, err error) {
 	this_.writeLock.Lock()
 	defer this_.writeLock.Unlock()
 
+	if this_.stdin == nil {
+		err = errors.New("in io is null")
+		return
+	}
 	n = len(buf)
 	err = util.Write(this_.stdin, buf, nil)
 	return
@@ -303,6 +307,10 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 	defer this_.readeLock.Unlock()
 
 	this_.lastActive = time.Now()
+	if this_.stdout == nil {
+		err = errors.New("out io is null")
+		return
+	}
 	n, err = this_.stdout.Read(buf)
 	return
 }

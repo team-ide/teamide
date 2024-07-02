@@ -150,8 +150,8 @@ func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal
 		err = errors.New("会话服务[" + key + "]已存在")
 		return
 	}
-	var command string
-	worker, command, err = this_.createService(param)
+	var cmd string
+	worker, cmd, err = this_.createService(param)
 	if err != nil {
 		return
 	}
@@ -165,11 +165,11 @@ func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal
 	if err != nil {
 		return
 	}
-	if command != "" {
+	if cmd != "" {
 		go func() {
-			command = strings.ReplaceAll(command, "\n\r", "\n")
-			this_.Logger.Info("SSH start run command", zap.Any("command", command))
-			commands := strings.Split(command, "\n")
+			cmd = strings.ReplaceAll(cmd, "\n\r", "\n")
+			this_.Logger.Info("SSH start run command", zap.Any("command", cmd))
+			commands := strings.Split(cmd, "\n")
 			for _, c := range commands {
 				c = strings.TrimSpace(c)
 				if c == "" {
@@ -181,7 +181,6 @@ func (this_ *WorkerFactory) Start(key string, param *CreateParam, size *terminal
 					this_.Logger.Info("SSH start run line sleep", zap.Any("time", t))
 					if t > 0 {
 						time.Sleep(time.Second * time.Duration(t))
-
 					}
 					continue
 				}
