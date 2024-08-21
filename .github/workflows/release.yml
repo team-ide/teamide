@@ -10,11 +10,11 @@ on:
     # paths: [ "package.json" ]
 jobs:
   buildStatic:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
 
       # 读取发布版本
@@ -118,11 +118,11 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    runs-on: macos-latest
+    runs-on: macos-latest-large
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -183,12 +183,12 @@ jobs:
 
   buildLinux:
     needs: buildStatic
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: docker.io/teamide/build:1.5
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -350,11 +350,11 @@ jobs:
 
   buildWindow:
     needs: buildStatic
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
