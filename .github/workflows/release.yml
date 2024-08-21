@@ -118,7 +118,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    runs-on: macos-13-large
+    runs-on: macos-12-large
     steps:
       # 下载源码
       - name: Checkout code
