@@ -14,7 +14,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
 
       # 读取发布版本
@@ -118,11 +118,11 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    runs-on: macos-latest-large
+    runs-on: macos-13-large
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -188,7 +188,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -354,7 +354,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
