@@ -14,7 +14,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
 
       # 读取发布版本
@@ -122,7 +122,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -188,7 +188,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
@@ -354,7 +354,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # 下载共享资源
       - uses: actions/download-artifact@v2
