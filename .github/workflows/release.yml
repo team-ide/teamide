@@ -118,7 +118,7 @@ jobs:
 
   buildMAC:
     needs: buildStatic
-    runs-on: macos-12-large
+    runs-on: macos-13
     steps:
       # 下载源码
       - name: Checkout code
@@ -183,7 +183,7 @@ jobs:
 
   buildLinux:
     needs: buildStatic
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     container: docker.io/teamide/build:1.5
     steps:
       # 下载源码
