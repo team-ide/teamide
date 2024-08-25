@@ -247,6 +247,14 @@ jobs:
           
           mv release/server-darwin-arm64 teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
+          
+          mkdir -p teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}
+          cp darwin-amd64/node teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}
+          
+          mkdir -p teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}
+          cp darwin-arm64/node teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}.zip teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}
          
 
       # 上传 到 Release
@@ -256,8 +264,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: darwin-amd64/node
-          asset_name: teamide-node-darwin-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_path: teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-node-darwin-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
         uses: actions/upload-release-asset@v1
@@ -265,8 +273,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: darwin-arm64/node
-          asset_name: teamide-node-darwin-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_path: teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-node-darwin-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -458,6 +466,21 @@ jobs:
           
           cp linux-amd64/server release/server-linux-amd64/teamide
           cp linux-arm64/server release/server-linux-arm64/teamide
+          
+          
+          mv release/server-linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          
+          mv release/server-linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+          
+          mkdir -p teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
+          cp linux-amd64/node teamide-node-linux-amd64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
+          
+          mkdir -p teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
+          cp linux-arm64/node teamide-node-linux-arm64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
 
       - name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
@@ -492,14 +515,6 @@ jobs:
           #指定用户/仓库名
           tags: teamide/teamide-server-arm64:latest,teamide/teamide-server-arm64:${{ steps.release_version.outputs.value }}
 
-      - run: |
-          echo 'release_version:${{ steps.release_version.outputs.value }}'
-          echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          mv release/server-linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
-          mv release/server-linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
-          ls
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -508,8 +523,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: linux-amd64/node
-          asset_name: teamide-node-linux-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_path: teamide-node-linux-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-node-linux-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
         uses: actions/upload-release-asset@v1
@@ -517,8 +532,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: linux-arm64/node
-          asset_name: teamide-node-linux-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_path: teamide-node-linux-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-node-linux-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -616,7 +631,7 @@ jobs:
           cp -r release/statics ./electron-template/assets/server/statics
           go mod tidy
           go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o ./electron-template/assets/server/server-windows-amd64.exe .
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./node.exe teamide/pkg/node/main
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/node-windows-amd64.exe teamide/pkg/node/main
 
           
           cp -r release/statics release/server-windows-amd64/statics
@@ -630,17 +645,6 @@ jobs:
           cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/pthreadVC2_x64.dll
           
           cp electron-template/assets/server/server-windows-amd64.exe release/server-windows-amd64/teamide.exe
-
-      # 上传 到 Release
-      - if: ${{ steps.release_upload_url.outputs.value != '' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: node.exe
-          asset_name: teamide-node-windows-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
-          asset_content_type: application/zip
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -704,8 +708,12 @@ jobs:
           property: version
 
       - run: |
-          mv release/server-windows-arm64 teamide-server-windows-arm64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-windows-arm64-${{steps.release_version.outputs.value}}
+          mv release/server-windows-amd64 teamide-server-windows-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-windows-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-windows-amd64-${{steps.release_version.outputs.value}}
+          
+          mkdir -p teamide-node-windows-amd64-${{steps.release_version.outputs.value}}
+          cp release/node-windows-amd64.exe teamide-node-windows-amd64-${{steps.release_version.outputs.value}}/node.exe
+          zip -q -r teamide-node-windows-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-windows-amd64-${{steps.release_version.outputs.value}}
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
         uses: actions/upload-release-asset@v1
@@ -713,7 +721,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip
-          asset_name: teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_path: teamide-node-windows-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-node-windows-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: teamide-server-windows-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-windows-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
