@@ -119,24 +119,17 @@ jobs:
 
   build-mac-amd64:
     runs-on: macos-latest
-    needs: ["build-static"]
     steps:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
 
       # 读取发布版本
       - name: Read Release Version
         id: release_version
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: release/package.json
+          path: package.json
           property: version
 
       - name: Setup go
@@ -145,36 +138,30 @@ jobs:
           go-version: "1.20.1"
 
       - run: |
-          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-amd64/electron-server .
-          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o release/darwin-amd64/server .
-          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-amd64/node teamide/pkg/node/main 
+          mkdir darwin-amd64
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-amd64/electron-server .
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o darwin-amd64/server .
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-amd64/node teamide/pkg/node/main 
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: release
-          path: release
+          name: darwin-amd64
+          path: darwin-amd64
 
   build-mac-arm64:
     runs-on: macos-latest
-    needs: ["build-static"]
     steps:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
 
       # 读取发布版本
       - name: Read Release Version
         id: release_version
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: release/package.json
+          path: package.json
           property: version
 
       - name: Setup go
@@ -183,18 +170,19 @@ jobs:
           go-version: "1.20.1"
 
       - run: |
-          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-arm64/electron-server .
-          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o release/darwin-arm64/server .
-          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-arm64/node teamide/pkg/node/main 
+          mkdir darwin-arm64
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-arm64/electron-server .
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o darwin-arm64/server .
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-arm64/node teamide/pkg/node/main 
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: release
-          path: release
+          name: darwin-arm64
+          path: darwin-arm64
 
   build-mac:
-    needs: ["build-static","build-mac-amd64","build-mac-arm64"]
+    needs: ["build-static", "build-mac-amd64", "build-mac-arm64"]
     runs-on: macos-latest
     steps:
       # 下载源码
@@ -206,6 +194,16 @@ jobs:
         with:
           name: release
           path: release
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: darwin-amd64
+          path: darwin-amd64
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: darwin-arm64
+          path: darwin-arm64
 
       # 读取发布地址
       - id: release_upload_url
@@ -230,17 +228,28 @@ jobs:
 
       - run: |
           mv release/statics ./electron-template/assets/server/statics
-          cp release/darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
-          cp release/darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
+          cp darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
+          cp darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
 
       - run: |
-          echo 'release_version:${{ steps.release_version.outputs.value }}'
-          echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          mv release/darwin-amd64 teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}
+          mkdir -p release/server-darwin-amd64/lib
+          
+          cp -rf release/statics release/server-darwin-amd64/statics
+          cp -rf conf/release release/server-darwin-amd64/conf
+          cp -rf docker/server.sh release/server-darwin-amd64/server.sh
+          chmod +x release/server-darwin-amd64/server.sh
+          
+          cp -rf release/server-darwin-amd64 release/server-darwin-arm64
+          
+          cp darwin-amd64/server release/server-darwin-amd64/teamide
+          cp darwin-arm64/server release/server-darwin-arm64/teamide
+
+          mv release/server-darwin-amd64 teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}
-          mv release/darwin-arm64 teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
+          
+          mv release/server-darwin-arm64 teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
-          ls
+         
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -249,7 +258,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: release/darwin-amd64/node
+          asset_path: darwin-amd64/node
           asset_name: teamide-node-darwin-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -258,7 +267,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: release/darwin-arm64/node
+          asset_path: darwin-arm64/node
           asset_name: teamide-node-darwin-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
 
@@ -302,23 +311,16 @@ jobs:
 
   build-linux-amd64:
     runs-on: ubuntu-latest
-    needs: ["build-static"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
 
       # 读取发布版本
       - name: Read Release Version
         id: release_version
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: release/package.json
+          path: package.json
           property: version
 
       - name: Set up QEMU
@@ -338,21 +340,21 @@ jobs:
 
       - name: Build linux-amd64
         run: |
+          mkdir linux-amd64
           chmod +x cmd/build-linux-amd64.sh
           docker run --platform linux/amd64 -v $(pwd):/build teamide/build-go-gcc:amd64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-amd64.sh ${{ steps.release_version.outputs.value }}
-          mv linux-amd64-electron-server release/linux-amd64/electron-server
-          mv linux-amd64-server release/linux-amd64/server
-          mv linux-amd64-node release/linux-amd64/node
+          mv linux-amd64-electron-server linux-amd64/electron-server
+          mv linux-amd64-server linux-amd64/server
+          mv linux-amd64-node linux-amd64/node
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: release
-          path: release
+          name: linux-amd64
+          path: linux-amd64
 
   build-linux-arm64:
     runs-on: ubuntu-latest
-    needs: ["build-static"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -388,6 +390,7 @@ jobs:
 
       - name: Build linux-arm64
         run: |
+          mkdir linux-arm64
           chmod +x cmd/build-linux-arm64.sh
           docker run --platform linux/arm64 -v $(pwd):/build teamide/build-go-gcc:arm64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-arm64.sh ${{ steps.release_version.outputs.value }}
           mv linux-arm64-electron-server release/linux-arm64/electron-server
@@ -397,8 +400,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v2
         with:
-          name: release
-          path: release
+          name: linux-arm64
+          path: linux-arm64
 
   build-linux:
     needs: ["build-static","build-linux-amd64","build-linux-arm64"]
@@ -413,6 +416,14 @@ jobs:
         with:
           name: release
           path: release
+      - uses: actions/download-artifact@v2
+        with:
+          name: linux-amd64
+          path: linux-amd64
+      - uses: actions/download-artifact@v2
+        with:
+          name: linux-arm64
+          path: linux-arm64
 
       # 读取发布地址
       - id: release_upload_url
@@ -440,8 +451,8 @@ jobs:
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
           go mod tidy
-          cp release/linux-amd64/electron-server ./electron-template/assets/server/electron-server-linux-amd64
-          cp release/linux-arm64/electron-server ./electron-template/assets/server/electron-server-linux-arm64
+          cp linux-amd64/electron-server ./electron-template/assets/server/electron-server-linux-amd64
+          cp linux-arm64/electron-server ./electron-template/assets/server/electron-server-linux-arm64
 
       - run: |
           mkdir -p release/server-linux-amd64/lib
@@ -456,8 +467,8 @@ jobs:
           rm -rf release/server-linux-arm64/lib/libaci.so
           cp -rf lib/shentong/arm64/libaci.so release/server-linux-arm64/lib/libaci.so
           
-          cp release/linux-amd64/server release/server-linux-amd64/teamide
-          cp release/linux-arm64/server release/server-linux-arm64/teamide
+          cp linux-amd64/server release/server-linux-amd64/teamide
+          cp linux-arm64/server release/server-linux-arm64/teamide
 
       - name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
@@ -495,9 +506,9 @@ jobs:
       - run: |
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          mv release/linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          mv release/server-linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
-          mv release/linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+          mv release/server-linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
           ls
 
