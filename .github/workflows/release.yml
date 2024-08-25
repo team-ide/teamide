@@ -75,6 +75,7 @@ jobs:
           mkdir release
           mkdir release/base
           mkdir release/base/lib
+          echo ''>release/base/lib/README.md
           
           cp -rf package.json release/
           cp -rf RELEASE.md release/
