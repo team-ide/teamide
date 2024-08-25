@@ -119,6 +119,7 @@ jobs:
 
   build-mac-amd64:
     runs-on: macos-latest
+    needs: ["build-static"]
     steps:
       # 下载源码
       - name: Checkout code
@@ -156,6 +157,7 @@ jobs:
 
   build-mac-arm64:
     runs-on: macos-latest
+    needs: ["build-static"]
     steps:
       # 下载源码
       - name: Checkout code
@@ -300,6 +302,7 @@ jobs:
 
   build-linux-amd64:
     runs-on: ubuntu-latest
+    needs: ["build-static"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -349,6 +352,7 @@ jobs:
 
   build-linux-arm64:
     runs-on: ubuntu-latest
+    needs: ["build-static"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
