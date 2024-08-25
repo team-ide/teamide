@@ -2,10 +2,10 @@ FROM teamide/server-base-amd64:0.0.1
 
 EXPOSE 21080/tcp
 
-COPY release/teamide-server-amd64/teamide /opt/teamide/teamide
-COPY release/teamide-server-amd64/statics /opt/teamide/statics
-COPY release/teamide-server-amd64/conf /opt/teamide/conf
-COPY release/teamide-server-amd64/lib /opt/teamide/lib
+COPY release/server-linux-amd64/teamide /opt/teamide/teamide
+COPY release/server-linux-amd64/statics /opt/teamide/statics
+COPY release/server-linux-amd64/conf /opt/teamide/conf
+COPY release/server-linux-amd64/lib /opt/teamide/lib
 COPY docker/docker-entrypoint.sh /opt/teamide/docker-entrypoint.sh
 COPY docker/server.sh /opt/teamide/server.sh
 

@@ -74,11 +74,15 @@ jobs:
       - run: |
           mkdir release
           mkdir release/base
+          mkdir release/base/lib
           
           cp -rf package.json release/
           cp -rf RELEASE.md release/
           cp -rf README.md release/base/
           cp -rf CHANGELOG.md release/base/CHANGELOG.md
+          cp -rf conf/release release/base/conf
+          
+          cp -rf release/base release/server-windows-amd64
           
           cp -rf teamide-html/dist release/statics
 
@@ -617,11 +621,26 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           go env -w CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\gcc
-          mv release/statics ./electron-template/assets/server/statics
+          cp -r release/statics ./electron-template/assets/server/statics
           go mod tidy
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server-windows-amd64.exe .
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o ./electron-template/assets/server/server-windows-amd64.exe .
           go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./node.exe teamide/pkg/node/main
 
+          
+          cp -r release/statics release/server-windows-amd64/statics
+          
+          cp lib/shentong/win64/aci.dll release/server-windows-amd64/lib/aci.dll
+          cp lib/shentong/win64/aci.lib release/server-windows-amd64/lib/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/lib/pthreadVC2_x64.dll
+          
+          cp lib/shentong/win64/aci.dll release/server-windows-amd64/aci.dll
+          cp lib/shentong/win64/aci.lib release/server-windows-amd64/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/pthreadVC2_x64.dll
+          
+          cp electron-template/assets/server/server-windows-amd64.exe release/server-windows-amd64/teamide.exe
+          
+          cp release/server-windows-amd64 teamide-server-windows-arm64-${{steps.release_version.outputs.value}}
+          zip teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-windows-arm64-${{steps.release_version.outputs.value}}
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
         uses: actions/upload-release-asset@v1
@@ -631,6 +650,15 @@ jobs:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
           asset_path: node.exe
           asset_name: teamide-node-windows-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-windows-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - name: Install Node and NPM
