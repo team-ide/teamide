@@ -227,7 +227,7 @@ jobs:
           property: version
 
       - run: |
-          mv release/statics ./electron-template/assets/server/statics
+          cp release/statics ./electron-template/assets/server/statics
           cp darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
           cp darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
 
@@ -358,12 +358,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # 下载共享资源
-      - uses: actions/download-artifact@v2
-        with:
-          name: release
-          path: release
 
       # 读取发布版本
       - name: Read Release Version
