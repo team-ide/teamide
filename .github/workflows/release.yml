@@ -227,7 +227,7 @@ jobs:
           property: version
 
       - run: |
-          cp release/statics ./electron-template/assets/server/statics
+          cp -rf release/statics ./electron-template/assets/server/statics
           cp darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
           cp darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
 
@@ -444,7 +444,6 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
-          go mod tidy
           cp linux-amd64/electron-server ./electron-template/assets/server/electron-server-linux-amd64
           cp linux-arm64/electron-server ./electron-template/assets/server/electron-server-linux-arm64
 
