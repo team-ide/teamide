@@ -51,6 +51,9 @@ func init() {
 		if v == "--isServer" {
 			isServer = true
 		}
+		if v == "--isNotServer" {
+			isServer = false
+		}
 		if v == "--isDev" || v == "--isHtmlDev" {
 			isHtmlDev = true
 		}
@@ -103,13 +106,13 @@ func init() {
 }
 
 func main() {
+	println("app version:" + base.GetVersion())
+	println("Go os:" + runtime.GOOS)
+	println("Go arch:" + runtime.GOARCH)
+	println("Go compiler:" + runtime.Compiler)
+	println("Go version:" + runtime.Version())
 	for _, v := range os.Args {
 		if v == "-version" || v == "-v" {
-			println("app version:" + base.GetVersion())
-			println("Go os:" + runtime.GOOS)
-			println("Go arch:" + runtime.GOARCH)
-			println("Go compiler:" + runtime.Compiler)
-			println("Go version:" + runtime.Version())
 			return
 		}
 	}

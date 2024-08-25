@@ -80,11 +80,6 @@ jobs:
           cp -rf README.md release/base/
           cp -rf CHANGELOG.md release/base/CHANGELOG.md
           
-          cp -rf release/base release/linux-amd64
-          cp -rf release/base release/linux-arm64
-          cp -rf release/base release/darwin-amd64
-          cp -rf release/base release/darwin-arm64
-          cp -rf release/base release/windows-amd64
           cp -rf teamide-html/dist release/statics
 
 
@@ -139,7 +134,6 @@ jobs:
 
       - run: |
           mkdir darwin-amd64
-          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-amd64/electron-server .
           CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o darwin-amd64/server .
           CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-amd64/node teamide/pkg/node/main 
 
@@ -171,7 +165,6 @@ jobs:
 
       - run: |
           mkdir darwin-arm64
-          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-arm64/electron-server .
           CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o darwin-arm64/server .
           CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-arm64/node teamide/pkg/node/main 
 
@@ -228,8 +221,8 @@ jobs:
 
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
-          cp darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
-          cp darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
+          cp darwin-amd64/server ./electron-template/assets/server/server-darwin-amd64
+          cp darwin-arm64/server ./electron-template/assets/server/server-darwin-arm64
 
       - run: |
           mkdir -p release/server-darwin-amd64/lib
@@ -302,8 +295,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd electron-template
-          chmod +x assets/server/electron-server-darwin-amd64
-          chmod +x assets/server/electron-server-darwin-arm64
+          chmod +x assets/server/server-darwin-amd64
+          chmod +x assets/server/server-darwin-arm64
           npm install
           npm run postinstall
           npm run build
@@ -343,7 +336,6 @@ jobs:
           mkdir linux-amd64
           chmod +x cmd/build-linux-amd64.sh
           docker run --platform linux/amd64 -v $(pwd):/build teamide/build-go-gcc:amd64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-amd64.sh ${{ steps.release_version.outputs.value }}
-          mv linux-amd64-electron-server linux-amd64/electron-server
           mv linux-amd64-server linux-amd64/server
           mv linux-amd64-node linux-amd64/node
 
@@ -387,9 +379,8 @@ jobs:
           mkdir linux-arm64
           chmod +x cmd/build-linux-arm64.sh
           docker run --platform linux/arm64 -v $(pwd):/build teamide/build-go-gcc:arm64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-arm64.sh ${{ steps.release_version.outputs.value }}
-          mv linux-arm64-electron-server release/linux-arm64/electron-server
-          mv linux-arm64-server release/linux-arm64/server
-          mv linux-arm64-node release/linux-arm64/node
+          mv linux-arm64-server linux-arm64/server
+          mv linux-arm64-node linux-arm64/node
 
       # 上传共享资源
       - uses: actions/upload-artifact@v2
@@ -444,8 +435,8 @@ jobs:
       #          mv release/html.go internal/static/html.go
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
-          cp linux-amd64/electron-server ./electron-template/assets/server/electron-server-linux-amd64
-          cp linux-arm64/electron-server ./electron-template/assets/server/electron-server-linux-arm64
+          cp linux-amd64/server ./electron-template/assets/server/server-linux-amd64
+          cp linux-arm64/server ./electron-template/assets/server/server-linux-arm64
 
       - run: |
           mkdir -p release/server-linux-amd64/lib
@@ -512,7 +503,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: release/linux-amd64/node
+          asset_path: linux-amd64/node
           asset_name: teamide-node-linux-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -521,7 +512,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: release/linux-arm64/node
+          asset_path: linux-arm64/node
           asset_name: teamide-node-linux-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
 
@@ -562,8 +553,8 @@ jobs:
           cp -rf lib/shentong/arm64/libaci.so ./electron-template/assets/server/lib/arm64/libaci.so
           
           cd electron-template
-          chmod +x assets/server/electron-server-linux-amd64
-          chmod +x assets/server/electron-server-linux-arm64
+          chmod +x assets/server/server-linux-amd64
+          chmod +x assets/server/server-linux-arm64
           npm install
           npm run postinstall
           npm run build
@@ -628,7 +619,19 @@ jobs:
           go env -w CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\gcc
           mv release/statics ./electron-template/assets/server/statics
           go mod tidy
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/electron-server-windows-amd64.exe .
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server-windows-amd64.exe .
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./node.exe teamide/pkg/node/main
+
+      # 上传 到 Release
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: node.exe
+          asset_name: teamide-node-windows-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1

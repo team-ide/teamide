@@ -15,10 +15,6 @@ echo "set go env GOFLAGS"
 echo "build start"
 
 CGO_ENABLED=1 GOOS=linux GOARCH=amd64 /usr/local/go/bin/go \
-build -ldflags="-s -X teamide/pkg/base.version="$1"" \
--o linux-amd64-electron-server .
-
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 /usr/local/go/bin/go \
 build -ldflags="-s -X teamide/pkg/base.version="$1" -X main.buildFlags=--isServer" \
 -o linux-amd64-server .
 

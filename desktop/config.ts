@@ -20,40 +20,38 @@ export default {
     server: {
         // 服务根目录
         dir: "./assets/server",
-        // so、dll库等
-        libDir: "./assets/server/lib",
         // darwin 系统服务配置
         darwin: {
             amd64: {
                 libDir: "",
-                exec: "./electron-server-darwin-amd64",
-                args: ["--isElectron"],
+                exec: "./server-darwin-amd64",
+                args: ["--isElectron", "--isNotServer"],
             },
             arm64: {
                 libDir: "",
-                exec: "./electron-server-darwin-arm64",
-                args: ["--isElectron"],
+                exec: "./server-darwin-arm64",
+                args: ["--isElectron", "--isNotServer"],
             },
         },
         // linux 系统服务配置
         linux: {
             amd64: {
                 libDir: "./assets/server/lib/amd64",
-                exec: "./electron-server-linux-amd64",
-                args: ["--isElectron"],
+                exec: "./server-linux-amd64",
+                args: ["--isElectron", "--isNotServer"],
             },
             arm64: {
                 libDir: "./assets/server/lib/arm64",
-                exec: "./electron-server-linux-arm64",
-                args: ["--isElectron"],
+                exec: "./server-linux-arm64",
+                args: ["--isElectron", "--isNotServer"],
             },
         },
         // win 系统服务配置
         win: {
             amd64: {
                 libDir: "./assets/server/lib",
-                exec: "./electron-server-windows-amd64",
-                args: ["--isElectron"],
+                exec: "./server-windows-amd64.exe",
+                args: ["--isElectron", "--isNotServer"],
             },
         }
     },
