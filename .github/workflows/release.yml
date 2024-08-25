@@ -9,13 +9,12 @@ on:
     # package.json 更改后再触发发布
     # paths: [ "package.json" ]
 jobs:
-  buildStatic:
-    runs-on: ubuntu-20.04
+  build-static:
+    runs-on: ubuntu-latest
     steps:
       # 下载源码
       - name: Checkout code
         uses: actions/checkout@v1
-
 
       # 读取发布版本
       - name: Read Release Version
@@ -81,9 +80,11 @@ jobs:
           cp -rf README.md release/base/
           cp -rf CHANGELOG.md release/base/CHANGELOG.md
           
-          cp -rf release/base release/teamide-linux-x64
-          cp -rf release/base release/teamide-darwin-x64
-          cp -rf release/base release/teamide-windows-x64
+          cp -rf release/base release/linux-amd64
+          cp -rf release/base release/linux-arm64
+          cp -rf release/base release/darwin-amd64
+          cp -rf release/base release/darwin-arm64
+          cp -rf release/base release/windows-amd64
           cp -rf teamide-html/dist release/statics
 
 
@@ -116,9 +117,83 @@ jobs:
           name: electron-template
           path: electron-template
 
-  buildMAC:
-    needs: buildStatic
-    runs-on: macos-13
+  build-mac-amd64:
+    runs-on: macos-latest
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: release
+          path: release
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.20.1"
+
+      - run: |
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-amd64/electron-server .
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o release/darwin-amd64/server .
+          CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-amd64/node teamide/pkg/node/main 
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
+
+  build-mac-arm64:
+    runs-on: macos-latest
+    steps:
+      # 下载源码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: release
+          path: release
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.20.1"
+
+      - run: |
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-arm64/electron-server .
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o release/darwin-arm64/server .
+          CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o release/darwin-arm64/node teamide/pkg/node/main 
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
+
+  build-mac:
+    needs: ["build-static","build-mac-amd64","build-mac-arm64"]
+    runs-on: macos-latest
     steps:
       # 下载源码
       - name: Checkout code
@@ -151,18 +226,59 @@ jobs:
           path: release/package.json
           property: version
 
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "1.20.14"
-
-      # 将静态资源打包html.go
-      #          mv release/html.go internal/static/html.go
       - run: |
           mv release/statics ./electron-template/assets/server/statics
-          go mod tidy
-          go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
+          cp release/darwin-amd64/electron-server ./electron-template/assets/server/electron-server-darwin-amd64
+          cp release/darwin-arm64/electron-server ./electron-template/assets/server/electron-server-darwin-arm64
+
+      - run: |
+          echo 'release_version:${{ steps.release_version.outputs.value }}'
+          echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
+          mv release/darwin-amd64 teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}
+          mv release/darwin-arm64 teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}
+          ls
+
+      # 上传 到 Release
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: release/darwin-amd64/node
+          asset_name: teamide-node-darwin-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: release/darwin-arm64/node
+          asset_name: teamide-node-darwin-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-darwin-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_content_type: application/zip
+
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-darwin-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_content_type: application/zip
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -175,16 +291,114 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd electron-template
-          chmod +x assets/server/server
+          chmod +x assets/server/electron-server-darwin-amd64
+          chmod +x assets/server/electron-server-darwin-arm64
           npm install
           npm run postinstall
           npm run build
           npm exec electron-builder -- --mac -p always
 
-  buildLinux:
-    needs: buildStatic
+  build-linux-amd64:
     runs-on: ubuntu-latest
-    container: docker.io/teamide/build:1.5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: release
+          path: release
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Pull linux-amd64
+        run: docker pull --platform linux/amd64 teamide/build-go-gcc:amd64-1.20.14-14.2.0
+
+      - name: Build linux-amd64
+        run: |
+          chmod +x cmd/build-linux-amd64.sh
+          docker run --platform linux/amd64 -v $(pwd):/build teamide/build-go-gcc:amd64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-amd64.sh ${{ steps.release_version.outputs.value }}
+          mv linux-amd64-electron-server release/linux-amd64/electron-server
+          mv linux-amd64-server release/linux-amd64/server
+          mv linux-amd64-node release/linux-amd64/node
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 下载共享资源
+      - uses: actions/download-artifact@v2
+        with:
+          name: release
+          path: release
+
+      # 读取发布版本
+      - name: Read Release Version
+        id: release_version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: release/package.json
+          property: version
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Pull linux-arm64
+        run: docker pull --platform linux/arm64 teamide/build-go-gcc:arm64-1.20.14-14.2.0
+
+      - name: Build linux-arm64
+        run: |
+          chmod +x cmd/build-linux-arm64.sh
+          docker run --platform linux/arm64 -v $(pwd):/build teamide/build-go-gcc:arm64-1.20.14-14.2.0 /bin/bash /build/cmd/build-linux-arm64.sh ${{ steps.release_version.outputs.value }}
+          mv linux-arm64-electron-server release/linux-arm64/electron-server
+          mv linux-arm64-server release/linux-arm64/server
+          mv linux-arm64-node release/linux-arm64/node
+
+      # 上传共享资源
+      - uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
+
+  build-linux:
+    needs: ["build-static","build-linux-amd64","build-linux-arm64"]
+    runs-on: ubuntu-latest
     steps:
       # 下载源码
       - name: Checkout code
@@ -217,37 +431,29 @@ jobs:
           path: release/package.json
           property: version
 
-      # 打包构建 Server
-      - name: Build Server
-        uses: actions/setup-go@v2
-        with:
-          go-version: "1.20.14"
-
       # 将静态资源打包html.go
       #          mv release/html.go internal/static/html.go
       - run: |
           cp -rf release/statics ./electron-template/assets/server/statics
           go mod tidy
-          go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server .
-          CGO_ENABLED=0 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-linux-x64/teamide-node teamide/pkg/node/main 
+          cp release/linux-amd64/electron-server ./electron-template/assets/server/electron-server-linux-amd64
+          cp release/linux-arm64/electron-server ./electron-template/assets/server/electron-server-linux-arm64
 
       - run: |
-          mkdir -p release/teamide-server-amd64/lib
-          cp -rf release/statics release/teamide-server-amd64/statics
-          cp -rf conf/release release/teamide-server-amd64/conf
-          cp -rf lib/shentong/amd64/libaci.so release/teamide-server-amd64/lib/libaci.so
-          cp -rf docker/server.sh release/teamide-server-amd64/server.sh
-          chmod +x release/teamide-server-amd64/server.sh
-          cp -rf release/teamide-server-amd64 release/teamide-server-arm64
-          rm -rf release/teamide-server-arm64/lib/libaci.so
-          cp -rf lib/shentong/arm64/libaci.so release/teamide-server-arm64/lib/libaci.so
-          go mod tidy
-          go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-amd64/teamide .
-          CC=/usr/local/share/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-gcc CXX=/usr/local/share/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-g++ CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags "-s -X main.buildFlags=--isServer -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/teamide-server-arm64/teamide .
-
-      - run: |
-          cd release/teamide-server-amd64
-          ldd teamide
+          mkdir -p release/server-linux-amd64/lib
+          
+          cp -rf release/statics release/server-linux-amd64/statics
+          cp -rf conf/release release/server-linux-amd64/conf
+          cp -rf lib/shentong/amd64/libaci.so release/server-linux-amd64/lib/libaci.so
+          cp -rf docker/server.sh release/server-linux-amd64/server.sh
+          chmod +x release/server-linux-amd64/server.sh
+          
+          cp -rf release/server-linux-amd64 release/server-linux-arm64
+          rm -rf release/server-linux-arm64/lib/libaci.so
+          cp -rf lib/shentong/arm64/libaci.so release/server-linux-arm64/lib/libaci.so
+          
+          cp release/linux-amd64/server release/server-linux-amd64/teamide
+          cp release/linux-arm64/server release/server-linux-arm64/teamide
 
       - name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
@@ -285,10 +491,10 @@ jobs:
       - run: |
           echo 'release_version:${{ steps.release_version.outputs.value }}'
           echo 'release_upload_url:${{ steps.release_upload_url.outputs.value }}'
-          mv release/teamide-server-amd64 teamide-server-amd64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-amd64-${{steps.release_version.outputs.value}}
-          mv release/teamide-server-arm64 teamide-server-arm64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-arm64-${{steps.release_version.outputs.value}}
+          mv release/linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          mv release/linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
           ls
 
       # 上传 到 Release
@@ -298,8 +504,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: release/teamide-linux-x64/teamide-node
-          asset_name: teamide-node-linux-x64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_path: release/linux-amd64/node
+          asset_name: teamide-node-linux-amd64-${{steps.release_version.outputs.value}} # 上传后的文件名
+          asset_content_type: application/zip
+      - if: ${{ steps.release_upload_url.outputs.value != '' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
+          asset_path: release/linux-arm64/node
+          asset_name: teamide-node-linux-arm64-${{steps.release_version.outputs.value}} # 上传后的文件名
           asset_content_type: application/zip
 
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -308,8 +523,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: teamide-server-amd64-${{steps.release_version.outputs.value}}.zip
-          asset_name: teamide-server-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_path: teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
@@ -318,8 +533,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.release_upload_url.outputs.value }} # 上传地址，通过创建Release获取到的
-          asset_path: teamide-server-arm64-${{steps.release_version.outputs.value}}.zip
-          asset_name: teamide-server-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
+          asset_path: teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip
+          asset_name: teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip # 上传后的文件名
           asset_content_type: application/zip
 
 
@@ -333,10 +548,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp -rf lib/shentong/amd64/libaci.so ./electron-template/assets/server/lib/libaci.so
+          mkdir -p ./electron-template/assets/server/lib/amd64/
+          cp -rf lib/shentong/amd64/libaci.so ./electron-template/assets/server/lib/amd64/libaci.so
+          mkdir -p ./electron-template/assets/server/lib/arm64/
+          cp -rf lib/shentong/arm64/libaci.so ./electron-template/assets/server/lib/arm64/libaci.so
           
           cd electron-template
-          chmod +x assets/server/server
+          chmod +x assets/server/electron-server-linux-amd64
+          chmod +x assets/server/electron-server-linux-arm64
           npm install
           npm run postinstall
           npm run build
@@ -348,9 +567,9 @@ jobs:
           name: release
           path: release
 
-  buildWindow:
-    needs: buildStatic
-    runs-on: windows-2019
+  build-window:
+    needs: ["build-static"]
+    runs-on: windows-latest
     steps:
       # 下载源码
       - name: Checkout code
@@ -401,7 +620,7 @@ jobs:
           go env -w CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\gcc
           mv release/statics ./electron-template/assets/server/statics
           go mod tidy
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/server.exe .
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./electron-template/assets/server/electron-server-windows-amd64.exe .
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1

@@ -24,18 +24,37 @@ export default {
         libDir: "./assets/server/lib",
         // darwin 系统服务配置
         darwin: {
-            exec: "./server",
-            args: ["--isElectron"],
+            amd64: {
+                libDir: "",
+                exec: "./electron-server-darwin-amd64",
+                args: ["--isElectron"],
+            },
+            arm64: {
+                libDir: "",
+                exec: "./electron-server-darwin-arm64",
+                args: ["--isElectron"],
+            },
         },
         // linux 系统服务配置
         linux: {
-            exec: "./server",
-            args: ["--isElectron"],
+            amd64: {
+                libDir: "./assets/server/lib/amd64",
+                exec: "./electron-server-linux-amd64",
+                args: ["--isElectron"],
+            },
+            arm64: {
+                libDir: "./assets/server/lib/arm64",
+                exec: "./electron-server-linux-arm64",
+                args: ["--isElectron"],
+            },
         },
         // win 系统服务配置
         win: {
-            exec: "./server.exe",
-            args: ["--isElectron"],
+            amd64: {
+                libDir: "./assets/server/lib",
+                exec: "./electron-server-windows-amd64",
+                args: ["--isElectron"],
+            },
         }
     },
 }
