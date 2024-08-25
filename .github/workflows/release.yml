@@ -466,21 +466,6 @@ jobs:
           
           cp linux-amd64/server release/server-linux-amd64/teamide
           cp linux-arm64/server release/server-linux-arm64/teamide
-          
-          
-          mv release/server-linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
-          
-          mv release/server-linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
-          zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
-          
-          mkdir -p teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
-          cp linux-amd64/node teamide-node-linux-amd64-${{steps.release_version.outputs.value}}/node
-          zip -q -r teamide-node-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
-          
-          mkdir -p teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
-          cp linux-arm64/node teamide-node-linux-arm64-${{steps.release_version.outputs.value}}/node
-          zip -q -r teamide-node-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
 
       - name: Set up Docker BuildX
         uses: docker/setup-buildx-action@v2
@@ -515,6 +500,21 @@ jobs:
           #指定用户/仓库名
           tags: teamide/teamide-server-arm64:latest,teamide/teamide-server-arm64:${{ steps.release_version.outputs.value }}
 
+      - run: |
+          
+          mv release/server-linux-amd64 teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-amd64-${{steps.release_version.outputs.value}}
+
+          mv release/server-linux-arm64 teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+          zip -q -r teamide-server-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-server-linux-arm64-${{steps.release_version.outputs.value}}
+
+          mkdir -p teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
+          cp linux-amd64/node teamide-node-linux-amd64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-linux-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-amd64-${{steps.release_version.outputs.value}}
+
+          mkdir -p teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
+          cp linux-arm64/node teamide-node-linux-arm64-${{steps.release_version.outputs.value}}/node
+          zip -q -r teamide-node-linux-arm64-${{steps.release_version.outputs.value}}.zip teamide-node-linux-arm64-${{steps.release_version.outputs.value}}
 
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
