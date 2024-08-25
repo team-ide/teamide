@@ -364,7 +364,7 @@ jobs:
         id: release_version
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: release/package.json
+          path: package.json
           property: version
 
       - name: Set up QEMU
