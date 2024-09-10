@@ -16,6 +16,7 @@ type ServerConfig struct {
 	Server          *server `json:"server,omitempty" yaml:"server,omitempty"`
 	Mysql           *mysql  `json:"mysql,omitempty" yaml:"mysql,omitempty"`
 	Log             *log    `json:"log,omitempty" yaml:"log,omitempty"`
+	Github          *Github `json:"github,omitempty" yaml:"github,omitempty"`
 	LogDataSaveDays int     `json:"logDataSaveDays,omitempty" yaml:"logDataSaveDays,omitempty"`
 }
 
@@ -41,6 +42,10 @@ type mysql struct {
 	Database string `json:"database,omitempty" yaml:"database,omitempty"`
 	Username string `json:"username,omitempty" yaml:"username,omitempty"`
 	Password string `json:"password,omitempty" yaml:"password,omitempty"`
+}
+type Github struct {
+	ClientId     string `json:"clientId,omitempty" yaml:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 }
 
 type log struct {

@@ -25,6 +25,7 @@ type ServerConf struct {
 	IsServerDev bool
 	RootDir     string
 	UserHomeDir string
+	Github      *config.Github
 }
 
 func NewServerContext(serverConf ServerConf) (context *ServerContext, err error) {
@@ -47,6 +48,11 @@ func NewServerContext(serverConf ServerConf) (context *ServerContext, err error)
 	}
 	//context.ServerConf = serverConf
 	context.ServerConfig = serverConfig
+
+	if serverConfig.Github == nil {
+		serverConfig.Github = serverConf.Github
+	}
+
 	err = context.Init(serverConfig)
 	if err != nil {
 		return
