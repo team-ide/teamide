@@ -116,6 +116,7 @@ jobs:
         with:
           name: electron-template
           path: electron-template
+          include-hidden-files: true
 
   build-mac-amd64:
     runs-on: macos-latest
