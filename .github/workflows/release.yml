@@ -633,24 +633,14 @@ jobs:
           compiler: gcc-10.2.0
 
       - run: |
+          mkdir windows-amd64
           go env -w CC=C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin\gcc
           cp -r release/statics ./electron-template/assets/server/statics
           go mod tidy
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o ./electron-template/assets/server/server-windows-amd64.exe .
-          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./release/node-windows-amd64.exe teamide/pkg/node/main
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }} -X main.buildFlags=--isServer" -o ./windows-amd64/server-windows-amd64.exe .
+          go build -ldflags "-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o ./windows-amd64/node-windows-amd64.exe teamide/pkg/node/main
 
-          
-          cp -r release/statics release/server-windows-amd64/statics
-          
-          cp lib/shentong/win64/aci.dll release/server-windows-amd64/lib/aci.dll
-          cp lib/shentong/win64/aci.lib release/server-windows-amd64/lib/aci.lib
-          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/lib/pthreadVC2_x64.dll
-          
-          cp lib/shentong/win64/aci.dll release/server-windows-amd64/aci.dll
-          cp lib/shentong/win64/aci.lib release/server-windows-amd64/aci.lib
-          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/pthreadVC2_x64.dll
-          
-          cp electron-template/assets/server/server-windows-amd64.exe release/server-windows-amd64/teamide.exe
+          cp windows-amd64/server-windows-amd64.exe electron-template/assets/server/server-windows-amd64.exe
 
       - name: Install Node and NPM
         uses: actions/setup-node@v1
@@ -681,8 +671,8 @@ jobs:
       # 上传共享资源
       - uses: actions/upload-artifact@v4
         with:
-          name: release
-          path: release
+          name: windows-amd64
+          path: windows-amd64
           include-hidden-files: true
 
   release-window:
@@ -698,6 +688,10 @@ jobs:
         with:
           name: release
           path: release
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-amd64
+          path: windows-amd64
 
       # 读取发布地址
       - id: release_upload_url
@@ -715,11 +709,24 @@ jobs:
           property: version
 
       - run: |
+          
+          cp -r release/statics release/server-windows-amd64/statics
+          
+          cp lib/shentong/win64/aci.dll release/server-windows-amd64/lib/aci.dll
+          cp lib/shentong/win64/aci.lib release/server-windows-amd64/lib/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/lib/pthreadVC2_x64.dll
+          
+          cp lib/shentong/win64/aci.dll release/server-windows-amd64/aci.dll
+          cp lib/shentong/win64/aci.lib release/server-windows-amd64/aci.lib
+          cp lib/shentong/win64/pthreadVC2_x64.dll release/server-windows-amd64/pthreadVC2_x64.dll
+          
+          cp windows-amd64/server-windows-amd64.exe release/server-windows-amd64/teamide.exe
+
           mv release/server-windows-amd64 teamide-server-windows-amd64-${{steps.release_version.outputs.value}}
           zip -q -r teamide-server-windows-amd64-${{steps.release_version.outputs.value}}.zip teamide-server-windows-amd64-${{steps.release_version.outputs.value}}
           
           mkdir -p teamide-node-windows-amd64-${{steps.release_version.outputs.value}}
-          cp release/node-windows-amd64.exe teamide-node-windows-amd64-${{steps.release_version.outputs.value}}/node.exe
+          cp windows-amd64/node-windows-amd64.exe teamide-node-windows-amd64-${{steps.release_version.outputs.value}}/node.exe
           zip -q -r teamide-node-windows-amd64-${{steps.release_version.outputs.value}}.zip teamide-node-windows-amd64-${{steps.release_version.outputs.value}}
       # 上传 到 Release
       - if: ${{ steps.release_upload_url.outputs.value != '' }}
