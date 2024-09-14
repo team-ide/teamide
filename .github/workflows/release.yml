@@ -14,7 +14,7 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       # 读取发布版本
       - name: Read Release Version
@@ -106,13 +106,13 @@ jobs:
       #          mv internal/static/html.go release/html.go
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: release
           path: release
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: electron-template
           path: electron-template
@@ -143,7 +143,7 @@ jobs:
           CGO_ENABLED=1 GOARCH=amd64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-amd64/node teamide/pkg/node/main 
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: darwin-amd64
           path: darwin-amd64
@@ -174,7 +174,7 @@ jobs:
           CGO_ENABLED=1 GOARCH=arm64 go build -ldflags="-s -X teamide/pkg/base.version=${{ steps.release_version.outputs.value }}" -o darwin-arm64/node teamide/pkg/node/main 
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: darwin-arm64
           path: darwin-arm64
@@ -185,20 +185,20 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: release
           path: release
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: darwin-amd64
           path: darwin-amd64
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: darwin-arm64
           path: darwin-arm64
@@ -211,7 +211,7 @@ jobs:
           property: upload_url
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: electron-template
           path: electron-template
@@ -342,18 +342,18 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull linux-amd64
-        run: docker pull --platform linux/amd64 teamide/build-go-gcc:amd64-1.20.14-7.5.0
+        run: docker pull --platform linux/amd64 teamide/build-go-gcc:amd64-1.20.14-8.3.0
 
       - name: Build linux-amd64
         run: |
           mkdir linux-amd64
           chmod +x cmd/build-linux-amd64.sh
-          docker run --platform linux/amd64 -v $(pwd):/build teamide/build-go-gcc:amd64-1.20.14-7.5.0 /bin/bash /build/cmd/build-linux-amd64.sh ${{ steps.release_version.outputs.value }}
+          docker run --platform linux/amd64 -v $(pwd):/build teamide/build-go-gcc:amd64-1.20.14-8.3.0 /bin/bash /build/cmd/build-linux-amd64.sh ${{ steps.release_version.outputs.value }}
           mv linux-amd64-server linux-amd64/server
           mv linux-amd64-node linux-amd64/node
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-amd64
           path: linux-amd64
@@ -385,18 +385,18 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull linux-arm64
-        run: docker pull --platform linux/arm64 teamide/build-go-gcc:arm64-1.20.14-7.5.0
+        run: docker pull --platform linux/arm64 teamide/build-go-gcc:arm64-1.20.14-8.3.0
 
       - name: Build linux-arm64
         run: |
           mkdir linux-arm64
           chmod +x cmd/build-linux-arm64.sh
-          docker run --platform linux/arm64 -v $(pwd):/build teamide/build-go-gcc:arm64-1.20.14-7.5.0 /bin/bash /build/cmd/build-linux-arm64.sh ${{ steps.release_version.outputs.value }}
+          docker run --platform linux/arm64 -v $(pwd):/build teamide/build-go-gcc:arm64-1.20.14-8.3.0 /bin/bash /build/cmd/build-linux-arm64.sh ${{ steps.release_version.outputs.value }}
           mv linux-arm64-server linux-arm64/server
           mv linux-arm64-node linux-arm64/node
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
           path: linux-arm64
@@ -407,18 +407,18 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: release
           path: release
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: linux-amd64
           path: linux-amd64
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: linux-arm64
           path: linux-arm64
@@ -431,7 +431,7 @@ jobs:
           property: upload_url
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: electron-template
           path: electron-template
@@ -586,10 +586,10 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: release
           path: release
@@ -602,7 +602,7 @@ jobs:
           property: upload_url
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: electron-template
           path: electron-template
@@ -673,7 +673,7 @@ jobs:
           npm exec electron-builder -- --win -p always
 
       # 上传共享资源
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: release
           path: release
@@ -684,10 +684,10 @@ jobs:
     steps:
       # 下载源码
       - name: Checkout code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       # 下载共享资源
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: release
           path: release
