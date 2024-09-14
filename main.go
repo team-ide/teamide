@@ -106,11 +106,11 @@ func init() {
 }
 
 func main() {
-	println("app version:" + base.GetVersion())
-	println("Go os:" + runtime.GOOS)
-	println("Go arch:" + runtime.GOARCH)
-	println("Go compiler:" + runtime.Compiler)
-	println("Go version:" + runtime.Version())
+	fmt.Println("app version:" + base.GetVersion())
+	fmt.Println("Go os:" + runtime.GOOS)
+	fmt.Println("Go arch:" + runtime.GOARCH)
+	fmt.Println("Go compiler:" + runtime.Compiler)
+	fmt.Println("Go version:" + runtime.Version())
 	for _, v := range os.Args {
 		if v == "-version" || v == "-v" {
 			return

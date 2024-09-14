@@ -77,6 +77,26 @@ func (this_ *ToolboxService) QueryGroup(toolboxGroup *ToolboxGroupModel) (res []
 	return
 }
 
+// GetUserGroupByName 查询
+func (this_ *ToolboxService) GetUserGroupByName(userId int64, name string) (res *ToolboxGroupModel, err error) {
+
+	sql := `SELECT * FROM ` + TableToolboxGroup + ` WHERE userId = ?  AND name = ?`
+	var list []*ToolboxGroupModel
+	err = this_.DatabaseWorker.Query(sql, []interface{}{userId, name}, &list)
+	if err != nil {
+		this_.Logger.Error("GetUserGroupByName Error", zap.Error(err))
+		return
+	}
+
+	if len(list) > 0 {
+		res = list[0]
+	} else {
+		res = nil
+	}
+
+	return
+}
+
 // CheckUserGroupExist 查询
 func (this_ *ToolboxService) CheckUserGroupExist(name string, userId int64) (res bool, err error) {
 

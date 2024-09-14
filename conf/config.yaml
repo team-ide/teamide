@@ -17,6 +17,9 @@ log:
   maxBackups: 10 # 最多几个文件
   level: debug # 级别，debug，info，warn，error
 
+github:
+  clientId:
+  clientSecret:
 
 # 日志数据 （操作日志，终端执行日志等） 保留天数，设置 0 永久保留
 logDataSaveDays: 15

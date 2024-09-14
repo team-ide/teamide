@@ -52,7 +52,7 @@ func (this_ *ToolboxService) DecryptOptionAttr(str string) (res string) {
 }
 
 // FormatOption 执行
-func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error) {
+func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel, decrypt bool) (err error) {
 	if toolboxData.Option == "" {
 		return
 	}
@@ -71,13 +71,25 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 	if err != nil {
 		return
 	}
-
+	for k, v := range optionMap {
+		bV, isBool := v.(bool)
+		sV, isString := v.(string)
+		if v == nil ||
+			(isString && sV == "") ||
+			(isBool && !bV) {
+			delete(optionMap, k)
+		}
+	}
 	switch toolboxType {
 	case databaseWorker_:
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -87,7 +99,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["auth"] != nil {
 			str, ok := optionMap["auth"].(string)
 			if ok {
-				optionMap["auth"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["auth"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["auth"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "auth")
 			}
@@ -97,7 +113,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -107,7 +127,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -117,7 +141,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -129,7 +157,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -139,7 +171,11 @@ func (this_ *ToolboxService) FormatOption(toolboxData *ToolboxModel) (err error)
 		if optionMap["password"] != nil {
 			str, ok := optionMap["password"].(string)
 			if ok {
-				optionMap["password"] = this_.EncryptOptionAttr(str)
+				if decrypt {
+					optionMap["password"] = this_.DecryptOptionAttr(str)
+				} else {
+					optionMap["password"] = this_.EncryptOptionAttr(str)
+				}
 			} else {
 				delete(optionMap, "password")
 			}
@@ -393,6 +429,9 @@ var (
 	otherWorker_ = otherWorker()
 )
 
+func init() {
+	initToolboxTypes()
+}
 func initToolboxTypes() {
 	if toolboxTypesInit {
 		return
@@ -425,6 +464,7 @@ func GetToolboxType(name string) (res *ToolboxType) {
 	for _, one := range *toolboxTypes {
 		if one.Name == name {
 			res = one
+			return
 		}
 	}
 	return

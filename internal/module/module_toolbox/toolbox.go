@@ -76,7 +76,7 @@ func (this_ *ToolboxService) QueryVisibility(toolbox *ToolboxModel) (res []*Tool
 
 	err = this_.DatabaseWorker.Query(sql, values, &res)
 	if err != nil {
-		this_.Logger.Error("Query Error", zap.Error(err))
+		this_.Logger.Error("QueryVisibility Error", zap.Error(err))
 		return
 	}
 
@@ -111,7 +111,40 @@ func (this_ *ToolboxService) CountVisibility(toolbox *ToolboxModel) (res int64, 
 
 	res, err = this_.DatabaseWorker.Count(sql, values)
 	if err != nil {
-		this_.Logger.Error("Count Error", zap.Error(err))
+		this_.Logger.Error("CountVisibility Error", zap.Error(err))
+		return
+	}
+
+	return
+}
+
+// Query 查询 工具
+func (this_ *ToolboxService) Query(toolbox *ToolboxModel) (res []*ToolboxModel, err error) {
+
+	var values []interface{}
+	sql := `SELECT * FROM ` + TableToolbox + ` WHERE deleted=2 `
+
+	if toolbox.UserId != 0 {
+		sql += " AND userId = ?"
+		values = append(values, toolbox.UserId)
+	}
+	if toolbox.ToolboxType != "" {
+		sql += " AND toolboxType = ?"
+		values = append(values, toolbox.ToolboxType)
+	}
+	if toolbox.GroupId != 0 {
+		sql += " AND groupId = ?"
+		values = append(values, toolbox.GroupId)
+	}
+	if toolbox.Name != "" {
+		sql += " AND name like ?"
+		values = append(values, fmt.Sprint("%", toolbox.Name, "%"))
+	}
+	sql += " ORDER BY sequence ASC, name ASC "
+
+	err = this_.DatabaseWorker.Query(sql, values, &res)
+	if err != nil {
+		this_.Logger.Error("Query Error", zap.Error(err))
 		return
 	}
 
@@ -203,7 +236,7 @@ func (this_ *ToolboxService) Insert(toolbox *ToolboxModel) (rowsAffected int64, 
 		values += ", " + fmt.Sprint(toolbox.GroupId)
 	}
 
-	err = this_.FormatOption(toolbox)
+	err = this_.FormatOption(toolbox, false)
 	if err != nil {
 		return
 	}
@@ -385,7 +418,7 @@ func (this_ *ToolboxService) Update(toolbox *ToolboxModel) (rowsAffected int64, 
 
 	}
 
-	err = this_.FormatOption(toolbox)
+	err = this_.FormatOption(toolbox, false)
 	if err != nil {
 		return
 	}

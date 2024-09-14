@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"regexp"

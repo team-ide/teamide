@@ -73,6 +73,10 @@ func (this_ *Server) toStaticByName(name string, c *gin.Context) bool {
 	// 查看本地文件是否有静态文件
 
 	filePath := this_.RootDir + "statics/" + name
+
+	if is, e := util.IsSubPath(this_.RootDir+"statics/", filePath); !is || e != nil {
+		return false
+	}
 	exist, _ := util.PathExists(filePath)
 	if exist {
 		fileInfo, err := os.Open(filePath)
@@ -80,7 +84,7 @@ func (this_ *Server) toStaticByName(name string, c *gin.Context) bool {
 			base.ResponseJSON(nil, err, c)
 			return true
 		}
-		defer fileInfo.Close()
+		defer func() { _ = fileInfo.Close() }()
 		this_.setHeaderByName(name, c)
 		_, err = io.Copy(c.Writer, fileInfo)
 		if err != nil {
@@ -93,7 +97,7 @@ func (this_ *Server) toStaticByName(name string, c *gin.Context) bool {
 			return false
 		}
 		this_.setHeaderByName(name, c)
-		c.Writer.Write(bytes)
+		_, _ = c.Writer.Write(bytes)
 	}
 
 	c.Status(http.StatusOK)
@@ -115,6 +119,9 @@ func (this_ *Server) toFiles(path string, c *gin.Context) bool {
 
 	filePath := this_.GetFilesFile(name)
 
+	if is, e := util.IsSubPath(this_.GetFilesDir(), filePath); !is || e != nil {
+		return false
+	}
 	exist, err := util.PathExists(filePath)
 	if err != nil {
 		base.ResponseJSON(nil, err, c)
@@ -130,7 +137,7 @@ func (this_ *Server) toFiles(path string, c *gin.Context) bool {
 		base.ResponseJSON(nil, err, c)
 		return true
 	}
-	defer fileInfo.Close()
+	defer func() { _ = fileInfo.Close() }()
 	_, err = io.Copy(c.Writer, fileInfo)
 	if err != nil {
 		base.ResponseJSON(nil, err, c)
