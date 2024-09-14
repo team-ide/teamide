@@ -110,6 +110,7 @@ jobs:
         with:
           name: release
           path: release
+          include-hidden-files: true
 
       # 上传共享资源
       - uses: actions/upload-artifact@v4
@@ -148,6 +149,7 @@ jobs:
         with:
           name: darwin-amd64
           path: darwin-amd64
+          include-hidden-files: true
 
   build-mac-arm64:
     runs-on: macos-latest
@@ -179,6 +181,7 @@ jobs:
         with:
           name: darwin-arm64
           path: darwin-arm64
+          include-hidden-files: true
 
   build-mac:
     needs: ["build-static", "build-mac-amd64", "build-mac-arm64"]
@@ -358,6 +361,7 @@ jobs:
         with:
           name: linux-amd64
           path: linux-amd64
+          include-hidden-files: true
 
   build-linux-arm64:
     runs-on: ubuntu-latest
@@ -401,6 +405,7 @@ jobs:
         with:
           name: linux-arm64
           path: linux-arm64
+          include-hidden-files: true
 
   build-linux:
     needs: ["build-static","build-linux-amd64","build-linux-arm64"]
@@ -678,6 +683,7 @@ jobs:
         with:
           name: release
           path: release
+          include-hidden-files: true
 
   release-window:
     runs-on: ubuntu-latest
