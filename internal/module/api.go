@@ -14,6 +14,7 @@ import (
 	"teamide/internal/module/module_datamove"
 	"teamide/internal/module/module_elasticsearch"
 	"teamide/internal/module/module_file_manager"
+	"teamide/internal/module/module_http"
 	"teamide/internal/module/module_id"
 	"teamide/internal/module/module_javascript"
 	"teamide/internal/module/module_kafka"
@@ -190,6 +191,7 @@ func (this_ *Api) GetApis() (apis []*base.ApiWorker, err error) {
 	apis = append(apis, module_net.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_maker.NewApi(this_.toolboxService).GetApis()...)
 	apis = append(apis, module_sync.NewApi(this_.toolboxService, this_.userService, this_.userSettingService).GetApis()...)
+	apis = append(apis, module_http.NewApi(this_.toolboxService).GetApis()...)
 
 	return
 }

@@ -424,6 +424,7 @@ var (
 	netConnWorker_       = netConn()
 
 	thriftWorker_ = thriftWorker()
+	httpWorker_   = httpWorker()
 	makerWorker_  = makerWorker()
 
 	otherWorker_ = otherWorker()
@@ -446,6 +447,7 @@ func initToolboxTypes() {
 	*toolboxTypes = append(*toolboxTypes, mongodbWorker_)
 	*toolboxTypes = append(*toolboxTypes, netConnWorker_)
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
+	*toolboxTypes = append(*toolboxTypes, httpWorker_)
 	if maker.HasMaker {
 		*toolboxTypes = append(*toolboxTypes, makerWorker_)
 	}
@@ -934,6 +936,22 @@ func makerWorker() *ToolboxType {
 					Rules: []*form.Rule{
 						{Required: true, Message: "目录不能为空"},
 					},
+				},
+			},
+		},
+	}
+
+	return worker_
+}
+
+func httpWorker() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "http",
+		Text: "HTTP/REST",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "Root Url（根地址）", Name: "url",
 				},
 			},
 		},
