@@ -3,8 +3,6 @@ package module_http
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/json"
-	"encoding/xml"
 	"github.com/team-ide/go-tool/util"
 	"io"
 	"mime/multipart"
@@ -52,20 +50,36 @@ func NewClient(config *Config) (client *http.Client) {
 
 type Request struct {
 	*Config
-	Username    string              `json:"username,omitempty"`
-	Password    string              `json:"password,omitempty"`
-	Url         string              `json:"url,omitempty"`
-	Path        string              `json:"path,omitempty"`
-	Params      map[string]string   `json:"params,omitempty"`
-	Method      string              `json:"method,omitempty"`
-	ContentType string              `json:"contentType,omitempty"`
-	Header      http.Header         `json:"header,omitempty"`
-	Body        string              `json:"body,omitempty"`
-	Data        map[string]any      `json:"data,omitempty"`
-	Files       map[string][]string `json:"files,omitempty"`
-	IsForm      bool                `json:"isForm,omitempty"`
-	IsJson      bool                `json:"isJson,omitempty"`
-	IsXml       bool                `json:"isXml,omitempty"`
+	Username    string   `json:"username,omitempty"`
+	Password    string   `json:"password,omitempty"`
+	Url         string   `json:"url,omitempty"`
+	Path        string   `json:"path,omitempty"`
+	Params      []*Field `json:"params,omitempty"`
+	Method      string   `json:"method,omitempty"`
+	ContentType string   `json:"contentType,omitempty"`
+	Headers     []*Field `json:"headers,omitempty"`
+
+	Body     string `json:"body,omitempty"`
+	BodyType string `json:"bodyType,omitempty"`
+
+	Text     string `json:"text,omitempty"`
+	TextType string `json:"textType,omitempty"`
+
+	FormData []*Field     `json:"formData,omitempty"`
+	Files    []*FieldFile `json:"files,omitempty"`
+}
+
+type Field struct {
+	Key      string       `json:"key,omitempty"`
+	Value    string       `json:"value,omitempty"`
+	IsFile   bool         `json:"isFile,omitempty"`
+	Files    []*FieldFile `json:"files,omitempty"`
+	Selected bool         `json:"selected,omitempty"`
+}
+
+type FieldFile struct {
+	Name string `json:"name,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 func (this_ *Request) GetUrl() string {
@@ -78,13 +92,16 @@ func (this_ *Request) GetUrl() string {
 		}
 	}
 	if this_.Params != nil {
-		for key, value := range this_.Params {
+		for _, one := range this_.Params {
+			if !one.Selected || one.Key == "" {
+				continue
+			}
 			if strings.Contains(res, "?") {
 				res += "&"
 			} else {
 				res += "?"
 			}
-			res = res + key + "=" + value
+			res = res + one.Key + "=" + one.Value
 		}
 	}
 	return res
@@ -92,90 +109,155 @@ func (this_ *Request) GetUrl() string {
 
 func (this_ *Request) FormBody() url.Values {
 	res := url.Values{}
-	if this_.Data != nil {
-		for key, value := range this_.Data {
-			res.Set(key, util.GetStringValue(value))
+	if this_.FormData != nil {
+		for _, one := range this_.FormData {
+			if !one.Selected || one.Key == "" {
+				continue
+			}
+			res.Set(one.Key, util.GetStringValue(one.Value))
 		}
 	}
 	return res
 }
 
 func (this_ *Request) GetHeader() http.Header {
-	res := this_.Header
-	if res == nil {
-		res = http.Header{}
+	res := http.Header{}
+	if this_.Headers != nil {
+		for _, one := range this_.Headers {
+			if !one.Selected || one.Key == "" {
+				continue
+			}
+			res.Set(one.Key, util.GetStringValue(one.Value))
+		}
 	}
-	res.Set("Content-Type", this_.ContentType)
+	if this_.ContentType != "" {
+		res.Set("Content-Type", this_.ContentType)
+	}
 	return res
 }
 
 func (this_ *Request) BodyReader() (res io.Reader, err error) {
-	if this_.Files != nil && len(this_.Files) > 0 {
+	if this_.BodyType == "form" {
+		if this_.FormData != nil {
+			var hasFile bool
+			for _, one := range this_.FormData {
+				if !one.Selected || one.Key == "" || !one.IsFile {
+					continue
+				}
+				hasFile = true
+				break
+			}
+			if hasFile {
+				// 创建一个multipart表单
+				var b = &bytes.Buffer{}
+				w := multipart.NewWriter(b)
+				for _, one := range this_.FormData {
+					if !one.Selected || one.Key == "" || !one.IsFile {
+						continue
+					}
+					for _, f := range one.Files {
+						this_.Body += "form field " + one.Key + "  binary:" + f.Name + "\n"
+						err = this_.appendFormFile(w, one.Key, f)
+						if err != nil {
+							return
+						}
+					}
+				}
+				// 关闭multipart writer，它将写入结束边界
+				err = w.Close()
+				if err != nil {
+					return
+				}
+				var wb = &bytes.Buffer{}
+				ws := multipart.NewWriter(wb)
+				for _, one := range this_.FormData {
+					if !one.Selected || one.Key == "" || one.IsFile {
+						continue
+					}
+					p, _ := ws.CreateFormField(one.Key)
+					if p != nil {
+						_, _ = p.Write([]byte(one.Value))
+					}
+
+					err = w.WriteField(one.Key, one.Value)
+					if err != nil {
+						return
+					}
+				}
+				_ = ws.Close()
+				bs, _ := io.ReadAll(wb)
+				this_.Body += string(bs)
+				if this_.ContentType == "" {
+					this_.ContentType = w.FormDataContentType()
+				}
+				res = b
+				return
+			}
+		}
+		this_.Body = this_.FormBody().Encode()
+		res = strings.NewReader(this_.Body)
+		if this_.ContentType == "" {
+			this_.ContentType = "application/x-www-form-urlencoded"
+		}
+		return
+	}
+
+	if this_.BodyType == "text" {
+		this_.Body = this_.Text
+		res = strings.NewReader(this_.Body)
+		if this_.ContentType == "" {
+			if this_.TextType == "json" {
+				this_.ContentType = "application/json"
+			}
+			if this_.TextType == "xml" {
+				this_.ContentType = "application/xml"
+			}
+		}
+		return
+	}
+
+	if this_.BodyType == "binary" {
+		if this_.ContentType == "" {
+			this_.ContentType = "application/octet-stream"
+		}
 		// 创建一个multipart表单
 		var b = &bytes.Buffer{}
-		w := multipart.NewWriter(b)
-		for name, fs := range this_.Files {
-			for _, f := range fs {
-				err = this_.appendFile(w, name, f)
-				if err != nil {
-					return
-				}
-			}
-		}
-		// 关闭multipart writer，它将写入结束边界
-		err = w.Close()
-		if err != nil {
-			return
-		}
-		if this_.Data != nil {
-			for key, value := range this_.Data {
-				err = w.WriteField(key, util.GetStringValue(value))
-				if err != nil {
-					return
-				}
-			}
-		}
-		if this_.ContentType == "" {
-			this_.ContentType = w.FormDataContentType()
-		}
-		return b, err
-	} else if this_.IsForm {
-		res = strings.NewReader(this_.FormBody().Encode())
-	} else if this_.IsJson {
-		if this_.Data != nil {
-			var bs []byte
-			bs, err = json.Marshal(this_.Data)
+		for _, one := range this_.Files {
+			this_.Body += "file binary:" + one.Name + "\n"
+			err = this_.appendFile(b, one)
 			if err != nil {
 				return
 			}
-			res = strings.NewReader(string(bs))
-		} else {
-			res = strings.NewReader(this_.Body)
 		}
-	} else if this_.IsXml {
-		if this_.Data != nil {
-			var bs []byte
-			bs, err = xml.Marshal(this_.Data)
-			if err != nil {
-				return
-			}
-			res = strings.NewReader(string(bs))
-		} else {
-			res = strings.NewReader(this_.Body)
-		}
+		res = b
+		return
 	}
 	return
 }
 
-func (this_ *Request) appendFile(w *multipart.Writer, name string, filePath string) (err error) {
+func (this_ *Request) appendFile(b *bytes.Buffer, f *FieldFile) (err error) {
 	// 打开文件
-	file, err := os.Open(filePath)
+	file, err := os.Open(f.Path)
+	if err != nil {
+		return
+	}
+	defer func() { _ = file.Close() }()
+	_, err = io.Copy(b, file)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (this_ *Request) appendFormFile(w *multipart.Writer, name string, f *FieldFile) (err error) {
+	// 打开文件
+	file, err := os.Open(f.Path)
 	if err != nil {
 		return
 	}
 	defer func() { _ = file.Close() }()
 	// 添加文件字段
-	fw, err := w.CreateFormFile(name, file.Name())
+	fw, err := w.CreateFormFile(name, f.Name)
 	if err != nil {
 		return
 	}
@@ -187,42 +269,51 @@ func (this_ *Request) appendFile(w *multipart.Writer, name string, filePath stri
 }
 
 type Response struct {
-	ContentType   string              `json:"contentType,omitempty"`
-	Header        http.Header         `json:"header,omitempty"`
-	Body          string              `json:"body,omitempty"`
-	Data          map[string]any      `json:"data,omitempty"`
-	Files         map[string][]string `json:"files,omitempty"`
-	IsForm        bool                `json:"isForm,omitempty"`
-	IsJson        bool                `json:"isJson,omitempty"`
-	IsXml         bool                `json:"isXml,omitempty"`
-	Status        string              `json:"status,omitempty"`
-	StatusCode    int                 `json:"statusCode,omitempty"`
-	ContentLength int64               `json:"contentLength,omitempty"`
+	ContentType   string      `json:"contentType,omitempty"`
+	Header        http.Header `json:"header,omitempty"`
+	Body          string      `json:"body,omitempty"`
+	Status        string      `json:"status,omitempty"`
+	StatusCode    int         `json:"statusCode,omitempty"`
+	ContentLength int64       `json:"contentLength,omitempty"`
 }
 
-func (this_ *api) Execute(request *Request) (res *Response, err error) {
+type Result struct {
+	Request  *Request  `json:"request,omitempty"`
+	Response *Response `json:"response,omitempty"`
+}
+
+func (this_ *api) Execute(request *Request) (res *Result, err error) {
 	reader, err := request.BodyReader()
 	if err != nil {
 		return
 	}
 	client := NewClient(request.Config)
 
-	r, err := http.NewRequest(request.Method, request.GetUrl(), reader)
+	request.Url = request.GetUrl()
+	r, err := http.NewRequest(request.Method, request.Url, reader)
 	if err != nil {
 		return
 	}
 	r.Header = request.GetHeader()
 
+	if request.ContentType != "" && r.Header.Get("Content-Type") == "" {
+		r.Header.Set("Content-Type", request.ContentType)
+	}
+
 	rR, err := client.Do(r)
 	if err != nil {
 		return
 	}
-	res = &Response{}
-	res.Status = rR.Status
-	res.StatusCode = rR.StatusCode
-	res.ContentLength = rR.ContentLength
-	res.Header = rR.Header
-	res.ContentType = rR.Header.Get("Content-Type")
+	resp := &Response{}
+	res = &Result{
+		Request:  request,
+		Response: resp,
+	}
+	resp.Status = rR.Status
+	resp.StatusCode = rR.StatusCode
+	resp.ContentLength = rR.ContentLength
+	resp.Header = rR.Header
+	resp.ContentType = rR.Header.Get("Content-Type")
 	resBody := rR.Body
 	if resBody == nil {
 		return
@@ -234,7 +325,7 @@ func (this_ *api) Execute(request *Request) (res *Response, err error) {
 		return
 	}
 	// 是文件流
-	if strings.Contains(res.ContentType, "application/octet-stream") {
+	if strings.Contains(resp.ContentType, "application/octet-stream") {
 		fileName := util.GetUUID()
 
 		teamFilePath := tempDir + "/" + fileName
@@ -253,7 +344,7 @@ func (this_ *api) Execute(request *Request) (res *Response, err error) {
 		if err != nil {
 			return
 		}
-		res.Body = string(bs)
+		resp.Body = string(bs)
 	}
 	return
 }
