@@ -62,8 +62,27 @@ func (this_ *ToolboxService) SaveExtend(data *ToolboxExtendModel) (err error) {
 			data.UpdateTime = time.Now()
 		}
 
-		sql := `UPDATE ` + TableToolboxExtend + ` SET name=?,value=?,updateTime=? WHERE extendId=? `
-		_, err = this_.DatabaseWorker.Exec(sql, []interface{}{data.Name, data.Value, data.UpdateTime, data.ExtendId})
+		sql := `UPDATE ` + TableToolboxExtend + ` SET `
+		var values []interface{}
+		if data.Name != "" {
+			sql += " name=?,"
+			values = append(values, data.Name)
+		}
+		if data.ExtendType != "" {
+			sql += " extendType=?,"
+			values = append(values, data.ExtendType)
+		}
+		if data.Value != "" {
+			sql += " value=?,"
+			values = append(values, data.Value)
+		}
+		sql += " updateTime=? "
+		values = append(values, data.UpdateTime)
+
+		sql += " WHERE extendId=?"
+		values = append(values, data.ExtendId)
+
+		_, err = this_.DatabaseWorker.Exec(sql, values)
 		if err != nil {
 			this_.Logger.Error("SaveExtend Error", zap.Error(err))
 			return

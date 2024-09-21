@@ -3,13 +3,21 @@ package module_http
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
+	"github.com/dop251/goja"
+	"github.com/team-ide/go-tool/javascript"
+	"github.com/team-ide/go-tool/task"
 	"github.com/team-ide/go-tool/util"
+	"go.uber.org/zap"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
+	"sync"
+	"teamide/internal/module/module_toolbox"
 	"time"
 )
 
@@ -67,6 +75,13 @@ type Request struct {
 
 	FormData []*Field     `json:"formData,omitempty"`
 	Files    []*FieldFile `json:"files,omitempty"`
+	extend   *Extend
+	dir      string
+
+	runtime        *goja.Runtime
+	scriptContext  map[string]interface{}
+	lock           sync.Mutex
+	toolboxService *module_toolbox.ToolboxService
 }
 
 type Field struct {
@@ -82,6 +97,196 @@ type FieldFile struct {
 	Path string `json:"path,omitempty"`
 }
 
+func (this_ *Request) init() (err error) {
+	if this_.runtime != nil {
+		return
+	}
+	this_.lock.Lock()
+	defer this_.lock.Unlock()
+	if this_.runtime != nil {
+		return
+	}
+	this_.runtime = goja.New()
+	this_.scriptContext = javascript.NewContext()
+	if len(this_.scriptContext) > 0 {
+		for key, value := range this_.scriptContext {
+			err = this_.runtime.Set(key, value)
+			if err != nil {
+				return
+			}
+		}
+	}
+	if this_.extend != nil {
+		for _, one := range this_.extend.Variables {
+			if !one.Selected || one.Key == "" {
+				continue
+			}
+			err = this_.runtime.Set(one.Key, one.Value)
+			if err != nil {
+				return
+			}
+		}
+		for _, one := range this_.extend.Secrets {
+			if !one.Selected || one.Key == "" {
+				continue
+			}
+			err = this_.runtime.Set(one.Key, this_.toolboxService.DecryptOptionAttr(one.Value))
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+func (this_ *Request) scriptValue(script string, param *task.ExecutorParam) (res any, err error) {
+	if script == "" {
+		return
+	}
+
+	err = this_.init()
+	if err != nil {
+		return
+	}
+
+	this_.lock.Lock()
+	defer this_.lock.Unlock()
+
+	if param == nil {
+		param = &task.ExecutorParam{}
+	}
+
+	err = this_.runtime.Set("index", param.Index)
+	if err != nil {
+		return
+	}
+	err = this_.runtime.Set("workerIndex", param.WorkerIndex)
+	if err != nil {
+		return
+	}
+
+	v, err := this_.runtime.RunString(script)
+	if err != nil {
+		err = errors.New("get scriptValue error:" + err.Error())
+		return
+	}
+	if v != nil {
+		res = v.Export()
+	}
+
+	return
+}
+func (this_ *Request) stringArg(arg string, param *task.ExecutorParam) (res any, err error) {
+	if arg == "" {
+		res = ""
+		return
+	}
+	text := ""
+	var re *regexp.Regexp
+	re, _ = regexp.Compile(`[$]+{(.+?)}`)
+	indexList := re.FindAllIndex([]byte(arg), -1)
+	var lastIndex int = 0
+	var v any
+	var vS string
+	for _, indexes := range indexList {
+		text += arg[lastIndex:indexes[0]]
+
+		lastIndex = indexes[1]
+
+		script := arg[indexes[0]+2 : indexes[1]-1]
+		script = strings.TrimSpace(script)
+		v, err = this_.scriptValue(script, param)
+		if err != nil {
+			return
+		}
+		vS = util.GetStringValue(v)
+		text += vS
+		//fmt.Println("stringArg:"+arg, ",value:", v, ",valueS:", vS, ",text:", text)
+	}
+	text += arg[lastIndex:]
+
+	res = text
+	if v != nil && text == vS {
+		return v, nil
+	}
+	return
+}
+func (this_ *Request) formatArg(arg interface{}, param *task.ExecutorParam) (res any, err error) {
+	if arg == nil {
+		return
+	}
+	switch tV := arg.(type) {
+	case string:
+		res, err = this_.stringArg(tV, param)
+		break
+	case []interface{}:
+		var list []interface{}
+		for _, one := range tV {
+			var v interface{}
+			v, err = this_.formatArg(one, param)
+			if err != nil {
+				return
+			}
+			list = append(list, v)
+		}
+		res = list
+		break
+	case map[string]any:
+		var data = map[string]any{}
+		for key, one := range tV {
+			var v interface{}
+			v, err = this_.formatArg(one, param)
+			if err != nil {
+				return
+			}
+			data[key] = v
+		}
+		res = data
+		break
+	default:
+		res = tV
+		break
+	}
+
+	return
+}
+
+func (this_ *Request) formatArgs(args []interface{}, param *task.ExecutorParam) (res []interface{}, err error) {
+	if len(args) == 0 {
+		return
+	}
+	for _, arg := range args {
+		var v interface{}
+		v, err = this_.formatArg(arg, param)
+		if err != nil {
+			return
+		}
+		res = append(res, v)
+	}
+
+	return
+}
+
+func (this_ *Request) formatValue(name, value string) (res string) {
+	defer func() {
+		if name != "" {
+			_ = this_.init()
+			if this_.runtime != nil {
+				_ = this_.runtime.Set(name, res)
+			}
+		}
+	}()
+	v, err := this_.stringArg(value, nil)
+	if err != nil {
+		res = value
+		this_.toolboxService.Logger.Error("formatValue error", zap.Any("value", value), zap.Error(err))
+		return
+	}
+	res = util.GetStringValue(v)
+	//fmt.Println("format:"+name, ",value:", res)
+
+	return
+}
 func (this_ *Request) GetUrl() string {
 	res := this_.Url
 	if this_.Path != "" {
@@ -101,7 +306,7 @@ func (this_ *Request) GetUrl() string {
 			} else {
 				res += "?"
 			}
-			res = res + one.Key + "=" + one.Value
+			res = res + one.Key + "=" + this_.formatValue(one.Key, one.Value)
 		}
 	}
 	return res
@@ -114,7 +319,7 @@ func (this_ *Request) FormBody() url.Values {
 			if !one.Selected || one.Key == "" {
 				continue
 			}
-			res.Set(one.Key, util.GetStringValue(one.Value))
+			res.Set(one.Key, this_.formatValue(one.Key, one.Value))
 		}
 	}
 	return res
@@ -127,7 +332,7 @@ func (this_ *Request) GetHeader() http.Header {
 			if !one.Selected || one.Key == "" {
 				continue
 			}
-			res.Set(one.Key, util.GetStringValue(one.Value))
+			res.Set(one.Key, this_.formatValue(one.Key, one.Value))
 		}
 	}
 	if this_.ContentType != "" {
@@ -175,11 +380,12 @@ func (this_ *Request) BodyReader() (res io.Reader, err error) {
 						continue
 					}
 					p, _ := ws.CreateFormField(one.Key)
+					v := this_.formatValue(one.Key, one.Value)
 					if p != nil {
-						_, _ = p.Write([]byte(one.Value))
+						_, _ = p.Write([]byte(v))
 					}
 
-					err = w.WriteField(one.Key, one.Value)
+					err = w.WriteField(one.Key, v)
 					if err != nil {
 						return
 					}
