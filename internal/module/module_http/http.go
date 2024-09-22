@@ -10,6 +10,7 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -58,6 +59,10 @@ func NewClient(config *Config) (client *http.Client) {
 
 type Request struct {
 	*Config
+	ToolboxId   int64    `json:"toolboxId,omitempty"`
+	ExtendId    int64    `json:"extendId,omitempty"`
+	ExecuteId   string   `json:"executeId,omitempty"`
+	Name        string   `json:"name,omitempty"`
 	Username    string   `json:"username,omitempty"`
 	Password    string   `json:"password,omitempty"`
 	Url         string   `json:"url,omitempty"`
@@ -481,14 +486,24 @@ type Response struct {
 	Status        string      `json:"status,omitempty"`
 	StatusCode    int         `json:"statusCode,omitempty"`
 	ContentLength int64       `json:"contentLength,omitempty"`
+	FileName      string      `json:"fileName,omitempty"`
 }
 
-type Result struct {
-	Request  *Request  `json:"request,omitempty"`
-	Response *Response `json:"response,omitempty"`
+type Execute struct {
+	StartTime    int64     `json:"startTime,omitempty"`
+	EndTime      int64     `json:"endTime,omitempty"`
+	Error        string    `json:"error,omitempty"`
+	RequestTime  int64     `json:"requestTime,omitempty"`
+	ResponseTime int64     `json:"responseTime,omitempty"`
+	Request      *Request  `json:"request,omitempty"`
+	Response     *Response `json:"response,omitempty"`
 }
 
-func (this_ *api) Execute(request *Request) (res *Result, err error) {
+func (this_ *api) Execute(request *Request) (res *Execute, err error) {
+	res = &Execute{
+		Request: request,
+	}
+	res.StartTime = util.GetNowMilli()
 	reader, err := request.BodyReader()
 	if err != nil {
 		return
@@ -506,15 +521,36 @@ func (this_ *api) Execute(request *Request) (res *Result, err error) {
 		r.Header.Set("Content-Type", request.ContentType)
 	}
 
+	res.RequestTime = util.GetNowMilli()
 	rR, err := client.Do(r)
+	res.ResponseTime = util.GetNowMilli()
 	if err != nil {
 		return
 	}
-	resp := &Response{}
-	res = &Result{
-		Request:  request,
-		Response: resp,
+
+	defer func() {
+		res.EndTime = util.GetNowMilli()
+		if err != nil {
+			res.Error = err.Error()
+		}
+
+		filePath := request.dir + "execute.json"
+		var f *os.File
+		f, err = os.Create(filePath)
+		if err != nil {
+			return
+		}
+		defer func() { _ = f.Close() }()
+		_, err = f.WriteString(util.GetStringValue(res))
+		if err != nil {
+			return
+		}
+	}()
+	if e, _ := util.PathExists(request.dir); !e {
+		_ = os.MkdirAll(request.dir, fs.ModePerm)
 	}
+	resp := &Response{}
+	res.Response = resp
 	resp.Status = rR.Status
 	resp.StatusCode = rR.StatusCode
 	resp.ContentLength = rR.ContentLength
@@ -526,17 +562,13 @@ func (this_ *api) Execute(request *Request) (res *Result, err error) {
 	}
 	defer func() { _ = resBody.Close() }()
 	var bs []byte
-	tempDir, err := util.GetTempDir()
-	if err != nil {
-		return
-	}
 	// 是文件流
 	if strings.Contains(resp.ContentType, "application/octet-stream") {
-		fileName := util.GetUUID()
+		resp.FileName = util.GetUUID()
 
-		teamFilePath := tempDir + "/" + fileName
+		filePath := request.dir + resp.FileName
 		var f *os.File
-		f, err = os.Create(teamFilePath)
+		f, err = os.Create(filePath)
 		if err != nil {
 			return
 		}

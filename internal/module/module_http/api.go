@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/team-ide/go-tool/util"
+	"os"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 )
@@ -19,26 +21,27 @@ func NewApi(toolboxService *module_toolbox.ToolboxService) *api {
 }
 
 var (
-	Power   = base.AppendPower(&base.PowerAction{Action: "http", Text: "HTTP", ShouldLogin: true, StandAlone: true})
-	execute = base.AppendPower(&base.PowerAction{Action: "execute", Text: "执行", ShouldLogin: true, StandAlone: true, Parent: Power})
-	close_  = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
+	Power         = base.AppendPower(&base.PowerAction{Action: "http", Text: "HTTP", ShouldLogin: true, StandAlone: true})
+	execute       = base.AppendPower(&base.PowerAction{Action: "execute", Text: "执行", ShouldLogin: true, StandAlone: true, Parent: Power})
+	history       = base.AppendPower(&base.PowerAction{Action: "history", Text: "历史执行", ShouldLogin: true, StandAlone: true, Parent: Power})
+	getExecute    = base.AppendPower(&base.PowerAction{Action: "getExecute", Text: "获取执行", ShouldLogin: true, StandAlone: true, Parent: Power})
+	deleteExecute = base.AppendPower(&base.PowerAction{Action: "deleteExecute", Text: "获取执行", ShouldLogin: true, StandAlone: true, Parent: Power})
+	close_        = base.AppendPower(&base.PowerAction{Action: "close", Text: "关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: execute, Do: this_.execute})
+	apis = append(apis, &base.ApiWorker{Power: history, Do: this_.history})
+	apis = append(apis, &base.ApiWorker{Power: getExecute, Do: this_.getExecute})
+	apis = append(apis, &base.ApiWorker{Power: deleteExecute, Do: this_.deleteExecute})
 	apis = append(apis, &base.ApiWorker{Power: close_, Do: this_.close})
 
 	return
 }
 
-type BaseRequest struct {
-	ToolboxId int64 `json:"toolboxId,omitempty"`
-	*Request
-}
-
 func (this_ *api) execute(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
-	request := &BaseRequest{}
+	request := &Request{}
 	if !base.RequestJSON(request, c) {
 		return
 	}
@@ -53,17 +56,87 @@ func (this_ *api) execute(requestBean *base.RequestBean, c *gin.Context) (res in
 		_ = json.Unmarshal([]byte(extends[0].Value), extend)
 	}
 	dir := this_.getRequestDir(request.ToolboxId)
-	//if e, _ := util.PathExists(dir); !e {
-	//	_ = os.MkdirAll(dir, fs.ModePerm)
-	//}
-	request.Request.dir = dir
-	request.Request.extend = extend
+	request.ExecuteId = util.GetUUID()
+	request.dir = dir + "" + request.ExecuteId + "/"
+	request.extend = extend
 	request.toolboxService = this_.toolboxService
 
-	res, err = this_.Execute(request.Request)
+	res, err = this_.Execute(request)
 	return
 }
 
+func (this_ *api) history(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	dir := this_.getRequestDir(request.ToolboxId)
+
+	if e, _ := util.PathExists(dir); !e {
+		return
+	}
+
+	fs, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	var list []map[string]any
+	for _, f := range fs {
+		if f.IsDir() {
+			bs, e := util.ReadFile(dir + "" + f.Name() + "/execute.json")
+			if e != nil {
+				continue
+			}
+			data := map[string]any{}
+			_ = json.Unmarshal(bs, &data)
+			list = append(list, data)
+		}
+	}
+	res = list
+	return
+}
+
+func (this_ *api) getExecute(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	dir := this_.getRequestDir(request.ToolboxId)
+
+	bs, err := util.ReadFile(dir + "" + request.ExecuteId + "/execute.json")
+	if err != nil {
+		return
+	}
+	data := map[string]any{}
+	_ = json.Unmarshal(bs, &data)
+	res = data
+	return
+}
+
+func (this_ *api) deleteExecute(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	dir := this_.getRequestDir(request.ToolboxId)
+
+	if e, _ := util.PathExists(dir + request.ExecuteId); !e {
+		return
+	}
+
+	if e, _ := util.IsSubPath(dir, dir+request.ExecuteId); !e {
+		return
+	}
+	err = os.RemoveAll(dir + request.ExecuteId)
+
+	return
+}
 func (this_ *api) close(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
 
 	return
