@@ -54,8 +54,8 @@ func (this_ *ToolboxService) SaveExtend(data *ToolboxExtendModel) (err error) {
 		if err != nil {
 			return
 		}
+		data.Value = string(bs)
 	}
-	data.Value = string(bs)
 
 	if data.ExtendId != 0 {
 		if data.UpdateTime.IsZero() {
@@ -121,6 +121,14 @@ func (this_ *ToolboxService) QueryExtends(q *ToolboxExtendModel) (res []*Toolbox
 	if q.UserId > 0 {
 		sql += " AND userId=?"
 		values = append(values, q.UserId)
+	}
+	if q.Name != "" {
+		sql += " AND name=?"
+		values = append(values, q.Name)
+	}
+	if q.Value != "" {
+		sql += " AND value=?"
+		values = append(values, q.Value)
 	}
 
 	sql += " ORDER BY createTime DESC"

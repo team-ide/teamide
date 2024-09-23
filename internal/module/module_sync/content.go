@@ -13,21 +13,24 @@ import (
 )
 
 type SyncInfo struct {
-	Explain              string           `json:"explain" yaml:"说明" sign:"explain"`
-	CreateBy             string           `json:"createBy" yaml:"所属" sign:"createBy"`
-	CreateAt             string           `json:"createAt" yaml:"时间" sign:"createAt"`
-	Encrypt              string           `json:"encrypt" yaml:"加密" sign:"encrypt"`
-	SignKey              string           `json:"signKey" yaml:"密串" sign:"signKey"`
-	Sign                 string           `json:"sign" yaml:"签名"`
-	UserSettingText      string           `json:"-" yaml:"个人设置" sign:"userSettingText"`
-	ToolboxGroupListText string           `json:"-" yaml:"工具分组" sign:"toolboxGroupListText"`
-	ToolboxListText      string           `json:"-" yaml:"工具" sign:"toolboxListText"`
-	UserSetting          map[string]any   `json:"-"`
-	UserSettingSize      int              `json:"userSettingSize"`
-	ToolboxGroupList     []map[string]any `json:"-"`
-	ToolboxGroupSize     int              `json:"toolboxGroupSize"`
-	ToolboxList          []map[string]any `json:"-"`
-	ToolboxSize          int              `json:"toolboxSize"`
+	Explain               string           `json:"explain" yaml:"说明" sign:"explain"`
+	CreateBy              string           `json:"createBy" yaml:"所属" sign:"createBy"`
+	CreateAt              string           `json:"createAt" yaml:"时间" sign:"createAt"`
+	Encrypt               string           `json:"encrypt" yaml:"加密" sign:"encrypt"`
+	SignKey               string           `json:"signKey" yaml:"密串" sign:"signKey"`
+	Sign                  string           `json:"sign" yaml:"签名"`
+	UserSettingText       string           `json:"-" yaml:"个人设置" sign:"userSettingText"`
+	ToolboxGroupListText  string           `json:"-" yaml:"工具分组" sign:"toolboxGroupListText"`
+	ToolboxListText       string           `json:"-" yaml:"工具" sign:"toolboxListText"`
+	ToolboxExtendListText string           `json:"-" yaml:"工具扩展" sign:"toolboxExtendListText"`
+	UserSetting           map[string]any   `json:"-"`
+	UserSettingSize       int              `json:"userSettingSize"`
+	ToolboxGroupList      []map[string]any `json:"-"`
+	ToolboxGroupSize      int              `json:"toolboxGroupSize"`
+	ToolboxList           []map[string]any `json:"-"`
+	ToolboxSize           int              `json:"toolboxSize"`
+	ToolboxExtendList     []map[string]any `json:"-"`
+	ToolboxExtendSize     int              `json:"toolboxExtendSize"`
 }
 
 func (this_ *SyncInfo) GetPassword(key string) (res []byte) {
@@ -112,6 +115,22 @@ func Read(key string, content string) (info *SyncInfo, err error) {
 		}
 	}
 	info.ToolboxSize = len(info.ToolboxList)
+
+	lines = strings.Split(strings.TrimSpace(info.ToolboxExtendListText), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		bs, e := Decrypt(line, password)
+		if e != nil {
+			continue
+		}
+		if e = thrift.Deserialize(ToolboxExtend, bs); e == nil {
+			info.ToolboxExtendList = append(info.ToolboxExtendList, ToolboxExtend.GetData())
+		}
+	}
+	info.ToolboxExtendSize = len(info.ToolboxExtendList)
 	return
 }
 
@@ -168,6 +187,19 @@ func Gen(key string, info *SyncInfo) (content string, err error) {
 		}
 		info.ToolboxListText += "  " + str + "\n"
 	}
+	// 生成 工具扩展 设置
+	for _, one := range info.ToolboxExtendList {
+		ToolboxExtend.SetData(one)
+		bs, err = thrift.Serialize(ToolboxExtend)
+		if err != nil {
+			return
+		}
+		str, err = Encrypt(bs, password)
+		if err != nil {
+			return
+		}
+		info.ToolboxExtendListText += "  " + str + "\n"
+	}
 
 	info.Sign = info.GenSign(key)
 
@@ -193,6 +225,11 @@ func Gen(key string, info *SyncInfo) (content string, err error) {
 	content += lineS1 + "\n"
 	content += "工具: |" + "\n"
 	content += info.ToolboxListText + "\n"
+	content += lineS1 + "\n\n"
+
+	content += lineS1 + "\n"
+	content += "工具扩展: |" + "\n"
+	content += info.ToolboxExtendListText + "\n"
 	content += lineS1 + "\n\n"
 
 	return

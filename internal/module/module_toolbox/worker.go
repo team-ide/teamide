@@ -946,15 +946,9 @@ func makerWorker() *ToolboxType {
 
 func httpWorker() *ToolboxType {
 	worker_ := &ToolboxType{
-		Name: "http",
-		Text: "HTTP/REST",
-		ConfigForm: &form.Form{
-			Fields: []*form.Field{
-				{
-					Label: "Root Url（根地址）", Name: "url",
-				},
-			},
-		},
+		Name:       "http",
+		Text:       "HTTP接口",
+		ConfigForm: &form.Form{},
 	}
 
 	return worker_

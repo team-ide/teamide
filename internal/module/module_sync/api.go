@@ -147,6 +147,7 @@ func (this_ *api) importFile(requestBean *base.RequestBean, c *gin.Context) (res
 				groupIdCache[gId] = find.GroupId
 			}
 		}
+		var toolboxIdCache = map[int64]int64{}
 
 		for _, d := range info.ToolboxList {
 			bs, err = json.Marshal(d)
@@ -164,6 +165,7 @@ func (this_ *api) importFile(requestBean *base.RequestBean, c *gin.Context) (res
 					continue
 				}
 			}
+			tId := t.ToolboxId
 			t.ToolboxId = 0
 			if t.ToolboxType == "" {
 				continue
@@ -177,6 +179,7 @@ func (this_ *api) importFile(requestBean *base.RequestBean, c *gin.Context) (res
 				gId = groupIdCache[t.GroupId]
 			}
 			if find != nil {
+				toolboxIdCache[tId] = find.ToolboxId
 				if param.ExistsDo == 1 {
 					continue
 				}
@@ -195,6 +198,44 @@ func (this_ *api) importFile(requestBean *base.RequestBean, c *gin.Context) (res
 				}
 				find.UserId = requestBean.JWT.UserId
 				_, err = this_.toolboxService.Insert(find)
+				if err != nil {
+					return
+				}
+				toolboxIdCache[tId] = find.ToolboxId
+			}
+		}
+
+		for _, d := range info.ToolboxExtendList {
+			bs, err = json.Marshal(d)
+			if err != nil {
+				return
+			}
+			t := &module_toolbox.ToolboxExtendModel{}
+			err = json.Unmarshal(bs, t)
+			if err != nil {
+				return
+			}
+			t.ExtendId = 0
+			if t.Value == "" || t.Name == "" || t.ExtendType == "" {
+				continue
+			}
+			if t.ToolboxId != 0 {
+				t.ToolboxId = toolboxIdCache[t.ToolboxId]
+				if t.ToolboxId == 0 {
+					continue
+				}
+			}
+			find, _ := this_.toolboxService.QueryExtends(&module_toolbox.ToolboxExtendModel{
+				UserId:     requestBean.JWT.UserId,
+				ExtendType: t.ExtendType,
+				Name:       t.Name,
+				Value:      t.Value,
+				ToolboxId:  t.ToolboxId,
+			})
+			if len(find) > 0 {
+			} else {
+				t.UserId = requestBean.JWT.UserId
+				err = this_.toolboxService.SaveExtend(t)
 				if err != nil {
 					return
 				}
@@ -294,13 +335,31 @@ func (this_ *api) genContent(userId int64, r *BaseRequest) (info *SyncInfo, cont
 			if err != nil {
 				return
 			}
-			fmt.Println(string(bs))
 			one := map[string]any{}
 			err = json.Unmarshal(bs, &one)
 			if err != nil {
 				return
 			}
 			info.ToolboxList = append(info.ToolboxList, one)
+		}
+
+		var extendList []*module_toolbox.ToolboxExtendModel
+		if extendList, err = this_.toolboxService.QueryExtends(&module_toolbox.ToolboxExtendModel{
+			UserId: userId,
+		}); err != nil {
+			return
+		}
+		for _, d := range extendList {
+			bs, err = json.Marshal(d)
+			if err != nil {
+				return
+			}
+			one := map[string]any{}
+			err = json.Unmarshal(bs, &one)
+			if err != nil {
+				return
+			}
+			info.ToolboxExtendList = append(info.ToolboxExtendList, one)
 		}
 	}
 

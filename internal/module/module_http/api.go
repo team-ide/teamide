@@ -202,6 +202,14 @@ func (this_ *api) getDir(toolboxId int64) (dir string) {
 }
 
 type Extend struct {
+	RootUrl string `json:"rootUrl,omitempty"`
+
 	Secrets   []*Field `json:"secrets,omitempty"`
 	Variables []*Field `json:"variables,omitempty"`
+
+	MaxIdleConn        int  `json:"maxIdleConn,omitempty"`     // 控制空闲（保持活动）的最大数量
+	MaxConnPerHost     int  `json:"maxConnPerHost,omitempty"`  // 每个主机的连接（包括拨号中的连接），包括活动状态和空闲状态。违反限制时，拨号将被阻止
+	IdleConnTimeout    int  `json:"idleConnTimeout,omitempty"` // 空闲的最长时间 秒
+	Timeout            int  `json:"timeout,omitempty"`         // 超时时间 秒
+	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
 }

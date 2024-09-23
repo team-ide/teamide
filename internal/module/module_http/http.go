@@ -22,17 +22,9 @@ import (
 	"time"
 )
 
-type Config struct {
-	MaxIdleConn        int  `json:"maxIdleConn,omitempty"`     // 控制空闲（保持活动）的最大数量
-	MaxConnPerHost     int  `json:"maxConnPerHost,omitempty"`  // 每个主机的连接（包括拨号中的连接），包括活动状态和空闲状态。违反限制时，拨号将被阻止
-	IdleConnTimeout    int  `json:"idleConnTimeout,omitempty"` // 空闲的最长时间 秒
-	Timeout            int  `json:"timeout,omitempty"`         // 超时时间 秒
-	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty"`
-}
-
-func NewClient(config *Config) (client *http.Client) {
+func NewClient(config *Extend) (client *http.Client) {
 	if config == nil {
-		config = &Config{}
+		config = &Extend{}
 		config.MaxIdleConn = 0
 		config.MaxConnPerHost = 0
 		config.IdleConnTimeout = 0
@@ -58,7 +50,6 @@ func NewClient(config *Config) (client *http.Client) {
 }
 
 type Request struct {
-	*Config
 	ToolboxId   int64    `json:"toolboxId,omitempty"`
 	ExtendId    int64    `json:"extendId,omitempty"`
 	ExecuteId   string   `json:"executeId,omitempty"`
@@ -293,7 +284,10 @@ func (this_ *Request) formatValue(name, value string) (res string) {
 	return
 }
 func (this_ *Request) GetUrl() string {
-	res := this_.Url
+	res := ""
+	if this_.extend != nil {
+		res = this_.extend.RootUrl
+	}
 	if this_.Path != "" {
 		if res != "" && !strings.HasSuffix(res, "/") && !strings.HasPrefix(this_.Path, "/") {
 			res += "/" + this_.Path
@@ -509,7 +503,11 @@ func (this_ *api) Execute(request *Request) (res *Execute, err error) {
 	if err != nil {
 		return
 	}
-	client := NewClient(request.Config)
+	client := NewClient(request.extend)
+
+	defer func() {
+		client.CloseIdleConnections()
+	}()
 
 	request.Url = request.GetUrl()
 	r, err := http.NewRequest(request.Method, request.Url, reader)

@@ -36,4 +36,14 @@ var (
 			{Name: "sequence", Num: 8, Type: thrift.GetFieldType(thriftlib.I32)},
 		},
 	}
+
+	ToolboxExtend = &thrift.Struct{
+		Fields: []*thrift.Field{
+			{Name: "extendId", Num: 1, Type: thrift.GetFieldType(thriftlib.I64)},
+			{Name: "toolboxId", Num: 2, Type: thrift.GetFieldType(thriftlib.I64)},
+			{Name: "extendType", Num: 3, Type: thrift.GetFieldType(thriftlib.STRING)},
+			{Name: "name", Num: 4, Type: thrift.GetFieldType(thriftlib.STRING)},
+			{Name: "value", Num: 5, Type: thrift.GetFieldType(thriftlib.STRING)},
+		},
+	}
 )
