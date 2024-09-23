@@ -487,6 +487,7 @@ type Response struct {
 	StatusCode    int         `json:"statusCode,omitempty"`
 	ContentLength int64       `json:"contentLength,omitempty"`
 	FileName      string      `json:"fileName,omitempty"`
+	*ContentInfo
 }
 
 type Execute struct {
@@ -532,6 +533,7 @@ func (this_ *api) Execute(request *Request) (res *Execute, err error) {
 		res.EndTime = util.GetNowMilli()
 		if err != nil {
 			res.Error = err.Error()
+			err = nil
 		}
 
 		filePath := request.dir + "execute.json"
@@ -562,9 +564,28 @@ func (this_ *api) Execute(request *Request) (res *Execute, err error) {
 	}
 	defer func() { _ = resBody.Close() }()
 	var bs []byte
+	resp.ContentInfo = GetContentInfo(resp.ContentType)
 	// 是文件流
-	if strings.Contains(resp.ContentType, "application/octet-stream") {
-		resp.FileName = util.GetUUID()
+	if resp.ContentInfo.IsFile {
+		//  获取Content-Disposition头
+		contentDisposition := rR.Header.Get("Content-Disposition")
+		if contentDisposition != "" && strings.Contains(contentDisposition, "filename=") {
+			// 解析Content-Disposition头来提取文件名
+			ss := strings.Split(contentDisposition, "filename=")
+			if len(ss) > 1 {
+				filename := strings.TrimSpace(ss[1])
+				resp.FileName, _ = url.PathUnescape(filename)
+				if resp.FileName == "" {
+					resp.FileName = filename
+				}
+			}
+		}
+		if resp.FileName == "" {
+			resp.FileName = GetFileNameFromURL(request.Url)
+		}
+		if resp.FileName == "" {
+			resp.FileName = util.GetUUID()
+		}
 
 		filePath := request.dir + resp.FileName
 		var f *os.File
