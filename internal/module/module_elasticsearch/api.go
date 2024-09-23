@@ -139,7 +139,7 @@ type BaseRequest struct {
 	PageIndex       int                    `json:"pageIndex"`
 	PageSize        int                    `json:"pageSize"`
 	ScrollId        string                 `json:"scrollId"`
-	Doc             interface{}            `json:"doc"`
+	Doc             string                 `json:"doc"`
 	SourceIndexName string                 `json:"sourceIndexName"`
 	DestIndexName   string                 `json:"destIndexName"`
 	AliasName       string                 `json:"aliasName"`
@@ -384,7 +384,11 @@ func (this_ *api) insertData(requestBean *base.RequestBean, c *gin.Context) (res
 		return
 	}
 
-	res, err = service.Insert(request.IndexName, request.Id, request.Doc)
+	data, err := util.JsonToMap(request.Doc)
+	if err != nil {
+		return
+	}
+	res, err = service.Insert(request.IndexName, request.Id, data)
 	if err != nil {
 		return
 	}
@@ -405,7 +409,11 @@ func (this_ *api) updateData(requestBean *base.RequestBean, c *gin.Context) (res
 		return
 	}
 
-	res, err = service.Update(request.IndexName, request.Id, request.Doc)
+	data, err := util.JsonToMap(request.Doc)
+	if err != nil {
+		return
+	}
+	res, err = service.Update(request.IndexName, request.Id, data)
 	if err != nil {
 		return
 	}
