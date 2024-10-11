@@ -166,7 +166,7 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 	sshConfig = ssh.Config{
 		Ciphers: Ciphers,
 	}
-	var timeout = 5 * time.Second
+	var timeout = 10 * time.Second
 	if config.Timeout > 0 {
 		timeout = time.Duration(config.Timeout) * time.Second
 	}
@@ -195,10 +195,26 @@ func NewClient(config Config) (client *ssh.Client, err error) {
 		}
 		client = ssh.NewClient(c, chanChannel, chanRequest)
 	} else {
-		client, err = ssh.Dial(config.Type, config.Address, clientConfig)
+
+		var conn net.Conn
+		d := net.Dialer{Timeout: timeout}
+		d.KeepAlive = 10 * time.Minute
+		d.FallbackDelay = 10 * time.Minute
+		conn, err = d.Dial(config.Type, config.Address)
 		if err != nil {
+			util.Logger.Error("ssh client Dial error", zap.Error(err))
 			return
 		}
+		var c ssh.Conn
+		var chanChannel <-chan ssh.NewChannel
+		var chanRequest <-chan *ssh.Request
+		c, chanChannel, chanRequest, err = ssh.NewClientConn(conn, config.Address, clientConfig)
+		if err != nil {
+			util.Logger.Error("ssh client NewClientConn error", zap.Error(err))
+			return
+		}
+		client = ssh.NewClient(c, chanChannel, chanRequest)
+
 	}
 	return
 }
