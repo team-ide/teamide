@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/tealeg/xlsx"
+	"github.com/tealeg/xlsx/v3"
 	"github.com/team-ide/go-dialect/dialect"
 	"github.com/team-ide/go-tool/datamove"
 	"github.com/team-ide/go-tool/db"
@@ -271,15 +271,26 @@ func (this_ *api) readFileColumnList(requestBean *base.RequestBean, c *gin.Conte
 			err = errors.New("open file [" + filePath + "] error:" + err.Error())
 			return
 		}
-		if len(file.Sheets) == 0 || len(file.Sheets[0].Rows) == 0 {
+		if len(file.Sheets) == 0 || file.Sheets[0].MaxRow == 0 {
 			err = errors.New("为解析到内容")
 			return
 		}
-		for _, col := range file.Sheets[0].Rows[0].Cells {
+		colLen := file.Sheets[0].Cols.Len
+		var firstRow *xlsx.Row
+		firstRow, err = file.Sheets[0].Row(0)
+		if err != nil {
+			return
+		}
+
+		for colIndex := 0; colIndex < colLen; colIndex++ {
+			cell := firstRow.GetCell(colIndex)
+			if cell == nil {
+				break
+			}
 			column := &datamove.Column{
 				ColumnModel: &dialect.ColumnModel{},
 			}
-			column.ColumnName = col.String()
+			column.ColumnName = cell.String()
 			columnList = append(columnList, column)
 		}
 		break
