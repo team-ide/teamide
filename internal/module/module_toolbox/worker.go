@@ -425,6 +425,7 @@ var (
 
 	thriftWorker_ = thriftWorker()
 	httpWorker_   = httpWorker()
+	serialWorker_ = serialWorker()
 	makerWorker_  = makerWorker()
 
 	otherWorker_ = otherWorker()
@@ -448,6 +449,7 @@ func initToolboxTypes() {
 	*toolboxTypes = append(*toolboxTypes, netConnWorker_)
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
 	*toolboxTypes = append(*toolboxTypes, httpWorker_)
+	*toolboxTypes = append(*toolboxTypes, serialWorker_)
 	if maker.HasMaker {
 		*toolboxTypes = append(*toolboxTypes, makerWorker_)
 	}
@@ -949,6 +951,44 @@ func httpWorker() *ToolboxType {
 		Name:       "http",
 		Text:       "HTTP接口",
 		ConfigForm: &form.Form{},
+	}
+
+	return worker_
+}
+
+func serialWorker() *ToolboxType {
+	worker_ := &ToolboxType{
+		Name: "serial",
+		Text: "串口",
+		ConfigForm: &form.Form{
+			Fields: []*form.Field{
+				{
+					Label: "串口名称（/dev/COM1）", Name: "portName", DefaultValue: "/dev/COM1",
+					Rules: []*form.Rule{
+						{Required: true, Message: "串口名称"},
+					},
+				},
+				{Label: "波特率", Name: "baudRate", Col: 8, IsNumber: true, DefaultValue: 9600},
+				{Label: "数据位", Name: "dataBits", Col: 8, IsNumber: true, DefaultValue: 8},
+				{Label: "停止位", Name: "stopBits", Col: 8, IsNumber: true, DefaultValue: 1},
+				{Label: "超时", Name: "interCharacterTimeout", Col: 8, IsNumber: true},
+				{Label: "最小读取", Name: "minimumReadSize", Col: 8, IsNumber: true, DefaultValue: 4},
+				{Label: "Parity Mode", Name: "parityMode", Col: 8, IsNumber: true, DefaultValue: 0, Type: "select",
+					Options: []*form.Option{
+						{Text: "PARITY_NONE", Value: "0"},
+						{Text: "PARITY_ODD", Value: "1"},
+						{Text: "PARITY_EVEN", Value: "2"},
+					},
+				},
+				{Label: "RTS CTS FlowControl", Name: "rtsCTSFlowControl", Col: 8, Type: "switch"},
+				{Label: "rs485 Enable", Name: "rs485Enable", Col: 8, Type: "switch"},
+				{Label: "rs485 Rts HighDuringSend", Name: "rs485RtsHighDuringSend", Col: 8, Type: "switch"},
+				{Label: "rs485 Rts HighAfterSend", Name: "rs485RtsHighAfterSend", Col: 8, Type: "switch"},
+				{Label: "rs485 Rx DuringTx", Name: "rs485RxDuringTx", Col: 8, Type: "switch"},
+				{Label: "rs485 Delay RtsBeforeSend", Name: "rs485DelayRtsBeforeSend", Col: 8, IsNumber: true, DefaultValue: 0},
+				{Label: "rs485 Delay RtsAfterSend", Name: "rs485DelayRtsAfterSend", Col: 8, IsNumber: true, DefaultValue: 0},
+			},
+		},
 	}
 
 	return worker_

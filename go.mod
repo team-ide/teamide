@@ -23,6 +23,7 @@ require (
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
+	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/shirou/gopsutil/v3 v3.23.12
