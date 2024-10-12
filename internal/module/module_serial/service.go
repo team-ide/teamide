@@ -1,6 +1,7 @@
 package module_serial
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -66,6 +67,9 @@ type Service struct {
 	conn      io.ReadWriteCloser
 	ws        *websocket.Conn
 	isStopped bool
+
+	InDataType  string `json:"inDataType"`
+	OutDataType string `json:"outDataType"`
 }
 
 func (this_ *Service) init() (err error) {
@@ -145,6 +149,14 @@ func (this_ *Service) startReadWS() {
 		if readErr != nil && readErr != io.EOF {
 			break
 		}
+
+		if this_.InDataType == "hex" {
+			b, e := hex.DecodeString(string(buf))
+			if e == nil {
+				buf = b
+			}
+		}
+
 		//this_.Logger.Info("ws on read", zap.Any("bs", string(buf)))
 		_, writeErr = this_.conn.Write(buf)
 
@@ -205,7 +217,12 @@ func (this_ *Service) startReadService() {
 		//}
 
 		if n > 0 {
-			writeErr = this_.ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+			if this_.OutDataType == "hex" {
+				s := hex.EncodeToString(buf[:n])
+				writeErr = this_.ws.WriteMessage(websocket.BinaryMessage, []byte(s))
+			} else {
+				writeErr = this_.ws.WriteMessage(websocket.BinaryMessage, buf[:n])
+			}
 			if writeErr != nil {
 				break
 			}

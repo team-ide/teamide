@@ -30,6 +30,7 @@ var (
 	check          = base.AppendPower(&base.PowerAction{Action: "check", Text: "串口测试", ShouldLogin: true, StandAlone: true, Parent: Power})
 	closePower     = base.AppendPower(&base.PowerAction{Action: "close", Text: "串口关闭", ShouldLogin: true, StandAlone: true, Parent: Power})
 	keyPower       = base.AppendPower(&base.PowerAction{Action: "key", Text: "串口Key", ShouldLogin: true, StandAlone: true, Parent: Power})
+	changeSetting  = base.AppendPower(&base.PowerAction{Action: "changeSetting", Text: "串口Key", ShouldLogin: true, StandAlone: true, Parent: Power})
 )
 
 func (this_ *api) GetApis() (apis []*base.ApiWorker) {
@@ -37,6 +38,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: websocketPower, Do: this_.websocket, IsWebSocket: true})
 	apis = append(apis, &base.ApiWorker{Power: check, Do: this_.check})
 	apis = append(apis, &base.ApiWorker{Power: closePower, Do: this_.close})
+	apis = append(apis, &base.ApiWorker{Power: changeSetting, Do: this_.changeSetting})
 
 	return
 }
@@ -65,6 +67,8 @@ func (this_ *api) key(requestBean *base.RequestBean, c *gin.Context) (res interf
 		return
 	}
 	service.Key = util.GetUUID()
+	service.InDataType = request.InDataType
+	service.OutDataType = request.OutDataType
 	setService(service.Key, service)
 	data := make(map[string]interface{})
 	data["key"] = service.Key
@@ -120,7 +124,9 @@ func (this_ *api) websocket(request *base.RequestBean, c *gin.Context) (res inte
 }
 
 type Request struct {
-	Key string `json:"key"`
+	Key         string `json:"key"`
+	InDataType  string `json:"inDataType"`
+	OutDataType string `json:"outDataType"`
 }
 
 func (this_ *api) check(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
@@ -149,6 +155,20 @@ func (this_ *api) close(_ *base.RequestBean, c *gin.Context) (res interface{}, e
 	service := getService(request.Key)
 	if service != nil {
 		service.stop()
+	}
+	return
+}
+
+func (this_ *api) changeSetting(_ *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	request := &Request{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	service := getService(request.Key)
+	if service != nil {
+		service.InDataType = request.InDataType
+		service.OutDataType = request.OutDataType
 	}
 	return
 }
