@@ -21,6 +21,7 @@ var (
 			{Name: "comment", Num: 3, Type: thrift.GetFieldType(thriftlib.STRING)},
 			{Name: "option", Num: 4, Type: thrift.GetFieldType(thriftlib.STRING)},
 			{Name: "sequence", Num: 5, Type: thrift.GetFieldType(thriftlib.I32)},
+			{Name: "parentId", Num: 6, Type: thrift.GetFieldType(thriftlib.I64)},
 		},
 	}
 

@@ -351,6 +351,22 @@ CREATE TABLE ` + TableToolboxExtend + ` (
 			},
 		},
 		/** 工具表 分组 添加顺序号 结束 **/
+
+		/** 工具表 分组 添加 父ID 开始 **/
+		{
+			Version: "1.0.4",
+			Module:  ModuleToolbox,
+			Stage:   `工具箱[` + TableToolboxGroup + `]添加顺序号[parentId]`,
+			Sql: &install.StageSqlModel{
+				Mysql: []string{
+					`ALTER TABLE ` + TableToolboxGroup + ` ADD COLUMN parentId int(10) DEFAULT NULL COMMENT '父ID';`,
+				},
+				Sqlite: []string{
+					`ALTER TABLE ` + TableToolboxGroup + ` ADD parentId int(10);`,
+				},
+			},
+		},
+		/** 工具表 分组 添加 父ID 结束 **/
 	}
 
 }

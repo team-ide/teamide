@@ -147,6 +147,27 @@ func (this_ *api) importFile(requestBean *base.RequestBean, c *gin.Context) (res
 				groupIdCache[gId] = find.GroupId
 			}
 		}
+
+		// 修改parentId
+		for _, d := range info.ToolboxGroupList {
+			bs, err = json.Marshal(d)
+			if err != nil {
+				return
+			}
+			g := &module_toolbox.ToolboxGroupModel{}
+			err = json.Unmarshal(bs, g)
+			if err != nil {
+				return
+			}
+			if g.ParentId == 0 || groupIdCache[g.ParentId] == 0 {
+				continue
+			}
+			_, err = this_.toolboxService.UpdateGroup(&module_toolbox.ToolboxGroupModel{
+				GroupId:  g.GroupId,
+				ParentId: groupIdCache[g.ParentId],
+			})
+		}
+
 		var toolboxIdCache = map[int64]int64{}
 
 		for _, d := range info.ToolboxList {

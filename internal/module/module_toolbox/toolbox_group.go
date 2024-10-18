@@ -131,9 +131,9 @@ func (this_ *ToolboxService) InsertGroup(toolboxGroup *ToolboxGroupModel) (rowsA
 		toolboxGroup.CreateTime = time.Now()
 	}
 
-	sql := `INSERT INTO ` + TableToolboxGroup + `(groupId, name, comment, option, userId, createTime) VALUES (?, ?, ?, ?, ?, ?) `
+	sql := `INSERT INTO ` + TableToolboxGroup + `(groupId, name, comment, option, userId, createTime, parentId) VALUES (?, ?, ?, ?, ?, ?, ?) `
 
-	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxGroup.GroupId, toolboxGroup.Name, toolboxGroup.Comment, toolboxGroup.Option, toolboxGroup.UserId, toolboxGroup.CreateTime})
+	rowsAffected, err = this_.DatabaseWorker.Exec(sql, []interface{}{toolboxGroup.GroupId, toolboxGroup.Name, toolboxGroup.Comment, toolboxGroup.Option, toolboxGroup.UserId, toolboxGroup.CreateTime, toolboxGroup.ParentId})
 	if err != nil {
 		this_.Logger.Error("InsertGroup Error", zap.Error(err))
 		return
@@ -185,6 +185,10 @@ func (this_ *ToolboxService) UpdateGroup(toolboxGroup *ToolboxGroupModel) (rowsA
 	if toolboxGroup.Option != "" {
 		sql += "option=?,"
 		values = append(values, toolboxGroup.Option)
+	}
+	if toolboxGroup.ParentId != 0 {
+		sql += "parentId=?,"
+		values = append(values, toolboxGroup.ParentId)
 	}
 
 	sql = strings.TrimSuffix(sql, ",")

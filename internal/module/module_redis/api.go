@@ -7,6 +7,8 @@ import (
 	"github.com/team-ide/go-tool/util"
 	"go.uber.org/zap"
 	goSSH "golang.org/x/crypto/ssh"
+	"sort"
+	"strings"
 	"teamide/internal/module/module_toolbox"
 	"teamide/pkg/base"
 	"teamide/pkg/ssh"
@@ -28,6 +30,7 @@ var (
 	infoPower          = base.AppendPower(&base.PowerAction{Action: "info", Text: "Redis信息", ShouldLogin: true, StandAlone: true, Parent: Power})
 	getPower           = base.AppendPower(&base.PowerAction{Action: "get", Text: "Redis获取Key值", ShouldLogin: true, StandAlone: true, Parent: Power})
 	keysPower          = base.AppendPower(&base.PowerAction{Action: "keys", Text: "Redis查询Keys", ShouldLogin: true, StandAlone: true, Parent: Power})
+	scanPower          = base.AppendPower(&base.PowerAction{Action: "scan", Text: "Redis Scan", ShouldLogin: true, StandAlone: true, Parent: Power})
 	setPower           = base.AppendPower(&base.PowerAction{Action: "set", Text: "Redis设置值", ShouldLogin: true, StandAlone: true, Parent: Power})
 	saddPower          = base.AppendPower(&base.PowerAction{Action: "sadd", Text: "Redis SAdd", ShouldLogin: true, StandAlone: true, Parent: Power})
 	sremPower          = base.AppendPower(&base.PowerAction{Action: "srem", Text: "Redis SRem", ShouldLogin: true, StandAlone: true, Parent: Power})
@@ -50,6 +53,7 @@ func (this_ *api) GetApis() (apis []*base.ApiWorker) {
 	apis = append(apis, &base.ApiWorker{Power: infoPower, Do: this_.info})
 	apis = append(apis, &base.ApiWorker{Power: getPower, Do: this_.get})
 	apis = append(apis, &base.ApiWorker{Power: keysPower, Do: this_.keys})
+	apis = append(apis, &base.ApiWorker{Power: scanPower, Do: this_.scan})
 	apis = append(apis, &base.ApiWorker{Power: setPower, Do: this_.set})
 	apis = append(apis, &base.ApiWorker{Power: saddPower, Do: this_.sadd})
 	apis = append(apis, &base.ApiWorker{Power: sremPower, Do: this_.srem})
@@ -148,11 +152,11 @@ type BaseRequest struct {
 	Key        string `json:"key"`
 	KeyBase64  string `json:"keyBase64"`
 	Value      string `json:"value"`
-	ValueSize  int    `json:"valueSize"`
+	ValueSize  int64  `json:"valueSize"`
 	ValueStart int    `json:"valueStart"`
 	Pattern    string `json:"pattern"`
 	Database   int    `json:"database"`
-	Size       int    `json:"size"`
+	Size       int64  `json:"size"`
 	DoType     string `json:"doType"`
 	Index      int64  `json:"index"`
 	Count      int64  `json:"count"`
@@ -224,11 +228,11 @@ func (this_ *api) get(requestBean *base.RequestBean, c *gin.Context) (res interf
 }
 
 type KeysResult struct {
-	Count   int        `json:"count"`
-	KeyList []*KeyInfo `json:"keyList"`
+	Database int        `json:"database"`
+	Count    int64      `json:"count"`
+	KeyList  []*KeyInfo `json:"keyList"`
 }
 type KeyInfo struct {
-	Database  int    `json:"database"`
 	Key       string `json:"key"`
 	KeyBase64 string `json:"keyBase64"`
 }
@@ -247,19 +251,70 @@ func (this_ *api) keys(requestBean *base.RequestBean, c *gin.Context) (res inter
 	if !base.RequestJSON(request, c) {
 		return
 	}
+	var size *redis.SizeArg = nil
+	if request.Size > 0 {
+		size = redis.NewSizeArg(request.Size)
+	}
 
-	kR, err := service.Keys(request.Pattern, redis.NewSizeArg(request.Size), &redis.Param{Database: request.Database})
+	kR, err := service.Keys(request.Pattern, size, &redis.Param{Database: request.Database})
 	if err != nil {
 		return
 	}
 	keysResult := &KeysResult{
-		Count: kR.Count,
+		Count:    kR.Count,
+		Database: kR.Database,
 	}
 	res = keysResult
 	for _, one := range kR.KeyList {
 		keyInfo := &KeyInfo{
-			Database: one.Database,
-			Key:      one.Key,
+			Key: one,
+		}
+		if keyInfo.Key != "" {
+			keyInfo.KeyBase64 = base64.StdEncoding.EncodeToString([]byte(keyInfo.Key))
+		}
+		keysResult.KeyList = append(keysResult.KeyList, keyInfo)
+	}
+	return
+}
+
+func (this_ *api) scan(requestBean *base.RequestBean, c *gin.Context) (res interface{}, err error) {
+	config, sshConfig, err := this_.getConfig(requestBean, c)
+	if err != nil {
+		return
+	}
+	service, err := getService(config, sshConfig)
+	if err != nil {
+		return
+	}
+
+	request := &BaseRequest{}
+	if !base.RequestJSON(request, c) {
+		return
+	}
+
+	var size *redis.SizeArg = nil
+	if request.Size > 0 {
+		size = redis.NewSizeArg(request.Size)
+	}
+	var count *redis.CountArg = nil
+	if request.Count > 0 {
+		count = redis.NewCountArg(request.Count)
+	}
+	kR, err := service.Scan(request.Pattern, size, count, &redis.Param{Database: request.Database})
+	if err != nil {
+		return
+	}
+	keysResult := &KeysResult{
+		Count:    kR.Count,
+		Database: kR.Database,
+	}
+	res = keysResult
+	sort.Slice(kR.KeyList, func(i, j int) bool {
+		return strings.ToLower(kR.KeyList[i]) < strings.ToLower(kR.KeyList[j]) //升序  即前面的值比后面的小 忽略大小写排序
+	})
+	for _, one := range kR.KeyList {
+		keyInfo := &KeyInfo{
+			Key: one,
 		}
 		if keyInfo.Key != "" {
 			keyInfo.KeyBase64 = base64.StdEncoding.EncodeToString([]byte(keyInfo.Key))

@@ -93,6 +93,7 @@ type ToolboxGroupModel struct {
 	Sequence   int       `json:"sequence,omitempty"`
 	CreateTime time.Time `json:"createTime,omitempty"`
 	UpdateTime time.Time `json:"updateTime,omitempty"`
+	ParentId   int64     `json:"parentId,omitempty"`
 }
 
 // ToolboxQuickCommandModel 工具箱快速命令
