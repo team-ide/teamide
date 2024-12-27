@@ -14,7 +14,7 @@ function start(){
     chmod +x node
     echo " ldd node"
     ldd node
-    nohup ./node -address=0.0.0.0:2013 -id=TeamIDE-Node-HW-Cloud -token=x1x2x3x4 > log/start.log 2>&1 &
+    nohup ./node -address=0.0.0.0:55101 -id=81 -token=x > log/start.log 2>&1 &
 
     echo "start successful"
     return 0

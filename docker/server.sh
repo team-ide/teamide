@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # 移至脚本目录
 cd `dirname $0`
@@ -57,6 +57,6 @@ case $1 in
     version
     ;;
 *)
-    echo "请输入: start, stop, restart"
+    echo "请输入: start, stop, restart, version"
     ;;
 esac

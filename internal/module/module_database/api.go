@@ -709,7 +709,7 @@ func (this_ *api) dataListExec(requestBean *base.RequestBean, c *gin.Context) (r
 	}
 	param := this_.getParam(requestBean, c)
 
-	err = service.DataListExec(param, request.OwnerName, request.TableName, request.ColumnList,
+	res, err = service.DataListExec(param, request.OwnerName, request.TableName, request.ColumnList,
 		request.InsertList,
 		request.UpdateList, request.UpdateWhereList,
 		request.DeleteList,
