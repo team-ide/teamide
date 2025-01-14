@@ -239,8 +239,8 @@ github.com/tealeg/xlsx/v3 v3.3.10 h1:hz4MO213nguwiz69QI6MkbYWcqhC3tEnXsBf2Eaqtog
 github.com/tealeg/xlsx/v3 v3.3.10/go.mod h1:KV4FTFtvGy0TBlOivJLZu/YNZk6e0Qtk7eOSglWksuA=
 github.com/team-ide/cron v1.0.1 h1:CrkjAOsS76g76ZsFOTBCZpzjm9GlUxwfPv85vq4vmZQ=
 github.com/team-ide/cron v1.0.1/go.mod h1:0o4pG9buGit9ZDS6CeKyUcMG95HErba2edMMyXE+i2A=
-github.com/team-ide/go-dialect v1.9.24 h1:lCzK+OophqCs4pBOtoTntc38MD2vQEVQpK7U63lZnHA=
-github.com/team-ide/go-dialect v1.9.24/go.mod h1:2k0TuEO4eyzDhAln6P3fteEIPYD6rh992T9kgIKuxaU=
+github.com/team-ide/go-dialect v1.9.27 h1:MDIFVgsO9/LRzfPETN0jlJWG8LHW/1PehtyqfUywKHk=
+github.com/team-ide/go-dialect v1.9.27/go.mod h1:2k0TuEO4eyzDhAln6P3fteEIPYD6rh992T9kgIKuxaU=
 github.com/team-ide/go-driver v1.3.4 h1:FXlX2KmeV0zGlk4QGEg+ECjcN/BX1I9zYDF6DnSfFjQ=
 github.com/team-ide/go-driver v1.3.4/go.mod h1:UhcuTAQRnvBUZXJeOA06eGJDeTqScJyfhyjpyzh3lxg=
 github.com/team-ide/go-interpreter v0.1.2 h1:m2C973+Wmp0GJ8khjZJfTjDCs9uRKCnMjm7is6+UkUo=

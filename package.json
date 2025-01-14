@@ -1,5 +1,5 @@
 {
   "name": "TeamIDE",
-  "version": "2.6.32",
+  "version": "2.6.33",
   "main": "./dist/main/main.js"
 }

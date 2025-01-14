@@ -2,8 +2,9 @@ module teamide
 
 go 1.18
 
-//replace github.com/team-ide/go-dialect v1.9.19 => ../go-dialect
-//replace github.com/team-ide/go-tool v1.2.12 => ../go-tool
+//replace github.com/team-ide/go-dialect => ../go-dialect
+//
+//replace github.com/team-ide/go-tool => ../go-tool
 
 replace github.com/dop251/goja => github.com/team-ide/goja v1.0.4
 
@@ -29,7 +30,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/tealeg/xlsx/v3 v3.3.10
 	github.com/team-ide/cron v1.0.1
-	github.com/team-ide/go-dialect v1.9.24
+	github.com/team-ide/go-dialect v1.9.27
 	github.com/team-ide/go-tool v1.2.35
 	go.mongodb.org/mongo-driver v1.17.1
 	go.uber.org/zap v1.27.0
