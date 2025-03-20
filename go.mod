@@ -28,11 +28,11 @@ require (
 	github.com/mssola/user_agent v0.6.0
 	github.com/pkg/sftp v1.13.6
 	github.com/shirou/gopsutil/v3 v3.23.12
-	github.com/tealeg/xlsx/v3 v3.3.10
+	github.com/tealeg/xlsx/v3 v3.3.12
 	github.com/team-ide/cron v1.0.1
-	github.com/team-ide/go-dialect v1.9.27
-	github.com/team-ide/go-tool v1.2.35
-	go.mongodb.org/mongo-driver v1.17.1
+	github.com/team-ide/go-dialect v1.9.29
+	github.com/team-ide/go-tool v1.2.41
+	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.28.0
 	golang.org/x/net v0.25.0
@@ -42,7 +42,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	gitee.com/opengauss/openGauss-connector-go-pq v1.0.4 // indirect
+	gitee.com/opengauss/openGauss-connector-go-pq v1.0.7 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
@@ -52,7 +52,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/dlclark/regexp2 v1.11.4 // indirect
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
-	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
@@ -85,7 +85,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.15.14 // indirect
+	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -111,7 +111,7 @@ require (
 	github.com/shabbyrobe/xmlwriter v0.0.0-20200208144257-9fca06d00ffa // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/team-ide/go-driver v1.3.4 // indirect
+	github.com/team-ide/go-driver v1.3.6 // indirect
 	github.com/team-ide/go-interpreter v0.1.2 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
