@@ -31,7 +31,7 @@ require (
 	github.com/tealeg/xlsx/v3 v3.3.12
 	github.com/team-ide/cron v1.0.1
 	github.com/team-ide/go-dialect v1.9.29
-	github.com/team-ide/go-tool v1.2.41
+	github.com/team-ide/go-tool v1.2.46
 	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.28.0
