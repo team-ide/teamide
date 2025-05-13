@@ -5,7 +5,7 @@ on:
       - dev*
 jobs:
   push:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
 
       - name: Sync Github Repos To Gitee # 名字随便起

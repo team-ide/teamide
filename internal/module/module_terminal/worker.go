@@ -288,7 +288,6 @@ type Worker struct {
 	commandLogFile *os.File
 	isRz           bool
 	isSz           bool
-	isLastSzEnd    bool
 
 	isStopped bool
 }
@@ -341,6 +340,9 @@ var (
 
 	// zmodem 取消 \x18\x18\x18\x18\x18\x08\x08\x08\x08\x08
 	sshCancel = []byte{24, 24, 24, 24, 24, 8, 8, 8, 8, 8}
+
+	sshSZError1End = []byte{42, 42, 7, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50, 100, 13, 10}
+	sshSZError2End = []byte{241, 164, 13, 42, 42, 24, 66, 48, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 50, 50}
 )
 
 func (this_ *Worker) onServiceRead(bs []byte) {
@@ -353,6 +355,12 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 			util.Logger.Error("onServiceRead error", zap.Any("err", e))
 		}
 	}()
+	//var l = len(bs)
+	//if l > 20 {
+	//	l = 20
+	//}
+	//fmt.Println("onServiceRead bytes:", bs[:l])
+	//fmt.Println("onServiceRead string:", string(bs[:l]))
 
 	if !this_.isRz && (bytes.Contains(bs, sshRZStart) || bytes.Contains(bs, sshRZSStart) || bytes.Contains(bs, sshRZEStart) || bytes.Contains(bs, sshRZESStart)) {
 		this_.isRz = true
@@ -364,18 +372,13 @@ func (this_ *Worker) onServiceRead(bs []byte) {
 	} else if !this_.isSz && bytes.Contains(bs, sshSZStart) {
 		this_.isSz = true
 		bs = []byte(fmt.Sprintf("\n开始下载文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
-	} else if this_.isSz && bytes.Contains(bs, sshSZEnd) {
+	} else if this_.isSz && (bytes.Contains(bs, sshSZEnd) || bytes.Equal(bs, sshSZError1End) || bytes.Equal(bs, sshSZError2End)) {
 		this_.isSz = false
-		this_.isLastSzEnd = true
 		bs = []byte(fmt.Sprintf("\n结束下载文件:%s\n", util.TimeFormat(time.Now(), "2006-01-02 15:04:05.000")))
 	} else {
 		if this_.isSz || this_.isRz {
 			return
 		}
-		if this_.isLastSzEnd && bytes.Equal(bs, sshSZEndOO) {
-			return
-		}
-		this_.isLastSzEnd = false
 	}
 
 	if this_.commandLogFile == nil {
