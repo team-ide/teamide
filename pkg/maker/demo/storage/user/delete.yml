@@ -1,7 +1,0 @@
-# 数据层，处理数据库等落地数据
-# 参数
-args:
-    - name: userId # 参数名称
-      type: i64 # 参数类型
-func: | # 函数内容
-    return db.delete(ctx, "tb_user", "userId=${userId}", {userId:userId})

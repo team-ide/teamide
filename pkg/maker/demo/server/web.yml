@@ -1,9 +1,0 @@
-host: 0.0.0.0
-port: 10011
-contextPath: /demo/api
-token:
-  include:
-  exclude:
-  validate:
-  var:
-  varType:

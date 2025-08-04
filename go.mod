@@ -21,7 +21,6 @@ require (
 	github.com/creack/pty v1.1.21
 	github.com/dop251/goja v0.0.0-20240516125602-ccbae20bcec2
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-zookeeper/zk v1.0.4
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
@@ -30,8 +29,8 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.12
 	github.com/tealeg/xlsx/v3 v3.3.12
 	github.com/team-ide/cron v1.0.1
-	github.com/team-ide/go-dialect v1.9.29
-	github.com/team-ide/go-tool v1.2.46
+	github.com/team-ide/go-dialect v1.9.30
+	github.com/team-ide/go-tool v1.2.48
 	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.28.0
@@ -68,6 +67,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
+	github.com/go-zookeeper/zk v1.0.4 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/godror/godror v0.37.0 // indirect
 	github.com/godror/knownpb v0.1.0 // indirect

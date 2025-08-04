@@ -1,5 +1,0 @@
-args:
-  - name: user
-    type: user
-func: |
-  return db.insert(ctx, "tb_user", user)

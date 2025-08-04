@@ -15,7 +15,6 @@ import (
 	"sync"
 	"teamide/pkg/base"
 	"teamide/pkg/form"
-	"teamide/pkg/maker"
 	"teamide/pkg/ssh"
 )
 
@@ -450,9 +449,6 @@ func initToolboxTypes() {
 	*toolboxTypes = append(*toolboxTypes, thriftWorker_)
 	*toolboxTypes = append(*toolboxTypes, httpWorker_)
 	*toolboxTypes = append(*toolboxTypes, serialWorker_)
-	if maker.HasMaker {
-		*toolboxTypes = append(*toolboxTypes, makerWorker_)
-	}
 	//*toolboxTypes = append(*toolboxTypes, otherWorker_)
 }
 

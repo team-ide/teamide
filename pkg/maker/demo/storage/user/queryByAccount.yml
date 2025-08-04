@@ -1,7 +1,0 @@
-# 数据层，处理数据库等落地数据
-# 参数
-args:
-    - name: account # 参数名称
-      type: string # 参数类型
-func: | # 函数内容
-    return db.selectOne(ctx, "select * from tb_user where account=${account}", {account:account}, struct.user)

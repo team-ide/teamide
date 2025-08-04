@@ -1,9 +1,0 @@
-args:
-  - name: userId
-    type: i64
-func: |
-  if(util.isEmpty(userId)){
-    throw error.USER_ID_IS_EMPTY;
-  }
-  storage.user.delete(ctx, userId)
-  redis.del(`user-${userId}`)
