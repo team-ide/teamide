@@ -245,8 +245,8 @@ github.com/team-ide/go-driver v1.3.6 h1:+U8DSI1VQCZ3E4IHlwScOdd2G7/W+aj+eO0P2Ep0
 github.com/team-ide/go-driver v1.3.6/go.mod h1:UhcuTAQRnvBUZXJeOA06eGJDeTqScJyfhyjpyzh3lxg=
 github.com/team-ide/go-interpreter v0.1.2 h1:m2C973+Wmp0GJ8khjZJfTjDCs9uRKCnMjm7is6+UkUo=
 github.com/team-ide/go-interpreter v0.1.2/go.mod h1:te6P2p8hjs7dB90D8SNsiOPPMwte/KFceES5ddmasjE=
-github.com/team-ide/go-tool v1.2.48 h1:9Li8K3cqfJgYY9Ry2TRNKfi+G0ff0yu2BLHZn3NYdqg=
-github.com/team-ide/go-tool v1.2.48/go.mod h1:taQQmlFDboxTVl2I9tvrbF5FmQoPswr0xl0AiJByzuo=
+github.com/team-ide/go-tool v1.2.49 h1:Myifws3RoAWNMRfp5siCMXBQohp/WN/41b31tvAI5zM=
+github.com/team-ide/go-tool v1.2.49/go.mod h1:taQQmlFDboxTVl2I9tvrbF5FmQoPswr0xl0AiJByzuo=
 github.com/team-ide/goja v1.0.4 h1:jmPVRk1rAtkvdncVL9rjlyCrYQBou6HgwDRNWnLnqP4=
 github.com/team-ide/goja v1.0.4/go.mod h1:WUV1qbPVN754l6kT35lPkoU0Ck6zlcE7UWl9F44ui/Q=
 github.com/team-ide/zap v1.27.0 h1:2DLUFPDfsxujtfSjEh8MEKSyaHakx3jYRct9fF7B7pk=

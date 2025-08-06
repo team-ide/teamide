@@ -562,6 +562,7 @@ func databaseWorker() *ToolboxType {
 				{Label: "TLS RootCert", Name: "tlsRootCert", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
 				{Label: "TLS Client Cert", Name: "tlsClientCert", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
 				{Label: "TLS Client Key", Name: "tlsClientKey", Type: "file", VIf: `type == 'mysql' && tlsConfig == 'custom'`},
+				{Label: "追加参数（charset=utf8mb4）", Name: "dsnAppend", VIf: `type != 'odbc' && type != 'gbase'`},
 			},
 		},
 	}

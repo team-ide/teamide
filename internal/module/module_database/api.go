@@ -178,6 +178,9 @@ func getService(config *db.Config, sshConfig *ssh.Config) (res db.IService, err 
 				return
 			}
 		}
+		if config.Type == "mysql" && config.DsnAppend == "" {
+			config.DsnAppend = "&charset=utf8mb4"
+		}
 		s, err = db.New(config)
 		if err != nil {
 			util.Logger.Error("getDatabaseService error", zap.Any("key", key), zap.Error(err))
