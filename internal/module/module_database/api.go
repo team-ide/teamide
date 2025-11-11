@@ -308,10 +308,76 @@ func (this_ *api) owners(requestBean *base.RequestBean, c *gin.Context) (res int
 
 	param := this_.getParam(requestBean, c)
 
-	res, err = service.OwnersSelect(param)
-	if err != nil {
-		return
+	// 添加日志输出，帮助排查达梦数据库库列表缺失问题
+	util.Logger.Info("[Database OwnersSelect] Start",
+		zap.Any("databaseType", config.Type),
+		zap.Any("param", param),
+	)
+
+	// 达梦数据库特殊处理：直接查询所有schema
+	if config.Type == "dameng" {
+		util.Logger.Info("[Database OwnersSelect] DaMeng custom query start")
+		var owners []*dialect.OwnerModel
+		sql := "SELECT NAME FROM SYSOBJECTS WHERE TYPE$ = 'SCH' ORDER BY NAME"
+		executeList, _, queryErr := service.ExecuteSQL(param, "", sql, &db.ExecuteOptions{})
+		if queryErr != nil {
+			err = queryErr
+			util.Logger.Error("[Database OwnersSelect] ExecuteSQL error", zap.Error(err))
+			return
+		}
+
+		util.Logger.Info("[Database OwnersSelect] ExecuteSQL result",
+			zap.Int("executeListLen", len(executeList)),
+			zap.Any("executeList", executeList),
+		)
+
+		if len(executeList) > 0 {
+			// dataList 类型是 []interface{}，每个元素是 map[string]interface{}
+			if dataListRaw, ok := executeList[0]["dataList"]; ok {
+				util.Logger.Info("[Database OwnersSelect] dataList found", zap.Any("type", fmt.Sprintf("%T", dataListRaw)))
+				// 尝试两种类型
+				if dataList, ok2 := dataListRaw.([]interface{}); ok2 {
+					util.Logger.Info("[Database OwnersSelect] dataList is []interface{}", zap.Int("len", len(dataList)))
+					for _, item := range dataList {
+						if row, ok3 := item.(map[string]interface{}); ok3 {
+							if name, ok4 := row["NAME"].(string); ok4 {
+								owners = append(owners, &dialect.OwnerModel{
+									OwnerName: name,
+								})
+							}
+						}
+					}
+				} else if dataList2, ok2 := dataListRaw.([]map[string]interface{}); ok2 {
+					util.Logger.Info("[Database OwnersSelect] dataList is []map[string]interface{}", zap.Int("len", len(dataList2)))
+					for _, row := range dataList2 {
+						if name, ok3 := row["NAME"].(string); ok3 {
+							owners = append(owners, &dialect.OwnerModel{
+								OwnerName: name,
+							})
+						}
+					}
+				} else {
+					util.Logger.Warn("[Database OwnersSelect] dataList type not matched", zap.Any("type", fmt.Sprintf("%T", dataListRaw)))
+				}
+			} else {
+				util.Logger.Warn("[Database OwnersSelect] dataList key not found")
+			}
+		}
+		res = owners
+	} else {
+		res, err = service.OwnersSelect(param)
+		if err != nil {
+			return
+		}
 	}
+
+	// 打印返回结果以便调试
+	util.Logger.Info("[Database OwnersSelect] Result",
+		zap.Any("databaseType", config.Type),
+		zap.Any("resultCount", len(res.([]*dialect.OwnerModel))),
+		zap.Any("owners", res),
+	)
+
 	return
 }
 
