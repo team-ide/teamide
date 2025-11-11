@@ -1,6 +1,6 @@
 module teamide
 
-go 1.18
+go 1.24.0
 
 //replace github.com/team-ide/go-dialect => ../go-dialect
 //
@@ -33,8 +33,8 @@ require (
 	github.com/team-ide/go-tool v1.2.50
 	go.mongodb.org/mongo-driver v1.17.3
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.28.0
-	golang.org/x/net v0.25.0
+	golang.org/x/crypto v0.43.0
+	golang.org/x/net v0.45.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -43,6 +43,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	gitee.com/opengauss/openGauss-connector-go-pq v1.0.7 // indirect
 	github.com/Shopify/sarama v1.38.1 // indirect
+	github.com/VictoriaMetrics/easyproto v0.1.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -58,22 +59,22 @@ require (
 	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
-	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/go-logfmt/logfmt v0.6.1 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
-	github.com/go-sql-driver/mysql v1.8.1 // indirect
+	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-zookeeper/zk v1.0.4 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/godror/godror v0.37.0 // indirect
-	github.com/godror/knownpb v0.1.0 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/godror/godror v0.49.4 // indirect
+	github.com/godror/knownpb v0.3.0 // indirect
+	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.0.0 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20230207041349-798e818bf904 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -95,7 +96,7 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-sqlite3 v1.14.16 // indirect
+	github.com/mattn/go-sqlite3 v1.14.32 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
@@ -111,7 +112,7 @@ require (
 	github.com/shabbyrobe/xmlwriter v0.0.0-20200208144257-9fca06d00ffa // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/team-ide/go-driver v1.3.6 // indirect
+	github.com/team-ide/go-driver v1.3.8 // indirect
 	github.com/team-ide/go-interpreter v0.1.2 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -125,9 +126,10 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
-	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 )

@@ -164,7 +164,7 @@ func main() {
 	}
 	util.Logger.Info("server start success")
 	if serverContext.IsHtmlDev {
-		serverUrl = "http://127.0.0.1:21081/"
+		serverUrl = "https://127.0.0.1:21081/"
 	}
 
 	// 如果是  Electron 打开该程序，则监听控制台
