@@ -46,6 +46,9 @@ type terminalService struct {
 	lastUser     string
 	lastDir      string
 	sftpClient   *sftp.Client
+	// keepalive 标记
+	isKeepalive   bool
+	keepaliveLock sync.Mutex
 }
 
 func (this_ *terminalService) IsWindows() (isWindows bool, err error) {
@@ -282,14 +285,41 @@ func (this_ *terminalService) idleSend(idleSendChar string) {
 		sendBytes = []byte{f}
 	}
 
-	util.Logger.Info("idleSend", zap.Any("idleSendChar", idleSendChar), zap.ByteString("sendBytes", sendBytes))
-	_, err := this_.Write(sendBytes)
+	// 标记为 keepalive 发送
+	this_.keepaliveLock.Lock()
+	this_.isKeepalive = true
+	this_.keepaliveLock.Unlock()
+
+	// 静默发送，不记录到日志
+	_, err := this_.writeSilent(sendBytes)
 	if err != nil {
 		util.Logger.Error("idleSend error", zap.Any("idleSendChar", idleSendChar), zap.ByteString("sendBytes", sendBytes), zap.Error(err))
 	}
+
+	// 等待一小段时间让服务器响应被读取并过滤
+	time.Sleep(100 * time.Millisecond)
+
+	// 取消 keepalive 标记
+	this_.keepaliveLock.Lock()
+	this_.isKeepalive = false
+	this_.keepaliveLock.Unlock()
 	return
 }
 func (this_ *terminalService) Write(buf []byte) (n int, err error) {
+	this_.writeLock.Lock()
+	defer this_.writeLock.Unlock()
+
+	if this_.stdin == nil {
+		err = errors.New("in io is null")
+		return
+	}
+	n = len(buf)
+	err = util.Write(this_.stdin, buf, nil)
+	return
+}
+
+// writeSilent 静默写入，用于 keepalive 等不需要记录的操作
+func (this_ *terminalService) writeSilent(buf []byte) (n int, err error) {
 	this_.writeLock.Lock()
 	defer this_.writeLock.Unlock()
 
@@ -312,6 +342,14 @@ func (this_ *terminalService) Read(buf []byte) (n int, err error) {
 		return
 	}
 	n, err = this_.stdout.Read(buf)
+
+	// 如果是 keepalive 产生的读取，丢弃数据
+	this_.keepaliveLock.Lock()
+	if this_.isKeepalive && n > 0 {
+		// 返回0长度，表示没有数据需要显示
+		n = 0
+	}
+	this_.keepaliveLock.Unlock()
 	return
 }
 
